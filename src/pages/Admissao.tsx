@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, AlertCircle, Loader2 } from 'lucide-react';
 import { AdmissaoStats } from '@/components/admissao/AdmissaoStats';
 import { AdmissaoList } from '@/components/admissao/AdmissaoList';
 import { AdmissaoForm } from '@/components/admissao/AdmissaoForm';
 import { AdmissaoDetail } from '@/components/admissao/AdmissaoDetail';
-import { useAdmissao } from '@/hooks/useAdmissao';
+import { useAdmissoes } from '@/hooks/useAdmissoes';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { AdmissaoFormData } from '@/types/database';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,17 +29,25 @@ export default function Admissao() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  const { isAuthenticated, hasMinimumRole, loading: authLoading } = useAuth();
+  
   const {
     admissoes,
+    isLoading,
+    error,
     criarAdmissao,
     atualizarAdmissao,
     atualizarDocumento,
-    aprovarEtapa,
+    atualizarWorkflow,
     excluirAdmissao,
     buscarAdmissao,
-  } = useAdmissao();
+    uploadDocumento,
+    isPending,
+  } = useAdmissoes();
 
   const selectedAdmissao = selectedId ? buscarAdmissao(selectedId) : null;
+  const isAdmin = hasMinimumRole('admin');
+  const canManage = hasMinimumRole('manager');
 
   const handleView = (id: string) => {
     setSelectedId(id);
@@ -43,27 +55,43 @@ export default function Admissao() {
   };
 
   const handleEdit = (id: string) => {
+    if (!canManage) {
+      toast.error('Você não tem permissão para editar admissões');
+      return;
+    }
     setSelectedId(id);
     setViewMode('edit');
   };
 
   const handleDelete = (id: string) => {
+    if (!isAdmin) {
+      toast.error('Você não tem permissão para excluir admissões');
+      return;
+    }
     setDeleteId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteId) {
-      excluirAdmissao(deleteId);
-      toast.success('Admissão excluída com sucesso');
-      setDeleteId(null);
-      if (selectedId === deleteId) {
-        setSelectedId(null);
-        setViewMode('list');
+      try {
+        await excluirAdmissao(deleteId);
+        toast.success('Admissão excluída com sucesso');
+        setDeleteId(null);
+        if (selectedId === deleteId) {
+          setSelectedId(null);
+          setViewMode('list');
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Erro ao excluir admissão');
       }
     }
   };
 
   const handleNew = () => {
+    if (!canManage) {
+      toast.error('Você não tem permissão para criar admissões');
+      return;
+    }
     setSelectedId(null);
     setViewMode('new');
   };
@@ -73,68 +101,267 @@ export default function Admissao() {
     setViewMode('list');
   };
 
-  const handleSubmitForm = (dados: Parameters<typeof criarAdmissao>[0]) => {
-    if (viewMode === 'new') {
-      const novaAdmissao = criarAdmissao(dados);
-      toast.success('Admissão criada com sucesso!');
-      setSelectedId(novaAdmissao.id);
-      setViewMode('detail');
-    } else if (viewMode === 'edit' && selectedId) {
-      atualizarAdmissao(selectedId, dados);
-      toast.success('Admissão atualizada com sucesso!');
-      setViewMode('detail');
+  const handleSubmitForm = async (dados: {
+    dadosPessoais: any;
+    dadosContato: any;
+    dadosProfissionais: any;
+    dadosBancarios: any;
+  }) => {
+    try {
+      // Convert old format to new format
+      const formData: AdmissaoFormData = {
+        nome_completo: dados.dadosPessoais.nomeCompleto,
+        cpf: dados.dadosPessoais.cpf,
+        rg: dados.dadosPessoais.rg,
+        data_nascimento: dados.dadosPessoais.dataNascimento,
+        estado_civil: dados.dadosPessoais.estadoCivil,
+        genero: dados.dadosPessoais.genero,
+        nacionalidade: dados.dadosPessoais.nacionalidade,
+        naturalidade: dados.dadosPessoais.naturalidade,
+        nome_mae: dados.dadosPessoais.nomeMae,
+        nome_pai: dados.dadosPessoais.nomePai,
+        email: dados.dadosContato.email,
+        telefone: dados.dadosContato.telefone,
+        celular: dados.dadosContato.celular,
+        endereco: dados.dadosContato.endereco,
+        numero: dados.dadosContato.numero,
+        complemento: dados.dadosContato.complemento,
+        bairro: dados.dadosContato.bairro,
+        cidade: dados.dadosContato.cidade,
+        estado: dados.dadosContato.estado,
+        cep: dados.dadosContato.cep,
+        cargo: dados.dadosProfissionais.cargo,
+        departamento: dados.dadosProfissionais.departamento,
+        filial: dados.dadosProfissionais.filial,
+        data_admissao: dados.dadosProfissionais.dataAdmissao,
+        tipo_contrato: dados.dadosProfissionais.tipoContrato,
+        jornada_trabalho: dados.dadosProfissionais.jornadaTrabalho,
+        salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, '').replace(',', '.')) : undefined,
+        gestor_imediato: dados.dadosProfissionais.gestorImediato,
+        centro_custo: dados.dadosProfissionais.centroCusto,
+        banco: dados.dadosBancarios.banco,
+        agencia: dados.dadosBancarios.agencia,
+        conta: dados.dadosBancarios.conta,
+        tipo_conta: dados.dadosBancarios.tipoConta,
+        chave_pix: dados.dadosBancarios.chavePix,
+      };
+
+      if (viewMode === 'new') {
+        const novaAdmissao = await criarAdmissao(formData);
+        toast.success('Admissão criada com sucesso!');
+        setSelectedId(novaAdmissao.id);
+        setViewMode('detail');
+      } else if (viewMode === 'edit' && selectedId) {
+        await atualizarAdmissao({ id: selectedId, dados: formData });
+        toast.success('Admissão atualizada com sucesso!');
+        setViewMode('detail');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao salvar admissão');
     }
   };
 
-  const handleDocumentUpload = (documentoId: string, file: File) => {
+  const handleDocumentUpload = async (documentoId: string, file: File) => {
     if (selectedId) {
-      atualizarDocumento(selectedId, documentoId, {
-        arquivo: file,
-        status: 'enviado',
-        dataEnvio: new Date(),
-      });
-      toast.success('Documento enviado com sucesso!');
+      try {
+        await uploadDocumento(selectedId, documentoId, file);
+        toast.success('Documento enviado com sucesso!');
+      } catch (error: any) {
+        toast.error(error.message || 'Erro ao enviar documento');
+      }
     }
   };
 
-  const handleDocumentRemove = (documentoId: string) => {
-    if (selectedId) {
-      atualizarDocumento(selectedId, documentoId, {
-        arquivo: undefined,
-        status: 'pendente',
-        dataEnvio: undefined,
+  const handleDocumentRemove = async (documentoId: string) => {
+    try {
+      await atualizarDocumento({
+        documentoId,
+        dados: {
+          arquivo_url: null,
+          arquivo_nome: null,
+          arquivo_tamanho: null,
+          status: 'pendente',
+          data_envio: null,
+        },
       });
       toast.info('Documento removido');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao remover documento');
     }
   };
 
-  const handleDocumentApprove = (documentoId: string) => {
-    if (selectedId) {
-      atualizarDocumento(selectedId, documentoId, { status: 'aprovado' });
+  const handleDocumentApprove = async (documentoId: string) => {
+    try {
+      await atualizarDocumento({
+        documentoId,
+        dados: { status: 'aprovado' },
+      });
       toast.success('Documento aprovado!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao aprovar documento');
     }
   };
 
-  const handleDocumentReject = (documentoId: string, motivo: string) => {
-    if (selectedId) {
-      atualizarDocumento(selectedId, documentoId, { status: 'rejeitado', observacao: motivo });
+  const handleDocumentReject = async (documentoId: string, motivo: string) => {
+    try {
+      await atualizarDocumento({
+        documentoId,
+        dados: { status: 'rejeitado', observacao: motivo },
+      });
       toast.error('Documento rejeitado');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao rejeitar documento');
     }
   };
 
-  const handleAprovarEtapa = (etapaId: string, observacao?: string) => {
+  const handleAprovarEtapa = async (etapaId: string, observacao?: string) => {
     if (selectedId) {
-      aprovarEtapa(selectedId, etapaId, true, observacao);
-      toast.success('Etapa aprovada com sucesso!');
+      try {
+        await atualizarWorkflow({
+          workflowId: etapaId,
+          admissaoId: selectedId,
+          aprovado: true,
+          observacao,
+        });
+        toast.success('Etapa aprovada com sucesso!');
+      } catch (error: any) {
+        toast.error(error.message || 'Erro ao aprovar etapa');
+      }
     }
   };
 
-  const handleRejeitarEtapa = (etapaId: string, observacao: string) => {
+  const handleRejeitarEtapa = async (etapaId: string, observacao: string) => {
     if (selectedId) {
-      aprovarEtapa(selectedId, etapaId, false, observacao);
-      toast.error('Etapa rejeitada');
+      try {
+        await atualizarWorkflow({
+          workflowId: etapaId,
+          admissaoId: selectedId,
+          aprovado: false,
+          observacao,
+        });
+        toast.error('Etapa rejeitada');
+      } catch (error: any) {
+        toast.error(error.message || 'Erro ao rejeitar etapa');
+      }
     }
   };
+
+  // Show loading state
+  if (authLoading || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show authentication required message
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Autenticação necessária</AlertTitle>
+          <AlertDescription>
+            Você precisa estar autenticado para acessar o módulo de Admissão.
+            Por favor, faça login para continuar.
+          </AlertDescription>
+        </Alert>
+        <Button onClick={() => window.location.href = '/login'}>
+          Fazer Login
+        </Button>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar dados</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button onClick={() => window.location.reload()}>
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  // Transform data for legacy components
+  const admissoesFormatted = admissoes.map(a => ({
+    id: a.id,
+    dadosPessoais: {
+      nomeCompleto: a.nome_completo,
+      cpf: a.cpf,
+      rg: a.rg || '',
+      dataNascimento: a.data_nascimento || '',
+      estadoCivil: a.estado_civil || '',
+      genero: a.genero || '',
+      nacionalidade: a.nacionalidade || '',
+      naturalidade: a.naturalidade || '',
+      nomeMae: a.nome_mae || '',
+      nomePai: a.nome_pai || '',
+    },
+    dadosContato: {
+      email: a.email,
+      telefone: a.telefone || '',
+      celular: a.celular || '',
+      endereco: a.endereco || '',
+      numero: a.numero || '',
+      complemento: a.complemento || '',
+      bairro: a.bairro || '',
+      cidade: a.cidade || '',
+      estado: a.estado || '',
+      cep: a.cep || '',
+    },
+    dadosProfissionais: {
+      cargo: a.cargo,
+      departamento: a.departamento || '',
+      filial: a.filial || '',
+      dataAdmissao: a.data_admissao || '',
+      tipoContrato: a.tipo_contrato || '',
+      jornadaTrabalho: a.jornada_trabalho || '',
+      salario: a.salario ? `R$ ${a.salario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
+      gestorImediato: a.gestor_imediato || '',
+      centroCusto: a.centro_custo || '',
+    },
+    dadosBancarios: {
+      banco: a.banco || '',
+      agencia: a.agencia || '',
+      conta: a.conta || '',
+      tipoConta: a.tipo_conta || '',
+      chavePix: a.chave_pix || '',
+    },
+    documentos: a.documentos.map(d => ({
+      id: d.id,
+      nome: d.nome,
+      tipo: d.tipo,
+      obrigatorio: d.obrigatorio,
+      status: d.status,
+      urlPreview: d.arquivo_url || undefined,
+      dataEnvio: d.data_envio ? new Date(d.data_envio) : undefined,
+      observacao: d.observacao || undefined,
+    })),
+    status: a.status,
+    historicoAprovacao: a.workflow.map(w => ({
+      id: w.id,
+      etapa: w.etapa,
+      status: w.status,
+      responsavel: w.responsavel_nome || 'Pendente',
+      dataAcao: w.data_acao ? new Date(w.data_acao) : undefined,
+      observacao: w.observacao || undefined,
+    })),
+    dataCriacao: new Date(a.created_at),
+    dataAtualizacao: new Date(a.updated_at),
+    criadoPor: a.criado_por || '',
+  }));
+
+  const selectedAdmissaoFormatted = selectedId 
+    ? admissoesFormatted.find(a => a.id === selectedId) 
+    : null;
 
   return (
     <motion.div
@@ -158,11 +385,11 @@ export default function Admissao() {
           </div>
 
           {/* Stats */}
-          <AdmissaoStats admissoes={admissoes} />
+          <AdmissaoStats admissoes={admissoesFormatted as any} />
 
           {/* List */}
           <AdmissaoList
-            admissoes={admissoes}
+            admissoes={admissoesFormatted as any}
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
@@ -193,30 +420,30 @@ export default function Admissao() {
           <AdmissaoForm
             onSubmit={handleSubmitForm}
             onCancel={handleBack}
-            initialData={selectedAdmissao ? {
-              dadosPessoais: selectedAdmissao.dadosPessoais,
-              dadosContato: selectedAdmissao.dadosContato,
-              dadosProfissionais: selectedAdmissao.dadosProfissionais,
-              dadosBancarios: selectedAdmissao.dadosBancarios,
+            initialData={selectedAdmissaoFormatted ? {
+              dadosPessoais: selectedAdmissaoFormatted.dadosPessoais,
+              dadosContato: selectedAdmissaoFormatted.dadosContato,
+              dadosProfissionais: selectedAdmissaoFormatted.dadosProfissionais,
+              dadosBancarios: selectedAdmissaoFormatted.dadosBancarios,
             } : undefined}
           />
         </div>
       )}
 
       {/* Detail View */}
-      {viewMode === 'detail' && selectedAdmissao && (
+      {viewMode === 'detail' && selectedAdmissaoFormatted && (
         <AdmissaoDetail
-          admissao={selectedAdmissao}
+          admissao={selectedAdmissaoFormatted as any}
           onBack={handleBack}
           onEdit={() => setViewMode('edit')}
-          onDelete={() => handleDelete(selectedAdmissao.id)}
+          onDelete={() => handleDelete(selectedAdmissaoFormatted.id)}
           onDocumentUpload={handleDocumentUpload}
           onDocumentRemove={handleDocumentRemove}
           onDocumentApprove={handleDocumentApprove}
           onDocumentReject={handleDocumentReject}
           onAprovarEtapa={handleAprovarEtapa}
           onRejeitarEtapa={handleRejeitarEtapa}
-          isAdmin={true}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -230,8 +457,13 @@ export default function Admissao() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isPending}
+            >
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
