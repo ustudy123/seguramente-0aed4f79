@@ -1,0 +1,167 @@
+import { motion } from 'framer-motion';
+import { 
+  User, 
+  Briefcase, 
+  Calendar, 
+  MapPin, 
+  FileText, 
+  Eye, 
+  MoreVertical,
+  CheckCircle,
+  Clock,
+  XCircle
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface AdmissaoCardProps {
+  admissao: Admissao;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
+  const { dadosPessoais, dadosProfissionais, documentos, status, historicoAprovacao, dataCriacao } = admissao;
+
+  const documentosEnviados = documentos.filter(d => d.status !== 'pendente').length;
+  const documentosTotal = documentos.length;
+  const progressoDocumentos = (documentosEnviados / documentosTotal) * 100;
+
+  const etapasAprovadas = historicoAprovacao.filter(e => e.status === 'aprovado').length;
+  const etapasTotal = historicoAprovacao.length;
+  const progressoAprovacao = (etapasAprovadas / etapasTotal) * 100;
+
+  const initials = dadosPessoais.nomeCompleto
+    .split(' ')
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-card rounded-xl border border-border p-5 hover:shadow-lg transition-all duration-300 group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12 border-2 border-primary/20">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+              {dadosPessoais.nomeCompleto}
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Briefcase className="h-3.5 w-3.5" />
+              <span>{dadosProfissionais.cargo}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge className={STATUS_COLORS[status]}>
+            {STATUS_LABELS[status]}
+          </Badge>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onView(admissao.id)}>
+                <Eye className="h-4 w-4 mr-2" /> Visualizar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(admissao.id)}>
+                <FileText className="h-4 w-4 mr-2" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onDelete(admissao.id)}
+                className="text-destructive focus:text-destructive"
+              >
+                <XCircle className="h-4 w-4 mr-2" /> Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <MapPin className="h-4 w-4" />
+          <span>{dadosProfissionais.departamento}</span>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>{format(new Date(dadosProfissionais.dataAdmissao), "dd/MM/yyyy")}</span>
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-3 border-t border-border">
+        <div>
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <FileText className="h-3 w-3" /> Documentos
+            </span>
+            <span className="font-medium text-foreground">{documentosEnviados}/{documentosTotal}</span>
+          </div>
+          <Progress value={progressoDocumentos} className="h-1.5" />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <CheckCircle className="h-3 w-3" /> Aprovação
+            </span>
+            <span className="font-medium text-foreground">{etapasAprovadas}/{etapasTotal}</span>
+          </div>
+          <Progress value={progressoAprovacao} className="h-1.5" />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
+        <div className="flex -space-x-1">
+          {historicoAprovacao.slice(0, 4).map((etapa, index) => (
+            <div
+              key={etapa.id}
+              className={`h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-xs ${
+                etapa.status === 'aprovado' 
+                  ? 'bg-success text-success-foreground'
+                  : etapa.status === 'rejeitado'
+                  ? 'bg-destructive text-destructive-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {etapa.status === 'aprovado' ? (
+                <CheckCircle className="h-3 w-3" />
+              ) : etapa.status === 'rejeitado' ? (
+                <XCircle className="h-3 w-3" />
+              ) : (
+                <Clock className="h-3 w-3" />
+              )}
+            </div>
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground ml-auto">
+          Criado em {format(dataCriacao, "dd/MM/yyyy", { locale: ptBR })}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
