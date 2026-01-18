@@ -1,0 +1,862 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { 
+  User, 
+  MapPin, 
+  Briefcase, 
+  CreditCard, 
+  FileText, 
+  ChevronLeft, 
+  ChevronRight,
+  Save,
+  Send
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { AdmissaoFormSteps } from './AdmissaoFormSteps';
+import { DocumentUpload } from './DocumentUpload';
+import { 
+  DadosPessoais, 
+  DadosContato, 
+  DadosProfissionais, 
+  DadosBancarios,
+  DocumentoAdmissao,
+  DOCUMENTOS_OBRIGATORIOS
+} from '@/types/admissao';
+import { cn } from '@/lib/utils';
+
+const STEPS = [
+  { id: 1, title: 'Dados Pessoais', description: 'Informações básicas', icon: User },
+  { id: 2, title: 'Contato', description: 'Endereço e telefone', icon: MapPin },
+  { id: 3, title: 'Profissional', description: 'Cargo e salário', icon: Briefcase },
+  { id: 4, title: 'Bancários', description: 'Dados bancários', icon: CreditCard },
+  { id: 5, title: 'Documentos', description: 'Upload de arquivos', icon: FileText },
+];
+
+// Schemas for validation
+const dadosPessoaisSchema = z.object({
+  nomeCompleto: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
+  cpf: z.string().min(11, 'CPF inválido'),
+  rg: z.string().min(5, 'RG inválido'),
+  dataNascimento: z.string().min(1, 'Data de nascimento obrigatória'),
+  estadoCivil: z.string().min(1, 'Estado civil obrigatório'),
+  genero: z.string().min(1, 'Gênero obrigatório'),
+  nacionalidade: z.string().min(1, 'Nacionalidade obrigatória'),
+  naturalidade: z.string().min(1, 'Naturalidade obrigatória'),
+  nomeMae: z.string().min(3, 'Nome da mãe obrigatório'),
+  nomePai: z.string().optional(),
+});
+
+const dadosContatoSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+  telefone: z.string().optional(),
+  celular: z.string().min(10, 'Celular inválido'),
+  endereco: z.string().min(3, 'Endereço obrigatório'),
+  numero: z.string().min(1, 'Número obrigatório'),
+  complemento: z.string().optional(),
+  bairro: z.string().min(2, 'Bairro obrigatório'),
+  cidade: z.string().min(2, 'Cidade obrigatória'),
+  estado: z.string().min(2, 'Estado obrigatório'),
+  cep: z.string().min(8, 'CEP inválido'),
+});
+
+const dadosProfissionaisSchema = z.object({
+  cargo: z.string().min(2, 'Cargo obrigatório'),
+  departamento: z.string().min(2, 'Departamento obrigatório'),
+  filial: z.string().min(2, 'Filial obrigatória'),
+  dataAdmissao: z.string().min(1, 'Data de admissão obrigatória'),
+  tipoContrato: z.string().min(1, 'Tipo de contrato obrigatório'),
+  jornadaTrabalho: z.string().min(1, 'Jornada de trabalho obrigatória'),
+  salario: z.string().min(1, 'Salário obrigatório'),
+  gestorImediato: z.string().min(2, 'Gestor imediato obrigatório'),
+  centroCusto: z.string().min(1, 'Centro de custo obrigatório'),
+});
+
+const dadosBancariosSchema = z.object({
+  banco: z.string().min(2, 'Banco obrigatório'),
+  agencia: z.string().min(3, 'Agência obrigatória'),
+  conta: z.string().min(4, 'Conta obrigatória'),
+  tipoConta: z.string().min(1, 'Tipo de conta obrigatório'),
+  chavePix: z.string().optional(),
+});
+
+interface AdmissaoFormProps {
+  onSubmit: (dados: {
+    dadosPessoais: DadosPessoais;
+    dadosContato: DadosContato;
+    dadosProfissionais: DadosProfissionais;
+    dadosBancarios: DadosBancarios;
+  }) => void;
+  onCancel: () => void;
+  initialData?: {
+    dadosPessoais?: Partial<DadosPessoais>;
+    dadosContato?: Partial<DadosContato>;
+    dadosProfissionais?: Partial<DadosProfissionais>;
+    dadosBancarios?: Partial<DadosBancarios>;
+  };
+}
+
+export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormProps) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [documentos, setDocumentos] = useState<DocumentoAdmissao[]>(
+    DOCUMENTOS_OBRIGATORIOS.map((doc, index) => ({
+      ...doc,
+      id: `new-doc-${index}`,
+      status: 'pendente',
+    }))
+  );
+
+  // Form for step 1 - Dados Pessoais
+  const formPessoais = useForm<DadosPessoais>({
+    resolver: zodResolver(dadosPessoaisSchema),
+    defaultValues: initialData?.dadosPessoais || {
+      nomeCompleto: '',
+      cpf: '',
+      rg: '',
+      dataNascimento: '',
+      estadoCivil: '',
+      genero: '',
+      nacionalidade: 'Brasileira',
+      naturalidade: '',
+      nomeMae: '',
+      nomePai: '',
+    },
+  });
+
+  // Form for step 2 - Dados de Contato
+  const formContato = useForm<DadosContato>({
+    resolver: zodResolver(dadosContatoSchema),
+    defaultValues: initialData?.dadosContato || {
+      email: '',
+      telefone: '',
+      celular: '',
+      endereco: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: '',
+    },
+  });
+
+  // Form for step 3 - Dados Profissionais
+  const formProfissionais = useForm<DadosProfissionais>({
+    resolver: zodResolver(dadosProfissionaisSchema),
+    defaultValues: initialData?.dadosProfissionais || {
+      cargo: '',
+      departamento: '',
+      filial: '',
+      dataAdmissao: '',
+      tipoContrato: 'CLT',
+      jornadaTrabalho: '44h semanais',
+      salario: '',
+      gestorImediato: '',
+      centroCusto: '',
+    },
+  });
+
+  // Form for step 4 - Dados Bancários
+  const formBancarios = useForm<DadosBancarios>({
+    resolver: zodResolver(dadosBancariosSchema),
+    defaultValues: initialData?.dadosBancarios || {
+      banco: '',
+      agencia: '',
+      conta: '',
+      tipoConta: 'corrente',
+      chavePix: '',
+    },
+  });
+
+  const validateCurrentStep = async (): Promise<boolean> => {
+    switch (currentStep) {
+      case 1:
+        return formPessoais.trigger();
+      case 2:
+        return formContato.trigger();
+      case 3:
+        return formProfissionais.trigger();
+      case 4:
+        return formBancarios.trigger();
+      default:
+        return true;
+    }
+  };
+
+  const handleNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid && currentStep < 5) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleDocumentUpload = (documentoId: string, file: File) => {
+    setDocumentos(prev => prev.map(doc =>
+      doc.id === documentoId
+        ? { ...doc, arquivo: file, status: 'enviado', dataEnvio: new Date() }
+        : doc
+    ));
+  };
+
+  const handleDocumentRemove = (documentoId: string) => {
+    setDocumentos(prev => prev.map(doc =>
+      doc.id === documentoId
+        ? { ...doc, arquivo: undefined, status: 'pendente', dataEnvio: undefined }
+        : doc
+    ));
+  };
+
+  const handleFinalSubmit = () => {
+    onSubmit({
+      dadosPessoais: formPessoais.getValues(),
+      dadosContato: formContato.getValues(),
+      dadosProfissionais: formProfissionais.getValues(),
+      dadosBancarios: formBancarios.getValues(),
+    });
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <motion.div
+            key="step1"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label htmlFor="nomeCompleto">Nome Completo *</Label>
+                <Input 
+                  id="nomeCompleto"
+                  {...formPessoais.register('nomeCompleto')}
+                  placeholder="Nome completo do colaborador"
+                />
+                {formPessoais.formState.errors.nomeCompleto && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.nomeCompleto.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input 
+                  id="cpf"
+                  {...formPessoais.register('cpf')}
+                  placeholder="000.000.000-00"
+                />
+                {formPessoais.formState.errors.cpf && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.cpf.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="rg">RG *</Label>
+                <Input 
+                  id="rg"
+                  {...formPessoais.register('rg')}
+                  placeholder="00.000.000-0"
+                />
+                {formPessoais.formState.errors.rg && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.rg.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="dataNascimento">Data de Nascimento *</Label>
+                <Input 
+                  id="dataNascimento"
+                  type="date"
+                  {...formPessoais.register('dataNascimento')}
+                />
+                {formPessoais.formState.errors.dataNascimento && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.dataNascimento.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="genero">Gênero *</Label>
+                <Select 
+                  value={formPessoais.watch('genero')}
+                  onValueChange={(value) => formPessoais.setValue('genero', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="feminino">Feminino</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                    <SelectItem value="prefiro_nao_informar">Prefiro não informar</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formPessoais.formState.errors.genero && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.genero.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="estadoCivil">Estado Civil *</Label>
+                <Select 
+                  value={formPessoais.watch('estadoCivil')}
+                  onValueChange={(value) => formPessoais.setValue('estadoCivil', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                    <SelectItem value="casado">Casado(a)</SelectItem>
+                    <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                    <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                    <SelectItem value="uniao_estavel">União Estável</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formPessoais.formState.errors.estadoCivil && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.estadoCivil.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="nacionalidade">Nacionalidade *</Label>
+                <Input 
+                  id="nacionalidade"
+                  {...formPessoais.register('nacionalidade')}
+                  placeholder="Brasileira"
+                />
+                {formPessoais.formState.errors.nacionalidade && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.nacionalidade.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="naturalidade">Naturalidade *</Label>
+                <Input 
+                  id="naturalidade"
+                  {...formPessoais.register('naturalidade')}
+                  placeholder="Cidade - UF"
+                />
+                {formPessoais.formState.errors.naturalidade && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.naturalidade.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="nomeMae">Nome da Mãe *</Label>
+                <Input 
+                  id="nomeMae"
+                  {...formPessoais.register('nomeMae')}
+                  placeholder="Nome completo da mãe"
+                />
+                {formPessoais.formState.errors.nomeMae && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.nomeMae.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="nomePai">Nome do Pai</Label>
+                <Input 
+                  id="nomePai"
+                  {...formPessoais.register('nomePai')}
+                  placeholder="Nome completo do pai (opcional)"
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 2:
+        return (
+          <motion.div
+            key="step2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label htmlFor="email">E-mail *</Label>
+                <Input 
+                  id="email"
+                  type="email"
+                  {...formContato.register('email')}
+                  placeholder="email@exemplo.com"
+                />
+                {formContato.formState.errors.email && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="celular">Celular *</Label>
+                <Input 
+                  id="celular"
+                  {...formContato.register('celular')}
+                  placeholder="(00) 00000-0000"
+                />
+                {formContato.formState.errors.celular && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.celular.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="telefone">Telefone Fixo</Label>
+                <Input 
+                  id="telefone"
+                  {...formContato.register('telefone')}
+                  placeholder="(00) 0000-0000"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="cep">CEP *</Label>
+                <Input 
+                  id="cep"
+                  {...formContato.register('cep')}
+                  placeholder="00000-000"
+                />
+                {formContato.formState.errors.cep && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.cep.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="estado">Estado *</Label>
+                <Select 
+                  value={formContato.watch('estado')}
+                  onValueChange={(value) => formContato.setValue('estado', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(uf => (
+                      <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formContato.formState.errors.estado && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.estado.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="cidade">Cidade *</Label>
+                <Input 
+                  id="cidade"
+                  {...formContato.register('cidade')}
+                  placeholder="Nome da cidade"
+                />
+                {formContato.formState.errors.cidade && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.cidade.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="bairro">Bairro *</Label>
+                <Input 
+                  id="bairro"
+                  {...formContato.register('bairro')}
+                  placeholder="Nome do bairro"
+                />
+                {formContato.formState.errors.bairro && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.bairro.message}</p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="endereco">Endereço *</Label>
+                <Input 
+                  id="endereco"
+                  {...formContato.register('endereco')}
+                  placeholder="Rua, Avenida, etc"
+                />
+                {formContato.formState.errors.endereco && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.endereco.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="numero">Número *</Label>
+                <Input 
+                  id="numero"
+                  {...formContato.register('numero')}
+                  placeholder="123"
+                />
+                {formContato.formState.errors.numero && (
+                  <p className="text-xs text-destructive mt-1">{formContato.formState.errors.numero.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="complemento">Complemento</Label>
+                <Input 
+                  id="complemento"
+                  {...formContato.register('complemento')}
+                  placeholder="Apto, Bloco, etc"
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            key="step3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cargo">Cargo *</Label>
+                <Input 
+                  id="cargo"
+                  {...formProfissionais.register('cargo')}
+                  placeholder="Ex: Analista de RH"
+                />
+                {formProfissionais.formState.errors.cargo && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.cargo.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="departamento">Departamento *</Label>
+                <Select 
+                  value={formProfissionais.watch('departamento')}
+                  onValueChange={(value) => formProfissionais.setValue('departamento', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Recursos Humanos">Recursos Humanos</SelectItem>
+                    <SelectItem value="Tecnologia">Tecnologia</SelectItem>
+                    <SelectItem value="Comercial">Comercial</SelectItem>
+                    <SelectItem value="Financeiro">Financeiro</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Operações">Operações</SelectItem>
+                    <SelectItem value="Jurídico">Jurídico</SelectItem>
+                    <SelectItem value="Administrativo">Administrativo</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formProfissionais.formState.errors.departamento && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.departamento.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="filial">Filial *</Label>
+                <Select 
+                  value={formProfissionais.watch('filial')}
+                  onValueChange={(value) => formProfissionais.setValue('filial', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Matriz">Matriz</SelectItem>
+                    <SelectItem value="Filial SP">Filial SP</SelectItem>
+                    <SelectItem value="Filial RJ">Filial RJ</SelectItem>
+                    <SelectItem value="Filial BH">Filial BH</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formProfissionais.formState.errors.filial && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.filial.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="dataAdmissao">Data de Admissão *</Label>
+                <Input 
+                  id="dataAdmissao"
+                  type="date"
+                  {...formProfissionais.register('dataAdmissao')}
+                />
+                {formProfissionais.formState.errors.dataAdmissao && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.dataAdmissao.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="tipoContrato">Tipo de Contrato *</Label>
+                <Select 
+                  value={formProfissionais.watch('tipoContrato')}
+                  onValueChange={(value) => formProfissionais.setValue('tipoContrato', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CLT">CLT</SelectItem>
+                    <SelectItem value="PJ">PJ</SelectItem>
+                    <SelectItem value="Estágio">Estágio</SelectItem>
+                    <SelectItem value="Temporário">Temporário</SelectItem>
+                    <SelectItem value="Trainee">Trainee</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formProfissionais.formState.errors.tipoContrato && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.tipoContrato.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="jornadaTrabalho">Jornada de Trabalho *</Label>
+                <Select 
+                  value={formProfissionais.watch('jornadaTrabalho')}
+                  onValueChange={(value) => formProfissionais.setValue('jornadaTrabalho', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="44h semanais">44h semanais</SelectItem>
+                    <SelectItem value="40h semanais">40h semanais</SelectItem>
+                    <SelectItem value="30h semanais">30h semanais</SelectItem>
+                    <SelectItem value="20h semanais">20h semanais</SelectItem>
+                    <SelectItem value="Flexível">Flexível</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formProfissionais.formState.errors.jornadaTrabalho && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.jornadaTrabalho.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="salario">Salário *</Label>
+                <Input 
+                  id="salario"
+                  {...formProfissionais.register('salario')}
+                  placeholder="R$ 0.000,00"
+                />
+                {formProfissionais.formState.errors.salario && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.salario.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="gestorImediato">Gestor Imediato *</Label>
+                <Input 
+                  id="gestorImediato"
+                  {...formProfissionais.register('gestorImediato')}
+                  placeholder="Nome do gestor"
+                />
+                {formProfissionais.formState.errors.gestorImediato && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.gestorImediato.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="centroCusto">Centro de Custo *</Label>
+                <Input 
+                  id="centroCusto"
+                  {...formProfissionais.register('centroCusto')}
+                  placeholder="Ex: RH-001"
+                />
+                {formProfissionais.formState.errors.centroCusto && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.centroCusto.message}</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 4:
+        return (
+          <motion.div
+            key="step4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="banco">Banco *</Label>
+                <Select 
+                  value={formBancarios.watch('banco')}
+                  onValueChange={(value) => formBancarios.setValue('banco', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Banco do Brasil">Banco do Brasil</SelectItem>
+                    <SelectItem value="Caixa Econômica">Caixa Econômica</SelectItem>
+                    <SelectItem value="Itaú">Itaú</SelectItem>
+                    <SelectItem value="Bradesco">Bradesco</SelectItem>
+                    <SelectItem value="Santander">Santander</SelectItem>
+                    <SelectItem value="Nubank">Nubank</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                    <SelectItem value="C6 Bank">C6 Bank</SelectItem>
+                    <SelectItem value="Sicoob">Sicoob</SelectItem>
+                    <SelectItem value="Sicredi">Sicredi</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formBancarios.formState.errors.banco && (
+                  <p className="text-xs text-destructive mt-1">{formBancarios.formState.errors.banco.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="tipoConta">Tipo de Conta *</Label>
+                <Select 
+                  value={formBancarios.watch('tipoConta')}
+                  onValueChange={(value) => formBancarios.setValue('tipoConta', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="corrente">Conta Corrente</SelectItem>
+                    <SelectItem value="poupanca">Poupança</SelectItem>
+                    <SelectItem value="salario">Conta Salário</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formBancarios.formState.errors.tipoConta && (
+                  <p className="text-xs text-destructive mt-1">{formBancarios.formState.errors.tipoConta.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="agencia">Agência *</Label>
+                <Input 
+                  id="agencia"
+                  {...formBancarios.register('agencia')}
+                  placeholder="0000-0"
+                />
+                {formBancarios.formState.errors.agencia && (
+                  <p className="text-xs text-destructive mt-1">{formBancarios.formState.errors.agencia.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="conta">Conta *</Label>
+                <Input 
+                  id="conta"
+                  {...formBancarios.register('conta')}
+                  placeholder="00000-0"
+                />
+                {formBancarios.formState.errors.conta && (
+                  <p className="text-xs text-destructive mt-1">{formBancarios.formState.errors.conta.message}</p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="chavePix">Chave PIX (opcional)</Label>
+                <Input 
+                  id="chavePix"
+                  {...formBancarios.register('chavePix')}
+                  placeholder="CPF, e-mail, telefone ou chave aleatória"
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 5:
+        return (
+          <motion.div
+            key="step5"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <DocumentUpload
+              documentos={documentos}
+              onUpload={handleDocumentUpload}
+              onRemove={handleDocumentRemove}
+            />
+          </motion.div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Steps indicator */}
+      <AdmissaoFormSteps 
+        steps={STEPS} 
+        currentStep={currentStep}
+        onStepClick={(step) => step < currentStep && setCurrentStep(step)}
+      />
+
+      {/* Step content */}
+      <div className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-3 mb-6">
+          {(() => {
+            const StepIcon = STEPS[currentStep - 1].icon;
+            return <StepIcon className="h-6 w-6 text-primary" />;
+          })()}
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              {STEPS[currentStep - 1].title}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {STEPS[currentStep - 1].description}
+            </p>
+          </div>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {renderStepContent()}
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={currentStep === 1 ? onCancel : handlePrevious}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          {currentStep === 1 ? 'Cancelar' : 'Voltar'}
+        </Button>
+
+        <div className="flex gap-2">
+          {currentStep === 5 ? (
+            <>
+              <Button variant="outline" onClick={handleFinalSubmit}>
+                <Save className="h-4 w-4 mr-1" />
+                Salvar Rascunho
+              </Button>
+              <Button onClick={handleFinalSubmit}>
+                <Send className="h-4 w-4 mr-1" />
+                Enviar para Aprovação
+              </Button>
+            </>
+          ) : (
+            <Button onClick={handleNext}>
+              Próximo
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

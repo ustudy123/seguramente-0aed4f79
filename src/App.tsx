@@ -9,6 +9,7 @@ import Colaboradores from "./pages/Colaboradores";
 import Ponto from "./pages/Ponto";
 import Ferias from "./pages/Ferias";
 import Documentos from "./pages/Documentos";
+import Admissao from "./pages/Admissao";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -31,7 +32,7 @@ const App = () => (
             <Route path="/financeiro/folha" element={<PlaceholderPage />} />
             <Route path="/financeiro/beneficios" element={<PlaceholderPage />} />
             <Route path="/ponto" element={<Ponto />} />
-            <Route path="/admissao" element={<PlaceholderPage />} />
+            <Route path="/admissao" element={<Admissao />} />
             <Route path="/ferias" element={<Ferias />} />
             <Route path="/avaliacoes" element={<PlaceholderPage />} />
             <Route path="/pdi" element={<PlaceholderPage />} />
