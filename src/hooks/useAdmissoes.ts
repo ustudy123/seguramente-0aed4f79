@@ -377,15 +377,11 @@ export function useAdmissoes() {
 
     if (uploadError) throw uploadError;
 
-    const { data: urlData } = supabase.storage
-      .from('documentos')
-      .getPublicUrl(filePath);
-
-    // Update document record
+    // Update document record with the file path (not public URL since bucket is private)
     await atualizarDocumento.mutateAsync({
       documentoId,
       dados: {
-        arquivo_url: urlData.publicUrl,
+        arquivo_url: filePath, // Store path, we'll generate signed URL when viewing
         arquivo_nome: file.name,
         arquivo_tamanho: file.size,
         status: 'enviado',
@@ -393,7 +389,26 @@ export function useAdmissoes() {
       },
     });
 
-    return urlData.publicUrl;
+    return filePath;
+  };
+
+  // Get signed URL for viewing a document
+  const getDocumentoUrl = async (filePath: string): Promise<string | null> => {
+    if (!filePath) return null;
+    
+    // If it's already a full URL (legacy), return as-is
+    if (filePath.startsWith('http')) return filePath;
+
+    const { data, error } = await supabase.storage
+      .from('documentos')
+      .createSignedUrl(filePath, 3600); // 1 hour expiration
+
+    if (error) {
+      console.error('Error creating signed URL:', error);
+      return null;
+    }
+
+    return data.signedUrl;
   };
 
   return {
@@ -409,6 +424,7 @@ export function useAdmissoes() {
     excluirAdmissao: excluirAdmissao.mutateAsync,
     buscarAdmissao,
     uploadDocumento,
+    getDocumentoUrl,
     isPending:
       criarAdmissao.isPending ||
       atualizarAdmissao.isPending ||

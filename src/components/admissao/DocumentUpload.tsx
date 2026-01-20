@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -10,7 +10,9 @@ import {
   Clock,
   Trash2,
   Eye,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +20,8 @@ import { Progress } from '@/components/ui/progress';
 import { DocumentoStatus } from '@/types/admissao';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 // Extended document type that includes urlPreview
 interface DocumentoAdmissaoExtended {
@@ -27,6 +31,8 @@ interface DocumentoAdmissaoExtended {
   obrigatorio: boolean;
   status: DocumentoStatus;
   arquivo?: File;
+  arquivo_url?: string;
+  arquivo_nome?: string;
   urlPreview?: string;
   dataEnvio?: Date;
   observacao?: string;
@@ -71,6 +77,9 @@ function DocumentItem({
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const StatusIcon = STATUS_CONFIG[documento.status].icon;
@@ -101,11 +110,12 @@ function DocumentItem({
     }, 100);
   };
 
-  const hasFile = documento.arquivo || documento.urlPreview;
+  const hasFile = documento.arquivo || documento.arquivo_url || documento.urlPreview;
 
   const getFileIcon = () => {
+    const fileName = documento.arquivo?.name || documento.arquivo_nome || documento.arquivo_url || '';
     if (documento.arquivo?.type?.startsWith('image/')) return Image;
-    if (documento.urlPreview?.match(/\.(jpg|jpeg|png|gif|webp)/i)) return Image;
+    if (fileName.match(/\.(jpg|jpeg|png|gif|webp)/i)) return Image;
     return FileText;
   };
 
@@ -113,12 +123,50 @@ function DocumentItem({
   
   const getFileName = () => {
     if (documento.arquivo) return documento.arquivo.name;
-    if (documento.urlPreview) {
-      const urlParts = documento.urlPreview.split('/');
+    if (documento.arquivo_nome) return documento.arquivo_nome;
+    if (documento.arquivo_url) {
+      const urlParts = documento.arquivo_url.split('/');
       return urlParts[urlParts.length - 1].split('-').slice(1).join('-') || 'Arquivo enviado';
     }
     return '';
   };
+
+  const handleViewDocument = useCallback(async () => {
+    const filePath = documento.arquivo_url || documento.urlPreview;
+    
+    if (!filePath) return;
+    
+    // If it's already a full URL, open directly
+    if (filePath.startsWith('http')) {
+      window.open(filePath, '_blank');
+      return;
+    }
+    
+    // Generate signed URL for private bucket
+    setLoadingPreview(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from('documentos')
+        .createSignedUrl(filePath, 3600);
+      
+      if (error) {
+        console.error('Error creating signed URL:', error);
+        return;
+      }
+      
+      const fileName = documento.arquivo_nome || documento.arquivo_url || '';
+      const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)/i);
+      
+      if (isImage) {
+        setPreviewUrl(data.signedUrl);
+        setPreviewOpen(true);
+      } else {
+        window.open(data.signedUrl, '_blank');
+      }
+    } finally {
+      setLoadingPreview(false);
+    }
+  }, [documento]);
 
   return (
     <motion.div
@@ -232,13 +280,14 @@ function DocumentItem({
             <Button 
               size="sm" 
               variant="ghost"
-              onClick={() => {
-                if (documento.urlPreview) {
-                  window.open(documento.urlPreview, '_blank');
-                }
-              }}
+              onClick={handleViewDocument}
+              disabled={loadingPreview}
             >
-              <Eye className="h-4 w-4" />
+              {loadingPreview ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </Button>
           )}
 
@@ -268,6 +317,34 @@ function DocumentItem({
           <p className="text-xs text-destructive">{documento.observacao}</p>
         </div>
       )}
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              {documento.nome}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4">
+            {previewUrl && (
+              <img 
+                src={previewUrl} 
+                alt={documento.nome} 
+                className="max-h-[60vh] object-contain rounded-lg"
+              />
+            )}
+            <Button 
+              variant="outline" 
+              onClick={() => previewUrl && window.open(previewUrl, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Abrir em nova aba
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
