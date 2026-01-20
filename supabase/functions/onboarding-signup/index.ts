@@ -14,17 +14,34 @@ type Payload = {
 };
 
 serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+  const corsHeaders: Record<string, string> = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
+
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   const authHeader = req.headers.get("authorization") ?? "";
   const jwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!jwt) {
-    return new Response(JSON.stringify({ error: "Missing Authorization" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Missing Authorization" }, 401);
   }
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -34,20 +51,14 @@ serve(async (req) => {
   // Validate user from JWT
   const { data: userData, error: userError } = await admin.auth.getUser(jwt);
   if (userError || !userData?.user) {
-    return new Response(JSON.stringify({ error: "Invalid token" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Invalid token" }, 401);
   }
 
   let payload: Payload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Invalid JSON" }, 400);
   }
 
   const tenantNome = (payload.tenantNome ?? "").trim();
@@ -55,18 +66,12 @@ serve(async (req) => {
   const nomeCompleto = (payload.nomeCompleto ?? "").trim();
 
   if (!tenantNome || !tenantSlug || !nomeCompleto) {
-    return new Response(JSON.stringify({ error: "Missing fields" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Missing fields" }, 400);
   }
 
   // Enforce slug format
   if (!/^[a-z0-9-]+$/.test(tenantSlug) || tenantSlug.length < 3) {
-    return new Response(JSON.stringify({ error: "Invalid tenantSlug" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Invalid tenantSlug" }, 400);
   }
 
   const userId = userData.user.id;
@@ -79,20 +84,11 @@ serve(async (req) => {
     .maybeSingle();
 
   if (existingProfileError) {
-    return new Response(JSON.stringify({ error: existingProfileError.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: existingProfileError.message }, 500);
   }
 
   if (existingProfile?.tenant_id) {
-    return new Response(
-      JSON.stringify({ ok: true, tenantId: existingProfile.tenant_id }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return json({ ok: true, tenantId: existingProfile.tenant_id }, 200);
   }
 
   // Ensure tenant slug isn't already used
@@ -103,20 +99,11 @@ serve(async (req) => {
     .maybeSingle();
 
   if (existingTenantError) {
-    return new Response(JSON.stringify({ error: existingTenantError.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: existingTenantError.message }, 500);
   }
 
   if (existingTenant?.id) {
-    return new Response(
-      JSON.stringify({ error: "Tenant slug already exists" }),
-      {
-        status: 409,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return json({ error: "Tenant slug already exists" }, 409);
   }
 
   // 1) Create tenant
@@ -127,10 +114,7 @@ serve(async (req) => {
     .single();
 
   if (tenantError || !tenant?.id) {
-    return new Response(JSON.stringify({ error: tenantError?.message ?? "Tenant create failed" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: tenantError?.message ?? "Tenant create failed" }, 500);
   }
 
   // 2) Create profile
@@ -143,10 +127,7 @@ serve(async (req) => {
   if (profileError) {
     // Best effort cleanup
     await admin.from("tenants").delete().eq("id", tenant.id);
-    return new Response(JSON.stringify({ error: profileError.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: profileError.message }, 500);
   }
 
   // 3) Assign owner role
@@ -156,14 +137,8 @@ serve(async (req) => {
   });
 
   if (roleError) {
-    return new Response(JSON.stringify({ error: roleError.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: roleError.message }, 500);
   }
 
-  return new Response(JSON.stringify({ ok: true, tenantId: tenant.id }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json({ ok: true, tenantId: tenant.id }, 200);
 });
