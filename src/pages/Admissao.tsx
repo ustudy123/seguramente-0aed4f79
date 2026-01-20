@@ -6,7 +6,7 @@ import { AdmissaoList } from '@/components/admissao/AdmissaoList';
 import { AdmissaoForm } from '@/components/admissao/AdmissaoForm';
 import { AdmissaoDetail } from '@/components/admissao/AdmissaoDetail';
 import { useAdmissoes } from '@/hooks/useAdmissoes';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { AdmissaoFormData } from '@/types/database';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -29,7 +29,7 @@ export default function Admissao() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { isAuthenticated, hasMinimumRole, loading: authLoading } = useAuth();
+  const { hasMinimumRole, loading: authLoading } = useAuthContext();
   
   const {
     admissoes,
@@ -251,25 +251,6 @@ export default function Admissao() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Show authentication required message
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Autenticação necessária</AlertTitle>
-          <AlertDescription>
-            Você precisa estar autenticado para acessar o módulo de Admissão.
-            Por favor, faça login para continuar.
-          </AlertDescription>
-        </Alert>
-        <Button onClick={() => window.location.href = '/login'}>
-          Fazer Login
-        </Button>
       </div>
     );
   }

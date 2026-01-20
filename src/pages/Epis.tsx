@@ -4,7 +4,6 @@ import { Plus, HardHat, Package, Users, History, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEpis } from "@/hooks/useEpis";
-import { useAuth } from "@/hooks/useAuth";
 import { EpiStats } from "@/components/epi/EpiStats";
 import { EpiList } from "@/components/epi/EpiList";
 import { EpiForm } from "@/components/epi/EpiForm";
@@ -16,7 +15,6 @@ import { AjustarEstoqueModal } from "@/components/epi/AjustarEstoqueModal";
 import type { EpiCompleto } from "@/types/epi";
 
 const Epis = () => {
-  const { isAuthenticated } = useAuth();
   const {
     tipos,
     tiposLoading,
@@ -46,20 +44,6 @@ const Epis = () => {
   const [showEntregaForm, setShowEntregaForm] = useState(false);
   const [editingEpi, setEditingEpi] = useState<EpiCompleto | null>(null);
   const [ajustarEstoqueEpi, setAjustarEstoqueEpi] = useState<EpiCompleto | null>(null);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <HardHat className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-semibold mb-2">Autenticação Necessária</h2>
-          <p className="text-muted-foreground">
-            Faça login para acessar o módulo de EPIs.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const handleCreateEpi = async (data: any) => {
     await criarEpi(data);
