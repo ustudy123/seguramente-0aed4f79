@@ -15,16 +15,32 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { DocumentoAdmissao, DocumentoStatus } from '@/types/admissao';
+import { DocumentoStatus } from '@/types/admissao';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+
+// Extended document type that includes urlPreview
+interface DocumentoAdmissaoExtended {
+  id: string;
+  nome: string;
+  tipo: string;
+  obrigatorio: boolean;
+  status: DocumentoStatus;
+  arquivo?: File;
+  urlPreview?: string;
+  dataEnvio?: Date;
+  observacao?: string;
+}
 
 interface DocumentUploadProps {
-  documentos: DocumentoAdmissao[];
+  documentos: DocumentoAdmissaoExtended[];
   onUpload: (documentoId: string, file: File) => void;
   onRemove: (documentoId: string) => void;
   onApprove?: (documentoId: string) => void;
   onReject?: (documentoId: string, motivo: string) => void;
+  onToggleObrigatorio?: (documentoId: string, obrigatorio: boolean) => void;
   isAdmin?: boolean;
+  editableObrigatorio?: boolean;
 }
 
 const STATUS_CONFIG: Record<DocumentoStatus, { icon: React.ElementType; color: string; label: string }> = {
@@ -40,14 +56,18 @@ function DocumentItem({
   onRemove,
   onApprove,
   onReject,
-  isAdmin 
+  onToggleObrigatorio,
+  isAdmin,
+  editableObrigatorio 
 }: { 
-  documento: DocumentoAdmissao;
+  documento: DocumentoAdmissaoExtended;
   onUpload: (file: File) => void;
   onRemove: () => void;
   onApprove?: () => void;
   onReject?: (motivo: string) => void;
+  onToggleObrigatorio?: (obrigatorio: boolean) => void;
   isAdmin?: boolean;
+  editableObrigatorio?: boolean;
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -81,12 +101,24 @@ function DocumentItem({
     }, 100);
   };
 
+  const hasFile = documento.arquivo || documento.urlPreview;
+
   const getFileIcon = () => {
-    if (documento.arquivo?.type.startsWith('image/')) return Image;
+    if (documento.arquivo?.type?.startsWith('image/')) return Image;
+    if (documento.urlPreview?.match(/\.(jpg|jpeg|png|gif|webp)/i)) return Image;
     return FileText;
   };
 
   const FileIcon = getFileIcon();
+  
+  const getFileName = () => {
+    if (documento.arquivo) return documento.arquivo.name;
+    if (documento.urlPreview) {
+      const urlParts = documento.urlPreview.split('/');
+      return urlParts[urlParts.length - 1].split('-').slice(1).join('-') || 'Arquivo enviado';
+    }
+    return '';
+  };
 
   return (
     <motion.div
@@ -111,7 +143,7 @@ function DocumentItem({
             documento.status === 'enviado' ? "bg-info/10" :
             documento.status === 'aprovado' ? "bg-success/10" : "bg-destructive/10"
           )}>
-            {documento.arquivo ? (
+            {hasFile ? (
               <FileIcon className={cn("h-5 w-5", STATUS_CONFIG[documento.status].color)} />
             ) : (
               <File className="h-5 w-5 text-muted-foreground" />
@@ -119,9 +151,28 @@ function DocumentItem({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-sm text-foreground">{documento.nome}</span>
-              {documento.obrigatorio && (
+              {editableObrigatorio ? (
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id={`obrigatorio-${documento.id}`}
+                    checked={documento.obrigatorio}
+                    onCheckedChange={(checked) => onToggleObrigatorio?.(checked === true)}
+                  />
+                  <label 
+                    htmlFor={`obrigatorio-${documento.id}`}
+                    className="font-medium text-sm text-foreground cursor-pointer"
+                  >
+                    {documento.nome}
+                  </label>
+                </div>
+              ) : (
+                <span className="font-medium text-sm text-foreground">{documento.nome}</span>
+              )}
+              {documento.obrigatorio && !editableObrigatorio && (
                 <Badge variant="outline" className="text-xs">Obrigatório</Badge>
+              )}
+              {!documento.obrigatorio && !editableObrigatorio && (
+                <Badge variant="secondary" className="text-xs">Opcional</Badge>
               )}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
@@ -129,9 +180,9 @@ function DocumentItem({
               <span className={cn("text-xs", STATUS_CONFIG[documento.status].color)}>
                 {STATUS_CONFIG[documento.status].label}
               </span>
-              {documento.arquivo && (
+              {hasFile && (
                 <span className="text-xs text-muted-foreground">
-                  • {documento.arquivo.name}
+                  • {getFileName()}
                 </span>
               )}
             </div>
@@ -177,8 +228,16 @@ function DocumentItem({
             </>
           )}
 
-          {documento.arquivo && documento.status !== 'rejeitado' && (
-            <Button size="sm" variant="ghost">
+          {hasFile && documento.status !== 'rejeitado' && (
+            <Button 
+              size="sm" 
+              variant="ghost"
+              onClick={() => {
+                if (documento.urlPreview) {
+                  window.open(documento.urlPreview, '_blank');
+                }
+              }}
+            >
               <Eye className="h-4 w-4" />
             </Button>
           )}
@@ -219,46 +278,38 @@ export function DocumentUpload({
   onRemove,
   onApprove,
   onReject,
-  isAdmin = false 
+  onToggleObrigatorio,
+  isAdmin = false,
+  editableObrigatorio = false
 }: DocumentUploadProps) {
   const documentosObrigatorios = documentos.filter(d => d.obrigatorio);
   const documentosOpcionais = documentos.filter(d => !d.obrigatorio);
 
-  const enviadosObrigatorios = documentosObrigatorios.filter(d => d.status !== 'pendente').length;
   const aprovadosObrigatorios = documentosObrigatorios.filter(d => d.status === 'aprovado').length;
+  const totalObrigatorios = documentosObrigatorios.length;
 
-  return (
-    <div className="space-y-6">
-      {/* Progress header */}
-      <div className="bg-card rounded-xl border border-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="font-semibold text-foreground">Progresso dos Documentos</h3>
-            <p className="text-sm text-muted-foreground">
-              {aprovadosObrigatorios} de {documentosObrigatorios.length} documentos obrigatórios aprovados
-            </p>
+  // Calculate percentage safely to avoid division by zero
+  const progressPercent = totalObrigatorios > 0 
+    ? Math.round((aprovadosObrigatorios / totalObrigatorios) * 100) 
+    : 0;
+
+  // If editable mode, show all documents in a single list with checkboxes
+  if (editableObrigatorio) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-muted/50 rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold text-foreground text-sm">Configurar Documentos</h3>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold text-primary">
-              {Math.round((aprovadosObrigatorios / documentosObrigatorios.length) * 100)}%
-            </span>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Marque a caixa para tornar o documento obrigatório. Documentos obrigatórios precisam ser enviados para concluir a admissão.
+          </p>
         </div>
-        <Progress 
-          value={(aprovadosObrigatorios / documentosObrigatorios.length) * 100} 
-          className="h-2"
-        />
-      </div>
-
-      {/* Documentos Obrigatórios */}
-      <div>
-        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-warning" />
-          Documentos Obrigatórios ({documentosObrigatorios.length})
-        </h4>
+        
         <div className="space-y-3">
           <AnimatePresence>
-            {documentosObrigatorios.map(doc => (
+            {documentos.map(doc => (
               <DocumentItem
                 key={doc.id}
                 documento={doc}
@@ -266,12 +317,66 @@ export function DocumentUpload({
                 onRemove={() => onRemove(doc.id)}
                 onApprove={() => onApprove?.(doc.id)}
                 onReject={(motivo) => onReject?.(doc.id, motivo)}
+                onToggleObrigatorio={(obrigatorio) => onToggleObrigatorio?.(doc.id, obrigatorio)}
                 isAdmin={isAdmin}
+                editableObrigatorio={editableObrigatorio}
               />
             ))}
           </AnimatePresence>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Progress header */}
+      {totalObrigatorios > 0 && (
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-semibold text-foreground">Progresso dos Documentos</h3>
+              <p className="text-sm text-muted-foreground">
+                {aprovadosObrigatorios} de {totalObrigatorios} documentos obrigatórios aprovados
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-bold text-primary">
+                {progressPercent}%
+              </span>
+            </div>
+          </div>
+          <Progress 
+            value={progressPercent} 
+            className="h-2"
+          />
+        </div>
+      )}
+
+      {/* Documentos Obrigatórios */}
+      {documentosObrigatorios.length > 0 && (
+        <div>
+          <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            Documentos Obrigatórios ({documentosObrigatorios.length})
+          </h4>
+          <div className="space-y-3">
+            <AnimatePresence>
+              {documentosObrigatorios.map(doc => (
+                <DocumentItem
+                  key={doc.id}
+                  documento={doc}
+                  onUpload={(file) => onUpload(doc.id, file)}
+                  onRemove={() => onRemove(doc.id)}
+                  onApprove={() => onApprove?.(doc.id)}
+                  onReject={(motivo) => onReject?.(doc.id, motivo)}
+                  isAdmin={isAdmin}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
 
       {/* Documentos Opcionais */}
       {documentosOpcionais.length > 0 && (
