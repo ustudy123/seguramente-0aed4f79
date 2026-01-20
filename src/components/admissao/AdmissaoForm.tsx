@@ -223,6 +223,14 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
     ));
   };
 
+  const handleToggleObrigatorio = (documentoId: string, obrigatorio: boolean) => {
+    setDocumentos(prev => prev.map(doc =>
+      doc.id === documentoId
+        ? { ...doc, obrigatorio }
+        : doc
+    ));
+  };
+
   const handleFinalSubmit = () => {
     onSubmit({
       dadosPessoais: formPessoais.getValues(),
@@ -787,6 +795,8 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
               documentos={documentos}
               onUpload={handleDocumentUpload}
               onRemove={handleDocumentRemove}
+              onToggleObrigatorio={handleToggleObrigatorio}
+              editableObrigatorio={true}
             />
           </motion.div>
         );
