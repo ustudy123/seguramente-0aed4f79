@@ -68,9 +68,9 @@ const App = () => (
               <Route path="/felicidade" element={<PlaceholderPage />} />
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/configuracoes" element={<PlaceholderPage />} />
+              {/* Catch-all inside protected layout */}
+              <Route path="*" element={<NotFound />} />
             </Route>
-
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
