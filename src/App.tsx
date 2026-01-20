@@ -10,6 +10,7 @@ import Ponto from "./pages/Ponto";
 import Ferias from "./pages/Ferias";
 import Documentos from "./pages/Documentos";
 import Admissao from "./pages/Admissao";
+import Epis from "./pages/Epis";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -36,7 +37,7 @@ const App = () => (
             <Route path="/ferias" element={<Ferias />} />
             <Route path="/avaliacoes" element={<PlaceholderPage />} />
             <Route path="/pdi" element={<PlaceholderPage />} />
-            <Route path="/epis" element={<PlaceholderPage />} />
+            <Route path="/epis" element={<Epis />} />
             <Route path="/felicidade" element={<PlaceholderPage />} />
             <Route path="/documentos" element={<Documentos />} />
             <Route path="/configuracoes" element={<PlaceholderPage />} />
