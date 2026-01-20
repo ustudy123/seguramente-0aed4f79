@@ -155,45 +155,41 @@ export function useAuth() {
 
       let tenantId = userData.tenantId;
 
-      // If creating new tenant (for company registration)
+      // If creating new tenant (company registration), do it via edge function
+      // using Service Role key (bypasses RLS safely).
       if (!tenantId && userData.tenantNome && userData.tenantSlug) {
-        const { data: tenant, error: tenantError } = await supabase
-          .from('tenants')
-          .insert({
-            nome: userData.tenantNome,
-            slug: userData.tenantSlug,
-          })
-          .select()
-          .single();
+        const { data, error: fnError } = await supabase.functions.invoke(
+          'onboarding-signup',
+          {
+            body: {
+              tenantNome: userData.tenantNome,
+              tenantSlug: userData.tenantSlug,
+              nomeCompleto: userData.nomeCompleto,
+            },
+          }
+        );
 
-        if (tenantError) throw tenantError;
-        tenantId = tenant.id;
+        if (fnError) throw fnError;
+        tenantId = (data as any)?.tenantId;
       }
 
       if (!tenantId) throw new Error('Tenant não especificado');
 
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: authData.user.id,
-          tenant_id: tenantId,
-          nome_completo: userData.nomeCompleto,
-        });
-
-      if (profileError) throw profileError;
-
-      // Assign owner role if creating new tenant
-      if (!userData.tenantId && userData.tenantNome) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
+      // Create profile (only when joining an existing tenant)
+      if (userData.tenantId) {
+        const { error: profileError } = await supabase
+          .from('profiles')
           .insert({
             user_id: authData.user.id,
-            role: 'owner',
+            tenant_id: tenantId,
+            nome_completo: userData.nomeCompleto,
           });
 
-        if (roleError) throw roleError;
+        if (profileError) throw profileError;
       }
+
+      // Assign owner role when joining existing tenant is not applicable here.
+      // Owner role is assigned inside the edge function for company registration.
 
       setState(prev => ({ ...prev, loading: false }));
       return { error: null, user: authData.user };
