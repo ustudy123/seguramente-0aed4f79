@@ -1,4 +1,4 @@
-import { Bell, Search, User, ChevronDown } from "lucide-react";
+import { Bell, Search, ChevronDown, LogOut, User, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +11,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useTenant } from "@/hooks/useTenant";
+import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
+  const { profile, signOut } = useAuthContext();
+  const { tenant } = useTenant();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
     <header className="h-16 bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-30">
       {/* Search */}
@@ -26,6 +47,14 @@ export const Header = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-4">
+        {/* Tenant indicator */}
+        {tenant && (
+          <div className="hidden md:block text-right mr-2">
+            <p className="text-xs text-muted-foreground">Empresa</p>
+            <p className="text-sm font-medium">{tenant.nome}</p>
+          </div>
+        )}
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -59,25 +88,40 @@ export const Header = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-3 pl-2 pr-3">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="" />
+                <AvatarImage src={profile?.avatar_url || ""} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                  AD
+                  {profile?.nome_completo ? getInitials(profile.nome_completo) : "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">Admin</p>
-                <p className="text-xs text-muted-foreground">Gestor RH</p>
+                <p className="text-sm font-medium">
+                  {profile?.nome_completo?.split(" ")[0] || "Usuário"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {profile?.cargo || "Colaborador"}
+                </p>
               </div>
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {profile?.nome_completo || "Minha Conta"}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Perfil</DropdownMenuItem>
-            <DropdownMenuItem>Configurações</DropdownMenuItem>
+            <DropdownMenuItem>
+              <User className="w-4 h-4 mr-2" />
+              Perfil
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="w-4 h-4 mr-2" />
+              Configurações
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Sair</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
