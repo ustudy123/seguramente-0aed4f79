@@ -61,6 +61,16 @@ export default function Register() {
     mode: "onChange",
   });
 
+  const translateErrorMessage = (message: string): string => {
+    const translations: Record<string, string> = {
+      "User already registered": "Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.",
+      "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres.",
+      "Invalid email": "E-mail inválido.",
+      "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+    };
+    return translations[message] || message;
+  };
+
   const onSubmit = async (data: RegisterFormData) => {
     const { error } = await signUp(data.email, data.password, {
       nomeCompleto: data.nomeCompleto,
@@ -69,8 +79,9 @@ export default function Register() {
     });
 
     if (error) {
+      const translatedMessage = translateErrorMessage(error.message || "");
       toast.error("Erro ao criar conta", {
-        description: error.message || "Tente novamente mais tarde.",
+        description: translatedMessage || "Tente novamente mais tarde.",
       });
       return;
     }
