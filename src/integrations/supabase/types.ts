@@ -223,6 +223,13 @@ export type Database = {
           endereco: string | null
           estado: string | null
           estado_civil: string | null
+          exame_admissional_clinica: string | null
+          exame_admissional_crm: string | null
+          exame_admissional_data: string | null
+          exame_admissional_medico: string | null
+          exame_admissional_observacoes: string | null
+          exame_admissional_resultado: string | null
+          exame_admissional_validade: string | null
           filial: string | null
           genero: string | null
           gestor_imediato: string | null
@@ -265,6 +272,13 @@ export type Database = {
           endereco?: string | null
           estado?: string | null
           estado_civil?: string | null
+          exame_admissional_clinica?: string | null
+          exame_admissional_crm?: string | null
+          exame_admissional_data?: string | null
+          exame_admissional_medico?: string | null
+          exame_admissional_observacoes?: string | null
+          exame_admissional_resultado?: string | null
+          exame_admissional_validade?: string | null
           filial?: string | null
           genero?: string | null
           gestor_imediato?: string | null
@@ -307,6 +321,13 @@ export type Database = {
           endereco?: string | null
           estado?: string | null
           estado_civil?: string | null
+          exame_admissional_clinica?: string | null
+          exame_admissional_crm?: string | null
+          exame_admissional_data?: string | null
+          exame_admissional_medico?: string | null
+          exame_admissional_observacoes?: string | null
+          exame_admissional_resultado?: string | null
+          exame_admissional_validade?: string | null
           filial?: string | null
           genero?: string | null
           gestor_imediato?: string | null
@@ -343,11 +364,13 @@ export type Database = {
           created_at: string
           departamento_id: string | null
           descricao: string | null
+          exames_obrigatorios: string[] | null
           faixa_salarial_max: number | null
           faixa_salarial_min: number | null
           id: string
           nivel: string | null
           nome: string
+          periodicidade_exame_meses: number | null
           tenant_id: string
           updated_at: string
         }
@@ -356,11 +379,13 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           descricao?: string | null
+          exames_obrigatorios?: string[] | null
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
           id?: string
           nivel?: string | null
           nome: string
+          periodicidade_exame_meses?: number | null
           tenant_id: string
           updated_at?: string
         }
@@ -369,11 +394,13 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           descricao?: string | null
+          exames_obrigatorios?: string[] | null
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
           id?: string
           nivel?: string | null
           nome?: string
+          periodicidade_exame_meses?: number | null
           tenant_id?: string
           updated_at?: string
         }

@@ -106,6 +106,7 @@ export default function Admissao() {
     dadosContato: any;
     dadosProfissionais: any;
     dadosBancarios: any;
+    exameAdmissional?: any;
   }) => {
     try {
       // Convert old format to new format
@@ -144,6 +145,14 @@ export default function Admissao() {
         conta: dados.dadosBancarios.conta,
         tipo_conta: dados.dadosBancarios.tipoConta,
         chave_pix: dados.dadosBancarios.chavePix,
+        // Exame Admissional
+        exame_admissional_data: dados.exameAdmissional?.dataExame || undefined,
+        exame_admissional_validade: dados.exameAdmissional?.dataValidade || undefined,
+        exame_admissional_resultado: dados.exameAdmissional?.resultado || undefined,
+        exame_admissional_clinica: dados.exameAdmissional?.clinica || undefined,
+        exame_admissional_medico: dados.exameAdmissional?.medico || undefined,
+        exame_admissional_crm: dados.exameAdmissional?.crm || undefined,
+        exame_admissional_observacoes: dados.exameAdmissional?.observacoes || undefined,
       };
 
       if (viewMode === 'new') {

@@ -85,6 +85,15 @@ export interface AdmissaoFormData {
   conta?: string;
   tipo_conta?: string;
   chave_pix?: string;
+
+  // Exame Admissional
+  exame_admissional_data?: string;
+  exame_admissional_validade?: string;
+  exame_admissional_resultado?: string;
+  exame_admissional_clinica?: string;
+  exame_admissional_medico?: string;
+  exame_admissional_crm?: string;
+  exame_admissional_observacoes?: string;
 }
 
 // Status labels and colors

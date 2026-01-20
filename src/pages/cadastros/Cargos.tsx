@@ -67,6 +67,8 @@ export default function Cargos() {
     nivel: null as string | null,
     faixa_salarial_min: null as number | null,
     faixa_salarial_max: null as number | null,
+    periodicidade_exame_meses: 12 as number | null,
+    exames_obrigatorios: ['Clínico Geral'] as string[] | null,
     ativo: true,
   });
 
@@ -83,6 +85,8 @@ export default function Cargos() {
       nivel: null,
       faixa_salarial_min: null,
       faixa_salarial_max: null,
+      periodicidade_exame_meses: 12,
+      exames_obrigatorios: ['Clínico Geral'],
       ativo: true,
     });
     setIsFormOpen(true);
@@ -97,6 +101,8 @@ export default function Cargos() {
       nivel: cargo.nivel,
       faixa_salarial_min: cargo.faixa_salarial_min,
       faixa_salarial_max: cargo.faixa_salarial_max,
+      periodicidade_exame_meses: cargo.periodicidade_exame_meses || 12,
+      exames_obrigatorios: cargo.exames_obrigatorios || ['Clínico Geral'],
       ativo: cargo.ativo,
     });
     setIsFormOpen(true);

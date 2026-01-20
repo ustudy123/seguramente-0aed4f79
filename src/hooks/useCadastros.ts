@@ -24,10 +24,12 @@ export interface Cargo {
   nivel: string | null;
   faixa_salarial_min: number | null;
   faixa_salarial_max: number | null;
+  periodicidade_exame_meses: number | null;
+  exames_obrigatorios: string[] | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;
-  departamento?: Departamento;
+  departamento?: Departamento | { id: string; nome: string } | null;
 }
 
 export interface Filial {

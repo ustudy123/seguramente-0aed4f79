@@ -12,11 +12,13 @@ import {
   ChevronLeft, 
   ChevronRight,
   Save,
-  Send
+  Send,
+  Stethoscope
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -36,12 +38,24 @@ import {
 } from '@/types/admissao';
 import { cn } from '@/lib/utils';
 
+// Exame Admissional type
+interface DadosExameAdmissional {
+  dataExame: string;
+  dataValidade: string;
+  resultado: string;
+  clinica: string;
+  medico: string;
+  crm: string;
+  observacoes: string;
+}
+
 const STEPS = [
   { id: 1, title: 'Dados Pessoais', description: 'Informações básicas', icon: User },
   { id: 2, title: 'Contato', description: 'Endereço e telefone', icon: MapPin },
   { id: 3, title: 'Profissional', description: 'Cargo e salário', icon: Briefcase },
   { id: 4, title: 'Bancários', description: 'Dados bancários', icon: CreditCard },
-  { id: 5, title: 'Documentos', description: 'Upload de arquivos', icon: FileText },
+  { id: 5, title: 'Exame Admissional', description: 'Dados do exame médico', icon: Stethoscope },
+  { id: 6, title: 'Documentos', description: 'Upload de arquivos', icon: FileText },
 ];
 
 // Schemas for validation
@@ -91,12 +105,23 @@ const dadosBancariosSchema = z.object({
   chavePix: z.string().optional(),
 });
 
+const exameAdmissionalSchema = z.object({
+  dataExame: z.string().optional(),
+  dataValidade: z.string().optional(),
+  resultado: z.string().optional(),
+  clinica: z.string().optional(),
+  medico: z.string().optional(),
+  crm: z.string().optional(),
+  observacoes: z.string().optional(),
+});
+
 interface AdmissaoFormProps {
   onSubmit: (dados: {
     dadosPessoais: DadosPessoais;
     dadosContato: DadosContato;
     dadosProfissionais: DadosProfissionais;
     dadosBancarios: DadosBancarios;
+    exameAdmissional?: DadosExameAdmissional;
   }) => void;
   onCancel: () => void;
   initialData?: {
@@ -104,6 +129,7 @@ interface AdmissaoFormProps {
     dadosContato?: Partial<DadosContato>;
     dadosProfissionais?: Partial<DadosProfissionais>;
     dadosBancarios?: Partial<DadosBancarios>;
+    exameAdmissional?: Partial<DadosExameAdmissional>;
   };
 }
 
@@ -179,6 +205,20 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
     },
   });
 
+  // Form for step 5 - Exame Admissional
+  const formExame = useForm<DadosExameAdmissional>({
+    resolver: zodResolver(exameAdmissionalSchema),
+    defaultValues: initialData?.exameAdmissional || {
+      dataExame: '',
+      dataValidade: '',
+      resultado: '',
+      clinica: '',
+      medico: '',
+      crm: '',
+      observacoes: '',
+    },
+  });
+
   const validateCurrentStep = async (): Promise<boolean> => {
     switch (currentStep) {
       case 1:
@@ -189,6 +229,8 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
         return formProfissionais.trigger();
       case 4:
         return formBancarios.trigger();
+      case 5:
+        return formExame.trigger();
       default:
         return true;
     }
@@ -196,7 +238,7 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
 
   const handleNext = async () => {
     const isValid = await validateCurrentStep();
-    if (isValid && currentStep < 5) {
+    if (isValid && currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -237,6 +279,7 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
       dadosContato: formContato.getValues(),
       dadosProfissionais: formProfissionais.getValues(),
       dadosBancarios: formBancarios.getValues(),
+      exameAdmissional: formExame.getValues(),
     });
   };
 
@@ -790,6 +833,107 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="bg-muted/50 rounded-lg p-4 border border-border mb-4">
+              <div className="flex items-center gap-2">
+                <Stethoscope className="h-5 w-5 text-primary" />
+                <div>
+                  <h4 className="font-medium text-foreground">Exame Admissional</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Informações sobre o exame médico ocupacional de admissão
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dataExame">Data do Exame</Label>
+                <Input 
+                  id="dataExame"
+                  type="date"
+                  {...formExame.register('dataExame')}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="dataValidade">Validade do Exame</Label>
+                <Input 
+                  id="dataValidade"
+                  type="date"
+                  {...formExame.register('dataValidade')}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  A periodicidade varia conforme o cargo e riscos ocupacionais
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="resultado">Resultado</Label>
+                <Select 
+                  value={formExame.watch('resultado')}
+                  onValueChange={(value) => formExame.setValue('resultado', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o resultado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apto">Apto</SelectItem>
+                    <SelectItem value="inapto">Inapto</SelectItem>
+                    <SelectItem value="apto_com_restricoes">Apto com Restrições</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="clinica">Clínica / Hospital</Label>
+                <Input 
+                  id="clinica"
+                  {...formExame.register('clinica')}
+                  placeholder="Nome da clínica ou hospital"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="medico">Médico Responsável</Label>
+                <Input 
+                  id="medico"
+                  {...formExame.register('medico')}
+                  placeholder="Nome do médico"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="crm">CRM</Label>
+                <Input 
+                  id="crm"
+                  {...formExame.register('crm')}
+                  placeholder="Ex: CRM/SP 123456"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="observacoes">Observações</Label>
+                <Textarea 
+                  id="observacoes"
+                  {...formExame.register('observacoes')}
+                  placeholder="Observações sobre o exame, restrições, recomendações, etc."
+                  rows={3}
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 6:
+        return (
+          <motion.div
+            key="step6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
           >
             <DocumentUpload
               documentos={documentos}
@@ -848,7 +992,7 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
         </Button>
 
         <div className="flex gap-2">
-          {currentStep === 5 ? (
+          {currentStep === 6 ? (
             <>
               <Button variant="outline" onClick={handleFinalSubmit}>
                 <Save className="h-4 w-4 mr-1" />
