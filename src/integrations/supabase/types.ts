@@ -337,6 +337,104 @@ export type Database = {
           },
         ]
       }
+      cargos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          departamento_id: string | null
+          descricao: string | null
+          faixa_salarial_max: number | null
+          faixa_salarial_min: number | null
+          id: string
+          nivel: string | null
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          departamento_id?: string | null
+          descricao?: string | null
+          faixa_salarial_max?: number | null
+          faixa_salarial_min?: number | null
+          id?: string
+          nivel?: string | null
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          departamento_id?: string | null
+          descricao?: string | null
+          faixa_salarial_max?: number | null
+          faixa_salarial_min?: number | null
+          id?: string
+          nivel?: string | null
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cargos_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cargos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departamentos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          responsavel_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          responsavel_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          responsavel_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_entregas: {
         Row: {
           colaborador_cargo: string | null
@@ -593,6 +691,65 @@ export type Database = {
             columns: ["tipo_id"]
             isOneToOne: false
             referencedRelation: "epi_tipos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filiais: {
+        Row: {
+          ativo: boolean
+          cep: string | null
+          cidade: string | null
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: string
+          nome: string
+          responsavel_id: string | null
+          telefone: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          nome: string
+          responsavel_id?: string | null
+          telefone?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string
+          responsavel_id?: string | null
+          telefone?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filiais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
