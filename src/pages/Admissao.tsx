@@ -331,6 +331,8 @@ export default function Admissao() {
       tipo: d.tipo,
       obrigatorio: d.obrigatorio,
       status: d.status,
+      arquivo_url: d.arquivo_url || undefined,
+      arquivo_nome: d.arquivo_nome || undefined,
       urlPreview: d.arquivo_url || undefined,
       dataEnvio: d.data_envio ? new Date(d.data_envio) : undefined,
       observacao: d.observacao || undefined,

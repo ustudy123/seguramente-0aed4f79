@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Extended document type that includes urlPreview
 interface DocumentoAdmissaoExtended {
@@ -110,7 +111,7 @@ function DocumentItem({
     }, 100);
   };
 
-  const hasFile = documento.arquivo || documento.arquivo_url || documento.urlPreview;
+  const hasFile = documento.arquivo || documento.arquivo_url || documento.urlPreview || documento.arquivo_nome;
 
   const getFileIcon = () => {
     const fileName = documento.arquivo?.name || documento.arquivo_nome || documento.arquivo_url || '';
@@ -132,9 +133,27 @@ function DocumentItem({
   };
 
   const handleViewDocument = useCallback(async () => {
+    // For local File objects (not yet uploaded to storage)
+    if (documento.arquivo instanceof File) {
+      const localUrl = URL.createObjectURL(documento.arquivo);
+      const isImage = documento.arquivo.type.startsWith('image/');
+      
+      if (isImage) {
+        setPreviewUrl(localUrl);
+        setPreviewOpen(true);
+      } else {
+        window.open(localUrl, '_blank');
+      }
+      return;
+    }
+    
     const filePath = documento.arquivo_url || documento.urlPreview;
     
-    if (!filePath) return;
+    if (!filePath) {
+      console.error('No file path available for document:', documento.nome);
+      toast.error('Documento ainda não foi salvo no servidor. Salve a admissão primeiro.');
+      return;
+    }
     
     // If it's already a full URL, open directly
     if (filePath.startsWith('http')) {
@@ -151,6 +170,7 @@ function DocumentItem({
       
       if (error) {
         console.error('Error creating signed URL:', error);
+        toast.error('Erro ao gerar link de visualização. Verifique se o arquivo foi enviado corretamente.');
         return;
       }
       
