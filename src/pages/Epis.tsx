@@ -1,0 +1,224 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, HardHat, Package, Users, History, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEpis } from "@/hooks/useEpis";
+import { useAuth } from "@/hooks/useAuth";
+import { EpiStats } from "@/components/epi/EpiStats";
+import { EpiList } from "@/components/epi/EpiList";
+import { EpiForm } from "@/components/epi/EpiForm";
+import { EpiTipoForm } from "@/components/epi/EpiTipoForm";
+import { EpiEntregaForm } from "@/components/epi/EpiEntregaForm";
+import { EpiEntregaList } from "@/components/epi/EpiEntregaList";
+import { EpiMovimentacoes } from "@/components/epi/EpiMovimentacoes";
+import { AjustarEstoqueModal } from "@/components/epi/AjustarEstoqueModal";
+import type { EpiCompleto } from "@/types/epi";
+
+const Epis = () => {
+  const { isAuthenticated } = useAuth();
+  const {
+    tipos,
+    tiposLoading,
+    epis,
+    episLoading,
+    entregas,
+    entregasLoading,
+    movimentacoes,
+    movimentacoesLoading,
+    stats,
+    criarTipo,
+    criandoTipo,
+    criarEpi,
+    criandoEpi,
+    atualizarEpi,
+    atualizandoEpi,
+    excluirEpi,
+    ajustarEstoque,
+    registrarEntrega,
+    registrandoEntrega,
+    registrarDevolucao,
+  } = useEpis();
+
+  const [activeTab, setActiveTab] = useState("estoque");
+  const [showTipoForm, setShowTipoForm] = useState(false);
+  const [showEpiForm, setShowEpiForm] = useState(false);
+  const [showEntregaForm, setShowEntregaForm] = useState(false);
+  const [editingEpi, setEditingEpi] = useState<EpiCompleto | null>(null);
+  const [ajustarEstoqueEpi, setAjustarEstoqueEpi] = useState<EpiCompleto | null>(null);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <HardHat className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-xl font-semibold mb-2">Autenticação Necessária</h2>
+          <p className="text-muted-foreground">
+            Faça login para acessar o módulo de EPIs.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleCreateEpi = async (data: any) => {
+    await criarEpi(data);
+  };
+
+  const handleUpdateEpi = async (data: any) => {
+    if (editingEpi) {
+      await atualizarEpi({ id: editingEpi.id, ...data });
+      setEditingEpi(null);
+    }
+  };
+
+  const handleEditEpi = (epi: EpiCompleto) => {
+    setEditingEpi(epi);
+    setShowEpiForm(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <HardHat className="w-7 h-7 text-primary" />
+            Gestão de EPIs
+          </h1>
+          <p className="text-muted-foreground">
+            Controle de equipamentos de proteção individual
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowTipoForm(true)}>
+            <Settings className="w-4 h-4 mr-2" />
+            Novo Tipo
+          </Button>
+          <Button variant="outline" onClick={() => setShowEntregaForm(true)}>
+            <Users className="w-4 h-4 mr-2" />
+            Registrar Entrega
+          </Button>
+          <Button onClick={() => setShowEpiForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Novo EPI
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Stats */}
+      <EpiStats stats={stats} />
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="estoque" className="flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            Estoque
+          </TabsTrigger>
+          <TabsTrigger value="entregas" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Entregas
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="flex items-center gap-2">
+            <History className="w-4 h-4" />
+            Histórico
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="estoque" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-card rounded-xl border p-6"
+          >
+            <h2 className="text-lg font-semibold mb-4">EPIs em Estoque</h2>
+            <EpiList
+              epis={epis}
+              isLoading={episLoading}
+              onEdit={handleEditEpi}
+              onDelete={excluirEpi}
+              onAjustarEstoque={setAjustarEstoqueEpi}
+            />
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="entregas" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-card rounded-xl border p-6"
+          >
+            <h2 className="text-lg font-semibold mb-4">Controle de Entregas</h2>
+            <EpiEntregaList
+              entregas={entregas}
+              isLoading={entregasLoading}
+              onDevolucao={async (id, obs) => {
+                await registrarDevolucao({ entregaId: id, observacoes: obs });
+              }}
+            />
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="historico" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-card rounded-xl border p-6"
+          >
+            <h2 className="text-lg font-semibold mb-4">Histórico de Movimentações</h2>
+            <EpiMovimentacoes
+              movimentacoes={movimentacoes}
+              isLoading={movimentacoesLoading}
+            />
+          </motion.div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      <EpiTipoForm
+        open={showTipoForm}
+        onOpenChange={setShowTipoForm}
+        onSubmit={async (data) => { await criarTipo(data); }}
+        isLoading={criandoTipo}
+      />
+
+      <EpiForm
+        open={showEpiForm || !!editingEpi}
+        onOpenChange={(open) => {
+          setShowEpiForm(open);
+          if (!open) setEditingEpi(null);
+        }}
+        onSubmit={editingEpi ? handleUpdateEpi : handleCreateEpi}
+        tipos={tipos}
+        epi={editingEpi}
+        isLoading={criandoEpi || atualizandoEpi}
+      />
+
+      <EpiEntregaForm
+        open={showEntregaForm}
+        onOpenChange={setShowEntregaForm}
+        onSubmit={async (data) => { await registrarEntrega(data); }}
+        epis={epis}
+        isLoading={registrandoEntrega}
+      />
+
+      <AjustarEstoqueModal
+        epi={ajustarEstoqueEpi}
+        open={!!ajustarEstoqueEpi}
+        onOpenChange={(open) => {
+          if (!open) setAjustarEstoqueEpi(null);
+        }}
+        onConfirm={async (epiId, novaQuantidade, motivo) => {
+          await ajustarEstoque({ epiId, novaQuantidade, motivo });
+        }}
+      />
+    </div>
+  );
+};
+
+export default Epis;

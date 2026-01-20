@@ -337,6 +337,266 @@ export type Database = {
           },
         ]
       }
+      epi_entregas: {
+        Row: {
+          colaborador_cargo: string | null
+          colaborador_cpf: string | null
+          colaborador_departamento: string | null
+          colaborador_nome: string
+          created_at: string
+          data_devolucao_efetiva: string | null
+          data_devolucao_prevista: string | null
+          data_entrega: string
+          entregue_por: string | null
+          entregue_por_nome: string | null
+          epi_id: string
+          id: string
+          motivo_entrega: string | null
+          observacoes: string | null
+          quantidade: number
+          recebido_por_assinatura: string | null
+          status: Database["public"]["Enums"]["entrega_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_departamento?: string | null
+          colaborador_nome: string
+          created_at?: string
+          data_devolucao_efetiva?: string | null
+          data_devolucao_prevista?: string | null
+          data_entrega?: string
+          entregue_por?: string | null
+          entregue_por_nome?: string | null
+          epi_id: string
+          id?: string
+          motivo_entrega?: string | null
+          observacoes?: string | null
+          quantidade?: number
+          recebido_por_assinatura?: string | null
+          status?: Database["public"]["Enums"]["entrega_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_departamento?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          data_devolucao_efetiva?: string | null
+          data_devolucao_prevista?: string | null
+          data_entrega?: string
+          entregue_por?: string | null
+          entregue_por_nome?: string | null
+          epi_id?: string
+          id?: string
+          motivo_entrega?: string | null
+          observacoes?: string | null
+          quantidade?: number
+          recebido_por_assinatura?: string | null
+          status?: Database["public"]["Enums"]["entrega_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_entregas_epi_id_fkey"
+            columns: ["epi_id"]
+            isOneToOne: false
+            referencedRelation: "epis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_entregas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_movimentacoes: {
+        Row: {
+          created_at: string
+          documento_referencia: string | null
+          epi_id: string
+          id: string
+          motivo: string | null
+          quantidade: number
+          quantidade_anterior: number
+          quantidade_atual: number
+          realizado_por: string | null
+          realizado_por_nome: string | null
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          documento_referencia?: string | null
+          epi_id: string
+          id?: string
+          motivo?: string | null
+          quantidade: number
+          quantidade_anterior: number
+          quantidade_atual: number
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          documento_referencia?: string | null
+          epi_id?: string
+          id?: string
+          motivo?: string | null
+          quantidade?: number
+          quantidade_anterior?: number
+          quantidade_atual?: number
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_movimentacoes_epi_id_fkey"
+            columns: ["epi_id"]
+            isOneToOne: false
+            referencedRelation: "epis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_movimentacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_tipos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          obrigatorio_para_funcoes: string[] | null
+          tenant_id: string
+          updated_at: string
+          validade_meses: number | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          obrigatorio_para_funcoes?: string[] | null
+          tenant_id: string
+          updated_at?: string
+          validade_meses?: number | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          obrigatorio_para_funcoes?: string[] | null
+          tenant_id?: string
+          updated_at?: string
+          validade_meses?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_tipos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epis: {
+        Row: {
+          ca: string | null
+          codigo: string | null
+          created_at: string
+          custo_unitario: number | null
+          data_fabricacao: string | null
+          data_validade: string | null
+          id: string
+          localizacao: string | null
+          marca: string | null
+          modelo: string | null
+          observacoes: string | null
+          quantidade_estoque: number
+          quantidade_minima: number
+          status: Database["public"]["Enums"]["epi_status"]
+          tamanho: string | null
+          tenant_id: string
+          tipo_id: string
+          updated_at: string
+        }
+        Insert: {
+          ca?: string | null
+          codigo?: string | null
+          created_at?: string
+          custo_unitario?: number | null
+          data_fabricacao?: string | null
+          data_validade?: string | null
+          id?: string
+          localizacao?: string | null
+          marca?: string | null
+          modelo?: string | null
+          observacoes?: string | null
+          quantidade_estoque?: number
+          quantidade_minima?: number
+          status?: Database["public"]["Enums"]["epi_status"]
+          tamanho?: string | null
+          tenant_id: string
+          tipo_id: string
+          updated_at?: string
+        }
+        Update: {
+          ca?: string | null
+          codigo?: string | null
+          created_at?: string
+          custo_unitario?: number | null
+          data_fabricacao?: string | null
+          data_validade?: string | null
+          id?: string
+          localizacao?: string | null
+          marca?: string | null
+          modelo?: string | null
+          observacoes?: string | null
+          quantidade_estoque?: number
+          quantidade_minima?: number
+          status?: Database["public"]["Enums"]["epi_status"]
+          tamanho?: string | null
+          tenant_id?: string
+          tipo_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epis_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epis_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "epi_tipos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -469,6 +729,13 @@ export type Database = {
         | "concluido"
       app_role: "owner" | "admin" | "manager" | "user"
       documento_status: "pendente" | "enviado" | "aprovado" | "rejeitado"
+      entrega_status: "ativa" | "devolvido" | "extraviado" | "vencido"
+      epi_status:
+        | "disponivel"
+        | "em_uso"
+        | "danificado"
+        | "vencido"
+        | "descartado"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
@@ -608,6 +875,14 @@ export const Constants = {
       ],
       app_role: ["owner", "admin", "manager", "user"],
       documento_status: ["pendente", "enviado", "aprovado", "rejeitado"],
+      entrega_status: ["ativa", "devolvido", "extraviado", "vencido"],
+      epi_status: [
+        "disponivel",
+        "em_uso",
+        "danificado",
+        "vencido",
+        "descartado",
+      ],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },

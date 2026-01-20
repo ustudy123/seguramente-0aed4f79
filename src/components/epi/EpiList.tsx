@@ -1,0 +1,245 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  Edit,
+  Trash2,
+  Package,
+  AlertTriangle,
+  Calendar,
+  MoreHorizontal,
+} from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { EpiCompleto } from "@/types/epi";
+import { EPI_STATUS_LABELS, EPI_STATUS_COLORS } from "@/types/epi";
+
+interface EpiListProps {
+  epis: EpiCompleto[];
+  isLoading?: boolean;
+  onEdit: (epi: EpiCompleto) => void;
+  onDelete: (id: string) => Promise<void>;
+  onAjustarEstoque: (epi: EpiCompleto) => void;
+}
+
+export function EpiList({
+  epis,
+  isLoading,
+  onEdit,
+  onDelete,
+  onAjustarEstoque,
+}: EpiListProps) {
+  const [search, setSearch] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const filtered = epis.filter(
+    (epi) =>
+      epi.tipo.nome.toLowerCase().includes(search.toLowerCase()) ||
+      epi.marca?.toLowerCase().includes(search.toLowerCase()) ||
+      epi.modelo?.toLowerCase().includes(search.toLowerCase()) ||
+      epi.codigo?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const isVencido = (dataValidade: string | null) => {
+    if (!dataValidade) return false;
+    return new Date(dataValidade) < new Date();
+  };
+
+  const isEstoqueBaixo = (epi: EpiCompleto) => {
+    return epi.quantidade_estoque <= epi.quantidade_minima;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Buscar EPIs..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="max-w-sm"
+      />
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhum EPI encontrado</p>
+        </div>
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>EPI</TableHead>
+                <TableHead>CA</TableHead>
+                <TableHead>Marca / Modelo</TableHead>
+                <TableHead>Tamanho</TableHead>
+                <TableHead className="text-center">Estoque</TableHead>
+                <TableHead>Validade</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((epi, index) => (
+                <motion.tr
+                  key={epi.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.02 }}
+                  className="border-b transition-colors hover:bg-muted/50"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{epi.tipo.nome}</span>
+                      {epi.codigo && (
+                        <Badge variant="outline" className="text-xs">
+                          {epi.codigo}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {epi.ca || "-"}
+                  </TableCell>
+                  <TableCell>
+                    {epi.marca || "-"}
+                    {epi.modelo && <span className="text-muted-foreground"> / {epi.modelo}</span>}
+                  </TableCell>
+                  <TableCell>{epi.tamanho || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      {isEstoqueBaixo(epi) && (
+                        <AlertTriangle className="w-4 h-4 text-orange-500" />
+                      )}
+                      <span
+                        className={
+                          isEstoqueBaixo(epi)
+                            ? "text-orange-500 font-semibold"
+                            : ""
+                        }
+                      >
+                        {epi.quantidade_estoque}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {epi.data_validade ? (
+                      <div className="flex items-center gap-1">
+                        {isVencido(epi.data_validade) && (
+                          <Calendar className="w-4 h-4 text-red-500" />
+                        )}
+                        <span
+                          className={
+                            isVencido(epi.data_validade)
+                              ? "text-red-500 font-semibold"
+                              : ""
+                          }
+                        >
+                          {format(new Date(epi.data_validade), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })}
+                        </span>
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={EPI_STATUS_COLORS[epi.status]}>
+                      {EPI_STATUS_LABELS[epi.status]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(epi)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onAjustarEstoque(epi)}>
+                          <Package className="w-4 h-4 mr-2" />
+                          Ajustar Estoque
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setDeleteId(epi.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir EPI?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O EPI e todo seu histórico de
+              entregas serão removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deleteId) {
+                  await onDelete(deleteId);
+                  setDeleteId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
