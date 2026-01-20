@@ -25,6 +25,11 @@ import Epis from "./pages/Epis";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
+// Cadastros Pages
+import Departamentos from "./pages/cadastros/Departamentos";
+import Cargos from "./pages/cadastros/Cargos";
+import Filiais from "./pages/cadastros/Filiais";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -54,9 +59,9 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/feed" element={<PlaceholderPage />} />
               <Route path="/colaboradores" element={<Colaboradores />} />
-              <Route path="/cadastros/departamentos" element={<PlaceholderPage />} />
-              <Route path="/cadastros/cargos" element={<PlaceholderPage />} />
-              <Route path="/cadastros/filiais" element={<PlaceholderPage />} />
+              <Route path="/cadastros/departamentos" element={<Departamentos />} />
+              <Route path="/cadastros/cargos" element={<Cargos />} />
+              <Route path="/cadastros/filiais" element={<Filiais />} />
               <Route path="/financeiro/folha" element={<PlaceholderPage />} />
               <Route path="/financeiro/beneficios" element={<PlaceholderPage />} />
               <Route path="/ponto" element={<Ponto />} />
