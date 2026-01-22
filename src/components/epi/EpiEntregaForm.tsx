@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef } from "react";
-import { Camera, X, Upload, Image } from "lucide-react";
+import { useState, useRef, useMemo } from "react";
+import { Camera, X, Upload, Search, UserCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +24,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { EpiCompleto } from "@/types/epi";
 import { MOTIVOS_ENTREGA } from "@/types/epi";
+import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 
 const schema = z.object({
   epi_id: z.string().min(1, "Selecione o EPI"),
@@ -73,7 +88,12 @@ export function EpiEntregaForm({
 }: EpiEntregaFormProps) {
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [colaboradorOpen, setColaboradorOpen] = useState(false);
+  const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -92,6 +112,35 @@ export function EpiEntregaForm({
 
   const selectedEpiId = form.watch("epi_id");
   const selectedEpi = epis.find((e) => e.id === selectedEpiId);
+
+  // Filtrar colaboradores baseado na busca
+  const filteredColaboradores = useMemo(() => {
+    if (!searchQuery) return colaboradores;
+    const query = searchQuery.toLowerCase();
+    return colaboradores.filter(
+      (c) =>
+        c.nome_completo.toLowerCase().includes(query) ||
+        c.cpf.includes(query) ||
+        c.cargo?.toLowerCase().includes(query)
+    );
+  }, [colaboradores, searchQuery]);
+
+  const handleSelectColaborador = (colaborador: Colaborador) => {
+    setSelectedColaborador(colaborador);
+    form.setValue("colaborador_nome", colaborador.nome_completo);
+    form.setValue("colaborador_cpf", colaborador.cpf);
+    form.setValue("colaborador_cargo", colaborador.cargo);
+    form.setValue("colaborador_departamento", colaborador.departamento || "");
+    setColaboradorOpen(false);
+  };
+
+  const handleClearColaborador = () => {
+    setSelectedColaborador(null);
+    form.setValue("colaborador_nome", "");
+    form.setValue("colaborador_cpf", "");
+    form.setValue("colaborador_cargo", "");
+    form.setValue("colaborador_departamento", "");
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -129,6 +178,7 @@ export function EpiEntregaForm({
     form.reset();
     setFoto(null);
     setFotoPreview(null);
+    setSelectedColaborador(null);
     onOpenChange(false);
   };
 
@@ -182,6 +232,99 @@ export function EpiEntregaForm({
               </div>
             )}
 
+            {/* Seleção de Colaborador */}
+            <div className="space-y-2">
+              <FormLabel>Colaborador *</FormLabel>
+              {colaboradores.length > 0 ? (
+                <div className="space-y-2">
+                  <Popover open={colaboradorOpen} onOpenChange={setColaboradorOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={colaboradorOpen}
+                        className={cn(
+                          "w-full justify-between",
+                          !selectedColaborador && "text-muted-foreground"
+                        )}
+                      >
+                        {selectedColaborador ? (
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-primary" />
+                            <span>{selectedColaborador.nome_completo}</span>
+                            <Badge variant="secondary" className="ml-auto">
+                              {selectedColaborador.cargo}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Search className="h-4 w-4" />
+                            Buscar colaborador...
+                          </span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command shouldFilter={false}>
+                        <CommandInput 
+                          placeholder="Buscar por nome, CPF ou cargo..." 
+                          value={searchQuery}
+                          onValueChange={setSearchQuery}
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            {loadingColaboradores ? "Carregando..." : "Nenhum colaborador encontrado."}
+                          </CommandEmpty>
+                          <CommandGroup heading="Colaboradores">
+                            {filteredColaboradores.map((colaborador) => (
+                              <CommandItem
+                                key={colaborador.id}
+                                value={colaborador.id}
+                                onSelect={() => handleSelectColaborador(colaborador)}
+                                className="flex flex-col items-start gap-1 py-3"
+                              >
+                                <div className="flex items-center gap-2 w-full">
+                                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">{colaborador.nome_completo}</span>
+                                </div>
+                                <div className="flex gap-2 text-xs text-muted-foreground ml-6">
+                                  <span>CPF: {colaborador.cpf}</span>
+                                  {colaborador.cargo && <span>• {colaborador.cargo}</span>}
+                                  {colaborador.departamento && <span>• {colaborador.departamento}</span>}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  {selectedColaborador && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="gap-1">
+                        <UserCheck className="h-3 w-3" />
+                        Colaborador selecionado
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearColaborador}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Limpar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum colaborador cadastrado. Complete uma admissão primeiro ou preencha manualmente abaixo.
+                </p>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -190,7 +333,11 @@ export function EpiEntregaForm({
                   <FormItem>
                     <FormLabel>Nome do Colaborador *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome completo" {...field} />
+                      <Input 
+                        placeholder="Nome completo" 
+                        {...field} 
+                        disabled={!!selectedColaborador}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -204,7 +351,11 @@ export function EpiEntregaForm({
                   <FormItem>
                     <FormLabel>CPF</FormLabel>
                     <FormControl>
-                      <Input placeholder="000.000.000-00" {...field} />
+                      <Input 
+                        placeholder="000.000.000-00" 
+                        {...field} 
+                        disabled={!!selectedColaborador}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -218,7 +369,11 @@ export function EpiEntregaForm({
                   <FormItem>
                     <FormLabel>Cargo</FormLabel>
                     <FormControl>
-                      <Input placeholder="Cargo do colaborador" {...field} />
+                      <Input 
+                        placeholder="Cargo do colaborador" 
+                        {...field} 
+                        disabled={!!selectedColaborador}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -232,7 +387,11 @@ export function EpiEntregaForm({
                   <FormItem>
                     <FormLabel>Departamento</FormLabel>
                     <FormControl>
-                      <Input placeholder="Setor" {...field} />
+                      <Input 
+                        placeholder="Setor" 
+                        {...field} 
+                        disabled={!!selectedColaborador}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
