@@ -12,7 +12,9 @@ import {
   MoreHorizontal,
   Eye,
   Trash2,
-  Clock
+  Clock,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,88 +33,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-
-interface Documento {
-  id: number;
-  nome: string;
-  tipo: string;
-  colaborador: string;
-  dataUpload: string;
-  dataValidade?: string;
-  status: "valido" | "vencendo" | "vencido";
-  tamanho: string;
-}
-
-const documentos: Documento[] = [
-  {
-    id: 1,
-    nome: "Contrato_Ana_Silva.pdf",
-    tipo: "Contrato",
-    colaborador: "Ana Carolina Silva",
-    dataUpload: "2024-01-15",
-    status: "valido",
-    tamanho: "245 KB",
-  },
-  {
-    id: 2,
-    nome: "ASO_Carlos_Mendes.pdf",
-    tipo: "ASO",
-    colaborador: "Carlos Eduardo Mendes",
-    dataUpload: "2024-06-01",
-    dataValidade: "2025-01-25",
-    status: "vencendo",
-    tamanho: "180 KB",
-  },
-  {
-    id: 3,
-    nome: "Certificado_NR35_Paula.pdf",
-    tipo: "Certificado",
-    colaborador: "Paula Santos Oliveira",
-    dataUpload: "2023-03-10",
-    dataValidade: "2025-03-10",
-    status: "valido",
-    tamanho: "512 KB",
-  },
-  {
-    id: 4,
-    nome: "ASO_Joao_Almeida.pdf",
-    tipo: "ASO",
-    colaborador: "João Pedro Almeida",
-    dataUpload: "2023-09-20",
-    dataValidade: "2024-12-20",
-    status: "vencido",
-    tamanho: "156 KB",
-  },
-  {
-    id: 5,
-    nome: "Ficha_Registro_Maria.pdf",
-    tipo: "Ficha de Registro",
-    colaborador: "Maria Fernanda Costa",
-    dataUpload: "2024-02-01",
-    status: "valido",
-    tamanho: "320 KB",
-  },
-  {
-    id: 6,
-    nome: "CTPS_Roberto_Lima.pdf",
-    tipo: "CTPS",
-    colaborador: "Roberto Carlos Lima",
-    dataUpload: "2021-11-15",
-    status: "valido",
-    tamanho: "890 KB",
-  },
-];
-
-const categorias = [
-  { nome: "Contratos", icon: FileText, count: 45 },
-  { nome: "ASOs", icon: FileCheck, count: 198 },
-  { nome: "Certificados", icon: File, count: 89 },
-  { nome: "Fichas de Registro", icon: Folder, count: 198 },
-  { nome: "CTPS", icon: FileText, count: 198 },
-  { nome: "Outros", icon: Folder, count: 56 },
-];
+import { useDocumentos, TIPOS_DOCUMENTO, type Documento } from "@/hooks/useDocumentos";
+import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
 
 const statusConfig = {
   valido: {
@@ -136,20 +70,51 @@ const Documentos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [tipoFilter, setTipoFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [documentoToDelete, setDocumentoToDelete] = useState<Documento | null>(null);
+
+  const { 
+    documentos, 
+    isLoading, 
+    stats, 
+    tiposUnicos,
+    deleteDocumento,
+    deleting,
+    getSignedUrl,
+  } = useDocumentos();
 
   const filteredDocs = documentos.filter((doc) => {
     const matchesSearch = 
-      doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.colaborador.toLowerCase().includes(searchTerm.toLowerCase());
+      doc.nome_original.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTipo = tipoFilter === "all" || doc.tipo === tipoFilter;
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
     return matchesSearch && matchesTipo && matchesStatus;
   });
 
-  const stats = {
-    total: documentos.length,
-    vencendo: documentos.filter((d) => d.status === "vencendo").length,
-    vencidos: documentos.filter((d) => d.status === "vencido").length,
+  // Agrupar por tipo para aba de categorias
+  const categorias = tiposUnicos.map((tipo) => ({
+    nome: tipo,
+    count: documentos.filter((d) => d.tipo === tipo).length,
+  }));
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
+  const handleDownload = async (doc: Documento) => {
+    const url = await getSignedUrl(doc.storage_path);
+    if (url) {
+      window.open(url, "_blank");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!documentoToDelete) return;
+    await deleteDocumento(documentoToDelete);
+    setDocumentoToDelete(null);
   };
 
   return (
@@ -165,7 +130,7 @@ const Documentos = () => {
           <h1 className="text-2xl font-bold text-foreground">Documentos</h1>
           <p className="text-muted-foreground">Gestão de arquivos e documentos</p>
         </div>
-        <Button className="gradient-primary shadow-glow">
+        <Button className="gradient-primary shadow-glow" onClick={() => setShowUploadForm(true)}>
           <Upload className="w-4 h-4 mr-2" />
           Upload de Documento
         </Button>
@@ -244,11 +209,9 @@ const Documentos = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos Tipos</SelectItem>
-                  <SelectItem value="Contrato">Contrato</SelectItem>
-                  <SelectItem value="ASO">ASO</SelectItem>
-                  <SelectItem value="Certificado">Certificado</SelectItem>
-                  <SelectItem value="Ficha de Registro">Ficha de Registro</SelectItem>
-                  <SelectItem value="CTPS">CTPS</SelectItem>
+                  {TIPOS_DOCUMENTO.map((tipo) => (
+                    <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -272,71 +235,95 @@ const Documentos = () => {
             transition={{ duration: 0.4, delay: 0.25 }}
             className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
           >
-            <div className="divide-y divide-border">
-              {filteredDocs.map((doc, index) => {
-                const config = statusConfig[doc.status];
-                return (
-                  <motion.div
-                    key={doc.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
-                    className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn("p-2 rounded-lg", config.style)}>
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{doc.nome}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{doc.colaborador}</span>
-                          <span>•</span>
-                          <span>{doc.tipo}</span>
-                          <span>•</span>
-                          <span>{doc.tamanho}</span>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : filteredDocs.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  {documentos.length === 0
+                    ? "Nenhum documento cadastrado ainda."
+                    : "Nenhum documento encontrado com os filtros aplicados."}
+                </p>
+                {documentos.length === 0 && (
+                  <Button onClick={() => setShowUploadForm(true)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Enviar Primeiro Documento
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {filteredDocs.map((doc, index) => {
+                  const config = statusConfig[doc.status];
+                  return (
+                    <motion.div
+                      key={doc.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
+                      className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={cn("p-2 rounded-lg", config.style)}>
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{doc.nome_original}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{doc.colaborador_nome}</span>
+                            <span>•</span>
+                            <span>{doc.tipo}</span>
+                            <span>•</span>
+                            <span>{formatFileSize(doc.tamanho)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {doc.dataValidade && (
-                        <div className="text-right hidden md:block">
-                          <p className="text-xs text-muted-foreground">Validade</p>
-                          <p className="text-sm font-medium">
-                            {new Date(doc.dataValidade).toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                      )}
-                      <Badge className={cn("text-xs hidden sm:flex", config.style)}>
-                        {config.label}
-                      </Badge>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Visualizar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                      <div className="flex items-center gap-3">
+                        {doc.data_validade && (
+                          <div className="text-right hidden md:block">
+                            <p className="text-xs text-muted-foreground">Validade</p>
+                            <p className="text-sm font-medium">
+                              {new Date(doc.data_validade).toLocaleDateString("pt-BR")}
+                            </p>
+                          </div>
+                        )}
+                        <Badge className={cn("text-xs hidden sm:flex", config.style)}>
+                          {config.label}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleDownload(doc)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Visualizar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownload(doc)}>
+                              <Download className="w-4 h-4 mr-2" />
+                              Download
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => setDocumentoToDelete(doc)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         </TabsContent>
 
@@ -346,30 +333,80 @@ const Documentos = () => {
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
-            {categorias.map((cat, index) => (
-              <motion.div
-                key={cat.nome}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <cat.icon className="w-6 h-6 text-primary" />
+            {categorias.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Folder className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Nenhuma categoria encontrada. Envie documentos para ver as categorias.
+                </p>
+              </div>
+            ) : (
+              categorias.map((cat, index) => (
+                <motion.div
+                  key={cat.nome}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
+                  onClick={() => {
+                    setTipoFilter(cat.nome);
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <File className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {cat.nome}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{cat.count} documentos</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {cat.nome}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{cat.count} documentos</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      {/* Upload Form Modal */}
+      <DocumentoUploadForm
+        open={showUploadForm}
+        onOpenChange={setShowUploadForm}
+      />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!documentoToDelete} onOpenChange={() => setDocumentoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              Excluir Documento
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o documento{" "}
+              <span className="font-medium">{documentoToDelete?.nome_original}</span>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
