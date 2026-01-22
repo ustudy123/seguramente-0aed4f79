@@ -22,6 +22,7 @@ import Ferias from "./pages/Ferias";
 import Documentos from "./pages/Documentos";
 import Admissao from "./pages/Admissao";
 import Epis from "./pages/Epis";
+import Feed from "./pages/Feed";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -57,7 +58,7 @@ const App = () => (
               }
             >
               <Route path="/" element={<Dashboard />} />
-              <Route path="/feed" element={<PlaceholderPage />} />
+              <Route path="/feed" element={<Feed />} />
               <Route path="/colaboradores" element={<Colaboradores />} />
               <Route path="/cadastros/departamentos" element={<Departamentos />} />
               <Route path="/cadastros/cargos" element={<Cargos />} />

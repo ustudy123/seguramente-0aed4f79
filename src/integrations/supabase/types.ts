@@ -725,6 +725,127 @@ export type Database = {
           },
         ]
       }
+      feed_comentarios: {
+        Row: {
+          autor_avatar: string | null
+          autor_id: string
+          autor_nome: string
+          conteudo: string
+          created_at: string
+          id: string
+          post_id: string
+          tenant_id: string
+        }
+        Insert: {
+          autor_avatar?: string | null
+          autor_id: string
+          autor_nome: string
+          conteudo: string
+          created_at?: string
+          id?: string
+          post_id: string
+          tenant_id: string
+        }
+        Update: {
+          autor_avatar?: string | null
+          autor_id?: string
+          autor_nome?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_comentarios_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_posts: {
+        Row: {
+          autor_avatar: string | null
+          autor_id: string
+          autor_nome: string
+          conteudo: string
+          created_at: string
+          fixado: boolean
+          id: string
+          imagem_url: string | null
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          autor_avatar?: string | null
+          autor_id: string
+          autor_nome: string
+          conteudo: string
+          created_at?: string
+          fixado?: boolean
+          id?: string
+          imagem_url?: string | null
+          tenant_id: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          autor_avatar?: string | null
+          autor_id?: string
+          autor_nome?: string
+          conteudo?: string
+          created_at?: string
+          fixado?: boolean
+          id?: string
+          imagem_url?: string | null
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feed_reacoes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          tenant_id: string
+          tipo: string
+          user_id: string
+          user_nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          tenant_id: string
+          tipo: string
+          user_id: string
+          user_nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          tenant_id?: string
+          tipo?: string
+          user_id?: string
+          user_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_reacoes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filiais: {
         Row: {
           ativo: boolean
