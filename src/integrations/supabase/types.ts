@@ -784,6 +784,338 @@ export type Database = {
           },
         ]
       }
+      ponto_ajustes: {
+        Row: {
+          aprovado_por: string | null
+          aprovado_por_nome: string | null
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          created_by: string | null
+          created_by_nome: string | null
+          data_aprovacao: string | null
+          data_referencia: string
+          hora_original: string | null
+          hora_solicitada: string | null
+          id: string
+          motivo: string
+          observacao_aprovador: string | null
+          ponto_diario_id: string | null
+          status: string
+          tenant_id: string
+          tipo_ajuste: string
+          tipo_marcacao: string | null
+        }
+        Insert: {
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          created_by?: string | null
+          created_by_nome?: string | null
+          data_aprovacao?: string | null
+          data_referencia: string
+          hora_original?: string | null
+          hora_solicitada?: string | null
+          id?: string
+          motivo: string
+          observacao_aprovador?: string | null
+          ponto_diario_id?: string | null
+          status?: string
+          tenant_id: string
+          tipo_ajuste: string
+          tipo_marcacao?: string | null
+        }
+        Update: {
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          colaborador_cpf?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          created_by?: string | null
+          created_by_nome?: string | null
+          data_aprovacao?: string | null
+          data_referencia?: string
+          hora_original?: string | null
+          hora_solicitada?: string | null
+          id?: string
+          motivo?: string
+          observacao_aprovador?: string | null
+          ponto_diario_id?: string | null
+          status?: string
+          tenant_id?: string
+          tipo_ajuste?: string
+          tipo_marcacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_ajustes_ponto_diario_id_fkey"
+            columns: ["ponto_diario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_diario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_ajustes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_audit_log: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          id: string
+          ip_origem: string | null
+          registro_id: string
+          tabela_origem: string
+          tenant_id: string
+          user_agent: string | null
+          usuario_email: string | null
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          ip_origem?: string | null
+          registro_id: string
+          tabela_origem: string
+          tenant_id: string
+          user_agent?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          ip_origem?: string | null
+          registro_id?: string
+          tabela_origem?: string
+          tenant_id?: string
+          user_agent?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_configuracao: {
+        Row: {
+          bloquear_dispositivo_nao_autorizado: boolean
+          created_at: string
+          exigir_localizacao: boolean
+          hora_entrada_padrao: string
+          hora_retorno_almoco_padrao: string
+          hora_saida_almoco_padrao: string
+          hora_saida_padrao: string
+          id: string
+          permitir_registro_fora_horario: boolean
+          tenant_id: string
+          tolerancia_atraso: number
+          tolerancia_hora_extra: number
+          updated_at: string
+        }
+        Insert: {
+          bloquear_dispositivo_nao_autorizado?: boolean
+          created_at?: string
+          exigir_localizacao?: boolean
+          hora_entrada_padrao?: string
+          hora_retorno_almoco_padrao?: string
+          hora_saida_almoco_padrao?: string
+          hora_saida_padrao?: string
+          id?: string
+          permitir_registro_fora_horario?: boolean
+          tenant_id: string
+          tolerancia_atraso?: number
+          tolerancia_hora_extra?: number
+          updated_at?: string
+        }
+        Update: {
+          bloquear_dispositivo_nao_autorizado?: boolean
+          created_at?: string
+          exigir_localizacao?: boolean
+          hora_entrada_padrao?: string
+          hora_retorno_almoco_padrao?: string
+          hora_saida_almoco_padrao?: string
+          hora_saida_padrao?: string
+          id?: string
+          permitir_registro_fora_horario?: boolean
+          tenant_id?: string
+          tolerancia_atraso?: number
+          tolerancia_hora_extra?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_configuracao_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_diario: {
+        Row: {
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data: string
+          entrada: string | null
+          horas_extras: unknown
+          horas_faltantes: unknown
+          horas_trabalhadas: unknown
+          id: string
+          observacao: string | null
+          retorno_almoco: string | null
+          saida: string | null
+          saida_almoco: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data: string
+          entrada?: string | null
+          horas_extras?: unknown
+          horas_faltantes?: unknown
+          horas_trabalhadas?: unknown
+          id?: string
+          observacao?: string | null
+          retorno_almoco?: string | null
+          saida?: string | null
+          saida_almoco?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_cpf?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data?: string
+          entrada?: string | null
+          horas_extras?: unknown
+          horas_faltantes?: unknown
+          horas_trabalhadas?: unknown
+          id?: string
+          observacao?: string | null
+          retorno_almoco?: string | null
+          saida?: string | null
+          saida_almoco?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_diario_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_marcacoes: {
+        Row: {
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          created_by: string | null
+          data_marcacao: string
+          dispositivo: string | null
+          hash_marcacao: string
+          hora_marcacao: string
+          id: string
+          ip_origem: string | null
+          latitude: number | null
+          longitude: number | null
+          marcacao_original: boolean
+          tenant_id: string
+          tipo_marcacao: string
+          user_agent: string | null
+        }
+        Insert: {
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          created_by?: string | null
+          data_marcacao?: string
+          dispositivo?: string | null
+          hash_marcacao: string
+          hora_marcacao?: string
+          id?: string
+          ip_origem?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          marcacao_original?: boolean
+          tenant_id: string
+          tipo_marcacao: string
+          user_agent?: string | null
+        }
+        Update: {
+          colaborador_cpf?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          created_by?: string | null
+          data_marcacao?: string
+          dispositivo?: string | null
+          hash_marcacao?: string
+          hora_marcacao?: string
+          id?: string
+          ip_origem?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          marcacao_original?: boolean
+          tenant_id?: string
+          tipo_marcacao?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_marcacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
