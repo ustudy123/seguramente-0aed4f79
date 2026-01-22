@@ -4,6 +4,7 @@ import {
   Search, 
   Plus, 
   Download, 
+  Upload,
   MoreHorizontal,
   Mail,
   Phone,
@@ -34,7 +35,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorForm } from "@/components/colaboradores/ColaboradorForm";
-import { useQuery } from "@tanstack/react-query";
+import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -69,10 +71,18 @@ const statusLabels: Record<string, string> = {
 
 const Colaboradores = () => {
   const { tenantId } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+
+  const handleImportSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
+    queryClient.invalidateQueries({ queryKey: ["cargos"] });
+    queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+  };
 
   // Buscar colaboradores do banco
   const { data: colaboradores = [], isLoading, refetch } = useQuery({
@@ -123,10 +133,16 @@ const Colaboradores = () => {
           <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
           <p className="text-muted-foreground">Gerencie sua equipe</p>
         </div>
-        <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Colaborador
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowImport(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Importar Planilha
+          </Button>
+          <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Colaborador
+          </Button>
+        </div>
       </motion.div>
 
       {/* Filters */}
@@ -301,6 +317,15 @@ const Colaboradores = () => {
         open={showForm}
         onOpenChange={setShowForm}
         onSuccess={() => refetch()}
+      />
+
+      {/* Import Modal */}
+      <ImportPlanilhaModal
+        open={showImport}
+        onOpenChange={setShowImport}
+        onSuccess={handleImportSuccess}
+        titulo="Importar Colaboradores"
+        descricao="Importe uma planilha para criar colaboradores, cargos e departamentos automaticamente"
       />
     </div>
   );
