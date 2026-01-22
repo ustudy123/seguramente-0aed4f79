@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 interface ImportPlanilhaModalProps {
@@ -120,18 +121,41 @@ export function ImportPlanilhaModal({
     }
   };
 
-  const downloadTemplate = () => {
-    // Criar template de exemplo
-    const template = `Nome,CPF,Sexo,Data Nascimento,SITUAÇÃO,BR/PDH,Nome cargo,Departamento,Nível
-João Silva,123.456.789-00,Masculino,15/03/1990,1,Matriz,Analista de RH,Recursos Humanos,Pleno
-Maria Santos,987.654.321-00,Feminino,22/08/1985,1,Filial SP,Gerente Financeiro,Financeiro,Gerente
-Pedro Oliveira,111.222.333-44,Masculino,10/01/1995,0,Matriz,Desenvolvedor,TI,Junior`;
-    
-    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+  const templateData = [
+    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO", "BR/PDH", "Nome cargo", "Departamento", "Nível"],
+    ["João Silva", "123.456.789-00", "Masculino", "15/03/1990", "1", "Matriz", "Analista de RH", "Recursos Humanos", "Pleno"],
+    ["Maria Santos", "987.654.321-00", "Feminino", "22/08/1985", "1", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente"],
+    ["Pedro Oliveira", "111.222.333-44", "Masculino", "10/01/1995", "0", "Matriz", "Desenvolvedor", "TI", "Junior"],
+  ];
+
+  const downloadTemplateCSV = () => {
+    const csvContent = templateData.map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "modelo_importacao.csv";
     link.click();
+  };
+
+  const downloadTemplateXLSX = () => {
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Modelo");
+    
+    // Ajustar largura das colunas
+    ws["!cols"] = [
+      { wch: 25 }, // Nome
+      { wch: 18 }, // CPF
+      { wch: 12 }, // Sexo
+      { wch: 16 }, // Data Nascimento
+      { wch: 12 }, // SITUAÇÃO
+      { wch: 12 }, // BR/PDH
+      { wch: 20 }, // Nome cargo
+      { wch: 20 }, // Departamento
+      { wch: 12 }, // Nível
+    ];
+    
+    XLSX.writeFile(wb, "modelo_importacao.xlsx");
   };
 
   const dadosValidos = dados.filter(d => d.erros.length === 0);
@@ -197,10 +221,16 @@ Pedro Oliveira,111.222.333-44,Masculino,10/01/1995,0,Matriz,Desenvolvedor,TI,Jun
                       Baixe nosso template com as colunas corretas
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={downloadTemplate}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar Modelo
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={downloadTemplateCSV}>
+                      <Download className="w-4 h-4 mr-2" />
+                      CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={downloadTemplateXLSX}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Excel (.xlsx)
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-muted/30 rounded-lg">
