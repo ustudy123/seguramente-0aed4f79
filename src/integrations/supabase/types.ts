@@ -905,6 +905,92 @@ export type Database = {
           },
         ]
       }
+      humor_diario: {
+        Row: {
+          created_at: string
+          data: string
+          emoji: string
+          humor: string
+          id: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+          user_nome: string
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          emoji: string
+          humor: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+          user_nome: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          emoji?: string
+          humor?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+          user_nome?: string
+        }
+        Relationships: []
+      }
+      humor_historico: {
+        Row: {
+          created_at: string
+          emoji_anterior: string | null
+          emoji_novo: string
+          humor_anterior: string | null
+          humor_diario_id: string
+          humor_novo: string
+          id: string
+          motivo_mudanca: string | null
+          tenant_id: string
+          user_id: string
+          user_nome: string
+        }
+        Insert: {
+          created_at?: string
+          emoji_anterior?: string | null
+          emoji_novo: string
+          humor_anterior?: string | null
+          humor_diario_id: string
+          humor_novo: string
+          id?: string
+          motivo_mudanca?: string | null
+          tenant_id: string
+          user_id: string
+          user_nome: string
+        }
+        Update: {
+          created_at?: string
+          emoji_anterior?: string | null
+          emoji_novo?: string
+          humor_anterior?: string | null
+          humor_diario_id?: string
+          humor_novo?: string
+          id?: string
+          motivo_mudanca?: string | null
+          tenant_id?: string
+          user_id?: string
+          user_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "humor_historico_humor_diario_id_fkey"
+            columns: ["humor_diario_id"]
+            isOneToOne: false
+            referencedRelation: "humor_diario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_ajustes: {
         Row: {
           aprovado_por: string | null

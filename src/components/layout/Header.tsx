@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
+import { HumorSelector } from "@/components/humor/HumorSelector";
 
 export const Header = () => {
   const { profile, signOut } = useAuthContext();
@@ -54,6 +55,9 @@ export const Header = () => {
             <p className="text-sm font-medium">{tenant.nome}</p>
           </div>
         )}
+
+        {/* Humor do Dia */}
+        <HumorSelector />
 
         {/* Notifications */}
         <DropdownMenu>
