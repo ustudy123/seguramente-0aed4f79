@@ -1,6 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState, useRef } from "react";
+import { Camera, X, Upload, Image } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +48,18 @@ type FormData = z.infer<typeof schema>;
 interface EpiEntregaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { epi_id: string; colaborador_nome: string; quantidade: number; colaborador_cpf?: string; colaborador_cargo?: string; colaborador_departamento?: string; data_devolucao_prevista?: string; motivo_entrega?: string; observacoes?: string }) => Promise<void>;
+  onSubmit: (data: { 
+    epi_id: string; 
+    colaborador_nome: string; 
+    quantidade: number; 
+    colaborador_cpf?: string; 
+    colaborador_cargo?: string; 
+    colaborador_departamento?: string; 
+    data_devolucao_prevista?: string; 
+    motivo_entrega?: string; 
+    observacoes?: string;
+    foto?: File;
+  }) => Promise<void>;
   epis: EpiCompleto[];
   isLoading?: boolean;
 }
@@ -58,6 +71,10 @@ export function EpiEntregaForm({
   epis,
   isLoading,
 }: EpiEntregaFormProps) {
+  const [foto, setFoto] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -76,6 +93,26 @@ export function EpiEntregaForm({
   const selectedEpiId = form.watch("epi_id");
   const selectedEpi = epis.find((e) => e.id === selectedEpiId);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveFoto = () => {
+    setFoto(null);
+    setFotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (data: FormData) => {
     await onSubmit({
       epi_id: data.epi_id,
@@ -87,8 +124,11 @@ export function EpiEntregaForm({
       data_devolucao_prevista: data.data_devolucao_prevista,
       motivo_entrega: data.motivo_entrega,
       observacoes: data.observacoes,
+      foto: foto || undefined,
     });
     form.reset();
+    setFoto(null);
+    setFotoPreview(null);
     onOpenChange(false);
   };
 
@@ -257,6 +297,68 @@ export function EpiEntregaForm({
                 </FormItem>
               )}
             />
+
+            {/* Seção de Foto */}
+            <div className="space-y-2">
+              <FormLabel>Foto da Entrega</FormLabel>
+              <div className="flex flex-col gap-3">
+                {fotoPreview ? (
+                  <div className="relative w-full max-w-xs">
+                    <img 
+                      src={fotoPreview} 
+                      alt="Preview da foto" 
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8"
+                      onClick={handleRemoveFoto}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div 
+                    className="w-full max-w-xs h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="p-3 rounded-full bg-muted">
+                      <Camera className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium">Adicionar foto</p>
+                      <p className="text-xs text-muted-foreground">Clique para selecionar</p>
+                    </div>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {!fotoPreview && (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Escolher arquivo
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Opcional: Tire uma foto ou selecione uma imagem da entrega do EPI
+              </p>
+            </div>
 
             <FormField
               control={form.control}
