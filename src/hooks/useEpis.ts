@@ -271,7 +271,7 @@ export function useEpis() {
   // ==================== MUTATIONS - ENTREGAS ====================
 
   const registrarEntregaMutation = useMutation({
-    mutationFn: async (dados: Omit<EpiEntregaInsert, "tenant_id">) => {
+    mutationFn: async (dados: Omit<EpiEntregaInsert, "tenant_id"> & { foto?: File }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
 
       // Verificar estoque disponível
@@ -285,13 +285,39 @@ export function useEpis() {
         throw new Error("Estoque insuficiente para esta entrega");
       }
 
+      // Upload da foto se existir
+      let fotoUrl: string | undefined;
+      if (dados.foto) {
+        const fileExt = dados.foto.name.split('.').pop();
+        const fileName = `${tenantId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('epi-fotos')
+          .upload(fileName, dados.foto);
+        
+        if (uploadError) {
+          console.error('Erro no upload da foto:', uploadError);
+          throw new Error("Erro ao fazer upload da foto");
+        }
+        
+        const { data: urlData } = supabase.storage
+          .from('epi-fotos')
+          .getPublicUrl(fileName);
+        
+        fotoUrl = urlData.publicUrl;
+      }
+
+      // Remover a foto do objeto antes de inserir
+      const { foto, ...dadosSemFoto } = dados;
+
       const { data, error } = await supabase
         .from("epi_entregas")
         .insert({
-          ...dados,
+          ...dadosSemFoto,
           tenant_id: tenantId,
           entregue_por: user?.id,
           entregue_por_nome: profile?.nome_completo,
+          foto_entrega_url: fotoUrl,
         })
         .select(`*, epi:epis(*, tipo:epi_tipos(*))`)
         .single();

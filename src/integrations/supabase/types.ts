@@ -475,6 +475,7 @@ export type Database = {
           entregue_por: string | null
           entregue_por_nome: string | null
           epi_id: string
+          foto_entrega_url: string | null
           id: string
           motivo_entrega: string | null
           observacoes: string | null
@@ -496,6 +497,7 @@ export type Database = {
           entregue_por?: string | null
           entregue_por_nome?: string | null
           epi_id: string
+          foto_entrega_url?: string | null
           id?: string
           motivo_entrega?: string | null
           observacoes?: string | null
@@ -517,6 +519,7 @@ export type Database = {
           entregue_por?: string | null
           entregue_por_nome?: string | null
           epi_id?: string
+          foto_entrega_url?: string | null
           id?: string
           motivo_entrega?: string | null
           observacoes?: string | null
