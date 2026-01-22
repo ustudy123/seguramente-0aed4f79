@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Briefcase, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Briefcase, Search, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,6 +42,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useCargos, useDepartamentos, Cargo } from "@/hooks/useCadastros";
+import { useQueryClient } from "@tanstack/react-query";
 
 const NIVEIS = [
   { value: "estagiario", label: "Estagiário" },
@@ -56,9 +58,11 @@ const NIVEIS = [
 export default function Cargos() {
   const { cargos, isLoading, createCargo, updateCargo, deleteCargo } = useCargos();
   const { departamentos } = useDepartamentos();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<Cargo | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -71,6 +75,11 @@ export default function Cargos() {
     exames_obrigatorios: ['Clínico Geral'] as string[] | null,
     ativo: true,
   });
+
+  const handleImportSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["cargos"] });
+    queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+  };
 
   const filteredCargos = cargos.filter((cargo) =>
     cargo.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -162,10 +171,16 @@ export default function Cargos() {
             Gerencie os cargos da sua empresa
           </p>
         </div>
-        <Button onClick={handleOpenCreate} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Cargo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
+            <Upload className="w-4 h-4" />
+            Importar Planilha
+          </Button>
+          <Button onClick={handleOpenCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Novo Cargo
+          </Button>
+        </div>
       </motion.div>
 
       {/* Search */}
@@ -431,6 +446,15 @@ export default function Cargos() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Modal */}
+      <ImportPlanilhaModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        onSuccess={handleImportSuccess}
+        titulo="Importar Cargos e Colaboradores"
+        descricao="Importe uma planilha para criar cargos, departamentos e colaboradores automaticamente"
+      />
     </div>
   );
 }
