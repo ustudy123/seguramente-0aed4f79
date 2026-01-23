@@ -48,6 +48,7 @@ const schema = z.object({
   marca: z.string().optional(),
   fabricante: z.string().optional(),
   estoque_minimo: z.coerce.number().min(0).optional().nullable(),
+  estoque_inicial: z.coerce.number().min(0).optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -64,6 +65,7 @@ interface EpiTipoFormProps {
     marca?: string;
     fabricante?: string;
     estoque_minimo?: number | null;
+    estoque_inicial?: number | null;
   }) => Promise<void>;
   isLoading?: boolean;
 }
@@ -85,6 +87,7 @@ export function EpiTipoForm({
       marca: "",
       fabricante: "",
       estoque_minimo: 5,
+      estoque_inicial: 100,
     },
   });
 
@@ -98,6 +101,7 @@ export function EpiTipoForm({
       marca: data.marca,
       fabricante: data.fabricante,
       estoque_minimo: data.estoque_minimo,
+      estoque_inicial: data.estoque_inicial,
     });
     form.reset();
     onOpenChange(false);
@@ -222,6 +226,25 @@ export function EpiTipoForm({
                       <Input
                         type="number"
                         placeholder="Ex: 5"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="estoque_inicial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estoque Inicial</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 100"
                         {...field}
                         value={field.value || ""}
                       />

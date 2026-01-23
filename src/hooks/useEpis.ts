@@ -123,18 +123,58 @@ export function useEpis() {
   // ==================== MUTATIONS - TIPOS ====================
 
   const criarTipoMutation = useMutation({
-    mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id">) => {
+    mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id"> & { estoque_inicial?: number | null }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
+      
+      // Separar estoque_inicial dos dados do tipo
+      const { estoque_inicial, ...dadosTipo } = dados;
+      
       const { data, error } = await supabase
         .from("epi_tipos")
-        .insert({ ...dados, tenant_id: tenantId })
+        .insert({ ...dadosTipo, tenant_id: tenantId })
         .select()
         .single();
       if (error) throw error;
+      
+      // Se informou estoque inicial, criar automaticamente um EPI no estoque
+      const quantidadeInicial = estoque_inicial ?? 100;
+      if (quantidadeInicial > 0) {
+        const { data: novoEpi, error: epiError } = await supabase
+          .from("epis")
+          .insert({
+            tenant_id: tenantId,
+            tipo_id: data.id,
+            quantidade_estoque: quantidadeInicial,
+            quantidade_minima: dados.estoque_minimo ?? 5,
+            status: "disponivel",
+          })
+          .select()
+          .single();
+        
+        if (epiError) {
+          console.error("Erro ao criar EPI inicial:", epiError);
+        } else {
+          // Registrar movimentação de entrada inicial
+          await supabase.from("epi_movimentacoes").insert({
+            tenant_id: tenantId,
+            epi_id: novoEpi.id,
+            tipo: "entrada",
+            quantidade: quantidadeInicial,
+            quantidade_anterior: 0,
+            quantidade_atual: quantidadeInicial,
+            motivo: "Cadastro inicial do tipo de EPI",
+            realizado_por: user?.id,
+            realizado_por_nome: profile?.nome_completo,
+          });
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["epi-tipos"] });
+      queryClient.invalidateQueries({ queryKey: ["epis"] });
+      queryClient.invalidateQueries({ queryKey: ["epi-movimentacoes"] });
       toast.success("Tipo de EPI criado com sucesso!");
     },
     onError: (error) => {
