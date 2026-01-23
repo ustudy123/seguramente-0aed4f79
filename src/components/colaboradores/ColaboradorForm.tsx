@@ -76,6 +76,19 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
   const { cargos } = useCargos();
   const { filiais } = useFiliais();
 
+  // Radix Select não permite SelectItem com value="".
+  // Como esses cadastros podem vir com nome vazio (ex.: importação/registro incompleto),
+  // filtramos antes de renderizar.
+  const cargosOptions = cargos.filter(
+    (c) => typeof c?.nome === "string" && c.nome.trim().length > 0,
+  );
+  const departamentosOptions = departamentos.filter(
+    (d) => typeof d?.nome === "string" && d.nome.trim().length > 0,
+  );
+  const filiaisOptions = filiais.filter(
+    (f) => typeof f?.nome === "string" && f.nome.trim().length > 0,
+  );
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -254,8 +267,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {cargos.map((cargo) => (
-                          <SelectItem key={cargo.id} value={cargo.nome}>
+                        {cargosOptions.map((cargo) => (
+                          <SelectItem key={cargo.id} value={cargo.nome.trim()}>
                             {cargo.nome}
                           </SelectItem>
                         ))}
@@ -281,8 +294,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {departamentos.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.nome}>
+                        {departamentosOptions.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.nome.trim()}>
                             {dept.nome}
                           </SelectItem>
                         ))}
@@ -308,8 +321,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {filiais.map((filial) => (
-                          <SelectItem key={filial.id} value={filial.nome}>
+                        {filiaisOptions.map((filial) => (
+                          <SelectItem key={filial.id} value={filial.nome.trim()}>
                             {filial.nome}
                           </SelectItem>
                         ))}

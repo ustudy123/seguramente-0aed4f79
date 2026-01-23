@@ -136,7 +136,14 @@ const Colaboradores = () => {
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
-  const departments = [...new Set(colaboradores.map((c) => c.departamento).filter(Boolean))];
+  const departments = [
+    ...new Set(
+      colaboradores
+        .map((c) => c.departamento)
+        .filter((d): d is string => typeof d === "string" && d.trim().length > 0)
+        .map((d) => d.trim()),
+    ),
+  ];
 
   return (
     <div className="space-y-6">
@@ -187,7 +194,9 @@ const Colaboradores = () => {
             <SelectContent>
               <SelectItem value="all">Todos Departamentos</SelectItem>
               {departments.map((dept) => (
-                <SelectItem key={dept} value={dept!}>{dept}</SelectItem>
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
