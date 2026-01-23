@@ -178,6 +178,7 @@ const Epis = () => {
           if (!open) setEditingEpi(null);
         }}
         onSubmit={editingEpi ? handleUpdateEpi : handleCreateEpi}
+        onCreateTipo={async (data) => { await criarTipo(data); }}
         tipos={tipos}
         epi={editingEpi}
         isLoading={criandoEpi || atualizandoEpi}
