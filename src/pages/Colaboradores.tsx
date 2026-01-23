@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { ColaboradorForm } from "@/components/colaboradores/ColaboradorForm";
+import { ColaboradorForm, ColaboradorEditData } from "@/components/colaboradores/ColaboradorForm";
 import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +62,7 @@ interface ColaboradorExtendido {
   status: string;
   cpf: string;
   filial: string | null;
+  tipo_contrato: string | null;
 }
 
 const statusStyles: Record<string, string> = {
@@ -90,6 +91,30 @@ const Colaboradores = () => {
   const [showImport, setShowImport] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
+
+  const handleEditColaborador = (colab: ColaboradorExtendido) => {
+    setEditingColaborador({
+      id: colab.id,
+      nome_completo: colab.nome_completo,
+      cpf: colab.cpf,
+      email: colab.email,
+      celular: colab.celular,
+      tipo_contrato: colab.tipo_contrato,
+      cargo: colab.cargo,
+      departamento: colab.departamento,
+      filial: colab.filial,
+      data_admissao: colab.data_admissao,
+    });
+    setShowForm(true);
+  };
+
+  const handleCloseForm = (open: boolean) => {
+    setShowForm(open);
+    if (!open) {
+      setEditingColaborador(null);
+    }
+  };
 
   const handleViewProfile = (colab: ColaboradorExtendido) => {
     setSelectedColaborador(colab);
@@ -110,7 +135,7 @@ const Colaboradores = () => {
 
       const { data, error } = await supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido")
         .order("nome_completo");
@@ -280,7 +305,7 @@ const Colaboradores = () => {
                       <DropdownMenuItem onClick={() => handleViewProfile(colab)}>
                         Ver perfil
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast.info("Funcionalidade de edição em desenvolvimento")}>
+                      <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>
                         Editar
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toast.info("Funcionalidade de documentos em desenvolvimento")}>
@@ -356,8 +381,9 @@ const Colaboradores = () => {
       {/* Form Modal */}
       <ColaboradorForm
         open={showForm}
-        onOpenChange={setShowForm}
+        onOpenChange={handleCloseForm}
         onSuccess={() => refetch()}
+        colaborador={editingColaborador}
       />
 
       {/* Import Modal */}

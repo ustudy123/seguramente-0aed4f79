@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -62,19 +62,35 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+export interface ColaboradorEditData {
+  id: string;
+  nome_completo: string;
+  cpf: string;
+  email: string;
+  celular: string | null;
+  tipo_contrato: string | null;
+  cargo: string;
+  departamento: string | null;
+  filial: string | null;
+  data_admissao: string | null;
+}
+
 interface ColaboradorFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  colaborador?: ColaboradorEditData | null;
 }
 
-export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFormProps) {
+export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: ColaboradorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { tenantId, user } = useAuth();
   const queryClient = useQueryClient();
   const { departamentos } = useDepartamentos();
   const { cargos } = useCargos();
   const { filiais } = useFiliais();
+
+  const isEditMode = !!colaborador;
 
   // Radix Select não permite SelectItem com value="".
   // Como esses cadastros podem vir com nome vazio (ex.: importação/registro incompleto),
@@ -104,6 +120,34 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
     },
   });
 
+  // Preencher formulário quando em modo edição
+  useEffect(() => {
+    if (open && colaborador) {
+      form.reset({
+        nome_completo: colaborador.nome_completo || "",
+        cpf: colaborador.cpf || "",
+        email: colaborador.email || "",
+        celular: colaborador.celular || "",
+        tipo_contrato: colaborador.tipo_contrato || "clt",
+        cargo: colaborador.cargo || "",
+        departamento: colaborador.departamento || "",
+        filial: colaborador.filial || "",
+        data_admissao: colaborador.data_admissao || new Date().toISOString().split("T")[0],
+      });
+    } else if (open && !colaborador) {
+      form.reset({
+        nome_completo: "",
+        cpf: "",
+        email: "",
+        celular: "",
+        tipo_contrato: "clt",
+        cargo: "",
+        departamento: "",
+        filial: "",
+        data_admissao: new Date().toISOString().split("T")[0],
+      });
+    }
+  }, [open, colaborador, form]);
 
   const onSubmit = async (data: FormData) => {
     if (!tenantId) {
@@ -114,39 +158,71 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
     setIsSubmitting(true);
 
     try {
-      // Criar admissão diretamente como "concluido" (colaborador ativo)
-      const { error } = await supabase.from("admissoes").insert({
-        tenant_id: tenantId,
-        nome_completo: data.nome_completo,
-        cpf: cleanCpf(data.cpf),
-        email: data.email,
-        celular: data.celular || null,
-        tipo_contrato: data.tipo_contrato,
-        cargo: data.cargo,
-        departamento: data.departamento || null,
-        filial: data.filial || null,
-        data_admissao: data.data_admissao,
-        status: "concluido",
-        criado_por: user?.id,
-      });
+      if (isEditMode && colaborador) {
+        // Modo EDIÇÃO - UPDATE
+        const { error } = await supabase
+          .from("admissoes")
+          .update({
+            nome_completo: data.nome_completo,
+            cpf: cleanCpf(data.cpf),
+            email: data.email,
+            celular: data.celular || null,
+            tipo_contrato: data.tipo_contrato,
+            cargo: data.cargo,
+            departamento: data.departamento || null,
+            filial: data.filial || null,
+            data_admissao: data.data_admissao,
+          })
+          .eq("id", colaborador.id)
+          .eq("tenant_id", tenantId);
 
-      if (error) {
-        if (error.code === "23505") {
-          toast.error("CPF ou email já cadastrado");
-        } else {
-          throw error;
+        if (error) {
+          if (error.code === "23505") {
+            toast.error("CPF ou email já cadastrado para outro colaborador");
+          } else {
+            throw error;
+          }
+          return;
         }
-        return;
+
+        toast.success("Colaborador atualizado com sucesso!");
+      } else {
+        // Modo CRIAÇÃO - INSERT
+        const { error } = await supabase.from("admissoes").insert({
+          tenant_id: tenantId,
+          nome_completo: data.nome_completo,
+          cpf: cleanCpf(data.cpf),
+          email: data.email,
+          celular: data.celular || null,
+          tipo_contrato: data.tipo_contrato,
+          cargo: data.cargo,
+          departamento: data.departamento || null,
+          filial: data.filial || null,
+          data_admissao: data.data_admissao,
+          status: "concluido",
+          criado_por: user?.id,
+        });
+
+        if (error) {
+          if (error.code === "23505") {
+            toast.error("CPF ou email já cadastrado");
+          } else {
+            throw error;
+          }
+          return;
+        }
+
+        toast.success("Colaborador cadastrado com sucesso!");
       }
 
-      toast.success("Colaborador cadastrado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
+      queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
       form.reset();
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      console.error("Erro ao cadastrar colaborador:", error);
-      toast.error("Erro ao cadastrar colaborador");
+      console.error("Erro ao salvar colaborador:", error);
+      toast.error(isEditMode ? "Erro ao atualizar colaborador" : "Erro ao cadastrar colaborador");
     } finally {
       setIsSubmitting(false);
     }
@@ -156,9 +232,11 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Novo Colaborador</DialogTitle>
+          <DialogTitle>{isEditMode ? "Editar Colaborador" : "Novo Colaborador"}</DialogTitle>
           <DialogDescription>
-            Preencha os dados para cadastrar um novo colaborador.
+            {isEditMode 
+              ? "Atualize os dados do colaborador." 
+              : "Preencha os dados para cadastrar um novo colaborador."}
           </DialogDescription>
         </DialogHeader>
 
@@ -305,9 +383,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="filial"
@@ -332,21 +408,21 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="data_admissao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Admissão *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
+
+            <FormField
+              control={form.control}
+              name="data_admissao"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de Admissão *</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end gap-3 pt-4">
               <Button
@@ -359,7 +435,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Cadastrar
+                {isEditMode ? "Salvar Alterações" : "Cadastrar"}
               </Button>
             </div>
           </form>
