@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,10 +44,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
-import { Loader2, Download, ArrowLeft, ArrowRight, XCircle } from "lucide-react";
+import { Loader2, Download, ArrowLeft, ArrowRight, XCircle, Check, ChevronsUpDown, AlertCircle, User } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { EpiTipo } from "@/types/epi";
+import { cn } from "@/lib/utils";
 
 interface EpiEntregaWizardProps {
   open: boolean;
@@ -66,14 +80,25 @@ export function EpiEntregaWizard({
   onSuccess,
 }: EpiEntregaWizardProps) {
   const { tenantId, user, profile } = useAuth();
-  const { colaboradores } = useColaboradores();
+  const { colaboradores, isLoading: colaboradoresLoading } = useColaboradores();
   const reciboRef = useRef<HTMLDivElement>(null);
-
+  const [colaboradorPopoverOpen, setColaboradorPopoverOpen] = useState(false);
+  const [colaboradorSearch, setColaboradorSearch] = useState("");
   const [step, setStep] = useState<WizardStep>("form");
+  
+  // Filtrar colaboradores pelo termo de busca
+  const filteredColaboradores = useMemo(() => {
+    if (!colaboradorSearch) return colaboradores;
+    const search = colaboradorSearch.toLowerCase();
+    return colaboradores.filter(
+      (c) =>
+        c.nome_completo.toLowerCase().includes(search) ||
+        c.cpf.includes(search)
+    );
+  }, [colaboradores, colaboradorSearch]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showRecusaDialog, setShowRecusaDialog] = useState(false);
 
-  // Form data
+  const [showRecusaDialog, setShowRecusaDialog] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     colaboradorId: "",
     colaboradorNome: "",
@@ -351,45 +376,130 @@ export function EpiEntregaWizard({
           <div className="min-h-[400px]">
             {step === "form" && (
               <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Colaborador *</Label>
-                    <Select
-                      value={formData.colaboradorId}
-                      onValueChange={handleColaboradorChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o colaborador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {colaboradores.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.nome_completo}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Alerta se não houver colaboradores */}
+                {!colaboradoresLoading && colaboradores.length === 0 && (
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                      <div>
+                        <p className="font-medium text-destructive">Nenhum colaborador cadastrado</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Para registrar entregas de EPI, é necessário ter colaboradores com admissão concluída. 
+                          Acesse o menu "Admissão" para cadastrar novos colaboradores.
+                        </p>
+                      </div>
+                    </div>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <Label>Tipo de EPI *</Label>
-                    <Select
-                      value={formData.epiTipoId}
-                      onValueChange={handleEpiChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o EPI" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {epiTipos.filter(t => t.is_active !== false).map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.nome}
-                            {t.ca_numero && ` (CA: ${t.ca_numero})`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Seleção de colaborador com busca */}
+                <div className="space-y-2">
+                  <Label>Colaborador *</Label>
+                  <Popover open={colaboradorPopoverOpen} onOpenChange={setColaboradorPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={colaboradorPopoverOpen}
+                        className="w-full justify-between font-normal"
+                        disabled={colaboradores.length === 0}
+                      >
+                        {formData.colaboradorId ? (
+                          <span className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {formData.colaboradorNome}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Buscar colaborador...</span>
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command shouldFilter={false}>
+                        <CommandInput 
+                          placeholder="Buscar por nome ou CPF..." 
+                          value={colaboradorSearch}
+                          onValueChange={setColaboradorSearch}
+                        />
+                        <CommandList>
+                          <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {filteredColaboradores.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={c.id}
+                                onSelect={() => {
+                                  handleColaboradorChange(c.id);
+                                  setColaboradorPopoverOpen(false);
+                                  setColaboradorSearch("");
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.colaboradorId === c.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span>{c.nome_completo}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    CPF: {c.cpf} {c.cargo && `• ${c.cargo}`}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Dados do colaborador selecionado (somente leitura) */}
+                {formData.colaboradorId && (
+                  <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                    <p className="text-sm font-medium text-muted-foreground">Dados do Colaborador</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Nome Completo</Label>
+                        <p className="text-sm font-medium">{formData.colaboradorNome}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">CPF</Label>
+                        <p className="text-sm font-medium">{formData.colaboradorCpf}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Cargo</Label>
+                        <p className="text-sm font-medium">{formData.colaboradorCargo || "—"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Departamento</Label>
+                        <p className="text-sm font-medium">{formData.colaboradorDepartamento || "—"}</p>
+                      </div>
+                    </div>
                   </div>
+                )}
+
+                {/* Seleção de EPI */}
+                <div className="space-y-2">
+                  <Label>Tipo de EPI *</Label>
+                  <Select
+                    value={formData.epiTipoId}
+                    onValueChange={handleEpiChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o EPI" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {epiTipos.filter(t => t.is_active !== false).map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.nome}
+                          {t.ca_numero && ` (CA: ${t.ca_numero})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
