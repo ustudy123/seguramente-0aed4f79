@@ -23,6 +23,7 @@ interface LivenessDetectionProps {
 
 export function LivenessDetection({ onComplete, onError }: LivenessDetectionProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -46,9 +47,10 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
         video: { facingMode: "user", width: 640, height: 480 },
       });
       
+      streamRef.current = mediaStream;
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
       }
       
       setStream(mediaStream);
@@ -65,11 +67,11 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
     startCamera();
     
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [startCamera]);
 
   // Confirmar ação atual
   const handleConfirmAction = () => {
