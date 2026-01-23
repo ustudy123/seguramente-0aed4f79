@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/select';
 import { CpfInput } from '@/components/ui/cpf-input';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { CepInput } from '@/components/ui/cep-input';
+import { EnderecoData } from '@/lib/viacep';
 import { AdmissaoFormSteps } from './AdmissaoFormSteps';
 import { DocumentUpload } from './DocumentUpload';
 import { 
@@ -91,7 +93,7 @@ const dadosContatoSchema = z.object({
   bairro: z.string().min(2, 'Bairro obrigatório'),
   cidade: z.string().min(2, 'Cidade obrigatória'),
   estado: z.string().min(2, 'Estado obrigatório'),
-  cep: z.string().min(8, 'CEP inválido'),
+  cep: z.string().min(8, 'CEP inválido').max(9, 'CEP inválido'),
 });
 
 const dadosProfissionaisSchema = z.object({
@@ -489,10 +491,16 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
 
               <div>
                 <Label htmlFor="cep">CEP *</Label>
-                <Input 
+                <CepInput 
                   id="cep"
-                  {...formContato.register('cep')}
-                  placeholder="00000-000"
+                  value={formContato.watch('cep')}
+                  onChange={(value) => formContato.setValue('cep', value, { shouldValidate: true })}
+                  onAddressFound={(endereco: EnderecoData) => {
+                    formContato.setValue('endereco', endereco.logradouro, { shouldValidate: true });
+                    formContato.setValue('bairro', endereco.bairro, { shouldValidate: true });
+                    formContato.setValue('cidade', endereco.cidade, { shouldValidate: true });
+                    formContato.setValue('estado', endereco.estado, { shouldValidate: true });
+                  }}
                 />
                 {formContato.formState.errors.cep && (
                   <p className="text-xs text-destructive mt-1">{formContato.formState.errors.cep.message}</p>
