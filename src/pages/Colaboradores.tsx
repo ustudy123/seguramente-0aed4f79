@@ -12,7 +12,11 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Loader2
+  Loader2,
+  User,
+  Briefcase,
+  MapPin,
+  X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,6 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorForm } from "@/components/colaboradores/ColaboradorForm";
@@ -39,6 +49,7 @@ import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface ColaboradorExtendido {
   id: string;
@@ -77,6 +88,13 @@ const Colaboradores = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
+
+  const handleViewProfile = (colab: ColaboradorExtendido) => {
+    setSelectedColaborador(colab);
+    setShowDetail(true);
+  };
 
   const handleImportSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
@@ -225,7 +243,8 @@ const Colaboradores = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15 + index * 0.05 }}
-              className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group"
+              className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group cursor-pointer"
+              onClick={() => handleViewProfile(colab)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -241,20 +260,33 @@ const Colaboradores = () => {
                     <p className="text-sm text-muted-foreground">{colab.cargo}</p>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Ver perfil</DropdownMenuItem>
-                    <DropdownMenuItem>Editar</DropdownMenuItem>
-                    <DropdownMenuItem>Documentos</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">Desligar</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewProfile(colab)}>
+                        Ver perfil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toast.info("Funcionalidade de edição em desenvolvimento")}>
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toast.info("Funcionalidade de documentos em desenvolvimento")}>
+                        Documentos
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onClick={() => toast.info("Funcionalidade de desligamento em desenvolvimento")}
+                      >
+                        Desligar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
               <div className="space-y-2 text-sm">
@@ -327,6 +359,89 @@ const Colaboradores = () => {
         titulo="Importar Colaboradores"
         descricao="Importe uma planilha para criar colaboradores, cargos e departamentos automaticamente"
       />
+
+      {/* Detail Modal */}
+      <Dialog open={showDetail} onOpenChange={setShowDetail}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {selectedColaborador?.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-lg font-semibold">{selectedColaborador?.nome_completo}</p>
+                <p className="text-sm text-muted-foreground font-normal">{selectedColaborador?.cargo}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedColaborador && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <User className="w-3 h-3" /> CPF
+                  </p>
+                  <p className="text-sm font-medium">
+                    {selectedColaborador.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> Email
+                  </p>
+                  <p className="text-sm font-medium truncate">{selectedColaborador.email}</p>
+                </div>
+                {selectedColaborador.celular && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Phone className="w-3 h-3" /> Celular
+                    </p>
+                    <p className="text-sm font-medium">{selectedColaborador.celular}</p>
+                  </div>
+                )}
+                {selectedColaborador.departamento && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Building2 className="w-3 h-3" /> Departamento
+                    </p>
+                    <p className="text-sm font-medium">{selectedColaborador.departamento}</p>
+                  </div>
+                )}
+                {selectedColaborador.filial && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> Filial
+                    </p>
+                    <p className="text-sm font-medium">{selectedColaborador.filial}</p>
+                  </div>
+                )}
+                {selectedColaborador.data_admissao && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Data de Admissão
+                    </p>
+                    <p className="text-sm font-medium">
+                      {new Date(selectedColaborador.data_admissao).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t flex justify-between items-center">
+                <Badge className={cn("text-xs", statusStyles[selectedColaborador.status] || statusStyles.concluido)}>
+                  {statusLabels[selectedColaborador.status] || "Ativo"}
+                </Badge>
+                <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
