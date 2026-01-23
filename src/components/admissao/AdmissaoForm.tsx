@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { CpfInput } from '@/components/ui/cpf-input';
 import { AdmissaoFormSteps } from './AdmissaoFormSteps';
 import { DocumentUpload } from './DocumentUpload';
 import { 
@@ -37,6 +38,7 @@ import {
   DOCUMENTOS_OBRIGATORIOS
 } from '@/types/admissao';
 import { cn } from '@/lib/utils';
+import { validateCpf, cleanCpf } from '@/lib/cpf';
 
 // Exame Admissional type
 interface DadosExameAdmissional {
@@ -61,7 +63,13 @@ const STEPS = [
 // Schemas for validation
 const dadosPessoaisSchema = z.object({
   nomeCompleto: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  cpf: z.string().min(11, 'CPF inválido'),
+  cpf: z.string()
+    .min(11, 'CPF deve ter 11 dígitos')
+    .refine((val) => {
+      const cleaned = cleanCpf(val);
+      return cleaned.length === 11;
+    }, 'CPF deve ter 11 dígitos')
+    .refine((val) => validateCpf(val), 'CPF inválido - verifique os dígitos'),
   rg: z.string().min(5, 'RG inválido'),
   dataNascimento: z.string().min(1, 'Data de nascimento obrigatória'),
   estadoCivil: z.string().min(1, 'Estado civil obrigatório'),
@@ -309,10 +317,10 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
 
               <div>
                 <Label htmlFor="cpf">CPF *</Label>
-                <Input 
+                <CpfInput 
                   id="cpf"
-                  {...formPessoais.register('cpf')}
-                  placeholder="000.000.000-00"
+                  value={formPessoais.watch('cpf')}
+                  onChange={(value) => formPessoais.setValue('cpf', value, { shouldValidate: true })}
                 />
                 {formPessoais.formState.errors.cpf && (
                   <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.cpf.message}</p>
