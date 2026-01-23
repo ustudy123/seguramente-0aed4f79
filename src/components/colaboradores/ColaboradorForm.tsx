@@ -36,6 +36,15 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateCpf, cleanCpf } from "@/lib/cpf";
 
+const TIPOS_VINCULO = [
+  { value: "clt", label: "CLT" },
+  { value: "prolabore", label: "Pró-labore (Sócio)" },
+  { value: "pj", label: "Pessoa Jurídica (PJ)" },
+  { value: "estagiario", label: "Estagiário" },
+  { value: "temporario", label: "Temporário" },
+  { value: "autonomo", label: "Autônomo" },
+];
+
 const formSchema = z.object({
   nome_completo: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   cpf: z.string()
@@ -44,6 +53,7 @@ const formSchema = z.object({
     .refine((val) => validateCpf(val), "CPF inválido - verifique os dígitos"),
   email: z.string().email("Email inválido"),
   celular: z.string().optional(),
+  tipo_contrato: z.string().min(1, "Selecione o tipo de vínculo"),
   cargo: z.string().min(1, "Selecione um cargo"),
   departamento: z.string().optional(),
   filial: z.string().optional(),
@@ -73,6 +83,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
       cpf: "",
       email: "",
       celular: "",
+      tipo_contrato: "clt",
       cargo: "",
       departamento: "",
       filial: "",
@@ -97,6 +108,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
         cpf: cleanCpf(data.cpf),
         email: data.email,
         celular: data.celular || null,
+        tipo_contrato: data.tipo_contrato,
         cargo: data.cargo,
         departamento: data.departamento || null,
         filial: data.filial || null,
@@ -206,6 +218,31 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
+                name="tipo_contrato"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Vínculo *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {TIPOS_VINCULO.map((tipo) => (
+                          <SelectItem key={tipo.value} value={tipo.value}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="cargo"
                 render={({ field }) => (
                   <FormItem>
@@ -228,7 +265,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                   </FormItem>
                 )}
               />
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="departamento"
