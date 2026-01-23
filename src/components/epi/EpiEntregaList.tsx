@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   RotateCcw,
   User,
   Calendar,
   Package,
+  Search,
+  X,
+  CalendarIcon,
 } from "lucide-react";
 import {
   Table,
@@ -35,6 +38,13 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type { EpiEntrega, EpiCompleto, EntregaStatus } from "@/types/epi";
 import { ENTREGA_STATUS_LABELS, ENTREGA_STATUS_COLORS } from "@/types/epi";
 
@@ -49,8 +59,11 @@ export function EpiEntregaList({
   isLoading,
   onDevolucao,
 }: EpiEntregaListProps) {
-  const [search, setSearch] = useState("");
+  const [filtroColaborador, setFiltroColaborador] = useState("");
+  const [filtroEpi, setFiltroEpi] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dataInicio, setDataInicio] = useState<Date | undefined>();
+  const [dataFim, setDataFim] = useState<Date | undefined>();
   const [devolucaoModal, setDevolucaoModal] = useState<{
     open: boolean;
     entregaId: string;
@@ -59,17 +72,85 @@ export function EpiEntregaList({
   const [observacoes, setObservacoes] = useState("");
   const [processando, setProcessando] = useState(false);
 
-  const filtered = entregas.filter((entrega) => {
-    const matchSearch =
-      entrega.colaborador_nome.toLowerCase().includes(search.toLowerCase()) ||
-      entrega.epi.tipo.nome.toLowerCase().includes(search.toLowerCase()) ||
-      entrega.colaborador_cpf?.includes(search);
+  // Obter lista única de EPIs para o filtro
+  const episUnicos = useMemo(() => {
+    const map = new Map<string, string>();
+    entregas.forEach((entrega) => {
+      if (entrega.epi?.tipo?.nome) {
+        map.set(entrega.epi.tipo.id, entrega.epi.tipo.nome);
+      }
+    });
+    return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
+  }, [entregas]);
 
-    const matchStatus =
-      statusFilter === "all" || entrega.status === statusFilter;
+  const filtered = useMemo(() => {
+    return entregas.filter((entrega) => {
+      // Filtro por colaborador
+      if (filtroColaborador) {
+        const nomeColaborador = entrega.colaborador_nome.toLowerCase();
+        const cpfColaborador = entrega.colaborador_cpf || "";
+        if (
+          !nomeColaborador.includes(filtroColaborador.toLowerCase()) &&
+          !cpfColaborador.includes(filtroColaborador)
+        ) {
+          return false;
+        }
+      }
 
-    return matchSearch && matchStatus;
-  });
+      // Filtro por EPI
+      if (filtroEpi && filtroEpi !== "all") {
+        if (entrega.epi?.tipo?.id !== filtroEpi) {
+          return false;
+        }
+      }
+
+      // Filtro por status
+      if (statusFilter !== "all" && entrega.status !== statusFilter) {
+        return false;
+      }
+
+      // Filtro por período
+      if (dataInicio || dataFim) {
+        const dataEntrega = new Date(entrega.data_entrega);
+
+        if (dataInicio && dataFim) {
+          if (
+            !isWithinInterval(dataEntrega, {
+              start: startOfDay(dataInicio),
+              end: endOfDay(dataFim),
+            })
+          ) {
+            return false;
+          }
+        } else if (dataInicio) {
+          if (dataEntrega < startOfDay(dataInicio)) {
+            return false;
+          }
+        } else if (dataFim) {
+          if (dataEntrega > endOfDay(dataFim)) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }, [entregas, filtroColaborador, filtroEpi, statusFilter, dataInicio, dataFim]);
+
+  const limparFiltros = () => {
+    setFiltroColaborador("");
+    setFiltroEpi("all");
+    setStatusFilter("all");
+    setDataInicio(undefined);
+    setDataFim(undefined);
+  };
+
+  const temFiltrosAtivos =
+    filtroColaborador ||
+    (filtroEpi && filtroEpi !== "all") ||
+    statusFilter !== "all" ||
+    dataInicio ||
+    dataFim;
 
   const handleDevolucao = async () => {
     setProcessando(true);
@@ -92,31 +173,145 @@ export function EpiEntregaList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="Buscar por colaborador ou EPI..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="ativa">Ativas</SelectItem>
-            <SelectItem value="devolvido">Devolvidas</SelectItem>
-            <SelectItem value="extraviado">Extraviadas</SelectItem>
-            <SelectItem value="vencido">Vencidas</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Filtros */}
+      <div className="flex flex-col gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar por colaborador ou CPF..."
+                value={filtroColaborador}
+                onChange={(e) => setFiltroColaborador(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="w-full sm:w-48">
+            <Select value={filtroEpi} onValueChange={setFiltroEpi}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por EPI" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os EPIs</SelectItem>
+                {episUnicos.map((epi) => (
+                  <SelectItem key={epi.id} value={epi.id}>
+                    {epi.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-full sm:w-40">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="ativa">Ativas</SelectItem>
+                <SelectItem value="devolvido">Devolvidas</SelectItem>
+                <SelectItem value="extraviado">Extraviadas</SelectItem>
+                <SelectItem value="vencido">Vencidas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Filtro por período */}
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 sm:flex-initial">
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+              Data inicial
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full sm:w-[180px] justify-start text-left font-normal",
+                    !dataInicio && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataInicio
+                    ? format(dataInicio, "dd/MM/yyyy", { locale: ptBR })
+                    : "Selecionar"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={dataInicio}
+                  onSelect={setDataInicio}
+                  disabled={(date) => (dataFim ? date > dataFim : false)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex-1 sm:flex-initial">
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+              Data final
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full sm:w-[180px] justify-start text-left font-normal",
+                    !dataFim && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataFim
+                    ? format(dataFim, "dd/MM/yyyy", { locale: ptBR })
+                    : "Selecionar"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={dataFim}
+                  onSelect={setDataFim}
+                  disabled={(date) => (dataInicio ? date < dataInicio : false)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {temFiltrosAtivos && (
+            <Button variant="ghost" onClick={limparFiltros} className="gap-2">
+              <X className="h-4 w-4" />
+              Limpar filtros
+            </Button>
+          )}
+        </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {/* Contador de resultados */}
+      {temFiltrosAtivos && (
+        <p className="text-sm text-muted-foreground">
+          Exibindo {filtered.length} de {entregas.length} entregas
+        </p>
+      )}
+
+      {entregas.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Nenhuma entrega encontrada</p>
+          <p>Nenhuma entrega registrada</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhuma entrega encontrada com os filtros aplicados</p>
+          <Button variant="link" onClick={limparFiltros} className="mt-2">
+            Limpar filtros
+          </Button>
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
