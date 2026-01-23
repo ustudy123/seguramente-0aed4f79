@@ -122,10 +122,10 @@ export function ImportPlanilhaModal({
   };
 
   const templateData = [
-    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO", "BR/PDH", "Nome cargo", "Departamento", "Nível"],
-    ["João Silva", "123.456.789-00", "Masculino", "15/03/1990", "1", "Matriz", "Analista de RH", "Recursos Humanos", "Pleno"],
-    ["Maria Santos", "987.654.321-00", "Feminino", "22/08/1985", "1", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente"],
-    ["Pedro Oliveira", "111.222.333-44", "Masculino", "10/01/1995", "0", "Matriz", "Desenvolvedor", "TI", "Junior"],
+    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO ( 0 para inativo; 1 para ativo)", "BR/PDH", "Nome cargo", "Departamento", "Nível"],
+    ["Joana da Silva", "338.172.580-70", "Masculino", "15/03/1990", "1 ( ativo)", "Matriz", "Analista de RH", "Recursos Humanos", "Pleno"],
+    ["Ana Paula Padrao", "987.654.321-00", "Feminino", "22/08/1985", "1 (ativo)", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente"],
+    ["Maria Aparecida Meneghel", "408.785.550-30", "Masculino", "10/01/1995", "0 ( inativo)", "Matriz", "Desenvolvedor", "TI", "Junior"],
   ];
 
   const downloadTemplateCSV = () => {
@@ -236,7 +236,7 @@ export function ImportPlanilhaModal({
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
-                    {["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO", "BR/PDH", "Nome cargo", "Departamento", "Nível"].map(col => (
+                    {["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO (0=Inativo; 1=Ativo)", "BR/PDH", "Nome cargo", "Departamento", "Nível"].map(col => (
                       <Badge key={col} variant="secondary" className="text-xs">
                         {col}
                       </Badge>
