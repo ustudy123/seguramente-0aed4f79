@@ -27,15 +27,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CpfInput } from "@/components/ui/cpf-input";
 import { useDepartamentos, useCargos, useFiliais } from "@/hooks/useCadastros";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { validateCpf, cleanCpf } from "@/lib/cpf";
 
 const formSchema = z.object({
   nome_completo: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
-  cpf: z.string().min(11, "CPF inválido").max(14, "CPF inválido"),
+  cpf: z.string()
+    .min(11, "CPF deve ter 11 dígitos")
+    .refine((val) => cleanCpf(val).length === 11, "CPF deve ter 11 dígitos")
+    .refine((val) => validateCpf(val), "CPF inválido - verifique os dígitos"),
   email: z.string().email("Email inválido"),
   celular: z.string().optional(),
   cargo: z.string().min(1, "Selecione um cargo"),
@@ -74,15 +79,6 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
     },
   });
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})/, "$1-$2")
-      .slice(0, 14);
-  };
-
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     return numbers
@@ -104,7 +100,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
       const { error } = await supabase.from("admissoes").insert({
         tenant_id: tenantId,
         nome_completo: data.nome_completo,
-        cpf: data.cpf.replace(/\D/g, ""),
+        cpf: cleanCpf(data.cpf),
         email: data.email,
         celular: data.celular || null,
         cargo: data.cargo,
@@ -171,11 +167,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                   <FormItem>
                     <FormLabel>CPF *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="000.000.000-00"
-                        {...field}
-                        onChange={(e) => field.onChange(formatCPF(e.target.value))}
-                        maxLength={14}
+                      <CpfInput
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
