@@ -78,18 +78,37 @@ export const ENTREGA_STATUS_COLORS: Record<EntregaStatus, string> = {
   vencido: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
 };
 
+// Categorias de EPI (agrupamentos)
+export const CATEGORIAS_EPI = [
+  "Proteção da Cabeça",
+  "Proteção Auditiva",
+  "Proteção Respiratória",
+  "Proteção Visual",
+  "Proteção Facial",
+  "Proteção das Mãos",
+  "Proteção dos Pés",
+  "Proteção contra Quedas",
+  "Proteção do Tronco",
+  "Sinalização e Visibilidade",
+  "Outros",
+] as const;
+
+export type CategoriaEpi = typeof CATEGORIAS_EPI[number];
+
 // Tipos de EPI padrão (para seed inicial)
 export const TIPOS_EPI_PADRAO = [
-  { nome: "Capacete de Segurança", descricao: "Proteção para a cabeça", validade_meses: 60 },
-  { nome: "Óculos de Proteção", descricao: "Proteção ocular", validade_meses: 24 },
-  { nome: "Protetor Auricular", descricao: "Proteção auditiva", validade_meses: 12 },
-  { nome: "Luvas de Segurança", descricao: "Proteção para as mãos", validade_meses: 6 },
-  { nome: "Botina de Segurança", descricao: "Proteção para os pés", validade_meses: 12 },
-  { nome: "Cinto de Segurança", descricao: "Proteção contra quedas", validade_meses: 24 },
-  { nome: "Máscara Respiratória", descricao: "Proteção respiratória", validade_meses: 6 },
-  { nome: "Avental de Segurança", descricao: "Proteção do tronco", validade_meses: 12 },
-  { nome: "Protetor Facial", descricao: "Proteção facial completa", validade_meses: 24 },
-  { nome: "Colete Refletivo", descricao: "Sinalização de alta visibilidade", validade_meses: 24 },
+  { nome: "Capacete de Segurança", descricao: "Proteção para a cabeça", categoria: "Proteção da Cabeça", validade_meses: 60 },
+  { nome: "Óculos de Proteção", descricao: "Proteção ocular", categoria: "Proteção Visual", validade_meses: 24 },
+  { nome: "Protetor Auricular", descricao: "Proteção auditiva tipo plug", categoria: "Proteção Auditiva", validade_meses: 12 },
+  { nome: "Abafador de Ruído", descricao: "Proteção auditiva tipo concha", categoria: "Proteção Auditiva", validade_meses: 24 },
+  { nome: "Luvas de Segurança", descricao: "Proteção para as mãos", categoria: "Proteção das Mãos", validade_meses: 6 },
+  { nome: "Botina de Segurança", descricao: "Proteção para os pés", categoria: "Proteção dos Pés", validade_meses: 12 },
+  { nome: "Cinto de Segurança", descricao: "Proteção contra quedas", categoria: "Proteção contra Quedas", validade_meses: 24 },
+  { nome: "Máscara Respiratória PFF2", descricao: "Proteção respiratória descartável", categoria: "Proteção Respiratória", validade_meses: 6 },
+  { nome: "Respirador Semi-Facial", descricao: "Proteção respiratória reutilizável", categoria: "Proteção Respiratória", validade_meses: 12 },
+  { nome: "Avental de Segurança", descricao: "Proteção do tronco", categoria: "Proteção do Tronco", validade_meses: 12 },
+  { nome: "Protetor Facial", descricao: "Proteção facial completa", categoria: "Proteção Facial", validade_meses: 24 },
+  { nome: "Colete Refletivo", descricao: "Sinalização de alta visibilidade", categoria: "Sinalização e Visibilidade", validade_meses: 24 },
 ];
 
 // Motivos de entrega padrão

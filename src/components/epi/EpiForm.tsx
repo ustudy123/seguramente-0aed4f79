@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,9 +36,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EpiTipoForm } from "./EpiTipoForm";
 import type { EpiTipo, EpiCompleto } from "@/types/epi";
+import { CATEGORIAS_EPI } from "@/types/epi";
 
 const schema = z.object({
-  tipo_id: z.string().min(1, "Selecione o tipo de EPI"),
+  tipo_id: z.string().min(1, "Selecione o Nome do EPI"),
   codigo: z.string().optional(),
   ca: z.string().optional(),
   marca: z.string().optional(),
@@ -86,6 +87,24 @@ export function EpiForm({
 }: EpiFormProps) {
   const [showTipoForm, setShowTipoForm] = useState(false);
   const [isCreatingTipo, setIsCreatingTipo] = useState(false);
+  const [selectedCategoria, setSelectedCategoria] = useState<string>("");
+
+  // Get unique categories from existing tipos, plus default categories
+  const categorias = useMemo(() => {
+    const existingCategories = tipos
+      .filter(t => t.is_active !== false && t.categoria)
+      .map(t => t.categoria as string);
+    
+    const allCategories = [...new Set([...CATEGORIAS_EPI, ...existingCategories])];
+    return allCategories.sort();
+  }, [tipos]);
+
+  // Filter tipos by selected category
+  const tiposFiltrados = useMemo(() => {
+    if (!selectedCategoria) return [];
+    return tipos.filter(t => t.is_active !== false && t.categoria === selectedCategoria);
+  }, [tipos, selectedCategoria]);
+
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -104,6 +123,13 @@ export function EpiForm({
       observacoes: epi?.observacoes || "",
     },
   });
+
+  // Set initial category when editing an EPI
+  useEffect(() => {
+    if (epi?.tipo?.categoria) {
+      setSelectedCategoria(epi.tipo.categoria);
+    }
+  }, [epi]);
 
   const handleSubmit = async (data: FormData) => {
     await onSubmit(data);
@@ -129,6 +155,11 @@ export function EpiForm({
     }
   };
 
+  const handleCategoriaChange = (value: string) => {
+    setSelectedCategoria(value);
+    form.setValue("tipo_id", ""); // Reset tipo when category changes
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -138,13 +169,49 @@ export function EpiForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Categoria (agrupamento) */}
+              <FormItem>
+                <FormLabel className="flex items-center gap-1.5">
+                  Categoria *
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
+                        <p>
+                          Categoria é o agrupamento do EPI (ex: Proteção Auditiva, Proteção Visual).
+                          Selecione a categoria para filtrar os tipos de EPI disponíveis.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </FormLabel>
+                <Select 
+                  onValueChange={handleCategoriaChange} 
+                  value={selectedCategoria}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categorias.map((categoria) => (
+                      <SelectItem key={categoria} value={categoria}>
+                        {categoria}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+
+              {/* Nome do EPI (item específico) */}
               <FormField
                 control={form.control}
                 name="tipo_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-1.5">
-                      Categoria *
+                      Nome do EPI *
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -152,8 +219,7 @@ export function EpiForm({
                           </TooltipTrigger>
                           <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
                             <p>
-                              Categorias são os tipos de EPIs cadastrados no sistema (ex: Capacete, Luvas, Óculos).
-                              Selecione uma categoria existente ou crie uma nova.
+                              Nome específico do EPI dentro da categoria selecionada (ex: Protetor Auricular, Abafador).
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -162,23 +228,29 @@ export function EpiForm({
                     <Select 
                       onValueChange={handleTipoChange} 
                       value={field.value}
+                      disabled={!selectedCategoria}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione a categoria" />
+                          <SelectValue placeholder={selectedCategoria ? "Selecione o EPI" : "Selecione a categoria primeiro"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {tipos.filter(t => t.is_active !== false).map((tipo) => (
+                        {tiposFiltrados.map((tipo) => (
                           <SelectItem key={tipo.id} value={tipo.id}>
                             {tipo.nome}
                           </SelectItem>
                         ))}
+                        {tiposFiltrados.length === 0 && selectedCategoria && (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            Nenhum EPI cadastrado nesta categoria
+                          </div>
+                        )}
                         <Separator className="my-1" />
                         <SelectItem value="__new__" className="text-primary font-medium">
                           <span className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />
-                            Incluir nova categoria
+                            Cadastrar novo EPI
                           </span>
                         </SelectItem>
                       </SelectContent>
@@ -386,6 +458,7 @@ export function EpiForm({
         onOpenChange={setShowTipoForm}
         onSubmit={handleCreateTipo}
         isLoading={isCreatingTipo}
+        defaultCategoria={selectedCategoria}
       />
     </Dialog>
   );

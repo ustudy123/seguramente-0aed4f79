@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,24 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const CATEGORIAS_EPI = [
-  "Proteção da Cabeça",
-  "Proteção dos Olhos e Face",
-  "Proteção Auditiva",
-  "Proteção Respiratória",
-  "Proteção das Mãos",
-  "Proteção dos Pés",
-  "Proteção contra Quedas",
-  "Proteção do Tronco",
-  "Proteção do Corpo Inteiro",
-  "Outros",
-];
+import { CATEGORIAS_EPI } from "@/types/epi";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   descricao: z.string().optional(),
-  categoria: z.string().optional(),
+  categoria: z.string().min(1, "Selecione uma categoria"),
   validade_meses: z.coerce.number().min(0).optional().nullable(),
   ca_numero: z.string().optional(),
   marca: z.string().optional(),
@@ -68,6 +57,7 @@ interface EpiTipoFormProps {
     estoque_inicial?: number | null;
   }) => Promise<void>;
   isLoading?: boolean;
+  defaultCategoria?: string;
 }
 
 export function EpiTipoForm({
@@ -75,13 +65,14 @@ export function EpiTipoForm({
   onOpenChange,
   onSubmit,
   isLoading,
+  defaultCategoria,
 }: EpiTipoFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       nome: "",
       descricao: "",
-      categoria: "",
+      categoria: defaultCategoria || "",
       validade_meses: undefined,
       ca_numero: "",
       marca: "",
@@ -90,6 +81,13 @@ export function EpiTipoForm({
       estoque_inicial: 100,
     },
   });
+
+  // Update categoria when defaultCategoria changes
+  useEffect(() => {
+    if (defaultCategoria) {
+      form.setValue("categoria", defaultCategoria);
+    }
+  }, [defaultCategoria, form]);
 
   const handleSubmit = async (data: FormData) => {
     await onSubmit({
@@ -111,7 +109,7 @@ export function EpiTipoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Tipo de EPI</DialogTitle>
+          <DialogTitle>Cadastrar Novo EPI</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -121,9 +119,9 @@ export function EpiTipoForm({
                 name="nome"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Nome *</FormLabel>
+                    <FormLabel>Nome do EPI *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Capacete de Segurança" {...field} />
+                      <Input placeholder="Ex: Protetor Auricular, Abafador, etc" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,7 +133,7 @@ export function EpiTipoForm({
                 name="categoria"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria</FormLabel>
+                    <FormLabel>Categoria *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
@@ -263,7 +261,7 @@ export function EpiTipoForm({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Descrição do tipo de EPI"
+                      placeholder="Descrição do EPI"
                       {...field}
                     />
                   </FormControl>
