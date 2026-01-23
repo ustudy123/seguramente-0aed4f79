@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CpfInput } from '@/components/ui/cpf-input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { AdmissaoFormSteps } from './AdmissaoFormSteps';
 import { DocumentUpload } from './DocumentUpload';
 import { 
@@ -467,10 +468,10 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
 
               <div>
                 <Label htmlFor="celular">Celular *</Label>
-                <Input 
+                <PhoneInput 
                   id="celular"
-                  {...formContato.register('celular')}
-                  placeholder="(00) 00000-0000"
+                  value={formContato.watch('celular')}
+                  onChange={(value) => formContato.setValue('celular', value, { shouldValidate: true })}
                 />
                 {formContato.formState.errors.celular && (
                   <p className="text-xs text-destructive mt-1">{formContato.formState.errors.celular.message}</p>
@@ -479,10 +480,10 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
 
               <div>
                 <Label htmlFor="telefone">Telefone Fixo</Label>
-                <Input 
+                <PhoneInput 
                   id="telefone"
-                  {...formContato.register('telefone')}
-                  placeholder="(00) 0000-0000"
+                  value={formContato.watch('telefone')}
+                  onChange={(value) => formContato.setValue('telefone', value)}
                 />
               </div>
 

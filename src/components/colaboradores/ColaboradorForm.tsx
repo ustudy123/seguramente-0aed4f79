@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CpfInput } from "@/components/ui/cpf-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useDepartamentos, useCargos, useFiliais } from "@/hooks/useCadastros";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,13 +80,6 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
     },
   });
 
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers
-      .replace(/(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{5})(\d)/, "$1-$2")
-      .slice(0, 15);
-  };
 
   const onSubmit = async (data: FormData) => {
     if (!tenantId) {
@@ -184,11 +178,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess }: ColaboradorFo
                   <FormItem>
                     <FormLabel>Celular</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="(00) 00000-0000"
-                        {...field}
-                        onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                        maxLength={15}
+                      <PhoneInput
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
