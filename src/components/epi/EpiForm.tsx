@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { EpiTipoForm } from "./EpiTipoForm";
 import type { EpiTipo, EpiCompleto } from "@/types/epi";
 
 const schema = z.object({
@@ -49,6 +53,17 @@ interface EpiFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: FormData) => Promise<void>;
+  onCreateTipo: (data: {
+    nome: string;
+    descricao?: string;
+    categoria?: string;
+    validade_meses?: number | null;
+    ca_numero?: string;
+    marca?: string;
+    fabricante?: string;
+    estoque_minimo?: number | null;
+    estoque_inicial?: number | null;
+  }) => Promise<void>;
   tipos: EpiTipo[];
   epi?: EpiCompleto | null;
   isLoading?: boolean;
@@ -58,10 +73,13 @@ export function EpiForm({
   open,
   onOpenChange,
   onSubmit,
+  onCreateTipo,
   tipos,
   epi,
   isLoading,
 }: EpiFormProps) {
+  const [showTipoForm, setShowTipoForm] = useState(false);
+  const [isCreatingTipo, setIsCreatingTipo] = useState(false);
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -87,6 +105,24 @@ export function EpiForm({
     onOpenChange(false);
   };
 
+  const handleCreateTipo = async (data: Parameters<typeof onCreateTipo>[0]) => {
+    setIsCreatingTipo(true);
+    try {
+      await onCreateTipo(data);
+      setShowTipoForm(false);
+    } finally {
+      setIsCreatingTipo(false);
+    }
+  };
+
+  const handleTipoChange = (value: string) => {
+    if (value === "__new__") {
+      setShowTipoForm(true);
+    } else {
+      form.setValue("tipo_id", value);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -102,18 +138,28 @@ export function EpiForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de EPI *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={handleTipoChange} 
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {tipos.map((tipo) => (
+                        {tipos.filter(t => t.is_active !== false).map((tipo) => (
                           <SelectItem key={tipo.id} value={tipo.id}>
                             {tipo.nome}
                           </SelectItem>
                         ))}
+                        <Separator className="my-1" />
+                        <SelectItem value="__new__" className="text-primary font-medium">
+                          <span className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Incluir novo tipo
+                          </span>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -312,6 +358,14 @@ export function EpiForm({
           </form>
         </Form>
       </DialogContent>
+
+      {/* Modal para criar novo tipo de EPI */}
+      <EpiTipoForm
+        open={showTipoForm}
+        onOpenChange={setShowTipoForm}
+        onSubmit={handleCreateTipo}
+        isLoading={isCreatingTipo}
+      />
     </Dialog>
   );
 }
