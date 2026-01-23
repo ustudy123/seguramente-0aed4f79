@@ -27,7 +27,13 @@ export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew }: Adm
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [departamentoFilter, setDepartamentoFilter] = useState<string>('todos');
 
-  const departamentos = [...new Set(admissoes.map(a => a.dadosProfissionais.departamento))];
+  const departamentos = [
+    ...new Set(
+      admissoes
+        .map((a) => a.dadosProfissionais.departamento)
+        .filter((dep): dep is string => typeof dep === 'string' && dep.trim().length > 0)
+    ),
+  ];
 
   const filteredAdmissoes = admissoes.filter(admissao => {
     const matchesSearch = admissao.dadosPessoais.nomeCompleto
@@ -92,8 +98,10 @@ export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew }: Adm
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os departamentos</SelectItem>
-              {departamentos.map(dep => (
-                <SelectItem key={dep} value={dep}>{dep}</SelectItem>
+              {departamentos.map((dep) => (
+                <SelectItem key={dep} value={dep}>
+                  {dep}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
