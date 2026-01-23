@@ -157,6 +157,24 @@ export function EpiEntregaWizard({
     setIsLoading(true);
 
     try {
+      // A tabela epi_entregas referencia `epis.id` (item de estoque),
+      // então precisamos resolver o epi_id a partir do tipo selecionado (epi_tipos).
+      const { data: epiRow, error: epiError } = await supabase
+        .from("epis")
+        .select("id, quantidade_estoque")
+        .eq("tipo_id", formData.epiTipoId)
+        .gte("quantidade_estoque", formData.quantidade)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (epiError) throw epiError;
+      if (!epiRow?.id) {
+        throw new Error(
+          "Não há EPI em estoque para este tipo (ou o estoque é insuficiente). Cadastre um EPI em \"EPIs\" com este tipo e estoque disponível."
+        );
+      }
+
       let fotoUrl: string | undefined;
       let assinaturaUrl: string | undefined;
       const signedAt = new Date().toISOString();
@@ -181,7 +199,7 @@ export function EpiEntregaWizard({
         .from("epi_entregas")
         .insert({
           tenant_id: tenantId,
-          epi_id: formData.epiTipoId, // Usando epi_tipos como referência
+          epi_id: epiRow.id,
           colaborador_nome: formData.colaboradorNome,
           colaborador_cpf: formData.colaboradorCpf,
           colaborador_cargo: formData.colaboradorCargo,
