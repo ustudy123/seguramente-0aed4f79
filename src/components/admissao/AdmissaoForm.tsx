@@ -105,7 +105,7 @@ const dadosProfissionaisSchema = z.object({
   jornadaTrabalho: z.string().min(1, 'Jornada de trabalho obrigatória'),
   salario: z.string().min(1, 'Salário obrigatório'),
   gestorImediato: z.string().min(2, 'Gestor imediato obrigatório'),
-  centroCusto: z.string().min(1, 'Centro de custo obrigatório'),
+  centroCusto: z.string().optional(),
 });
 
 const dadosBancariosSchema = z.object({
@@ -736,15 +736,12 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
               </div>
 
               <div>
-                <Label htmlFor="centroCusto">Centro de Custo *</Label>
+                <Label htmlFor="centroCusto">Centro de Custo</Label>
                 <Input 
                   id="centroCusto"
                   {...formProfissionais.register('centroCusto')}
-                  placeholder="Ex: RH-001"
+                  placeholder="Ex: RH-001 (opcional)"
                 />
-                {formProfissionais.formState.errors.centroCusto && (
-                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.centroCusto.message}</p>
-                )}
               </div>
             </div>
           </motion.div>
