@@ -138,22 +138,95 @@ export function ImportPlanilhaModal({
   };
 
   const downloadTemplateXLSX = () => {
-    const ws = XLSX.utils.aoa_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Modelo");
+    // Aba de dados
+    const wsData = XLSX.utils.aoa_to_sheet(templateData);
     
-    // Ajustar largura das colunas
-    ws["!cols"] = [
-      { wch: 25 }, // Nome
+    // Ajustar largura das colunas na aba de dados
+    wsData["!cols"] = [
+      { wch: 30 }, // Nome
       { wch: 18 }, // CPF
       { wch: 12 }, // Sexo
       { wch: 16 }, // Data Nascimento
-      { wch: 12 }, // SITUAÇÃO
+      { wch: 38 }, // SITUAÇÃO
       { wch: 12 }, // BR/PDH
-      { wch: 20 }, // Nome cargo
+      { wch: 22 }, // Nome cargo
       { wch: 20 }, // Departamento
-      { wch: 12 }, // Nível
+      { wch: 14 }, // Nível
     ];
+
+    // Aba de instruções
+    const instrucoesData = [
+      ["INSTRUÇÕES DE PREENCHIMENTO DA PLANILHA DE IMPORTAÇÃO"],
+      [""],
+      ["Esta planilha permite importar colaboradores em massa para o sistema."],
+      ["Preencha a aba 'Dados' seguindo as orientações abaixo para cada coluna."],
+      [""],
+      ["═══════════════════════════════════════════════════════════════════════════"],
+      [""],
+      ["COLUNA", "OBRIGATÓRIO", "DESCRIÇÃO", "VALORES ACEITOS", "EXEMPLOS"],
+      [""],
+      ["Nome", "SIM", "Nome completo do colaborador", "Texto livre", "Maria da Silva Santos"],
+      ["CPF", "SIM", "CPF do colaborador (com ou sem pontuação)", "11 dígitos numéricos", "123.456.789-00 ou 12345678900"],
+      ["Sexo", "NÃO", "Gênero do colaborador", "Masculino, Feminino, M, F", "Masculino"],
+      ["Data Nascimento", "NÃO", "Data de nascimento", "DD/MM/AAAA ou AAAA-MM-DD", "15/03/1990"],
+      ["SITUAÇÃO", "NÃO", "Status do colaborador no sistema", "0 = Inativo (desligado), 1 = Ativo", "1"],
+      ["BR/PDH", "NÃO", "Filial/Unidade do colaborador", "Nome da filial cadastrada", "Matriz, Filial SP"],
+      ["Nome cargo", "SIM", "Cargo/Função do colaborador", "Nome do cargo", "Analista de RH"],
+      ["Departamento", "NÃO", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
+      ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
+      [""],
+      ["═══════════════════════════════════════════════════════════════════════════"],
+      [""],
+      ["OBSERVAÇÕES IMPORTANTES:"],
+      [""],
+      ["1. As colunas marcadas como OBRIGATÓRIO devem ser preenchidas para que o registro seja importado."],
+      ["2. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
+      ["3. Departamentos e Cargos não cadastrados serão criados automaticamente."],
+      ["4. A primeira linha deve conter os cabeçalhos (não apagar)."],
+      ["5. Linhas completamente vazias serão ignoradas."],
+      ["6. Registros com erros serão listados ao final da importação."],
+      [""],
+      ["═══════════════════════════════════════════════════════════════════════════"],
+      [""],
+      ["NÍVEIS ACEITOS (variações reconhecidas):"],
+      [""],
+      ["Nível", "Variações aceitas"],
+      ["Estagiário", "estagiario, estagiário"],
+      ["Junior", "junior, júnior, jr"],
+      ["Pleno", "pleno, pl"],
+      ["Senior", "senior, sênior, sr"],
+      ["Especialista", "especialista, esp"],
+      ["Coordenador", "coordenador, coord"],
+      ["Gerente", "gerente, ger"],
+      ["Diretor", "diretor, dir"],
+      [""],
+      ["═══════════════════════════════════════════════════════════════════════════"],
+      [""],
+      ["FORMATOS DE DATA ACEITOS:"],
+      [""],
+      ["Formato", "Exemplo"],
+      ["DD/MM/AAAA", "15/03/1990"],
+      ["DD-MM-AAAA", "15-03-1990"],
+      ["AAAA-MM-DD", "1990-03-15"],
+      ["AAAA/MM/DD", "1990/03/15"],
+      [""],
+      ["Em caso de dúvidas, entre em contato com o suporte."],
+    ];
+
+    const wsInstrucoes = XLSX.utils.aoa_to_sheet(instrucoesData);
+    
+    // Ajustar largura das colunas na aba de instruções
+    wsInstrucoes["!cols"] = [
+      { wch: 20 }, // Coluna
+      { wch: 14 }, // Obrigatório
+      { wch: 45 }, // Descrição
+      { wch: 50 }, // Valores aceitos
+      { wch: 30 }, // Exemplos
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsData, "Dados");
+    XLSX.utils.book_append_sheet(wb, wsInstrucoes, "Instruções");
     
     XLSX.writeFile(wb, "modelo_importacao.xlsx");
   };
