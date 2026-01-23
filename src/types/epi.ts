@@ -5,14 +5,33 @@ export type EpiStatus = Database["public"]["Enums"]["epi_status"];
 export type EntregaStatus = Database["public"]["Enums"]["entrega_status"];
 
 // Tipos de tabela
-export type EpiTipo = Database["public"]["Tables"]["epi_tipos"]["Row"];
+export type EpiTipo = Database["public"]["Tables"]["epi_tipos"]["Row"] & {
+  // Campos adicionados pela migração
+  categoria?: string | null;
+  ca_numero?: string | null;
+  marca?: string | null;
+  fabricante?: string | null;
+  estoque_minimo?: number | null;
+  quantidade_estoque?: number | null;
+  is_active?: boolean | null;
+};
 export type EpiTipoInsert = Database["public"]["Tables"]["epi_tipos"]["Insert"];
 
 export type Epi = Database["public"]["Tables"]["epis"]["Row"];
 export type EpiInsert = Database["public"]["Tables"]["epis"]["Insert"];
 export type EpiUpdate = Database["public"]["Tables"]["epis"]["Update"];
 
-export type EpiEntrega = Database["public"]["Tables"]["epi_entregas"]["Row"];
+export type EpiEntrega = Database["public"]["Tables"]["epi_entregas"]["Row"] & {
+  // Campos adicionados pela migração
+  assinatura_url?: string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  signed_at?: string | null;
+  liveness_detected?: boolean | null;
+  liveness_data?: { actions: string[]; timestamps: string[] } | null;
+  data_validade?: string | null;
+  employee_id?: string | null;
+};
 export type EpiEntregaInsert = Database["public"]["Tables"]["epi_entregas"]["Insert"];
 export type EpiEntregaUpdate = Database["public"]["Tables"]["epi_entregas"]["Update"];
 

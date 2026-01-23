@@ -18,11 +18,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const CATEGORIAS_EPI = [
+  "Proteção da Cabeça",
+  "Proteção dos Olhos e Face",
+  "Proteção Auditiva",
+  "Proteção Respiratória",
+  "Proteção das Mãos",
+  "Proteção dos Pés",
+  "Proteção contra Quedas",
+  "Proteção do Tronco",
+  "Proteção do Corpo Inteiro",
+  "Outros",
+];
 
 const schema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   descricao: z.string().optional(),
+  categoria: z.string().optional(),
   validade_meses: z.coerce.number().min(0).optional().nullable(),
+  ca_numero: z.string().optional(),
+  marca: z.string().optional(),
+  fabricante: z.string().optional(),
+  estoque_minimo: z.coerce.number().min(0).optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -30,7 +55,16 @@ type FormData = z.infer<typeof schema>;
 interface EpiTipoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { nome: string; descricao?: string; validade_meses?: number | null }) => Promise<void>;
+  onSubmit: (data: {
+    nome: string;
+    descricao?: string;
+    categoria?: string;
+    validade_meses?: number | null;
+    ca_numero?: string;
+    marca?: string;
+    fabricante?: string;
+    estoque_minimo?: number | null;
+  }) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -45,37 +79,158 @@ export function EpiTipoForm({
     defaultValues: {
       nome: "",
       descricao: "",
+      categoria: "",
       validade_meses: undefined,
+      ca_numero: "",
+      marca: "",
+      fabricante: "",
+      estoque_minimo: 5,
     },
   });
 
   const handleSubmit = async (data: FormData) => {
-    await onSubmit({ nome: data.nome, descricao: data.descricao, validade_meses: data.validade_meses });
+    await onSubmit({
+      nome: data.nome,
+      descricao: data.descricao,
+      categoria: data.categoria,
+      validade_meses: data.validade_meses,
+      ca_numero: data.ca_numero,
+      marca: data.marca,
+      fabricante: data.fabricante,
+      estoque_minimo: data.estoque_minimo,
+    });
     form.reset();
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo Tipo de EPI</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="nome"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Capacete de Segurança" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="nome"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel>Nome *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Capacete de Segurança" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="categoria"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CATEGORIAS_EPI.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ca_numero"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>C.A. (Certificado de Aprovação)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: 12345" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="marca"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Marca</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: 3M" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="fabricante"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fabricante</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: 3M do Brasil" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="validade_meses"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Validade (meses)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 12"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="estoque_minimo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estoque Mínimo</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Ex: 5"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -87,25 +242,6 @@ export function EpiTipoForm({
                     <Textarea
                       placeholder="Descrição do tipo de EPI"
                       {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="validade_meses"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Validade (meses)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Ex: 12"
-                      {...field}
-                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />

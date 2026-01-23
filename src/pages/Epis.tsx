@@ -8,7 +8,7 @@ import { EpiStats } from "@/components/epi/EpiStats";
 import { EpiList } from "@/components/epi/EpiList";
 import { EpiForm } from "@/components/epi/EpiForm";
 import { EpiTipoForm } from "@/components/epi/EpiTipoForm";
-import { EpiEntregaForm } from "@/components/epi/EpiEntregaForm";
+import { EpiEntregaWizard } from "@/components/epi/entrega/EpiEntregaWizard";
 import { EpiEntregaList } from "@/components/epi/EpiEntregaList";
 import { EpiMovimentacoes } from "@/components/epi/EpiMovimentacoes";
 import { AjustarEstoqueModal } from "@/components/epi/AjustarEstoqueModal";
@@ -183,12 +183,13 @@ const Epis = () => {
         isLoading={criandoEpi || atualizandoEpi}
       />
 
-      <EpiEntregaForm
+      <EpiEntregaWizard
         open={showEntregaForm}
         onOpenChange={setShowEntregaForm}
-        onSubmit={async (data) => { await registrarEntrega(data); }}
-        epis={epis}
-        isLoading={registrandoEntrega}
+        epiTipos={tipos}
+        onSuccess={() => {
+          // Refresh data
+        }}
       />
 
       <AjustarEstoqueModal
