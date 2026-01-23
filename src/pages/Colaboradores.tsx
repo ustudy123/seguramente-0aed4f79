@@ -16,7 +16,9 @@ import {
   User,
   Briefcase,
   MapPin,
-  X
+  X,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface ColaboradorExtendido {
   id: string;
@@ -92,6 +103,7 @@ const Colaboradores = () => {
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
 
   const handleEditColaborador = (colab: ColaboradorExtendido) => {
     setEditingColaborador({
@@ -243,12 +255,20 @@ const Colaboradores = () => {
         </div>
       </motion.div>
 
-      {/* Results Count */}
+      {/* Results Count & View Toggle */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Mostrando <span className="font-medium text-foreground">{filteredColaboradores.length}</span> de{" "}
           <span className="font-medium text-foreground">{colaboradores.length}</span> colaboradores
         </p>
+        <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as "cards" | "list")}>
+          <ToggleGroupItem value="cards" aria-label="Visualização em cards" className="h-9 px-3">
+            <LayoutGrid className="w-4 h-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="list" aria-label="Visualização em lista" className="h-9 px-3">
+            <List className="w-4 h-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {/* Loading State */}
@@ -268,7 +288,7 @@ const Colaboradores = () => {
             Cadastrar Primeiro Colaborador
           </Button>
         </motion.div>
-      ) : (
+      ) : viewMode === "cards" ? (
         /* Colaboradores Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredColaboradores.map((colab, index) => (
@@ -356,6 +376,95 @@ const Colaboradores = () => {
             </motion.div>
           ))}
         </div>
+      ) : (
+        /* Colaboradores List/Table */
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
+        >
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[300px]">Colaborador</TableHead>
+                <TableHead>Cargo</TableHead>
+                <TableHead className="hidden md:table-cell">Departamento</TableHead>
+                <TableHead className="hidden lg:table-cell">Contato</TableHead>
+                <TableHead className="hidden xl:table-cell">Admissão</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredColaboradores.map((colab) => (
+                <TableRow 
+                  key={colab.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleViewProfile(colab)}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground">{colab.nome_completo}</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{colab.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">{colab.cargo}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {colab.departamento || "-"}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                    {colab.celular || "-"}
+                  </TableCell>
+                  <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                    {colab.data_admissao 
+                      ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") 
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
+                      {statusLabels[colab.status] || "Ativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewProfile(colab)}>
+                          Ver perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toast.info("Funcionalidade de documentos em desenvolvimento")}>
+                          Documentos
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => toast.info("Funcionalidade de desligamento em desenvolvimento")}
+                        >
+                          Desligar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </motion.div>
       )}
 
       {/* Pagination - only show if we have colaboradores */}
