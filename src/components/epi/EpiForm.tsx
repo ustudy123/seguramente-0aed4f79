@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
+import { Plus, HelpCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -137,14 +143,29 @@ export function EpiForm({
                 name="tipo_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo de EPI *</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5">
+                      Categoria *
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p>
+                              Categorias são os tipos de EPIs cadastrados no sistema (ex: Capacete, Luvas, Óculos).
+                              Selecione uma categoria existente ou crie uma nova.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </FormLabel>
                     <Select 
                       onValueChange={handleTipoChange} 
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
+                          <SelectValue placeholder="Selecione a categoria" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -157,7 +178,7 @@ export function EpiForm({
                         <SelectItem value="__new__" className="text-primary font-medium">
                           <span className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />
-                            Incluir novo tipo
+                            Incluir nova categoria
                           </span>
                         </SelectItem>
                       </SelectContent>
