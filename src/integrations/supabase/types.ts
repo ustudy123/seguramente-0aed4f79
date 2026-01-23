@@ -464,6 +464,7 @@ export type Database = {
       }
       epi_entregas: {
         Row: {
+          assinatura_url: string | null
           colaborador_cargo: string | null
           colaborador_cpf: string | null
           colaborador_departamento: string | null
@@ -472,20 +473,28 @@ export type Database = {
           data_devolucao_efetiva: string | null
           data_devolucao_prevista: string | null
           data_entrega: string
+          data_validade: string | null
+          employee_id: string | null
           entregue_por: string | null
           entregue_por_nome: string | null
           epi_id: string
           foto_entrega_url: string | null
           id: string
+          ip_address: string | null
+          liveness_data: Json | null
+          liveness_detected: boolean | null
           motivo_entrega: string | null
           observacoes: string | null
           quantidade: number
           recebido_por_assinatura: string | null
+          signed_at: string | null
           status: Database["public"]["Enums"]["entrega_status"]
           tenant_id: string
           updated_at: string
+          user_agent: string | null
         }
         Insert: {
+          assinatura_url?: string | null
           colaborador_cargo?: string | null
           colaborador_cpf?: string | null
           colaborador_departamento?: string | null
@@ -494,20 +503,28 @@ export type Database = {
           data_devolucao_efetiva?: string | null
           data_devolucao_prevista?: string | null
           data_entrega?: string
+          data_validade?: string | null
+          employee_id?: string | null
           entregue_por?: string | null
           entregue_por_nome?: string | null
           epi_id: string
           foto_entrega_url?: string | null
           id?: string
+          ip_address?: string | null
+          liveness_data?: Json | null
+          liveness_detected?: boolean | null
           motivo_entrega?: string | null
           observacoes?: string | null
           quantidade?: number
           recebido_por_assinatura?: string | null
+          signed_at?: string | null
           status?: Database["public"]["Enums"]["entrega_status"]
           tenant_id: string
           updated_at?: string
+          user_agent?: string | null
         }
         Update: {
+          assinatura_url?: string | null
           colaborador_cargo?: string | null
           colaborador_cpf?: string | null
           colaborador_departamento?: string | null
@@ -516,18 +533,25 @@ export type Database = {
           data_devolucao_efetiva?: string | null
           data_devolucao_prevista?: string | null
           data_entrega?: string
+          data_validade?: string | null
+          employee_id?: string | null
           entregue_por?: string | null
           entregue_por_nome?: string | null
           epi_id?: string
           foto_entrega_url?: string | null
           id?: string
+          ip_address?: string | null
+          liveness_data?: Json | null
+          liveness_detected?: boolean | null
           motivo_entrega?: string | null
           observacoes?: string | null
           quantidade?: number
           recebido_por_assinatura?: string | null
+          signed_at?: string | null
           status?: Database["public"]["Enums"]["entrega_status"]
           tenant_id?: string
           updated_at?: string
+          user_agent?: string | null
         }
         Relationships: [
           {
@@ -608,31 +632,52 @@ export type Database = {
       }
       epi_tipos: {
         Row: {
+          ca_numero: string | null
+          categoria: string | null
           created_at: string
           descricao: string | null
+          estoque_minimo: number | null
+          fabricante: string | null
           id: string
+          is_active: boolean | null
+          marca: string | null
           nome: string
           obrigatorio_para_funcoes: string[] | null
+          quantidade_estoque: number | null
           tenant_id: string
           updated_at: string
           validade_meses: number | null
         }
         Insert: {
+          ca_numero?: string | null
+          categoria?: string | null
           created_at?: string
           descricao?: string | null
+          estoque_minimo?: number | null
+          fabricante?: string | null
           id?: string
+          is_active?: boolean | null
+          marca?: string | null
           nome: string
           obrigatorio_para_funcoes?: string[] | null
+          quantidade_estoque?: number | null
           tenant_id: string
           updated_at?: string
           validade_meses?: number | null
         }
         Update: {
+          ca_numero?: string | null
+          categoria?: string | null
           created_at?: string
           descricao?: string | null
+          estoque_minimo?: number | null
+          fabricante?: string | null
           id?: string
+          is_active?: boolean | null
+          marca?: string | null
           nome?: string
           obrigatorio_para_funcoes?: string[] | null
+          quantidade_estoque?: number | null
           tenant_id?: string
           updated_at?: string
           validade_meses?: number | null
