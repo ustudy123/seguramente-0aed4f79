@@ -189,31 +189,44 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
   });
 
   // Form for step 3 - Dados Profissionais
+  const defaultProfissionais = {
+    cargo: '',
+    departamento: '',
+    filial: '',
+    dataAdmissao: '',
+    tipoContrato: 'CLT',
+    jornadaTrabalho: '44h semanais',
+    salario: '',
+    gestorImediato: '',
+    centroCusto: '',
+  };
   const formProfissionais = useForm<DadosProfissionais>({
     resolver: zodResolver(dadosProfissionaisSchema),
-    defaultValues: initialData?.dadosProfissionais || {
-      cargo: '',
-      departamento: '',
-      filial: '',
-      dataAdmissao: '',
-      tipoContrato: 'CLT',
-      jornadaTrabalho: '44h semanais',
-      salario: '',
-      gestorImediato: '',
-      centroCusto: '',
-    },
+    defaultValues: initialData?.dadosProfissionais ? {
+      ...defaultProfissionais,
+      ...initialData.dadosProfissionais,
+      // Ensure Select fields don't have empty strings
+      tipoContrato: initialData.dadosProfissionais.tipoContrato || 'CLT',
+      jornadaTrabalho: initialData.dadosProfissionais.jornadaTrabalho || '44h semanais',
+    } : defaultProfissionais,
   });
 
   // Form for step 4 - Dados Bancários
+  // Form for step 4 - Dados Bancários
+  const defaultBancarios = {
+    banco: '',
+    agencia: '',
+    conta: '',
+    tipoConta: 'corrente',
+    chavePix: '',
+  };
   const formBancarios = useForm<DadosBancarios>({
     resolver: zodResolver(dadosBancariosSchema),
-    defaultValues: initialData?.dadosBancarios || {
-      banco: '',
-      agencia: '',
-      conta: '',
-      tipoConta: 'corrente',
-      chavePix: '',
-    },
+    defaultValues: initialData?.dadosBancarios ? {
+      ...defaultBancarios,
+      ...initialData.dadosBancarios,
+      tipoConta: initialData.dadosBancarios.tipoConta || 'corrente',
+    } : defaultBancarios,
   });
 
   // Form for step 5 - Exame Admissional
