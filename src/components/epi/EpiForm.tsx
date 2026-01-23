@@ -150,7 +150,7 @@ export function EpiForm({
                           <TooltipTrigger asChild>
                             <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
+                          <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
                             <p>
                               Categorias são os tipos de EPIs cadastrados no sistema (ex: Capacete, Luvas, Óculos).
                               Selecione uma categoria existente ou crie uma nova.
