@@ -10,6 +10,7 @@ interface PhotoCaptureProps {
 
 export function PhotoCapture({ onCapture, onError }: PhotoCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -21,17 +22,18 @@ export function PhotoCapture({ onCapture, onError }: PhotoCaptureProps) {
       setCameraError(null);
       
       // Parar stream anterior se existir
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
       });
       
+      streamRef.current = mediaStream;
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
       }
       
       setStream(mediaStream);
@@ -42,17 +44,17 @@ export function PhotoCapture({ onCapture, onError }: PhotoCaptureProps) {
       setCameraError(errorMessage);
       onError?.(errorMessage);
     }
-  }, [onError, stream]);
+  }, [onError]);
 
   useEffect(() => {
     startCamera();
     
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [startCamera]);
 
   // Capturar foto
   const capturePhoto = () => {
@@ -75,8 +77,8 @@ export function PhotoCapture({ onCapture, onError }: PhotoCaptureProps) {
     setCapturedPhoto(photoData);
     
     // Parar câmera após captura
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
     }
     setCameraReady(false);
   };
