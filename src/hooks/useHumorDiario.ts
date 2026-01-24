@@ -30,6 +30,70 @@ export const HUMOR_OPTIONS: HumorOption[] = [
   { id: "desanimado", label: "Desanimado", emoji: "😞", color: "bg-red-300", category: "negativo" },
 ];
 
+// Micro-perguntas rotativas para análise ergonômica cognitiva
+export interface MicroPergunta {
+  id: string;
+  pergunta: string;
+  opcoes: { label: string; value: string }[];
+}
+
+export const MICRO_PERGUNTAS: MicroPergunta[] = [
+  {
+    id: "carga_trabalho",
+    pergunta: "Hoje meu trabalho foi…",
+    opcoes: [
+      { label: "Leve", value: "leve" },
+      { label: "Normal", value: "normal" },
+      { label: "Pesado", value: "pesado" },
+    ],
+  },
+  {
+    id: "pausas",
+    pergunta: "Consegui fazer pausas hoje?",
+    opcoes: [
+      { label: "Sim", value: "sim" },
+      { label: "Parcial", value: "parcial" },
+      { label: "Não", value: "nao" },
+    ],
+  },
+  {
+    id: "pressao",
+    pergunta: "Senti pressão excessiva hoje?",
+    opcoes: [
+      { label: "Sim", value: "sim" },
+      { label: "Não", value: "nao" },
+    ],
+  },
+  {
+    id: "apoio_equipe",
+    pergunta: "Tive apoio da equipe hoje?",
+    opcoes: [
+      { label: "Sim", value: "sim" },
+      { label: "Parcial", value: "parcial" },
+      { label: "Não", value: "nao" },
+    ],
+  },
+  {
+    id: "clareza_tarefas",
+    pergunta: "As tarefas de hoje foram claras?",
+    opcoes: [
+      { label: "Sim", value: "sim" },
+      { label: "Parcial", value: "parcial" },
+      { label: "Não", value: "nao" },
+    ],
+  },
+];
+
+// Função para obter uma micro-pergunta rotativa baseada no dia
+export function getMicroPerguntaDoDia(): MicroPergunta {
+  const hoje = new Date();
+  const diaDoAno = Math.floor(
+    (hoje.getTime() - new Date(hoje.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const indice = diaDoAno % MICRO_PERGUNTAS.length;
+  return MICRO_PERGUNTAS[indice];
+}
+
 export interface HumorDiario {
   id: string;
   tenant_id: string;
@@ -38,6 +102,8 @@ export interface HumorDiario {
   data: string;
   humor: string;
   emoji: string;
+  micropergunta_tipo?: string | null;
+  micropergunta_resposta?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -90,7 +156,17 @@ export function useHumorDiario() {
 
   // Registrar humor do dia (primeira vez)
   const registrarHumor = useMutation({
-    mutationFn: async ({ humor, emoji }: { humor: string; emoji: string }) => {
+    mutationFn: async ({ 
+      humor, 
+      emoji,
+      micropergunta_tipo,
+      micropergunta_resposta,
+    }: { 
+      humor: string; 
+      emoji: string;
+      micropergunta_tipo?: string;
+      micropergunta_resposta?: string;
+    }) => {
       if (!user?.id || !tenant?.id || !profile?.nome_completo) {
         throw new Error("Usuário não autenticado");
       }
@@ -103,6 +179,8 @@ export function useHumorDiario() {
           data: today,
           humor,
           emoji,
+          micropergunta_tipo: micropergunta_tipo || null,
+          micropergunta_resposta: micropergunta_resposta || null,
         })
         .select()
         .single();
@@ -134,11 +212,15 @@ export function useHumorDiario() {
     mutationFn: async ({ 
       humor, 
       emoji, 
-      motivo 
+      motivo,
+      micropergunta_tipo,
+      micropergunta_resposta,
     }: { 
       humor: string; 
       emoji: string; 
       motivo?: string;
+      micropergunta_tipo?: string;
+      micropergunta_resposta?: string;
     }) => {
       if (!user?.id || !tenant?.id || !profile?.nome_completo || !humorHoje) {
         throw new Error("Dados insuficientes para atualização");
@@ -152,6 +234,8 @@ export function useHumorDiario() {
         .update({
           humor,
           emoji,
+          micropergunta_tipo: micropergunta_tipo || null,
+          micropergunta_resposta: micropergunta_resposta || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", humorHoje.id)
