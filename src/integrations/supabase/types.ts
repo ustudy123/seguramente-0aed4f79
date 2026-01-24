@@ -957,6 +957,8 @@ export type Database = {
           emoji: string
           humor: string
           id: string
+          micropergunta_resposta: string | null
+          micropergunta_tipo: string | null
           tenant_id: string
           updated_at: string
           user_id: string
@@ -968,6 +970,8 @@ export type Database = {
           emoji: string
           humor: string
           id?: string
+          micropergunta_resposta?: string | null
+          micropergunta_tipo?: string | null
           tenant_id: string
           updated_at?: string
           user_id: string
@@ -979,6 +983,8 @@ export type Database = {
           emoji?: string
           humor?: string
           id?: string
+          micropergunta_resposta?: string | null
+          micropergunta_tipo?: string | null
           tenant_id?: string
           updated_at?: string
           user_id?: string
