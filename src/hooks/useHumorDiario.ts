@@ -46,14 +46,17 @@ const humorDiarioTable = () => (supabase as any).from('humor_diario');
 const humorHistoricoTable = () => (supabase as any).from('humor_historico');
 
 export function useHumorDiario() {
-  const { user, profile } = useAuthContext();
+  const { user, profile, loading: authLoading } = useAuthContext();
   const { tenant } = useTenant();
   const queryClient = useQueryClient();
 
   const today = new Date().toISOString().split('T')[0];
 
+  // Só buscar humor quando auth estiver pronto E profile carregado
+  const isReady = !!user?.id && !!profile?.id && !authLoading;
+
   // Buscar humor do dia atual do usuário
-  const { data: humorHoje, isLoading, refetch } = useQuery({
+  const { data: humorHoje, isLoading: queryLoading, refetch } = useQuery({
     queryKey: ["humor-diario", user?.id, today],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -67,8 +70,11 @@ export function useHumorDiario() {
       if (error) throw error;
       return data as HumorDiario | null;
     },
-    enabled: !!user?.id,
+    enabled: isReady,
   });
+
+  // Loading inclui auth loading + query loading
+  const isLoading = authLoading || !isReady || queryLoading;
 
   // Registrar humor do dia (primeira vez)
   const registrarHumor = useMutation({
@@ -162,8 +168,8 @@ export function useHumorDiario() {
     },
   });
 
-  // Verificar se precisa mostrar o popup (não registrou humor hoje)
-  const precisaRegistrarHumor = !isLoading && !humorHoje && !!user?.id;
+  // Verificar se precisa mostrar o popup (auth pronto + não registrou humor hoje)
+  const precisaRegistrarHumor = isReady && !queryLoading && !humorHoje;
 
   return {
     humorHoje,
