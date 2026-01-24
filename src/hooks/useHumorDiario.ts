@@ -3,22 +3,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 
+export type HumorCategory = "positivo" | "neutro" | "negativo";
+
 export interface HumorOption {
   id: string;
   label: string;
   emoji: string;
   color: string;
+  category: HumorCategory;
 }
 
+// POSITIVOS: indicam bem-estar
+// NEUTROS: requerem atenção leve
+// NEGATIVOS: indicam risco de burnout/boreout e exigem atenção da gestão
 export const HUMOR_OPTIONS: HumorOption[] = [
-  { id: "muito_feliz", label: "Muito Feliz", emoji: "😄", color: "bg-green-500" },
-  { id: "feliz", label: "Feliz", emoji: "🙂", color: "bg-green-400" },
-  { id: "neutro", label: "Neutro", emoji: "😐", color: "bg-yellow-400" },
-  { id: "cansado", label: "Cansado", emoji: "😴", color: "bg-orange-400" },
-  { id: "estressado", label: "Estressado", emoji: "😤", color: "bg-red-400" },
-  { id: "triste", label: "Triste", emoji: "😢", color: "bg-blue-400" },
-  { id: "motivado", label: "Motivado", emoji: "💪", color: "bg-purple-500" },
-  { id: "ansioso", label: "Ansioso", emoji: "😰", color: "bg-amber-500" },
+  // Positivos
+  { id: "bem", label: "Bem", emoji: "😊", color: "bg-green-500", category: "positivo" },
+  { id: "animado", label: "Animado", emoji: "😄", color: "bg-green-400", category: "positivo" },
+  { id: "motivado", label: "Motivado", emoji: "💪", color: "bg-emerald-500", category: "positivo" },
+  // Neutros
+  { id: "neutro", label: "Neutro", emoji: "😐", color: "bg-yellow-400", category: "neutro" },
+  { id: "cansado", label: "Cansado", emoji: "😴", color: "bg-orange-400", category: "neutro" },
+  // Negativos (atenção - indicam risco)
+  { id: "estressado", label: "Estressado", emoji: "😰", color: "bg-red-500", category: "negativo" },
+  { id: "ansioso", label: "Ansioso", emoji: "😟", color: "bg-red-400", category: "negativo" },
+  { id: "desanimado", label: "Desanimado", emoji: "😞", color: "bg-red-300", category: "negativo" },
 ];
 
 export interface HumorDiario {
