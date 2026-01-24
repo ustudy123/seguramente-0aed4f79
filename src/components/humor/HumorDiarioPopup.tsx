@@ -20,11 +20,11 @@ interface HumorDiarioPopupProps {
 
 export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
   const [selectedHumor, setSelectedHumor] = useState<string | null>(null);
-  const { registrarHumor } = useHumorDiario();
+  const { registrarHumor, atualizarHumor, isAtualizacao, humorHoje } = useHumorDiario();
 
   const handleSelectHumor = async () => {
     if (!selectedHumor) {
-      toast.error("Selecione como você está se sentindo hoje");
+      toast.error("Selecione como você está se sentindo");
       return;
     }
 
@@ -32,53 +32,138 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
     if (!option) return;
 
     try {
-      await registrarHumor.mutateAsync({
-        humor: option.id,
-        emoji: option.emoji,
-      });
-      toast.success("Humor registrado com sucesso! 🎉");
+      if (isAtualizacao) {
+        // Atualizar registro existente
+        await atualizarHumor.mutateAsync({
+          humor: option.id,
+          emoji: option.emoji,
+          motivo: "Check-in periódico (6h)",
+        });
+        toast.success("Humor atualizado! 🎉");
+      } else {
+        // Primeiro registro do dia
+        await registrarHumor.mutateAsync({
+          humor: option.id,
+          emoji: option.emoji,
+        });
+        toast.success("Humor registrado com sucesso! 🎉");
+      }
+      setSelectedHumor(null);
       onClose();
     } catch (error) {
       toast.error("Erro ao registrar humor");
     }
   };
 
+  const isPending = registrarHumor.isPending || atualizarHumor.isPending;
+
+  // Agrupar humores por categoria para exibição
+  const positivos = HUMOR_OPTIONS.filter(h => h.category === "positivo");
+  const neutros = HUMOR_OPTIONS.filter(h => h.category === "neutro");
+  const negativos = HUMOR_OPTIONS.filter(h => h.category === "negativo");
+
+  // Determinar saudação baseada na hora
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? "Bom dia! ☀️" : hora < 18 ? "Boa tarde! 🌤️" : "Boa noite! 🌙";
+  
+  const mensagem = isAtualizacao 
+    ? "Como você está se sentindo agora?" 
+    : "Como você está se sentindo hoje?";
+
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent 
-        className="sm:max-w-md" 
+        className="sm:max-w-lg" 
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-bold text-center">
-            Bom dia! ☀️
+            {saudacao}
           </DialogTitle>
           <DialogDescription className="text-center text-base">
-            Como você está se sentindo hoje?
+            {mensagem}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-4 gap-3 py-6">
-          {HUMOR_OPTIONS.map((option) => (
-            <motion.button
-              key={option.id}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedHumor(option.id)}
-              className={cn(
-                "flex flex-col items-center gap-2 p-3 rounded-xl transition-all border-2",
-                selectedHumor === option.id
-                  ? "border-primary bg-primary/10 shadow-lg"
-                  : "border-transparent hover:bg-muted"
-              )}
-            >
-              <span className="text-4xl">{option.emoji}</span>
-              <span className="text-xs font-medium text-muted-foreground">
-                {option.label}
-              </span>
-            </motion.button>
-          ))}
+        <div className="space-y-4 py-4">
+          {/* Positivos */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">😊 Positivo</p>
+            <div className="flex justify-center gap-2">
+              {positivos.map((option) => (
+                <motion.button
+                  key={option.id}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedHumor(option.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
+                    selectedHumor === option.id
+                      ? "border-green-500 bg-green-500/10 shadow-lg"
+                      : "border-transparent hover:bg-muted"
+                  )}
+                >
+                  <span className="text-3xl">{option.emoji}</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {option.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Neutros */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">😐 Neutro</p>
+            <div className="flex justify-center gap-2">
+              {neutros.map((option) => (
+                <motion.button
+                  key={option.id}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedHumor(option.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
+                    selectedHumor === option.id
+                      ? "border-yellow-500 bg-yellow-500/10 shadow-lg"
+                      : "border-transparent hover:bg-muted"
+                  )}
+                >
+                  <span className="text-3xl">{option.emoji}</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {option.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Negativos */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">⚠️ Atenção</p>
+            <div className="flex justify-center gap-2">
+              {negativos.map((option) => (
+                <motion.button
+                  key={option.id}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedHumor(option.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
+                    selectedHumor === option.id
+                      ? "border-red-500 bg-red-500/10 shadow-lg"
+                      : "border-transparent hover:bg-muted"
+                  )}
+                >
+                  <span className="text-3xl">{option.emoji}</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {option.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <AnimatePresence>
@@ -101,14 +186,14 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
 
         <Button
           onClick={handleSelectHumor}
-          disabled={!selectedHumor || registrarHumor.isPending}
+          disabled={!selectedHumor || isPending}
           className="w-full"
           size="lg"
         >
-          {registrarHumor.isPending ? (
+          {isPending ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Registrando...
+              {isAtualizacao ? "Atualizando..." : "Registrando..."}
             </>
           ) : (
             "Confirmar"
