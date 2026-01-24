@@ -770,6 +770,307 @@ export type Database = {
           },
         ]
       }
+      ergonomia_acoes: {
+        Row: {
+          created_at: string
+          custo_estimado: number | null
+          custo_real: number | null
+          data_conclusao: string | null
+          data_inicio: string | null
+          descricao: string | null
+          evidencia_conclusao: string | null
+          id: string
+          item_nr17_id: string | null
+          prazo: string | null
+          prioridade: Database["public"]["Enums"]["acao_prioridade"]
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          risco_id: string | null
+          status: Database["public"]["Enums"]["acao_status"]
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custo_estimado?: number | null
+          custo_real?: number | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          evidencia_conclusao?: string | null
+          id?: string
+          item_nr17_id?: string | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["acao_prioridade"]
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          risco_id?: string | null
+          status?: Database["public"]["Enums"]["acao_status"]
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custo_estimado?: number | null
+          custo_real?: number | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          evidencia_conclusao?: string | null
+          id?: string
+          item_nr17_id?: string | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["acao_prioridade"]
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          risco_id?: string | null
+          status?: Database["public"]["Enums"]["acao_status"]
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ergonomia_acoes_item_nr17_id_fkey"
+            columns: ["item_nr17_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_itens_nr17"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ergonomia_acoes_risco_id_fkey"
+            columns: ["risco_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_riscos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ergonomia_evidencias: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          created_at: string
+          descricao: string | null
+          enviado_por: string | null
+          enviado_por_nome: string | null
+          id: string
+          item_nr17_id: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          id?: string
+          item_nr17_id: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          id?: string
+          item_nr17_id?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ergonomia_evidencias_item_nr17_id_fkey"
+            columns: ["item_nr17_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_itens_nr17"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ergonomia_itens_nr17: {
+        Row: {
+          categoria: Database["public"]["Enums"]["ergonomia_categoria"]
+          codigo: string
+          created_at: string
+          data_avaliacao: string | null
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          proxima_reavaliacao: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: Database["public"]["Enums"]["ergonomia_status"]
+          tenant_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria: Database["public"]["Enums"]["ergonomia_categoria"]
+          codigo: string
+          created_at?: string
+          data_avaliacao?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          proxima_reavaliacao?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["ergonomia_status"]
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["ergonomia_categoria"]
+          codigo?: string
+          created_at?: string
+          data_avaliacao?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          proxima_reavaliacao?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["ergonomia_status"]
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ergonomia_maturidade: {
+        Row: {
+          acoes_concluidas: number
+          acoes_pendentes: number
+          created_at: string
+          data_avaliacao: string
+          id: string
+          itens_atendidos: number
+          itens_nao_atendidos: number
+          itens_parciais: number
+          nivel: string
+          observacoes: string | null
+          pontuacao: number
+          riscos_criticos: number
+          tenant_id: string
+        }
+        Insert: {
+          acoes_concluidas?: number
+          acoes_pendentes?: number
+          created_at?: string
+          data_avaliacao?: string
+          id?: string
+          itens_atendidos?: number
+          itens_nao_atendidos?: number
+          itens_parciais?: number
+          nivel: string
+          observacoes?: string | null
+          pontuacao?: number
+          riscos_criticos?: number
+          tenant_id: string
+        }
+        Update: {
+          acoes_concluidas?: number
+          acoes_pendentes?: number
+          created_at?: string
+          data_avaliacao?: string
+          id?: string
+          itens_atendidos?: number
+          itens_nao_atendidos?: number
+          itens_parciais?: number
+          nivel?: string
+          observacoes?: string | null
+          pontuacao?: number
+          riscos_criticos?: number
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      ergonomia_riscos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          departamento: string | null
+          descricao: string | null
+          eixo: Database["public"]["Enums"]["ergonomia_eixo"]
+          fonte: string | null
+          id: string
+          impactos_potenciais: string[] | null
+          item_nr17_id: string | null
+          medidas_existentes: string[] | null
+          medidas_recomendadas: string[] | null
+          probabilidade: Database["public"]["Enums"]["risco_severidade"]
+          setor: string | null
+          severidade: Database["public"]["Enums"]["risco_severidade"]
+          tenant_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          departamento?: string | null
+          descricao?: string | null
+          eixo: Database["public"]["Enums"]["ergonomia_eixo"]
+          fonte?: string | null
+          id?: string
+          impactos_potenciais?: string[] | null
+          item_nr17_id?: string | null
+          medidas_existentes?: string[] | null
+          medidas_recomendadas?: string[] | null
+          probabilidade?: Database["public"]["Enums"]["risco_severidade"]
+          setor?: string | null
+          severidade?: Database["public"]["Enums"]["risco_severidade"]
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          departamento?: string | null
+          descricao?: string | null
+          eixo?: Database["public"]["Enums"]["ergonomia_eixo"]
+          fonte?: string | null
+          id?: string
+          impactos_potenciais?: string[] | null
+          item_nr17_id?: string | null
+          medidas_existentes?: string[] | null
+          medidas_recomendadas?: string[] | null
+          probabilidade?: Database["public"]["Enums"]["risco_severidade"]
+          setor?: string | null
+          severidade?: Database["public"]["Enums"]["risco_severidade"]
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ergonomia_riscos_item_nr17_id_fkey"
+            columns: ["item_nr17_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_itens_nr17"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_comentarios: {
         Row: {
           autor_avatar: string | null
@@ -1571,6 +1872,8 @@ export type Database = {
       }
     }
     Enums: {
+      acao_prioridade: "baixa" | "media" | "alta" | "urgente"
+      acao_status: "pendente" | "em_andamento" | "concluida" | "cancelada"
       admissao_status:
         | "rascunho"
         | "aguardando_documentos"
@@ -1587,6 +1890,20 @@ export type Database = {
         | "danificado"
         | "vencido"
         | "descartado"
+      ergonomia_categoria:
+        | "organizacao_trabalho"
+        | "mobiliario"
+        | "equipamentos"
+        | "condicoes_ambientais"
+        | "levantamento_cargas"
+        | "aet"
+      ergonomia_eixo: "fisico" | "cognitivo" | "organizacional"
+      ergonomia_status:
+        | "atendido"
+        | "parcial"
+        | "nao_atendido"
+        | "nao_aplicavel"
+      risco_severidade: "baixo" | "medio" | "alto" | "critico"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
@@ -1716,6 +2033,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      acao_prioridade: ["baixa", "media", "alta", "urgente"],
+      acao_status: ["pendente", "em_andamento", "concluida", "cancelada"],
       admissao_status: [
         "rascunho",
         "aguardando_documentos",
@@ -1734,6 +2053,22 @@ export const Constants = {
         "vencido",
         "descartado",
       ],
+      ergonomia_categoria: [
+        "organizacao_trabalho",
+        "mobiliario",
+        "equipamentos",
+        "condicoes_ambientais",
+        "levantamento_cargas",
+        "aet",
+      ],
+      ergonomia_eixo: ["fisico", "cognitivo", "organizacional"],
+      ergonomia_status: [
+        "atendido",
+        "parcial",
+        "nao_atendido",
+        "nao_aplicavel",
+      ],
+      risco_severidade: ["baixo", "medio", "alto", "critico"],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },
