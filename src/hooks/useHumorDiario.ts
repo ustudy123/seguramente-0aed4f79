@@ -45,6 +45,18 @@ export interface HumorDiario {
 const humorDiarioTable = () => (supabase as any).from('humor_diario');
 const humorHistoricoTable = () => (supabase as any).from('humor_historico');
 
+// Intervalo em horas para solicitar novo registro de humor
+const INTERVALO_HORAS = 6;
+
+// Verifica se passaram X horas desde o último registro
+function passaramHorasDesdeRegistro(updatedAt: string, horas: number): boolean {
+  const ultimaAtualizacao = new Date(updatedAt);
+  const agora = new Date();
+  const diferencaMs = agora.getTime() - ultimaAtualizacao.getTime();
+  const diferencaHoras = diferencaMs / (1000 * 60 * 60);
+  return diferencaHoras >= horas;
+}
+
 export function useHumorDiario() {
   const { user, profile, loading: authLoading } = useAuthContext();
   const { tenant } = useTenant();
@@ -168,13 +180,22 @@ export function useHumorDiario() {
     },
   });
 
-  // Verificar se precisa mostrar o popup (auth pronto + não registrou humor hoje)
-  const precisaRegistrarHumor = isReady && !queryLoading && !humorHoje;
+  // Verificar se precisa mostrar o popup:
+  // 1. Primeiro login do dia (não tem registro)
+  // 2. Passaram 6 horas desde o último registro/atualização
+  const precisaRegistrarHumor = isReady && !queryLoading && (
+    !humorHoje || 
+    passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS)
+  );
+
+  // Flag para saber se é atualização (já tem registro) ou primeiro do dia
+  const isAtualizacao = !!humorHoje;
 
   return {
     humorHoje,
     isLoading,
     precisaRegistrarHumor,
+    isAtualizacao,
     registrarHumor,
     atualizarHumor,
     refetch,
