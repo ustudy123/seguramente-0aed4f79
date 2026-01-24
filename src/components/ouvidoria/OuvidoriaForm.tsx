@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, EyeOff, Eye, Lightbulb, AlertTriangle, AlertCircle, Star, HelpCircle } from "lucide-react";
+import { Send, EyeOff, Eye, Lightbulb, AlertTriangle, AlertCircle, Star, HelpCircle, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { TipoManifestacao } from "@/types/ouvidoria";
+import { AnexoUpload } from "./AnexoUpload";
 
 interface OuvidoriaFormProps {
   onSubmit: (data: {
@@ -17,6 +18,7 @@ interface OuvidoriaFormProps {
     assunto: string;
     mensagem: string;
     anonimo: boolean;
+    anexos?: File[];
   }) => Promise<void>;
   isLoading?: boolean;
 }
@@ -69,6 +71,7 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
   const [assunto, setAssunto] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [anonimo, setAnonimo] = useState(false);
+  const [anexos, setAnexos] = useState<File[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +82,7 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
       assunto: assunto.trim(),
       mensagem: mensagem.trim(),
       anonimo,
+      anexos: anexos.length > 0 ? anexos : undefined,
     });
 
     // Reset form
@@ -86,6 +90,7 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
     setAssunto("");
     setMensagem("");
     setAnonimo(false);
+    setAnexos([]);
   };
 
   const isValid = tipo && assunto.trim() && mensagem.trim();
@@ -189,6 +194,24 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
               maxLength={5000}
             />
             <p className="text-xs text-muted-foreground text-right">{mensagem.length}/5000</p>
+          </div>
+
+          {/* Anexos */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Paperclip className="w-4 h-4" />
+              Anexos (opcional)
+            </Label>
+            <AnexoUpload
+              anexos={anexos}
+              onAnexosChange={setAnexos}
+              maxFiles={5}
+              maxSize={10 * 1024 * 1024}
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Anexe documentos, imagens ou outros arquivos como evidência (máx. 5 arquivos, 10MB cada)
+            </p>
           </div>
 
           {/* Botão de Envio */}

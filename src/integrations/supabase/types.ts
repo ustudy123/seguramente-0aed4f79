@@ -1038,6 +1038,7 @@ export type Database = {
       }
       ouvidoria: {
         Row: {
+          anexos: Json | null
           anonimo: boolean
           assunto: string
           autor_departamento: string | null
@@ -1058,6 +1059,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anexos?: Json | null
           anonimo?: boolean
           assunto: string
           autor_departamento?: string | null
@@ -1078,6 +1080,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anexos?: Json | null
           anonimo?: boolean
           assunto?: string
           autor_departamento?: string | null

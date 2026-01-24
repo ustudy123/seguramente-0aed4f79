@@ -10,7 +10,8 @@ import {
   ChevronDown, 
   ChevronUp,
   Send,
-  Trash2
+  Trash2,
+  Paperclip
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,8 @@ import {
   PRIORIDADE_LABELS,
   PRIORIDADE_COLORS,
 } from "@/types/ouvidoria";
+import { AnexosList } from "./AnexosList";
+import type { AnexoManifestacao } from "@/types/ouvidoria";
 
 interface OuvidoriaCardProps {
   manifestacao: Manifestacao;
@@ -111,6 +114,12 @@ export function OuvidoriaCard({
                     {PRIORIDADE_LABELS[manifestacao.prioridade]}
                   </Badge>
                 )}
+                {manifestacao.anexos && manifestacao.anexos.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    <Paperclip className="w-3 h-3 mr-1" />
+                    {manifestacao.anexos.length} anexo(s)
+                  </Badge>
+                )}
               </div>
               <h3 className="font-semibold text-lg">{manifestacao.assunto}</h3>
             </div>
@@ -168,6 +177,11 @@ export function OuvidoriaCard({
               </Button>
             )}
           </div>
+
+          {/* Anexos */}
+          {manifestacao.anexos && manifestacao.anexos.length > 0 && (
+            <AnexosList anexos={manifestacao.anexos} />
+          )}
 
           {/* Resposta existente */}
           {manifestacao.resposta && (
