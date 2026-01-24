@@ -5,6 +5,7 @@ import {
   Home,
   Users,
   MessageSquare,
+  MessageSquareHeart,
   Clock,
   Calendar,
   Star,
@@ -20,7 +21,6 @@ import {
   ChevronRight,
   Building2,
   Settings,
-  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +58,7 @@ const menuItems: MenuItem[] = [
   { title: "Avaliações", icon: Star, path: "/avaliacoes" },
   { title: "PDI", icon: Target, path: "/pdi" },
   { title: "EPIs", icon: Shield, path: "/epis" },
+  { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
   { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
   { title: "Documentos", icon: FileText, path: "/documentos" },
 ];

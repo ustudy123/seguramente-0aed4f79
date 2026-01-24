@@ -23,6 +23,7 @@ import Documentos from "./pages/Documentos";
 import Admissao from "./pages/Admissao";
 import Epis from "./pages/Epis";
 import Feed from "./pages/Feed";
+import Ouvidoria from "./pages/Ouvidoria";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/avaliacoes" element={<PlaceholderPage />} />
               <Route path="/pdi" element={<PlaceholderPage />} />
               <Route path="/epis" element={<Epis />} />
+              <Route path="/ouvidoria" element={<Ouvidoria />} />
               <Route path="/felicidade" element={<PlaceholderPage />} />
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/configuracoes" element={<PlaceholderPage />} />
