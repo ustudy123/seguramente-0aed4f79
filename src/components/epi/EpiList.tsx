@@ -61,6 +61,7 @@ export function EpiList({
   const filtered = epis.filter(
     (epi) =>
       epi.tipo.nome.toLowerCase().includes(search.toLowerCase()) ||
+      epi.tipo.categoria?.toLowerCase().includes(search.toLowerCase()) ||
       epi.marca?.toLowerCase().includes(search.toLowerCase()) ||
       epi.modelo?.toLowerCase().includes(search.toLowerCase()) ||
       epi.codigo?.toLowerCase().includes(search.toLowerCase())
@@ -102,7 +103,8 @@ export function EpiList({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>EPI</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Nome do EPI</TableHead>
                 <TableHead>CA</TableHead>
                 <TableHead>Marca / Modelo</TableHead>
                 <TableHead>Tamanho</TableHead>
@@ -121,6 +123,15 @@ export function EpiList({
                   transition={{ delay: index * 0.02 }}
                   className="border-b transition-colors hover:bg-muted/50"
                 >
+                  <TableCell>
+                    {epi.tipo.categoria ? (
+                      <Badge variant="secondary" className="text-xs font-normal">
+                        {epi.tipo.categoria}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{epi.tipo.nome}</span>
