@@ -84,13 +84,9 @@ export const MICRO_PERGUNTAS: MicroPergunta[] = [
   },
 ];
 
-// Função para obter uma micro-pergunta rotativa baseada no dia
-export function getMicroPerguntaDoDia(): MicroPergunta {
-  const hoje = new Date();
-  const diaDoAno = Math.floor(
-    (hoje.getTime() - new Date(hoje.getFullYear(), 0, 0).getTime()) / 86400000
-  );
-  const indice = diaDoAno % MICRO_PERGUNTAS.length;
+// Função para obter uma micro-pergunta aleatória
+export function getMicroPerguntaAleatoria(): MicroPergunta {
+  const indice = Math.floor(Math.random() * MICRO_PERGUNTAS.length);
   return MICRO_PERGUNTAS[indice];
 }
 
