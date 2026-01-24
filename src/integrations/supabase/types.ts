@@ -1036,6 +1036,77 @@ export type Database = {
           },
         ]
       }
+      ouvidoria: {
+        Row: {
+          anonimo: boolean
+          assunto: string
+          autor_departamento: string | null
+          autor_email: string | null
+          autor_id: string | null
+          autor_nome: string | null
+          created_at: string
+          id: string
+          mensagem: string
+          prioridade: string | null
+          respondido_em: string | null
+          respondido_por: string | null
+          respondido_por_nome: string | null
+          resposta: string | null
+          status: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          anonimo?: boolean
+          assunto: string
+          autor_departamento?: string | null
+          autor_email?: string | null
+          autor_id?: string | null
+          autor_nome?: string | null
+          created_at?: string
+          id?: string
+          mensagem: string
+          prioridade?: string | null
+          respondido_em?: string | null
+          respondido_por?: string | null
+          respondido_por_nome?: string | null
+          resposta?: string | null
+          status?: string
+          tenant_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          anonimo?: boolean
+          assunto?: string
+          autor_departamento?: string | null
+          autor_email?: string | null
+          autor_id?: string | null
+          autor_nome?: string | null
+          created_at?: string
+          id?: string
+          mensagem?: string
+          prioridade?: string | null
+          respondido_em?: string | null
+          respondido_por?: string | null
+          respondido_por_nome?: string | null
+          resposta?: string | null
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ouvidoria_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_ajustes: {
         Row: {
           aprovado_por: string | null
