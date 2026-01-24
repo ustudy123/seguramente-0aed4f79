@@ -57,11 +57,6 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
 
   const isPending = registrarHumor.isPending || atualizarHumor.isPending;
 
-  // Agrupar humores por categoria para exibição
-  const positivos = HUMOR_OPTIONS.filter(h => h.category === "positivo");
-  const neutros = HUMOR_OPTIONS.filter(h => h.category === "neutro");
-  const negativos = HUMOR_OPTIONS.filter(h => h.category === "negativo");
-
   // Determinar saudação baseada na hora
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia! ☀️" : hora < 18 ? "Boa tarde! 🌤️" : "Boa noite! 🌙";
@@ -86,83 +81,27 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Positivos */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">😊 Positivo</p>
-            <div className="flex justify-center gap-2">
-              {positivos.map((option) => (
-                <motion.button
-                  key={option.id}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedHumor(option.id)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
-                    selectedHumor === option.id
-                      ? "border-green-500 bg-green-500/10 shadow-lg"
-                      : "border-transparent hover:bg-muted"
-                  )}
-                >
-                  <span className="text-3xl">{option.emoji}</span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {option.label}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Neutros */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">😐 Neutro</p>
-            <div className="flex justify-center gap-2">
-              {neutros.map((option) => (
-                <motion.button
-                  key={option.id}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedHumor(option.id)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
-                    selectedHumor === option.id
-                      ? "border-yellow-500 bg-yellow-500/10 shadow-lg"
-                      : "border-transparent hover:bg-muted"
-                  )}
-                >
-                  <span className="text-3xl">{option.emoji}</span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {option.label}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Negativos */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">⚠️ Atenção</p>
-            <div className="flex justify-center gap-2">
-              {negativos.map((option) => (
-                <motion.button
-                  key={option.id}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedHumor(option.id)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
-                    selectedHumor === option.id
-                      ? "border-red-500 bg-red-500/10 shadow-lg"
-                      : "border-transparent hover:bg-muted"
-                  )}
-                >
-                  <span className="text-3xl">{option.emoji}</span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {option.label}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
+        <div className="py-4">
+          <div className="flex flex-wrap justify-center gap-3">
+            {HUMOR_OPTIONS.map((option) => (
+              <motion.button
+                key={option.id}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedHumor(option.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 p-3 rounded-xl transition-all border-2",
+                  selectedHumor === option.id
+                    ? "border-primary bg-primary/10 shadow-lg"
+                    : "border-transparent hover:bg-muted"
+                )}
+              >
+                <span className="text-3xl">{option.emoji}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {option.label}
+                </span>
+              </motion.button>
+            ))}
           </div>
         </div>
 
