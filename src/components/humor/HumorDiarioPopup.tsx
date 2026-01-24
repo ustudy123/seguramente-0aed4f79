@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { 
   HUMOR_OPTIONS, 
   useHumorDiario, 
-  getMicroPerguntaDoDia,
+  getMicroPerguntaAleatoria,
   type MicroPergunta 
 } from "@/hooks/useHumorDiario";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
   const [microPerguntaResposta, setMicroPerguntaResposta] = useState<string | null>(null);
   const { registrarHumor, atualizarHumor, isAtualizacao } = useHumorDiario();
 
-  const microPergunta: MicroPergunta = getMicroPerguntaDoDia();
+  const microPergunta: MicroPergunta = useMemo(() => getMicroPerguntaAleatoria(), []);
 
   const handleNextStep = () => {
     if (!selectedHumor) {
