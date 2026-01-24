@@ -5,11 +5,20 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import type { Manifestacao, TipoManifestacao, StatusManifestacao, PrioridadeManifestacao } from "@/types/ouvidoria";
 
+interface AnexoData {
+  nome: string;
+  url: string;
+  tamanho: number;
+  tipo: string;
+  [key: string]: string | number; // Index signature for JSON compatibility
+}
+
 interface CriarManifestacaoData {
   tipo: TipoManifestacao;
   assunto: string;
   mensagem: string;
   anonimo: boolean;
+  anexos?: File[];
 }
 
 interface ResponderManifestacaoData {
@@ -42,10 +51,39 @@ export function useOuvidoria() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Manifestacao[];
+      return data as unknown as Manifestacao[];
     },
     enabled: !!tenantId,
   });
+
+  // Upload de anexos
+  const uploadAnexos = async (files: File[], manifestacaoId: string): Promise<AnexoData[]> => {
+    const anexosUploadados: AnexoData[] = [];
+    const userId = user?.id || "anonimo";
+
+    for (const file of files) {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${userId}/${manifestacaoId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("ouvidoria-anexos")
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error("Erro ao fazer upload:", uploadError);
+        continue;
+      }
+
+      anexosUploadados.push({
+        nome: file.name,
+        url: fileName,
+        tamanho: file.size,
+        tipo: file.type,
+      });
+    }
+
+    return anexosUploadados;
+  };
 
   // Criar nova manifestação
   const criarManifestacaoMutation = useMutation({
@@ -53,6 +91,7 @@ export function useOuvidoria() {
       if (!tenantId) throw new Error("Tenant não encontrado");
       if (!user && !data.anonimo) throw new Error("Usuário não autenticado");
 
+      // Primeiro criar a manifestação sem anexos
       const manifestacao = {
         tenant_id: tenantId,
         tipo: data.tipo,
@@ -65,6 +104,7 @@ export function useOuvidoria() {
         autor_departamento: data.anonimo ? null : profile?.cargo,
         status: "pendente" as StatusManifestacao,
         prioridade: "normal" as PrioridadeManifestacao,
+        anexos: [] as AnexoData[],
       };
 
       const { data: result, error } = await supabase
@@ -74,6 +114,23 @@ export function useOuvidoria() {
         .single();
 
       if (error) throw error;
+
+      // Se há anexos, fazer upload e atualizar a manifestação
+      if (data.anexos && data.anexos.length > 0) {
+        const anexosUploadados = await uploadAnexos(data.anexos, result.id);
+
+        if (anexosUploadados.length > 0) {
+          const { error: updateError } = await supabase
+            .from("ouvidoria")
+            .update({ anexos: anexosUploadados })
+            .eq("id", result.id);
+
+          if (updateError) {
+            console.error("Erro ao atualizar anexos:", updateError);
+          }
+        }
+      }
+
       return result;
     },
     onSuccess: () => {
@@ -117,7 +174,7 @@ export function useOuvidoria() {
   // Atualizar status/prioridade
   const atualizarStatusMutation = useMutation({
     mutationFn: async (data: AtualizarStatusData) => {
-      const updateData: Partial<Manifestacao> = {
+      const updateData: { status: StatusManifestacao; prioridade?: PrioridadeManifestacao } = {
         status: data.status,
       };
 

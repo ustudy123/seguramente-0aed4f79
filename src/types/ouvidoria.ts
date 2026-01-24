@@ -2,6 +2,13 @@ export type TipoManifestacao = 'sugestao' | 'reclamacao' | 'denuncia' | 'elogio'
 export type StatusManifestacao = 'pendente' | 'em_analise' | 'respondido' | 'arquivado';
 export type PrioridadeManifestacao = 'baixa' | 'normal' | 'alta' | 'urgente';
 
+export interface AnexoManifestacao {
+  nome: string;
+  url: string;
+  tamanho: number;
+  tipo: string;
+}
+
 export interface Manifestacao {
   id: string;
   tenant_id: string;
@@ -19,6 +26,7 @@ export interface Manifestacao {
   respondido_por: string | null;
   respondido_por_nome: string | null;
   respondido_em: string | null;
+  anexos: AnexoManifestacao[] | null;
   created_at: string;
   updated_at: string;
 }
