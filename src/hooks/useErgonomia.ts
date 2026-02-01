@@ -211,6 +211,62 @@ export function useErgonomia() {
     },
   });
 
+  // Mutation para atualizar status da ação
+  const updateAcaoStatusMutation = useMutation({
+    mutationFn: async ({ id, status, data_conclusao }: { id: string; status: ErgonomiaAcao['status']; data_conclusao?: string }) => {
+      const updateData: any = { status };
+      
+      if (status === 'em_andamento' && !data_conclusao) {
+        updateData.data_inicio = new Date().toISOString().split('T')[0];
+      }
+      
+      if (status === 'concluida') {
+        updateData.data_conclusao = new Date().toISOString().split('T')[0];
+      }
+      
+      const { data, error } = await supabase
+        .from("ergonomia_acoes")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ergonomia-acoes"] });
+      toast.success("Status da ação atualizado!");
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao atualizar status da ação");
+    },
+  });
+
+  // Mutation para atualizar risco
+  const updateRiscoMutation = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { data, error } = await supabase
+        .from("ergonomia_riscos")
+        .update({ ativo })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ergonomia-riscos"] });
+      toast.success("Risco atualizado!");
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar risco:", error);
+      toast.error("Erro ao atualizar risco");
+    },
+  });
+
   // Estatísticas de conformidade
   const estatisticas = {
     total: itensNR17.length,
@@ -272,11 +328,16 @@ export function useErgonomia() {
     updateItemStatus: updateItemStatusMutation.mutateAsync,
     initializeItens: initializeItensMutation.mutateAsync,
     createRisco: createRiscoMutation.mutateAsync,
+    updateRisco: updateRiscoMutation.mutateAsync,
     createAcao: createAcaoMutation.mutateAsync,
+    updateAcaoStatus: updateAcaoStatusMutation.mutateAsync,
     
     // Mutation states
     isCreatingItem: createItemMutation.isPending,
     isUpdatingStatus: updateItemStatusMutation.isPending,
     isInitializing: initializeItensMutation.isPending,
+    isCreatingRisco: createRiscoMutation.isPending,
+    isCreatingAcao: createAcaoMutation.isPending,
+    isUpdatingAcaoStatus: updateAcaoStatusMutation.isPending,
   };
 }
