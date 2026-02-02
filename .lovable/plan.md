@@ -1,120 +1,256 @@
 
-# Plano: Auto-preenchimento do campo "Por quê" ao selecionar sugestão de ação
+# Plano: AEP Multi-Setor com Coleta de Evidências por Função
 
-## Objetivo
-Quando o usuário clicar em uma sugestão de ação nos radares de Burnout, Boreout ou Energia, o campo "POR QUÊ (Why)" será automaticamente preenchido com uma justificativa contextual e coerente com a ação selecionada.
+## Resumo Executivo
 
----
+Transformar o gerador de AEP para suportar a análise ergonômica de **múltiplos setores, funções e colaboradores** em uma única sessão, permitindo que cada evidência (foto/vídeo/áudio) seja vinculada a um contexto específico (setor + função + colaborador) antes da análise pela IA.
 
-## Alterações Necessárias
+## Arquitetura Proposta
 
-### 1. Atualizar Configuração dos Fatores (`radarConfig.ts`)
+### Fluxo do Novo Processo
 
-Transformar o array de `sugestoes` (strings simples) em um array de objetos contendo:
-- `titulo`: O título da ação (o que já existe hoje)
-- `porque`: A justificativa automática para aquela ação
-
-**Exemplo da estrutura atual:**
-```typescript
-sugestoes: [
-  'Implementar rodízio de tarefas complexas',
-  'Criar pausas programadas para recuperação mental',
-]
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                    1. CONFIGURAÇÃO INICIAL                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐   │
+│  │ Dados Empresa│  │ Selecionar   │  │ Opção: Todos os Setores  │   │
+│  │ (CNPJ, Nome) │  │ Setores      │  │ ou Seleção Individual    │   │
+│  └──────────────┘  └──────────────┘  └──────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    2. COLETA DE EVIDÊNCIAS                          │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │ Para cada Evidência (foto/vídeo/áudio):                        │ │
+│  │   • Setor*      [Dropdown dos cadastros]                       │ │
+│  │   • Função*     [Dropdown filtrado pelo setor]                 │ │
+│  │   • Colaborador [Opcional - Dropdown filtrado]                 │ │
+│  │   • Arquivo     [Upload foto/vídeo]                            │ │
+│  │   • Contexto    [Texto/Áudio adicional]                        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│  Lista de evidências coletadas com preview e tags de identificação  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    3. ANÁLISE COM IA                                │
+│  • Processa todas as evidências agrupadas por setor/função          │
+│  • Gera riscos e recomendações específicas por contexto             │
+│  • Consolida em relatório único ou individual por função            │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    4. GERAÇÃO DE DOCUMENTO(S)                       │
+│  Opções:                                                            │
+│  • AEP Consolidada (empresa inteira, todos setores/funções)         │
+│  • AEPs Individuais (uma por função avaliada)                       │
+│  • AEP por Setor (agrupando funções do mesmo setor)                 │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Nova estrutura:**
+## Novos Tipos e Interfaces
+
+### 1. Evidência Contextualizada
 ```typescript
-sugestoes: [
-  { 
-    titulo: 'Implementar rodízio de tarefas complexas',
-    porque: 'Reduzir a sobrecarga mental causada pela exposição prolongada a tarefas de alta complexidade cognitiva'
-  },
-  { 
-    titulo: 'Criar pausas programadas para recuperação mental',
-    porque: 'Permitir recuperação cognitiva adequada e prevenir fadiga mental acumulada'
-  },
-]
-```
-
-Isso será aplicado a todos os fatores dos três radares:
-- **Burnout** (6 fatores × 4 sugestões = 24 pares título/porquê)
-- **Boreout** (5 fatores × 4 sugestões = 20 pares título/porquê)
-- **Energia** (4 fatores × 4 sugestões = 16 pares título/porquê)
-
----
-
-### 2. Atualizar o Componente de Formulário (`FatorActionForm.tsx`)
-
-Modificar a interface e lógica para:
-
-1. **Atualizar a prop `sugestoes`** para aceitar objetos em vez de strings
-2. **Modificar `handleSugestaoSelect`** para preencher tanto o `titulo` quanto o `porque`:
-
-```typescript
-const handleSugestaoSelect = (sugestao: { titulo: string; porque: string }) => {
-  setSelectedSugestao(sugestao.titulo);
-  setFormData(prev => ({
-    ...prev,
-    titulo: sugestao.titulo,
-    porque: sugestao.porque,  // <-- Novo auto-preenchimento
-  }));
-};
-```
-
-3. **Atualizar o estado `selectedSugestao`** para armazenar apenas o título (para comparação visual)
-
----
-
-### 3. Atualizar Tipagem
-
-Criar um tipo para as sugestões estruturadas:
-
-```typescript
-interface SugestaoAcao {
-  titulo: string;
-  porque: string;
+interface EvidenciaAEP {
+  id: string;
+  setor: string;           // Obrigatório
+  funcao: string;          // Obrigatório  
+  colaboradorId?: string;  // Opcional
+  colaboradorNome?: string;
+  tipo: 'foto' | 'video' | 'audio';
+  arquivoBase64: string;
+  videoFrames?: string[];  // Se for vídeo
+  contextoTexto?: string;
+  audioBase64?: string;    // Contexto em áudio
+  transcricaoAudio?: string;
+  analisadaPorIA: boolean;
+  resultadoIA?: AnaliseResultado;
+  createdAt: string;
 }
 ```
 
----
+### 2. Documento AEP Multi-Função
+```typescript
+interface AEPDocumentoMulti {
+  id?: string;
+  tenant_id?: string;
+  
+  // Identificação da Empresa (comum)
+  empresa: {
+    nome: string;
+    cnpj: string;
+    unidade: string;
+    dataAvaliacao: string;
+    responsavelLevantamento: string;
+    profissionalValidador?: string;
+    versao: string;
+  };
+  
+  // Avaliações por função
+  avaliacoes: AEPAvaliacaoFuncao[];
+  
+  // Síntese consolidada
+  sinteseGeral?: AEPSinteseAvaliacao;
+  
+  // Ações consolidadas
+  acoesConsolidadas: AEPAcaoRecomendada[];
+  
+  assinaturas: AEPAssinatura;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface AEPAvaliacaoFuncao {
+  id: string;
+  setor: string;
+  funcao: string;
+  colaboradoresAvaliados: string[]; // Nomes
+  evidencias: EvidenciaAEP[];
+  descricaoAtividade: AEPDescricaoAtividade;
+  riscosFisicos: AEPRiscosFisicos;
+  riscosCognitivos: AEPRiscosCognitivos;
+  classificacaoRisco: ClassificacaoRisco;
+  acoesRecomendadas: AEPAcaoRecomendada[];
+}
+```
+
+## Componentes a Criar/Modificar
+
+### 1. `AEPEvidenciaForm.tsx` (NOVO)
+Formulário para adicionar evidências com seletores de setor/função/colaborador:
+- Dropdowns integrados com `useDepartamentos` e `useCargos`
+- Filtro dinâmico de funções baseado no setor selecionado
+- Lista de colaboradores filtrada por setor/função
+- Suporte a upload de foto, vídeo ou gravação de áudio
+- Preview da mídia antes de confirmar
+
+### 2. `AEPEvidenciasList.tsx` (NOVO)
+Lista de evidências coletadas com:
+- Cards agrupados por setor/função
+- Preview de imagens/frames de vídeo
+- Indicador de status (analisada/pendente)
+- Botão para remover evidência
+- Contador de evidências por função
+
+### 3. `AEPConfigInicial.tsx` (NOVO)
+Configuração inicial do documento:
+- Dados da empresa (CNPJ, nome, unidade)
+- Checkbox "Avaliar todos os setores"
+- Multi-select de setores (se não for todos)
+- Auto-carrega funções dos setores selecionados
+
+### 4. `AEPGeneratorMulti.tsx` (NOVO)
+Novo wizard com fluxo adaptado:
+1. **Configuração** - Dados empresa + seleção de setores
+2. **Coleta de Evidências** - Upload com contexto obrigatório
+3. **Análise IA** - Processa evidências agrupadas
+4. **Revisão por Função** - Editar riscos/ações por função
+5. **Síntese Geral** - Consolidação dos resultados
+6. **Assinaturas** - Conclusão
+
+### 5. `AEPDocumentoPreviewMulti.tsx` (NOVO)
+Preview do documento consolidado ou individual:
+- Seções repetidas para cada função avaliada
+- Quadro resumo com todas as funções e níveis de risco
+- Opção de gerar PDF único ou múltiplos PDFs
+
+### 6. Modificações no Assistente IA
+- Adaptar para receber array de evidências
+- Retornar análise agrupada por setor/função
+- Novo endpoint ou adaptação do `analyze-ergonomia`
+
+## Mudanças na Edge Function
+
+```typescript
+// Novo formato de request
+interface AnaliseMultiRequest {
+  tipo: 'multi';
+  evidencias: {
+    setor: string;
+    funcao: string;
+    colaborador?: string;
+    imagens?: string[];
+    videoFrames?: string[];
+    audioBase64?: string;
+    contexto?: string;
+  }[];
+  empresaInfo: {
+    nome: string;
+    unidade: string;
+  };
+}
+
+// Resposta agrupada
+interface AnaliseMultiResponse {
+  avaliacoesPorFuncao: {
+    setor: string;
+    funcao: string;
+    riscosIdentificados: RiscoIdentificado[];
+    recomendacoes: string[];
+    conformidadeEstimada: number;
+    resumo: string;
+  }[];
+  sinteseGeral: string;
+  riscosCriticosGerais: string[];
+}
+```
+
+## Experiência do Usuário
+
+### Cenário 1: Avaliação Completa da Empresa
+1. Usuário seleciona "Avaliar todos os setores"
+2. Sistema lista todos os setores/funções cadastrados
+3. Para cada função, usuário sobe fotos/vídeos do posto de trabalho
+4. Informa qual colaborador está sendo filmado (opcional)
+5. IA analisa e gera relatório consolidado
+
+### Cenário 2: Avaliação de Setor Específico
+1. Usuário seleciona apenas "Produção" e "Logística"
+2. Sistema filtra funções desses setores
+3. Usuário coleta evidências apenas das funções desejadas
+4. Gera AEP específica desses setores
+
+### Cenário 3: Avaliação de Função Única (Fluxo Atual)
+1. Mantém compatibilidade com fluxo existente
+2. Usuário pode escolher "Modo simples" (uma função)
+
+## Arquivos a Criar
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `src/types/aep-multi.ts` | Novos tipos para AEP multi-função |
+| `src/components/ergonomia/aep/AEPEvidenciaForm.tsx` | Formulário de evidência contextualizada |
+| `src/components/ergonomia/aep/AEPEvidenciasList.tsx` | Lista de evidências coletadas |
+| `src/components/ergonomia/aep/AEPConfigInicial.tsx` | Configuração inicial com seleção de setores |
+| `src/components/ergonomia/aep/AEPGeneratorMulti.tsx` | Wizard multi-função |
+| `src/components/ergonomia/aep/AEPRevisaoFuncao.tsx` | Edição de riscos/ações por função |
+| `src/components/ergonomia/aep/AEPDocumentoPreviewMulti.tsx` | Preview do documento consolidado |
+| `src/hooks/useAEPMulti.ts` | Hook para gerenciar estado do AEP multi |
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/ergonomia/radar/radarConfig.ts` | Converter sugestões de string[] para objeto[] com título e porquê |
-| `src/components/ergonomia/radar/FatorActionForm.tsx` | Atualizar interface e lógica de seleção |
+| Arquivo | Modificação |
+|---------|-------------|
+| `supabase/functions/analyze-ergonomia/index.ts` | Suporte a análise multi-evidência |
+| `src/pages/Ergonomia.tsx` | Toggle entre modo simples e multi |
+| `src/types/aep.ts` | Exportar tipos compartilhados |
 
----
+## Integração com Cadastros Existentes
 
-## Justificativas Contextuais (Exemplos)
+O sistema utilizará os cadastros já existentes:
+- **Departamentos** (`useDepartamentos`) → Setores disponíveis
+- **Cargos** (`useCargos`) → Funções por departamento
+- **Colaboradores** (`useColaboradores`) → Lista de pessoas por cargo/departamento
 
-### Radar de Burnout - Sobrecarga Cognitiva
-| Sugestão | Justificativa (Porquê) |
-|----------|------------------------|
-| Implementar rodízio de tarefas complexas | Reduzir a sobrecarga mental causada pela exposição prolongada a tarefas de alta complexidade cognitiva |
-| Criar pausas programadas para recuperação mental | Permitir recuperação cognitiva adequada e prevenir fadiga mental acumulada |
+## Benefícios da Abordagem
 
-### Radar de Boreout - Baixo Desafio
-| Sugestão | Justificativa (Porquê) |
-|----------|------------------------|
-| Mapear competências e realocá-las | Aproveitar melhor o potencial dos colaboradores e reduzir a subutilização de habilidades |
-| Criar projetos especiais desafiadores | Estimular o engajamento através de desafios que correspondam às capacidades do colaborador |
-
-### Radar de Energia - Vitalidade
-| Sugestão | Justificativa (Porquê) |
-|----------|------------------------|
-| Promover atividades físicas | Aumentar os níveis de energia física e mental através do exercício regular |
-| Melhorar qualidade do ambiente | Criar condições ambientais que favoreçam o bem-estar e a disposição dos colaboradores |
-
----
-
-## Comportamento Esperado
-
-1. Usuário clica em um fator do radar (ex: "Sobrecarga Cognitiva")
-2. Abre o formulário de ação com sugestões em badges
-3. Ao clicar em uma sugestão (ex: "Implementar rodízio de tarefas"):
-   - Campo "O QUÊ" é preenchido com: "Implementar rodízio de tarefas complexas"
-   - Campo "POR QUÊ" é preenchido com: "Reduzir a sobrecarga mental causada pela exposição prolongada a tarefas de alta complexidade cognitiva"
-4. O usuário pode editar ambos os campos se desejar personalizar
-5. Demais campos 5W2H continuam disponíveis para preenchimento manual
+1. **Rastreabilidade**: Cada evidência vinculada a setor/função/colaborador específico
+2. **Flexibilidade**: Gerar documento único ou múltiplos por função
+3. **Conformidade NR-17**: Análise por posto de trabalho/função
+4. **Escalabilidade**: Avaliar toda empresa em uma única sessão
+5. **Auditoria**: Histórico de evidências por avaliação
+6. **Compatibilidade**: Mantém fluxo simples para avaliações pontuais
