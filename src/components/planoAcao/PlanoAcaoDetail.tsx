@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -17,10 +16,8 @@ import {
   Edit,
   Trash2,
   MessageSquare,
-  Paperclip,
   History,
   ListTodo,
-  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +29,9 @@ import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import { PlanoAcaoTarefas } from "./PlanoAcaoTarefas";
 import { PlanoAcaoHistorico } from "./PlanoAcaoHistorico";
 import { PlanoAcaoComentarios } from "./PlanoAcaoComentarios";
-import type { PlanoAcao, AcaoStatus, AcaoGutPrioridade } from "@/types/planoAcao";
+import { PlanoAcaoFormModal } from "./PlanoAcaoFormModal";
+import { InfoCardModal, W5H2Detail, GutModal } from "./InfoCardModal";
+import type { AcaoStatus, AcaoGutPrioridade } from "@/types/planoAcao";
 
 interface PlanoAcaoDetailProps {
   acaoId: string;
@@ -56,6 +55,10 @@ const prioridadeConfig: Record<AcaoGutPrioridade, { label: string; color: string
 
 export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
   const [activeTab, setActiveTab] = useState("tarefas");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedInfoCard, setSelectedInfoCard] = useState<string | null>(null);
+  const [showGutModal, setShowGutModal] = useState(false);
+  
   const { useAcao, useTarefas, useHistorico, useComentarios } = usePlanoAcao();
   
   const { data: acao, isLoading } = useAcao(acaoId);
@@ -92,6 +95,36 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
   const StatusIcon = status.icon;
   const prioridade = prioridadeConfig[acao.prioridade || "medio"];
 
+  // Componente de card clicável
+  const ClickableInfoCard = ({
+    cardKey,
+    icon: Icon,
+    title,
+    children,
+    iconColor = "text-primary",
+  }: {
+    cardKey: string;
+    icon: React.ElementType;
+    title: string;
+    children: React.ReactNode;
+    iconColor?: string;
+  }) => (
+    <Card 
+      className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all duration-200"
+      onClick={() => setSelectedInfoCard(cardKey)}
+    >
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Icon className={`h-4 w-4 ${iconColor}`} />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {children}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -123,7 +156,7 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
           </Button>
@@ -153,88 +186,45 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
       {/* Info Cards - 5W2H */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Who - Responsável */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <User className="h-4 w-4 text-primary" />
-              Quem (Who)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">{acao.responsavel_nome || "Não definido"}</p>
-          </CardContent>
-        </Card>
+        <ClickableInfoCard cardKey="who" icon={User} title="Quem (Who)">
+          <p className="text-sm">{acao.responsavel_nome || "Não definido"}</p>
+        </ClickableInfoCard>
 
         {/* Where - Onde */}
-        {acao.onde && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                Onde (Where)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{acao.onde}</p>
-            </CardContent>
-          </Card>
-        )}
+        <ClickableInfoCard cardKey="where" icon={MapPin} title="Onde (Where)">
+          <p className="text-sm">{acao.onde || "Não informado"}</p>
+        </ClickableInfoCard>
 
         {/* Why - Por quê */}
-        {acao.porque && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-primary" />
-                Por quê (Why)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{acao.porque}</p>
-            </CardContent>
-          </Card>
-        )}
+        <ClickableInfoCard cardKey="why" icon={HelpCircle} title="Por quê (Why)">
+          <p className="text-sm line-clamp-2">{acao.porque || "Não informado"}</p>
+        </ClickableInfoCard>
 
         {/* How - Como */}
-        {acao.como && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
-                Como (How)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{acao.como}</p>
-            </CardContent>
-          </Card>
-        )}
+        <ClickableInfoCard cardKey="how" icon={Target} title="Como (How)">
+          <p className="text-sm line-clamp-2">{acao.como || "Não informado"}</p>
+        </ClickableInfoCard>
 
         {/* How Much - Quanto custa */}
-        {(acao.custo_estimado || acao.custo_real) && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-primary" />
-                Quanto (How Much)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 text-sm">
-                {acao.custo_estimado && (
-                  <p>Estimado: R$ {acao.custo_estimado.toLocaleString("pt-BR")}</p>
-                )}
-                {acao.custo_real && (
-                  <p>Real: R$ {acao.custo_real.toLocaleString("pt-BR")}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ClickableInfoCard cardKey="howmuch" icon={DollarSign} title="Quanto (How Much)">
+          <div className="space-y-1 text-sm">
+            {acao.custo_estimado ? (
+              <p>Estimado: R$ {acao.custo_estimado.toLocaleString("pt-BR")}</p>
+            ) : (
+              <p className="text-muted-foreground">Não informado</p>
+            )}
+            {acao.custo_real && (
+              <p>Real: R$ {acao.custo_real.toLocaleString("pt-BR")}</p>
+            )}
+          </div>
+        </ClickableInfoCard>
 
         {/* GUT Score */}
         {acao.pontuacao_gut && (
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all duration-200"
+            onClick={() => setShowGutModal(true)}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-primary" />
@@ -304,6 +294,108 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
           <PlanoAcaoHistorico historico={historico} />
         </TabsContent>
       </Tabs>
+
+      {/* Modal de Edição */}
+      <PlanoAcaoFormModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        editData={acao}
+      />
+
+      {/* Modais de detalhes 5W2H */}
+      <InfoCardModal
+        open={selectedInfoCard === "who"}
+        onOpenChange={(open) => !open && setSelectedInfoCard(null)}
+        title="Quem (Who)"
+        subtitle="Responsável pela execução"
+        icon={User}
+      >
+        <W5H2Detail label="Responsável Principal" value={acao.responsavel_nome} />
+        <W5H2Detail label="Criado por" value={acao.criado_por_nome} />
+        {acao.created_at && (
+          <W5H2Detail 
+            label="Data de Criação" 
+            value={format(new Date(acao.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} 
+          />
+        )}
+      </InfoCardModal>
+
+      <InfoCardModal
+        open={selectedInfoCard === "where"}
+        onOpenChange={(open) => !open && setSelectedInfoCard(null)}
+        title="Onde (Where)"
+        subtitle="Local ou área de aplicação"
+        icon={MapPin}
+      >
+        <W5H2Detail label="Localização" value={acao.onde} />
+        <W5H2Detail label="Módulo de Origem" value={acao.origem_modulo} badge={acao.origem_descricao || undefined} />
+      </InfoCardModal>
+
+      <InfoCardModal
+        open={selectedInfoCard === "why"}
+        onOpenChange={(open) => !open && setSelectedInfoCard(null)}
+        title="Por quê (Why)"
+        subtitle="Justificativa e motivação"
+        icon={HelpCircle}
+      >
+        <W5H2Detail label="Justificativa" value={acao.porque} emptyText="Nenhuma justificativa informada" />
+        <W5H2Detail label="Descrição completa" value={acao.descricao} />
+      </InfoCardModal>
+
+      <InfoCardModal
+        open={selectedInfoCard === "how"}
+        onOpenChange={(open) => !open && setSelectedInfoCard(null)}
+        title="Como (How)"
+        subtitle="Estratégia de execução"
+        icon={Target}
+      >
+        <W5H2Detail label="Método de Execução" value={acao.como} emptyText="Nenhuma estratégia definida" />
+        <W5H2Detail label="Tipo de Ação" value={acao.tipo} />
+        {acao.tempo_estimado_minutos && (
+          <W5H2Detail 
+            label="Tempo Estimado" 
+            value={`${Math.floor(acao.tempo_estimado_minutos / 60)}h ${acao.tempo_estimado_minutos % 60}min`} 
+          />
+        )}
+        {acao.tempo_gasto_minutos !== undefined && acao.tempo_gasto_minutos > 0 && (
+          <W5H2Detail 
+            label="Tempo Gasto" 
+            value={`${Math.floor(acao.tempo_gasto_minutos / 60)}h ${acao.tempo_gasto_minutos % 60}min`} 
+          />
+        )}
+      </InfoCardModal>
+
+      <InfoCardModal
+        open={selectedInfoCard === "howmuch"}
+        onOpenChange={(open) => !open && setSelectedInfoCard(null)}
+        title="Quanto (How Much)"
+        subtitle="Custos envolvidos"
+        icon={DollarSign}
+      >
+        <W5H2Detail label="Custo Estimado" value={acao.custo_estimado} format="currency" />
+        <W5H2Detail label="Custo Real" value={acao.custo_real} format="currency" />
+        {acao.custo_estimado && acao.custo_real && (
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground">Variação:</p>
+            <p className={`font-medium ${acao.custo_real > acao.custo_estimado ? 'text-red-600' : 'text-green-600'}`}>
+              {acao.custo_real > acao.custo_estimado ? '+' : ''}
+              R$ {(acao.custo_real - acao.custo_estimado).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              {' '}({((acao.custo_real - acao.custo_estimado) / acao.custo_estimado * 100).toFixed(1)}%)
+            </p>
+          </div>
+        )}
+      </InfoCardModal>
+
+      {/* Modal GUT */}
+      <GutModal
+        open={showGutModal}
+        onOpenChange={setShowGutModal}
+        gravidade={acao.gravidade || 3}
+        urgencia={acao.urgencia || 3}
+        tendencia={acao.tendencia || 3}
+        pontuacao={acao.pontuacao_gut || 27}
+        prioridade={acao.prioridade}
+      />
     </motion.div>
   );
 }

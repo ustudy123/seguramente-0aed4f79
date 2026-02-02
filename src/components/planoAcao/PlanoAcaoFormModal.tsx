@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,6 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import { cn } from "@/lib/utils";
+import type { PlanoAcao } from "@/types/planoAcao";
 
 const formSchema = z.object({
   // 5W2H
@@ -78,6 +79,7 @@ interface PlanoAcaoFormModalProps {
     id?: string;
     descricao?: string;
   };
+  editData?: PlanoAcao;
 }
 
 const GUT_LABELS: Record<number, string> = {
@@ -104,9 +106,11 @@ const LabelWithTooltip = ({ label, tooltip, required = false }: { label: string;
   </div>
 );
 
-export function PlanoAcaoFormModal({ open, onOpenChange, origem }: PlanoAcaoFormModalProps) {
-  const { createAcao, isCreatingAcao } = usePlanoAcao();
+export function PlanoAcaoFormModal({ open, onOpenChange, origem, editData }: PlanoAcaoFormModalProps) {
+  const { createAcao, isCreatingAcao, updateAcao, isUpdatingAcao } = usePlanoAcao();
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const isEditing = !!editData;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -128,10 +132,36 @@ export function PlanoAcaoFormModal({ open, onOpenChange, origem }: PlanoAcaoForm
     },
   });
 
+  // Preencher formulário quando editData mudar
+  useEffect(() => {
+    if (editData && open) {
+      form.reset({
+        titulo: editData.titulo || "",
+        descricao: editData.descricao || "",
+        porque: editData.porque || "",
+        onde: editData.onde || "",
+        prazo: editData.prazo || "",
+        responsavel_nome: editData.responsavel_nome || "",
+        como: editData.como || "",
+        custo_estimado: editData.custo_estimado?.toString() || "",
+        tipo: (editData.tipo as any) || "corretiva",
+        origem_modulo: (editData.origem_modulo as any) || "manual",
+        gravidade: editData.gravidade || 3,
+        urgencia: editData.urgencia || 3,
+        tendencia: editData.tendencia || 3,
+        exige_evidencia: editData.exige_evidencia || false,
+      });
+      // Expandir GUT se já tem valores
+      if (editData.pontuacao_gut) {
+        setShowAdvanced(true);
+      }
+    }
+  }, [editData, open, form]);
+
   const gutScore = form.watch("gravidade") * form.watch("urgencia") * form.watch("tendencia");
 
   const onSubmit = async (data: FormData) => {
-    await createAcao({
+    const payload = {
       titulo: data.titulo,
       descricao: data.descricao || undefined,
       porque: data.porque || undefined,
@@ -147,9 +177,15 @@ export function PlanoAcaoFormModal({ open, onOpenChange, origem }: PlanoAcaoForm
       gravidade: data.gravidade,
       urgencia: data.urgencia,
       tendencia: data.tendencia,
-      prioridade: gutScore >= 64 ? 'imediato' : gutScore >= 27 ? 'urgente' : gutScore >= 8 ? 'medio' : 'baixo',
+      prioridade: gutScore >= 64 ? 'imediato' as const : gutScore >= 27 ? 'urgente' as const : gutScore >= 8 ? 'medio' as const : 'baixo' as const,
       exige_evidencia: data.exige_evidencia,
-    });
+    };
+
+    if (isEditing && editData) {
+      await updateAcao({ id: editData.id, data: payload });
+    } else {
+      await createAcao(payload);
+    }
     
     onOpenChange(false);
     form.reset();
@@ -160,7 +196,7 @@ export function PlanoAcaoFormModal({ open, onOpenChange, origem }: PlanoAcaoForm
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Nova Ação Estratégica
+            {isEditing ? "Editar Ação" : "Nova Ação Estratégica"}
             <Badge variant="outline" className="ml-2">5W2H</Badge>
           </DialogTitle>
         </DialogHeader>
