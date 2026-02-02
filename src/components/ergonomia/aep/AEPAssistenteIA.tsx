@@ -28,7 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useAnaliseIA, AnaliseResultado } from "@/hooks/useAnaliseIA";
+import type { AnaliseResultado } from "@/hooks/useAnaliseIA";
 import { useVideoFrameExtractor } from "@/hooks/useVideoFrameExtractor";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import type { 
@@ -105,12 +105,11 @@ export function AEPAssistenteIA({
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [uploadType, setUploadType] = useState<"foto" | "video">("foto");
   const [videoFrames, setVideoFrames] = useState<string[] | null>(null);
-  const [isAnalyzingWithAudio, setIsAnalyzingWithAudio] = useState(false);
+  const [isAnalyzingLocal, setIsAnalyzingLocal] = useState(false);
+  const [resultado, setResultado] = useState<AnaliseResultado | null>(null);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  
-  const { isAnalyzing, resultado, limparResultado } = useAnaliseIA();
   const { extractFrames, isExtracting, progress: extractionProgress } = useVideoFrameExtractor({
     maxFrames: 8,
     framesPerSecond: 2,
@@ -184,22 +183,23 @@ export function AEPAssistenteIA({
     const stepContext = STEP_CONTEXT[currentStep];
     let fullContext = `Etapa: ${stepContext.title}. ${contexto}`;
     
-    setIsAnalyzingWithAudio(true);
+    setIsAnalyzingLocal(true);
 
     try {
-      // Get audio transcription if available
-      let audioTranscricao: string | undefined;
+      // Get audio context if available
       if (audioBlob) {
-        // For now, we'll include a note about the audio
-        // In a full implementation, we'd send to Whisper API for transcription
-        fullContext += "\n\n[Áudio gravado pelo avaliador - contexto verbal disponível]";
+        // Add note about audio (for transcription context)
+        fullContext += "\n\n[Áudio gravado pelo avaliador com observações sobre o posto de trabalho]";
       }
 
       // Import supabase for function invocation
       const { supabase } = await import("@/integrations/supabase/client");
 
+      let analysisResult: AnaliseResultado | null = null;
+
       if (videoFrames && videoFrames.length > 0) {
         // Analyze video frames
+        console.log("Enviando análise de vídeo com", videoFrames.length, "frames");
         const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
           body: {
             tipo: "video",
@@ -209,11 +209,13 @@ export function AEPAssistenteIA({
         });
 
         if (error) throw new Error(error.message);
-        if (data.error) throw new Error(data.error);
+        if (data?.error) throw new Error(data.error);
         
+        analysisResult = data;
         toast.success("Análise de vídeo concluída!");
       } else if (uploadedImage) {
         // Analyze single image
+        console.log("Enviando análise de imagem");
         const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
           body: {
             tipo: "imagem",
@@ -223,32 +225,47 @@ export function AEPAssistenteIA({
         });
 
         if (error) throw new Error(error.message);
-        if (data.error) throw new Error(data.error);
+        if (data?.error) throw new Error(data.error);
         
+        analysisResult = data;
         toast.success("Análise de imagem concluída!");
       } else if (contexto.trim() || audioBlob) {
         // Text-only analysis
+        console.log("Enviando análise de texto");
         const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
           body: {
             tipo: "texto",
-            conteudo: contexto || "Análise baseada em contexto de áudio",
+            conteudo: contexto || "Análise baseada em contexto verbal do avaliador",
             contexto: fullContext,
           },
         });
 
         if (error) throw new Error(error.message);
-        if (data.error) throw new Error(data.error);
+        if (data?.error) throw new Error(data.error);
         
+        analysisResult = data;
         toast.success("Análise concluída!");
       } else {
         toast.error("Forneça uma imagem, vídeo, áudio ou descrição para análise");
+        return;
+      }
+
+      // Save result to state
+      if (analysisResult) {
+        console.log("Resultado da análise:", analysisResult);
+        setResultado(analysisResult);
       }
     } catch (err) {
+      console.error("Erro na análise:", err);
       const message = err instanceof Error ? err.message : "Erro na análise";
       toast.error(message);
     } finally {
-      setIsAnalyzingWithAudio(false);
+      setIsAnalyzingLocal(false);
     }
+  };
+
+  const limparResultado = () => {
+    setResultado(null);
   };
 
   const handleApplyToDescricao = () => {
@@ -358,7 +375,7 @@ export function AEPAssistenteIA({
 
   if (!showForStep) return null;
 
-  const isProcessing = isAnalyzing || isExtracting || isAnalyzingWithAudio;
+  const isProcessing = isAnalyzingLocal || isExtracting;
   const hasMedia = uploadedImage || videoFrames || audioBlob;
   const canAnalyze = hasMedia || contexto.trim();
 
