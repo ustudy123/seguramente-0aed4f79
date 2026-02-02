@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { 
   Brain, 
   Upload, 
@@ -13,17 +14,21 @@ import {
   AlertTriangle,
   FileSearch,
   Download,
-  X
+  X,
+  ClipboardList,
+  Plus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAnaliseIA, AnaliseResultado } from "@/hooks/useAnaliseIA";
+import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 
 interface EvidenciaUpload {
   id: string;
@@ -37,7 +42,10 @@ interface EvidenciaUpload {
 export function AnaliseIASection() {
   const [evidencias, setEvidencias] = useState<EvidenciaUpload[]>([]);
   const [contexto, setContexto] = useState("");
+  const [createdAcoes, setCreatedAcoes] = useState<Set<number>>(new Set());
   const { isAnalyzing, resultado, analisarArquivo, limparResultado } = useAnaliseIA();
+  const { createAcao } = usePlanoAcao();
+  const navigate = useNavigate();
 
   const getTipoFromMime = (mimeType: string): EvidenciaUpload['tipo'] => {
     if (mimeType.startsWith('image/')) return 'foto';
@@ -119,7 +127,48 @@ export function AnaliseIASection() {
     });
     setEvidencias([]);
     setContexto("");
+    setCreatedAcoes(new Set());
     limparResultado();
+  };
+
+  const handleCriarAcao = async (recomendacao: string, index: number) => {
+    try {
+      await createAcao({
+        titulo: recomendacao.length > 100 ? recomendacao.substring(0, 100) + "..." : recomendacao,
+        descricao: recomendacao,
+        porque: "Recomendação identificada pela análise ergonômica AEP-IA para adequação à NR-17",
+        origem_modulo: "ergonomia",
+        origem_descricao: "Análise AEP-IA",
+        prioridade: "medio",
+        tipo: "corretiva",
+        exige_evidencia: true,
+      });
+      
+      setCreatedAcoes(prev => new Set([...prev, index]));
+      toast.success("Ação criada com sucesso!", {
+        action: {
+          label: "Ver Plano de Ação",
+          onClick: () => navigate("/plano-acao")
+        }
+      });
+    } catch (error) {
+      toast.error("Erro ao criar ação");
+      console.error(error);
+    }
+  };
+
+  const handleCriarTodasAcoes = async () => {
+    if (!resultado?.recomendacoes) return;
+    
+    const pendentes = resultado.recomendacoes.filter((_, idx) => !createdAcoes.has(idx));
+    
+    for (let i = 0; i < resultado.recomendacoes.length; i++) {
+      if (!createdAcoes.has(i)) {
+        await handleCriarAcao(resultado.recomendacoes[i], i);
+      }
+    }
+    
+    toast.success(`${pendentes.length} ação(ões) criada(s) com sucesso!`);
   };
 
   const TIPO_ICONS = {
@@ -357,15 +406,61 @@ export function AnaliseIASection() {
               {/* Recomendações */}
               {resultado.recomendacoes.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-3">Recomendações</h4>
-                  <ul className="space-y-1">
-                    {resultado.recomendacoes.map((rec, idx) => (
-                      <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      Recomendações ({resultado.recomendacoes.length})
+                    </h4>
+                    {resultado.recomendacoes.some((_, idx) => !createdAcoes.has(idx)) && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="gap-2 text-xs"
+                        onClick={handleCriarTodasAcoes}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Criar todas as ações
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <TooltipProvider>
+                      {resultado.recomendacoes.map((rec, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex items-start justify-between gap-3 p-3 rounded-lg bg-background border group"
+                        >
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                            <span className="text-sm text-muted-foreground">{rec}</span>
+                          </div>
+                          {createdAcoes.has(idx) ? (
+                            <Badge variant="secondary" className="shrink-0 text-xs gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Ação criada
+                            </Badge>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="shrink-0 gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleCriarAcao(rec, idx)}
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                  <span className="hidden md:inline">Criar Ação</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Transformar em ação 5W2H no Plano de Ação
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      ))}
+                    </TooltipProvider>
+                  </div>
                 </div>
               )}
 
