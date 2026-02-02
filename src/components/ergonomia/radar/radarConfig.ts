@@ -14,6 +14,11 @@ import {
   Activity,
 } from "lucide-react";
 
+export interface SugestaoAcao {
+  titulo: string;
+  porque: string;
+}
+
 export const BURNOUT_NIVEL_CONFIG = {
   baixo: {
     color: 'text-success',
@@ -93,10 +98,22 @@ export const BURNOUT_FATORES = [
     detailedAnalysis: 'Analisamos a quantidade e complexidade dos riscos cognitivos identificados no ambiente de trabalho, incluindo demandas de atenção, memória e processamento de informações.',
     dataSource: ['Inventário de Riscos Cognitivos', 'Análise de Carga Mental'],
     sugestoes: [
-      'Implementar rodízio de tarefas complexas',
-      'Criar pausas programadas para recuperação mental',
-      'Simplificar processos e procedimentos',
-      'Implementar ferramentas de apoio cognitivo',
+      { 
+        titulo: 'Implementar rodízio de tarefas complexas',
+        porque: 'Reduzir a sobrecarga mental causada pela exposição prolongada a tarefas de alta complexidade cognitiva'
+      },
+      { 
+        titulo: 'Criar pausas programadas para recuperação mental',
+        porque: 'Permitir recuperação cognitiva adequada e prevenir fadiga mental acumulada'
+      },
+      { 
+        titulo: 'Simplificar processos e procedimentos',
+        porque: 'Diminuir a carga cognitiva exigida para execução das atividades rotineiras'
+      },
+      { 
+        titulo: 'Implementar ferramentas de apoio cognitivo',
+        porque: 'Oferecer suporte tecnológico que reduza a demanda de memória e processamento mental'
+      },
     ],
   },
   { 
@@ -107,10 +124,22 @@ export const BURNOUT_FATORES = [
     detailedAnalysis: 'Avaliamos os riscos organizacionais relacionados ao ritmo, pressão por prazos e metas, intensidade das demandas e controle sobre o próprio trabalho.',
     dataSource: ['Riscos Organizacionais', 'Análise de Jornada'],
     sugestoes: [
-      'Revisar metas e prazos irrealistas',
-      'Balancear carga de trabalho entre equipes',
-      'Implementar gestão de prioridades',
-      'Avaliar necessidade de contratações',
+      { 
+        titulo: 'Revisar metas e prazos irrealistas',
+        porque: 'Adequar as expectativas de entrega à capacidade real da equipe, evitando sobrecarga'
+      },
+      { 
+        titulo: 'Balancear carga de trabalho entre equipes',
+        porque: 'Distribuir demandas de forma equitativa para evitar sobrecarga em indivíduos específicos'
+      },
+      { 
+        titulo: 'Implementar gestão de prioridades',
+        porque: 'Permitir foco nas atividades mais importantes e reduzir sensação de urgência constante'
+      },
+      { 
+        titulo: 'Avaliar necessidade de contratações',
+        porque: 'Dimensionar adequadamente a equipe para atender às demandas sem sobrecarga'
+      },
     ],
   },
   { 
@@ -121,10 +150,22 @@ export const BURNOUT_FATORES = [
     detailedAnalysis: 'Consideramos as ações pendentes relacionadas a pausas e recuperação, assim como a existência de políticas e práticas de descanso durante a jornada.',
     dataSource: ['Ações Pendentes', 'Política de Pausas'],
     sugestoes: [
-      'Implementar pausas ativas obrigatórias',
-      'Criar espaços de descanso adequados',
-      'Estabelecer política formal de pausas',
-      'Monitorar intervalos por sistema',
+      { 
+        titulo: 'Implementar pausas ativas obrigatórias',
+        porque: 'Garantir momentos de recuperação física e mental durante a jornada de trabalho'
+      },
+      { 
+        titulo: 'Criar espaços de descanso adequados',
+        porque: 'Oferecer ambientes propícios para recuperação e descompressão dos colaboradores'
+      },
+      { 
+        titulo: 'Estabelecer política formal de pausas',
+        porque: 'Institucionalizar a cultura de pausas e garantir que todos tenham direito ao descanso'
+      },
+      { 
+        titulo: 'Monitorar intervalos por sistema',
+        porque: 'Acompanhar o cumprimento das pausas e identificar colaboradores em risco de fadiga'
+      },
     ],
   },
   { 
@@ -135,10 +176,22 @@ export const BURNOUT_FATORES = [
     detailedAnalysis: 'Monitoramos os registros de humor diário dos colaboradores, identificando padrões de estresse, cansaço, ansiedade e desânimo nos últimos 7 dias.',
     dataSource: ['Humor Diário', 'Registros dos últimos 7 dias'],
     sugestoes: [
-      'Realizar escuta ativa com gestores',
-      'Oferecer apoio psicológico',
-      'Investigar causas de insatisfação',
-      'Promover ações de bem-estar',
+      { 
+        titulo: 'Realizar escuta ativa com gestores',
+        porque: 'Identificar causas específicas do humor negativo através de conversas individuais'
+      },
+      { 
+        titulo: 'Oferecer apoio psicológico',
+        porque: 'Disponibilizar suporte profissional para colaboradores em sofrimento emocional'
+      },
+      { 
+        titulo: 'Investigar causas de insatisfação',
+        porque: 'Compreender os fatores organizacionais que contribuem para o humor negativo'
+      },
+      { 
+        titulo: 'Promover ações de bem-estar',
+        porque: 'Criar iniciativas que melhorem o clima organizacional e a satisfação no trabalho'
+      },
     ],
   },
   { 
@@ -149,10 +202,22 @@ export const BURNOUT_FATORES = [
     detailedAnalysis: 'Analisamos as manifestações recebidas pela ouvidoria, incluindo denúncias, reclamações e sugestões relacionadas ao ambiente de trabalho e relações interpessoais.',
     dataSource: ['Ouvidoria', 'Ocorrências em aberto'],
     sugestoes: [
-      'Investigar denúncias pendentes',
-      'Implementar ações corretivas',
-      'Reforçar canais de comunicação',
-      'Capacitar lideranças',
+      { 
+        titulo: 'Investigar denúncias pendentes',
+        porque: 'Resolver situações reportadas que podem estar causando sofrimento aos colaboradores'
+      },
+      { 
+        titulo: 'Implementar ações corretivas',
+        porque: 'Tratar as causas raiz das denúncias e prevenir novas ocorrências similares'
+      },
+      { 
+        titulo: 'Reforçar canais de comunicação',
+        porque: 'Garantir que colaboradores tenham meios seguros para reportar problemas'
+      },
+      { 
+        titulo: 'Capacitar lideranças',
+        porque: 'Preparar gestores para lidar adequadamente com conflitos e situações sensíveis'
+      },
     ],
   },
   { 
@@ -163,10 +228,22 @@ export const BURNOUT_FATORES = [
     detailedAnalysis: 'Combinamos indicadores de humor negativo com riscos cognitivos para avaliar a carga emocional exigida nas atividades laborais.',
     dataSource: ['Humor Diário', 'Riscos Cognitivos'],
     sugestoes: [
-      'Oferecer treinamento de inteligência emocional',
-      'Criar grupos de apoio entre pares',
-      'Revisar atribuições de funções de alto contato',
-      'Implementar supervisão técnica',
+      { 
+        titulo: 'Oferecer treinamento de inteligência emocional',
+        porque: 'Desenvolver habilidades para lidar com demandas emocionais do trabalho'
+      },
+      { 
+        titulo: 'Criar grupos de apoio entre pares',
+        porque: 'Estabelecer rede de suporte entre colegas para compartilhar experiências e estratégias'
+      },
+      { 
+        titulo: 'Revisar atribuições de funções de alto contato',
+        porque: 'Adequar a exposição emocional às características e limites de cada colaborador'
+      },
+      { 
+        titulo: 'Implementar supervisão técnica',
+        porque: 'Oferecer acompanhamento profissional para funções com alta demanda emocional'
+      },
     ],
   },
 ] as const;
@@ -180,10 +257,22 @@ export const BOREOUT_FATORES = [
     detailedAnalysis: 'Avaliamos se há subutilização das competências dos colaboradores, analisando a relação entre capacidades identificadas e complexidade das tarefas atribuídas.',
     dataSource: ['Inventário de Riscos', 'Ações Cadastradas'],
     sugestoes: [
-      'Mapear competências e realocá-las',
-      'Criar projetos especiais desafiadores',
-      'Implementar job enrichment',
-      'Oferecer oportunidades de desenvolvimento',
+      { 
+        titulo: 'Mapear competências e realocá-las',
+        porque: 'Aproveitar melhor o potencial dos colaboradores e reduzir a subutilização de habilidades'
+      },
+      { 
+        titulo: 'Criar projetos especiais desafiadores',
+        porque: 'Estimular o engajamento através de desafios que correspondam às capacidades do colaborador'
+      },
+      { 
+        titulo: 'Implementar job enrichment',
+        porque: 'Enriquecer as funções com responsabilidades que aumentem o senso de realização'
+      },
+      { 
+        titulo: 'Oferecer oportunidades de desenvolvimento',
+        porque: 'Proporcionar crescimento profissional e novos desafios de aprendizagem'
+      },
     ],
   },
   { 
@@ -194,10 +283,22 @@ export const BOREOUT_FATORES = [
     detailedAnalysis: 'Analisamos riscos cognitivos relacionados à monotonia, avaliando a diversidade de tarefas e estímulos no ambiente de trabalho.',
     dataSource: ['Riscos Cognitivos', 'Análise de Tarefas'],
     sugestoes: [
-      'Implementar rodízio de atividades',
-      'Automatizar tarefas repetitivas',
-      'Criar variação nas rotinas',
-      'Enriquecer postos de trabalho',
+      { 
+        titulo: 'Implementar rodízio de atividades',
+        porque: 'Quebrar a monotonia através da alternância entre diferentes tipos de tarefas'
+      },
+      { 
+        titulo: 'Automatizar tarefas repetitivas',
+        porque: 'Liberar colaboradores para atividades mais estimulantes e de maior valor agregado'
+      },
+      { 
+        titulo: 'Criar variação nas rotinas',
+        porque: 'Introduzir elementos de novidade que mantenham o interesse e a atenção'
+      },
+      { 
+        titulo: 'Enriquecer postos de trabalho',
+        porque: 'Adicionar responsabilidades e atividades diversificadas às funções existentes'
+      },
     ],
   },
   { 
@@ -208,10 +309,22 @@ export const BOREOUT_FATORES = [
     detailedAnalysis: 'Correlacionamos indicadores de humor com a percepção de propósito, avaliando se os colaboradores compreendem a importância de suas contribuições.',
     dataSource: ['Humor Diário', 'Clima Organizacional'],
     sugestoes: [
-      'Comunicar propósito e impacto do trabalho',
-      'Conectar tarefas aos objetivos maiores',
-      'Promover reconhecimento',
-      'Envolver em decisões',
+      { 
+        titulo: 'Comunicar propósito e impacto do trabalho',
+        porque: 'Conectar as atividades diárias aos resultados e benefícios gerados pela empresa'
+      },
+      { 
+        titulo: 'Conectar tarefas aos objetivos maiores',
+        porque: 'Demonstrar como cada função contribui para o sucesso organizacional'
+      },
+      { 
+        titulo: 'Promover reconhecimento',
+        porque: 'Valorizar contribuições individuais e reforçar a importância de cada colaborador'
+      },
+      { 
+        titulo: 'Envolver em decisões',
+        porque: 'Aumentar o senso de pertencimento e responsabilidade sobre os resultados'
+      },
     ],
   },
   { 
@@ -222,10 +335,22 @@ export const BOREOUT_FATORES = [
     detailedAnalysis: 'Monitoramos a frequência de registros de humor neutro ou indiferente, que podem indicar desconexão emocional com o trabalho.',
     dataSource: ['Humor Diário', 'Taxa de Neutralidade'],
     sugestoes: [
-      'Realizar conversas individuais',
-      'Investigar causas da apatia',
-      'Criar momentos de celebração',
-      'Promover conexões interpessoais',
+      { 
+        titulo: 'Realizar conversas individuais',
+        porque: 'Identificar causas pessoais ou profissionais da apatia através de escuta ativa'
+      },
+      { 
+        titulo: 'Investigar causas da apatia',
+        porque: 'Compreender fatores organizacionais que levam ao desinteresse e desengajamento'
+      },
+      { 
+        titulo: 'Criar momentos de celebração',
+        porque: 'Estimular emoções positivas e reconexão com aspectos prazerosos do trabalho'
+      },
+      { 
+        titulo: 'Promover conexões interpessoais',
+        porque: 'Fortalecer vínculos sociais que aumentam o engajamento e a satisfação'
+      },
     ],
   },
   { 
@@ -236,10 +361,22 @@ export const BOREOUT_FATORES = [
     detailedAnalysis: 'Avaliamos indicadores de integração social, analisando a participação em atividades coletivas e a percepção de pertencimento ao grupo.',
     dataSource: ['Humor Positivo', 'Engajamento Social'],
     sugestoes: [
-      'Promover team building',
-      'Criar rituais de integração',
-      'Facilitar colaboração entre áreas',
-      'Estabelecer mentoria entre pares',
+      { 
+        titulo: 'Promover team building',
+        porque: 'Fortalecer vínculos entre membros da equipe através de atividades conjuntas'
+      },
+      { 
+        titulo: 'Criar rituais de integração',
+        porque: 'Estabelecer momentos regulares de conexão e fortalecimento do grupo'
+      },
+      { 
+        titulo: 'Facilitar colaboração entre áreas',
+        porque: 'Ampliar a rede de relacionamentos e reduzir o isolamento departamental'
+      },
+      { 
+        titulo: 'Estabelecer mentoria entre pares',
+        porque: 'Criar conexões significativas através do compartilhamento de conhecimento'
+      },
     ],
   },
 ] as const;
@@ -253,10 +390,22 @@ export const ENERGIA_FATORES = [
     detailedAnalysis: 'Medimos a vitalidade através dos registros de humor positivo, avaliando a disposição e energia demonstrada pelos colaboradores.',
     dataSource: ['Humor Diário', 'Registros Positivos'],
     sugestoes: [
-      'Promover atividades físicas',
-      'Melhorar qualidade do ambiente',
-      'Incentivar hábitos saudáveis',
-      'Criar programa de qualidade de vida',
+      { 
+        titulo: 'Promover atividades físicas',
+        porque: 'Aumentar os níveis de energia física e mental através do exercício regular'
+      },
+      { 
+        titulo: 'Melhorar qualidade do ambiente',
+        porque: 'Criar condições ambientais que favoreçam o bem-estar e a disposição'
+      },
+      { 
+        titulo: 'Incentivar hábitos saudáveis',
+        porque: 'Promover escolhas que contribuam para a saúde e vitalidade dos colaboradores'
+      },
+      { 
+        titulo: 'Criar programa de qualidade de vida',
+        porque: 'Institucionalizar iniciativas de promoção da saúde e bem-estar integral'
+      },
     ],
   },
   { 
@@ -267,10 +416,22 @@ export const ENERGIA_FATORES = [
     detailedAnalysis: 'Calculamos o engajamento combinando taxa de conclusão de ações com indicadores positivos de humor, refletindo o comprometimento ativo.',
     dataSource: ['Ações Concluídas', 'Humor Positivo'],
     sugestoes: [
-      'Reconhecer realizações publicamente',
-      'Dar autonomia e responsabilidade',
-      'Alinhar objetivos pessoais e organizacionais',
-      'Promover participação em decisões',
+      { 
+        titulo: 'Reconhecer realizações publicamente',
+        porque: 'Valorizar contribuições e reforçar comportamentos desejados através do reconhecimento'
+      },
+      { 
+        titulo: 'Dar autonomia e responsabilidade',
+        porque: 'Aumentar o senso de propriedade e controle sobre o próprio trabalho'
+      },
+      { 
+        titulo: 'Alinhar objetivos pessoais e organizacionais',
+        porque: 'Criar conexão entre as aspirações individuais e as metas da empresa'
+      },
+      { 
+        titulo: 'Promover participação em decisões',
+        porque: 'Envolver colaboradores nos processos decisórios que afetam seu trabalho'
+      },
     ],
   },
   { 
@@ -281,10 +442,22 @@ export const ENERGIA_FATORES = [
     detailedAnalysis: 'Avaliamos a presença psicológica considerando a ausência de fatores negativos como humor ruim e denúncias abertas que indicam desconexão.',
     dataSource: ['Humor Negativo', 'Denúncias Abertas'],
     sugestoes: [
-      'Implementar práticas de mindfulness',
-      'Reduzir distrações no ambiente',
-      'Criar ambientes de foco',
-      'Promover gestão do tempo',
+      { 
+        titulo: 'Implementar práticas de mindfulness',
+        porque: 'Desenvolver a capacidade de atenção plena e redução do estresse'
+      },
+      { 
+        titulo: 'Reduzir distrações no ambiente',
+        porque: 'Criar condições que favoreçam a concentração e o foco nas atividades'
+      },
+      { 
+        titulo: 'Criar ambientes de foco',
+        porque: 'Disponibilizar espaços adequados para trabalho que exige concentração'
+      },
+      { 
+        titulo: 'Promover gestão do tempo',
+        porque: 'Capacitar colaboradores para organizar suas atividades de forma mais eficiente'
+      },
     ],
   },
   { 
@@ -295,10 +468,22 @@ export const ENERGIA_FATORES = [
     detailedAnalysis: 'Avaliamos a sustentabilidade da energia considerando o nível de burnout - quanto menor o risco de burnout, maior a sustentabilidade.',
     dataSource: ['Índice de Burnout', 'Tendência Histórica'],
     sugestoes: [
-      'Equilibrar demandas e recursos',
-      'Promover recuperação adequada',
-      'Monitorar sinais de esgotamento',
-      'Criar cultura de cuidado',
+      { 
+        titulo: 'Equilibrar demandas e recursos',
+        porque: 'Garantir que a carga de trabalho seja compatível com os recursos disponíveis'
+      },
+      { 
+        titulo: 'Promover recuperação adequada',
+        porque: 'Assegurar tempo e condições para restauração da energia física e mental'
+      },
+      { 
+        titulo: 'Monitorar sinais de esgotamento',
+        porque: 'Identificar precocemente colaboradores em risco de burnout para intervenção'
+      },
+      { 
+        titulo: 'Criar cultura de cuidado',
+        porque: 'Estabelecer ambiente onde o bem-estar é valorizado e protegido'
+      },
     ],
   },
 ] as const;

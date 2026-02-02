@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { AcaoPrioridade } from "@/types/ergonomia";
+import type { SugestaoAcao } from "./radarConfig";
 
 const PRIORIDADE_LABELS: Record<AcaoPrioridade, string> = {
   baixa: 'Baixa',
@@ -41,7 +42,7 @@ interface FatorActionFormProps {
   fatorKey: string;
   fatorLabel: string;
   radarType: 'burnout' | 'boreout' | 'energia';
-  sugestoes: readonly string[];
+  sugestoes: readonly SugestaoAcao[];
   onSubmit: (acao: {
     titulo: string;
     descricao: string;
@@ -85,11 +86,12 @@ export function FatorActionForm({
   });
   const [selectedSugestao, setSelectedSugestao] = useState<string | null>(null);
 
-  const handleSugestaoSelect = (sugestao: string) => {
-    setSelectedSugestao(sugestao);
+  const handleSugestaoSelect = (sugestao: SugestaoAcao) => {
+    setSelectedSugestao(sugestao.titulo);
     setFormData(prev => ({
       ...prev,
-      titulo: sugestao,
+      titulo: sugestao.titulo,
+      porque: sugestao.porque,
     }));
   };
 
@@ -139,17 +141,17 @@ export function FatorActionForm({
               {sugestoes.map((sugestao, idx) => (
                 <Badge
                   key={idx}
-                  variant={selectedSugestao === sugestao ? "default" : "outline"}
+                  variant={selectedSugestao === sugestao.titulo ? "default" : "outline"}
                   className={cn(
                     "cursor-pointer text-xs transition-all",
-                    selectedSugestao === sugestao 
+                    selectedSugestao === sugestao.titulo 
                       ? "bg-primary" 
                       : "hover:bg-primary/10"
                   )}
                   onClick={() => handleSugestaoSelect(sugestao)}
                 >
-                  {selectedSugestao === sugestao && <Check className="h-3 w-3 mr-1" />}
-                  {sugestao}
+                  {selectedSugestao === sugestao.titulo && <Check className="h-3 w-3 mr-1" />}
+                  {sugestao.titulo}
                 </Badge>
               ))}
             </div>
