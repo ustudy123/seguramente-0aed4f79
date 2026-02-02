@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -289,8 +290,8 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       enabled: !!acaoId,
     });
 
-  // Tarefas mock para demonstração
-  const MOCK_TAREFAS: PlanoTarefa[] = [
+  // Tarefas mock - usa ref para manter estado entre renders
+  const mockTarefasRef = React.useRef<PlanoTarefa[]>([
     {
       id: "tarefa-1",
       tenant_id: "demo",
@@ -316,7 +317,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       titulo: "Solicitar orçamentos de fornecedores",
       descricao: "Contatar ao menos 3 fornecedores especializados",
       ordem: 2,
-      status: "em_andamento",
+      status: "nao_iniciada",
       prioridade: "medio",
       prazo: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       responsavel_nome: "Maria Santos",
@@ -341,7 +342,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: new Date().toISOString(),
     },
-  ];
+  ]);
 
   // Tarefas de uma ação
   const useTarefas = (acaoId: string | undefined) =>
@@ -352,7 +353,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
         // Retornar mock se o ID for de demonstração
         if (acaoId.startsWith("mock-")) {
-          return MOCK_TAREFAS.filter(t => t.acao_id === acaoId);
+          return mockTarefasRef.current.filter(t => t.acao_id === acaoId);
         }
 
         const { data, error } = await supabase
@@ -818,17 +819,18 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       
       // Se é uma tarefa mock, simular atualização localmente
       if (id.startsWith("tarefa-") || acaoId.startsWith("mock-")) {
-        const mockTarefa = MOCK_TAREFAS.find(t => t.id === id);
+        const mockTarefa = mockTarefasRef.current.find(t => t.id === id);
         if (mockTarefa) {
           const updated = { 
             ...mockTarefa, 
             ...data,
-            data_conclusao: data.status === "concluida" ? new Date().toISOString() : mockTarefa.data_conclusao,
+            status: data.status || mockTarefa.status,
+            data_conclusao: data.status === "concluida" ? new Date().toISOString() : (data.status === "nao_iniciada" ? undefined : mockTarefa.data_conclusao),
           };
           // Atualizar no array mock para refletir mudança
-          const index = MOCK_TAREFAS.findIndex(t => t.id === id);
+          const index = mockTarefasRef.current.findIndex(t => t.id === id);
           if (index !== -1) {
-            MOCK_TAREFAS[index] = updated as PlanoTarefa;
+            mockTarefasRef.current[index] = updated as PlanoTarefa;
           }
           return updated as PlanoTarefa;
         }
@@ -888,9 +890,9 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
     mutationFn: async ({ id, acaoId }: { id: string; acaoId: string }) => {
       // Se é uma tarefa mock, simular deleção localmente
       if (id.startsWith("tarefa-") || acaoId.startsWith("mock-")) {
-        const index = MOCK_TAREFAS.findIndex(t => t.id === id);
+        const index = mockTarefasRef.current.findIndex(t => t.id === id);
         if (index !== -1) {
-          MOCK_TAREFAS.splice(index, 1);
+          mockTarefasRef.current.splice(index, 1);
         }
         return { acaoId };
       }
