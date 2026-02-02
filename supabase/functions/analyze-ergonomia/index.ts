@@ -26,6 +26,7 @@ interface AnaliseResultado {
   recomendacoes: string[];
   conformidadeEstimada: number;
   resumoGeral: string;
+  transcricaoAudio?: string; // Transcrição do áudio se fornecido
 }
 
 serve(async (req) => {
@@ -253,6 +254,11 @@ Responda SEMPRE em português brasileiro.`;
     }
 
     const resultado: AnaliseResultado = JSON.parse(toolCall.function.arguments);
+    
+    // Add audio transcription to result if available
+    if (audioTranscricao) {
+      resultado.transcricaoAudio = audioTranscricao;
+    }
 
     return new Response(JSON.stringify(resultado), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
