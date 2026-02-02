@@ -1,0 +1,151 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "./useTenant";
+
+export interface PilarData {
+  organizacao: {
+    totalColaboradores: number;
+    cargosDefinidos: number;
+    departamentos: number;
+    admissoesAndamento: number;
+    score: number;
+  };
+  condicoes: {
+    itensNr17Atendidos: number;
+    itensNr17Total: number;
+    episDisponiveis: number;
+    episBaixoEstoque: number;
+    riscosAtivos: number;
+    score: number;
+  };
+  experiencia: {
+    humorPositivo: number;
+    humorTotal: number;
+    ouvidoriaPendente: number;
+    feedPostsHoje: number;
+    score: number;
+  };
+  governanca: {
+    acoesEmAndamento: number;
+    acoesConcluidas: number;
+    acoesTotal: number;
+    evidenciasEnviadas: number;
+    score: number;
+  };
+}
+
+export const useDashboardData = () => {
+  const { tenant } = useTenant();
+
+  return useQuery({
+    queryKey: ["dashboard-pilares", tenant?.id],
+    queryFn: async (): Promise<PilarData> => {
+      if (!tenant?.id) throw new Error("Tenant não encontrado");
+
+      // Parallel queries for all pilares
+      const [
+        cargosRes,
+        departamentosRes,
+        admissoesRes,
+        itensNr17Res,
+        episRes,
+        riscosRes,
+        humorRes,
+        ouvidoriaRes,
+        feedRes,
+        acoesRes,
+        evidenciasRes,
+      ] = await Promise.all([
+        // Pilar 1 - Organização
+        supabase.from("cargos").select("id", { count: "exact" }).eq("tenant_id", tenant.id).eq("ativo", true),
+        supabase.from("departamentos").select("id", { count: "exact" }).eq("tenant_id", tenant.id).eq("ativo", true),
+        supabase.from("admissoes").select("id", { count: "exact" }).eq("tenant_id", tenant.id).neq("status", "concluido").neq("status", "reprovado"),
+        
+        // Pilar 2 - Condições
+        supabase.from("ergonomia_itens_nr17").select("id, status").eq("tenant_id", tenant.id),
+        supabase.from("epis").select("id, quantidade_estoque, quantidade_minima, status").eq("tenant_id", tenant.id),
+        supabase.from("ergonomia_riscos").select("id").eq("tenant_id", tenant.id).eq("ativo", true),
+        
+        // Pilar 3 - Experiência
+        supabase.from("humor_diario").select("id, humor").eq("tenant_id", tenant.id).gte("data", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]),
+        supabase.from("ouvidoria").select("id").eq("tenant_id", tenant.id).eq("status", "pendente"),
+        supabase.from("feed_posts").select("id").eq("tenant_id", tenant.id).gte("created_at", new Date().toISOString().split("T")[0]),
+        
+        // Pilar 4 - Governança
+        supabase.from("ergonomia_acoes").select("id, status").eq("tenant_id", tenant.id),
+        supabase.from("ergonomia_evidencias").select("id").eq("tenant_id", tenant.id),
+      ]);
+
+      // Calcular métricas Pilar 1
+      const cargos = cargosRes.count || 0;
+      const departamentos = departamentosRes.count || 0;
+      const admissoes = admissoesRes.count || 0;
+      const scoreOrganizacao = Math.min(100, Math.round((cargos > 0 ? 25 : 0) + (departamentos > 0 ? 25 : 0) + (cargos >= 5 ? 25 : cargos * 5) + (departamentos >= 3 ? 25 : departamentos * 8)));
+
+      // Calcular métricas Pilar 2
+      const itensNr17 = itensNr17Res.data || [];
+      const itensAtendidos = itensNr17.filter(i => i.status === "atendido").length;
+      const itensParciais = itensNr17.filter(i => i.status === "parcial").length;
+      const itensTotal = itensNr17.length;
+      const epis = episRes.data || [];
+      const episDisponiveis = epis.filter(e => e.status === "disponivel").length;
+      const episBaixoEstoque = epis.filter(e => e.quantidade_estoque <= e.quantidade_minima).length;
+      const riscosAtivos = riscosRes.count || 0;
+      const scoreCondicoes = itensTotal > 0 
+        ? Math.round(((itensAtendidos + itensParciais * 0.5) / itensTotal) * 100) 
+        : (epis.length > 0 ? 50 : 30);
+
+      // Calcular métricas Pilar 3
+      const humores = humorRes.data || [];
+      const humorPositivo = humores.filter(h => ["bem", "animado", "motivado"].includes(h.humor)).length;
+      const ouvidoriaPendente = ouvidoriaRes.count || 0;
+      const feedHoje = feedRes.count || 0;
+      const scoreExperiencia = humores.length > 0 
+        ? Math.round((humorPositivo / humores.length) * 80 + (ouvidoriaPendente === 0 ? 20 : Math.max(0, 20 - ouvidoriaPendente * 5)))
+        : 40;
+
+      // Calcular métricas Pilar 4
+      const acoes = acoesRes.data || [];
+      const acoesConcluidas = acoes.filter(a => a.status === "concluida").length;
+      const acoesEmAndamento = acoes.filter(a => a.status === "em_andamento").length;
+      const evidencias = evidenciasRes.count || 0;
+      const scoreGovernanca = acoes.length > 0 
+        ? Math.round((acoesConcluidas / acoes.length) * 60 + (evidencias > 0 ? 20 : 0) + (acoesEmAndamento > 0 ? 20 : 0))
+        : 35;
+
+      return {
+        organizacao: {
+          totalColaboradores: 0, // Será implementado com tabela de colaboradores
+          cargosDefinidos: cargos,
+          departamentos: departamentos,
+          admissoesAndamento: admissoes,
+          score: scoreOrganizacao,
+        },
+        condicoes: {
+          itensNr17Atendidos: itensAtendidos,
+          itensNr17Total: itensTotal,
+          episDisponiveis: episDisponiveis,
+          episBaixoEstoque: episBaixoEstoque,
+          riscosAtivos: riscosAtivos,
+          score: scoreCondicoes,
+        },
+        experiencia: {
+          humorPositivo: humorPositivo,
+          humorTotal: humores.length,
+          ouvidoriaPendente: ouvidoriaPendente,
+          feedPostsHoje: feedHoje,
+          score: scoreExperiencia,
+        },
+        governanca: {
+          acoesEmAndamento: acoesEmAndamento,
+          acoesConcluidas: acoesConcluidas,
+          acoesTotal: acoes.length,
+          evidenciasEnviadas: evidencias,
+          score: scoreGovernanca,
+        },
+      };
+    },
+    enabled: !!tenant?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
+};
