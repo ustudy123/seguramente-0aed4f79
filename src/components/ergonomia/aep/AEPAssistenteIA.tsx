@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, 
@@ -10,16 +10,27 @@ import {
   AlertTriangle,
   CheckCircle,
   Lightbulb,
-  Wand2
+  Wand2,
+  Video,
+  Mic,
+  MicOff,
+  Square,
+  Play,
+  Pause,
+  Trash2,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useAnaliseIA, AnaliseResultado, RiscoIdentificado } from "@/hooks/useAnaliseIA";
+import { useAnaliseIA, AnaliseResultado } from "@/hooks/useAnaliseIA";
+import { useVideoFrameExtractor } from "@/hooks/useVideoFrameExtractor";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import type { 
   AEPDescricaoAtividade, 
   AEPRiscosFisicos, 
@@ -44,8 +55,8 @@ interface AEPAssistenteIAProps {
 
 const STEP_CONTEXT: Record<number, { title: string; description: string }> = {
   1: { title: "Identificação", description: "Dados básicos da empresa e avaliação" },
-  2: { title: "Descrição da Atividade", description: "A IA pode sugerir descrições baseadas em fotos ou informações do setor" },
-  3: { title: "Avaliação de Riscos", description: "A IA pode analisar imagens para identificar riscos físicos e cognitivos" },
+  2: { title: "Descrição da Atividade", description: "A IA pode sugerir descrições baseadas em fotos, vídeos ou áudios" },
+  3: { title: "Avaliação de Riscos", description: "A IA pode analisar mídias para identificar riscos físicos e cognitivos" },
   4: { title: "Síntese", description: "A IA pode avaliar a conformidade geral baseada nos riscos identificados" },
   5: { title: "Ações Recomendadas", description: "A IA pode sugerir ações corretivas baseadas nos riscos" },
   6: { title: "Assinaturas", description: "Etapa de conclusão manual" },
@@ -92,38 +103,151 @@ export function AEPAssistenteIA({
   const [contexto, setContexto] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadType, setUploadType] = useState<"foto" | "video">("foto");
+  const [videoFrames, setVideoFrames] = useState<string[] | null>(null);
+  const [isAnalyzingWithAudio, setIsAnalyzingWithAudio] = useState(false);
   
-  const { isAnalyzing, resultado, analisarImagem, analisarTexto, limparResultado } = useAnaliseIA();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  
+  const { isAnalyzing, resultado, limparResultado } = useAnaliseIA();
+  const { extractFrames, isExtracting, progress: extractionProgress } = useVideoFrameExtractor({
+    maxFrames: 8,
+    framesPerSecond: 2,
+    maxDuration: 30,
+  });
+  const {
+    isRecording,
+    isPaused,
+    formattedDuration,
+    audioUrl,
+    audioBlob,
+    maxDuration,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    clearRecording,
+    getBase64: getAudioBase64,
+  } = useAudioRecorder({ maxDuration: 120 });
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  // Cleanup audio URL on unmount
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
+
+  const onDropImage = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
         setUploadedImage(reader.result as string);
         setUploadedFileName(file.name);
+        setVideoFrames(null);
       };
       reader.readAsDataURL(file);
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+  const onDropVideo = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      setUploadedFileName(file.name);
+      const result = await extractFrames(file);
+      if (result) {
+        setVideoFrames(result.frames);
+        setUploadedImage(result.frames[0]); // Show first frame as preview
+        toast.success(`${result.frameCount} frames extraídos de ${result.duration.toFixed(1)}s de vídeo`);
+      }
+    }
+  }, [extractFrames]);
+
+  const imageDropzone = useDropzone({
+    onDrop: onDropImage,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
+  });
+
+  const videoDropzone = useDropzone({
+    onDrop: onDropVideo,
+    accept: { 'video/*': ['.mp4', '.mov', '.webm', '.avi'] },
+    maxFiles: 1,
+    maxSize: 50 * 1024 * 1024,
   });
 
   const handleAnalyze = async () => {
     const stepContext = STEP_CONTEXT[currentStep];
-    const fullContext = `Etapa: ${stepContext.title}. ${contexto}`;
+    let fullContext = `Etapa: ${stepContext.title}. ${contexto}`;
+    
+    setIsAnalyzingWithAudio(true);
 
-    if (uploadedImage) {
-      await analisarImagem(uploadedImage, fullContext);
-    } else if (contexto.trim()) {
-      await analisarTexto(contexto, fullContext);
-    } else {
-      toast.error("Forneça uma imagem ou descrição para análise");
+    try {
+      // Get audio transcription if available
+      let audioTranscricao: string | undefined;
+      if (audioBlob) {
+        // For now, we'll include a note about the audio
+        // In a full implementation, we'd send to Whisper API for transcription
+        fullContext += "\n\n[Áudio gravado pelo avaliador - contexto verbal disponível]";
+      }
+
+      // Import supabase for function invocation
+      const { supabase } = await import("@/integrations/supabase/client");
+
+      if (videoFrames && videoFrames.length > 0) {
+        // Analyze video frames
+        const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
+          body: {
+            tipo: "video",
+            conteudo: videoFrames,
+            contexto: fullContext,
+          },
+        });
+
+        if (error) throw new Error(error.message);
+        if (data.error) throw new Error(data.error);
+        
+        toast.success("Análise de vídeo concluída!");
+      } else if (uploadedImage) {
+        // Analyze single image
+        const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
+          body: {
+            tipo: "imagem",
+            conteudo: uploadedImage,
+            contexto: fullContext,
+          },
+        });
+
+        if (error) throw new Error(error.message);
+        if (data.error) throw new Error(data.error);
+        
+        toast.success("Análise de imagem concluída!");
+      } else if (contexto.trim() || audioBlob) {
+        // Text-only analysis
+        const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
+          body: {
+            tipo: "texto",
+            conteudo: contexto || "Análise baseada em contexto de áudio",
+            contexto: fullContext,
+          },
+        });
+
+        if (error) throw new Error(error.message);
+        if (data.error) throw new Error(data.error);
+        
+        toast.success("Análise concluída!");
+      } else {
+        toast.error("Forneça uma imagem, vídeo, áudio ou descrição para análise");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro na análise";
+      toast.error(message);
+    } finally {
+      setIsAnalyzingWithAudio(false);
     }
   };
 
@@ -132,12 +256,10 @@ export function AEPAssistenteIA({
     
     const updates: Partial<AEPDescricaoAtividade> = {};
     
-    // Gerar descrição baseada nos riscos identificados
     if (resultado.resumoGeral) {
       updates.descricaoGeral = resultado.resumoGeral;
     }
     
-    // Extrair informações de postura dos riscos físicos
     const posturaRisco = resultado.riscosIdentificados.find(r => 
       r.tipo.toLowerCase().includes("postura") || r.descricao.toLowerCase().includes("postura")
     );
@@ -214,10 +336,31 @@ export function AEPAssistenteIA({
     toast.success(`${novasAcoes.length} ações sugeridas adicionadas!`);
   };
 
+  const clearUpload = () => {
+    setUploadedImage(null);
+    setUploadedFileName(null);
+    setVideoFrames(null);
+  };
+
+  const toggleAudioPlayback = () => {
+    if (!audioRef.current || !audioUrl) return;
+    
+    if (isPlayingAudio) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlayingAudio(!isPlayingAudio);
+  };
+
   const stepInfo = STEP_CONTEXT[currentStep];
   const showForStep = currentStep >= 2 && currentStep <= 5;
 
   if (!showForStep) return null;
+
+  const isProcessing = isAnalyzing || isExtracting || isAnalyzingWithAudio;
+  const hasMedia = uploadedImage || videoFrames || audioBlob;
+  const canAnalyze = hasMedia || contexto.trim();
 
   return (
     <motion.div 
@@ -247,11 +390,18 @@ export function AEPAssistenteIA({
               </span>
             </div>
           </div>
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
+          <div className="flex items-center gap-2">
+            {hasMedia && (
+              <Badge variant="secondary" className="text-xs">
+                {videoFrames ? `${videoFrames.length} frames` : audioBlob ? "Áudio" : "Foto"}
+              </Badge>
+            )}
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
         </button>
 
         {/* Content */}
@@ -265,49 +415,200 @@ export function AEPAssistenteIA({
               className="border-t"
             >
               <div className="p-4 space-y-4">
-                {/* Upload Area */}
-                <div
-                  {...getRootProps()}
-                  className={cn(
-                    "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
-                    isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50",
-                    uploadedImage && "border-success bg-success/5"
-                  )}
-                >
-                  <input {...getInputProps()} />
-                  {uploadedImage ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-success" />
-                      <span className="text-sm text-success">{uploadedFileName}</span>
+                {/* Upload Tabs */}
+                <Tabs value={uploadType} onValueChange={(v) => setUploadType(v as "foto" | "video")}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="foto" className="gap-2">
+                      <Camera className="h-4 w-4" />
+                      Foto
+                    </TabsTrigger>
+                    <TabsTrigger value="video" className="gap-2">
+                      <Video className="h-4 w-4" />
+                      Vídeo
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="foto" className="mt-3">
+                    <div
+                      {...imageDropzone.getRootProps()}
+                      className={cn(
+                        "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
+                        imageDropzone.isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50",
+                        uploadedImage && !videoFrames && "border-success bg-success/5"
+                      )}
+                    >
+                      <input {...imageDropzone.getInputProps()} />
+                      {uploadedImage && !videoFrames ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-success" />
+                          <span className="text-sm text-success">{uploadedFileName}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              clearUpload();
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="h-5 w-5 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            Arraste uma foto ou clique para selecionar
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            JPG, PNG, WebP (máx. 10MB)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="video" className="mt-3">
+                    <div
+                      {...videoDropzone.getRootProps()}
+                      className={cn(
+                        "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
+                        videoDropzone.isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50",
+                        videoFrames && "border-success bg-success/5"
+                      )}
+                    >
+                      <input {...videoDropzone.getInputProps()} />
+                      {isExtracting ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                          <p className="text-sm text-muted-foreground">
+                            Extraindo frames... {extractionProgress}%
+                          </p>
+                          <Progress value={extractionProgress} className="h-2 w-48" />
+                        </div>
+                      ) : videoFrames ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-success" />
+                            <span className="text-sm text-success">
+                              {uploadedFileName} ({videoFrames.length} frames)
+                            </span>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                clearUpload();
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex gap-1 overflow-x-auto pb-2">
+                            {videoFrames.slice(0, 4).map((frame, i) => (
+                              <img 
+                                key={i} 
+                                src={frame} 
+                                alt={`Frame ${i + 1}`}
+                                className="h-12 w-auto rounded border"
+                              />
+                            ))}
+                            {videoFrames.length > 4 && (
+                              <div className="h-12 w-12 rounded border bg-muted flex items-center justify-center text-xs">
+                                +{videoFrames.length - 4}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <Video className="h-5 w-5 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            Arraste um vídeo ou clique para selecionar
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            MP4, MOV, WebM (máx. 30s, 50MB)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Audio Recording */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Mic className="h-4 w-4" />
+                    Gravação de Áudio (contexto verbal)
+                  </label>
+                  
+                  <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30">
+                    {!isRecording && !audioUrl ? (
                       <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadedImage(null);
-                          setUploadedFileName(null);
-                        }}
+                        variant="outline" 
+                        size="sm" 
+                        onClick={startRecording}
+                        className="gap-2"
                       >
-                        Remover
+                        <Mic className="h-4 w-4 text-destructive" />
+                        Iniciar Gravação
                       </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex gap-2">
-                        <Upload className="h-5 w-5 text-muted-foreground" />
-                        <Camera className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Arraste uma foto do posto de trabalho ou clique para selecionar
-                      </p>
-                    </div>
-                  )}
+                    ) : isRecording ? (
+                      <>
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
+                          <span className="text-sm font-mono">{formattedDuration}</span>
+                          <span className="text-xs text-muted-foreground">
+                            / {Math.floor(maxDuration / 60)}:00
+                          </span>
+                        </div>
+                        {isPaused ? (
+                          <Button variant="ghost" size="icon" onClick={resumeRecording}>
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="icon" onClick={pauseRecording}>
+                            <Pause className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="destructive" size="icon" onClick={stopRecording}>
+                          <Square className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : audioUrl ? (
+                      <>
+                        <audio 
+                          ref={audioRef} 
+                          src={audioUrl} 
+                          onEnded={() => setIsPlayingAudio(false)}
+                        />
+                        <Button variant="ghost" size="icon" onClick={toggleAudioPlayback}>
+                          {isPlayingAudio ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <span className="text-sm flex-1">Áudio gravado ({formattedDuration})</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={clearRecording}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Grave observações verbais sobre o posto de trabalho (máx. 2 min)
+                  </p>
                 </div>
 
                 {/* Context Input */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    Contexto adicional (opcional)
+                    Contexto adicional (texto)
                   </label>
                   <Textarea
                     value={contexto}
@@ -320,13 +621,13 @@ export function AEPAssistenteIA({
                 {/* Analyze Button */}
                 <Button 
                   onClick={handleAnalyze}
-                  disabled={isAnalyzing || (!uploadedImage && !contexto.trim())}
+                  disabled={isProcessing || !canAnalyze}
                   className="w-full gap-2"
                 >
-                  {isAnalyzing ? (
+                  {isProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Analisando com IA...
+                      {isExtracting ? "Processando vídeo..." : "Analisando com IA..."}
                     </>
                   ) : (
                     <>

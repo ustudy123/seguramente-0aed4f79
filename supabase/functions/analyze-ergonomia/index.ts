@@ -6,9 +6,10 @@ const corsHeaders = {
 };
 
 interface AnaliseRequest {
-  tipo: "imagem" | "documento" | "texto";
-  conteudo: string; // base64 para imagem, texto para documento/texto
+  tipo: "imagem" | "documento" | "texto" | "video" | "audio";
+  conteudo: string | string[]; // base64 para imagem, array de base64 para vídeo frames, texto para documento/texto
   contexto?: string;
+  audioTranscricao?: string; // Transcrição de áudio se disponível
 }
 
 interface RiscoIdentificado {
@@ -38,14 +39,14 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY não configurada");
     }
 
-    const { tipo, conteudo, contexto }: AnaliseRequest = await req.json();
+    const { tipo, conteudo, contexto, audioTranscricao }: AnaliseRequest = await req.json();
 
     if (!conteudo) {
       throw new Error("Conteúdo não fornecido");
     }
 
     const systemPrompt = `Você é um especialista em ergonomia ocupacional e NR-17 (Norma Regulamentadora de Ergonomia do Brasil).
-Sua função é analisar evidências (fotos, documentos, descrições) de postos de trabalho e identificar:
+Sua função é analisar evidências (fotos, vídeos, documentos, descrições, relatos em áudio) de postos de trabalho e identificar:
 
 1. RISCOS ERGONÔMICOS classificados em três eixos:
    - Físico: postura, mobiliário, equipamentos, esforço repetitivo, levantamento de carga
@@ -65,27 +66,61 @@ Responda SEMPRE em português brasileiro.`;
       { role: "system", content: systemPrompt }
     ];
 
+    // Build context with audio transcription if available
+    let fullContext = contexto || "";
+    if (audioTranscricao) {
+      fullContext = `${fullContext}\n\nRelato em áudio do trabalhador/avaliador: "${audioTranscricao}"`;
+    }
+
     if (tipo === "imagem") {
       messages.push({
         role: "user",
         content: [
           {
             type: "text",
-            text: `Analise esta imagem de posto de trabalho e identifique todos os riscos ergonômicos visíveis, lacunas normativas da NR-17 e recomendações de melhoria.${contexto ? `\n\nContexto adicional: ${contexto}` : ""}`
+            text: `Analise esta imagem de posto de trabalho e identifique todos os riscos ergonômicos visíveis, lacunas normativas da NR-17 e recomendações de melhoria.${fullContext ? `\n\nContexto adicional: ${fullContext}` : ""}`
           },
           {
             type: "image_url",
             image_url: {
-              url: conteudo.startsWith("data:") ? conteudo : `data:image/jpeg;base64,${conteudo}`,
+              url: (conteudo as string).startsWith("data:") ? conteudo as string : `data:image/jpeg;base64,${conteudo}`,
               detail: "high"
             }
           }
         ]
       });
-    } else {
+    } else if (tipo === "video") {
+      // Video analysis with multiple frames
+      const frames = conteudo as string[];
+      const imageContent: any[] = [
+        {
+          type: "text",
+          text: `Analise estes ${frames.length} frames extraídos de um vídeo do posto de trabalho. Identifique riscos ergonômicos, movimentos repetitivos, posturas inadequadas, e qualquer padrão de comportamento que possa indicar problemas ergonômicos.${fullContext ? `\n\nContexto adicional: ${fullContext}` : ""}`
+        }
+      ];
+
+      // Add each frame as an image (limit to prevent token overflow)
+      const maxFramesToSend = Math.min(frames.length, 8);
+      for (let i = 0; i < maxFramesToSend; i++) {
+        const frame = frames[Math.floor(i * (frames.length / maxFramesToSend))];
+        imageContent.push({
+          type: "image_url",
+          image_url: {
+            url: frame.startsWith("data:") ? frame : `data:image/jpeg;base64,${frame}`,
+            detail: "low" // Use low detail for frames to reduce tokens
+          }
+        });
+      }
+
       messages.push({
         role: "user",
-        content: `Analise as seguintes evidências/descrição de posto de trabalho e identifique riscos ergonômicos, lacunas normativas da NR-17 e recomendações:\n\n${conteudo}${contexto ? `\n\nContexto adicional: ${contexto}` : ""}`
+        content: imageContent
+      });
+    } else {
+      // Text-based analysis (including audio transcription context)
+      messages.push({
+        role: "user",
+        content: `Analise as seguintes evidências/descrição de posto de trabalho e identifique riscos ergonômicos, lacunas normativas da NR-17 e recomendações:\n\n${conteudo}${fullContext ? `\n\nContexto adicional: ${fullContext}` : ""}`
       });
     }
 
