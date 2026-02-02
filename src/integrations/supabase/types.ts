@@ -1417,6 +1417,582 @@ export type Database = {
           },
         ]
       }
+      plano_acoes: {
+        Row: {
+          codigo: string
+          como: string | null
+          created_at: string | null
+          criado_por: string | null
+          criado_por_nome: string | null
+          custo_estimado: number | null
+          custo_real: number | null
+          data_conclusao: string | null
+          data_inicio: string | null
+          descricao: string | null
+          exige_evidencia: boolean | null
+          gravidade: number | null
+          id: string
+          onde: string | null
+          origem_descricao: string | null
+          origem_id: string | null
+          origem_modulo: string
+          pontuacao_gut: number | null
+          porque: string | null
+          prazo: string | null
+          prioridade: Database["public"]["Enums"]["acao_gut_prioridade"] | null
+          progresso: number | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: Database["public"]["Enums"]["acao_status"] | null
+          tempo_estimado_minutos: number | null
+          tempo_gasto_minutos: number | null
+          tenant_id: string
+          tendencia: number | null
+          tipo: string | null
+          titulo: string
+          updated_at: string | null
+          urgencia: number | null
+        }
+        Insert: {
+          codigo: string
+          como?: string | null
+          created_at?: string | null
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          custo_estimado?: number | null
+          custo_real?: number | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          exige_evidencia?: boolean | null
+          gravidade?: number | null
+          id?: string
+          onde?: string | null
+          origem_descricao?: string | null
+          origem_id?: string | null
+          origem_modulo?: string
+          pontuacao_gut?: number | null
+          porque?: string | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["acao_gut_prioridade"] | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["acao_status"] | null
+          tempo_estimado_minutos?: number | null
+          tempo_gasto_minutos?: number | null
+          tenant_id: string
+          tendencia?: number | null
+          tipo?: string | null
+          titulo: string
+          updated_at?: string | null
+          urgencia?: number | null
+        }
+        Update: {
+          codigo?: string
+          como?: string | null
+          created_at?: string | null
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          custo_estimado?: number | null
+          custo_real?: number | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          exige_evidencia?: boolean | null
+          gravidade?: number | null
+          id?: string
+          onde?: string | null
+          origem_descricao?: string | null
+          origem_id?: string | null
+          origem_modulo?: string
+          pontuacao_gut?: number | null
+          porque?: string | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["acao_gut_prioridade"] | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["acao_status"] | null
+          tempo_estimado_minutos?: number | null
+          tempo_gasto_minutos?: number | null
+          tenant_id?: string
+          tendencia?: number | null
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string | null
+          urgencia?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_acoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_comentarios: {
+        Row: {
+          acao_id: string
+          autor_id: string
+          autor_nome: string
+          conteudo: string
+          created_at: string | null
+          id: string
+          mencoes: string[] | null
+          tarefa_id: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          acao_id: string
+          autor_id: string
+          autor_nome: string
+          conteudo: string
+          created_at?: string | null
+          id?: string
+          mencoes?: string[] | null
+          tarefa_id?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          acao_id?: string
+          autor_id?: string
+          autor_nome?: string
+          conteudo?: string
+          created_at?: string | null
+          id?: string
+          mencoes?: string[] | null
+          tarefa_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_comentarios_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_comentarios_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "plano_tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_comentarios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_evidencias: {
+        Row: {
+          acao_id: string
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_tipo: string | null
+          arquivo_url: string | null
+          created_at: string | null
+          descricao: string | null
+          enviado_por: string | null
+          enviado_por_nome: string | null
+          id: string
+          tarefa_id: string | null
+          tenant_id: string
+          tipo: string | null
+          titulo: string
+        }
+        Insert: {
+          acao_id: string
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          id?: string
+          tarefa_id?: string | null
+          tenant_id: string
+          tipo?: string | null
+          titulo: string
+        }
+        Update: {
+          acao_id?: string
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          id?: string
+          tarefa_id?: string | null
+          tenant_id?: string
+          tipo?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_evidencias_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_evidencias_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "plano_tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_evidencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_historico: {
+        Row: {
+          acao_id: string | null
+          created_at: string | null
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          descricao: string
+          id: string
+          tarefa_id: string | null
+          tenant_id: string
+          tipo_evento: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao_id?: string | null
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao: string
+          id?: string
+          tarefa_id?: string | null
+          tenant_id: string
+          tipo_evento: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao_id?: string | null
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string
+          id?: string
+          tarefa_id?: string | null
+          tenant_id?: string
+          tipo_evento?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_historico_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_historico_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "plano_tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_participantes: {
+        Row: {
+          acao_id: string
+          aceito: boolean | null
+          created_at: string | null
+          data_aceite: string | null
+          id: string
+          tenant_id: string
+          tipo: string
+          usuario_id: string
+          usuario_nome: string
+        }
+        Insert: {
+          acao_id: string
+          aceito?: boolean | null
+          created_at?: string | null
+          data_aceite?: string | null
+          id?: string
+          tenant_id: string
+          tipo?: string
+          usuario_id: string
+          usuario_nome: string
+        }
+        Update: {
+          acao_id?: string
+          aceito?: boolean | null
+          created_at?: string | null
+          data_aceite?: string | null
+          id?: string
+          tenant_id?: string
+          tipo?: string
+          usuario_id?: string
+          usuario_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_participantes_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_participantes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_tarefas: {
+        Row: {
+          acao_id: string
+          concluida_por: string | null
+          concluida_por_nome: string | null
+          created_at: string | null
+          data_conclusao: string | null
+          depende_de: string | null
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          ordem: number | null
+          prazo: string | null
+          prioridade: Database["public"]["Enums"]["acao_gut_prioridade"] | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: Database["public"]["Enums"]["tarefa_status"] | null
+          tempo_estimado_minutos: number | null
+          tempo_gasto_minutos: number | null
+          tenant_id: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          acao_id: string
+          concluida_por?: string | null
+          concluida_por_nome?: string | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          depende_de?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          ordem?: number | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["acao_gut_prioridade"] | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["tarefa_status"] | null
+          tempo_estimado_minutos?: number | null
+          tempo_gasto_minutos?: number | null
+          tenant_id: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          acao_id?: string
+          concluida_por?: string | null
+          concluida_por_nome?: string | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          depende_de?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          ordem?: number | null
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["acao_gut_prioridade"] | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["tarefa_status"] | null
+          tempo_estimado_minutos?: number | null
+          tempo_gasto_minutos?: number | null
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_tarefas_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_tarefas_depende_de_fkey"
+            columns: ["depende_de"]
+            isOneToOne: false
+            referencedRelation: "plano_tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_tarefas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_templates: {
+        Row: {
+          acao_template: Json
+          ativo: boolean | null
+          categoria: string | null
+          created_at: string | null
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          tarefas_template: Json | null
+          tenant_id: string
+          updated_at: string | null
+          uso_count: number | null
+        }
+        Insert: {
+          acao_template: Json
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          tarefas_template?: Json | null
+          tenant_id: string
+          updated_at?: string | null
+          uso_count?: number | null
+        }
+        Update: {
+          acao_template?: Json
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tarefas_template?: Json | null
+          tenant_id?: string
+          updated_at?: string | null
+          uso_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_tempo: {
+        Row: {
+          acao_id: string | null
+          created_at: string | null
+          descricao: string | null
+          duracao_minutos: number | null
+          fim: string | null
+          id: string
+          inicio: string
+          tarefa_id: string | null
+          tenant_id: string
+          usuario_id: string
+          usuario_nome: string
+        }
+        Insert: {
+          acao_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          duracao_minutos?: number | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          tarefa_id?: string | null
+          tenant_id: string
+          usuario_id: string
+          usuario_nome: string
+        }
+        Update: {
+          acao_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          duracao_minutos?: number | null
+          fim?: string | null
+          id?: string
+          inicio?: string
+          tarefa_id?: string | null
+          tenant_id?: string
+          usuario_id?: string
+          usuario_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_tempo_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_tempo_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "plano_tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_tempo_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_ajustes: {
         Row: {
           aprovado_por: string | null
@@ -1872,6 +2448,7 @@ export type Database = {
       }
     }
     Enums: {
+      acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"
       acao_prioridade: "baixa" | "media" | "alta" | "urgente"
       acao_status: "pendente" | "em_andamento" | "concluida" | "cancelada"
       admissao_status:
@@ -1904,6 +2481,7 @@ export type Database = {
         | "nao_atendido"
         | "nao_aplicavel"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
+      tarefa_status: "nao_iniciada" | "em_andamento" | "bloqueada" | "concluida"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
@@ -2033,6 +2611,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      acao_gut_prioridade: ["baixo", "medio", "urgente", "imediato"],
       acao_prioridade: ["baixa", "media", "alta", "urgente"],
       acao_status: ["pendente", "em_andamento", "concluida", "cancelada"],
       admissao_status: [
@@ -2069,6 +2648,7 @@ export const Constants = {
         "nao_aplicavel",
       ],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
+      tarefa_status: ["nao_iniciada", "em_andamento", "bloqueada", "concluida"],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },
