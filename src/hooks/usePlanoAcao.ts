@@ -271,6 +271,12 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       queryFn: async () => {
         if (!acaoId) return null;
 
+        // Retornar mock se o ID for de demonstração
+        if (acaoId.startsWith("mock-")) {
+          const mockAcao = MOCK_ACOES.find(a => a.id === acaoId);
+          return mockAcao || null;
+        }
+
         const { data, error } = await supabase
           .from("plano_acoes")
           .select("*")
@@ -283,12 +289,71 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       enabled: !!acaoId,
     });
 
+  // Tarefas mock para demonstração
+  const MOCK_TAREFAS: PlanoTarefa[] = [
+    {
+      id: "tarefa-1",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      titulo: "Realizar levantamento das estações de trabalho",
+      descricao: "Mapear todas as estações e identificar necessidades de ajuste",
+      ordem: 1,
+      status: "concluida",
+      prioridade: "urgente",
+      prazo: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      data_conclusao: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      responsavel_nome: "Carlos Silva",
+      tempo_estimado_minutos: 120,
+      tempo_gasto_minutos: 90,
+      concluida_por_nome: "Carlos Silva",
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "tarefa-2",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      titulo: "Solicitar orçamentos de fornecedores",
+      descricao: "Contatar ao menos 3 fornecedores especializados",
+      ordem: 2,
+      status: "em_andamento",
+      prioridade: "medio",
+      prazo: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      responsavel_nome: "Maria Santos",
+      tempo_estimado_minutos: 240,
+      tempo_gasto_minutos: 60,
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "tarefa-3",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      titulo: "Executar ajustes nas estações prioritárias",
+      descricao: "Iniciar pelos setores com maior incidência de queixas",
+      ordem: 3,
+      status: "nao_iniciada",
+      prioridade: "urgente",
+      prazo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      responsavel_nome: "Carlos Silva",
+      tempo_estimado_minutos: 480,
+      tempo_gasto_minutos: 0,
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+
   // Tarefas de uma ação
   const useTarefas = (acaoId: string | undefined) =>
     useQuery({
       queryKey: ["plano-tarefas", acaoId],
       queryFn: async () => {
         if (!acaoId) return [];
+
+        // Retornar mock se o ID for de demonstração
+        if (acaoId.startsWith("mock-")) {
+          return MOCK_TAREFAS.filter(t => t.acao_id === acaoId);
+        }
 
         const { data, error } = await supabase
           .from("plano_tarefas")
@@ -302,12 +367,57 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       enabled: !!acaoId,
     });
 
+  // Histórico mock para demonstração
+  const MOCK_HISTORICO: PlanoHistorico[] = [
+    {
+      id: "hist-1",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      tipo_evento: "criacao",
+      descricao: "Ação criada a partir da análise ergonômica NR-17",
+      usuario_nome: "Admin Sistema",
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "hist-2",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      tipo_evento: "status_alterado",
+      descricao: "Status alterado de Pendente para Em Andamento",
+      usuario_nome: "Carlos Silva",
+      created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "hist-3",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      tipo_evento: "tarefa_concluida",
+      descricao: "Tarefa 'Realizar levantamento das estações de trabalho' concluída",
+      usuario_nome: "Carlos Silva",
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "hist-4",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      tipo_evento: "comentario",
+      descricao: "Novo comentário adicionado",
+      usuario_nome: "Maria Santos",
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
   // Histórico de uma ação
   const useHistorico = (acaoId: string | undefined) =>
     useQuery({
       queryKey: ["plano-historico", acaoId],
       queryFn: async () => {
         if (!acaoId) return [];
+
+        // Retornar mock se o ID for de demonstração
+        if (acaoId.startsWith("mock-")) {
+          return MOCK_HISTORICO.filter(h => h.acao_id === acaoId);
+        }
 
         const { data, error } = await supabase
           .from("plano_historico")
@@ -321,12 +431,54 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       enabled: !!acaoId,
     });
 
+  // Comentários mock para demonstração
+  const MOCK_COMENTARIOS: PlanoComentario[] = [
+    {
+      id: "com-1",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      conteudo: "Já iniciamos o levantamento. Identificamos 12 estações que precisam de ajustes urgentes.",
+      autor_id: "user-1",
+      autor_nome: "Carlos Silva",
+      mencoes: [],
+      created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "com-2",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      conteudo: "Ótimo trabalho! Podemos priorizar o setor administrativo que tem mais queixas.",
+      autor_id: "user-2",
+      autor_nome: "Maria Santos",
+      mencoes: [],
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "com-3",
+      tenant_id: "demo",
+      acao_id: "mock-1",
+      conteudo: "Recebi 2 orçamentos dos fornecedores. Aguardando o terceiro para comparativo.",
+      autor_id: "user-2",
+      autor_nome: "Maria Santos",
+      mencoes: [],
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
   // Comentários de uma ação
   const useComentarios = (acaoId: string | undefined) =>
     useQuery({
       queryKey: ["plano-comentarios", acaoId],
       queryFn: async () => {
         if (!acaoId) return [];
+
+        // Retornar mock se o ID for de demonstração
+        if (acaoId.startsWith("mock-")) {
+          return MOCK_COMENTARIOS.filter(c => c.acao_id === acaoId);
+        }
 
         const { data, error } = await supabase
           .from("plano_comentarios")
