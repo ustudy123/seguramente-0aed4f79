@@ -3,8 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Shield } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Logo } from "@/components/ui/Logo";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -58,11 +58,8 @@ export default function Login() {
   return (
     <div className="space-y-8">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
-          <Shield className="w-7 h-7 text-primary-foreground" />
-        </div>
-        <span className="text-2xl font-bold">Seguramente</span>
+      <div className="lg:hidden flex items-center justify-center mb-8">
+        <Logo size="lg" showText={true} />
       </div>
 
       <div className="text-center lg:text-left space-y-2">
