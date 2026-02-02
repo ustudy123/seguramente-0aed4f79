@@ -1,1 +1,7 @@
 project_id = "diayjpsrcerycycyaxst"
+
+[functions.analyze-ergonomia]
+verify_jwt = false
+
+[functions.onboarding-signup]
+verify_jwt = false
