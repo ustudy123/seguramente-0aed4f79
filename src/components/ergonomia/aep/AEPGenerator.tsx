@@ -23,8 +23,9 @@ import { AEPFormSintese } from "./AEPFormSintese";
 import { AEPFormAcoes } from "./AEPFormAcoes";
 import { AEPFormAssinaturas } from "./AEPFormAssinaturas";
 import { AEPDocumentoPreview } from "./AEPDocumentoPreview";
+import { AEPAssistenteIA } from "./AEPAssistenteIA";
 
-import type { AEPDocumento } from "@/types/aep";
+import type { AEPDocumento, AEPDescricaoAtividade, AEPRiscosFisicos, AEPRiscosCognitivos, AEPAcaoRecomendada } from "@/types/aep";
 import { getDefaultAEPDocumento } from "@/types/aep";
 
 const STEPS = [
@@ -119,6 +120,35 @@ export function AEPGenerator({ onSave, initialData }: AEPGeneratorProps) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Handlers para atualização parcial via IA
+  const handleUpdateDescricao = (updates: Partial<AEPDescricaoAtividade>) => {
+    setDocumento(prev => ({
+      ...prev,
+      descricaoAtividade: { ...prev.descricaoAtividade, ...updates }
+    }));
+  };
+
+  const handleUpdateRiscosFisicos = (updates: Partial<AEPRiscosFisicos>) => {
+    setDocumento(prev => ({
+      ...prev,
+      riscosFisicos: { ...prev.riscosFisicos, ...updates }
+    }));
+  };
+
+  const handleUpdateRiscosCognitivos = (updates: Partial<AEPRiscosCognitivos>) => {
+    setDocumento(prev => ({
+      ...prev,
+      riscosCognitivos: { ...prev.riscosCognitivos, ...updates }
+    }));
+  };
+
+  const handleAddAcoes = (novasAcoes: AEPAcaoRecomendada[]) => {
+    setDocumento(prev => ({
+      ...prev,
+      acoesRecomendadas: [...prev.acoesRecomendadas, ...novasAcoes]
+    }));
   };
 
   const renderStep = () => {
@@ -260,6 +290,19 @@ export function AEPGenerator({ onSave, initialData }: AEPGeneratorProps) {
           </div>
         ))}
       </div>
+
+      {/* AI Assistant */}
+      <AEPAssistenteIA
+        currentStep={currentStep}
+        descricaoAtividade={documento.descricaoAtividade}
+        riscosFisicos={documento.riscosFisicos}
+        riscosCognitivos={documento.riscosCognitivos}
+        acoesRecomendadas={documento.acoesRecomendadas}
+        onUpdateDescricao={handleUpdateDescricao}
+        onUpdateRiscosFisicos={handleUpdateRiscosFisicos}
+        onUpdateRiscosCognitivos={handleUpdateRiscosCognitivos}
+        onAddAcoes={handleAddAcoes}
+      />
 
       {/* Form Content */}
       <motion.div
