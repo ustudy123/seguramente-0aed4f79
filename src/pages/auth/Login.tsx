@@ -57,8 +57,8 @@ export default function Login() {
 
   return (
     <div className="space-y-8">
-      {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-center mb-8">
+      {/* Logo - always visible */}
+      <div className="flex items-center justify-center lg:justify-start mb-4">
         <Logo size="lg" showText={true} />
       </div>
 

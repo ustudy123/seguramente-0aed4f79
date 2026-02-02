@@ -23,13 +23,13 @@ export function AuthLayout() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[hsl(145,55%,50%)] rounded-full blur-3xl opacity-50" />
         </div>
         
-        {/* Logo */}
+        {/* Decorative element instead of logo */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10"
         >
-          <Logo size="lg" showText={true} textClassName="text-white" />
+          <div className="w-16 h-1 bg-gradient-to-r from-[hsl(145,55%,50%)] via-[hsl(280,55%,60%)] to-[hsl(145,55%,50%)] rounded-full" />
         </motion.div>
         
         {/* Main content */}
