@@ -32,6 +32,7 @@ import { HubServicos } from "@/components/ergonomia/HubServicos";
 import { AnaliseIASection } from "@/components/ergonomia/AnaliseIASection";
 import { IntegracaoCognitiva } from "@/components/ergonomia/IntegracaoCognitiva";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
+import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ITENS_NR17_PADRAO,
@@ -55,6 +56,7 @@ export default function Ergonomia() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [showRiscoForm, setShowRiscoForm] = useState(false);
   const [showAcaoForm, setShowAcaoForm] = useState(false);
+  const [aepMode, setAepMode] = useState<'simples' | 'multi'>('simples');
   
   const {
     itensNR17,
@@ -367,7 +369,34 @@ export default function Ergonomia() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <AEPGenerator />
+                {/* Toggle entre modos */}
+                <div className="flex items-center gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium">Modo de Geração:</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={aepMode === 'simples' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAepMode('simples')}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Função Única
+                    </Button>
+                    <Button
+                      variant={aepMode === 'multi' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAepMode('multi')}
+                    >
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Multi-Setor
+                    </Button>
+                  </div>
+                </div>
+                
+                {aepMode === 'simples' ? (
+                  <AEPGenerator />
+                ) : (
+                  <AEPGeneratorMulti />
+                )}
               </motion.div>
             </TabsContent>
 
