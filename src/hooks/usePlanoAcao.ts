@@ -815,6 +815,26 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
   const updateTarefaMutation = useMutation({
     mutationFn: async ({ id, acaoId, data }: { id: string; acaoId: string; data: UpdatePlanoTarefaDTO }) => {
       const userName = profile?.nome_completo || user?.email || "Usuário";
+      
+      // Se é uma tarefa mock, simular atualização localmente
+      if (id.startsWith("tarefa-") || acaoId.startsWith("mock-")) {
+        const mockTarefa = MOCK_TAREFAS.find(t => t.id === id);
+        if (mockTarefa) {
+          const updated = { 
+            ...mockTarefa, 
+            ...data,
+            data_conclusao: data.status === "concluida" ? new Date().toISOString() : mockTarefa.data_conclusao,
+          };
+          // Atualizar no array mock para refletir mudança
+          const index = MOCK_TAREFAS.findIndex(t => t.id === id);
+          if (index !== -1) {
+            MOCK_TAREFAS[index] = updated as PlanoTarefa;
+          }
+          return updated as PlanoTarefa;
+        }
+        throw new Error("Tarefa não encontrada");
+      }
+      
       const updateData: Record<string, unknown> = { ...data };
       
       // Se está sendo concluída, registrar quem concluiu
@@ -866,6 +886,15 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
   // Deletar tarefa
   const deleteTarefaMutation = useMutation({
     mutationFn: async ({ id, acaoId }: { id: string; acaoId: string }) => {
+      // Se é uma tarefa mock, simular deleção localmente
+      if (id.startsWith("tarefa-") || acaoId.startsWith("mock-")) {
+        const index = MOCK_TAREFAS.findIndex(t => t.id === id);
+        if (index !== -1) {
+          MOCK_TAREFAS.splice(index, 1);
+        }
+        return { acaoId };
+      }
+      
       const { error } = await supabase.from("plano_tarefas").delete().eq("id", id);
       if (error) throw error;
       return { acaoId };
