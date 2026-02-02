@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Flame, AlertTriangle, TrendingDown, Clock, MessageSquareWarning, Heart } from "lucide-react";
+import { Flame, AlertTriangle, TrendingDown, Clock, MessageSquareWarning, Heart, Maximize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ interface RadarBurnoutProps {
     denuncias: number;
     exigenciasEmocionais: number;
   };
+  onClick?: () => void;
 }
 
 const NIVEL_CONFIG = {
@@ -57,19 +58,31 @@ const FATORES_CONFIG = [
   { key: 'exigenciasEmocionais', label: 'Exigências Emocionais', icon: Heart },
 ] as const;
 
-export function RadarBurnout({ score, nivel, fatores }: RadarBurnoutProps) {
+export function RadarBurnout({ score, nivel, fatores, onClick }: RadarBurnoutProps) {
   const config = NIVEL_CONFIG[nivel];
 
   return (
-    <Card className={cn("border-2", config.borderColor)}>
+    <Card 
+      className={cn(
+        "border-2 transition-all duration-200",
+        config.borderColor,
+        onClick && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flame className={cn("h-5 w-5", config.color)} />
             <span className="text-lg">Radar de Burnout</span>
           </div>
-          <div className={cn("px-3 py-1 rounded-full text-sm font-medium", config.bgColor, config.color)}>
-            {config.icon} {config.label}
+          <div className="flex items-center gap-2">
+            <div className={cn("px-3 py-1 rounded-full text-sm font-medium", config.bgColor, config.color)}>
+              {config.icon} {config.label}
+            </div>
+            {onClick && (
+              <Maximize2 className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -137,6 +150,13 @@ export function RadarBurnout({ score, nivel, fatores }: RadarBurnoutProps) {
               {nivel === 'moderado' && "Monitore os indicadores e promova pausas regulares."}
             </p>
           </div>
+        )}
+
+        {/* Indicador de clique */}
+        {onClick && (
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Clique para ver detalhes
+          </p>
         )}
       </CardContent>
     </Card>

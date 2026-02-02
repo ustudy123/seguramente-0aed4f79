@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, Heart, Users, Brain, TrendingUp } from "lucide-react";
+import { Zap, Heart, Users, Brain, TrendingUp, Maximize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ interface RadarEnergiaProps {
     presencaPsicologica: number;
     sustentabilidade: number;
   };
+  onClick?: () => void;
 }
 
 const NIVEL_CONFIG = {
@@ -53,19 +54,31 @@ const FATORES_CONFIG = [
   { key: 'sustentabilidade', label: 'Sustentabilidade', icon: Users },
 ] as const;
 
-export function RadarEnergia({ score, nivel, fatores }: RadarEnergiaProps) {
+export function RadarEnergia({ score, nivel, fatores, onClick }: RadarEnergiaProps) {
   const config = NIVEL_CONFIG[nivel];
 
   return (
-    <Card className={cn("border-2", config.borderColor)}>
+    <Card 
+      className={cn(
+        "border-2 transition-all duration-200",
+        config.borderColor,
+        onClick && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className={cn("h-5 w-5", config.color)} />
             <span className="text-lg">Energia Organizacional</span>
           </div>
-          <div className={cn("px-3 py-1 rounded-full text-sm font-medium", config.bgColor, config.color)}>
-            {config.icon} {config.label}
+          <div className="flex items-center gap-2">
+            <div className={cn("px-3 py-1 rounded-full text-sm font-medium", config.bgColor, config.color)}>
+              {config.icon} {config.label}
+            </div>
+            {onClick && (
+              <Maximize2 className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -133,6 +146,13 @@ export function RadarEnergia({ score, nivel, fatores }: RadarEnergiaProps) {
             {nivel === 'baixo' && "⚠️ Baixa energia detectada. Ação necessária."}
           </p>
         </div>
+
+        {/* Indicador de clique */}
+        {onClick && (
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Clique para ver detalhes
+          </p>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Battery, Target, RotateCcw, HelpCircle, Meh, Users } from "lucide-react";
+import { Battery, Target, RotateCcw, HelpCircle, Meh, Users, Maximize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ interface RadarBoreoutProps {
     apatia: number;
     desconexao: number;
   };
+  onClick?: () => void;
 }
 
 const NIVEL_CONFIG = {
@@ -55,19 +56,31 @@ const FATORES_CONFIG = [
   { key: 'desconexao', label: 'Desconexão com Equipe', icon: Users },
 ] as const;
 
-export function RadarBoreout({ score, nivel, fatores }: RadarBoreoutProps) {
+export function RadarBoreout({ score, nivel, fatores, onClick }: RadarBoreoutProps) {
   const config = NIVEL_CONFIG[nivel];
 
   return (
-    <Card className={cn("border-2", config.borderColor)}>
+    <Card 
+      className={cn(
+        "border-2 transition-all duration-200",
+        config.borderColor,
+        onClick && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Battery className={cn("h-5 w-5", config.color)} />
             <span className="text-lg">Radar de Boreout</span>
           </div>
-          <div className={cn("px-3 py-1 rounded-full text-sm font-medium", config.bgColor, config.color)}>
-            {config.icon} {config.label}
+          <div className="flex items-center gap-2">
+            <div className={cn("px-3 py-1 rounded-full text-sm font-medium", config.bgColor, config.color)}>
+              {config.icon} {config.label}
+            </div>
+            {onClick && (
+              <Maximize2 className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -135,6 +148,13 @@ export function RadarBoreout({ score, nivel, fatores }: RadarBoreoutProps) {
               {nivel === 'moderado' && "Atenção à monotonia. Promova novos desafios."}
             </p>
           </div>
+        )}
+
+        {/* Indicador de clique */}
+        {onClick && (
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Clique para ver detalhes
+          </p>
         )}
       </CardContent>
     </Card>
