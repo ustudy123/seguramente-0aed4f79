@@ -40,14 +40,32 @@ export function RadarDetailModal({ open, onOpenChange, type, radares }: RadarDet
     prioridade: AcaoPrioridade;
     fator_radar: string;
     radar_type: string;
+    responsavel_nome: string;
+    prazo: string;
+    onde: string;
+    porque: string;
+    como: string;
+    custo_estimado: string;
   }) => {
     try {
+      // Build comprehensive description with 5W2H
+      const radarLabel = acao.radar_type === 'burnout' ? 'Burnout' : acao.radar_type === 'boreout' ? 'Boreout' : 'Energia';
+      let descricao = `**Origem:** Radar de ${radarLabel} - Fator: ${acao.fator_radar}\n\n`;
+      
+      if (acao.porque) descricao += `**Por quê:** ${acao.porque}\n`;
+      if (acao.onde) descricao += `**Onde:** ${acao.onde}\n`;
+      if (acao.como) descricao += `**Como:** ${acao.como}\n`;
+      if (acao.descricao) descricao += `\n**Observações:** ${acao.descricao}`;
+
       await createAcao({
         titulo: `[${acao.radar_type.toUpperCase()}/${acao.fator_radar}] ${acao.titulo}`,
-        descricao: acao.descricao || `Ação criada a partir do Radar de ${acao.radar_type === 'burnout' ? 'Burnout' : acao.radar_type === 'boreout' ? 'Boreout' : 'Energia'} - Fator: ${acao.fator_radar}`,
+        descricao: descricao.trim(),
         tipo: acao.tipo,
         prioridade: acao.prioridade,
         status: 'pendente',
+        responsavel_nome: acao.responsavel_nome || undefined,
+        prazo: acao.prazo || undefined,
+        custo_estimado: acao.custo_estimado ? parseFloat(acao.custo_estimado) : undefined,
       });
       toast.success("Ação cadastrada com sucesso!");
     } catch (error) {
