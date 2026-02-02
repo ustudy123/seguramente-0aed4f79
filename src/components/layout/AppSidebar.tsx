@@ -20,10 +20,10 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Building2,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 interface MenuItem {
   title: string;
@@ -168,17 +168,15 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
     >
       {/* Logo */}
       <div className="p-4 flex items-center gap-3 border-b border-sidebar-border">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-          <Building2 className="w-5 h-5 text-sidebar-primary-foreground" />
-        </div>
-        {!isCollapsed && (
+        {isCollapsed ? (
+          <Logo size="md" showText={false} />
+        ) : (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <h1 className="text-lg font-bold text-sidebar-foreground">PeopleFlow</h1>
-            <p className="text-xs text-sidebar-muted">Gestão de Pessoas</p>
+            <Logo size="md" showText={true} textClassName="text-sidebar-foreground" />
           </motion.div>
         )}
       </div>

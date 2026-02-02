@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Users, FileCheck, HardHat, Calendar, Clock } from "lucide-react";
+import { Users, FileCheck, HardHat, Calendar, Clock } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export function AuthLayout() {
   const features = [
@@ -14,23 +15,21 @@ export function AuthLayout() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-[55%] bg-gradient-to-br from-primary via-primary to-primary/90 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[55%] bg-gradient-to-br from-[hsl(215,50%,23%)] via-[hsl(215,50%,20%)] to-[hsl(215,55%,15%)] p-12 flex-col justify-between relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-[hsl(145,55%,50%)] rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[hsl(280,55%,60%)] rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[hsl(145,55%,50%)] rounded-full blur-3xl opacity-50" />
         </div>
         
         {/* Logo */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 relative z-10"
+          className="relative z-10"
         >
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-            <Shield className="w-7 h-7 text-white" />
-          </div>
-          <span className="text-3xl font-bold text-white tracking-tight">Seguramente</span>
+          <Logo size="lg" showText={true} textClassName="text-white" />
         </motion.div>
         
         {/* Main content */}
@@ -61,7 +60,7 @@ export function AuthLayout() {
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20"
               >
-                <feature.icon className="w-5 h-5 text-white/90" />
+                <feature.icon className="w-5 h-5 text-[hsl(145,55%,60%)]" />
                 <span className="text-white/90 text-sm font-medium">{feature.text}</span>
               </motion.div>
             ))}
