@@ -12,7 +12,8 @@ import {
   Building2,
   Sparkles,
   BookOpen,
-  Zap
+  Zap,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +31,7 @@ import { RadaresSection } from "@/components/ergonomia/RadaresSection";
 import { HubServicos } from "@/components/ergonomia/HubServicos";
 import { AnaliseIASection } from "@/components/ergonomia/AnaliseIASection";
 import { IntegracaoCognitiva } from "@/components/ergonomia/IntegracaoCognitiva";
+import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ITENS_NR17_PADRAO,
@@ -195,6 +197,10 @@ export default function Ergonomia() {
                   <ClipboardCheck className="h-4 w-4" />
                   Plano de Ação ({acoes.length})
                 </TabsTrigger>
+                <TabsTrigger value="aep" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Gerar AEP
+                </TabsTrigger>
                 <TabsTrigger value="inteligencia" className="gap-2">
                   <Sparkles className="h-4 w-4" />
                   IA & Análise
@@ -352,6 +358,16 @@ export default function Ergonomia() {
                     onUpdateStatus={handleUpdateAcaoStatus}
                   />
                 )}
+              </motion.div>
+            </TabsContent>
+
+            {/* Tab: Gerar AEP */}
+            <TabsContent value="aep" className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <AEPGenerator />
               </motion.div>
             </TabsContent>
 
