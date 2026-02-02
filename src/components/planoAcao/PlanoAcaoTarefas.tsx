@@ -69,8 +69,13 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
   const [newTarefa, setNewTarefa] = useState({
     titulo: "",
     descricao: "",
+    porque: "",
+    onde: "",
     prazo: "",
-    prioridade: "media" as string,
+    responsavel_nome: "",
+    como: "",
+    custo_estimado: "",
+    prioridade: "medio" as string,
   });
 
   const { createTarefa, isCreatingTarefa, updateTarefa, deleteTarefa } = usePlanoAcao();
@@ -78,17 +83,37 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
   const handleAddTarefa = async () => {
     if (!newTarefa.titulo.trim()) return;
 
+    // Monta descrição completa no formato 5W2H
+    const descricao5W2H = [
+      newTarefa.descricao && `O quê: ${newTarefa.descricao}`,
+      newTarefa.porque && `Por quê: ${newTarefa.porque}`,
+      newTarefa.onde && `Onde: ${newTarefa.onde}`,
+      newTarefa.como && `Como: ${newTarefa.como}`,
+      newTarefa.custo_estimado && `Quanto: R$ ${newTarefa.custo_estimado}`,
+    ].filter(Boolean).join('\n');
+
     await createTarefa({
       acao_id: acaoId,
       titulo: newTarefa.titulo,
-      descricao: newTarefa.descricao || undefined,
+      descricao: descricao5W2H || undefined,
       prazo: newTarefa.prazo || undefined,
+      responsavel_nome: newTarefa.responsavel_nome || undefined,
       prioridade: newTarefa.prioridade as any,
       ordem: tarefas.length,
       status: "nao_iniciada",
     });
 
-    setNewTarefa({ titulo: "", descricao: "", prazo: "", prioridade: "medio" });
+    setNewTarefa({ 
+      titulo: "", 
+      descricao: "", 
+      porque: "",
+      onde: "",
+      prazo: "", 
+      responsavel_nome: "",
+      como: "",
+      custo_estimado: "",
+      prioridade: "medio" 
+    });
     setShowAddDialog(false);
   };
 
@@ -226,41 +251,117 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
         )}
       </CardContent>
 
-      {/* Dialog de adicionar tarefa */}
+      {/* Dialog de adicionar tarefa - 5W2H */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nova Tarefa</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Nova Tarefa (5W2H)
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* O QUÊ - What */}
             <div className="space-y-2">
-              <Label htmlFor="titulo">Título *</Label>
+              <Label htmlFor="titulo" className="flex items-center gap-2">
+                <span className="font-semibold text-primary">O quê</span>
+                <span className="text-muted-foreground text-xs">(What) *</span>
+              </Label>
               <Input
                 id="titulo"
-                placeholder="Descreva a tarefa..."
+                placeholder="Qual é a tarefa a ser executada?"
                 value={newTarefa.titulo}
                 onChange={(e) => setNewTarefa({ ...newTarefa, titulo: e.target.value })}
               />
             </div>
 
+            {/* POR QUÊ - Why */}
             <div className="space-y-2">
-              <Label htmlFor="descricao">Descrição</Label>
+              <Label htmlFor="porque" className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Por quê</span>
+                <span className="text-muted-foreground text-xs">(Why)</span>
+              </Label>
               <Textarea
-                id="descricao"
-                placeholder="Detalhes adicionais (opcional)..."
-                value={newTarefa.descricao}
-                onChange={(e) => setNewTarefa({ ...newTarefa, descricao: e.target.value })}
+                id="porque"
+                placeholder="Qual a justificativa ou objetivo desta tarefa?"
+                value={newTarefa.porque}
+                onChange={(e) => setNewTarefa({ ...newTarefa, porque: e.target.value })}
+                rows={2}
               />
             </div>
 
+            {/* ONDE - Where */}
+            <div className="space-y-2">
+              <Label htmlFor="onde" className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Onde</span>
+                <span className="text-muted-foreground text-xs">(Where)</span>
+              </Label>
+              <Input
+                id="onde"
+                placeholder="Local ou setor onde será executada"
+                value={newTarefa.onde}
+                onChange={(e) => setNewTarefa({ ...newTarefa, onde: e.target.value })}
+              />
+            </div>
+
+            {/* QUANDO - When e QUEM - Who */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="prazo">Prazo</Label>
+                <Label htmlFor="prazo" className="flex items-center gap-2">
+                  <span className="font-semibold text-primary">Quando</span>
+                  <span className="text-muted-foreground text-xs">(When)</span>
+                </Label>
                 <Input
                   id="prazo"
                   type="date"
                   value={newTarefa.prazo}
                   onChange={(e) => setNewTarefa({ ...newTarefa, prazo: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="responsavel" className="flex items-center gap-2">
+                  <span className="font-semibold text-primary">Quem</span>
+                  <span className="text-muted-foreground text-xs">(Who)</span>
+                </Label>
+                <Input
+                  id="responsavel"
+                  placeholder="Responsável pela tarefa"
+                  value={newTarefa.responsavel_nome}
+                  onChange={(e) => setNewTarefa({ ...newTarefa, responsavel_nome: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* COMO - How */}
+            <div className="space-y-2">
+              <Label htmlFor="como" className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Como</span>
+                <span className="text-muted-foreground text-xs">(How)</span>
+              </Label>
+              <Textarea
+                id="como"
+                placeholder="Descreva o método ou procedimento para execução"
+                value={newTarefa.como}
+                onChange={(e) => setNewTarefa({ ...newTarefa, como: e.target.value })}
+                rows={2}
+              />
+            </div>
+
+            {/* QUANTO - How much e Prioridade */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="custo" className="flex items-center gap-2">
+                  <span className="font-semibold text-primary">Quanto</span>
+                  <span className="text-muted-foreground text-xs">(How much)</span>
+                </Label>
+                <Input
+                  id="custo"
+                  type="number"
+                  step="0.01"
+                  placeholder="Custo estimado (R$)"
+                  value={newTarefa.custo_estimado}
+                  onChange={(e) => setNewTarefa({ ...newTarefa, custo_estimado: e.target.value })}
                 />
               </div>
 
@@ -274,10 +375,10 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="baixa">Baixa</SelectItem>
-                    <SelectItem value="media">Média</SelectItem>
-                    <SelectItem value="alta">Alta</SelectItem>
-                    <SelectItem value="critica">Crítica</SelectItem>
+                    <SelectItem value="baixo">Baixa</SelectItem>
+                    <SelectItem value="medio">Média</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
+                    <SelectItem value="imediato">Imediata</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
