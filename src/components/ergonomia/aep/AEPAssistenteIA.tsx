@@ -258,6 +258,13 @@ export function AEPAssistenteIA({
       if (analysisResult) {
         console.log("Resultado da análise:", analysisResult);
         setResultado(analysisResult);
+        
+        // Update context field with audio transcription if available
+        if (analysisResult.transcricaoAudio) {
+          const transcricaoTexto = `[Transcrição do áudio]: ${analysisResult.transcricaoAudio}`;
+          setContexto(prev => prev ? `${prev}\n\n${transcricaoTexto}` : transcricaoTexto);
+          toast.info("Transcrição do áudio adicionada ao contexto");
+        }
       }
     } catch (err) {
       console.error("Erro na análise:", err);
@@ -449,7 +456,7 @@ export function AEPAssistenteIA({
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="foto" className="mt-3">
+                  <TabsContent value="foto" className="mt-3 space-y-3">
                     <div
                       {...imageDropzone.getRootProps()}
                       className={cn(
@@ -486,6 +493,17 @@ export function AEPAssistenteIA({
                         </div>
                       )}
                     </div>
+                    
+                    {/* Image Preview */}
+                    {uploadedImage && !videoFrames && (
+                      <div className="relative rounded-lg overflow-hidden border bg-muted/30">
+                        <img 
+                          src={uploadedImage} 
+                          alt="Preview da imagem" 
+                          className="w-full h-auto max-h-48 object-contain"
+                        />
+                      </div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="video" className="mt-3">

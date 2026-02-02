@@ -16,6 +16,7 @@ export interface AnaliseResultado {
   recomendacoes: string[];
   conformidadeEstimada: number;
   resumoGeral: string;
+  transcricaoAudio?: string;
 }
 
 export function useAnaliseIA() {
