@@ -181,14 +181,14 @@ export function AcaoForm({
             <div className="space-y-2">
               <Label>Vinculada ao Risco</Label>
               <Select
-                value={formData.risco_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, risco_id: value }))}
+                value={formData.risco_id || "_none"}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, risco_id: value === "_none" ? "" : value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="_none">Nenhum</SelectItem>
                   {riscos.map((risco) => (
                     <SelectItem key={risco.id} value={risco.id}>
                       {risco.titulo}
@@ -201,14 +201,14 @@ export function AcaoForm({
             <div className="space-y-2">
               <Label>Item NR-17</Label>
               <Select
-                value={formData.item_nr17_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, item_nr17_id: value }))}
+                value={formData.item_nr17_id || "_none"}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, item_nr17_id: value === "_none" ? "" : value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="_none">Nenhum</SelectItem>
                   {itensNR17.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.codigo} - {item.titulo}
