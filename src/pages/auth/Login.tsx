@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Building2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,18 +56,18 @@ export default function Login() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-          <Building2 className="w-6 h-6 text-primary-foreground" />
+        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
+          <Shield className="w-7 h-7 text-primary-foreground" />
         </div>
-        <span className="text-2xl font-bold">RH360</span>
+        <span className="text-2xl font-bold">Seguramente</span>
       </div>
 
-      <div className="text-center lg:text-left">
-        <h1 className="text-2xl font-bold">Bem-vindo de volta!</h1>
-        <p className="text-muted-foreground mt-1">
+      <div className="text-center lg:text-left space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Bem-vindo de volta!</h1>
+        <p className="text-muted-foreground">
           Entre com suas credenciais para acessar o sistema
         </p>
       </div>
