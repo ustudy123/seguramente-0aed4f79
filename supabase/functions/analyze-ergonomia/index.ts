@@ -9,7 +9,7 @@ interface AnaliseRequest {
   tipo: "imagem" | "documento" | "texto" | "video" | "audio";
   conteudo: string | string[]; // base64 para imagem, array de base64 para vídeo frames, texto para documento/texto
   contexto?: string;
-  audioTranscricao?: string; // Transcrição de áudio se disponível
+  audioBase64?: string; // Áudio em base64 para transcrição
 }
 
 interface RiscoIdentificado {
@@ -39,10 +39,54 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY não configurada");
     }
 
-    const { tipo, conteudo, contexto, audioTranscricao }: AnaliseRequest = await req.json();
+    const { tipo, conteudo, contexto, audioBase64 }: AnaliseRequest = await req.json();
 
     if (!conteudo) {
       throw new Error("Conteúdo não fornecido");
+    }
+
+    // Transcribe audio if provided
+    let audioTranscricao: string | null = null;
+    if (audioBase64) {
+      console.log("Transcrevendo áudio com Whisper...");
+      try {
+        // Extract base64 data (remove data URL prefix if present)
+        const base64Data = audioBase64.includes(",") 
+          ? audioBase64.split(",")[1] 
+          : audioBase64;
+        
+        // Convert base64 to binary
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Create form data for Whisper API
+        const audioBlob = new Blob([bytes], { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("file", audioBlob, "audio.webm");
+        formData.append("model", "whisper-1");
+        formData.append("language", "pt");
+        
+        const whisperResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: formData,
+        });
+        
+        if (whisperResponse.ok) {
+          const whisperData = await whisperResponse.json();
+          audioTranscricao = whisperData.text;
+          console.log("Transcrição obtida:", audioTranscricao);
+        } else {
+          console.error("Erro na transcrição:", await whisperResponse.text());
+        }
+      } catch (transcribeError) {
+        console.error("Erro ao transcrever áudio:", transcribeError);
+      }
     }
 
     const systemPrompt = `Você é um especialista em ergonomia ocupacional e NR-17 (Norma Regulamentadora de Ergonomia do Brasil).

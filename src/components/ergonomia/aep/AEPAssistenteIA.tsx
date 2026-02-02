@@ -186,10 +186,11 @@ export function AEPAssistenteIA({
     setIsAnalyzingLocal(true);
 
     try {
-      // Get audio context if available
+      // Get audio base64 if available
+      let audioBase64: string | null = null;
       if (audioBlob) {
-        // Add note about audio (for transcription context)
-        fullContext += "\n\n[Áudio gravado pelo avaliador com observações sobre o posto de trabalho]";
+        console.log("Obtendo áudio em base64 para transcrição...");
+        audioBase64 = await getAudioBase64();
       }
 
       // Import supabase for function invocation
@@ -205,6 +206,7 @@ export function AEPAssistenteIA({
             tipo: "video",
             conteudo: videoFrames,
             contexto: fullContext,
+            audioBase64,
           },
         });
 
@@ -215,12 +217,13 @@ export function AEPAssistenteIA({
         toast.success("Análise de vídeo concluída!");
       } else if (uploadedImage) {
         // Analyze single image
-        console.log("Enviando análise de imagem");
+        console.log("Enviando análise de imagem", audioBase64 ? "com áudio" : "sem áudio");
         const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
           body: {
             tipo: "imagem",
             conteudo: uploadedImage,
             contexto: fullContext,
+            audioBase64,
           },
         });
 
@@ -230,13 +233,14 @@ export function AEPAssistenteIA({
         analysisResult = data;
         toast.success("Análise de imagem concluída!");
       } else if (contexto.trim() || audioBlob) {
-        // Text-only analysis
-        console.log("Enviando análise de texto");
+        // Text-only analysis (with optional audio transcription)
+        console.log("Enviando análise de texto", audioBase64 ? "com áudio" : "sem áudio");
         const { data, error } = await supabase.functions.invoke("analyze-ergonomia", {
           body: {
             tipo: "texto",
             conteudo: contexto || "Análise baseada em contexto verbal do avaliador",
             contexto: fullContext,
+            audioBase64,
           },
         });
 
