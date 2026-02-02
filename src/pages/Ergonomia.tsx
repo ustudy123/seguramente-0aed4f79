@@ -9,11 +9,15 @@ import {
   ClipboardCheck,
   Brain,
   Dumbbell,
-  Building2
+  Building2,
+  Sparkles,
+  BookOpen,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useErgonomia } from "@/hooks/useErgonomia";
+import { useErgonomiaInteligente } from "@/hooks/useErgonomiaInteligente";
 import { ErgonomiaStats } from "@/components/ergonomia/ErgonomiaStats";
 import { CategoriaCard } from "@/components/ergonomia/CategoriaCard";
 import { ItemDetailModal } from "@/components/ergonomia/ItemDetailModal";
@@ -22,6 +26,10 @@ import { RiscoForm } from "@/components/ergonomia/RiscoForm";
 import { RiscosList } from "@/components/ergonomia/RiscosList";
 import { AcaoForm } from "@/components/ergonomia/AcaoForm";
 import { AcoesList } from "@/components/ergonomia/AcoesList";
+import { RadaresSection } from "@/components/ergonomia/RadaresSection";
+import { HubServicos } from "@/components/ergonomia/HubServicos";
+import { AnaliseIASection } from "@/components/ergonomia/AnaliseIASection";
+import { IntegracaoCognitiva } from "@/components/ergonomia/IntegracaoCognitiva";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ITENS_NR17_PADRAO,
@@ -68,6 +76,12 @@ export default function Ergonomia() {
     isCreatingAcao,
     refetchItens,
   } = useErgonomia();
+
+  const { 
+    radares, 
+    dadosCognitivos, 
+    isLoading: isLoadingInteligente 
+  } = useErgonomiaInteligente();
 
   const handleViewItem = (item: ItemNR17) => {
     setSelectedItem(item);
@@ -118,10 +132,10 @@ export default function Ergonomia() {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Activity className="h-7 w-7 text-primary" />
-            Ergonomia Inteligente
+            Ergonomia Inteligente - SST
           </h1>
           <p className="text-muted-foreground mt-1">
-            Governança ergonômica e conformidade com a NR-17
+            Governança ergonômica integrada: física, cognitiva e organizacional
           </p>
         </div>
         
@@ -152,10 +166,23 @@ export default function Ergonomia() {
             nivelMaturidade={nivelMaturidade}
           />
 
+          {/* Radares Preditivos */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Radares Preditivos</h2>
+            </div>
+            <RadaresSection radares={radares} isLoading={isLoadingInteligente} />
+          </motion.div>
+
           {/* Tabs principais */}
           <Tabs defaultValue="conformidade" className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <TabsList>
+              <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="conformidade" className="gap-2">
                   <Activity className="h-4 w-4" />
                   Conformidade NR-17
@@ -167,6 +194,14 @@ export default function Ergonomia() {
                 <TabsTrigger value="acoes" className="gap-2">
                   <ClipboardCheck className="h-4 w-4" />
                   Plano de Ação ({acoes.length})
+                </TabsTrigger>
+                <TabsTrigger value="inteligencia" className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  IA & Análise
+                </TabsTrigger>
+                <TabsTrigger value="hub" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Hub de Serviços
                 </TabsTrigger>
               </TabsList>
 
@@ -317,6 +352,28 @@ export default function Ergonomia() {
                     onUpdateStatus={handleUpdateAcaoStatus}
                   />
                 )}
+              </motion.div>
+            </TabsContent>
+
+            {/* Tab: IA & Análise */}
+            <TabsContent value="inteligencia" className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+              >
+                <AnaliseIASection />
+                <IntegracaoCognitiva dados={dadosCognitivos} />
+              </motion.div>
+            </TabsContent>
+
+            {/* Tab: Hub de Serviços */}
+            <TabsContent value="hub" className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <HubServicos />
               </motion.div>
             </TabsContent>
           </Tabs>
