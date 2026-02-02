@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Lightbulb, Check } from "lucide-react";
+import { Plus, Lightbulb, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { AcaoPrioridade } from "@/types/ergonomia";
 
@@ -42,6 +49,13 @@ interface FatorActionFormProps {
     prioridade: AcaoPrioridade;
     fator_radar: string;
     radar_type: string;
+    // 5W2H fields
+    responsavel_nome: string;
+    prazo: string;
+    onde: string;
+    porque: string;
+    como: string;
+    custo_estimado: string;
   }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -61,6 +75,13 @@ export function FatorActionForm({
     descricao: "",
     tipo: "corretiva" as 'corretiva' | 'preventiva' | 'melhoria',
     prioridade: "media" as AcaoPrioridade,
+    // 5W2H
+    responsavel_nome: "",
+    prazo: "",
+    onde: "",
+    porque: "",
+    como: "",
+    custo_estimado: "",
   });
   const [selectedSugestao, setSelectedSugestao] = useState<string | null>(null);
 
@@ -81,6 +102,22 @@ export function FatorActionForm({
     });
   };
 
+  const LabelWithTooltip = ({ label, tooltip, required = false }: { label: string; tooltip: string; required?: boolean }) => (
+    <div className="flex items-center gap-1">
+      <span className="text-xs">{label}{required && ' *'}</span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[200px]">
+            <p className="text-xs">{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+
   return (
     <Card className="border-primary/30 bg-primary/5">
       <CardHeader className="pb-3">
@@ -88,6 +125,7 @@ export function FatorActionForm({
           <Plus className="h-4 w-4" />
           Nova Ação para: {fatorLabel}
         </CardTitle>
+        <p className="text-xs text-muted-foreground">Preencha os campos 5W2H para uma ação bem estruturada</p>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Sugestões */}
@@ -118,16 +156,21 @@ export function FatorActionForm({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* WHAT - O QUÊ */}
           <div className="space-y-2">
-            <Label htmlFor="titulo" className="text-xs">Título da Ação *</Label>
+            <LabelWithTooltip 
+              label="O QUÊ (What)" 
+              tooltip="Descreva qual ação será realizada"
+              required 
+            />
             <Input
-              id="titulo"
               value={formData.titulo}
               onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
-              placeholder="Ou digite sua própria ação..."
+              placeholder="Título da ação a ser executada..."
               className="text-sm h-9"
               required
+              maxLength={200}
             />
           </div>
 
@@ -175,15 +218,113 @@ export function FatorActionForm({
             </div>
           </div>
 
+          <Separator className="my-2" />
+
+          {/* 5W2H Fields */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* WHY - POR QUÊ */}
+            <div className="space-y-2 col-span-2">
+              <LabelWithTooltip 
+                label="POR QUÊ (Why)" 
+                tooltip="Justificativa ou motivo para realizar esta ação"
+              />
+              <Input
+                value={formData.porque}
+                onChange={(e) => setFormData(prev => ({ ...prev, porque: e.target.value }))}
+                placeholder="Por que esta ação é necessária?"
+                className="text-sm h-9"
+                maxLength={300}
+              />
+            </div>
+
+            {/* WHERE - ONDE */}
+            <div className="space-y-2">
+              <LabelWithTooltip 
+                label="ONDE (Where)" 
+                tooltip="Local, setor ou departamento onde a ação será aplicada"
+              />
+              <Input
+                value={formData.onde}
+                onChange={(e) => setFormData(prev => ({ ...prev, onde: e.target.value }))}
+                placeholder="Setor / Departamento"
+                className="text-sm h-9"
+                maxLength={100}
+              />
+            </div>
+
+            {/* WHEN - QUANDO */}
+            <div className="space-y-2">
+              <LabelWithTooltip 
+                label="QUANDO (When)" 
+                tooltip="Data limite para conclusão da ação"
+              />
+              <Input
+                type="date"
+                value={formData.prazo}
+                onChange={(e) => setFormData(prev => ({ ...prev, prazo: e.target.value }))}
+                className="text-sm h-9"
+              />
+            </div>
+
+            {/* WHO - QUEM */}
+            <div className="space-y-2">
+              <LabelWithTooltip 
+                label="QUEM (Who)" 
+                tooltip="Responsável pela execução da ação"
+              />
+              <Input
+                value={formData.responsavel_nome}
+                onChange={(e) => setFormData(prev => ({ ...prev, responsavel_nome: e.target.value }))}
+                placeholder="Nome do responsável"
+                className="text-sm h-9"
+                maxLength={100}
+              />
+            </div>
+
+            {/* HOW MUCH - QUANTO */}
+            <div className="space-y-2">
+              <LabelWithTooltip 
+                label="QUANTO (How much)" 
+                tooltip="Custo estimado para implementar a ação"
+              />
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.custo_estimado}
+                onChange={(e) => setFormData(prev => ({ ...prev, custo_estimado: e.target.value }))}
+                placeholder="R$ 0,00"
+                className="text-sm h-9"
+              />
+            </div>
+          </div>
+
+          {/* HOW - COMO */}
           <div className="space-y-2">
-            <Label htmlFor="descricao" className="text-xs">Descrição (opcional)</Label>
+            <LabelWithTooltip 
+              label="COMO (How)" 
+              tooltip="Descreva como a ação será executada, os passos ou método"
+            />
             <Textarea
-              id="descricao"
-              value={formData.descricao}
-              onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-              placeholder="Descreva detalhes da ação..."
+              value={formData.como}
+              onChange={(e) => setFormData(prev => ({ ...prev, como: e.target.value }))}
+              placeholder="Descreva o método ou passos para execução..."
               rows={2}
               className="text-sm"
+              maxLength={1000}
+            />
+          </div>
+
+          {/* Additional description */}
+          <div className="space-y-2">
+            <Label className="text-xs">Observações adicionais</Label>
+            <Textarea
+              value={formData.descricao}
+              onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+              placeholder="Outras informações relevantes..."
+              rows={2}
+              className="text-sm"
+              maxLength={1000}
             />
           </div>
 
