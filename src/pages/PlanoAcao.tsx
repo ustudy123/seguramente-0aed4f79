@@ -17,6 +17,7 @@ import { PlanoAcaoList } from "@/components/planoAcao/PlanoAcaoList";
 import { PlanoAcaoInbox } from "@/components/planoAcao/PlanoAcaoInbox";
 import { PlanoAcaoFormModal } from "@/components/planoAcao/PlanoAcaoFormModal";
 import { PlanoAcaoFilters } from "@/components/planoAcao/PlanoAcaoFilters";
+import { PlanoAcaoIAAssistant } from "@/components/planoAcao/PlanoAcaoIAAssistant";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import type { PlanoAcaoFilters as FilterType } from "@/types/planoAcao";
 
@@ -80,6 +81,9 @@ export default function PlanoAcao() {
 
       {/* Stats */}
       <PlanoAcaoStats stats={stats} isLoading={isLoadingStats} />
+
+      {/* Assistente IA */}
+      <PlanoAcaoIAAssistant />
 
       {/* Search and Filters */}
       <div className="space-y-4">

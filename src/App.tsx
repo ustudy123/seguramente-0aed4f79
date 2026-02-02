@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+import { ChatIAWidget } from "@/components/chat/ChatIAWidget";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -85,6 +86,9 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
+          
+          {/* Chat IA Widget - disponível em todas as páginas protegidas */}
+          <ChatIAWidget />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

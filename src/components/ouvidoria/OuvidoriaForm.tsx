@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, EyeOff, Eye, Lightbulb, AlertTriangle, AlertCircle, Star, HelpCircle, Paperclip } from "lucide-react";
+import { Send, EyeOff, Eye, Lightbulb, AlertTriangle, AlertCircle, Star, HelpCircle, Paperclip, Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import type { TipoManifestacao } from "@/types/ouvidoria";
 import { AnexoUpload } from "./AnexoUpload";
+import { OuvidoriaIAAnalise } from "./OuvidoriaIAAnalise";
+import { useOuvidoriaIA } from "@/hooks/useOuvidoriaIA";
 
 interface OuvidoriaFormProps {
   onSubmit: (data: {
@@ -73,6 +75,8 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
   const [anonimo, setAnonimo] = useState(false);
   const [anexos, setAnexos] = useState<File[]>([]);
 
+  const { isAnalyzing, analise, analisarManifestacao, limpar } = useOuvidoriaIA();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tipo || !assunto.trim() || !mensagem.trim()) return;
@@ -91,9 +95,16 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
     setMensagem("");
     setAnonimo(false);
     setAnexos([]);
+    limpar();
+  };
+
+  const handleAnalisar = async () => {
+    if (!tipo || !assunto.trim() || !mensagem.trim()) return;
+    await analisarManifestacao(tipo, assunto, mensagem);
   };
 
   const isValid = tipo && assunto.trim() && mensagem.trim();
+  const canAnalyze = tipo && assunto.trim().length >= 5 && mensagem.trim().length >= 20;
 
   return (
     <Card>
@@ -195,6 +206,31 @@ export function OuvidoriaForm({ onSubmit, isLoading }: OuvidoriaFormProps) {
             />
             <p className="text-xs text-muted-foreground text-right">{mensagem.length}/5000</p>
           </div>
+
+          {/* Análise IA */}
+          {canAnalyze && !analise && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAnalisar}
+              disabled={isAnalyzing}
+              className="w-full"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Analisando...
+                </>
+              ) : (
+                <>
+                  <Brain className="w-4 h-4 mr-2" />
+                  Pré-analisar com IA
+                </>
+              )}
+            </Button>
+          )}
+
+          {analise && <OuvidoriaIAAnalise analise={analise} />}
 
           {/* Anexos */}
           <div className="space-y-2">
