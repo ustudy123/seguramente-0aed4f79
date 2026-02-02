@@ -25,6 +25,8 @@ import Epis from "./pages/Epis";
 import Feed from "./pages/Feed";
 import Ouvidoria from "./pages/Ouvidoria";
 import Ergonomia from "./pages/Ergonomia";
+import PlanoAcao from "./pages/PlanoAcao";
+import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -71,7 +73,8 @@ const App = () => (
               <Route path="/admissao" element={<Admissao />} />
               <Route path="/ferias" element={<Ferias />} />
               <Route path="/avaliacoes" element={<PlaceholderPage />} />
-              <Route path="/pdi" element={<PlaceholderPage />} />
+              <Route path="/plano-acao" element={<PlanoAcao />} />
+              <Route path="/plano-acao/:id" element={<PlanoAcaoDetalhe />} />
               <Route path="/epis" element={<Epis />} />
               <Route path="/ouvidoria" element={<Ouvidoria />} />
               <Route path="/ergonomia" element={<Ergonomia />} />

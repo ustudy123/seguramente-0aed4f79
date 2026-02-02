@@ -5,13 +5,10 @@ import {
   Plus, 
   Inbox, 
   BarChart3, 
-  Clock, 
   AlertTriangle,
-  CheckCircle2,
   Filter,
   Search,
 } from "lucide-react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,126 +44,124 @@ export default function PlanoAcao() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        >
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Target className="h-7 w-7 text-primary" />
-              Plano de Ação
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Gestão estratégica de ações com metodologia 5W2H e Matriz GUT
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? "bg-primary/10" : ""}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
-            <Button onClick={() => setShowFormModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Ação
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Stats */}
-        <PlanoAcaoStats stats={stats} isLoading={isLoadingStats} />
-
-        {/* Search and Filters */}
-        <div className="space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar ações por código, título ou descrição..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <PlanoAcaoFilters 
-                filters={filters} 
-                onChange={setFilters} 
-                onClear={() => setFilters({})}
-              />
-            </motion.div>
-          )}
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Target className="h-7 w-7 text-primary" />
+            Plano de Ação
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Gestão estratégica de ações com metodologia 5W2H e Matriz GUT
+          </p>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="todas" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Todas
-            </TabsTrigger>
-            <TabsTrigger value="minhas" className="flex items-center gap-2">
-              <Inbox className="h-4 w-4" />
-              Minha Caixa
-              {minhasAcoes.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
-                  {minhasAcoes.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="criticas" className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Críticas
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? "bg-primary/10" : ""}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filtros
+          </Button>
+          <Button onClick={() => setShowFormModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Ação
+          </Button>
+        </div>
+      </motion.div>
 
-          <TabsContent value="todas">
-            <PlanoAcaoList 
-              acoes={acoes} 
-              isLoading={isLoadingAcoes} 
-            />
-          </TabsContent>
+      {/* Stats */}
+      <PlanoAcaoStats stats={stats} isLoading={isLoadingStats} />
 
-          <TabsContent value="minhas">
-            <PlanoAcaoInbox 
-              acoes={minhasAcoes} 
-              isLoading={isLoadingMinhasAcoes} 
-            />
-          </TabsContent>
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar ações por código, título ou descrição..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
 
-          <TabsContent value="criticas">
-            <PlanoAcaoList 
-              acoes={acoes.filter(a => 
-                a.prioridade === 'imediato' || 
-                a.prioridade === 'urgente' ||
-                (a.prazo && new Date(a.prazo) < new Date())
-              )} 
-              isLoading={isLoadingAcoes} 
-              emptyMessage="Nenhuma ação crítica ou atrasada"
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <PlanoAcaoFilters 
+              filters={filters} 
+              onChange={setFilters} 
+              onClear={() => setFilters({})}
             />
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        )}
       </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="todas" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Todas
+          </TabsTrigger>
+          <TabsTrigger value="minhas" className="flex items-center gap-2">
+            <Inbox className="h-4 w-4" />
+            Minha Caixa
+            {minhasAcoes.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                {minhasAcoes.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="criticas" className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Críticas
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="todas">
+          <PlanoAcaoList 
+            acoes={acoes} 
+            isLoading={isLoadingAcoes} 
+          />
+        </TabsContent>
+
+        <TabsContent value="minhas">
+          <PlanoAcaoInbox 
+            acoes={minhasAcoes} 
+            isLoading={isLoadingMinhasAcoes} 
+          />
+        </TabsContent>
+
+        <TabsContent value="criticas">
+          <PlanoAcaoList 
+            acoes={acoes.filter(a => 
+              a.prioridade === 'imediato' || 
+              a.prioridade === 'urgente' ||
+              (a.prazo && new Date(a.prazo) < new Date())
+            )} 
+            isLoading={isLoadingAcoes} 
+            emptyMessage="Nenhuma ação crítica ou atrasada"
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Modal de criação */}
       <PlanoAcaoFormModal
         open={showFormModal}
         onOpenChange={setShowFormModal}
       />
-    </MainLayout>
+    </div>
   );
 }
