@@ -8,6 +8,7 @@ import { FatorActionForm } from "./FatorActionForm";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { AcaoPrioridade } from "@/types/ergonomia";
+import type { SugestaoAcao } from "./radarConfig";
 
 interface FatorDetailCardProps {
   fatorKey: string;
@@ -17,7 +18,7 @@ interface FatorDetailCardProps {
   detailedAnalysis: string;
   dataSource: readonly string[];
   value: number;
-  sugestoes: readonly string[];
+  sugestoes: readonly SugestaoAcao[];
   radarType: 'burnout' | 'boreout' | 'energia';
   inverseColors?: boolean; // For energia, higher is better
   existingActions: { titulo: string; status: string }[];
