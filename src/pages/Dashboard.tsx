@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
-import { Users, UserPlus, UserMinus, Clock, Calendar, FileText, TrendingUp } from "lucide-react";
-import { StatCard } from "@/components/dashboard/StatCard";
+import { PilaresSummaryLive } from "@/components/dashboard/PilaresSummaryLive";
+import { DashboardPilares } from "@/components/dashboard/DashboardPilares";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { EmployeeChart } from "@/components/dashboard/EmployeeChart";
 import { PendingTasks } from "@/components/dashboard/PendingTasks";
 
 const Dashboard = () => {
@@ -16,60 +15,38 @@ const Dashboard = () => {
         transition={{ duration: 0.4 }}
       >
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do seu RH</p>
+        <p className="text-muted-foreground">
+          Plataforma de Governança do Trabalho Humano
+        </p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Colaboradores"
-          value={198}
-          change={4.2}
-          icon={Users}
-          variant="primary"
-          delay={0.05}
-        />
-        <StatCard
-          title="Admissões (Mês)"
-          value={6}
-          change={12}
-          icon={UserPlus}
-          variant="success"
-          delay={0.1}
-        />
-        <StatCard
-          title="Desligamentos (Mês)"
-          value={2}
-          change={-25}
-          icon={UserMinus}
-          variant="warning"
-          delay={0.15}
-        />
-        <StatCard
-          title="Turnover"
-          value="3.2%"
-          change={-8}
-          icon={TrendingUp}
-          variant="info"
-          delay={0.2}
-        />
-      </div>
+      {/* Pilares Summary - Visão Geral */}
+      <PilaresSummaryLive />
 
       {/* Quick Actions */}
       <QuickActions />
 
-      {/* Charts and Activity */}
+      {/* Pilares Detail Cards */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2 className="text-lg font-semibold text-foreground mb-4">
+          Detalhamento por Pilar
+        </h2>
+        <DashboardPilares />
+      </motion.div>
+
+      {/* Activity and Tasks */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <EmployeeChart />
+          <RecentActivity />
         </div>
         <div>
           <PendingTasks />
         </div>
       </div>
-
-      {/* Recent Activity */}
-      <RecentActivity />
     </div>
   );
 };
