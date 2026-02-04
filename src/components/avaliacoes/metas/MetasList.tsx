@@ -1,0 +1,297 @@
+import { useState } from "react";
+import { 
+  Plus, 
+  Target, 
+  TrendingUp,
+  MoreVertical,
+  Trash2,
+  Edit,
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  AlertCircle
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useMetas } from "@/hooks/useMetas";
+import { 
+  STATUS_META_LABELS, 
+  PERIODO_LABELS,
+  OKR_TIPO_LABELS,
+  type MetaStatus 
+} from "@/types/avaliacao";
+import { MetaForm } from "./MetaForm";
+
+const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = {
+  nao_iniciada: { color: "bg-slate-100 text-slate-700", icon: Clock },
+  em_andamento: { color: "bg-blue-100 text-blue-700", icon: TrendingUp },
+  concluida: { color: "bg-green-100 text-green-700", icon: CheckCircle2 },
+  cancelada: { color: "bg-slate-100 text-slate-500", icon: Clock },
+  atrasada: { color: "bg-red-100 text-red-700", icon: AlertCircle },
+};
+
+export function MetasList() {
+  const { metas, isLoadingMetas, deleteMeta, deleteOkr } = useMetas();
+  const [showForm, setShowForm] = useState(false);
+  const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (id: string) => {
+    setExpandedMetas(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleDeleteMeta = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta meta e todos os seus OKRs?")) {
+      await deleteMeta(id);
+    }
+  };
+
+  const handleDeleteOkr = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este Key Result?")) {
+      await deleteOkr(id);
+    }
+  };
+
+  if (isLoadingMetas) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-muted rounded w-1/4 mx-auto" />
+            <div className="h-8 bg-muted rounded w-1/2 mx-auto" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Metas & OKRs</h2>
+          <p className="text-sm text-muted-foreground">
+            Gerencie objetivos e resultados-chave
+          </p>
+        </div>
+        <Button onClick={() => setShowForm(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nova Meta
+        </Button>
+      </div>
+
+      {metas.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-muted rounded-full">
+                <Target className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Nenhuma meta cadastrada</h3>
+                <p className="text-muted-foreground">
+                  Crie sua primeira meta para começar a acompanhar objetivos.
+                </p>
+              </div>
+              <Button onClick={() => setShowForm(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Criar Meta
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {metas.map((meta) => {
+            const StatusIcon = statusConfig[meta.status]?.icon || Clock;
+            const statusColor = statusConfig[meta.status]?.color || "bg-slate-100";
+            const isExpanded = expandedMetas.has(meta.id);
+            const hasOkrs = meta.okrs && meta.okrs.length > 0;
+
+            return (
+              <Card key={meta.id} className="hover:shadow-md transition-shadow">
+                <Collapsible open={isExpanded} onOpenChange={() => toggleExpanded(meta.id)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge className={statusColor}>
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                            {STATUS_META_LABELS[meta.status]}
+                          </Badge>
+                          <Badge variant="outline">
+                            {PERIODO_LABELS[meta.periodo]} {meta.ano}
+                            {meta.trimestre && ` Q${meta.trimestre}`}
+                          </Badge>
+                          <Badge variant="secondary">
+                            {meta.tipo === "individual" ? "Individual" : 
+                             meta.tipo === "equipe" ? "Equipe" : "Departamento"}
+                          </Badge>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold text-lg">{meta.titulo}</h3>
+                          {meta.descricao && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {meta.descricao}
+                            </p>
+                          )}
+                        </div>
+
+                        {meta.colaborador_nome && (
+                          <p className="text-sm text-muted-foreground">
+                            Responsável: {meta.colaborador_nome}
+                          </p>
+                        )}
+
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Progresso</span>
+                            <span className="font-medium">{meta.progresso}%</span>
+                          </div>
+                          <Progress value={meta.progresso} className="h-2" />
+                        </div>
+
+                        {hasOkrs && (
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="gap-2 p-0 h-auto">
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              {meta.okrs?.length} Key Result(s)
+                            </Button>
+                          </CollapsibleTrigger>
+                        )}
+                      </div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Adicionar OKR
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="gap-2">
+                            <Edit className="h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteMeta(meta.id)}
+                            className="gap-2 text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <CollapsibleContent className="mt-4">
+                      <div className="space-y-3 pl-4 border-l-2 border-muted">
+                        {meta.okrs?.map((okr) => {
+                          const OkrStatusIcon = statusConfig[okr.status]?.icon || Clock;
+                          const okrStatusColor = statusConfig[okr.status]?.color || "bg-slate-100";
+
+                          return (
+                            <div 
+                              key={okr.id} 
+                              className="p-3 bg-muted/50 rounded-lg space-y-2"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {OKR_TIPO_LABELS[okr.tipo]}
+                                    </Badge>
+                                    <Badge className={`${okrStatusColor} text-xs`}>
+                                      <OkrStatusIcon className="h-3 w-3 mr-1" />
+                                      {STATUS_META_LABELS[okr.status]}
+                                    </Badge>
+                                  </div>
+                                  <p className="font-medium">{okr.key_result}</p>
+                                  {okr.responsavel_nome && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Responsável: {okr.responsavel_nome}
+                                    </p>
+                                  )}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  onClick={() => handleDeleteOkr(okr.id)}
+                                >
+                                  <Trash2 className="h-3 w-3 text-muted-foreground" />
+                                </Button>
+                              </div>
+
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">
+                                    {okr.valor_atual} / {okr.valor_alvo} {okr.unidade}
+                                  </span>
+                                  <span className="font-medium">{okr.progresso}%</span>
+                                </div>
+                                <Progress value={okr.progresso} className="h-1.5" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </CardContent>
+                </Collapsible>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Nova Meta</DialogTitle>
+            <DialogDescription>
+              Defina um objetivo e seus resultados-chave (OKRs)
+            </DialogDescription>
+          </DialogHeader>
+          <MetaForm onSuccess={() => setShowForm(false)} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
