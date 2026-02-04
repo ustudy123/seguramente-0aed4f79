@@ -28,6 +28,7 @@ import Ouvidoria from "./pages/Ouvidoria";
 import Ergonomia from "./pages/Ergonomia";
 import PlanoAcao from "./pages/PlanoAcao";
 import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
+import Avaliacoes from "./pages/Avaliacoes";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -73,7 +74,7 @@ const App = () => (
               <Route path="/ponto" element={<Ponto />} />
               <Route path="/admissao" element={<Admissao />} />
               <Route path="/ferias" element={<Ferias />} />
-              <Route path="/avaliacoes" element={<PlaceholderPage />} />
+              <Route path="/avaliacoes" element={<Avaliacoes />} />
               <Route path="/plano-acao" element={<PlanoAcao />} />
               <Route path="/plano-acao/:id" element={<PlanoAcaoDetalhe />} />
               <Route path="/epis" element={<Epis />} />

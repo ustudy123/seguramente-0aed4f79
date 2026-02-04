@@ -358,6 +358,329 @@ export type Database = {
           },
         ]
       }
+      avaliacao_9box: {
+        Row: {
+          avaliador_id: string | null
+          avaliador_nome: string | null
+          ciclo_id: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_avaliacao: string
+          desempenho: number
+          id: string
+          justificativa: string | null
+          potencial: number
+          quadrante: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          avaliador_id?: string | null
+          avaliador_nome?: string | null
+          ciclo_id?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_avaliacao?: string
+          desempenho: number
+          id?: string
+          justificativa?: string | null
+          potencial: number
+          quadrante: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          avaliador_id?: string | null
+          avaliador_nome?: string | null
+          ciclo_id?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_avaliacao?: string
+          desempenho?: number
+          id?: string
+          justificativa?: string | null
+          potencial?: number
+          quadrante?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacao_9box_ciclo_id_fkey"
+            columns: ["ciclo_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacao_ciclos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacao_9box_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avaliacao_ciclos: {
+        Row: {
+          config_360: Json | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_fim: string
+          data_inicio: string
+          departamentos_ids: string[] | null
+          descricao: string | null
+          id: string
+          nome: string
+          notificacoes_enviadas: boolean | null
+          status: Database["public"]["Enums"]["avaliacao_ciclo_status"]
+          template_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          config_360?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim: string
+          data_inicio: string
+          departamentos_ids?: string[] | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          notificacoes_enviadas?: boolean | null
+          status?: Database["public"]["Enums"]["avaliacao_ciclo_status"]
+          template_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          config_360?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string
+          data_inicio?: string
+          departamentos_ids?: string[] | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          notificacoes_enviadas?: boolean | null
+          status?: Database["public"]["Enums"]["avaliacao_ciclo_status"]
+          template_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacao_ciclos_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacao_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacao_ciclos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avaliacao_feedbacks: {
+        Row: {
+          categoria: string
+          created_at: string
+          criterio: string
+          feedback: string | null
+          id: string
+          resposta_id: string
+          tenant_id: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          criterio: string
+          feedback?: string | null
+          id?: string
+          resposta_id: string
+          tenant_id: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          criterio?: string
+          feedback?: string | null
+          id?: string
+          resposta_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacao_feedbacks_resposta_id_fkey"
+            columns: ["resposta_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacao_respostas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacao_feedbacks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avaliacao_respostas: {
+        Row: {
+          areas_desenvolvimento: string | null
+          avaliado_id: string
+          avaliado_nome: string
+          avaliador_id: string | null
+          avaliador_nome: string | null
+          ciclo_id: string
+          comentario_geral: string | null
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          id: string
+          nota_geral: number | null
+          notas_criterios: Json | null
+          pontos_fortes: string | null
+          status: Database["public"]["Enums"]["resposta_status"]
+          tenant_id: string
+          tipo_avaliador: Database["public"]["Enums"]["tipo_avaliador"]
+          updated_at: string
+        }
+        Insert: {
+          areas_desenvolvimento?: string | null
+          avaliado_id: string
+          avaliado_nome: string
+          avaliador_id?: string | null
+          avaliador_nome?: string | null
+          ciclo_id: string
+          comentario_geral?: string | null
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          nota_geral?: number | null
+          notas_criterios?: Json | null
+          pontos_fortes?: string | null
+          status?: Database["public"]["Enums"]["resposta_status"]
+          tenant_id: string
+          tipo_avaliador: Database["public"]["Enums"]["tipo_avaliador"]
+          updated_at?: string
+        }
+        Update: {
+          areas_desenvolvimento?: string | null
+          avaliado_id?: string
+          avaliado_nome?: string
+          avaliador_id?: string | null
+          avaliador_nome?: string | null
+          ciclo_id?: string
+          comentario_geral?: string | null
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          nota_geral?: number | null
+          notas_criterios?: Json | null
+          pontos_fortes?: string | null
+          status?: Database["public"]["Enums"]["resposta_status"]
+          tenant_id?: string
+          tipo_avaliador?: Database["public"]["Enums"]["tipo_avaliador"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacao_respostas_ciclo_id_fkey"
+            columns: ["ciclo_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacao_ciclos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacao_respostas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avaliacao_templates: {
+        Row: {
+          ativo: boolean
+          categorias: Json
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          criterios: Json
+          descricao: string | null
+          escala_labels: Json | null
+          escala_max: number
+          escala_min: number
+          id: string
+          nome: string
+          permite_comentarios: boolean
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["avaliacao_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categorias?: Json
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          criterios?: Json
+          descricao?: string | null
+          escala_labels?: Json | null
+          escala_max?: number
+          escala_min?: number
+          id?: string
+          nome: string
+          permite_comentarios?: boolean
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["avaliacao_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categorias?: Json
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          criterios?: Json
+          descricao?: string | null
+          escala_labels?: Json | null
+          escala_max?: number
+          escala_min?: number
+          id?: string
+          nome?: string
+          permite_comentarios?: boolean
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["avaliacao_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacao_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargos: {
         Row: {
           ativo: boolean
@@ -1339,6 +1662,226 @@ export type Database = {
             columns: ["humor_diario_id"]
             isOneToOne: false
             referencedRelation: "humor_diario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_okrs: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          key_result: string
+          meta_id: string
+          progresso: number
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: Database["public"]["Enums"]["meta_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["okr_tipo"]
+          unidade: string | null
+          updated_at: string
+          valor_alvo: number
+          valor_atual: number | null
+          valor_inicial: number | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          key_result: string
+          meta_id: string
+          progresso?: number
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["meta_status"]
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["okr_tipo"]
+          unidade?: string | null
+          updated_at?: string
+          valor_alvo: number
+          valor_atual?: number | null
+          valor_inicial?: number | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          key_result?: string
+          meta_id?: string
+          progresso?: number
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["meta_status"]
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["okr_tipo"]
+          unidade?: string | null
+          updated_at?: string
+          valor_alvo?: number
+          valor_atual?: number | null
+          valor_inicial?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_okrs_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_okrs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas: {
+        Row: {
+          ano: number
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          departamento_id: string | null
+          departamento_nome: string | null
+          descricao: string | null
+          id: string
+          periodo: Database["public"]["Enums"]["meta_periodo"]
+          peso: number | null
+          progresso: number
+          status: Database["public"]["Enums"]["meta_status"]
+          tenant_id: string
+          tipo: string
+          titulo: string
+          trimestre: number | null
+          updated_at: string
+          vinculo_ciclo_id: string | null
+        }
+        Insert: {
+          ano: number
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          departamento_id?: string | null
+          departamento_nome?: string | null
+          descricao?: string | null
+          id?: string
+          periodo?: Database["public"]["Enums"]["meta_periodo"]
+          peso?: number | null
+          progresso?: number
+          status?: Database["public"]["Enums"]["meta_status"]
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          trimestre?: number | null
+          updated_at?: string
+          vinculo_ciclo_id?: string | null
+        }
+        Update: {
+          ano?: number
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          departamento_id?: string | null
+          departamento_nome?: string | null
+          descricao?: string | null
+          id?: string
+          periodo?: Database["public"]["Enums"]["meta_periodo"]
+          peso?: number | null
+          progresso?: number
+          status?: Database["public"]["Enums"]["meta_status"]
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          trimestre?: number | null
+          updated_at?: string
+          vinculo_ciclo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_vinculo_ciclo_id_fkey"
+            columns: ["vinculo_ciclo_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacao_ciclos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      okr_checkins: {
+        Row: {
+          created_at: string
+          id: string
+          observacao: string | null
+          okr_id: string
+          realizado_por: string | null
+          realizado_por_nome: string | null
+          tenant_id: string
+          valor_anterior: number | null
+          valor_novo: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          okr_id: string
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id: string
+          valor_anterior?: number | null
+          valor_novo: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          okr_id?: string
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id?: string
+          valor_anterior?: number | null
+          valor_novo?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "okr_checkins_okr_id_fkey"
+            columns: ["okr_id"]
+            isOneToOne: false
+            referencedRelation: "meta_okrs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "okr_checkins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -2459,6 +3002,8 @@ export type Database = {
         | "reprovado"
         | "concluido"
       app_role: "owner" | "admin" | "manager" | "user"
+      avaliacao_ciclo_status: "rascunho" | "ativo" | "encerrado" | "analisando"
+      avaliacao_tipo: "simples" | "360"
       documento_status: "pendente" | "enviado" | "aprovado" | "rejeitado"
       entrega_status: "ativa" | "devolvido" | "extraviado" | "vencido"
       epi_status:
@@ -2480,9 +3025,19 @@ export type Database = {
         | "parcial"
         | "nao_atendido"
         | "nao_aplicavel"
+      meta_periodo: "mensal" | "trimestral" | "semestral" | "anual"
+      meta_status:
+        | "nao_iniciada"
+        | "em_andamento"
+        | "concluida"
+        | "cancelada"
+        | "atrasada"
+      okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
+      resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
       tarefa_status: "nao_iniciada" | "em_andamento" | "bloqueada" | "concluida"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
+      tipo_avaliador: "auto" | "gestor" | "par" | "subordinado"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
     CompositeTypes: {
@@ -2623,6 +3178,8 @@ export const Constants = {
         "concluido",
       ],
       app_role: ["owner", "admin", "manager", "user"],
+      avaliacao_ciclo_status: ["rascunho", "ativo", "encerrado", "analisando"],
+      avaliacao_tipo: ["simples", "360"],
       documento_status: ["pendente", "enviado", "aprovado", "rejeitado"],
       entrega_status: ["ativa", "devolvido", "extraviado", "vencido"],
       epi_status: [
@@ -2647,9 +3204,20 @@ export const Constants = {
         "nao_atendido",
         "nao_aplicavel",
       ],
+      meta_periodo: ["mensal", "trimestral", "semestral", "anual"],
+      meta_status: [
+        "nao_iniciada",
+        "em_andamento",
+        "concluida",
+        "cancelada",
+        "atrasada",
+      ],
+      okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
+      resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
       tarefa_status: ["nao_iniciada", "em_andamento", "bloqueada", "concluida"],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
+      tipo_avaliador: ["auto", "gestor", "par", "subordinado"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },
   },
