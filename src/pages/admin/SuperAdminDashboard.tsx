@@ -37,6 +37,7 @@
  import {
    Dialog,
    DialogContent,
+  DialogDescription,
    DialogHeader,
    DialogTitle,
  } from '@/components/ui/dialog';
@@ -273,15 +274,22 @@
  
        {/* Modal - Novo Tenant */}
        <Dialog open={showTenantForm} onOpenChange={setShowTenantForm}>
-         <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
            <DialogHeader>
              <DialogTitle>Nova Empresa</DialogTitle>
+            <DialogDescription>
+              Cadastre a empresa e o administrador principal
+            </DialogDescription>
            </DialogHeader>
            <TenantForm
              onSubmit={async (data) => {
                try {
-                 await createTenant(data);
-                 toast.success('Empresa criada com sucesso!');
+                const result = await createTenant(data);
+                if (result.inviteSent) {
+                  toast.success('Empresa criada! Convite enviado para o e-mail do administrador.');
+                } else {
+                  toast.success('Empresa criada com sucesso! Credenciais definidas.');
+                }
                  setShowTenantForm(false);
                } catch (error: any) {
                  toast.error(error.message || 'Erro ao criar empresa');
@@ -298,8 +306,11 @@
          <DialogContent>
            <DialogHeader>
              <DialogTitle>
-               Criar Usuário Owner - {selectedTenant?.nome}
+              Adicionar Administrador - {selectedTenant?.nome}
              </DialogTitle>
+            <DialogDescription>
+              Crie um novo usuário administrador para esta empresa
+            </DialogDescription>
            </DialogHeader>
            {selectedTenant && (
              <TenantOwnerForm
