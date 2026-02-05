@@ -9,6 +9,7 @@ interface AuthState {
   profile: Profile | null;
   roles: AppRole[];
   tenantId: string | null;
+  isSuperAdmin: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -20,36 +21,45 @@ export function useAuth() {
     profile: null,
     roles: [],
     tenantId: null,
+    isSuperAdmin: false,
     loading: true,
     error: null,
   });
 
   const fetchUserData = useCallback(async (userId: string) => {
     try {
-      // Fetch profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+      // Fetch profile, roles, and superadmin status in parallel
+      const [profileResult, rolesResult, superadminResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId),
+        supabase
+          .from('superadmins')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('ativo', true)
+          .maybeSingle()
+      ]);
 
-      if (profileError) throw profileError;
+      if (profileResult.error) throw profileResult.error;
+      if (rolesResult.error) throw rolesResult.error;
+      // superadmin query might fail due to RLS on first load, ignore
 
-      // Fetch roles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-
-      if (rolesError) throw rolesError;
-
-      const roles = userRoles?.map(r => r.role) || [];
+      const roles = rolesResult.data?.map(r => r.role) || [];
+      const isSuperAdmin = roles.includes('superadmin') || !!superadminResult.data;
 
       setState(prev => ({
         ...prev,
-        profile,
+        profile: profileResult.data,
         roles,
-        tenantId: profile?.tenant_id || null,
+        tenantId: profileResult.data?.tenant_id || null,
+        isSuperAdmin,
         loading: false,
         error: null,
       }));
@@ -211,6 +221,7 @@ export function useAuth() {
       profile: null,
       roles: [],
       tenantId: null,
+      isSuperAdmin: false,
       loading: false,
       error: null,
     });
@@ -221,12 +232,15 @@ export function useAuth() {
   }, [state.roles]);
 
   const hasMinimumRole = useCallback((minimumRole: AppRole): boolean => {
-    const roleHierarchy: AppRole[] = ['user', 'manager', 'admin', 'owner'];
+    // Superadmin tem acesso a tudo
+    if (state.roles.includes('superadmin')) return true;
+    const roleHierarchy: AppRole[] = ['user', 'manager', 'admin', 'owner', 'superadmin'];
     const minimumIndex = roleHierarchy.indexOf(minimumRole);
     return state.roles.some(role => roleHierarchy.indexOf(role) >= minimumIndex);
   }, [state.roles]);
 
-  const isAuthenticated = !!state.user && !!state.profile;
+  // Superadmins podem não ter profile (não pertencem a um tenant específico)
+  const isAuthenticated = !!state.user && (!!state.profile || state.isSuperAdmin);
 
   return {
     ...state,

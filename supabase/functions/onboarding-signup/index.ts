@@ -1,5 +1,6 @@
 // Supabase Edge Function: onboarding-signup
-// Creates a new tenant + profile + owner role for the newly created user.
+// Creates a new tenant + profile + owner role for the newly created user
+// OR creates an owner for an existing tenant (when called by superadmin)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -11,6 +12,10 @@ type Payload = {
   tenantNome: string;
   tenantSlug: string;
   nomeCompleto: string;
+  // New fields for superadmin creating owner for existing tenant
+  tenantId?: string;
+  email?: string;
+  password?: string;
 };
 
 serve(async (req) => {
@@ -54,6 +59,8 @@ serve(async (req) => {
     return json({ error: "Invalid token" }, 401);
   }
 
+  const userId = userData.user.id;
+
   let payload: Payload;
   try {
     payload = await req.json();
@@ -64,7 +71,64 @@ serve(async (req) => {
   const tenantNome = (payload.tenantNome ?? "").trim();
   const tenantSlug = (payload.tenantSlug ?? "").trim();
   const nomeCompleto = (payload.nomeCompleto ?? "").trim();
+  const existingTenantId = (payload.tenantId ?? "").trim();
+  const email = (payload.email ?? "").trim();
+  const password = (payload.password ?? "").trim();
 
+  // Mode 1: Superadmin creating owner for existing tenant
+  if (existingTenantId && email && password && nomeCompleto) {
+    // Check if caller is superadmin
+    const { data: superadminCheck } = await admin
+      .from("superadmins")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("ativo", true)
+      .maybeSingle();
+
+    if (!superadminCheck) {
+      return json({ error: "Only superadmins can create owners for existing tenants" }, 403);
+    }
+
+    // Create new user
+    const { data: newUser, error: createUserError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+
+    if (createUserError || !newUser?.user) {
+      return json({ error: createUserError?.message ?? "Failed to create user" }, 500);
+    }
+
+    const newUserId = newUser.user.id;
+
+    // Create profile for new user
+    const { error: profileError } = await admin.from("profiles").insert({
+      user_id: newUserId,
+      tenant_id: existingTenantId,
+      nome_completo: nomeCompleto,
+    });
+
+    if (profileError) {
+      // Cleanup user if profile creation fails
+      await admin.auth.admin.deleteUser(newUserId);
+      return json({ error: profileError.message }, 500);
+    }
+
+    // Assign owner role
+    const { error: roleError } = await admin.from("user_roles").insert({
+      user_id: newUserId,
+      role: "owner",
+    });
+
+    if (roleError) {
+      return json({ error: roleError.message }, 500);
+    }
+
+    return json({ ok: true, userId: newUserId, tenantId: existingTenantId }, 200);
+  }
+
+  // Mode 2: Regular signup - create new tenant
   if (!tenantNome || !tenantSlug || !nomeCompleto) {
     return json({ error: "Missing fields" }, 400);
   }
@@ -73,8 +137,6 @@ serve(async (req) => {
   if (!/^[a-z0-9-]+$/.test(tenantSlug) || tenantSlug.length < 3) {
     return json({ error: "Invalid tenantSlug" }, 400);
   }
-
-  const userId = userData.user.id;
 
   // Prevent double-creation if profile already exists
   const { data: existingProfile, error: existingProfileError } = await admin
