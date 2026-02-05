@@ -1,0 +1,203 @@
+ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+ import { supabase } from '@/integrations/supabase/client';
+ import { useAuthContext } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
+
+type TenantPlan = Database['public']['Enums']['tenant_plan'];
+ 
+ export interface Tenant {
+   id: string;
+   nome: string;
+   slug: string;
+  plano: TenantPlan;
+   ativo: boolean;
+   created_at: string;
+   updated_at: string;
+ }
+ 
+ export interface TenantWithStats extends Tenant {
+   total_usuarios: number;
+   total_colaboradores: number;
+ }
+ 
+ export interface SuperAdmin {
+   id: string;
+   user_id: string;
+   email: string;
+   nome: string | null;
+   ativo: boolean;
+   created_at: string;
+ }
+ 
+ export function useSuperAdmin() {
+   const queryClient = useQueryClient();
+   const { isSuperAdmin, user } = useAuthContext();
+ 
+   // Listar todos os tenants
+   const { data: tenants = [], isLoading: isLoadingTenants } = useQuery({
+     queryKey: ['superadmin', 'tenants'],
+     queryFn: async (): Promise<TenantWithStats[]> => {
+       const { data: tenantsData, error } = await supabase
+         .from('tenants')
+         .select('*')
+         .order('created_at', { ascending: false });
+ 
+       if (error) throw error;
+ 
+       // Buscar contagem de usuários e colaboradores por tenant
+       const tenantsWithStats = await Promise.all(
+         (tenantsData || []).map(async (tenant) => {
+           const [usersCount, colabsCount] = await Promise.all([
+             supabase
+               .from('profiles')
+               .select('id', { count: 'exact', head: true })
+               .eq('tenant_id', tenant.id),
+             supabase
+               .from('admissoes')
+               .select('id', { count: 'exact', head: true })
+               .eq('tenant_id', tenant.id)
+               .eq('status', 'concluido')
+           ]);
+ 
+           return {
+             ...tenant,
+             total_usuarios: usersCount.count || 0,
+             total_colaboradores: colabsCount.count || 0,
+           };
+         })
+       );
+ 
+       return tenantsWithStats;
+     },
+     enabled: isSuperAdmin,
+   });
+ 
+   // Criar novo tenant
+   const createTenantMutation = useMutation({
+    mutationFn: async (data: { nome: string; slug: string; plano?: TenantPlan }) => {
+       const { data: tenant, error } = await supabase
+         .from('tenants')
+         .insert({
+           nome: data.nome,
+           slug: data.slug,
+           plano: data.plano || 'starter',
+           ativo: true,
+         })
+         .select()
+         .single();
+ 
+       if (error) throw error;
+       return tenant;
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
+     },
+   });
+ 
+   // Atualizar tenant
+   const updateTenantMutation = useMutation({
+    mutationFn: async ({ id, ...updateData }: { id: string; nome?: string; slug?: string; plano?: TenantPlan; ativo?: boolean }) => {
+       const { error } = await supabase
+         .from('tenants')
+        .update(updateData)
+         .eq('id', id);
+ 
+       if (error) throw error;
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
+     },
+   });
+ 
+   // Desativar/ativar tenant
+   const toggleTenantMutation = useMutation({
+     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+       const { error } = await supabase
+         .from('tenants')
+         .update({ ativo })
+         .eq('id', id);
+ 
+       if (error) throw error;
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
+     },
+   });
+ 
+   // Listar superadmins
+   const { data: superadmins = [], isLoading: isLoadingSuperadmins } = useQuery({
+     queryKey: ['superadmin', 'superadmins'],
+     queryFn: async (): Promise<SuperAdmin[]> => {
+       const { data, error } = await supabase
+         .from('superadmins')
+         .select('*')
+         .order('created_at', { ascending: false });
+ 
+       if (error) throw error;
+       return data || [];
+     },
+     enabled: isSuperAdmin,
+   });
+ 
+   // Buscar usuários de um tenant específico
+   const getTenantUsers = async (tenantId: string) => {
+     const { data, error } = await supabase
+       .from('profiles')
+       .select('*, user_roles!inner(role)')
+       .eq('tenant_id', tenantId)
+       .order('nome_completo');
+ 
+     if (error) throw error;
+     return data;
+   };
+ 
+   // Criar usuário owner para um tenant
+   const createTenantOwnerMutation = useMutation({
+     mutationFn: async (data: {
+       tenantId: string;
+       email: string;
+       password: string;
+       nomeCompleto: string;
+     }) => {
+       // Criar usuário via edge function (que tem service role)
+       const { data: result, error } = await supabase.functions.invoke(
+         'onboarding-signup',
+         {
+           body: {
+             tenantNome: '', // já existe
+             tenantSlug: '',
+             nomeCompleto: data.nomeCompleto,
+             tenantId: data.tenantId, // usar tenant existente
+             email: data.email,
+             password: data.password,
+           },
+         }
+       );
+ 
+       if (error) throw error;
+       return result;
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });
+     },
+   });
+ 
+   return {
+     // Estado
+     isSuperAdmin,
+     tenants,
+     superadmins,
+     isLoading: isLoadingTenants || isLoadingSuperadmins,
+ 
+     // Mutations
+     createTenant: createTenantMutation.mutateAsync,
+     updateTenant: updateTenantMutation.mutateAsync,
+     toggleTenant: toggleTenantMutation.mutateAsync,
+     createTenantOwner: createTenantOwnerMutation.mutateAsync,
+     getTenantUsers,
+ 
+     // Status
+     isCreatingTenant: createTenantMutation.isPending,
+     isUpdatingTenant: updateTenantMutation.isPending,
+   };
+ }

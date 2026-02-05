@@ -1,4 +1,4 @@
-import { Bell, Search, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import { Bell, Search, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { HumorSelector } from "@/components/humor/HumorSelector";
 
 export const Header = () => {
-  const { profile, signOut } = useAuthContext();
+  const { profile, signOut, isSuperAdmin } = useAuthContext();
   const { tenant } = useTenant();
   const navigate = useNavigate();
 
@@ -48,6 +48,19 @@ export const Header = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-4">
+        {/* Super Admin indicator */}
+        {isSuperAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/admin")}
+            className="hidden md:flex items-center gap-2 border-primary/50 text-primary hover:bg-primary/10"
+          >
+            <Shield className="w-4 h-4" />
+            Super Admin
+          </Button>
+        )}
+
         {/* Tenant indicator */}
         {tenant && (
           <div className="hidden md:block text-right mr-2">

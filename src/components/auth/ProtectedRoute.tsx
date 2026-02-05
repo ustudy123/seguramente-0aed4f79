@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, profile, loading, hasMinimumRole, signOut } = useAuthContext();
+  const { user, profile, loading, hasMinimumRole, signOut, isSuperAdmin } = useAuthContext();
   const location = useLocation();
 
   if (loading) {
@@ -28,8 +28,13 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Logged in, but missing tenant/profile linkage
-  if (!profile) {
+  // Superadmins podem não ter profile - redirecionar para área admin
+  if (!profile && isSuperAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // Logged in, but missing tenant/profile linkage (não é superadmin)
+  if (!profile && !isSuperAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="max-w-md w-full px-6 text-center space-y-4">

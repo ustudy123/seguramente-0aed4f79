@@ -37,6 +37,10 @@ import Departamentos from "./pages/cadastros/Departamentos";
 import Cargos from "./pages/cadastros/Cargos";
 import Filiais from "./pages/cadastros/Filiais";
 
+// Admin Pages
+import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
+import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -54,6 +58,16 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
+
+          {/* Super Admin Routes */}
+          <Route
+            path="/admin/*"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminDashboard />
+              </SuperAdminRoute>
+            }
+          />
 
             {/* Protected App Routes */}
             <Route
