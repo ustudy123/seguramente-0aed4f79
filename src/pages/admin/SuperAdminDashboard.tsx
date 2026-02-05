@@ -14,6 +14,7 @@
    Eye,
    Edit,
    Power,
+  ArrowLeft,
  } from 'lucide-react';
  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
@@ -93,10 +94,20 @@
          {/* Header */}
          <div className="flex items-center justify-between">
            <div>
-             <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-               <Shield className="w-8 h-8 text-primary" />
-               Painel Super Admin
-             </h1>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/')}
+                  className="shrink-0"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                  <Shield className="w-8 h-8 text-primary" />
+                  Painel Super Admin
+                </h1>
+              </div>
              <p className="text-muted-foreground mt-1">
                Gerencie todas as empresas cadastradas no sistema
              </p>
