@@ -2,6 +2,7 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuthContext } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
+ import type { TenantFormData } from '@/components/admin/TenantForm';
 
 type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
@@ -74,20 +75,50 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
    // Criar novo tenant
    const createTenantMutation = useMutation({
-    mutationFn: async (data: { nome: string; slug: string; plano?: TenantPlan }) => {
-       const { data: tenant, error } = await supabase
-         .from('tenants')
-         .insert({
-           nome: data.nome,
-           slug: data.slug,
-           plano: data.plano || 'starter',
-           ativo: true,
-         })
-         .select()
-         .single();
+    mutationFn: async (data: TenantFormData) => {
+      // Step 1: Create the tenant
+      const { data: tenant, error: tenantError } = await supabase
+        .from('tenants')
+        .insert({
+          nome: data.nome,
+          slug: data.slug,
+          plano: data.plano || 'starter',
+          ativo: true,
+        })
+        .select()
+        .single();
  
-       if (error) throw error;
-       return tenant;
+      if (tenantError) throw tenantError;
+
+      // Step 2: Create owner for the tenant via edge function
+      const { data: result, error: ownerError } = await supabase.functions.invoke(
+        'onboarding-signup',
+        {
+          body: {
+            tenantNome: '',
+            tenantSlug: '',
+            nomeCompleto: data.ownerNome,
+            tenantId: tenant.id,
+            email: data.ownerEmail,
+            password: data.accessMethod === 'password' ? data.ownerPassword : undefined,
+            inviteMode: data.accessMethod === 'invite',
+          },
+        }
+      );
+
+      if (ownerError) {
+        // Cleanup: delete tenant if owner creation failed
+        await supabase.from('tenants').delete().eq('id', tenant.id);
+        throw new Error(ownerError.message || 'Erro ao criar usuário owner');
+      }
+
+      if (result?.error) {
+        // Cleanup: delete tenant if owner creation failed
+        await supabase.from('tenants').delete().eq('id', tenant.id);
+        throw new Error(result.error);
+      }
+
+      return { tenant, inviteSent: result?.inviteSent };
      },
      onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenants'] });

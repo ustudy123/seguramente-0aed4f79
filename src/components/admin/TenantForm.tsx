@@ -9,13 +9,26 @@
    SelectTrigger,
    SelectValue,
  } from '@/components/ui/select';
- import { Loader2 } from 'lucide-react';
+ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+ import { Separator } from '@/components/ui/separator';
+ import { Loader2, Eye, EyeOff, Mail, Key } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type TenantPlan = Database['public']['Enums']['tenant_plan'];
+ type AccessMethod = 'invite' | 'password';
+ 
+ export interface TenantFormData {
+   nome: string;
+   slug: string;
+   plano: TenantPlan;
+   ownerNome: string;
+   ownerEmail: string;
+   accessMethod: AccessMethod;
+   ownerPassword?: string;
+ }
  
  interface TenantFormProps {
-  onSubmit: (data: { nome: string; slug: string; plano: TenantPlan }) => Promise<void>;
+  onSubmit: (data: TenantFormData) => Promise<void>;
    isLoading?: boolean;
    onCancel: () => void;
    initialData?: {
@@ -29,6 +42,13 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
    const [nome, setNome] = useState(initialData?.nome || '');
    const [slug, setSlug] = useState(initialData?.slug || '');
   const [plano, setPlano] = useState<TenantPlan>(initialData?.plano || 'starter');
+  
+  // Owner fields
+  const [ownerNome, setOwnerNome] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
+  const [accessMethod, setAccessMethod] = useState<AccessMethod>('invite');
+  const [ownerPassword, setOwnerPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
  
    const generateSlug = (name: string) => {
      return name
@@ -48,11 +68,28 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
  
    const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
-     await onSubmit({ nome, slug, plano });
+    await onSubmit({ 
+      nome, 
+      slug, 
+      plano,
+      ownerNome,
+      ownerEmail,
+      accessMethod,
+      ownerPassword: accessMethod === 'password' ? ownerPassword : undefined,
+    });
    };
+ 
+  const isFormValid = nome && slug && ownerNome && ownerEmail && 
+    (accessMethod === 'invite' || (accessMethod === 'password' && ownerPassword.length >= 6));
  
    return (
      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Dados da Empresa */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Dados da Empresa
+        </h3>
+        
        <div className="space-y-2">
          <Label htmlFor="nome">Nome da Empresa</Label>
          <Input
@@ -91,14 +128,109 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
            </SelectContent>
          </Select>
        </div>
+      </div>
+ 
+      <Separator />
+ 
+      {/* Dados do Administrador */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Administrador Principal
+        </h3>
+        
+        <div className="space-y-2">
+          <Label htmlFor="ownerNome">Nome Completo</Label>
+          <Input
+            id="ownerNome"
+            placeholder="Nome do administrador"
+            value={ownerNome}
+            onChange={(e) => setOwnerNome(e.target.value)}
+            required
+          />
+        </div>
+ 
+        <div className="space-y-2">
+          <Label htmlFor="ownerEmail">E-mail</Label>
+          <Input
+            id="ownerEmail"
+            type="email"
+            placeholder="admin@empresa.com"
+            value={ownerEmail}
+            onChange={(e) => setOwnerEmail(e.target.value)}
+            required
+          />
+        </div>
+ 
+        <div className="space-y-3">
+          <Label>Método de Acesso</Label>
+          <RadioGroup 
+            value={accessMethod} 
+            onValueChange={(v) => setAccessMethod(v as AccessMethod)}
+            className="space-y-2"
+          >
+            <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
+              <RadioGroupItem value="invite" id="invite" className="mt-0.5" />
+              <label htmlFor="invite" className="flex-1 cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" />
+                  <span className="font-medium">Enviar link de convite</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  O usuário receberá um e-mail com link para definir sua senha
+                </p>
+              </label>
+            </div>
+            
+            <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
+              <RadioGroupItem value="password" id="password" className="mt-0.5" />
+              <label htmlFor="password" className="flex-1 cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <Key className="w-4 h-4 text-primary" />
+                  <span className="font-medium">Definir senha manualmente</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Você define a senha e informa ao cliente
+                </p>
+              </label>
+            </div>
+          </RadioGroup>
+        </div>
+ 
+        {accessMethod === 'password' && (
+          <div className="space-y-2">
+            <Label htmlFor="ownerPassword">Senha</Label>
+            <div className="relative">
+              <Input
+                id="ownerPassword"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Senha inicial"
+                value={ownerPassword}
+                onChange={(e) => setOwnerPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres</p>
+          </div>
+        )}
+      </div>
  
        <div className="flex justify-end gap-2 pt-4">
          <Button type="button" variant="outline" onClick={onCancel}>
            Cancelar
          </Button>
-         <Button type="submit" disabled={isLoading || !nome || !slug}>
+        <Button type="submit" disabled={isLoading || !isFormValid}>
            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-           Criar Empresa
+          {accessMethod === 'invite' ? 'Criar e Enviar Convite' : 'Criar Empresa'}
          </Button>
        </div>
      </form>
