@@ -3001,7 +3001,7 @@ export type Database = {
         | "aprovado"
         | "reprovado"
         | "concluido"
-      app_role: "owner" | "admin" | "manager" | "user"
+      app_role: "owner" | "admin" | "manager" | "user" | "superadmin"
       avaliacao_ciclo_status: "rascunho" | "ativo" | "encerrado" | "analisando"
       avaliacao_tipo: "simples" | "360"
       documento_status: "pendente" | "enviado" | "aprovado" | "rejeitado"
@@ -3177,7 +3177,7 @@ export const Constants = {
         "reprovado",
         "concluido",
       ],
-      app_role: ["owner", "admin", "manager", "user"],
+      app_role: ["owner", "admin", "manager", "user", "superadmin"],
       avaliacao_ciclo_status: ["rascunho", "ativo", "encerrado", "analisando"],
       avaliacao_tipo: ["simples", "360"],
       documento_status: ["pendente", "enviado", "aprovado", "rejeitado"],
