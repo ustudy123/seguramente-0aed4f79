@@ -310,6 +310,31 @@ export function useAtestados() {
       if (atestado.arquivo_url) {
         await supabase.storage.from("atestados").remove([atestado.arquivo_url]);
       }
+
+      // Se o atestado está vinculado a um afastamento, verificar se precisa remover
+      if (atestado.afastamento_id) {
+        // Verificar se há outros atestados vinculados ao mesmo afastamento
+        const { data: outrosAtestados } = await supabase
+          .from("atestados" as never)
+          .select("id")
+          .eq("afastamento_id", atestado.afastamento_id)
+          .neq("id", atestado.id) as { data: { id: string }[] | null };
+
+        // Se não há outros atestados, remover o afastamento
+        if (!outrosAtestados || outrosAtestados.length === 0) {
+          await supabase
+            .from("afastamentos" as never)
+            .delete()
+            .eq("id", atestado.afastamento_id);
+        }
+      }
+
+      // Remover alertas de saúde relacionados ao atestado
+      await supabase
+        .from("alertas_saude" as never)
+        .delete()
+        .eq("referencia_id", atestado.id)
+        .eq("referencia_tipo", "atestado");
       
       const { error } = await supabase
         .from("atestados" as never)
@@ -319,6 +344,8 @@ export function useAtestados() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
       toast.success("Atestado excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -347,6 +374,41 @@ export function useAtestados() {
     },
     onError: (error: Error) => {
       toast.error("Erro ao registrar benefício: " + error.message);
+    },
+  });
+
+  // Delete afastamento
+  const deleteAfastamentoMutation = useMutation({
+    mutationFn: async (afastamentoId: string) => {
+      if (!tenantId) throw new Error("Tenant não identificado");
+      
+      // Desvincular atestados do afastamento antes de deletar
+      await supabase
+        .from("atestados" as never)
+        .update({ afastamento_id: null } as never)
+        .eq("afastamento_id", afastamentoId);
+
+      // Deletar alertas relacionados
+      await supabase
+        .from("alertas_saude" as never)
+        .delete()
+        .eq("referencia_id", afastamentoId)
+        .eq("referencia_tipo", "afastamento");
+      
+      const { error } = await supabase
+        .from("afastamentos" as never)
+        .delete()
+        .eq("id", afastamentoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      toast.success("Afastamento excluído com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir afastamento: " + error.message);
     },
   });
 
@@ -437,6 +499,8 @@ export function useAtestados() {
     updateAtestado: updateAtestadoMutation.mutateAsync,
     deleteAtestado: deleteAtestadoMutation.mutateAsync,
     deletingAtestado: deleteAtestadoMutation.isPending,
+    deleteAfastamento: deleteAfastamentoMutation.mutateAsync,
+    deletingAfastamento: deleteAfastamentoMutation.isPending,
     createBeneficio: createBeneficioMutation.mutateAsync,
     resolveAlerta: resolveAlertaMutation.mutateAsync,
     
