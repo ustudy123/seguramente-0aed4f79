@@ -136,70 +136,21 @@ serve(async (req) => {
         }),
       });
     } else {
-      // Para PDFs, informar limitação e sugerir upload de imagem
-      // Nota: OpenAI Vision não suporta PDF diretamente
-      // Alternativa: usar apenas o nome do arquivo e pedir para usuário preencher manualmente
-      // ou usar uma descrição baseada no que sabemos
+      // Para PDFs - a maioria dos atestados médicos são imagens escaneadas
+      // OpenAI Vision não suporta PDF diretamente, então sugerimos conversão
+      console.log("PDF detectado - PDFs escaneados não são suportados diretamente");
       
-      console.log("PDF detectado - usando análise baseada em texto...");
-      
-      // Tentar ler o PDF como texto (funciona para alguns PDFs com texto)
-      const arrayBuffer = await file.arrayBuffer();
-      const textDecoder = new TextDecoder('utf-8', { fatal: false });
-      let pdfText = textDecoder.decode(arrayBuffer);
-      
-      // Limpar caracteres não-imprimíveis e extrair texto legível
-      pdfText = pdfText
-        .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      // Extrair apenas strings que parecem texto (entre parênteses em PDFs)
-      const textMatches = pdfText.match(/\(([^)]+)\)/g);
-      let extractedText = '';
-      if (textMatches) {
-        extractedText = textMatches
-          .map(m => m.slice(1, -1))
-          .filter(t => t.length > 2 && /[a-zA-Z]/.test(t))
-          .join(' ');
-      }
-      
-      if (extractedText.length < 50) {
-        // PDF provavelmente é uma imagem escaneada
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: "PDF não contém texto extraível",
-            message: "Este PDF parece ser uma imagem escaneada. Por favor, converta para JPG/PNG ou tire uma foto do atestado para usar a extração automática."
-          }),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
-          }
-        );
-      }
-
-      console.log("Texto extraído do PDF:", extractedText.substring(0, 500));
-
-      response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { 
-              role: "user", 
-              content: `Extraia as informações deste atestado médico. O texto foi extraído de um PDF:\n\n${extractedText}`
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.1,
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "PDF não suportado para extração automática",
+          message: "Para usar a extração automática com IA, por favor tire uma foto do atestado ou converta o PDF para imagem (JPG/PNG). PDFs escaneados não são processados diretamente."
         }),
-      });
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
 
     if (!response.ok) {
