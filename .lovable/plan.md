@@ -1,153 +1,171 @@
 
-
-# Plano: Sistema de Convite para Novos Donos de Empresas
+# Plano: Pastas de Documentos por Colaborador
 
 ## Objetivo
-Implementar duas formas para o dono de uma empresa recém-cadastrada acessar o sistema:
-1. **Link de Convite Mágico**: Enviar e-mail com link de acesso direto (sem senha inicial)
-2. **Credenciais Fixas**: Criar com e-mail e senha definidos pelo Super Admin (como está hoje)
+Criar automaticamente uma pasta virtual para cada colaborador no módulo de Documentos quando ele for cadastrado, organizando todos os arquivos por colaborador.
 
 ---
 
 ## Visão Geral da Solução
 
-O formulário de criação de empresa será expandido para incluir os dados do owner e permitir escolher o método de acesso. Ao criar a empresa, o sistema já configura o primeiro usuário automaticamente.
+A abordagem recomendada é **organizar por colaborador** (não por departamento) pelos seguintes motivos:
+
+- **Prontuário individual**: Cada colaborador terá sua "pasta pessoal" com todos os documentos
+- **Mudanças organizacionais**: Se o colaborador mudar de departamento, seus documentos permanecem intactos
+- **Privacidade (LGPD)**: Facilita atender solicitações de acesso/portabilidade de dados
+- **Desligamento**: Pasta completa pronta para arquivamento
+- **Busca eficiente**: Fácil encontrar "todos os documentos de João Silva"
+
+---
+
+## Estrutura de Storage
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    Nova Empresa                             │
-├─────────────────────────────────────────────────────────────┤
-│  Nome da Empresa: [___________________]                     │
-│  Slug:            [___________________]                     │
-│  Plano:           [Starter ▼]                               │
-├─────────────────────────────────────────────────────────────┤
-│  ADMINISTRADOR PRINCIPAL                                    │
-│  Nome Completo:   [___________________]                     │
-│  Email:           [___________________]                     │
-│                                                             │
-│  Método de Acesso:                                          │
-│  ○ Enviar link de convite por e-mail                        │
-│  ○ Definir senha manualmente                                │
-│                                                             │
-│  [Se senha manual]                                          │
-│  Senha:           [___________________]                     │
-├─────────────────────────────────────────────────────────────┤
-│            [Cancelar]    [Criar Empresa]                    │
-└─────────────────────────────────────────────────────────────┘
+storage/documentos/
+└── {tenant_id}/
+    └── colaboradores/
+        └── {colaborador_id}/
+            ├── atestado_2024-01-15.pdf
+            ├── ASO_admissional.pdf
+            ├── contrato_trabalho.pdf
+            └── certificado_NR35.pdf
 ```
 
 ---
 
-## Etapas de Implementação
+## Implementação em 4 Etapas
 
-### 1. Configurar Serviço de E-mail (Resend)
+### Etapa 1: Atualizar Hook useDocumentos
 
-Será necessário configurar o Resend para envio de e-mails de convite:
-- Adicionar secret `RESEND_API_KEY` no projeto
-- Configurar domínio verificado no Resend
+**Arquivo:** `src/hooks/useDocumentos.ts`
 
-### 2. Atualizar TenantForm
+**Mudanças:**
+- Alterar a função de upload para salvar arquivos na pasta do colaborador: `{tenant_id}/colaboradores/{colaborador_id}/`
+- Adicionar função para buscar documentos agrupados por colaborador
+- Incluir estatísticas por colaborador
 
-Modificar o formulário de criação de empresa para incluir:
-- Campos do administrador principal (nome, e-mail)
-- Seletor de método de acesso (convite ou senha)
-- Campo de senha (condicional)
+### Etapa 2: Vincular Admissão ao Módulo de Documentos
 
-### 3. Atualizar Edge Function `onboarding-signup`
+**Arquivo:** `src/hooks/useAdmissoes.ts`
 
-Adicionar um terceiro modo de operação:
-- **Modo 3 - Convite**: Criar usuário + enviar e-mail de convite mágico
+**Mudanças:**
+- Ao concluir uma admissão (status = 'concluido'), migrar os documentos da admissão para a pasta do colaborador no módulo de documentos
+- Registrar cada documento do processo admissional na tabela `documentos` automaticamente
 
-A lógica será:
-- Se `inviteMode: true`, usar `admin.auth.admin.inviteUserByEmail()` 
-- Isso cria o usuário e envia automaticamente um link para definir senha
+### Etapa 3: Criar Visualização por Pastas no Módulo Documentos
 
-### 4. Criar Edge Function para Envio de E-mail Personalizado (Opcional)
+**Arquivo:** `src/pages/Documentos.tsx`
 
-Se quiser e-mails mais personalizados com a marca, criar função usando Resend:
-- Template com logo e informações da empresa
-- Link de primeiro acesso
+**Mudanças:**
+- Adicionar nova aba "Por Colaborador" com navegação em pastas
+- Exibir lista de colaboradores como pastas clicáveis
+- Ao clicar em uma pasta, mostrar os documentos daquele colaborador
+- Manter visualizações existentes (Todos, Por Categoria)
 
-### 5. Atualizar SuperAdminDashboard
+**Novo componente:** `src/components/documentos/ColaboradorFolderView.tsx`
+- Grid de "pastas" mostrando cada colaborador
+- Contador de documentos por colaborador
+- Indicador de documentos vencendo/vencidos por colaborador
 
-- Remover modal separado "Criar usuário owner"
-- Integrar criação do owner no fluxo de criação da empresa
-- Opcionalmente manter botão para adicionar owners adicionais
+### Etapa 4: Integração com Cadastro de Colaboradores
+
+**Arquivo:** `src/pages/Colaboradores.tsx`
+
+**Mudanças:**
+- Alterar item de menu "Documentos" para navegar diretamente à pasta do colaborador
+- Adicionar ação rápida para visualizar/gerenciar documentos do colaborador
 
 ---
 
 ## Detalhes Técnicos
 
-### Edge Function Atualizada
+### Mudança no storage_path dos documentos
 
-A função `onboarding-signup` será modificada para aceitar:
+De: `{tenant_id}/{timestamp}_{arquivo}`
+
+Para: `{tenant_id}/colaboradores/{colaborador_id}/{timestamp}_{arquivo}`
+
+### Nova função: getDocumentosPorColaborador
 
 ```typescript
-type Payload = {
-  // ... campos existentes
-  inviteMode?: boolean; // true = enviar convite, false = usar senha
-};
+const documentosPorColaborador = useMemo(() => {
+  const agrupados = new Map<string, { nome: string; documentos: Documento[] }>();
+  
+  documentos.forEach(doc => {
+    const key = doc.colaborador_id || 'sem-colaborador';
+    if (!agrupados.has(key)) {
+      agrupados.set(key, { nome: doc.colaborador_nome, documentos: [] });
+    }
+    agrupados.get(key)!.documentos.push(doc);
+  });
+  
+  return agrupados;
+}, [documentos]);
 ```
 
-Quando `inviteMode: true`:
-```typescript
-const { data: newUser, error } = await admin.auth.admin.inviteUserByEmail(email, {
-  data: { 
-    tenant_id: tenantId,
-    nome_completo: nomeCompleto 
-  },
-  redirectTo: `${SITE_URL}/login`
-});
-```
+### Migração de documentos da admissão
 
-### Componente TenantForm Atualizado
-
-Novos campos no formulário:
-- `ownerNome`: Nome do administrador
-- `ownerEmail`: E-mail do administrador
-- `accessMethod`: "invite" | "password"
-- `ownerPassword`: Senha (apenas se accessMethod = "password")
-
-### Fluxo do Usuário Convidado
-
-1. Super Admin cria empresa com método "convite"
-2. Owner recebe e-mail com link mágico
-3. Owner clica no link → é autenticado automaticamente
-4. Sistema redireciona para tela de definir nova senha
-5. Owner está pronto para usar o sistema
+Quando admissão atingir status "concluido":
+1. Buscar todos os documentos em `admissao_documentos` com `arquivo_url` preenchido
+2. Para cada documento, copiar o arquivo no storage para a nova pasta
+3. Inserir registro na tabela `documentos` com os metadados apropriados
 
 ---
 
-## Pré-requisitos
+## Interface do Usuário
 
-Antes de implementar, será necessário:
+### Aba "Por Colaborador" no módulo Documentos
 
-1. **Configurar Resend** (se quiser e-mails personalizados):
-   - Criar conta em resend.com
-   - Validar domínio de e-mail
-   - Gerar API key
+```text
+┌─────────────────────────────────────────────────────────┐
+│  Documentos                                             │
+│  [Todos] [Por Categoria] [Por Colaborador]              │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │    📁        │  │    📁        │  │    📁        │  │
+│  │ João Silva   │  │ Maria Santos │  │ Pedro Costa  │  │
+│  │ 12 docs      │  │ 8 docs       │  │ 5 docs       │  │
+│  │ 1 vencendo   │  │              │  │ 2 vencidos   │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
 
-2. **Configurar URL do Site**:
-   - Definir `SITE_URL` ou usar URL de produção para redirecionamento
+### Visualização interna da pasta
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  ← Voltar  │  📁 João Silva                             │
+│            │  Cargo: Analista | Depto: TI               │
+├─────────────────────────────────────────────────────────┤
+│  [+ Upload para esta pasta]                             │
+│                                                         │
+│  📄 Contrato de Trabalho         │ 15/01/2024 │ Válido │
+│  📄 ASO Admissional              │ 15/01/2024 │ Válido │
+│  📄 Certificado NR-35            │ 10/02/2024 │ Vencendo │
+│  📄 Atestado Médico              │ 05/02/2025 │ Válido │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/admin/TenantForm.tsx` | Adicionar campos do owner e seletor de método |
-| `supabase/functions/onboarding-signup/index.ts` | Adicionar modo convite com `inviteUserByEmail` |
-| `src/hooks/useSuperAdmin.ts` | Atualizar mutation para aceitar novos parâmetros |
-| `src/pages/admin/SuperAdminDashboard.tsx` | Ajustar fluxo para criar tenant + owner juntos |
+| Arquivo | Ação |
+|---------|------|
+| `src/hooks/useDocumentos.ts` | Modificar estrutura de storage e adicionar agrupamento |
+| `src/pages/Documentos.tsx` | Adicionar aba "Por Colaborador" |
+| `src/components/documentos/ColaboradorFolderView.tsx` | Criar novo componente |
+| `src/components/documentos/DocumentoUploadForm.tsx` | Ajustar path de upload |
+| `src/hooks/useAdmissoes.ts` | Migrar docs ao concluir admissão |
+| `src/pages/Colaboradores.tsx` | Link direto para pasta de documentos |
 
 ---
 
-## Resultado Esperado
+## Consideracoes Finais
 
-Após implementação:
-- Super Admin pode criar empresa e owner em um único passo
-- Pode escolher enviar convite por e-mail OU definir senha
-- Owner convidado recebe e-mail e acessa diretamente
-- Credenciais mostradas ao Super Admin se optar por senha fixa
-
+- **Retrocompatibilidade**: Documentos existentes continuam funcionando (paths antigos serão mantidos)
+- **Performance**: Agrupamento feito em memória, sem queries adicionais
+- **Segurança**: Mantém RLS existente, documentos isolados por tenant
