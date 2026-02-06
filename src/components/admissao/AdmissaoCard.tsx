@@ -33,22 +33,23 @@ interface AdmissaoCardProps {
 }
 
 export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
-  const { dadosPessoais, dadosProfissionais, documentos, status, historicoAprovacao, dataCriacao } = admissao;
+  const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
 
   const documentosEnviados = documentos.filter(d => d.status !== 'pendente').length;
   const documentosTotal = documentos.length;
-  const progressoDocumentos = (documentosEnviados / documentosTotal) * 100;
+  const progressoDocumentos = documentosTotal > 0 ? (documentosEnviados / documentosTotal) * 100 : 0;
 
   const etapasAprovadas = historicoAprovacao.filter(e => e.status === 'aprovado').length;
   const etapasTotal = historicoAprovacao.length;
-  const progressoAprovacao = (etapasAprovadas / etapasTotal) * 100;
+  const progressoAprovacao = etapasTotal > 0 ? (etapasAprovadas / etapasTotal) * 100 : 0;
 
-  const initials = dadosPessoais.nomeCompleto
+  const nomeCompleto = dadosPessoais?.nomeCompleto || 'Sem nome';
+  const initials = nomeCompleto
     .split(' ')
     .map(n => n[0])
     .slice(0, 2)
     .join('')
-    .toUpperCase();
+    .toUpperCase() || '??';
 
   return (
     <motion.div
@@ -65,11 +66,11 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
           </Avatar>
           <div>
             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-              {dadosPessoais.nomeCompleto}
+              {nomeCompleto}
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Briefcase className="h-3.5 w-3.5" />
-              <span>{dadosProfissionais.cargo}</span>
+              <span>{dadosProfissionais?.cargo || 'Cargo não definido'}</span>
             </div>
           </div>
         </div>
@@ -105,11 +106,15 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
       <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="h-4 w-4" />
-          <span>{dadosProfissionais.departamento}</span>
+          <span>{dadosProfissionais?.departamento || 'Sem departamento'}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{format(new Date(dadosProfissionais.dataAdmissao), "dd/MM/yyyy")}</span>
+          <span>
+            {dadosProfissionais?.dataAdmissao 
+              ? format(new Date(dadosProfissionais.dataAdmissao), "dd/MM/yyyy")
+              : 'Data não definida'}
+          </span>
         </div>
       </div>
 
@@ -159,7 +164,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
           ))}
         </div>
         <span className="text-xs text-muted-foreground ml-auto">
-          Criado em {format(dataCriacao, "dd/MM/yyyy", { locale: ptBR })}
+          {dataCriacao ? `Criado em ${format(dataCriacao, "dd/MM/yyyy", { locale: ptBR })}` : ''}
         </span>
       </div>
     </motion.div>
