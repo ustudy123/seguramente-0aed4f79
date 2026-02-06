@@ -26,6 +26,8 @@ const Atestados = () => {
     creatingAtestado,
     deleteAtestado,
     deletingAtestado,
+    deleteAfastamento,
+    deletingAfastamento,
     resolveAlerta,
     getSignedUrl,
   } = useAtestados();
@@ -100,7 +102,11 @@ const Atestados = () => {
             </TabsContent>
 
             <TabsContent value="afastamentos">
-              <AfastamentoList afastamentos={afastamentos} />
+              <AfastamentoList 
+                afastamentos={afastamentos} 
+                onDelete={deleteAfastamento}
+                deleting={deletingAfastamento}
+              />
             </TabsContent>
 
             <TabsContent value="inss">

@@ -7,11 +7,23 @@ import {
   Clock, 
   AlertTriangle,
   CheckCircle2,
-  FileText
+  Trash2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Afastamento } from "@/types/atestado";
 import { 
   AFASTAMENTO_STATUS_LABELS,
@@ -21,9 +33,11 @@ import {
 
 interface AfastamentoListProps {
   afastamentos: Afastamento[];
+  onDelete?: (id: string) => Promise<void>;
+  deleting?: boolean;
 }
 
-export function AfastamentoList({ afastamentos }: AfastamentoListProps) {
+export function AfastamentoList({ afastamentos, onDelete, deleting }: AfastamentoListProps) {
   if (afastamentos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -82,6 +96,37 @@ export function AfastamentoList({ afastamentos }: AfastamentoListProps) {
                       >
                         {GRUPO_CLINICO_LABELS[afastamento.motivo_principal]}
                       </Badge>
+                    )}
+                    {onDelete && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir afastamento?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação não pode ser desfeita. O afastamento de {afastamento.colaborador_nome} será permanentemente removido.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(afastamento.id)}
+                              disabled={deleting}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {deleting ? "Excluindo..." : "Excluir"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                 </div>
