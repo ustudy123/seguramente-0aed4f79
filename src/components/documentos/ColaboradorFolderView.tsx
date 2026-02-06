@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import JSZip from "jszip";
 import {
   FolderOpen,
   User,
@@ -10,6 +11,7 @@ import {
   Upload,
   Search,
   Download,
+  FolderDown,
   MoreHorizontal,
   Eye,
   Trash2,
@@ -40,6 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import { type Documento } from "@/hooks/useDocumentos";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { toast } from "sonner";
 
 const statusConfig = {
   valido: {
@@ -76,6 +79,7 @@ interface ColaboradorFolderViewProps {
   onDelete: (doc: Documento) => void;
   deleting: boolean;
   initialColaboradorId?: string | null;
+  getSignedUrl: (storagePath: string) => Promise<string | null>;
 }
 
 export function ColaboradorFolderView({
@@ -85,13 +89,61 @@ export function ColaboradorFolderView({
   onDelete,
   deleting,
   initialColaboradorId,
+  getSignedUrl,
 }: ColaboradorFolderViewProps) {
   const { colaboradores } = useColaboradores();
   const [selectedFolder, setSelectedFolder] = useState<ColaboradorFolder | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [documentoToDelete, setDocumentoToDelete] = useState<Documento | null>(null);
   const [initialFolderOpened, setInitialFolderOpened] = useState(false);
+  const [downloadingZip, setDownloadingZip] = useState(false);
 
+  // Função para baixar pasta como ZIP
+  const handleDownloadZip = async () => {
+    if (!selectedFolder || selectedFolder.documentos.length === 0) return;
+    
+    setDownloadingZip(true);
+    const zip = new JSZip();
+    
+    try {
+      // Baixar cada arquivo e adicionar ao ZIP
+      const downloadPromises = selectedFolder.documentos.map(async (doc) => {
+        try {
+          const url = await getSignedUrl(doc.storage_path);
+          if (!url) return;
+          
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`Erro ao baixar ${doc.nome_original}`);
+          
+          const blob = await response.blob();
+          zip.file(doc.nome_original, blob);
+        } catch (error) {
+          console.error(`Erro ao baixar ${doc.nome_original}:`, error);
+        }
+      });
+      
+      await Promise.all(downloadPromises);
+      
+      // Gerar e baixar o ZIP
+      const content = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(content);
+      link.download = `${selectedFolder.nome.replace(/[^a-zA-Z0-9]/g, "_")}_documentos.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      toast.success("Download concluído", {
+        description: `${selectedFolder.documentos.length} documento(s) baixado(s) com sucesso.`
+      });
+    } catch (error) {
+      console.error("Erro ao criar ZIP:", error);
+      toast.error("Erro ao criar arquivo ZIP");
+    } finally {
+      setDownloadingZip(false);
+    }
+  };
   // Agrupar documentos por colaborador
   const pastas = useMemo(() => {
     const agrupados = new Map<string, ColaboradorFolder>();
@@ -201,10 +253,26 @@ export function ColaboradorFolderView({
               </div>
             </div>
           </div>
-          <Button onClick={() => onUpload(selectedFolder.id)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Upload para esta pasta
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedFolder.documentos.length > 0 && (
+              <Button 
+                variant="outline" 
+                onClick={handleDownloadZip}
+                disabled={downloadingZip}
+              >
+                {downloadingZip ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FolderDown className="w-4 h-4 mr-2" />
+                )}
+                Baixar Pasta (.zip)
+              </Button>
+            )}
+            <Button onClick={() => onUpload(selectedFolder.id)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Upload para esta pasta
+            </Button>
+          </div>
         </motion.div>
 
         {/* Lista de documentos */}
