@@ -32,6 +32,7 @@ import Avaliacoes from "./pages/Avaliacoes";
 import Atestados from "./pages/Atestados";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
+import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -59,6 +60,9 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
+
+            {/* Rota Pública - Questionário Psicossocial */}
+            <Route path="/questionario/:token" element={<QuestionarioPsicossocial />} />
 
           {/* Super Admin Routes */}
           <Route
