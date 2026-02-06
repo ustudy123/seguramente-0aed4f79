@@ -1,0 +1,383 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+import type { 
+  Atestado, 
+  Afastamento, 
+  EventoSaude, 
+  BeneficioINSS, 
+  AlertaSaude,
+  AtestadoFormData 
+} from "@/types/atestado";
+
+export function useAtestados() {
+  const { tenantId, user, profile } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Fetch atestados
+  const { data: atestados = [], isLoading: loadingAtestados } = useQuery({
+    queryKey: ["atestados", tenantId],
+    queryFn: async (): Promise<Atestado[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("atestados" as never)
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("data_emissao", { ascending: false }) as { data: Atestado[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Fetch afastamentos
+  const { data: afastamentos = [], isLoading: loadingAfastamentos } = useQuery({
+    queryKey: ["afastamentos", tenantId],
+    queryFn: async (): Promise<Afastamento[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("afastamentos" as never)
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("data_inicio", { ascending: false }) as { data: Afastamento[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Fetch eventos de saúde
+  const { data: eventosSaude = [], isLoading: loadingEventos } = useQuery({
+    queryKey: ["eventos_saude", tenantId],
+    queryFn: async (): Promise<EventoSaude[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("eventos_saude" as never)
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("data_inicio", { ascending: false }) as { data: EventoSaude[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Fetch benefícios INSS
+  const { data: beneficiosINSS = [], isLoading: loadingBeneficios } = useQuery({
+    queryKey: ["beneficios_inss", tenantId],
+    queryFn: async (): Promise<BeneficioINSS[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("beneficios_inss" as never)
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("data_inicio", { ascending: false }) as { data: BeneficioINSS[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Fetch alertas
+  const { data: alertas = [], isLoading: loadingAlertas } = useQuery({
+    queryKey: ["alertas_saude", tenantId],
+    queryFn: async (): Promise<AlertaSaude[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("alertas_saude" as never)
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .eq("resolvido", false)
+        .order("created_at", { ascending: false }) as { data: AlertaSaude[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Create atestado
+  const createAtestadoMutation = useMutation({
+    mutationFn: async ({ formData, file }: { formData: AtestadoFormData; file?: File }) => {
+      if (!tenantId || !user) throw new Error("Usuário não autenticado");
+
+      let arquivo_url = null;
+      let arquivo_nome = null;
+      let arquivo_tamanho = null;
+
+      // Upload file if provided
+      if (file) {
+        const timestamp = Date.now();
+        const fileName = `${tenantId}/${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("atestados")
+          .upload(fileName, file, { cacheControl: "3600", upsert: false });
+
+        if (uploadError) throw uploadError;
+        
+        arquivo_url = fileName;
+        arquivo_nome = file.name;
+        arquivo_tamanho = file.size;
+      }
+
+      // Calculate dias_afastamento if dates provided
+      let dias_afastamento = formData.dias_afastamento;
+      if (formData.data_inicio_afastamento && formData.data_fim_afastamento && !dias_afastamento) {
+        const inicio = new Date(formData.data_inicio_afastamento);
+        const fim = new Date(formData.data_fim_afastamento);
+        dias_afastamento = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      }
+
+      const { data, error } = await supabase
+        .from("atestados" as never)
+        .insert({
+          tenant_id: tenantId,
+          ...formData,
+          dias_afastamento,
+          arquivo_url,
+          arquivo_nome,
+          arquivo_tamanho,
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo,
+        } as never)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Create/update afastamento if assistencial with dates
+      if (formData.tipo === 'assistencial' && formData.data_inicio_afastamento) {
+        await createOrUpdateAfastamento(data as Atestado);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      toast.success("Atestado cadastrado com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao cadastrar atestado: " + error.message);
+    },
+  });
+
+  // Helper function to create/update afastamento
+  const createOrUpdateAfastamento = async (atestado: Atestado) => {
+    if (!tenantId || !atestado.data_inicio_afastamento) return;
+
+    // Check for existing active afastamento for this colaborador
+    const { data: existingAfastamentos } = await supabase
+      .from("afastamentos" as never)
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("colaborador_nome", atestado.colaborador_nome)
+      .eq("status", "ativo") as { data: Afastamento[] | null };
+
+    if (existingAfastamentos && existingAfastamentos.length > 0) {
+      // Update existing afastamento
+      const existing = existingAfastamentos[0];
+      const newEndDate = atestado.data_fim_afastamento || atestado.data_inicio_afastamento;
+      
+      if (new Date(newEndDate) > new Date(existing.data_fim || existing.data_inicio)) {
+        await supabase
+          .from("afastamentos" as never)
+          .update({ 
+            data_fim: newEndDate,
+            motivo_principal: atestado.grupo_clinico || existing.motivo_principal,
+          } as never)
+          .eq("id", existing.id);
+      }
+
+      // Link atestado to afastamento
+      await supabase
+        .from("atestados" as never)
+        .update({ afastamento_id: existing.id } as never)
+        .eq("id", atestado.id);
+    } else {
+      // Create new afastamento
+      const { data: newAfastamento } = await supabase
+        .from("afastamentos" as never)
+        .insert({
+          tenant_id: tenantId,
+          colaborador_id: atestado.colaborador_id,
+          colaborador_nome: atestado.colaborador_nome,
+          colaborador_cpf: atestado.colaborador_cpf,
+          data_inicio: atestado.data_inicio_afastamento,
+          data_fim: atestado.data_fim_afastamento,
+          motivo_principal: atestado.grupo_clinico,
+          nexo_trabalho: atestado.nexo_trabalho,
+        } as never)
+        .select()
+        .single();
+
+      if (newAfastamento) {
+        await supabase
+          .from("atestados" as never)
+          .update({ afastamento_id: (newAfastamento as Afastamento).id } as never)
+          .eq("id", atestado.id);
+      }
+    }
+  };
+
+  // Update atestado
+  const updateAtestadoMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<AtestadoFormData> }) => {
+      const { error } = await supabase
+        .from("atestados" as never)
+        .update(data as never)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      toast.success("Atestado atualizado com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar: " + error.message);
+    },
+  });
+
+  // Delete atestado
+  const deleteAtestadoMutation = useMutation({
+    mutationFn: async (atestado: Atestado) => {
+      // Delete file from storage if exists
+      if (atestado.arquivo_url) {
+        await supabase.storage.from("atestados").remove([atestado.arquivo_url]);
+      }
+      
+      const { error } = await supabase
+        .from("atestados" as never)
+        .delete()
+        .eq("id", atestado.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["atestados"] });
+      toast.success("Atestado excluído com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao excluir: " + error.message);
+    },
+  });
+
+  // Create benefício INSS
+  const createBeneficioMutation = useMutation({
+    mutationFn: async (data: Partial<BeneficioINSS>) => {
+      if (!tenantId || !user) throw new Error("Usuário não autenticado");
+      
+      const { error } = await supabase
+        .from("beneficios_inss" as never)
+        .insert({
+          tenant_id: tenantId,
+          ...data,
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo,
+        } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["beneficios_inss"] });
+      toast.success("Benefício INSS registrado com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao registrar benefício: " + error.message);
+    },
+  });
+
+  // Resolve alerta
+  const resolveAlertaMutation = useMutation({
+    mutationFn: async (alertaId: string) => {
+      if (!user) throw new Error("Usuário não autenticado");
+      
+      const { error } = await supabase
+        .from("alertas_saude" as never)
+        .update({
+          resolvido: true,
+          resolvido_por: user.id,
+          resolvido_em: new Date().toISOString(),
+        } as never)
+        .eq("id", alertaId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      toast.success("Alerta resolvido!");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao resolver alerta: " + error.message);
+    },
+  });
+
+  // Get signed URL for file
+  const getSignedUrl = async (storagePath: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from("atestados")
+      .createSignedUrl(storagePath, 3600);
+    if (error) {
+      toast.error("Erro ao gerar link de download");
+      return null;
+    }
+    return data.signedUrl;
+  };
+
+  // Calculate stats
+  const stats = {
+    totalAtestados: atestados.length,
+    atestadosAssistenciais: atestados.filter(a => a.tipo === 'assistencial').length,
+    atestadosOcupacionais: atestados.filter(a => a.tipo === 'ocupacional').length,
+    afastamentosAtivos: afastamentos.filter(a => a.status === 'ativo').length,
+    afastamentos15Dias: afastamentos.filter(a => a.alerta_15_dias && a.status === 'ativo').length,
+    afastamentos30Dias: afastamentos.filter(a => a.alerta_30_dias && a.status === 'ativo').length,
+    asoRetornoPendente: afastamentos.filter(a => a.aso_retorno_pendente).length,
+    beneficiosAtivos: beneficiosINSS.filter(b => !b.data_alta).length,
+    beneficiosB91: beneficiosINSS.filter(b => b.especie === 'b91').length,
+    colaboradoresEstabilidade: beneficiosINSS.filter(b => 
+      b.gera_estabilidade && 
+      b.data_fim_estabilidade && 
+      new Date(b.data_fim_estabilidade) > new Date()
+    ).length,
+    alertasPendentes: alertas.length,
+    saudeMental: atestados.filter(a => a.grupo_clinico === 'mental').length,
+    totalDiasAfastamento: atestados.reduce((acc, a) => acc + (a.dias_afastamento || 0), 0),
+  };
+
+  // Group by grupo_clinico
+  const atestadosPorGrupo = atestados.reduce((acc, atestado) => {
+    const grupo = atestado.grupo_clinico || 'outro';
+    acc[grupo] = (acc[grupo] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const isLoading = loadingAtestados || loadingAfastamentos || loadingEventos || loadingBeneficios || loadingAlertas;
+
+  return {
+    // Data
+    atestados,
+    afastamentos,
+    eventosSaude,
+    beneficiosINSS,
+    alertas,
+    stats,
+    atestadosPorGrupo,
+    
+    // Loading states
+    isLoading,
+    loadingAtestados,
+    loadingAfastamentos,
+    
+    // Mutations
+    createAtestado: createAtestadoMutation.mutateAsync,
+    creatingAtestado: createAtestadoMutation.isPending,
+    updateAtestado: updateAtestadoMutation.mutateAsync,
+    deleteAtestado: deleteAtestadoMutation.mutateAsync,
+    deletingAtestado: deleteAtestadoMutation.isPending,
+    createBeneficio: createBeneficioMutation.mutateAsync,
+    resolveAlerta: resolveAlertaMutation.mutateAsync,
+    
+    // Utils
+    getSignedUrl,
+  };
+}
