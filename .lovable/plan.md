@@ -1,153 +1,94 @@
 
-# Plano: Pastas de Documentos por Colaborador
+# Plano: Sincronização Automática de Documentos da Admissão
 
 ## Objetivo
-Criar automaticamente uma pasta virtual para cada colaborador no módulo de Documentos quando ele for cadastrado, organizando todos os arquivos por colaborador.
+Quando documentos forem anexados na Etapa 6 (Documentos) do processo de admissão, eles devem ser automaticamente registrados na pasta do respectivo colaborador no módulo de Documentos.
 
 ---
 
-## Visão Geral da Solução
+## Análise do Fluxo Atual
 
-A abordagem recomendada é **organizar por colaborador** (não por departamento) pelos seguintes motivos:
-
-- **Prontuário individual**: Cada colaborador terá sua "pasta pessoal" com todos os documentos
-- **Mudanças organizacionais**: Se o colaborador mudar de departamento, seus documentos permanecem intactos
-- **Privacidade (LGPD)**: Facilita atender solicitações de acesso/portabilidade de dados
-- **Desligamento**: Pasta completa pronta para arquivamento
-- **Busca eficiente**: Fácil encontrar "todos os documentos de João Silva"
+O sistema atualmente:
+1. **Etapa 6 - Upload**: Documentos são enviados via `uploadDocumento()` no hook `useAdmissoes.ts`
+2. **Armazenamento**: Arquivos salvos em `documentos/{tenant_id}/admissoes/{admissao_id}/{documento_id}-{arquivo}`
+3. **Registro**: Metadados salvos apenas na tabela `admissao_documentos`
+4. **Problema**: Os documentos NÃO aparecem no módulo de Documentos, pois não são inseridos na tabela `documentos`
 
 ---
 
-## Estrutura de Storage
+## Solução Proposta
 
-```text
-storage/documentos/
-└── {tenant_id}/
-    └── colaboradores/
-        └── {colaborador_id}/
-            ├── atestado_2024-01-15.pdf
-            ├── ASO_admissional.pdf
-            ├── contrato_trabalho.pdf
-            └── certificado_NR35.pdf
-```
+### Estratégia: Sincronização no Momento do Upload
 
----
+Ao fazer upload de um documento na admissão, automaticamente:
+1. Fazer upload para o storage (já existe)
+2. Atualizar `admissao_documentos` (já existe)
+3. **NOVO**: Inserir registro na tabela `documentos` vinculando ao CPF do colaborador
 
-## Implementação em 4 Etapas
-
-### Etapa 1: Atualizar Hook useDocumentos
-
-**Arquivo:** `src/hooks/useDocumentos.ts`
-
-**Mudanças:**
-- Alterar a função de upload para salvar arquivos na pasta do colaborador: `{tenant_id}/colaboradores/{colaborador_id}/`
-- Adicionar função para buscar documentos agrupados por colaborador
-- Incluir estatísticas por colaborador
-
-### Etapa 2: Vincular Admissão ao Módulo de Documentos
-
-**Arquivo:** `src/hooks/useAdmissoes.ts`
-
-**Mudanças:**
-- Ao concluir uma admissão (status = 'concluido'), migrar os documentos da admissão para a pasta do colaborador no módulo de documentos
-- Registrar cada documento do processo admissional na tabela `documentos` automaticamente
-
-### Etapa 3: Criar Visualização por Pastas no Módulo Documentos
-
-**Arquivo:** `src/pages/Documentos.tsx`
-
-**Mudanças:**
-- Adicionar nova aba "Por Colaborador" com navegação em pastas
-- Exibir lista de colaboradores como pastas clicáveis
-- Ao clicar em uma pasta, mostrar os documentos daquele colaborador
-- Manter visualizações existentes (Todos, Por Categoria)
-
-**Novo componente:** `src/components/documentos/ColaboradorFolderView.tsx`
-- Grid de "pastas" mostrando cada colaborador
-- Contador de documentos por colaborador
-- Indicador de documentos vencendo/vencidos por colaborador
-
-### Etapa 4: Integração com Cadastro de Colaboradores
-
-**Arquivo:** `src/pages/Colaboradores.tsx`
-
-**Mudanças:**
-- Alterar item de menu "Documentos" para navegar diretamente à pasta do colaborador
-- Adicionar ação rápida para visualizar/gerenciar documentos do colaborador
+### Vantagens desta abordagem
+- Documentos aparecem imediatamente no módulo Documentos
+- Não precisa esperar a admissão ser concluída
+- Mantém rastreabilidade (origem = admissão)
+- Evita duplicação de arquivos no storage
 
 ---
 
-## Detalhes Técnicos
+## Implementação Técnica
 
-### Mudança no storage_path dos documentos
+### Arquivo: `src/hooks/useAdmissoes.ts`
 
-De: `{tenant_id}/{timestamp}_{arquivo}`
+**Mudanças na função `uploadDocumento`:**
 
-Para: `{tenant_id}/colaboradores/{colaborador_id}/{timestamp}_{arquivo}`
-
-### Nova função: getDocumentosPorColaborador
+1. Buscar dados da admissão (nome_completo, cpf) antes do upload
+2. Após salvar no `admissao_documentos`, inserir também na tabela `documentos`:
 
 ```typescript
-const documentosPorColaborador = useMemo(() => {
-  const agrupados = new Map<string, { nome: string; documentos: Documento[] }>();
-  
-  documentos.forEach(doc => {
-    const key = doc.colaborador_id || 'sem-colaborador';
-    if (!agrupados.has(key)) {
-      agrupados.set(key, { nome: doc.colaborador_nome, documentos: [] });
-    }
-    agrupados.get(key)!.documentos.push(doc);
-  });
-  
-  return agrupados;
-}, [documentos]);
+// Após atualizar admissao_documentos, sincronizar com módulo documentos
+const admissao = await supabase
+  .from('admissoes')
+  .select('nome_completo, cpf')
+  .eq('id', admissaoId)
+  .single();
+
+const documentoAdmissao = await supabase
+  .from('admissao_documentos')
+  .select('nome, tipo')
+  .eq('id', documentoId)
+  .single();
+
+// Inserir na tabela documentos
+await supabase.from('documentos').insert({
+  tenant_id: tenantId,
+  colaborador_id: null, // Não existe profile ainda
+  colaborador_nome: admissao.data.nome_completo,
+  colaborador_cpf: admissao.data.cpf,
+  nome_arquivo: filePath,
+  nome_original: file.name,
+  tipo: documentoAdmissao.data.nome, // Ex: "RG", "CPF", "CTPS"
+  tamanho: file.size,
+  mime_type: file.type,
+  storage_path: filePath,
+  data_validade: null,
+  status: 'valido',
+  observacoes: `Documento da admissão`,
+  criado_por: user.id,
+  criado_por_nome: profile?.nome_completo,
+});
 ```
 
-### Migração de documentos da admissão
+### Considerações Importantes
 
-Quando admissão atingir status "concluido":
-1. Buscar todos os documentos em `admissao_documentos` com `arquivo_url` preenchido
-2. Para cada documento, copiar o arquivo no storage para a nova pasta
-3. Inserir registro na tabela `documentos` com os metadados apropriados
+**1. Identificação do Colaborador**
+- Na admissão, o colaborador ainda não tem um `colaborador_id` (não é um profile ainda)
+- Usaremos o CPF como identificador único
+- Quando a admissão for concluída e o colaborador virar um profile, os documentos já estarão disponíveis
 
----
+**2. Estrutura do Storage Path**
+- Documentos ficarão em: `{tenant_id}/admissoes/{admissao_id}/...`
+- Quando a admissão for concluída, podemos opcionalmente mover para a pasta do colaborador
 
-## Interface do Usuário
-
-### Aba "Por Colaborador" no módulo Documentos
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│  Documentos                                             │
-│  [Todos] [Por Categoria] [Por Colaborador]              │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │    📁        │  │    📁        │  │    📁        │  │
-│  │ João Silva   │  │ Maria Santos │  │ Pedro Costa  │  │
-│  │ 12 docs      │  │ 8 docs       │  │ 5 docs       │  │
-│  │ 1 vencendo   │  │              │  │ 2 vencidos   │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Visualização interna da pasta
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│  ← Voltar  │  📁 João Silva                             │
-│            │  Cargo: Analista | Depto: TI               │
-├─────────────────────────────────────────────────────────┤
-│  [+ Upload para esta pasta]                             │
-│                                                         │
-│  📄 Contrato de Trabalho         │ 15/01/2024 │ Válido │
-│  📄 ASO Admissional              │ 15/01/2024 │ Válido │
-│  📄 Certificado NR-35            │ 10/02/2024 │ Vencendo │
-│  📄 Atestado Médico              │ 05/02/2025 │ Válido │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
+**3. Evitar Duplicação**
+- Adicionar verificação para não inserir se já existir registro com o mesmo `storage_path`
 
 ---
 
@@ -155,17 +96,56 @@ Quando admissão atingir status "concluido":
 
 | Arquivo | Ação |
 |---------|------|
-| `src/hooks/useDocumentos.ts` | Modificar estrutura de storage e adicionar agrupamento |
-| `src/pages/Documentos.tsx` | Adicionar aba "Por Colaborador" |
-| `src/components/documentos/ColaboradorFolderView.tsx` | Criar novo componente |
-| `src/components/documentos/DocumentoUploadForm.tsx` | Ajustar path de upload |
-| `src/hooks/useAdmissoes.ts` | Migrar docs ao concluir admissão |
-| `src/pages/Colaboradores.tsx` | Link direto para pasta de documentos |
+| `src/hooks/useAdmissoes.ts` | Adicionar lógica de sincronização no `uploadDocumento` |
 
 ---
 
-## Consideracoes Finais
+## Fluxo Final
 
-- **Retrocompatibilidade**: Documentos existentes continuam funcionando (paths antigos serão mantidos)
-- **Performance**: Agrupamento feito em memória, sem queries adicionais
-- **Segurança**: Mantém RLS existente, documentos isolados por tenant
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    ETAPA 6 - DOCUMENTOS                     │
+│                                                             │
+│  Usuário seleciona arquivo → Upload iniciado                │
+│                       ↓                                     │
+│  1. Upload para storage/documentos/{tenant}/admissoes/...   │
+│                       ↓                                     │
+│  2. Atualiza admissao_documentos (status: enviado)          │
+│                       ↓                                     │
+│  3. NOVO: Insere na tabela documentos                       │
+│     - colaborador_nome: nome da admissão                    │
+│     - colaborador_cpf: cpf da admissão                      │
+│     - tipo: nome do documento (RG, CPF, etc)                │
+│                       ↓                                     │
+│  Documento aparece automaticamente no módulo Documentos     │
+│  Agrupado pelo CPF/nome do colaborador                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Visualização no Módulo Documentos
+
+O colaborador aparecerá na aba "Por Colaborador" mesmo durante o processo de admissão:
+
+```text
+┌──────────────────────────────────────────────────────┐
+│  Por Colaborador                                     │
+├──────────────────────────────────────────────────────┤
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐     │
+│  │    📁      │  │    📁      │  │    📁      │     │
+│  │ João Silva │  │ Maria (*)  │  │ Pedro      │     │
+│  │ 12 docs    │  │ 3 docs     │  │ 5 docs     │     │
+│  └────────────┘  └────────────┘  └────────────┘     │
+│                                                      │
+│  (*) Colaborador em processo de admissão             │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## Tratamento de Remoção de Documentos
+
+Quando um documento for removido da admissão, também será removido do módulo Documentos:
+
+- Ao chamar `handleDocumentRemove`, adicionar lógica para deletar da tabela `documentos` usando o `storage_path` como referência
