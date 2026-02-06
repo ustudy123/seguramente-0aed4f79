@@ -62,6 +62,11 @@ export interface Atestado {
   profissional_nome: string;
   profissional_registro: string;
   profissional_tipo: string | null;
+  profissional_uf: string | null;
+  profissional_rqe: string | null;
+  profissional_telefone: string | null;
+  profissional_email: string | null;
+  profissional_endereco: string | null;
   
   data_inicio_afastamento: string | null;
   data_fim_afastamento: string | null;
@@ -71,6 +76,7 @@ export interface Atestado {
   
   contem_cid: boolean;
   cid_codigo: string | null;
+  cid_autorizado: boolean | null;
   grupo_clinico: GrupoClinico | null;
   nexo_trabalho: NexoTrabalho;
   
@@ -217,6 +223,11 @@ export interface AtestadoFormData {
   profissional_nome: string;
   profissional_registro: string;
   profissional_tipo?: string;
+  profissional_uf?: string;
+  profissional_rqe?: string;
+  profissional_telefone?: string;
+  profissional_email?: string;
+  profissional_endereco?: string;
   
   data_inicio_afastamento?: string;
   data_fim_afastamento?: string;
@@ -226,6 +237,7 @@ export interface AtestadoFormData {
   
   contem_cid?: boolean;
   cid_codigo?: string;
+  cid_autorizado?: boolean;
   grupo_clinico?: GrupoClinico;
   nexo_trabalho?: NexoTrabalho;
   
@@ -235,6 +247,29 @@ export interface AtestadoFormData {
   
   observacoes?: string;
   evento_saude_id?: string;
+}
+
+// Extracted data from AI
+export interface AtestadoExtractedData {
+  colaborador_nome?: string;
+  colaborador_cpf?: string;
+  profissional_nome?: string;
+  profissional_registro?: string;
+  profissional_uf?: string;
+  profissional_rqe?: string;
+  profissional_telefone?: string;
+  profissional_email?: string;
+  profissional_endereco?: string;
+  data_emissao?: string;
+  dias_afastamento?: number;
+  horas_afastamento?: number;
+  unidade_afastamento?: 'dias' | 'horas';
+  data_inicio_afastamento?: string;
+  data_fim_afastamento?: string;
+  contem_cid?: boolean;
+  cid_codigo?: string;
+  cid_autorizado?: boolean;
+  observacoes?: string;
 }
 
 // Labels

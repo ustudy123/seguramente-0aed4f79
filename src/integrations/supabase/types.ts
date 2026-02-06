@@ -535,6 +535,7 @@ export type Database = {
           arquivo_nome: string | null
           arquivo_tamanho: number | null
           arquivo_url: string | null
+          cid_autorizado: boolean | null
           cid_codigo: string | null
           colaborador_cargo: string | null
           colaborador_cpf: string | null
@@ -556,9 +557,14 @@ export type Database = {
           nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes: string | null
           observacoes_ocupacionais: string | null
+          profissional_email: string | null
+          profissional_endereco: string | null
           profissional_nome: string
           profissional_registro: string
+          profissional_rqe: string | null
+          profissional_telefone: string | null
           profissional_tipo: string | null
+          profissional_uf: string | null
           restricoes: string | null
           subtipo_assistencial:
             | Database["public"]["Enums"]["atestado_subtipo_assistencial"]
@@ -577,6 +583,7 @@ export type Database = {
           arquivo_nome?: string | null
           arquivo_tamanho?: number | null
           arquivo_url?: string | null
+          cid_autorizado?: boolean | null
           cid_codigo?: string | null
           colaborador_cargo?: string | null
           colaborador_cpf?: string | null
@@ -598,9 +605,14 @@ export type Database = {
           nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes?: string | null
           observacoes_ocupacionais?: string | null
+          profissional_email?: string | null
+          profissional_endereco?: string | null
           profissional_nome: string
           profissional_registro: string
+          profissional_rqe?: string | null
+          profissional_telefone?: string | null
           profissional_tipo?: string | null
+          profissional_uf?: string | null
           restricoes?: string | null
           subtipo_assistencial?:
             | Database["public"]["Enums"]["atestado_subtipo_assistencial"]
@@ -619,6 +631,7 @@ export type Database = {
           arquivo_nome?: string | null
           arquivo_tamanho?: number | null
           arquivo_url?: string | null
+          cid_autorizado?: boolean | null
           cid_codigo?: string | null
           colaborador_cargo?: string | null
           colaborador_cpf?: string | null
@@ -640,9 +653,14 @@ export type Database = {
           nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
           observacoes?: string | null
           observacoes_ocupacionais?: string | null
+          profissional_email?: string | null
+          profissional_endereco?: string | null
           profissional_nome?: string
           profissional_registro?: string
+          profissional_rqe?: string | null
+          profissional_telefone?: string | null
           profissional_tipo?: string | null
+          profissional_uf?: string | null
           restricoes?: string | null
           subtipo_assistencial?:
             | Database["public"]["Enums"]["atestado_subtipo_assistencial"]
