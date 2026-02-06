@@ -1232,6 +1232,77 @@ export type Database = {
           },
         ]
       }
+      documentos: {
+        Row: {
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_validade: string | null
+          id: string
+          mime_type: string
+          nome_arquivo: string
+          nome_original: string
+          observacoes: string | null
+          status: string
+          storage_path: string
+          tamanho: number
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_validade?: string | null
+          id?: string
+          mime_type: string
+          nome_arquivo: string
+          nome_original: string
+          observacoes?: string | null
+          status?: string
+          storage_path: string
+          tamanho: number
+          tenant_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_validade?: string | null
+          id?: string
+          mime_type?: string
+          nome_arquivo?: string
+          nome_original?: string
+          observacoes?: string | null
+          status?: string
+          storage_path?: string
+          tamanho?: number
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_entregas: {
         Row: {
           assinatura_url: string | null
