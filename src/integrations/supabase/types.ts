@@ -3520,6 +3520,214 @@ export type Database = {
           },
         ]
       }
+      questionario_psicossocial_campanhas: {
+        Row: {
+          anonimo: boolean
+          blocos_dinamicos: Json | null
+          cargos_ids: string[] | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_fim: string
+          data_inicio: string
+          departamentos_ids: string[] | null
+          descricao: string | null
+          id: string
+          nome: string
+          status: Database["public"]["Enums"]["campanha_psicossocial_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          anonimo?: boolean
+          blocos_dinamicos?: Json | null
+          cargos_ids?: string[] | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim: string
+          data_inicio: string
+          departamentos_ids?: string[] | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          anonimo?: boolean
+          blocos_dinamicos?: Json | null
+          cargos_ids?: string[] | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string
+          data_inicio?: string
+          departamentos_ids?: string[] | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionario_psicossocial_campanhas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionario_psicossocial_convites: {
+        Row: {
+          campanha_id: string
+          colaborador_cargo: string | null
+          colaborador_cpf: string | null
+          colaborador_departamento: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          concluido_em: string | null
+          created_at: string
+          enviado_em: string | null
+          enviado_via: Database["public"]["Enums"]["convite_enviado_via"] | null
+          id: string
+          iniciado_em: string | null
+          lembrete_enviado: boolean | null
+          status: Database["public"]["Enums"]["convite_psicossocial_status"]
+          tenant_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          campanha_id: string
+          colaborador_cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_departamento?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          concluido_em?: string | null
+          created_at?: string
+          enviado_em?: string | null
+          enviado_via?:
+            | Database["public"]["Enums"]["convite_enviado_via"]
+            | null
+          id?: string
+          iniciado_em?: string | null
+          lembrete_enviado?: boolean | null
+          status?: Database["public"]["Enums"]["convite_psicossocial_status"]
+          tenant_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string
+          colaborador_cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_departamento?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          concluido_em?: string | null
+          created_at?: string
+          enviado_em?: string | null
+          enviado_via?:
+            | Database["public"]["Enums"]["convite_enviado_via"]
+            | null
+          id?: string
+          iniciado_em?: string | null
+          lembrete_enviado?: boolean | null
+          status?: Database["public"]["Enums"]["convite_psicossocial_status"]
+          tenant_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionario_psicossocial_convites_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionario_psicossocial_convites_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionario_psicossocial_respostas: {
+        Row: {
+          campanha_id: string
+          colaborador_id: string | null
+          concluido_em: string | null
+          convite_id: string
+          created_at: string
+          id: string
+          indicadores: Json | null
+          ip_address: string | null
+          respostas: Json
+          tempo_resposta_segundos: number | null
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          campanha_id: string
+          colaborador_id?: string | null
+          concluido_em?: string | null
+          convite_id: string
+          created_at?: string
+          id?: string
+          indicadores?: Json | null
+          ip_address?: string | null
+          respostas?: Json
+          tempo_resposta_segundos?: number | null
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          campanha_id?: string
+          colaborador_id?: string | null
+          concluido_em?: string | null
+          convite_id?: string
+          created_at?: string
+          id?: string
+          indicadores?: Json | null
+          ip_address?: string | null
+          respostas?: Json
+          tempo_resposta_segundos?: number | null
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionario_psicossocial_respostas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionario_psicossocial_respostas_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_convites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionario_psicossocial_respostas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       superadmins: {
         Row: {
           ativo: boolean
@@ -3664,6 +3872,13 @@ export type Database = {
       avaliacao_ciclo_status: "rascunho" | "ativo" | "encerrado" | "analisando"
       avaliacao_tipo: "simples" | "360"
       beneficio_inss_especie: "b31" | "b91"
+      campanha_psicossocial_status: "rascunho" | "ativa" | "encerrada"
+      convite_enviado_via: "link" | "qrcode" | "whatsapp" | "email"
+      convite_psicossocial_status:
+        | "pendente"
+        | "iniciado"
+        | "concluido"
+        | "expirado"
       documento_status: "pendente" | "enviado" | "aprovado" | "rejeitado"
       entrega_status: "ativa" | "devolvido" | "extraviado" | "vencido"
       epi_status:
@@ -3878,6 +4093,14 @@ export const Constants = {
       avaliacao_ciclo_status: ["rascunho", "ativo", "encerrado", "analisando"],
       avaliacao_tipo: ["simples", "360"],
       beneficio_inss_especie: ["b31", "b91"],
+      campanha_psicossocial_status: ["rascunho", "ativa", "encerrada"],
+      convite_enviado_via: ["link", "qrcode", "whatsapp", "email"],
+      convite_psicossocial_status: [
+        "pendente",
+        "iniciado",
+        "concluido",
+        "expirado",
+      ],
       documento_status: ["pendente", "enviado", "aprovado", "rejeitado"],
       entrega_status: ["ativa", "devolvido", "extraviado", "vencido"],
       epi_status: [
