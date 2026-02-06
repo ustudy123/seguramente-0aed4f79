@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Brain, 
@@ -9,11 +9,14 @@ import {
   Clock,
   Shield,
   AlertCircle,
-  Loader2
+  Loader2,
+  UserCheck,
+  UserX,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { 
   ESCALA_RESPOSTAS, 
@@ -21,24 +24,25 @@ import {
   obterTodasPerguntas,
   type ConvitePsicossocial,
   type CampanhaPsicossocial,
-  type PerguntaPsicossocial
 } from "@/types/psicossocial";
 import { toast } from "sonner";
 import logoSeguramente from "@/assets/logo-seguramente.png";
 
+type EtapaQuestionario = 'consentimento' | 'identificacao' | 'questionario' | 'concluido';
+
 export default function QuestionarioPsicossocial() {
   const { token } = useParams<{ token: string }>();
-  const navigate = useNavigate();
   const startTime = useRef(Date.now());
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [convite, setConvite] = useState<ConvitePsicossocial | null>(null);
   const [campanha, setCampanha] = useState<CampanhaPsicossocial | null>(null);
+  const [etapa, setEtapa] = useState<EtapaQuestionario>('consentimento');
+  const [identificacaoVoluntaria, setIdentificacaoVoluntaria] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [respostas, setRespostas] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [completed, setCompleted] = useState(false);
 
   const { buscarConvitePorToken, atualizarConvitePublico, salvarRespostaPublica } = usePsicossocial();
 
@@ -61,7 +65,7 @@ export default function QuestionarioPsicossocial() {
         }
 
         if (data.status === 'concluido') {
-          setCompleted(true);
+          setEtapa('concluido');
           setLoading(false);
           return;
         }
@@ -116,7 +120,7 @@ export default function QuestionarioPsicossocial() {
 
   // Tempo estimado restante
   const perguntasRestantes = totalPerguntas - Object.keys(respostas).length;
-  const tempoEstimado = Math.ceil(perguntasRestantes * 0.3); // ~18 segundos por pergunta
+  const tempoEstimado = Math.ceil(perguntasRestantes * 0.3);
 
   const handleResposta = (valor: number) => {
     if (!perguntaAtual) return;
@@ -155,25 +159,35 @@ export default function QuestionarioPsicossocial() {
     setSubmitting(true);
     try {
       const tempoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-      // Passar o convite com a campanha anexada para calcular indicadores corretamente
       const conviteCompleto = { ...convite, campanha };
-      await salvarRespostaPublica(conviteCompleto, respostas, tempoSegundos);
-      setCompleted(true);
+      await salvarRespostaPublica(conviteCompleto, respostas, tempoSegundos, identificacaoVoluntaria);
+      setEtapa('concluido');
       toast.success("Respostas enviadas com sucesso!");
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
-
-      // Mostrar erro real (PostgrestError / Error / string)
-      const anyErr = err as unknown as { message?: string; details?: string; hint?: string; code?: string };
-      const message =
-        anyErr?.message ||
-        (typeof err === "string" ? err : "Erro ao enviar respostas. Tente novamente.");
-
+      const anyErr = err as { message?: string; details?: string; hint?: string; code?: string };
+      const message = anyErr?.message || "Erro ao enviar respostas. Tente novamente.";
       const extra = [anyErr?.code, anyErr?.details, anyErr?.hint].filter(Boolean).join(" • ");
       toast.error(extra ? `${message} (${extra})` : message);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleConsentimento = () => {
+    // Se campanha permite identificação voluntária e é anônima, mostrar tela de escolha
+    if (campanha?.anonimo && campanha?.permite_identificacao_voluntaria) {
+      setEtapa('identificacao');
+    } else {
+      // Caso contrário, ir direto para o questionário
+      setIdentificacaoVoluntaria(!campanha?.anonimo);
+      setEtapa('questionario');
+    }
+  };
+
+  const handleEscolhaIdentificacao = (identificar: boolean) => {
+    setIdentificacaoVoluntaria(identificar);
+    setEtapa('questionario');
   };
 
   // Tela de loading
@@ -203,8 +217,142 @@ export default function QuestionarioPsicossocial() {
     );
   }
 
+  // Tela de consentimento (LGPD)
+  if (etapa === 'consentimento') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Brain className="h-12 w-12 text-purple-600" />
+            </div>
+            <CardTitle className="text-2xl">Avaliação Psicossocial</CardTitle>
+            <CardDescription>
+              {campanha?.nome}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Política de uso dos dados */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-5 w-5 text-gray-600" />
+                <h3 className="font-medium">Política de Uso dos Dados</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {campanha?.politica_uso_dados || 
+                  "Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Os dados são tratados de acordo com a LGPD."}
+              </p>
+            </div>
+
+            {/* Indicador de anonimato */}
+            {campanha?.anonimo && (
+              <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                <Shield className="h-6 w-6 text-emerald-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-emerald-800">Questionário Anônimo</p>
+                  <p className="text-sm text-emerald-700">
+                    Seu nome e CPF não serão vinculados às respostas.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Tempo estimado */}
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm">Tempo estimado: ~{Math.ceil(totalPerguntas * 0.3)} minutos</span>
+            </div>
+
+            <Button 
+              onClick={handleConsentimento} 
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              size="lg"
+            >
+              Iniciar Questionário
+            </Button>
+
+            <p className="text-xs text-center text-muted-foreground">
+              Ao continuar, você concorda com a política de uso dos dados.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Tela de escolha de identificação
+  if (etapa === 'identificacao') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Shield className="h-12 w-12 text-purple-600" />
+            </div>
+            <CardTitle className="text-xl">Como deseja responder?</CardTitle>
+            <CardDescription>
+              Você pode escolher se quer se identificar ou permanecer anônimo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Mensagem institucional */}
+            {campanha?.mensagem_institucional && (
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  {campanha.mensagem_institucional}
+                </p>
+              </div>
+            )}
+
+            {/* Opção Anônimo */}
+            <button
+              onClick={() => handleEscolhaIdentificacao(false)}
+              className="w-full p-4 rounded-lg border-2 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 transition-colors text-left"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <UserX className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-emerald-800">Responder Anonimamente</h3>
+                  <p className="text-sm text-emerald-700 mt-1">
+                    Suas respostas não serão vinculadas ao seu nome. Recomendado para maior liberdade de expressão.
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Opção Identificado */}
+            <button
+              onClick={() => handleEscolhaIdentificacao(true)}
+              className="w-full p-4 rounded-lg border-2 border-blue-200 bg-blue-50/50 hover:bg-blue-100 transition-colors text-left"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <UserCheck className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-blue-800">Me Identificar Voluntariamente</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Permite que o RH/Saúde entre em contato para acompanhamento individual, se necessário.
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <p className="text-xs text-center text-muted-foreground pt-2">
+              {convite?.colaborador_nome && (
+                <span>Respondendo como: <strong>{convite.colaborador_nome}</strong></span>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Tela de conclusão
-  if (completed) {
+  if (etapa === 'concluido') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -213,10 +361,16 @@ export default function QuestionarioPsicossocial() {
             <h2 className="text-2xl font-bold mb-2">Obrigado!</h2>
             <p className="text-muted-foreground mb-6">
               Suas respostas foram registradas com sucesso.
-              {campanha?.anonimo && (
+              {campanha?.anonimo && !identificacaoVoluntaria && (
                 <span className="block mt-2 text-sm">
                   <Shield className="inline h-4 w-4 mr-1" />
                   Suas respostas são anônimas.
+                </span>
+              )}
+              {identificacaoVoluntaria && (
+                <span className="block mt-2 text-sm">
+                  <UserCheck className="inline h-4 w-4 mr-1" />
+                  Você optou por se identificar para acompanhamento.
                 </span>
               )}
             </p>
@@ -356,11 +510,19 @@ export default function QuestionarioPsicossocial() {
       </footer>
 
       {/* Indicador de anonimato */}
-      {campanha?.anonimo && (
+      {campanha?.anonimo && !identificacaoVoluntaria && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2">
           <span className="text-xs text-muted-foreground flex items-center gap-1 bg-white/80 px-3 py-1 rounded-full shadow-sm">
             <Shield className="h-3 w-3" />
             Respostas anônimas
+          </span>
+        </div>
+      )}
+      {identificacaoVoluntaria && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2">
+          <span className="text-xs text-blue-600 flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full shadow-sm border border-blue-200">
+            <UserCheck className="h-3 w-3" />
+            Identificado voluntariamente
           </span>
         </div>
       )}

@@ -3533,7 +3533,10 @@ export type Database = {
           departamentos_ids: string[] | null
           descricao: string | null
           id: string
+          mensagem_institucional: string | null
           nome: string
+          permite_identificacao_voluntaria: boolean
+          politica_uso_dados: string | null
           status: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           updated_at: string
@@ -3550,7 +3553,10 @@ export type Database = {
           departamentos_ids?: string[] | null
           descricao?: string | null
           id?: string
+          mensagem_institucional?: string | null
           nome: string
+          permite_identificacao_voluntaria?: boolean
+          politica_uso_dados?: string | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           updated_at?: string
@@ -3567,7 +3573,10 @@ export type Database = {
           departamentos_ids?: string[] | null
           descricao?: string | null
           id?: string
+          mensagem_institucional?: string | null
           nome?: string
+          permite_identificacao_voluntaria?: boolean
+          politica_uso_dados?: string | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id?: string
           updated_at?: string
@@ -3669,6 +3678,7 @@ export type Database = {
           convite_id: string
           created_at: string
           id: string
+          identificacao_voluntaria: boolean
           indicadores: Json | null
           ip_address: string | null
           respostas: Json
@@ -3683,6 +3693,7 @@ export type Database = {
           convite_id: string
           created_at?: string
           id?: string
+          identificacao_voluntaria?: boolean
           indicadores?: Json | null
           ip_address?: string | null
           respostas?: Json
@@ -3697,6 +3708,7 @@ export type Database = {
           convite_id?: string
           created_at?: string
           id?: string
+          identificacao_voluntaria?: boolean
           indicadores?: Json | null
           ip_address?: string | null
           respostas?: Json
