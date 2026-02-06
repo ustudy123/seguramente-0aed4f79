@@ -3,16 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
-import type {
-  CampanhaPsicossocial,
-  ConvitePsicossocial,
-  RespostaPsicossocial,
-  NovaCampanha,
-  GerarConvitesInput,
-  EstatisticasCampanha,
-  IndicadoresPsicossociais,
+import {
   BLOCOS_PSICOSSOCIAL,
-  obterTodasPerguntas,
+  BLOCOS_DINAMICOS,
+  type CampanhaPsicossocial,
+  type ConvitePsicossocial,
+  type RespostaPsicossocial,
+  type NovaCampanha,
+  type GerarConvitesInput,
+  type EstatisticasCampanha,
+  type IndicadoresPsicossociais,
 } from "@/types/psicossocial";
 
 // Gerar token único
@@ -25,10 +25,8 @@ export function calcularIndicadores(
   respostas: Record<string, number>,
   blocosDinamicos?: string[]
 ): IndicadoresPsicossociais {
-  const { BLOCOS_PSICOSSOCIAL, BLOCOS_DINAMICOS } = require("@/types/psicossocial");
-  
-  const blocos = BLOCOS_PSICOSSOCIAL as typeof import("@/types/psicossocial").BLOCOS_PSICOSSOCIAL;
-  const blocosDinamicosConfig = BLOCOS_DINAMICOS as typeof import("@/types/psicossocial").BLOCOS_DINAMICOS;
+  const blocos = BLOCOS_PSICOSSOCIAL;
+  const blocosDinamicosConfig = BLOCOS_DINAMICOS;
   
   // Calcular média por bloco (escala 0-4)
   const mediasPorBloco: { bloco: string; media: number; nivel: 'baixo' | 'moderado' | 'alto' | 'critico' }[] = [];
