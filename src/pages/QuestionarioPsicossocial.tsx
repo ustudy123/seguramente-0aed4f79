@@ -424,14 +424,7 @@ export default function QuestionarioPsicossocial() {
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Bloco/Categoria */}
-              {blocoAtual && (
-                <div className="text-center mb-4">
-                  <span className="text-xs font-medium text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
-                    {blocoAtual.titulo}
-                  </span>
-                </div>
-              )}
+              {/* Bloco/Categoria - mantido internamente mas não exibido ao colaborador */}
 
               {/* Pergunta */}
               <Card className="shadow-lg">
