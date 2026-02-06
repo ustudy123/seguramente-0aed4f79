@@ -101,10 +101,14 @@ export function useDocumentos() {
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
-      // Gerar nome único para o arquivo
+      // Gerar nome único com estrutura de pastas por colaborador
       const timestamp = Date.now();
-      const ext = file.name.split(".").pop();
-      const nomeArquivo = `${tenantId}/${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      
+      // Nova estrutura: {tenant_id}/colaboradores/{colaborador_id}/{timestamp}_{arquivo}
+      const nomeArquivo = colaboradorId
+        ? `${tenantId}/colaboradores/${colaboradorId}/${timestamp}_${safeFileName}`
+        : `${tenantId}/${timestamp}_${safeFileName}`;
 
       // Upload para o storage
       const { error: uploadError } = await supabase.storage

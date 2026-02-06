@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, 
@@ -18,7 +19,8 @@ import {
   MapPin,
   X,
   LayoutGrid,
-  List
+  List,
+  FolderOpen
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -93,6 +95,7 @@ const statusLabels: Record<string, string> = {
 };
 
 const Colaboradores = () => {
+  const navigate = useNavigate();
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -328,7 +331,8 @@ const Colaboradores = () => {
                       <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>
                         Editar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast.info("Funcionalidade de documentos em desenvolvimento")}>
+                      <DropdownMenuItem onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
+                        <FolderOpen className="w-4 h-4 mr-2" />
                         Documentos
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -447,7 +451,8 @@ const Colaboradores = () => {
                         <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info("Funcionalidade de documentos em desenvolvimento")}>
+                        <DropdownMenuItem onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
+                          <FolderOpen className="w-4 h-4 mr-2" />
                           Documentos
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
