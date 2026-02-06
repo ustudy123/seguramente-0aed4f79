@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,7 +17,10 @@ import {
   Phone,
   Mail,
   MapPin,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
 import {
   Dialog,
@@ -50,11 +53,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import type { AtestadoFormData, AtestadoTipo, AtestadoExtractedData } from "@/types/atestado";
 import { 
   SUBTIPO_ASSISTENCIAL_LABELS,
@@ -65,6 +77,7 @@ import {
 } from "@/types/atestado";
 
 const formSchema = z.object({
+  colaborador_id: z.string().optional(),
   colaborador_nome: z.string().min(1, "Nome do colaborador é obrigatório"),
   colaborador_cpf: z.string().optional(),
   colaborador_cargo: z.string().optional(),
@@ -108,7 +121,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AtestadoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { formData: AtestadoFormData; file?: File }) => Promise<void>;
+  onSubmit: (data: { formData: AtestadoFormData; file?: File; colaboradorId?: string }) => Promise<void>;
   loading?: boolean;
 }
 
@@ -117,6 +130,10 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const [tipoAtestado, setTipoAtestado] = useState<AtestadoTipo>("assistencial");
   const [extracting, setExtracting] = useState(false);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
+  const [colaboradorSelecionado, setColaboradorSelecionado] = useState<Colaborador | null>(null);
+  const [openColaboradorPopover, setOpenColaboradorPopover] = useState(false);
+  
+  const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -128,6 +145,28 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       unidade_afastamento: "dias",
     },
   });
+
+  // Preencher dados do colaborador quando selecionado
+  const handleColaboradorSelect = (colaborador: Colaborador) => {
+    setColaboradorSelecionado(colaborador);
+    setOpenColaboradorPopover(false);
+    
+    form.setValue("colaborador_id", colaborador.id);
+    form.setValue("colaborador_nome", colaborador.nome_completo);
+    form.setValue("colaborador_cpf", colaborador.cpf || "");
+    form.setValue("colaborador_cargo", colaborador.cargo || "");
+    form.setValue("colaborador_departamento", colaborador.departamento || "");
+  };
+
+  // Limpar seleção de colaborador
+  const handleClearColaborador = () => {
+    setColaboradorSelecionado(null);
+    form.setValue("colaborador_id", "");
+    form.setValue("colaborador_nome", "");
+    form.setValue("colaborador_cpf", "");
+    form.setValue("colaborador_cargo", "");
+    form.setValue("colaborador_departamento", "");
+  };
 
   const extractDataFromFile = async (uploadedFile: File) => {
     setExtracting(true);
@@ -234,6 +273,12 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   });
 
   const handleSubmit = async (values: FormValues) => {
+    // Validar se colaborador foi selecionado
+    if (!colaboradorSelecionado) {
+      toast.error("Selecione um colaborador cadastrado antes de continuar.");
+      return;
+    }
+
     const formData: AtestadoFormData = {
       colaborador_nome: values.colaborador_nome,
       colaborador_cpf: values.colaborador_cpf,
@@ -271,10 +316,15 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       observacoes: values.observacoes,
     };
 
-    await onSubmit({ formData, file: file || undefined });
+    await onSubmit({ 
+      formData, 
+      file: file || undefined,
+      colaboradorId: colaboradorSelecionado.id 
+    });
     form.reset();
     setFile(null);
     setExtractionSuccess(false);
+    setColaboradorSelecionado(null);
     onOpenChange(false);
   };
 
@@ -294,7 +344,94 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Upload com IA */}
+            {/* 1. Seleção de Colaborador (PRIMEIRO) */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Selecionar Colaborador *
+              </h3>
+              
+              <div className="space-y-3">
+                <Popover open={openColaboradorPopover} onOpenChange={setOpenColaboradorPopover}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openColaboradorPopover}
+                      className="w-full justify-between"
+                    >
+                      {colaboradorSelecionado
+                        ? colaboradorSelecionado.nome_completo
+                        : "Buscar colaborador..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Digite o nome do colaborador..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {colaboradores.map((colaborador) => (
+                            <CommandItem
+                              key={colaborador.id}
+                              value={colaborador.nome_completo}
+                              onSelect={() => handleColaboradorSelect(colaborador)}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  colaboradorSelecionado?.id === colaborador.id
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{colaborador.nome_completo}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {colaborador.cargo} • {colaborador.cpf}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {colaboradorSelecionado && (
+                  <Alert className="border-primary/30 bg-primary/5">
+                    <User className="h-4 w-4" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <div>
+                        <strong>{colaboradorSelecionado.nome_completo}</strong>
+                        <p className="text-xs text-muted-foreground">
+                          CPF: {colaboradorSelecionado.cpf} • Cargo: {colaboradorSelecionado.cargo}
+                          {colaboradorSelecionado.departamento && ` • ${colaboradorSelecionado.departamento}`}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearColaborador}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {!colaboradorSelecionado && (
+                  <p className="text-xs text-muted-foreground">
+                    O atestado será vinculado à pasta de documentos do colaborador selecionado.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Upload com IA */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <Upload className="h-4 w-4" />
@@ -336,7 +473,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                       Arraste o arquivo ou clique para selecionar
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      PDF ou imagem até 20MB
+                      Imagem (JPG/PNG) até 20MB
                     </p>
                   </div>
                 )}
@@ -374,69 +511,65 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
               )}
             </div>
 
-            {/* Colaborador */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Dados do Paciente/Colaborador
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="colaborador_nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do colaborador" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="colaborador_cpf"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CPF</FormLabel>
-                      <FormControl>
-                        <Input placeholder="000.000.000-00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="colaborador_cargo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cargo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cargo" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="colaborador_departamento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departamento</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Departamento" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {/* Dados do Colaborador (readonly, preenchidos automaticamente) */}
+            {colaboradorSelecionado && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Dados do Colaborador (preenchidos automaticamente)
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="colaborador_nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome Completo</FormLabel>
+                        <FormControl>
+                          <Input {...field} readOnly className="bg-muted" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="colaborador_cpf"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CPF</FormLabel>
+                        <FormControl>
+                          <Input {...field} readOnly className="bg-muted" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="colaborador_cargo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cargo</FormLabel>
+                        <FormControl>
+                          <Input {...field} readOnly className="bg-muted" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="colaborador_departamento"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Departamento</FormLabel>
+                        <FormControl>
+                          <Input {...field} readOnly className="bg-muted" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
-
-            {/* Tipo de Atestado */}
+            )}
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <FileText className="h-4 w-4" />

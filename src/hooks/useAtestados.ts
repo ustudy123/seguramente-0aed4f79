@@ -98,7 +98,7 @@ export function useAtestados() {
 
   // Create atestado
   const createAtestadoMutation = useMutation({
-    mutationFn: async ({ formData, file }: { formData: AtestadoFormData; file?: File }) => {
+    mutationFn: async ({ formData, file, colaboradorId }: { formData: AtestadoFormData; file?: File; colaboradorId?: string }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
       let arquivo_url = null;
@@ -119,6 +119,38 @@ export function useAtestados() {
         arquivo_url = fileName;
         arquivo_nome = file.name;
         arquivo_tamanho = file.size;
+
+        // Também salvar no módulo de Documentos (vinculado ao colaborador)
+        if (colaboradorId) {
+          const docFileName = `${tenantId}/${colaboradorId}/${timestamp}_atestado_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+          
+          const { error: docUploadError } = await supabase.storage
+            .from("documentos")
+            .upload(docFileName, file, { cacheControl: "3600", upsert: false });
+
+          if (!docUploadError) {
+            // Salvar metadados no banco de documentos
+            await supabase
+              .from("documentos" as never)
+              .insert({
+                tenant_id: tenantId,
+                colaborador_id: colaboradorId,
+                colaborador_nome: formData.colaborador_nome,
+                colaborador_cpf: formData.colaborador_cpf || null,
+                nome_arquivo: docFileName,
+                nome_original: file.name,
+                tipo: "Atestado",
+                tamanho: file.size,
+                mime_type: file.type,
+                storage_path: docFileName,
+                data_validade: null,
+                status: "valido",
+                observacoes: `Atestado ${formData.tipo} - ${formData.profissional_nome} (${formData.profissional_registro})`,
+                criado_por: user.id,
+                criado_por_nome: profile?.nome_completo,
+              } as never);
+          }
+        }
       }
 
       // Calculate dias_afastamento if dates provided
@@ -133,6 +165,7 @@ export function useAtestados() {
         .from("atestados" as never)
         .insert({
           tenant_id: tenantId,
+          colaborador_id: colaboradorId || null,
           colaborador_nome: formData.colaborador_nome,
           colaborador_cpf: formData.colaborador_cpf,
           colaborador_cargo: formData.colaborador_cargo,
@@ -185,6 +218,7 @@ export function useAtestados() {
       queryClient.invalidateQueries({ queryKey: ["atestados"] });
       queryClient.invalidateQueries({ queryKey: ["afastamentos"] });
       queryClient.invalidateQueries({ queryKey: ["alertas_saude"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
       toast.success("Atestado cadastrado com sucesso!");
     },
     onError: (error: Error) => {
