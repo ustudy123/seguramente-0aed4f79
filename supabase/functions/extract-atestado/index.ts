@@ -6,69 +6,28 @@ const corsHeaders = {
 };
 
 interface ExtractedData {
-  // Dados do paciente
   colaborador_nome?: string;
   colaborador_cpf?: string;
-  
-  // Dados do médico
   profissional_nome?: string;
-  profissional_registro?: string; // CRM
+  profissional_registro?: string;
   profissional_uf?: string;
   profissional_rqe?: string;
   profissional_telefone?: string;
   profissional_email?: string;
   profissional_endereco?: string;
-  
-  // Dados do atestado
   data_emissao?: string;
   dias_afastamento?: number;
   horas_afastamento?: number;
   unidade_afastamento?: 'dias' | 'horas';
   data_inicio_afastamento?: string;
   data_fim_afastamento?: string;
-  
-  // CID
   contem_cid?: boolean;
   cid_codigo?: string;
   cid_autorizado?: boolean;
-  
-  // Observações
   observacoes?: string;
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY não configurada");
-    }
-
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    
-    if (!file) {
-      throw new Error("Nenhum arquivo enviado");
-    }
-
-    // Converter arquivo para base64
-    const arrayBuffer = await file.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
-    
-    const mimeType = file.type || 'application/pdf';
-    const isImage = mimeType.startsWith('image/');
-    const isPdf = mimeType === 'application/pdf';
-
-    if (!isImage && !isPdf) {
-      throw new Error("Formato de arquivo não suportado. Use PDF ou imagem.");
-    }
-
-    const systemPrompt = `Você é um sistema especializado em extrair informações de atestados médicos brasileiros.
+const systemPrompt = `Você é um sistema especializado em extrair informações de atestados médicos brasileiros.
 
 Extraia TODAS as informações presentes no documento, seguindo a estrutura da Resolução CFM.
 
@@ -112,49 +71,136 @@ IMPORTANTE:
 - Separe CRM e UF corretamente
 - Se o período for em horas, coloque em horas_afastamento e unidade_afastamento="horas"`;
 
-    let content: { type: string; text?: string; image_url?: { url: string } }[];
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-    if (isImage) {
-      content = [
-        { type: "text", text: "Extraia as informações deste atestado médico:" },
-        { 
-          type: "image_url", 
-          image_url: { 
-            url: `data:${mimeType};base64,${base64}` 
-          } 
-        }
-      ];
-    } else {
-      // Para PDF, usar visão também (GPT-4 Vision pode ler PDFs como imagem)
-      content = [
-        { type: "text", text: "Extraia as informações deste atestado médico:" },
-        { 
-          type: "image_url", 
-          image_url: { 
-            url: `data:${mimeType};base64,${base64}` 
-          } 
-        }
-      ];
+  try {
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY não configurada");
     }
 
-    console.log("Enviando para OpenAI Vision...");
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    
+    if (!file) {
+      throw new Error("Nenhum arquivo enviado");
+    }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content }
-        ],
-        max_tokens: 2000,
-        temperature: 0.1,
-      }),
-    });
+    const mimeType = file.type || 'application/octet-stream';
+    const isImage = mimeType.startsWith('image/');
+    const isPdf = mimeType === 'application/pdf';
+
+    if (!isImage && !isPdf) {
+      throw new Error("Formato de arquivo não suportado. Use PDF ou imagem (PNG, JPG).");
+    }
+
+    let response;
+
+    if (isImage) {
+      // Para imagens, usar Vision API
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+
+      console.log("Enviando imagem para OpenAI Vision...");
+
+      response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { 
+              role: "user", 
+              content: [
+                { type: "text", text: "Extraia as informações deste atestado médico:" },
+                { 
+                  type: "image_url", 
+                  image_url: { 
+                    url: `data:${mimeType};base64,${base64}` 
+                  } 
+                }
+              ]
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.1,
+        }),
+      });
+    } else {
+      // Para PDFs, informar limitação e sugerir upload de imagem
+      // Nota: OpenAI Vision não suporta PDF diretamente
+      // Alternativa: usar apenas o nome do arquivo e pedir para usuário preencher manualmente
+      // ou usar uma descrição baseada no que sabemos
+      
+      console.log("PDF detectado - usando análise baseada em texto...");
+      
+      // Tentar ler o PDF como texto (funciona para alguns PDFs com texto)
+      const arrayBuffer = await file.arrayBuffer();
+      const textDecoder = new TextDecoder('utf-8', { fatal: false });
+      let pdfText = textDecoder.decode(arrayBuffer);
+      
+      // Limpar caracteres não-imprimíveis e extrair texto legível
+      pdfText = pdfText
+        .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      // Extrair apenas strings que parecem texto (entre parênteses em PDFs)
+      const textMatches = pdfText.match(/\(([^)]+)\)/g);
+      let extractedText = '';
+      if (textMatches) {
+        extractedText = textMatches
+          .map(m => m.slice(1, -1))
+          .filter(t => t.length > 2 && /[a-zA-Z]/.test(t))
+          .join(' ');
+      }
+      
+      if (extractedText.length < 50) {
+        // PDF provavelmente é uma imagem escaneada
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "PDF não contém texto extraível",
+            message: "Este PDF parece ser uma imagem escaneada. Por favor, converta para JPG/PNG ou tire uma foto do atestado para usar a extração automática."
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+
+      console.log("Texto extraído do PDF:", extractedText.substring(0, 500));
+
+      response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { 
+              role: "user", 
+              content: `Extraia as informações deste atestado médico. O texto foi extraído de um PDF:\n\n${extractedText}`
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.1,
+        }),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -174,7 +220,6 @@ IMPORTANTE:
     // Tentar parsear o JSON
     let extractedData: ExtractedData;
     try {
-      // Remover possíveis marcadores de código
       const cleanJson = content_response
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
@@ -182,7 +227,7 @@ IMPORTANTE:
       extractedData = JSON.parse(cleanJson);
     } catch (parseError) {
       console.error("Erro ao parsear JSON:", parseError);
-      throw new Error("Não foi possível extrair os dados do documento. Tente novamente ou preencha manualmente.");
+      throw new Error("Não foi possível extrair os dados do documento. Tente com uma imagem mais nítida.");
     }
 
     return new Response(
@@ -205,7 +250,7 @@ IMPORTANTE:
         message: "Não foi possível extrair os dados automaticamente. Preencha manualmente."
       }),
       { 
-        status: 400, 
+        status: 200, // Retornar 200 para o frontend tratar a mensagem
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );
