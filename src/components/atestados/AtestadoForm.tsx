@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { useDropzone } from "react-dropzone";
 import { 
   FileText, 
@@ -11,7 +11,13 @@ import {
   CalendarIcon,
   User,
   Stethoscope,
-  Building2
+  Building2,
+  Sparkles,
+  Loader2,
+  Phone,
+  Mail,
+  MapPin,
+  AlertCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -45,8 +51,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import type { AtestadoFormData, AtestadoTipo } from "@/types/atestado";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { AtestadoFormData, AtestadoTipo, AtestadoExtractedData } from "@/types/atestado";
 import { 
   SUBTIPO_ASSISTENCIAL_LABELS,
   SUBTIPO_OCUPACIONAL_LABELS,
@@ -68,14 +77,22 @@ const formSchema = z.object({
   data_emissao: z.date({ required_error: "Data de emissão é obrigatória" }),
   profissional_nome: z.string().min(1, "Nome do profissional é obrigatório"),
   profissional_registro: z.string().min(1, "Registro profissional é obrigatório"),
+  profissional_uf: z.string().optional(),
+  profissional_rqe: z.string().optional(),
+  profissional_telefone: z.string().optional(),
+  profissional_email: z.string().email("Email inválido").optional().or(z.literal("")),
+  profissional_endereco: z.string().optional(),
   profissional_tipo: z.string().optional(),
   
   data_inicio_afastamento: z.date().optional(),
   data_fim_afastamento: z.date().optional(),
   dias_afastamento: z.number().optional(),
+  horas_afastamento: z.number().optional(),
+  unidade_afastamento: z.string().optional(),
   
   contem_cid: z.boolean().optional(),
   cid_codigo: z.string().optional(),
+  cid_autorizado: z.boolean().optional(),
   grupo_clinico: z.string().optional(),
   nexo_trabalho: z.string().optional(),
   
@@ -98,19 +115,111 @@ interface AtestadoFormProps {
 export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: AtestadoFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [tipoAtestado, setTipoAtestado] = useState<AtestadoTipo>("assistencial");
+  const [extracting, setExtracting] = useState(false);
+  const [extractionSuccess, setExtractionSuccess] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       tipo: "assistencial",
       contem_cid: false,
+      cid_autorizado: false,
       nexo_trabalho: "nao",
+      unidade_afastamento: "dias",
     },
   });
+
+  const extractDataFromFile = async (uploadedFile: File) => {
+    setExtracting(true);
+    setExtractionSuccess(false);
+    
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadedFile);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/extract-atestado`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${sessionData?.session?.access_token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const data: AtestadoExtractedData = result.data;
+        
+        // Preencher campos do formulário
+        if (data.colaborador_nome) form.setValue("colaborador_nome", data.colaborador_nome);
+        if (data.colaborador_cpf) form.setValue("colaborador_cpf", data.colaborador_cpf);
+        if (data.profissional_nome) form.setValue("profissional_nome", data.profissional_nome);
+        if (data.profissional_registro) form.setValue("profissional_registro", data.profissional_registro);
+        if (data.profissional_uf) form.setValue("profissional_uf", data.profissional_uf);
+        if (data.profissional_rqe) form.setValue("profissional_rqe", data.profissional_rqe);
+        if (data.profissional_telefone) form.setValue("profissional_telefone", data.profissional_telefone);
+        if (data.profissional_email) form.setValue("profissional_email", data.profissional_email);
+        if (data.profissional_endereco) form.setValue("profissional_endereco", data.profissional_endereco);
+        
+        if (data.data_emissao) {
+          try {
+            const parsed = parse(data.data_emissao, "yyyy-MM-dd", new Date());
+            form.setValue("data_emissao", parsed);
+          } catch (e) {
+            console.error("Erro ao parsear data de emissão:", e);
+          }
+        }
+        
+        if (data.data_inicio_afastamento) {
+          try {
+            const parsed = parse(data.data_inicio_afastamento, "yyyy-MM-dd", new Date());
+            form.setValue("data_inicio_afastamento", parsed);
+          } catch (e) {
+            console.error("Erro ao parsear data de início:", e);
+          }
+        }
+        
+        if (data.data_fim_afastamento) {
+          try {
+            const parsed = parse(data.data_fim_afastamento, "yyyy-MM-dd", new Date());
+            form.setValue("data_fim_afastamento", parsed);
+          } catch (e) {
+            console.error("Erro ao parsear data de fim:", e);
+          }
+        }
+        
+        if (data.dias_afastamento) form.setValue("dias_afastamento", data.dias_afastamento);
+        if (data.horas_afastamento) form.setValue("horas_afastamento", data.horas_afastamento);
+        if (data.unidade_afastamento) form.setValue("unidade_afastamento", data.unidade_afastamento);
+        
+        if (data.contem_cid !== undefined) form.setValue("contem_cid", data.contem_cid);
+        if (data.cid_codigo) form.setValue("cid_codigo", data.cid_codigo);
+        if (data.cid_autorizado !== undefined) form.setValue("cid_autorizado", data.cid_autorizado);
+        
+        if (data.observacoes) form.setValue("observacoes", data.observacoes);
+
+        setExtractionSuccess(true);
+        toast.success("Dados extraídos com sucesso! Revise as informações.");
+      } else {
+        toast.error(result.message || "Não foi possível extrair os dados.");
+      }
+    } catch (error) {
+      console.error("Erro na extração:", error);
+      toast.error("Erro ao extrair dados do documento.");
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setFile(acceptedFiles[0]);
+      setExtractionSuccess(false);
     }
   }, []);
 
@@ -121,7 +230,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       "image/*": [".png", ".jpg", ".jpeg"],
     },
     maxFiles: 1,
-    maxSize: 20 * 1024 * 1024, // 20MB
+    maxSize: 20 * 1024 * 1024,
   });
 
   const handleSubmit = async (values: FormValues) => {
@@ -136,6 +245,11 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
       data_emissao: format(values.data_emissao, "yyyy-MM-dd"),
       profissional_nome: values.profissional_nome,
       profissional_registro: values.profissional_registro,
+      profissional_uf: values.profissional_uf,
+      profissional_rqe: values.profissional_rqe,
+      profissional_telefone: values.profissional_telefone,
+      profissional_email: values.profissional_email,
+      profissional_endereco: values.profissional_endereco,
       profissional_tipo: values.profissional_tipo,
       data_inicio_afastamento: values.data_inicio_afastamento 
         ? format(values.data_inicio_afastamento, "yyyy-MM-dd") 
@@ -144,8 +258,11 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
         ? format(values.data_fim_afastamento, "yyyy-MM-dd") 
         : undefined,
       dias_afastamento: values.dias_afastamento,
+      horas_afastamento: values.horas_afastamento,
+      unidade_afastamento: values.unidade_afastamento,
       contem_cid: values.contem_cid,
       cid_codigo: values.cid_codigo,
+      cid_autorizado: values.cid_autorizado,
       grupo_clinico: values.grupo_clinico as AtestadoFormData['grupo_clinico'],
       nexo_trabalho: values.nexo_trabalho as AtestadoFormData['nexo_trabalho'],
       aptidao: values.aptidao as AtestadoFormData['aptidao'],
@@ -157,15 +274,17 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
     await onSubmit({ formData, file: file || undefined });
     form.reset();
     setFile(null);
+    setExtractionSuccess(false);
     onOpenChange(false);
   };
 
   const watchTipo = form.watch("tipo");
   const watchContemCid = form.watch("contem_cid");
+  const watchUnidadeAfastamento = form.watch("unidade_afastamento");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -175,11 +294,91 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Upload com IA */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Documento
+              </h3>
+              
+              <div
+                {...getRootProps()}
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+                  isDragActive 
+                    ? "border-primary bg-primary/5" 
+                    : "border-muted-foreground/25 hover:border-primary/50"
+                )}
+              >
+                <input {...getInputProps()} />
+                {file ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="text-sm">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                        setExtractionSuccess(false);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Arraste o arquivo ou clique para selecionar
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PDF ou imagem até 20MB
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {file && !extractionSuccess && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => extractDataFromFile(file)}
+                  disabled={extracting}
+                >
+                  {extracting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Extraindo dados com IA...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Extrair dados com IA
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {extractionSuccess && (
+                <Alert className="border-primary/50 bg-primary/10">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <AlertDescription>
+                    Dados extraídos automaticamente. Revise as informações abaixo antes de salvar.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
             {/* Colaborador */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Dados do Colaborador
+                Dados do Paciente/Colaborador
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
@@ -324,34 +523,22 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
               </div>
             </div>
 
-            {/* Profissional */}
+            {/* Profissional Emissor */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <Stethoscope className="h-4 w-4" />
                 Profissional Emissor
               </h3>
+              
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="profissional_nome"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome *</FormLabel>
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>Nome do Médico *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Dr. Nome" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="profissional_registro"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Registro *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="CRM 12345" {...field} />
+                        <Input placeholder="Dr. Nome Completo" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -397,6 +584,101 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   )}
                 />
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="profissional_registro"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CRM *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12345" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="profissional_uf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UF do CRM</FormLabel>
+                      <FormControl>
+                        <Input placeholder="SP" maxLength={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="profissional_rqe"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>RQE</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Registro de Especialista" {...field} />
+                      </FormControl>
+                      <FormDescription className="text-xs">Quando houver</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="profissional_telefone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        Telefone
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="(11) 99999-9999" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="profissional_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        E-mail
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="medico@clinica.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="profissional_endereco"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Endereço Profissional
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Rua, número, bairro, cidade - UF" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Afastamento - only for assistencial */}
@@ -406,7 +688,70 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   <CalendarIcon className="h-4 w-4" />
                   Período de Afastamento
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="unidade_afastamento"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unidade</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || "dias"}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="dias">Dias</SelectItem>
+                            <SelectItem value="horas">Horas</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {watchUnidadeAfastamento === "horas" ? (
+                    <FormField
+                      control={form.control}
+                      name="horas_afastamento"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Horas</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="Horas" 
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormField
+                      control={form.control}
+                      name="dias_afastamento"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Dias</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="Dias" 
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  
                   <FormField
                     control={form.control}
                     name="data_inicio_afastamento"
@@ -483,24 +828,6 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="dias_afastamento"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Dias</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="Dias" 
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
                 {/* CID */}
@@ -527,65 +854,91 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   />
 
                   {watchContemCid && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <>
                       <FormField
                         control={form.control}
-                        name="cid_codigo"
+                        name="cid_autorizado"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Código CID</FormLabel>
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-accent bg-accent/50 p-3">
+                            <div className="space-y-0.5">
+                              <FormLabel className="flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                                CID autorizado pelo paciente?
+                              </FormLabel>
+                              <FormDescription className="text-xs">
+                                Conforme CFM, o CID só pode constar mediante autorização
+                              </FormDescription>
+                            </div>
                             <FormControl>
-                              <Input placeholder="F32.0" {...field} />
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
                             </FormControl>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="grupo_clinico"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Grupo Clínico</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="cid_codigo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Código CID</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
+                                <Input placeholder="F32.0" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                {Object.entries(GRUPO_CLINICO_LABELS).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="nexo_trabalho"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nexo com Trabalho</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {Object.entries(NEXO_TRABALHO_LABELS).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="grupo_clinico"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Grupo Clínico</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {Object.entries(GRUPO_CLINICO_LABELS).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="nexo_trabalho"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nexo com Trabalho</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {Object.entries(NEXO_TRABALHO_LABELS).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -654,53 +1007,6 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                 />
               </div>
             )}
-
-            {/* Upload */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Documento
-              </h3>
-              <div
-                {...getRootProps()}
-                className={cn(
-                  "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-                  isDragActive 
-                    ? "border-primary bg-primary/5" 
-                    : "border-muted-foreground/25 hover:border-primary/50"
-                )}
-              >
-                <input {...getInputProps()} />
-                {file ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span className="text-sm">{file.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFile(null);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Arraste o arquivo ou clique para selecionar
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PDF ou imagem até 20MB
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Observações */}
             <FormField
