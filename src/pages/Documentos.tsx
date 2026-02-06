@@ -365,6 +365,7 @@ const Documentos = () => {
               }}
               deleting={deleting}
               initialColaboradorId={colaboradorIdFromUrl}
+              getSignedUrl={getSignedUrl}
             />
           </motion.div>
         </TabsContent>
