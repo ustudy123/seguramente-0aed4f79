@@ -30,21 +30,26 @@ export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew }: Adm
   const departamentos = [
     ...new Set(
       admissoes
-        .map((a) => a.dadosProfissionais.departamento)
+        .map((a) => a.dadosProfissionais?.departamento)
         .filter((dep): dep is string => typeof dep === 'string' && dep.trim().length > 0)
     ),
   ];
 
   const filteredAdmissoes = admissoes.filter(admissao => {
-    const matchesSearch = admissao.dadosPessoais.nomeCompleto
+    const nomeCompleto = admissao.dadosPessoais?.nomeCompleto || '';
+    const cargo = admissao.dadosProfissionais?.cargo || '';
+    const cpf = admissao.dadosPessoais?.cpf || '';
+    const departamento = admissao.dadosProfissionais?.departamento || '';
+
+    const matchesSearch = nomeCompleto
       .toLowerCase()
       .includes(searchTerm.toLowerCase()) ||
-      admissao.dadosProfissionais.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      admissao.dadosPessoais.cpf.includes(searchTerm);
+      cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cpf.includes(searchTerm);
 
     const matchesStatus = statusFilter === 'todos' || admissao.status === statusFilter;
     const matchesDepartamento = departamentoFilter === 'todos' || 
-      admissao.dadosProfissionais.departamento === departamentoFilter;
+      departamento === departamentoFilter;
 
     return matchesSearch && matchesStatus && matchesDepartamento;
   });
