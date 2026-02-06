@@ -162,7 +162,15 @@ export default function QuestionarioPsicossocial() {
       toast.success("Respostas enviadas com sucesso!");
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
-      toast.error("Erro ao enviar respostas. Tente novamente.");
+
+      // Mostrar erro real (PostgrestError / Error / string)
+      const anyErr = err as unknown as { message?: string; details?: string; hint?: string; code?: string };
+      const message =
+        anyErr?.message ||
+        (typeof err === "string" ? err : "Erro ao enviar respostas. Tente novamente.");
+
+      const extra = [anyErr?.code, anyErr?.details, anyErr?.hint].filter(Boolean).join(" • ");
+      toast.error(extra ? `${message} (${extra})` : message);
     } finally {
       setSubmitting(false);
     }
