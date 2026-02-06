@@ -9,13 +9,13 @@ export type CampanhaPsicossocialStatus = 'rascunho' | 'ativa' | 'encerrada';
 export type ConvitePsicossocialStatus = 'pendente' | 'iniciado' | 'concluido' | 'expirado';
 export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
 
-// Escala padrão de respostas
+// Escala padrão de respostas (0 a 4)
 export const ESCALA_RESPOSTAS = [
-  { valor: 1, label: 'Nunca', emoji: '😊', cor: 'text-emerald-500' },
-  { valor: 2, label: 'Raramente', emoji: '🙂', cor: 'text-green-500' },
-  { valor: 3, label: 'Às vezes', emoji: '😐', cor: 'text-amber-500' },
-  { valor: 4, label: 'Frequentemente', emoji: '😟', cor: 'text-orange-500' },
-  { valor: 5, label: 'Sempre', emoji: '😰', cor: 'text-red-500' },
+  { valor: 0, label: 'Nunca', emoji: '😊', cor: 'text-emerald-500' },
+  { valor: 1, label: 'Raramente', emoji: '🙂', cor: 'text-green-500' },
+  { valor: 2, label: 'Às vezes', emoji: '😐', cor: 'text-amber-500' },
+  { valor: 3, label: 'Frequentemente', emoji: '😟', cor: 'text-orange-500' },
+  { valor: 4, label: 'Sempre', emoji: '😰', cor: 'text-red-500' },
 ] as const;
 
 // Interface para pergunta
@@ -104,6 +104,7 @@ export interface IndicadoresPsicossociais {
   IBD_S: number; // Índice Boreout
   IREC_S: number; // Índice Recuperação
   ICOP_S: number; // Índice Clareza Organizacional
+  INOT_S?: number; // Índice de Risco do Trabalho Noturno (quando aplicável)
   detalhes: {
     bloco: string;
     media: number;
@@ -124,6 +125,7 @@ export interface EstatisticasCampanha {
   media_IBD_S?: number;
   media_IREC_S?: number;
   media_ICOP_S?: number;
+  media_INOT_S?: number;
 }
 
 // Dados para criar campanha
@@ -160,12 +162,12 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
     id: 'bloco_1',
     numero: 1,
     titulo: 'Demandas Quantitativas e Ritmo de Trabalho',
-    descricao: 'Avaliação de carga de trabalho, pressão por tempo e ritmo imposto',
+    descricao: 'Carga, pressão por tempo, volume',
     objetivo: 'Identificar sobrecarga e pressão no trabalho',
     perguntas: [
       {
         id: 'p1_1',
-        texto: 'O volume de trabalho que recebo é maior do que consigo realizar no meu horário normal.',
+        texto: 'O volume de trabalho que recebo é maior do que consigo realizar dentro do meu horário normal.',
         blocoId: 'bloco_1',
         mapeamento: ['NR-01', 'NR-17', 'ISO 45003'],
       },
@@ -179,7 +181,7 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
         id: 'p1_3',
         texto: 'O ritmo do trabalho é imposto sem considerar limites físicos ou mentais.',
         blocoId: 'bloco_1',
-        mapeamento: ['NR-17', 'ISO 45003'],
+        mapeamento: ['NR-17'],
       },
       {
         id: 'p1_4',
@@ -192,13 +194,13 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
   {
     id: 'bloco_2',
     numero: 2,
-    titulo: 'Demandas Cognitivas (Esforço Mental e Atenção)',
-    descricao: 'Avaliação de exigência de atenção, concentração e tomada de decisão',
+    titulo: 'Demandas Cognitivas',
+    descricao: 'Atenção, concentração, decisões',
     objetivo: 'Identificar sobrecarga cognitiva',
     perguntas: [
       {
         id: 'p2_1',
-        texto: 'Meu trabalho exige atenção constante durante todo o tempo.',
+        texto: 'Meu trabalho exige atenção constante durante toda a jornada.',
         blocoId: 'bloco_2',
         mapeamento: ['NR-17', 'ISO 45003'],
       },
@@ -206,7 +208,7 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
         id: 'p2_2',
         texto: 'Preciso lidar com muitas informações ao mesmo tempo.',
         blocoId: 'bloco_2',
-        mapeamento: ['NR-17', 'ISO 45003'],
+        mapeamento: ['NR-17'],
       },
       {
         id: 'p2_3',
@@ -216,7 +218,7 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
       },
       {
         id: 'p2_4',
-        texto: 'Sinto dificuldade de concentração ao longo da jornada.',
+        texto: 'Sinto dificuldade de concentração ao longo do trabalho.',
         blocoId: 'bloco_2',
         mapeamento: ['NR-01', 'ISO 45003'],
       },
@@ -226,18 +228,18 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
     id: 'bloco_3',
     numero: 3,
     titulo: 'Demandas Emocionais',
-    descricao: 'Identificação de desgaste emocional decorrente do trabalho',
+    descricao: 'Desgaste emocional do trabalho',
     objetivo: 'Avaliar impacto emocional do trabalho',
     perguntas: [
       {
         id: 'p3_1',
-        texto: 'Meu trabalho envolve lidar com conflitos, reclamações ou situações emocionalmente difíceis.',
+        texto: 'Meu trabalho envolve lidar com conflitos ou situações emocionalmente difíceis.',
         blocoId: 'bloco_3',
         mapeamento: ['NR-01', 'ISO 45003'],
       },
       {
         id: 'p3_2',
-        texto: 'Preciso esconder o que realmente sinto para conseguir trabalhar.',
+        texto: 'Preciso esconder o que realmente sinto para continuar trabalhando.',
         blocoId: 'bloco_3',
         mapeamento: ['ISO 45003'],
       },
@@ -253,7 +255,7 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
     id: 'bloco_4',
     numero: 4,
     titulo: 'Autonomia, Controle e Influência',
-    descricao: 'Avaliação do grau de controle do trabalhador sobre seu trabalho',
+    descricao: 'Capacidade de decidir e organizar o trabalho',
     objetivo: 'Identificar nível de autonomia e controle',
     perguntas: [
       {
@@ -274,7 +276,7 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
         id: 'p4_3',
         texto: 'Posso fazer pausas quando sinto necessidade.',
         blocoId: 'bloco_4',
-        mapeamento: ['NR-17', 'ISO 45003'],
+        mapeamento: ['NR-17'],
         invertida: true,
       },
       {
@@ -290,7 +292,7 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
     id: 'bloco_5',
     numero: 5,
     titulo: 'Clareza de Papéis e Organização do Trabalho',
-    descricao: 'Avaliação de clareza de função, responsabilidades e conflitos de papel',
+    descricao: 'Trabalho real × prescrito',
     objetivo: 'Identificar ambiguidade e conflito de papéis',
     perguntas: [
       {
@@ -481,9 +483,9 @@ export const BLOCOS_DINAMICOS: BlocoPsicossocial[] = [
   {
     id: 'cet_noturno',
     numero: 11,
-    titulo: 'Trabalho Noturno / 3º Turno',
-    descricao: 'Avaliação específica para trabalhadores noturnos',
-    objetivo: 'Identificar impactos do trabalho noturno',
+    titulo: 'Ritmo Biológico, Sono e Fadiga – 3º Turno',
+    descricao: 'Avaliação específica de riscos do trabalho noturno (ativado automaticamente conforme jornada cadastrada)',
+    objetivo: 'Identificar impactos do trabalho noturno na saúde, sono e convivência social',
     dinamico: true,
     condicao: 'trabalho_noturno',
     perguntas: [
@@ -495,15 +497,40 @@ export const BLOCOS_DINAMICOS: BlocoPsicossocial[] = [
       },
       {
         id: 'cet_n2',
-        texto: 'Sinto impacto do trabalho noturno na minha saúde.',
+        texto: 'Tenho dificuldade para manter um padrão regular de sono nos dias de trabalho.',
+        blocoId: 'cet_noturno',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'cet_n3',
+        texto: 'Sinto sonolência durante o turno de trabalho.',
+        blocoId: 'cet_noturno',
+        mapeamento: ['NR-17', 'ISO 45003'],
+      },
+      {
+        id: 'cet_n4',
+        texto: 'Já cometi erros ou quase-erros por cansaço ou sono.',
+        blocoId: 'cet_noturno',
+        mapeamento: ['NR-01', 'NR-17'],
+      },
+      {
+        id: 'cet_n5',
+        texto: 'Consigo recuperar adequadamente o sono nos dias de folga.',
+        blocoId: 'cet_noturno',
+        mapeamento: ['NR-17', 'ISO 45003'],
+        invertida: true,
+      },
+      {
+        id: 'cet_n6',
+        texto: 'Sinto impacto do trabalho noturno na minha saúde física ou mental.',
         blocoId: 'cet_noturno',
         mapeamento: ['NR-01'],
       },
       {
-        id: 'cet_n3',
-        texto: 'Tenho dificuldade de recuperação física e mental após o turno.',
+        id: 'cet_n7',
+        texto: 'O trabalho noturno dificulta minha convivência social ou familiar.',
         blocoId: 'cet_noturno',
-        mapeamento: ['NR-17', 'ISO 45003'],
+        mapeamento: ['ISO 45003'],
       },
     ],
   },
