@@ -165,7 +165,8 @@ export function useAtestados() {
         .from("atestados" as never)
         .insert({
           tenant_id: tenantId,
-          colaborador_id: colaboradorId || null,
+          // Não vincular colaborador_id pois admissões não são profiles
+          colaborador_id: null,
           colaborador_nome: formData.colaborador_nome,
           colaborador_cpf: formData.colaborador_cpf,
           colaborador_cargo: formData.colaborador_cargo,
