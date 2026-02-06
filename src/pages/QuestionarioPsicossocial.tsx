@@ -147,7 +147,7 @@ export default function QuestionarioPsicossocial() {
   };
 
   const handleSubmit = async () => {
-    if (!convite || Object.keys(respostas).length < totalPerguntas) {
+    if (!convite || !campanha || Object.keys(respostas).length < totalPerguntas) {
       toast.error("Por favor, responda todas as perguntas");
       return;
     }
@@ -155,7 +155,9 @@ export default function QuestionarioPsicossocial() {
     setSubmitting(true);
     try {
       const tempoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-      await salvarRespostaPublica(convite, respostas, tempoSegundos);
+      // Passar o convite com a campanha anexada para calcular indicadores corretamente
+      const conviteCompleto = { ...convite, campanha };
+      await salvarRespostaPublica(conviteCompleto, respostas, tempoSegundos);
       setCompleted(true);
       toast.success("Respostas enviadas com sucesso!");
     } catch (err) {
