@@ -6,6 +6,9 @@
 
 // Enums
 export type CampanhaPsicossocialStatus = 'rascunho' | 'ativa' | 'encerrada';
+export type CampanhaPsicossocialTipo = 'regular' | 'extraordinaria';
+export type CampanhaPeriodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anual';
+export type EventoGatilhoTipo = 'acidente' | 'denuncia' | 'reestruturacao' | 'conflito' | 'ia_sugestao' | 'solicitacao_colaborador';
 export type ConvitePsicossocialStatus = 'pendente' | 'iniciado' | 'concluido' | 'expirado';
 export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
 
@@ -46,6 +49,8 @@ export interface CampanhaPsicossocial {
   nome: string;
   descricao?: string;
   status: CampanhaPsicossocialStatus;
+  tipo: CampanhaPsicossocialTipo; // regular ou extraordinária
+  periodicidade?: CampanhaPeriodicidade; // Para campanhas regulares
   data_inicio: string;
   data_fim: string;
   anonimo: boolean;
@@ -55,6 +60,11 @@ export interface CampanhaPsicossocial {
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];
+  // Campos para reaplicação controlada
+  motivo_extraordinaria?: string; // Motivo da reaplicação
+  evento_gatilho_tipo?: EventoGatilhoTipo; // Tipo do evento que disparou
+  evento_gatilho_id?: string; // ID do evento relacionado
+  campanha_anterior_id?: string; // Referência para comparação
   criado_por?: string;
   criado_por_nome?: string;
   created_at: string;
@@ -136,6 +146,8 @@ export interface EstatisticasCampanha {
 export interface NovaCampanha {
   nome: string;
   descricao?: string;
+  tipo?: CampanhaPsicossocialTipo;
+  periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;
   anonimo: boolean;
@@ -145,6 +157,11 @@ export interface NovaCampanha {
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];
+  // Campos para reaplicação extraordinária
+  motivo_extraordinaria?: string;
+  evento_gatilho_tipo?: EventoGatilhoTipo;
+  evento_gatilho_id?: string;
+  campanha_anterior_id?: string;
 }
 
 // Dados para gerar convites

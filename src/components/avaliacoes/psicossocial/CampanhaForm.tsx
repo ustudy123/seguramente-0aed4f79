@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, UserCheck, FileText, Info } from "lucide-react";
+import { Brain, Shield, AlertTriangle, UserCheck, FileText, Info, Calendar, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,8 +30,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
+import { BLOCOS_DINAMICOS, type CampanhaPsicossocial } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 
 const MENSAGEM_INSTITUCIONAL_PADRAO = `Você pode optar por se identificar caso deseje acompanhamento individual.
@@ -39,9 +46,20 @@ Sua identificação será utilizada apenas para ações de cuidado e não para p
 
 const POLITICA_USO_DADOS_PADRAO = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Os dados são tratados de acordo com a LGPD e as respostas individuais não serão utilizadas para decisões punitivas.`;
 
+const MOTIVOS_EXTRAORDINARIA = [
+  { value: 'acidente', label: 'Acidente de trabalho' },
+  { value: 'denuncia', label: 'Denúncia grave' },
+  { value: 'reestruturacao', label: 'Reestruturação organizacional' },
+  { value: 'conflito', label: 'Conflito relevante' },
+  { value: 'ia_sugestao', label: 'Sugestão da IA (preventivo)' },
+  { value: 'solicitacao_colaborador', label: 'Solicitação de colaborador' },
+];
+
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
+  tipo: z.enum(['regular', 'extraordinaria']).default('regular'),
+  periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().min(1, "Data de término é obrigatória"),
   anonimo: z.boolean().default(true),
@@ -49,6 +67,9 @@ const formSchema = z.object({
   mensagem_institucional: z.string().optional(),
   politica_uso_dados: z.string().optional(),
   blocos_dinamicos: z.array(z.string()).default([]),
+  motivo_extraordinaria: z.string().optional(),
+  evento_gatilho_tipo: z.enum(['acidente', 'denuncia', 'reestruturacao', 'conflito', 'ia_sugestao', 'solicitacao_colaborador']).optional(),
+  campanha_anterior_id: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -56,32 +77,41 @@ type FormValues = z.infer<typeof formSchema>;
 interface CampanhaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  campanhaAnterior?: CampanhaPsicossocial; // Para reaplicação baseada em campanha anterior
 }
 
-export function CampanhaForm({ open, onOpenChange }: CampanhaFormProps) {
-  const { criarCampanha } = usePsicossocial();
+export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaFormProps) {
+  const { criarCampanha, campanhas } = usePsicossocial();
+
+  const isReaplicacao = !!campanhaAnterior;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: "",
+      nome: isReaplicacao ? `Reaplicação - ${campanhaAnterior.nome}` : "",
       descricao: "",
+      tipo: isReaplicacao ? 'extraordinaria' : 'regular',
+      periodicidade: 'trimestral',
       data_inicio: format(new Date(), "yyyy-MM-dd"),
       data_fim: format(addDays(new Date(), 30), "yyyy-MM-dd"),
-      anonimo: true,
-      permite_identificacao_voluntaria: true,
-      mensagem_institucional: MENSAGEM_INSTITUCIONAL_PADRAO,
-      politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
-      blocos_dinamicos: [],
+      anonimo: campanhaAnterior?.anonimo ?? true,
+      permite_identificacao_voluntaria: campanhaAnterior?.permite_identificacao_voluntaria ?? true,
+      mensagem_institucional: campanhaAnterior?.mensagem_institucional ?? MENSAGEM_INSTITUCIONAL_PADRAO,
+      politica_uso_dados: campanhaAnterior?.politica_uso_dados ?? POLITICA_USO_DADOS_PADRAO,
+      blocos_dinamicos: campanhaAnterior?.blocos_dinamicos ?? [],
+      campanha_anterior_id: campanhaAnterior?.id,
     },
   });
 
   const anonimo = form.watch("anonimo");
+  const tipo = form.watch("tipo");
 
   const onSubmit = async (data: FormValues) => {
     await criarCampanha.mutateAsync({
       nome: data.nome,
       descricao: data.descricao,
+      tipo: data.tipo,
+      periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
       data_inicio: data.data_inicio,
       data_fim: data.data_fim,
       anonimo: data.anonimo,
@@ -89,26 +119,188 @@ export function CampanhaForm({ open, onOpenChange }: CampanhaFormProps) {
       mensagem_institucional: data.anonimo && data.permite_identificacao_voluntaria ? data.mensagem_institucional : undefined,
       politica_uso_dados: data.politica_uso_dados,
       blocos_dinamicos: data.blocos_dinamicos,
+      motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
+      evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
+      campanha_anterior_id: data.campanha_anterior_id,
     });
     form.reset();
     onOpenChange(false);
   };
+
+  // Campanhas anteriores para seleção (apenas regulares encerradas)
+  const campanhasAnteriores = campanhas.filter(c => c.status === 'encerrada');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-purple-600" />
-            Nova Campanha Psicossocial
+            {isReaplicacao ? (
+              <RefreshCw className="h-5 w-5 text-amber-600" />
+            ) : (
+              <Brain className="h-5 w-5 text-purple-600" />
+            )}
+            {isReaplicacao ? 'Reaplicação Extraordinária' : 'Nova Campanha Psicossocial'}
           </DialogTitle>
           <DialogDescription>
-            Configure uma nova campanha de avaliação de riscos psicossociais
+            {isReaplicacao 
+              ? 'Configure uma reaplicação controlada baseada na campanha anterior'
+              : 'Configure uma nova campanha de avaliação de riscos psicossociais'
+            }
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Tipo de Campanha */}
+            {!isReaplicacao && (
+              <FormField
+                control={form.control}
+                name="tipo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Campanha *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="regular">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            <span>Regular (ciclo programado)</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="extraordinaria">
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="h-4 w-4 text-amber-600" />
+                            <span>Extraordinária (reaplicação controlada)</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {tipo === 'regular' 
+                        ? 'Avaliação periódica programada (trimestral, semestral, anual)'
+                        : 'Reaplicação sob demanda por evento crítico ou necessidade'
+                      }
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Periodicidade - só para regular */}
+            {tipo === 'regular' && (
+              <FormField
+                control={form.control}
+                name="periodicidade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Periodicidade</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a periodicidade" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="trimestral">Trimestral (recomendado)</SelectItem>
+                        <SelectItem value="semestral">Semestral</SelectItem>
+                        <SelectItem value="anual">Anual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Define a frequência do ciclo de avaliações
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Campos de Reaplicação Extraordinária */}
+            {tipo === 'extraordinaria' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="evento_gatilho_tipo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        Motivo da Reaplicação *
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o motivo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {MOTIVOS_EXTRAORDINARIA.map(motivo => (
+                            <SelectItem key={motivo.value} value={motivo.value}>
+                              {motivo.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Tipo de evento que motivou esta reaplicação
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="motivo_extraordinaria"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descrição do Motivo</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Descreva o evento ou situação que motivou esta reaplicação..."
+                          rows={2}
+                          {...field} 
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {!isReaplicacao && campanhasAnteriores.length > 0 && (
+                  <FormField
+                    control={form.control}
+                    name="campanha_anterior_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Campanha Base para Comparação</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma campanha anterior (opcional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {campanhasAnteriores.map(c => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.nome} ({format(new Date(c.data_fim), 'dd/MM/yyyy')})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Permite comparar resultados antes × depois
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </>
+            )}
             {/* Nome */}
             <FormField
               control={form.control}
