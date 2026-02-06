@@ -3524,6 +3524,7 @@ export type Database = {
         Row: {
           anonimo: boolean
           blocos_dinamicos: Json | null
+          campanha_anterior_id: string | null
           cargos_ids: string[] | null
           created_at: string
           criado_por: string | null
@@ -3532,18 +3533,24 @@ export type Database = {
           data_inicio: string
           departamentos_ids: string[] | null
           descricao: string | null
+          evento_gatilho_id: string | null
+          evento_gatilho_tipo: string | null
           id: string
           mensagem_institucional: string | null
+          motivo_extraordinaria: string | null
           nome: string
+          periodicidade: string | null
           permite_identificacao_voluntaria: boolean
           politica_uso_dados: string | null
           status: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
+          tipo: string
           updated_at: string
         }
         Insert: {
           anonimo?: boolean
           blocos_dinamicos?: Json | null
+          campanha_anterior_id?: string | null
           cargos_ids?: string[] | null
           created_at?: string
           criado_por?: string | null
@@ -3552,18 +3559,24 @@ export type Database = {
           data_inicio: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          evento_gatilho_id?: string | null
+          evento_gatilho_tipo?: string | null
           id?: string
           mensagem_institucional?: string | null
+          motivo_extraordinaria?: string | null
           nome: string
+          periodicidade?: string | null
           permite_identificacao_voluntaria?: boolean
           politica_uso_dados?: string | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
+          tipo?: string
           updated_at?: string
         }
         Update: {
           anonimo?: boolean
           blocos_dinamicos?: Json | null
+          campanha_anterior_id?: string | null
           cargos_ids?: string[] | null
           created_at?: string
           criado_por?: string | null
@@ -3572,16 +3585,28 @@ export type Database = {
           data_inicio?: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          evento_gatilho_id?: string | null
+          evento_gatilho_tipo?: string | null
           id?: string
           mensagem_institucional?: string | null
+          motivo_extraordinaria?: string | null
           nome?: string
+          periodicidade?: string | null
           permite_identificacao_voluntaria?: boolean
           politica_uso_dados?: string | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id?: string
+          tipo?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "questionario_psicossocial_campanhas_campanha_anterior_id_fkey"
+            columns: ["campanha_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questionario_psicossocial_campanhas_tenant_id_fkey"
             columns: ["tenant_id"]
