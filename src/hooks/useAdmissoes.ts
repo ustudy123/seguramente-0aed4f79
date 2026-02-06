@@ -367,7 +367,7 @@ export function useAdmissoes() {
     documentoId: string,
     file: File
   ): Promise<string> => {
-    if (!tenantId) throw new Error('Tenant não encontrado');
+    if (!tenantId || !user) throw new Error('Tenant ou usuário não encontrado');
 
     const filePath = `${tenantId}/admissoes/${admissaoId}/${documentoId}-${file.name}`;
 
@@ -389,7 +389,97 @@ export function useAdmissoes() {
       },
     });
 
+    // === SINCRONIZAÇÃO COM MÓDULO DOCUMENTOS ===
+    // Buscar dados da admissão
+    const { data: admissaoData, error: admissaoError } = await supabase
+      .from('admissoes')
+      .select('nome_completo, cpf')
+      .eq('id', admissaoId)
+      .single();
+
+    if (admissaoError) {
+      console.error('Erro ao buscar dados da admissão para sincronização:', admissaoError);
+    }
+
+    // Buscar dados do documento da admissão
+    const { data: documentoData, error: docError } = await supabase
+      .from('admissao_documentos')
+      .select('nome, tipo')
+      .eq('id', documentoId)
+      .single();
+
+    if (docError) {
+      console.error('Erro ao buscar dados do documento para sincronização:', docError);
+    }
+
+    // Verificar se já existe documento com mesmo storage_path para evitar duplicação
+    const { data: existingDoc } = await supabase
+      .from('documentos')
+      .select('id')
+      .eq('storage_path', filePath)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    // Inserir na tabela documentos somente se não existir
+    if (!existingDoc && admissaoData && documentoData) {
+      const { error: insertError } = await supabase.from('documentos').insert({
+        tenant_id: tenantId,
+        colaborador_id: null, // Colaborador ainda não tem profile
+        colaborador_nome: admissaoData.nome_completo,
+        colaborador_cpf: admissaoData.cpf,
+        nome_arquivo: filePath,
+        nome_original: file.name,
+        tipo: documentoData.nome, // Ex: "RG", "CPF", "CTPS"
+        tamanho: file.size,
+        mime_type: file.type,
+        storage_path: filePath,
+        data_validade: null,
+        status: 'valido',
+        observacoes: 'Documento da admissão',
+        criado_por: user.id,
+        criado_por_nome: profile?.nome_completo || user.email || 'Sistema',
+      });
+
+      if (insertError) {
+        console.error('Erro ao sincronizar documento com módulo documentos:', insertError);
+      }
+    }
+
     return filePath;
+  };
+
+  // Remove document from admission and documents module
+  const removerDocumento = async (
+    documentoId: string,
+    storagePath: string
+  ): Promise<void> => {
+    if (!tenantId) throw new Error('Tenant não encontrado');
+
+    // Remove file from storage
+    if (storagePath) {
+      await supabase.storage
+        .from('documentos')
+        .remove([storagePath]);
+
+      // Remove from documentos table (sincronização)
+      await supabase
+        .from('documentos')
+        .delete()
+        .eq('storage_path', storagePath)
+        .eq('tenant_id', tenantId);
+    }
+
+    // Update admissao_documentos to clear file data
+    await atualizarDocumento.mutateAsync({
+      documentoId,
+      dados: {
+        arquivo_url: null,
+        arquivo_nome: null,
+        arquivo_tamanho: null,
+        status: 'pendente',
+        data_envio: null,
+      },
+    });
   };
 
   // Get signed URL for viewing a document
@@ -424,6 +514,7 @@ export function useAdmissoes() {
     excluirAdmissao: excluirAdmissao.mutateAsync,
     buscarAdmissao,
     uploadDocumento,
+    removerDocumento,
     getDocumentoUrl,
     isPending:
       criarAdmissao.isPending ||
