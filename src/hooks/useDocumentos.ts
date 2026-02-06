@@ -26,6 +26,7 @@ export interface Documento {
 }
 
 export const TIPOS_DOCUMENTO = [
+  "Atestado",
   "Contrato",
   "ASO",
   "Certificado",
