@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   FileText, 
@@ -47,6 +48,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useDocumentos, TIPOS_DOCUMENTO, type Documento } from "@/hooks/useDocumentos";
 import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
+import { ColaboradorFolderView } from "@/components/documentos/ColaboradorFolderView";
+import { Users } from "lucide-react";
 
 const statusConfig = {
   valido: {
@@ -67,11 +70,16 @@ const statusConfig = {
 };
 
 const Documentos = () => {
+  const [searchParams] = useSearchParams();
+  const colaboradorIdFromUrl = searchParams.get("colaborador");
+  
+  const [activeTab, setActiveTab] = useState(colaboradorIdFromUrl ? "colaboradores" : "todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [tipoFilter, setTipoFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [documentoToDelete, setDocumentoToDelete] = useState<Documento | null>(null);
+  const [uploadForColaboradorId, setUploadForColaboradorId] = useState<string | undefined>(undefined);
 
   const { 
     documentos, 
@@ -82,6 +90,18 @@ const Documentos = () => {
     deleting,
     getSignedUrl,
   } = useDocumentos();
+
+  const handleOpenUpload = (colaboradorId?: string) => {
+    setUploadForColaboradorId(colaboradorId);
+    setShowUploadForm(true);
+  };
+
+  const handleCloseUpload = (open: boolean) => {
+    setShowUploadForm(open);
+    if (!open) {
+      setUploadForColaboradorId(undefined);
+    }
+  };
 
   const filteredDocs = documentos.filter((doc) => {
     const matchesSearch = 
@@ -130,7 +150,7 @@ const Documentos = () => {
           <h1 className="text-2xl font-bold text-foreground">Documentos</h1>
           <p className="text-muted-foreground">Gestão de arquivos e documentos</p>
         </div>
-        <Button className="gradient-primary shadow-glow" onClick={() => setShowUploadForm(true)}>
+        <Button className="gradient-primary shadow-glow" onClick={() => handleOpenUpload()}>
           <Upload className="w-4 h-4 mr-2" />
           Upload de Documento
         </Button>
@@ -173,7 +193,7 @@ const Documentos = () => {
       </motion.div>
 
       {/* Tabs */}
-      <Tabs defaultValue="todos" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -181,6 +201,10 @@ const Documentos = () => {
         >
           <TabsList className="bg-muted/50">
             <TabsTrigger value="todos">Todos</TabsTrigger>
+            <TabsTrigger value="colaboradores" className="gap-1">
+              <Users className="w-4 h-4" />
+              Por Colaborador
+            </TabsTrigger>
             <TabsTrigger value="categorias">Por Categoria</TabsTrigger>
           </TabsList>
         </motion.div>
@@ -248,7 +272,7 @@ const Documentos = () => {
                     : "Nenhum documento encontrado com os filtros aplicados."}
                 </p>
                 {documentos.length === 0 && (
-                  <Button onClick={() => setShowUploadForm(true)}>
+                  <Button onClick={() => handleOpenUpload()}>
                     <Upload className="w-4 h-4 mr-2" />
                     Enviar Primeiro Documento
                   </Button>
@@ -327,6 +351,24 @@ const Documentos = () => {
           </motion.div>
         </TabsContent>
 
+        <TabsContent value="colaboradores">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <ColaboradorFolderView
+              documentos={documentos}
+              onUpload={handleOpenUpload}
+              onDownload={handleDownload}
+              onDelete={async (doc) => {
+                await deleteDocumento(doc);
+              }}
+              deleting={deleting}
+              initialColaboradorId={colaboradorIdFromUrl}
+            />
+          </motion.div>
+        </TabsContent>
+
         <TabsContent value="categorias">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -373,7 +415,8 @@ const Documentos = () => {
       {/* Upload Form Modal */}
       <DocumentoUploadForm
         open={showUploadForm}
-        onOpenChange={setShowUploadForm}
+        onOpenChange={handleCloseUpload}
+        preSelectedColaboradorId={uploadForColaboradorId}
       />
 
       {/* Delete Confirmation */}

@@ -54,9 +54,10 @@ type FormData = z.infer<typeof formSchema>;
 interface DocumentoUploadFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preSelectedColaboradorId?: string;
 }
 
-export function DocumentoUploadForm({ open, onOpenChange }: DocumentoUploadFormProps) {
+export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId }: DocumentoUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,12 +68,18 @@ export function DocumentoUploadForm({ open, onOpenChange }: DocumentoUploadFormP
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      colaboradorId: "",
+      colaboradorId: preSelectedColaboradorId || "",
       tipo: "",
       dataValidade: "",
       observacoes: "",
     },
   });
+
+  // Atualizar quando preSelectedColaboradorId mudar
+  const { setValue } = form;
+  if (preSelectedColaboradorId && form.getValues("colaboradorId") !== preSelectedColaboradorId) {
+    setValue("colaboradorId", preSelectedColaboradorId);
+  }
 
   const handleFileSelect = (file: File | null) => {
     if (!file) return;
