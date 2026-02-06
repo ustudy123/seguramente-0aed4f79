@@ -1,0 +1,183 @@
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { motion } from "framer-motion";
+import { 
+  AlertTriangle, 
+  Clock, 
+  Calendar, 
+  Shield,
+  Brain,
+  CheckCircle2,
+  Bell
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { AlertaSaude, Afastamento, BeneficioINSS } from "@/types/atestado";
+import { GRUPO_CLINICO_LABELS } from "@/types/atestado";
+
+interface AtestadoAlertasProps {
+  alertas: AlertaSaude[];
+  afastamentos: Afastamento[];
+  beneficios: BeneficioINSS[];
+  onResolveAlerta: (alertaId: string) => Promise<void>;
+}
+
+export function AtestadoAlertas({ 
+  alertas, 
+  afastamentos, 
+  beneficios,
+  onResolveAlerta 
+}: AtestadoAlertasProps) {
+  // Build alerts from data
+  const alertasCalculados = [
+    // Afastamentos próximos de 15 dias
+    ...afastamentos
+      .filter(a => a.alerta_15_dias && a.status === 'ativo' && !a.alerta_30_dias)
+      .map(a => ({
+        id: `15dias-${a.id}`,
+        tipo: '15_dias',
+        titulo: 'Afastamento próximo de 15 dias',
+        descricao: `${a.colaborador_nome} - ${a.dias_totais} dias de afastamento`,
+        prioridade: 'alta' as const,
+        colaborador_nome: a.colaborador_nome,
+        icon: Clock,
+        color: 'text-amber-600 dark:text-amber-400',
+        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+      })),
+    
+    // Afastamentos >= 30 dias sem ASO
+    ...afastamentos
+      .filter(a => a.aso_retorno_pendente)
+      .map(a => ({
+        id: `aso-${a.id}`,
+        tipo: 'aso_retorno',
+        titulo: 'ASO de Retorno Pendente',
+        descricao: `${a.colaborador_nome} - Afastamento ≥30 dias requer ASO de retorno ao trabalho`,
+        prioridade: 'critica' as const,
+        colaborador_nome: a.colaborador_nome,
+        icon: AlertTriangle,
+        color: 'text-red-600 dark:text-red-400',
+        bgColor: 'bg-red-100 dark:bg-red-900/30',
+      })),
+    
+    // Benefícios B91 ativos (estabilidade)
+    ...beneficios
+      .filter(b => b.gera_estabilidade && b.data_fim_estabilidade && new Date(b.data_fim_estabilidade) > new Date())
+      .map(b => ({
+        id: `b91-${b.id}`,
+        tipo: 'estabilidade',
+        titulo: 'Colaborador em Estabilidade',
+        descricao: `${b.colaborador_nome} - Estabilidade até ${format(new Date(b.data_fim_estabilidade!), "dd/MM/yyyy", { locale: ptBR })}`,
+        prioridade: 'alta' as const,
+        colaborador_nome: b.colaborador_nome,
+        icon: Shield,
+        color: 'text-purple-600 dark:text-purple-400',
+        bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+      })),
+    
+    // Alertas do banco
+    ...alertas.map(a => ({
+      id: a.id,
+      tipo: a.tipo,
+      titulo: a.titulo,
+      descricao: a.descricao || '',
+      prioridade: a.prioridade,
+      colaborador_nome: a.colaborador_nome,
+      icon: Bell,
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+      fromDb: true,
+    })),
+  ];
+
+  const prioridadeOrder = { critica: 0, alta: 1, media: 2, baixa: 3 };
+  const sortedAlertas = alertasCalculados.sort((a, b) => 
+    prioridadeOrder[a.prioridade] - prioridadeOrder[b.prioridade]
+  );
+
+  if (sortedAlertas.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Alertas de Saúde
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">
+              Nenhum alerta pendente
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Bell className="h-4 w-4" />
+          Alertas de Saúde
+          <Badge variant="destructive" className="ml-auto">
+            {sortedAlertas.length}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-2 p-4 pt-0">
+            {sortedAlertas.map((alerta, index) => (
+              <motion.div
+                key={alerta.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className={`p-3 rounded-lg border ${alerta.bgColor}`}
+              >
+                <div className="flex items-start gap-3">
+                  <alerta.icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${alerta.color}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium">{alerta.titulo}</p>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[10px] ${
+                          alerta.prioridade === 'critica' 
+                            ? 'border-red-500 text-red-600' 
+                            : alerta.prioridade === 'alta'
+                            ? 'border-amber-500 text-amber-600'
+                            : 'border-gray-500 text-gray-600'
+                        }`}
+                      >
+                        {alerta.prioridade}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {alerta.descricao}
+                    </p>
+                  </div>
+                  {'fromDb' in alerta && alerta.fromDb && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-shrink-0 h-7 text-xs"
+                      onClick={() => onResolveAlerta(alerta.id)}
+                    >
+                      Resolver
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+}

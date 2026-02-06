@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  Stethoscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -57,6 +58,7 @@ const menuItems: MenuItem[] = [
   { title: "Admissão", icon: UserPlus, path: "/admissao" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
   { title: "Avaliações", icon: Star, path: "/avaliacoes" },
+  { title: "Atestados", icon: Stethoscope, path: "/atestados" },
   { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
   { title: "EPIs", icon: Shield, path: "/epis" },
   { title: "Ergonomia", icon: Activity, path: "/ergonomia" },

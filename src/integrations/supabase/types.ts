@@ -358,6 +358,334 @@ export type Database = {
           },
         ]
       }
+      afastamentos: {
+        Row: {
+          alerta_15_dias: boolean | null
+          alerta_30_dias: boolean | null
+          aso_retorno_id: string | null
+          aso_retorno_pendente: boolean | null
+          beneficio_inss_id: string | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          dias_totais: number | null
+          evento_saude_id: string | null
+          id: string
+          motivo_principal: Database["public"]["Enums"]["grupo_clinico"] | null
+          nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes: string | null
+          status: Database["public"]["Enums"]["afastamento_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          alerta_15_dias?: boolean | null
+          alerta_30_dias?: boolean | null
+          aso_retorno_id?: string | null
+          aso_retorno_pendente?: boolean | null
+          beneficio_inss_id?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          dias_totais?: number | null
+          evento_saude_id?: string | null
+          id?: string
+          motivo_principal?: Database["public"]["Enums"]["grupo_clinico"] | null
+          nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["afastamento_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          alerta_15_dias?: boolean | null
+          alerta_30_dias?: boolean | null
+          aso_retorno_id?: string | null
+          aso_retorno_pendente?: boolean | null
+          beneficio_inss_id?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          dias_totais?: number | null
+          evento_saude_id?: string | null
+          id?: string
+          motivo_principal?: Database["public"]["Enums"]["grupo_clinico"] | null
+          nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["afastamento_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afastamentos_aso_retorno_fkey"
+            columns: ["aso_retorno_id"]
+            isOneToOne: false
+            referencedRelation: "atestados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afastamentos_beneficio_inss_fkey"
+            columns: ["beneficio_inss_id"]
+            isOneToOne: false
+            referencedRelation: "beneficios_inss"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afastamentos_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "afastamentos_evento_saude_fkey"
+            columns: ["evento_saude_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afastamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alertas_saude: {
+        Row: {
+          acao_gerada_id: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          descricao: string | null
+          id: string
+          lido: boolean | null
+          prioridade: string | null
+          referencia_id: string
+          referencia_tipo: string
+          resolvido: boolean | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          acao_gerada_id?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lido?: boolean | null
+          prioridade?: string | null
+          referencia_id: string
+          referencia_tipo: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          acao_gerada_id?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lido?: boolean | null
+          prioridade?: string | null
+          referencia_id?: string
+          referencia_tipo?: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_saude_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atestados: {
+        Row: {
+          afastamento_id: string | null
+          aptidao: Database["public"]["Enums"]["aptidao_ocupacional"] | null
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          cid_codigo: string | null
+          colaborador_cargo: string | null
+          colaborador_cpf: string | null
+          colaborador_departamento: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          contem_cid: boolean | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_emissao: string
+          data_fim_afastamento: string | null
+          data_inicio_afastamento: string | null
+          dias_afastamento: number | null
+          evento_saude_id: string | null
+          grupo_clinico: Database["public"]["Enums"]["grupo_clinico"] | null
+          horas_afastamento: number | null
+          id: string
+          nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes: string | null
+          observacoes_ocupacionais: string | null
+          profissional_nome: string
+          profissional_registro: string
+          profissional_tipo: string | null
+          restricoes: string | null
+          subtipo_assistencial:
+            | Database["public"]["Enums"]["atestado_subtipo_assistencial"]
+            | null
+          subtipo_ocupacional:
+            | Database["public"]["Enums"]["atestado_subtipo_ocupacional"]
+            | null
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["atestado_tipo"]
+          unidade_afastamento: string | null
+          updated_at: string
+        }
+        Insert: {
+          afastamento_id?: string | null
+          aptidao?: Database["public"]["Enums"]["aptidao_ocupacional"] | null
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          cid_codigo?: string | null
+          colaborador_cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_departamento?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          contem_cid?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao: string
+          data_fim_afastamento?: string | null
+          data_inicio_afastamento?: string | null
+          dias_afastamento?: number | null
+          evento_saude_id?: string | null
+          grupo_clinico?: Database["public"]["Enums"]["grupo_clinico"] | null
+          horas_afastamento?: number | null
+          id?: string
+          nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes?: string | null
+          observacoes_ocupacionais?: string | null
+          profissional_nome: string
+          profissional_registro: string
+          profissional_tipo?: string | null
+          restricoes?: string | null
+          subtipo_assistencial?:
+            | Database["public"]["Enums"]["atestado_subtipo_assistencial"]
+            | null
+          subtipo_ocupacional?:
+            | Database["public"]["Enums"]["atestado_subtipo_ocupacional"]
+            | null
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["atestado_tipo"]
+          unidade_afastamento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          afastamento_id?: string | null
+          aptidao?: Database["public"]["Enums"]["aptidao_ocupacional"] | null
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          cid_codigo?: string | null
+          colaborador_cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_departamento?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          contem_cid?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string
+          data_fim_afastamento?: string | null
+          data_inicio_afastamento?: string | null
+          dias_afastamento?: number | null
+          evento_saude_id?: string | null
+          grupo_clinico?: Database["public"]["Enums"]["grupo_clinico"] | null
+          horas_afastamento?: number | null
+          id?: string
+          nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes?: string | null
+          observacoes_ocupacionais?: string | null
+          profissional_nome?: string
+          profissional_registro?: string
+          profissional_tipo?: string | null
+          restricoes?: string | null
+          subtipo_assistencial?:
+            | Database["public"]["Enums"]["atestado_subtipo_assistencial"]
+            | null
+          subtipo_ocupacional?:
+            | Database["public"]["Enums"]["atestado_subtipo_ocupacional"]
+            | null
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["atestado_tipo"]
+          unidade_afastamento?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atestados_afastamento_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atestados_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "atestados_evento_saude_fkey"
+            columns: ["evento_saude_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atestados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avaliacao_9box: {
         Row: {
           avaliador_id: string | null
@@ -674,6 +1002,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "avaliacao_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beneficios_inss: {
+        Row: {
+          afastamento_id: string | null
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_alta: string | null
+          data_fim: string | null
+          data_fim_estabilidade: string | null
+          data_inicio: string
+          especie: Database["public"]["Enums"]["beneficio_inss_especie"]
+          evento_saude_id: string | null
+          gera_estabilidade: boolean | null
+          id: string
+          numero_beneficio: string | null
+          observacoes: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          afastamento_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_alta?: string | null
+          data_fim?: string | null
+          data_fim_estabilidade?: string | null
+          data_inicio: string
+          especie: Database["public"]["Enums"]["beneficio_inss_especie"]
+          evento_saude_id?: string | null
+          gera_estabilidade?: boolean | null
+          id?: string
+          numero_beneficio?: string | null
+          observacoes?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          afastamento_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_alta?: string | null
+          data_fim?: string | null
+          data_fim_estabilidade?: string | null
+          data_inicio?: string
+          especie?: Database["public"]["Enums"]["beneficio_inss_especie"]
+          evento_saude_id?: string | null
+          gera_estabilidade?: boolean | null
+          id?: string
+          numero_beneficio?: string | null
+          observacoes?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beneficios_inss_afastamento_fkey"
+            columns: ["afastamento_id"]
+            isOneToOne: false
+            referencedRelation: "afastamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beneficios_inss_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "beneficios_inss_evento_saude_fkey"
+            columns: ["evento_saude_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beneficios_inss_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1390,6 +1819,96 @@ export type Database = {
             columns: ["item_nr17_id"]
             isOneToOne: false
             referencedRelation: "ergonomia_itens_nr17"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos_saude: {
+        Row: {
+          codigo: string
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          grupo_clinico_principal:
+            | Database["public"]["Enums"]["grupo_clinico"]
+            | null
+          id: string
+          nexo_trabalho: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes: string | null
+          status: Database["public"]["Enums"]["evento_saude_status"]
+          tenant_id: string
+          titulo: string
+          total_atestados: number | null
+          total_dias_afastamento: number | null
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          grupo_clinico_principal?:
+            | Database["public"]["Enums"]["grupo_clinico"]
+            | null
+          id?: string
+          nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["evento_saude_status"]
+          tenant_id: string
+          titulo: string
+          total_atestados?: number | null
+          total_dias_afastamento?: number | null
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          grupo_clinico_principal?:
+            | Database["public"]["Enums"]["grupo_clinico"]
+            | null
+          id?: string
+          nexo_trabalho?: Database["public"]["Enums"]["nexo_trabalho"] | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["evento_saude_status"]
+          tenant_id?: string
+          titulo?: string
+          total_atestados?: number | null
+          total_dias_afastamento?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_saude_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "eventos_saude_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -3032,9 +3551,30 @@ export type Database = {
         | "aprovado"
         | "reprovado"
         | "concluido"
+      afastamento_status: "ativo" | "encerrado" | "beneficio_inss"
       app_role: "owner" | "admin" | "manager" | "user" | "superadmin"
+      aptidao_ocupacional:
+        | "apto"
+        | "apto_com_restricoes"
+        | "inapto_temporario"
+        | "inapto"
+      atestado_subtipo_assistencial:
+        | "medico"
+        | "odontologico"
+        | "psicologico"
+        | "comparecimento"
+        | "acompanhante"
+        | "acidente"
+      atestado_subtipo_ocupacional:
+        | "admissional"
+        | "periodico"
+        | "retorno_trabalho"
+        | "mudanca_funcao"
+        | "demissional"
+      atestado_tipo: "assistencial" | "ocupacional"
       avaliacao_ciclo_status: "rascunho" | "ativo" | "encerrado" | "analisando"
       avaliacao_tipo: "simples" | "360"
+      beneficio_inss_especie: "b31" | "b91"
       documento_status: "pendente" | "enviado" | "aprovado" | "rejeitado"
       entrega_status: "ativa" | "devolvido" | "extraviado" | "vencido"
       epi_status:
@@ -3056,6 +3596,19 @@ export type Database = {
         | "parcial"
         | "nao_atendido"
         | "nao_aplicavel"
+      evento_saude_status: "aberto" | "em_acompanhamento" | "encerrado"
+      grupo_clinico:
+        | "mental"
+        | "osteomuscular"
+        | "respiratorio"
+        | "cardiovascular"
+        | "digestivo"
+        | "dermatologico"
+        | "neurologico"
+        | "infeccioso"
+        | "oncologico"
+        | "endocrino"
+        | "outro"
       meta_periodo: "mensal" | "trimestral" | "semestral" | "anual"
       meta_status:
         | "nao_iniciada"
@@ -3063,6 +3616,7 @@ export type Database = {
         | "concluida"
         | "cancelada"
         | "atrasada"
+      nexo_trabalho: "nao" | "em_analise" | "sim"
       okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
@@ -3208,9 +3762,33 @@ export const Constants = {
         "reprovado",
         "concluido",
       ],
+      afastamento_status: ["ativo", "encerrado", "beneficio_inss"],
       app_role: ["owner", "admin", "manager", "user", "superadmin"],
+      aptidao_ocupacional: [
+        "apto",
+        "apto_com_restricoes",
+        "inapto_temporario",
+        "inapto",
+      ],
+      atestado_subtipo_assistencial: [
+        "medico",
+        "odontologico",
+        "psicologico",
+        "comparecimento",
+        "acompanhante",
+        "acidente",
+      ],
+      atestado_subtipo_ocupacional: [
+        "admissional",
+        "periodico",
+        "retorno_trabalho",
+        "mudanca_funcao",
+        "demissional",
+      ],
+      atestado_tipo: ["assistencial", "ocupacional"],
       avaliacao_ciclo_status: ["rascunho", "ativo", "encerrado", "analisando"],
       avaliacao_tipo: ["simples", "360"],
+      beneficio_inss_especie: ["b31", "b91"],
       documento_status: ["pendente", "enviado", "aprovado", "rejeitado"],
       entrega_status: ["ativa", "devolvido", "extraviado", "vencido"],
       epi_status: [
@@ -3235,6 +3813,20 @@ export const Constants = {
         "nao_atendido",
         "nao_aplicavel",
       ],
+      evento_saude_status: ["aberto", "em_acompanhamento", "encerrado"],
+      grupo_clinico: [
+        "mental",
+        "osteomuscular",
+        "respiratorio",
+        "cardiovascular",
+        "digestivo",
+        "dermatologico",
+        "neurologico",
+        "infeccioso",
+        "oncologico",
+        "endocrino",
+        "outro",
+      ],
       meta_periodo: ["mensal", "trimestral", "semestral", "anual"],
       meta_status: [
         "nao_iniciada",
@@ -3243,6 +3835,7 @@ export const Constants = {
         "cancelada",
         "atrasada",
       ],
+      nexo_trabalho: ["nao", "em_analise", "sim"],
       okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
