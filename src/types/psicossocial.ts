@@ -49,6 +49,9 @@ export interface CampanhaPsicossocial {
   data_inicio: string;
   data_fim: string;
   anonimo: boolean;
+  permite_identificacao_voluntaria: boolean; // Permite que colaborador opte por se identificar
+  mensagem_institucional?: string; // Mensagem personalizada sobre uso dos dados
+  politica_uso_dados?: string; // Política de uso dos dados para LGPD
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];
@@ -90,6 +93,7 @@ export interface RespostaPsicossocial {
   colaborador_id?: string;
   respostas: Record<string, number>; // { pergunta_id: valor }
   indicadores?: IndicadoresPsicossociais;
+  identificacao_voluntaria: boolean; // Se colaborador optou por se identificar
   tempo_resposta_segundos?: number;
   ip_address?: string;
   user_agent?: string;
@@ -135,6 +139,9 @@ export interface NovaCampanha {
   data_inicio: string;
   data_fim: string;
   anonimo: boolean;
+  permite_identificacao_voluntaria?: boolean;
+  mensagem_institucional?: string;
+  politica_uso_dados?: string;
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];

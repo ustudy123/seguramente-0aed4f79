@@ -172,6 +172,9 @@ export function usePsicossocial() {
           data_inicio: dados.data_inicio,
           data_fim: dados.data_fim,
           anonimo: dados.anonimo,
+          permite_identificacao_voluntaria: dados.permite_identificacao_voluntaria ?? true,
+          mensagem_institucional: dados.mensagem_institucional,
+          politica_uso_dados: dados.politica_uso_dados,
           departamentos_ids: dados.departamentos_ids,
           cargos_ids: dados.cargos_ids,
           blocos_dinamicos: dados.blocos_dinamicos,
@@ -405,7 +408,8 @@ export function usePsicossocial() {
   const salvarRespostaPublica = async (
     convite: ConvitePsicossocial & { campanha?: CampanhaPsicossocial },
     respostas: Record<string, number>,
-    tempoSegundos: number
+    tempoSegundos: number,
+    identificacaoVoluntaria: boolean = false
   ): Promise<void> => {
     // Calcular indicadores (passando blocos dinâmicos da campanha)
     const blocosDinamicos = convite.campanha?.blocos_dinamicos || [];
@@ -418,6 +422,7 @@ export function usePsicossocial() {
       colaborador_id: convite.colaborador_id,
       respostas: JSON.parse(JSON.stringify(respostas)),
       indicadores: JSON.parse(JSON.stringify(indicadores)),
+      identificacao_voluntaria: identificacaoVoluntaria,
       tempo_resposta_segundos: tempoSegundos,
       user_agent: navigator.userAgent,
       concluido_em: new Date().toISOString(),
