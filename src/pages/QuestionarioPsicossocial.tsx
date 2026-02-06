@@ -338,7 +338,7 @@ export default function QuestionarioPsicossocial() {
             <Button
               variant="ghost"
               onClick={handleProximo}
-              disabled={!respostas[perguntaAtual?.id]}
+              disabled={respostas[perguntaAtual?.id] === undefined}
             >
               Próximo
               <ChevronRight className="h-4 w-4 ml-1" />
