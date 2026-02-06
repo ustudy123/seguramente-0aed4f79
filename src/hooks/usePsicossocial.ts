@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { supabasePublic } from "@/lib/supabasePublic";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import type {
@@ -367,10 +368,11 @@ export function usePsicossocial() {
   };
 
   // ==================== FUNÇÕES PÚBLICAS (SEM AUTH) ====================
+  // Usam supabasePublic para evitar conflito de RLS com usuário logado
 
   // Buscar convite por token (público)
   const buscarConvitePorToken = async (token: string): Promise<ConvitePsicossocial & { campanha: CampanhaPsicossocial } | null> => {
-    const { data, error } = await supabase
+    const { data, error } = await supabasePublic
       .from("questionario_psicossocial_convites")
       .select(`
         *,
@@ -393,7 +395,7 @@ export function usePsicossocial() {
       updateData.concluido_em = new Date().toISOString();
     }
 
-    const { error } = await supabase
+    const { error } = await supabasePublic
       .from("questionario_psicossocial_convites")
       .update(updateData)
       .eq("token", token.toUpperCase());
@@ -423,7 +425,7 @@ export function usePsicossocial() {
       concluido_em: new Date().toISOString(),
     };
 
-    const { error } = await supabase
+    const { error } = await supabasePublic
       .from("questionario_psicossocial_respostas")
       .insert([insertData]);
 
