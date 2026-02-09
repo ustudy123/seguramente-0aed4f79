@@ -26,11 +26,9 @@ export interface Documento {
 }
 
 export const TIPOS_DOCUMENTO = [
-  "Atestado",
-  "Contrato",
-  "ASO",
-  "Certificado",
+  // Admissão
   "Ficha de Registro",
+  "Contrato",
   "CTPS",
   "RG",
   "CPF",
@@ -38,7 +36,21 @@ export const TIPOS_DOCUMENTO = [
   "Título de Eleitor",
   "Carteira de Reservista",
   "CNH",
+  "Certificado",
+  // Saúde Ocupacional
+  "ASO",
+  "Atestado",
+  // Segurança do Trabalho
   "Recibo de EPI",
+  "Ordem de Serviço",
+  "Treinamento NR",
+  // Termos e Declarações
+  "Termo de Confidencialidade",
+  "Termo de Responsabilidade",
+  "Termo de Uso de Imagem",
+  "Declaração de Dependentes",
+  "Vale Transporte",
+  // Outros
   "Outros",
 ];
 
