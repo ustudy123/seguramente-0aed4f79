@@ -120,15 +120,49 @@ export function useAtestados() {
         arquivo_nome = file.name;
         arquivo_tamanho = file.size;
 
-        // Também salvar no módulo de Documentos (vinculado ao colaborador)
+      // Também salvar no módulo de Documentos (vinculado ao colaborador)
         if (colaboradorId) {
-          const docFileName = `${tenantId}/${colaboradorId}/${timestamp}_atestado_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+          const docFileName = `${tenantId}/colaboradores/${colaboradorId}/${timestamp}_atestado_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
           
           const { error: docUploadError } = await supabase.storage
             .from("documentos")
             .upload(docFileName, file, { cacheControl: "3600", upsert: false });
 
           if (!docUploadError) {
+            // Buscar ou criar pasta do colaborador
+            let pastaId: string | null = null;
+            
+            const { data: pastaExistente } = await supabase
+              .from("documento_pastas" as never)
+              .select("id")
+              .eq("tenant_id", tenantId)
+              .eq("colaborador_id", colaboradorId)
+              .eq("tipo", "colaborador")
+              .limit(1)
+              .single() as { data: { id: string } | null };
+
+            if (pastaExistente) {
+              pastaId = pastaExistente.id;
+            } else {
+              // Criar pasta do colaborador
+              const { data: novaPasta } = await supabase
+                .from("documento_pastas" as never)
+                .insert({
+                  tenant_id: tenantId,
+                  nome: formData.colaborador_nome,
+                  tipo: "colaborador",
+                  colaborador_id: colaboradorId,
+                  colaborador_nome: formData.colaborador_nome,
+                  colaborador_cpf: formData.colaborador_cpf || null,
+                  criado_por: user.id,
+                  criado_por_nome: profile?.nome_completo,
+                } as never)
+                .select("id")
+                .single() as { data: { id: string } | null };
+              
+              if (novaPasta) pastaId = novaPasta.id;
+            }
+
             // Salvar metadados no banco de documentos
             await supabase
               .from("documentos" as never)
@@ -145,6 +179,7 @@ export function useAtestados() {
                 storage_path: docFileName,
                 data_validade: null,
                 status: "valido",
+                pasta_id: pastaId,
                 observacoes: `Atestado ${formData.tipo} - ${formData.profissional_nome} (${formData.profissional_registro})`,
                 criado_por: user.id,
                 criado_por_nome: profile?.nome_completo,
