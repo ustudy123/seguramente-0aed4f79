@@ -64,7 +64,7 @@ export const EpiEntregaRecibo = forwardRef<HTMLDivElement, EpiEntregaReciboProps
             )}
             {data.colaboradorCargo && (
               <div>
-                <span className="font-semibold">Cargo:</span> {data.colaboradorCargo}
+                <span className="font-semibold">Função:</span> {data.colaboradorCargo}
               </div>
             )}
             {data.colaboradorDepartamento && (

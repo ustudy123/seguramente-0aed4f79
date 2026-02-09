@@ -337,7 +337,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 name="cargo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cargo *</FormLabel>
+                    <FormLabel>Função *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>

@@ -221,7 +221,7 @@ const Colaboradores = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, email ou cargo..."
+              placeholder="Buscar por nome, email ou função..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -392,7 +392,7 @@ const Colaboradores = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[300px]">Colaborador</TableHead>
-                <TableHead>Cargo</TableHead>
+                <TableHead>Função</TableHead>
                 <TableHead className="hidden md:table-cell">Departamento</TableHead>
                 <TableHead className="hidden lg:table-cell">Contato</TableHead>
                 <TableHead className="hidden xl:table-cell">Admissão</TableHead>
@@ -506,7 +506,7 @@ const Colaboradores = () => {
         onOpenChange={setShowImport}
         onSuccess={handleImportSuccess}
         titulo="Importar Colaboradores"
-        descricao="Importe uma planilha para criar colaboradores, cargos e departamentos automaticamente"
+        descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
       />
 
       {/* Detail Modal */}
