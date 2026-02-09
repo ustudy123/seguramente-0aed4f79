@@ -18,10 +18,13 @@ import {
   Loader2,
   AlertCircle,
   FileCheck,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { type Documento } from "@/hooks/useDocumentos";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
+import { DocumentosCategorias } from "./DocumentosCategorias";
 
 const statusConfig = {
   valido: {
@@ -270,99 +274,125 @@ export function ColaboradorFolderView({
             )}
             <Button onClick={() => onUpload(selectedFolder.id)}>
               <Upload className="w-4 h-4 mr-2" />
-              Upload para esta pasta
+              Novo Documento
             </Button>
           </div>
         </motion.div>
 
-        {/* Lista de documentos */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
-        >
-          {selectedFolder.documentos.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">
-                Nenhum documento nesta pasta ainda.
-              </p>
-              <Button onClick={() => onUpload(selectedFolder.id)}>
-                <Upload className="w-4 h-4 mr-2" />
-                Enviar Primeiro Documento
-              </Button>
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {selectedFolder.documentos.map((doc, index) => {
-                const config = statusConfig[doc.status];
-                return (
-                  <motion.div
-                    key={doc.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn("p-2 rounded-lg", config.style)}>
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {doc.nome_original}
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{doc.tipo}</span>
-                          <span>•</span>
-                          <span>{formatFileSize(doc.tamanho)}</span>
+        {/* Tabs: Estruturado vs Todos */}
+        <Tabs defaultValue="estruturado" className="w-full">
+          <TabsList className="grid w-full max-w-xs grid-cols-2">
+            <TabsTrigger value="estruturado" className="flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4" />
+              Estruturado
+            </TabsTrigger>
+            <TabsTrigger value="todos" className="flex items-center gap-2">
+              <List className="w-4 h-4" />
+              Todos ({selectedFolder.documentos.length})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Aba Estruturado - por categorias */}
+          <TabsContent value="estruturado" className="mt-4">
+            <DocumentosCategorias
+              documentos={selectedFolder.documentos}
+              onUpload={(tipo) => onUpload(selectedFolder.id)}
+              onDownload={onDownload}
+              onDelete={setDocumentoToDelete}
+            />
+          </TabsContent>
+
+          {/* Aba Todos - lista simples */}
+          <TabsContent value="todos" className="mt-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
+            >
+              {selectedFolder.documentos.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">
+                    Nenhum documento nesta pasta ainda.
+                  </p>
+                  <Button onClick={() => onUpload(selectedFolder.id)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Enviar Primeiro Documento
+                  </Button>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {selectedFolder.documentos.map((doc, index) => {
+                    const config = statusConfig[doc.status];
+                    return (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={cn("p-2 rounded-lg", config.style)}>
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {doc.nome_original}
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>{doc.tipo}</span>
+                              <span>•</span>
+                              <span>{formatFileSize(doc.tamanho)}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {doc.data_validade && (
-                        <div className="text-right hidden md:block">
-                          <p className="text-xs text-muted-foreground">Validade</p>
-                          <p className="text-sm font-medium">
-                            {new Date(doc.data_validade).toLocaleDateString("pt-BR")}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          {doc.data_validade && (
+                            <div className="text-right hidden md:block">
+                              <p className="text-xs text-muted-foreground">Validade</p>
+                              <p className="text-sm font-medium">
+                                {new Date(doc.data_validade).toLocaleDateString("pt-BR")}
+                              </p>
+                            </div>
+                          )}
+                          <Badge className={cn("text-xs hidden sm:flex", config.style)}>
+                            {config.label}
+                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => onDownload(doc)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                Visualizar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onDownload(doc)}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => setDocumentoToDelete(doc)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                      )}
-                      <Badge className={cn("text-xs hidden sm:flex", config.style)}>
-                        {config.label}
-                      </Badge>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onDownload(doc)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Visualizar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDownload(doc)}>
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setDocumentoToDelete(doc)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          </TabsContent>
+        </Tabs>
 
         {/* Delete Confirmation */}
         <AlertDialog
