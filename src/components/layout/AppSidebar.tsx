@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Settings,
   Stethoscope,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -36,6 +37,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { title: "Início", icon: Home, path: "/" },
   { title: "Feed Social", icon: MessageSquare, path: "/feed" },
+  { title: "Empresa", icon: Building2, path: "/empresa" },
   { title: "Colaboradores", icon: Users, path: "/colaboradores" },
   {
     title: "Cadastros",

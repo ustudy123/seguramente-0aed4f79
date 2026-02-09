@@ -1,0 +1,177 @@
+import { useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Target,
+  RefreshCw,
+  Plus,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import type { EmpresaCadastro, EmpresaObrigacao, OBRIGACOES_TEMPLATES } from '@/types/empresa';
+import { OBRIGACOES_TEMPLATES as templates } from '@/types/empresa';
+import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
+
+interface Props {
+  cadastro: EmpresaCadastro | null;
+}
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  pendente: { label: 'Pendente', color: 'bg-muted text-muted-foreground', icon: Clock },
+  conforme: { label: 'Conforme', color: 'bg-accent text-accent-foreground', icon: CheckCircle2 },
+  nao_conforme: { label: 'Não Conforme', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
+  em_adequacao: { label: 'Em Adequação', color: 'bg-warning/10 text-warning', icon: RefreshCw },
+  nao_aplicavel: { label: 'N/A', color: 'bg-secondary text-secondary-foreground', icon: CheckCircle2 },
+};
+
+const CRITICIDADE_COLOR: Record<string, string> = {
+  baixa: 'border-l-muted-foreground',
+  media: 'border-l-warning',
+  alta: 'border-l-orange-500',
+  critica: 'border-l-destructive',
+};
+
+export function EmpresaObrigacoesTab({ cadastro }: Props) {
+  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro();
+
+  // Detect obligations from cadastro data
+  const obrigacoesDetectadas = useMemo(() => {
+    if (!cadastro) return [];
+    return templates.filter((t) => t.condicao(cadastro));
+  }, [cadastro]);
+
+  const obrigacoesNaoRegistradas = useMemo(() => {
+    return obrigacoesDetectadas.filter(
+      (t) => !obrigacoes.some((o) => o.origem_campo === t.origem_campo && o.titulo === t.titulo)
+    );
+  }, [obrigacoesDetectadas, obrigacoes]);
+
+  const handleSyncObrigacoes = async () => {
+    if (!cadastro) return;
+
+    let count = 0;
+    for (const template of obrigacoesNaoRegistradas) {
+      await createObrigacao.mutateAsync({
+        tenant_id: cadastro.tenant_id,
+        categoria: template.categoria,
+        subcategoria: template.subcategoria,
+        titulo: template.titulo,
+        descricao: template.descricao,
+        base_legal: template.base_legal,
+        criticidade: template.criticidade,
+        status: 'pendente',
+        origem: 'cadastro_empresa',
+        origem_campo: template.origem_campo,
+        prazo_sugerido: null,
+        responsavel_sugerido: null,
+        acao_gerada_id: null,
+      });
+      count++;
+    }
+
+    if (count > 0) {
+      toast.success(`${count} obrigação(ões) detectada(s) e registrada(s)!`);
+    } else {
+      toast.info('Nenhuma nova obrigação detectada.');
+    }
+  };
+
+  const handleCriarAcao = (obrigacao: EmpresaObrigacao) => {
+    criarAcaoDeObrigacao.mutate(obrigacao);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Sync bar */}
+      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+        <div>
+          <p className="text-sm font-medium">
+            {obrigacoesDetectadas.length} obrigação(ões) detectada(s) no cadastro
+          </p>
+          {obrigacoesNaoRegistradas.length > 0 && (
+            <p className="text-xs text-warning">
+              {obrigacoesNaoRegistradas.length} ainda não registrada(s)
+            </p>
+          )}
+        </div>
+        <Button
+          onClick={handleSyncObrigacoes}
+          disabled={obrigacoesNaoRegistradas.length === 0 || createObrigacao.isPending}
+          size="sm"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Sincronizar Obrigações
+        </Button>
+      </div>
+
+      {/* Lista de obrigações */}
+      {obrigacoes.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>Nenhuma obrigação registrada.</p>
+          <p className="text-xs mt-1">
+            Preencha o cadastro e clique em "Sincronizar" para detectar obrigações automaticamente.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {obrigacoes.map((obrigacao) => {
+            const statusConf = STATUS_CONFIG[obrigacao.status] || STATUS_CONFIG.pendente;
+            const StatusIcon = statusConf.icon;
+
+            return (
+              <Card
+                key={obrigacao.id}
+                className={`border-l-4 ${CRITICIDADE_COLOR[obrigacao.criticidade]}`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-sm">{obrigacao.titulo}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          {obrigacao.subcategoria?.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{obrigacao.descricao}</p>
+                      {obrigacao.base_legal && (
+                        <p className="text-xs text-primary mt-1">📜 {obrigacao.base_legal}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge className={`${statusConf.color} text-xs`}>
+                        <StatusIcon className="w-3 h-3 mr-1" />
+                        {statusConf.label}
+                      </Badge>
+                      {!obrigacao.acao_gerada_id && obrigacao.status !== 'conforme' && obrigacao.status !== 'nao_aplicavel' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCriarAcao(obrigacao)}
+                          disabled={criarAcaoDeObrigacao.isPending}
+                          className="text-xs"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Criar Ação
+                        </Button>
+                      )}
+                      {obrigacao.acao_gerada_id && (
+                        <Badge variant="default" className="text-xs">
+                          <Target className="w-3 h-3 mr-1" />
+                          Ação vinculada
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

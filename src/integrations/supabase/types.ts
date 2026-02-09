@@ -1688,6 +1688,266 @@ export type Database = {
           },
         ]
       }
+      empresa_cadastro: {
+        Row: {
+          aposentadoria_especial: boolean | null
+          aprendiz_quantidade_atual: number | null
+          aprendiz_quantidade_maxima: number | null
+          aprendiz_quantidade_minima: number | null
+          atualizado_por: string | null
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          cipa_data_mandato_fim: string | null
+          cipa_data_mandato_inicio: string | null
+          cipa_membros: Json | null
+          cipa_obrigatoria: boolean | null
+          cipa_situacao: string | null
+          cnae_descricao: string | null
+          cnae_principal: string | null
+          cnaes_secundarios: Json | null
+          cnpj: string | null
+          complemento: string | null
+          condicoes_especiais_detalhes: Json | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          espaco_confinado: boolean | null
+          estado: string | null
+          fap_atual: number | null
+          fap_classificacao: string | null
+          fap_historico: Json | null
+          grau_risco: number | null
+          grau_risco_ajustado: number | null
+          grau_risco_justificativa: string | null
+          id: string
+          insalubridade: boolean | null
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          jornada_padrao: string | null
+          nome_fantasia: string | null
+          numero: string | null
+          pcd_obrigatoria: boolean | null
+          pcd_percentual_exigido: number | null
+          pcd_quantidade_atual: number | null
+          pcd_quantidade_exigida: number | null
+          periculosidade: boolean | null
+          possui_escalas_especiais: boolean | null
+          possui_terceiro_turno: boolean | null
+          razao_social: string | null
+          sesmt_obrigatorio: boolean | null
+          sesmt_profissionais: Json | null
+          sesmt_situacao: string | null
+          tac_detalhes: Json | null
+          tac_possui: boolean | null
+          telefone: string | null
+          tenant_id: string
+          total_colaboradores: number | null
+          trabalho_altura: boolean | null
+          turnos: Json | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          aposentadoria_especial?: boolean | null
+          aprendiz_quantidade_atual?: number | null
+          aprendiz_quantidade_maxima?: number | null
+          aprendiz_quantidade_minima?: number | null
+          atualizado_por?: string | null
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cipa_data_mandato_fim?: string | null
+          cipa_data_mandato_inicio?: string | null
+          cipa_membros?: Json | null
+          cipa_obrigatoria?: boolean | null
+          cipa_situacao?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: Json | null
+          cnpj?: string | null
+          complemento?: string | null
+          condicoes_especiais_detalhes?: Json | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          espaco_confinado?: boolean | null
+          estado?: string | null
+          fap_atual?: number | null
+          fap_classificacao?: string | null
+          fap_historico?: Json | null
+          grau_risco?: number | null
+          grau_risco_ajustado?: number | null
+          grau_risco_justificativa?: string | null
+          id?: string
+          insalubridade?: boolean | null
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          jornada_padrao?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          pcd_obrigatoria?: boolean | null
+          pcd_percentual_exigido?: number | null
+          pcd_quantidade_atual?: number | null
+          pcd_quantidade_exigida?: number | null
+          periculosidade?: boolean | null
+          possui_escalas_especiais?: boolean | null
+          possui_terceiro_turno?: boolean | null
+          razao_social?: string | null
+          sesmt_obrigatorio?: boolean | null
+          sesmt_profissionais?: Json | null
+          sesmt_situacao?: string | null
+          tac_detalhes?: Json | null
+          tac_possui?: boolean | null
+          telefone?: string | null
+          tenant_id: string
+          total_colaboradores?: number | null
+          trabalho_altura?: boolean | null
+          turnos?: Json | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          aposentadoria_especial?: boolean | null
+          aprendiz_quantidade_atual?: number | null
+          aprendiz_quantidade_maxima?: number | null
+          aprendiz_quantidade_minima?: number | null
+          atualizado_por?: string | null
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cipa_data_mandato_fim?: string | null
+          cipa_data_mandato_inicio?: string | null
+          cipa_membros?: Json | null
+          cipa_obrigatoria?: boolean | null
+          cipa_situacao?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: Json | null
+          cnpj?: string | null
+          complemento?: string | null
+          condicoes_especiais_detalhes?: Json | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          espaco_confinado?: boolean | null
+          estado?: string | null
+          fap_atual?: number | null
+          fap_classificacao?: string | null
+          fap_historico?: Json | null
+          grau_risco?: number | null
+          grau_risco_ajustado?: number | null
+          grau_risco_justificativa?: string | null
+          id?: string
+          insalubridade?: boolean | null
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          jornada_padrao?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          pcd_obrigatoria?: boolean | null
+          pcd_percentual_exigido?: number | null
+          pcd_quantidade_atual?: number | null
+          pcd_quantidade_exigida?: number | null
+          periculosidade?: boolean | null
+          possui_escalas_especiais?: boolean | null
+          possui_terceiro_turno?: boolean | null
+          razao_social?: string | null
+          sesmt_obrigatorio?: boolean | null
+          sesmt_profissionais?: Json | null
+          sesmt_situacao?: string | null
+          tac_detalhes?: Json | null
+          tac_possui?: boolean | null
+          telefone?: string | null
+          tenant_id?: string
+          total_colaboradores?: number | null
+          trabalho_altura?: boolean | null
+          turnos?: Json | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_cadastro_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresa_obrigacoes: {
+        Row: {
+          acao_gerada_id: string | null
+          base_legal: string | null
+          categoria: string
+          created_at: string
+          criticidade: string | null
+          descricao: string | null
+          id: string
+          origem: string | null
+          origem_campo: string | null
+          prazo_sugerido: string | null
+          responsavel_sugerido: string | null
+          status: string
+          subcategoria: string | null
+          tenant_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          acao_gerada_id?: string | null
+          base_legal?: string | null
+          categoria: string
+          created_at?: string
+          criticidade?: string | null
+          descricao?: string | null
+          id?: string
+          origem?: string | null
+          origem_campo?: string | null
+          prazo_sugerido?: string | null
+          responsavel_sugerido?: string | null
+          status?: string
+          subcategoria?: string | null
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          acao_gerada_id?: string | null
+          base_legal?: string | null
+          categoria?: string
+          created_at?: string
+          criticidade?: string | null
+          descricao?: string | null
+          id?: string
+          origem?: string | null
+          origem_campo?: string | null
+          prazo_sugerido?: string | null
+          responsavel_sugerido?: string | null
+          status?: string
+          subcategoria?: string | null
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_obrigacoes_acao_gerada_id_fkey"
+            columns: ["acao_gerada_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_obrigacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_cets: {
         Row: {
           cet_id: string
