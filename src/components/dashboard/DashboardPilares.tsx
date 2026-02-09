@@ -39,21 +39,25 @@ export const DashboardPilares = () => {
         score={data.organizacao.score}
         color="navy"
         delay={0.1}
+        pilarIndicator="organizacao"
         metrics={[
           {
             label: "Funções Definidas",
             value: data.organizacao.cargosDefinidos,
             link: "/cadastros/cargos",
+            indicatorType: "cargos",
           },
           {
             label: "Departamentos",
             value: data.organizacao.departamentos,
             link: "/cadastros/departamentos",
+            indicatorType: "departamentos",
           },
           {
             label: "Admissões em Andamento",
             value: data.organizacao.admissoesAndamento,
             link: "/admissao",
+            indicatorType: "admissoes",
           },
         ]}
       />
@@ -66,22 +70,26 @@ export const DashboardPilares = () => {
         score={data.condicoes.score}
         color="green"
         delay={0.2}
+        pilarIndicator="condicoes"
         metrics={[
           {
             label: "NR-17 Atendidos",
             value: `${data.condicoes.itensNr17Atendidos}/${data.condicoes.itensNr17Total}`,
             link: "/ergonomia",
+            indicatorType: "nr17",
           },
           {
             label: "EPIs Disponíveis",
             value: data.condicoes.episDisponiveis,
             link: "/epis",
+            indicatorType: "epis",
           },
           {
             label: "Riscos Ativos",
             value: data.condicoes.riscosAtivos,
             change: data.condicoes.riscosAtivos > 5 ? 10 : -5,
             link: "/ergonomia",
+            indicatorType: "riscos",
           },
         ]}
       />
@@ -94,6 +102,7 @@ export const DashboardPilares = () => {
         score={data.experiencia.score}
         color="purple"
         delay={0.3}
+        pilarIndicator="experiencia"
         metrics={[
           {
             label: "Humor Positivo (7d)",
@@ -101,17 +110,20 @@ export const DashboardPilares = () => {
               ? `${Math.round((data.experiencia.humorPositivo / data.experiencia.humorTotal) * 100)}%` 
               : "—",
             change: data.experiencia.humorTotal > 0 ? 5 : undefined,
+            indicatorType: "humor",
           },
           {
             label: "Ouvidoria Pendente",
             value: data.experiencia.ouvidoriaPendente,
             change: data.experiencia.ouvidoriaPendente > 0 ? data.experiencia.ouvidoriaPendente : undefined,
             link: "/ouvidoria",
+            indicatorType: "ouvidoria",
           },
           {
             label: "Posts Hoje",
             value: data.experiencia.feedPostsHoje,
             link: "/feed",
+            indicatorType: "feed",
           },
         ]}
       />
@@ -124,11 +136,13 @@ export const DashboardPilares = () => {
         score={data.governanca.score}
         color="amber"
         delay={0.4}
+        pilarIndicator="governanca"
         metrics={[
           {
             label: "Ações em Andamento",
             value: data.governanca.acoesEmAndamento,
             link: "/ergonomia",
+            indicatorType: "acoes",
           },
           {
             label: "Ações Concluídas",
@@ -136,10 +150,12 @@ export const DashboardPilares = () => {
             change: data.governanca.acoesTotal > 0 
               ? Math.round((data.governanca.acoesConcluidas / data.governanca.acoesTotal) * 100) - 50 
               : undefined,
+            indicatorType: "acoes",
           },
           {
             label: "Evidências Enviadas",
             value: data.governanca.evidenciasEnviadas,
+            indicatorType: "evidencias",
           },
         ]}
       />
