@@ -1,39 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   FileText, 
   Upload, 
   Search,
-  Folder,
-  File,
-  FileCheck,
-  FileWarning,
-  Download,
-  MoreHorizontal,
-  Eye,
-  Trash2,
-  Clock,
+  FolderTree,
+  History,
+  Settings,
+  FolderPlus,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Building2,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,101 +28,188 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { useDocumentos, TIPOS_DOCUMENTO, type Documento } from "@/hooks/useDocumentos";
-import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
-import { ColaboradorFolderView } from "@/components/documentos/ColaboradorFolderView";
-import { Users } from "lucide-react";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
-const statusConfig = {
-  valido: {
-    label: "Válido",
-    icon: FileCheck,
-    style: "bg-success/10 text-success border-success/20",
-  },
-  vencendo: {
-    label: "Vencendo",
-    icon: Clock,
-    style: "bg-warning/10 text-warning border-warning/20",
-  },
-  vencido: {
-    label: "Vencido",
-    icon: FileWarning,
-    style: "bg-destructive/10 text-destructive border-destructive/20",
-  },
-};
+import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
+import { useDocumentos } from "@/hooks/useDocumentos";
+import { PastaTreeView } from "@/components/documentos/PastaTreeView";
+import { PastaDocumentosList } from "@/components/documentos/PastaDocumentosList";
+import { CreatePastaModal } from "@/components/documentos/CreatePastaModal";
+import { DocumentoAuditLog } from "@/components/documentos/DocumentoAuditLog";
+import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
+import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
   const [searchParams] = useSearchParams();
   const colaboradorIdFromUrl = searchParams.get("colaborador");
   
-  const [activeTab, setActiveTab] = useState(colaboradorIdFromUrl ? "colaboradores" : "todos");
+  const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
-  const [tipoFilter, setTipoFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [documentoToDelete, setDocumentoToDelete] = useState<Documento | null>(null);
-  const [uploadForColaboradorId, setUploadForColaboradorId] = useState<string | undefined>(undefined);
+  const [uploadForPastaId, setUploadForPastaId] = useState<string | undefined>(undefined);
+  const [showCreatePasta, setShowCreatePasta] = useState(false);
+  const [createPastaParentId, setCreatePastaParentId] = useState<string | null>(null);
+  const [createPastaParentNome, setCreatePastaParentNome] = useState<string | null>(null);
+  const [pastaToDelete, setPastaToDelete] = useState<string | null>(null);
+  const [dragContext, setDragContext] = useState<{
+    documentoId: string;
+    documentoNome: string;
+    pastaOrigemId: string;
+    pastaOrigemNome: string;
+  } | null>(null);
 
-  const { 
-    documentos, 
-    isLoading, 
-    stats, 
-    tiposUnicos,
+  const {
+    pastas,
+    tree,
+    auditLogs,
+    loading,
+    loadingAudit,
+    createPasta,
+    deletePasta,
+    moveDocumento,
+    movingDoc,
+    initializeDefaultStructure,
+    initializing,
+  } = useDocumentoPastas();
+
+  const {
+    documentos,
+    isLoading: loadingDocs,
+    stats,
     deleteDocumento,
     deleting,
     getSignedUrl,
   } = useDocumentos();
 
-  const handleOpenUpload = (colaboradorId?: string) => {
-    setUploadForColaboradorId(colaboradorId);
-    setShowUploadForm(true);
-  };
-
-  const handleCloseUpload = (open: boolean) => {
-    setShowUploadForm(open);
-    if (!open) {
-      setUploadForColaboradorId(undefined);
+  // Abrir pasta de colaborador se especificado na URL
+  useEffect(() => {
+    if (colaboradorIdFromUrl && tree.length > 0) {
+      const findPastaColaborador = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
+        for (const node of nodes) {
+          if (node.colaborador_id === colaboradorIdFromUrl) return node;
+          const found = findPastaColaborador(node.children);
+          if (found) return found;
+        }
+        return null;
+      };
+      const pasta = findPastaColaborador(tree);
+      if (pasta) setSelectedPasta(pasta);
     }
+  }, [colaboradorIdFromUrl, tree]);
+
+  const handleOpenUpload = useCallback((pastaId?: string) => {
+    setUploadForPastaId(pastaId);
+    setShowUploadForm(true);
+  }, []);
+
+  const handleCreateSubfolder = useCallback((parentId: string) => {
+    const findPasta = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
+      for (const node of nodes) {
+        if (node.id === parentId) return node;
+        const found = findPasta(node.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    const parent = findPasta(tree);
+    setCreatePastaParentId(parentId);
+    setCreatePastaParentNome(parent?.nome || null);
+    setShowCreatePasta(true);
+  }, [tree]);
+
+  const handleRenamePasta = useCallback((pasta: DocumentoPastaNode) => {
+    // Para renomear, vamos abrir o modal de criação com dados pré-preenchidos
+    toast.info("Função de renomear em desenvolvimento");
+  }, []);
+
+  const handleDeletePasta = useCallback((pastaId: string) => {
+    setPastaToDelete(pastaId);
+  }, []);
+
+  const confirmDeletePasta = async () => {
+    if (!pastaToDelete) return;
+    try {
+      await deletePasta(pastaToDelete);
+      if (selectedPasta?.id === pastaToDelete) {
+        setSelectedPasta(null);
+      }
+    } catch (error) {
+      // Error handled in hook
+    }
+    setPastaToDelete(null);
   };
 
-  const filteredDocs = documentos.filter((doc) => {
-    const matchesSearch = 
-      doc.nome_original.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTipo = tipoFilter === "all" || doc.tipo === tipoFilter;
-    const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
-    return matchesSearch && matchesTipo && matchesStatus;
-  });
+  const handleDropDocument = useCallback(async (documentoId: string, pastaDestinoId: string) => {
+    if (!dragContext) return;
+    
+    const findPasta = (nodes: DocumentoPastaNode[]): DocumentoPastaNode | null => {
+      for (const node of nodes) {
+        if (node.id === pastaDestinoId) return node;
+        const found = findPasta(node.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    
+    const pastaDestino = findPasta(tree);
+    
+    await moveDocumento({
+      documentoId,
+      documentoNome: dragContext.documentoNome,
+      pastaOrigemId: dragContext.pastaOrigemId,
+      pastaOrigemNome: dragContext.pastaOrigemNome,
+      pastaDestinoId,
+      pastaDestinoNome: pastaDestino?.nome || null,
+    });
+    
+    setDragContext(null);
+  }, [dragContext, tree, moveDocumento]);
 
-  // Agrupar por tipo para aba de categorias
-  const categorias = tiposUnicos.map((tipo) => ({
-    nome: tipo,
-    count: documentos.filter((d) => d.tipo === tipo).length,
-  }));
+  const handleDragStart = useCallback((documentoId: string, documentoNome: string, pastaOrigemId: string, pastaOrigemNome: string) => {
+    setDragContext({ documentoId, documentoNome, pastaOrigemId, pastaOrigemNome });
+  }, []);
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-  };
-
-  const handleDownload = async (doc: Documento) => {
+  const handleDownload = async (doc: DocumentoItem) => {
     const url = await getSignedUrl(doc.storage_path);
     if (url) {
       window.open(url, "_blank");
     }
   };
 
-  const handleDelete = async () => {
-    if (!documentoToDelete) return;
-    await deleteDocumento(documentoToDelete);
-    setDocumentoToDelete(null);
+  const handleDeleteDoc = async (doc: DocumentoItem) => {
+    const fullDoc = documentos.find(d => d.id === doc.id);
+    if (fullDoc) {
+      await deleteDocumento(fullDoc);
+    }
   };
 
+  const handleCreatePasta = async (data: { nome: string; tipo: string; pasta_pai_id: string | null }) => {
+    await createPasta({
+      nome: data.nome,
+      tipo: data.tipo as 'custom' | 'ano' | 'mes' | 'categoria',
+      pasta_pai_id: data.pasta_pai_id,
+    });
+  };
+
+  const handleInitialize = async () => {
+    try {
+      await initializeDefaultStructure();
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const showEmptyState = !loading && pastas.length === 0;
+
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -148,12 +219,18 @@ const Documentos = () => {
       >
         <div>
           <h1 className="text-2xl font-bold text-foreground">Documentos</h1>
-          <p className="text-muted-foreground">Gestão de arquivos e documentos</p>
+          <p className="text-muted-foreground">Gestão hierárquica de arquivos e prontuários</p>
         </div>
-        <Button className="gradient-primary shadow-glow" onClick={() => handleOpenUpload()}>
-          <Upload className="w-4 h-4 mr-2" />
-          Upload de Documento
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowCreatePasta(true)}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            Nova Pasta
+          </Button>
+          <Button className="gradient-primary shadow-glow" onClick={() => handleOpenUpload()}>
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </Button>
+        </div>
       </motion.div>
 
       {/* Stats */}
@@ -161,291 +238,214 @@ const Documentos = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
       >
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary/10">
-            <FileText className="w-6 h-6 text-primary" />
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-primary/10">
+            <FileText className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-            <p className="text-sm text-muted-foreground">Total de Documentos</p>
+            <p className="text-xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-xs text-muted-foreground">Total</p>
           </div>
         </div>
-        <div className="bg-warning/5 border border-warning/20 rounded-xl p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-warning/10">
-            <Clock className="w-6 h-6 text-warning" />
+        <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-muted">
+            <FolderTree className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-foreground">{stats.vencendo}</p>
-            <p className="text-sm text-muted-foreground">Vencendo em 30 dias</p>
+            <p className="text-xl font-bold text-foreground">{pastas.length}</p>
+            <p className="text-xs text-muted-foreground">Pastas</p>
           </div>
         </div>
-        <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-destructive/10">
-            <FileWarning className="w-6 h-6 text-destructive" />
+        <div className="bg-warning/5 border border-warning/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-warning/10">
+            <AlertCircle className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-foreground">{stats.vencidos}</p>
-            <p className="text-sm text-muted-foreground">Documentos Vencidos</p>
+            <p className="text-xl font-bold text-foreground">{stats.vencendo}</p>
+            <p className="text-xs text-muted-foreground">Vencendo</p>
+          </div>
+        </div>
+        <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-destructive/10">
+            <AlertCircle className="w-5 h-5 text-destructive" />
+          </div>
+          <div>
+            <p className="text-xl font-bold text-foreground">{stats.vencidos}</p>
+            <p className="text-xs text-muted-foreground">Vencidos</p>
           </div>
         </div>
       </motion.div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
         >
           <TabsList className="bg-muted/50">
-            <TabsTrigger value="todos">Todos</TabsTrigger>
-            <TabsTrigger value="colaboradores" className="gap-1">
-              <Users className="w-4 h-4" />
-              Por Colaborador
+            <TabsTrigger value="arvore" className="gap-2">
+              <FolderTree className="w-4 h-4" />
+              Estrutura
             </TabsTrigger>
-            <TabsTrigger value="categorias">Por Categoria</TabsTrigger>
+            <TabsTrigger value="historico" className="gap-2">
+              <History className="w-4 h-4" />
+              Auditoria
+            </TabsTrigger>
           </TabsList>
         </motion.div>
 
-        <TabsContent value="todos" className="space-y-4">
-          {/* Filters */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="bg-card rounded-xl border border-border p-4 shadow-sm"
-          >
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar documento ou colaborador..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={tipoFilter} onValueChange={setTipoFilter}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Tipos</SelectItem>
-                  {TIPOS_DOCUMENTO.map((tipo) => (
-                    <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[150px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Status</SelectItem>
-                  <SelectItem value="valido">Válido</SelectItem>
-                  <SelectItem value="vencendo">Vencendo</SelectItem>
-                  <SelectItem value="vencido">Vencido</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </motion.div>
-
-          {/* Documents List */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
-            className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : filteredDocs.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  {documentos.length === 0
-                    ? "Nenhum documento cadastrado ainda."
-                    : "Nenhum documento encontrado com os filtros aplicados."}
-                </p>
-                {documentos.length === 0 && (
-                  <Button onClick={() => handleOpenUpload()}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Enviar Primeiro Documento
-                  </Button>
+        {/* Tree View Tab */}
+        <TabsContent value="arvore" className="flex-1 mt-4">
+          {showEmptyState ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center h-full bg-card rounded-xl border border-border p-12"
+            >
+              <Building2 className="w-16 h-16 text-muted-foreground/50 mb-6" />
+              <h3 className="text-xl font-semibold mb-2">Estrutura de Pastas</h3>
+              <p className="text-muted-foreground text-center max-w-md mb-6">
+                Crie uma estrutura organizacional para seus documentos com pastas por unidade, 
+                colaborador e período. Ideal para compliance e processos judiciais.
+              </p>
+              <Button
+                size="lg"
+                onClick={handleInitialize}
+                disabled={initializing}
+                className="gradient-primary shadow-glow"
+              >
+                {initializing ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <FolderPlus className="w-5 h-5 mr-2" />
                 )}
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {filteredDocs.map((doc, index) => {
-                  const config = statusConfig[doc.status];
-                  return (
-                    <motion.div
-                      key={doc.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
-                      className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={cn("p-2 rounded-lg", config.style)}>
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{doc.nome_original}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{doc.colaborador_nome}</span>
-                            <span>•</span>
-                            <span>{doc.tipo}</span>
-                            <span>•</span>
-                            <span>{formatFileSize(doc.tamanho)}</span>
-                          </div>
-                        </div>
+                Criar Estrutura Padrão
+              </Button>
+              <p className="text-xs text-muted-foreground mt-4">
+                Serão criadas pastas: Administrativo, Unidades, Colaboradores e Anos
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex-1 h-full"
+            >
+              <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl border border-border">
+                {/* Tree Panel */}
+                <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+                  <div className="h-full flex flex-col bg-card">
+                    {/* Search */}
+                    <div className="p-3 border-b border-border">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Buscar pasta..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-9 h-9"
+                        />
                       </div>
-                      <div className="flex items-center gap-3">
-                        {doc.data_validade && (
-                          <div className="text-right hidden md:block">
-                            <p className="text-xs text-muted-foreground">Validade</p>
-                            <p className="text-sm font-medium">
-                              {new Date(doc.data_validade).toLocaleDateString("pt-BR")}
-                            </p>
-                          </div>
-                        )}
-                        <Badge className={cn("text-xs hidden sm:flex", config.style)}>
-                          {config.label}
-                        </Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleDownload(doc)}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              Visualizar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownload(doc)}>
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-destructive"
-                              onClick={() => setDocumentoToDelete(doc)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        </TabsContent>
-
-        <TabsContent value="colaboradores">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <ColaboradorFolderView
-              documentos={documentos}
-              onUpload={handleOpenUpload}
-              onDownload={handleDownload}
-              onDelete={async (doc) => {
-                await deleteDocumento(doc);
-              }}
-              deleting={deleting}
-              initialColaboradorId={colaboradorIdFromUrl}
-              getSignedUrl={getSignedUrl}
-            />
-          </motion.div>
-        </TabsContent>
-
-        <TabsContent value="categorias">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {categorias.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <Folder className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Nenhuma categoria encontrada. Envie documentos para ver as categorias.
-                </p>
-              </div>
-            ) : (
-              categorias.map((cat, index) => (
-                <motion.div
-                  key={cat.nome}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
-                  onClick={() => {
-                    setTipoFilter(cat.nome);
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <File className="w-6 h-6 text-primary" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {cat.nome}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{cat.count} documentos</p>
-                    </div>
+                    
+                    {/* Tree */}
+                    <ScrollArea className="flex-1 p-2">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <PastaTreeView
+                          tree={tree}
+                          selectedPastaId={selectedPasta?.id || null}
+                          onSelectPasta={setSelectedPasta}
+                          onCreateSubfolder={handleCreateSubfolder}
+                          onRenamePasta={handleRenamePasta}
+                          onDeletePasta={handleDeletePasta}
+                          onDropDocument={handleDropDocument}
+                        />
+                      )}
+                    </ScrollArea>
                   </div>
-                </motion.div>
-              ))
-            )}
+                </ResizablePanel>
+
+                <ResizableHandle withHandle />
+
+                {/* Documents Panel */}
+                <ResizablePanel defaultSize={70}>
+                  <div className="h-full p-4 bg-background">
+                    <PastaDocumentosList
+                      pasta={selectedPasta}
+                      onUpload={handleOpenUpload}
+                      onDownload={handleDownload}
+                      onDelete={handleDeleteDoc}
+                      deleting={deleting}
+                      onDragStart={handleDragStart}
+                    />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </motion.div>
+          )}
+        </TabsContent>
+
+        {/* Audit Tab */}
+        <TabsContent value="historico" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="h-full bg-card rounded-xl border border-border p-6 overflow-auto"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-semibold flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                Trilha de Auditoria
+              </h3>
+              <Badge variant="outline">{auditLogs.length} registros</Badge>
+            </div>
+            <DocumentoAuditLog logs={auditLogs} loading={loadingAudit} />
           </motion.div>
         </TabsContent>
       </Tabs>
 
-      {/* Upload Form Modal */}
+      {/* Modals */}
       <DocumentoUploadForm
         open={showUploadForm}
-        onOpenChange={handleCloseUpload}
-        preSelectedColaboradorId={uploadForColaboradorId}
+        onOpenChange={setShowUploadForm}
+        preSelectedColaboradorId={undefined}
       />
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!documentoToDelete} onOpenChange={() => setDocumentoToDelete(null)}>
+      <CreatePastaModal
+        open={showCreatePasta}
+        onOpenChange={setShowCreatePasta}
+        parentPastaId={createPastaParentId}
+        parentPastaNome={createPastaParentNome}
+        onCreate={handleCreatePasta}
+        creating={false}
+      />
+
+      {/* Delete Pasta Confirmation */}
+      <AlertDialog open={!!pastaToDelete} onOpenChange={() => setPastaToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-destructive" />
-              Excluir Documento
+              Excluir Pasta
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o documento{" "}
-              <span className="font-medium">{documentoToDelete?.nome_original}</span>?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir esta pasta? Todas as subpastas também serão excluídas.
+              Os documentos não serão excluídos, apenas ficarão sem pasta.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting}
+              onClick={confirmDeletePasta}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4 mr-2" />
-              )}
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
