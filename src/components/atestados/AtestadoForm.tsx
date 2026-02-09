@@ -140,11 +140,24 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
     defaultValues: {
       tipo: "assistencial",
       contem_cid: false,
-      cid_autorizado: false,
+      cid_autorizado: true, // Agora sempre true por padrão, pois o envio ao RH implica autorização
       nexo_trabalho: "nao",
       unidade_afastamento: "dias",
     },
   });
+
+  // Efeito para calcular automaticamente a data de fim
+  const watchDataInicio = form.watch("data_inicio_afastamento");
+  const watchDiasAfastamento = form.watch("dias_afastamento");
+  const watchUnidade = form.watch("unidade_afastamento");
+
+  useEffect(() => {
+    if (watchDataInicio && watchDiasAfastamento && watchDiasAfastamento > 0 && watchUnidade === "dias") {
+      const dataFim = new Date(watchDataInicio);
+      dataFim.setDate(dataFim.getDate() + watchDiasAfastamento - 1); // -1 pois o dia inicial conta
+      form.setValue("data_fim_afastamento", dataFim);
+    }
+  }, [watchDataInicio, watchDiasAfastamento, watchUnidade, form]);
 
   // Preencher dados do colaborador quando selecionado
   const handleColaboradorSelect = (colaborador: Colaborador) => {
@@ -973,7 +986,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                         <div className="space-y-0.5">
                           <FormLabel>Contém CID?</FormLabel>
                           <FormDescription className="text-xs">
-                            O CID é tratado como dado sensível (LGPD)
+                            Ao enviar ao RH, o colaborador autoriza o uso do CID (LGPD/CFM)
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -987,91 +1000,65 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                   />
 
                   {watchContemCid && (
-                    <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
-                        name="cid_autorizado"
+                        name="cid_codigo"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-accent bg-accent/50 p-3">
-                            <div className="space-y-0.5">
-                              <FormLabel className="flex items-center gap-2">
-                                <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                                CID autorizado pelo paciente?
-                              </FormLabel>
-                              <FormDescription className="text-xs">
-                                Conforme CFM, o CID só pode constar mediante autorização
-                              </FormDescription>
-                            </div>
+                          <FormItem>
+                            <FormLabel>Código CID</FormLabel>
                             <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
+                              <Input placeholder="F32.0" {...field} />
                             </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="cid_codigo"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Código CID</FormLabel>
+                      <FormField
+                        control={form.control}
+                        name="grupo_clinico"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grupo Clínico</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <Input placeholder="F32.0" {...field} />
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
                               </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="grupo_clinico"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Grupo Clínico</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {Object.entries(GRUPO_CLINICO_LABELS).map(([value, label]) => (
-                                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="nexo_trabalho"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nexo com Trabalho</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {Object.entries(NEXO_TRABALHO_LABELS).map(([value, label]) => (
-                                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </>
+                              <SelectContent>
+                                {Object.entries(GRUPO_CLINICO_LABELS).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="nexo_trabalho"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nexo com Trabalho</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Object.entries(NEXO_TRABALHO_LABELS).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
