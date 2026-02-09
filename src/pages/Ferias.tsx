@@ -20,10 +20,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-interface Ferias {
+interface FeriasItem {
   id: number;
   colaborador: string;
   departamento: string;
@@ -35,7 +46,7 @@ interface Ferias {
   dataSolicitacao: string;
 }
 
-const ferias: Ferias[] = [
+const initialFerias: FeriasItem[] = [
   {
     id: 1,
     colaborador: "Ana Carolina Silva",
@@ -111,7 +122,14 @@ const statusConfig = {
   },
 };
 
-const FeriasCard = ({ item, index }: { item: Ferias; index: number }) => {
+interface FeriasCardProps {
+  item: FeriasItem;
+  index: number;
+  onAprovar: (id: number) => void;
+  onRecusar: (id: number) => void;
+}
+
+const FeriasCard = ({ item, index, onAprovar, onRecusar }: FeriasCardProps) => {
   const config = statusConfig[item.status];
   const startDate = new Date(item.dataInicio).toLocaleDateString("pt-BR");
   const endDate = new Date(item.dataFim).toLocaleDateString("pt-BR");
@@ -165,11 +183,20 @@ const FeriasCard = ({ item, index }: { item: Ferias; index: number }) => {
 
       {item.status === "pendente" && (
         <div className="mt-4 pt-4 border-t border-border flex gap-2">
-          <Button size="sm" className="flex-1 gradient-primary">
+          <Button 
+            size="sm" 
+            className="flex-1 gradient-primary"
+            onClick={() => onAprovar(item.id)}
+          >
             <CheckCircle className="w-4 h-4 mr-1" />
             Aprovar
           </Button>
-          <Button size="sm" variant="outline" className="flex-1">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => onRecusar(item.id)}
+          >
             <XCircle className="w-4 h-4 mr-1" />
             Recusar
           </Button>
@@ -180,8 +207,60 @@ const FeriasCard = ({ item, index }: { item: Ferias; index: number }) => {
 };
 
 const Ferias = () => {
+  const [ferias, setFerias] = useState<FeriasItem[]>(initialFerias);
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("solicitacoes");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newSolicitacao, setNewSolicitacao] = useState({
+    colaborador: "",
+    departamento: "",
+    dataInicio: "",
+    dataFim: "",
+  });
+
+  const handleAprovar = (id: number) => {
+    setFerias(prev => prev.map(f => 
+      f.id === id ? { ...f, status: "aprovado" as const } : f
+    ));
+    const item = ferias.find(f => f.id === id);
+    toast.success(`Férias aprovadas para ${item?.colaborador}`);
+  };
+
+  const handleRecusar = (id: number) => {
+    setFerias(prev => prev.map(f => 
+      f.id === id ? { ...f, status: "recusado" as const } : f
+    ));
+    const item = ferias.find(f => f.id === id);
+    toast.error(`Férias recusadas para ${item?.colaborador}`);
+  };
+
+  const handleNovaSolicitacao = () => {
+    if (!newSolicitacao.colaborador || !newSolicitacao.dataInicio || !newSolicitacao.dataFim) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    const dataInicio = new Date(newSolicitacao.dataInicio);
+    const dataFim = new Date(newSolicitacao.dataFim);
+    const diasSolicitados = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    const novaSolicitacao: FeriasItem = {
+      id: Math.max(...ferias.map(f => f.id)) + 1,
+      colaborador: newSolicitacao.colaborador,
+      departamento: newSolicitacao.departamento || "Não informado",
+      dataInicio: newSolicitacao.dataInicio,
+      dataFim: newSolicitacao.dataFim,
+      diasSolicitados,
+      saldoDias: 30,
+      status: "pendente",
+      dataSolicitacao: new Date().toISOString().split("T")[0],
+    };
+
+    setFerias(prev => [novaSolicitacao, ...prev]);
+    setNewSolicitacao({ colaborador: "", departamento: "", dataInicio: "", dataFim: "" });
+    setIsModalOpen(false);
+    toast.success("Solicitação de férias criada com sucesso!");
+  };
 
   const filteredFerias = ferias.filter(
     (f) => statusFilter === "all" || f.status === statusFilter
@@ -206,7 +285,7 @@ const Ferias = () => {
           <h1 className="text-2xl font-bold text-foreground">Gestão de Férias</h1>
           <p className="text-muted-foreground">Solicitações e aprovações</p>
         </div>
-        <Button className="gradient-primary shadow-glow">
+        <Button className="gradient-primary shadow-glow" onClick={() => setIsModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Nova Solicitação
         </Button>
@@ -278,7 +357,13 @@ const Ferias = () => {
         <TabsContent value="solicitacoes" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredFerias.map((item, index) => (
-              <FeriasCard key={item.id} item={item} index={index} />
+              <FeriasCard 
+                key={item.id} 
+                item={item} 
+                index={index}
+                onAprovar={handleAprovar}
+                onRecusar={handleRecusar}
+              />
             ))}
           </div>
         </TabsContent>
@@ -311,6 +396,72 @@ const Ferias = () => {
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      {/* Modal Nova Solicitação */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Solicitação de Férias</DialogTitle>
+            <DialogDescription>
+              Preencha os dados para solicitar férias
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="colaborador">Nome do Colaborador *</Label>
+              <Input
+                id="colaborador"
+                placeholder="Nome completo"
+                value={newSolicitacao.colaborador}
+                onChange={(e) => setNewSolicitacao(prev => ({ ...prev, colaborador: e.target.value }))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="departamento">Departamento</Label>
+              <Input
+                id="departamento"
+                placeholder="Ex: Tecnologia"
+                value={newSolicitacao.departamento}
+                onChange={(e) => setNewSolicitacao(prev => ({ ...prev, departamento: e.target.value }))}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dataInicio">Data Início *</Label>
+                <Input
+                  id="dataInicio"
+                  type="date"
+                  value={newSolicitacao.dataInicio}
+                  onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataInicio: e.target.value }))}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="dataFim">Data Fim *</Label>
+                <Input
+                  id="dataFim"
+                  type="date"
+                  value={newSolicitacao.dataFim}
+                  onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataFim: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleNovaSolicitacao} className="gradient-primary">
+              <Plus className="w-4 h-4 mr-2" />
+              Criar Solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
