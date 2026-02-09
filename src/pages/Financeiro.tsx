@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   DollarSign,
@@ -53,6 +53,8 @@ import {
   type FolhaPeriodo,
 } from "@/hooks/useFinanceiro";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { HoleriteDetail } from "@/components/financeiro/HoleriteDetail";
+import type { FolhaItem } from "@/hooks/useFinanceiro";
 
 // ==========================================
 // SUB-COMPONENTS
@@ -387,6 +389,8 @@ const FolhaTab = () => {
   const [showNovoPeriodo, setShowNovoPeriodo] = useState(false);
   const [competencia, setCompetencia] = useState("");
   const [periodoSelecionado, setPeriodoSelecionado] = useState<string | null>(null);
+  const [holeriteItem, setHoleriteItem] = useState<FolhaItem | null>(null);
+  const [holeriteCompetencia, setHoleriteCompetencia] = useState("");
   const { data: itens = [] } = useFolhaItens(periodoSelecionado || undefined);
 
   const handleCriarPeriodo = async () => {
@@ -508,8 +512,8 @@ const FolhaTab = () => {
                             </thead>
                             <tbody className="divide-y divide-border">
                               {itens.map(item => (
-                                <tr key={item.id} className="hover:bg-muted/30">
-                                  <td className="p-2 font-medium">{item.colaborador_nome}</td>
+                                <tr key={item.id} className="hover:bg-muted/30 cursor-pointer" onClick={(e) => { e.stopPropagation(); setHoleriteItem(item); setHoleriteCompetencia(p.competencia); }}>
+                                  <td className="p-2 font-medium text-primary underline underline-offset-2">{item.colaborador_nome}</td>
                                   <td className="p-2 text-muted-foreground">{item.cargo || "—"}</td>
                                   <td className="p-2 text-right">R$ {item.salario_base?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
                                   <td className="p-2 text-right text-success">R$ {item.total_proventos?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
@@ -557,6 +561,14 @@ const FolhaTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Holerite Detail Modal */}
+      <HoleriteDetail
+        open={!!holeriteItem}
+        onClose={() => setHoleriteItem(null)}
+        item={holeriteItem}
+        competencia={holeriteCompetencia}
+      />
     </div>
   );
 };
