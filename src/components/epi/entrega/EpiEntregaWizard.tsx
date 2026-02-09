@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ import { SignatureCapture } from "./SignatureCapture";
 import { EpiEntregaRecibo } from "./EpiEntregaRecibo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
+import { useDocumentos } from "@/hooks/useDocumentos";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -81,6 +82,7 @@ export function EpiEntregaWizard({
 }: EpiEntregaWizardProps) {
   const { tenantId, user, profile } = useAuth();
   const { colaboradores, isLoading: colaboradoresLoading } = useColaboradores();
+  const { upload: uploadDocumento } = useDocumentos();
   const reciboRef = useRef<HTMLDivElement>(null);
   const [colaboradorPopoverOpen, setColaboradorPopoverOpen] = useState(false);
   const [colaboradorSearch, setColaboradorSearch] = useState("");
@@ -118,6 +120,7 @@ export function EpiEntregaWizard({
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [entregaResult, setEntregaResult] = useState<any>(null);
+  const [pdfArquivado, setPdfArquivado] = useState(false);
 
   const steps: WizardStep[] = ["form", "liveness", "photo", "signature", "complete"];
   const stepLabels = {
@@ -150,6 +153,7 @@ export function EpiEntregaWizard({
     setPhotoData(null);
     setSignatureData(null);
     setEntregaResult(null);
+    setPdfArquivado(false);
   };
 
   const handleClose = () => {
@@ -325,7 +329,25 @@ export function EpiEntregaWizard({
     }
   };
 
-  // Gerar PDF
+  // Gerar PDF e retornar como Blob (para arquivamento)
+  const generatePDFBlob = useCallback(async (): Promise<Blob | null> => {
+    if (!reciboRef.current) return null;
+
+    try {
+      const canvas = await html2canvas(reciboRef.current, { scale: 2, useCORS: true });
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      return pdf.output("blob");
+    } catch (error) {
+      console.error("Erro ao gerar PDF blob:", error);
+      return null;
+    }
+  }, []);
+
+  // Gerar PDF e baixar localmente
   const generatePDF = async () => {
     if (!reciboRef.current) return;
 
@@ -342,6 +364,51 @@ export function EpiEntregaWizard({
       toast.error("Erro ao gerar PDF");
     }
   };
+
+  // Arquivar PDF no módulo de documentos
+  const arquivarPDFDocumentos = useCallback(async () => {
+    if (!reciboRef.current || !formData.colaboradorId) return;
+
+    try {
+      // Aguardar um momento para garantir que o recibo esteja renderizado
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      const pdfBlob = await generatePDFBlob();
+      if (!pdfBlob) {
+        console.warn("Não foi possível gerar o PDF para arquivamento");
+        return;
+      }
+
+      const fileName = `Recibo EPI - ${formData.epiTipo?.nome || "EPI"} - ${format(new Date(formData.dataEntrega), "dd-MM-yyyy")}.pdf`;
+      const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      await uploadDocumento({
+        file,
+        colaboradorNome: formData.colaboradorNome,
+        colaboradorCpf: formData.colaboradorCpf,
+        colaboradorId: formData.colaboradorId,
+        tipo: "Recibo de EPI",
+        observacoes: `Entrega de ${formData.quantidade}x ${formData.epiTipo?.nome || "EPI"}${formData.epiTipo?.ca_numero ? ` (CA: ${formData.epiTipo.ca_numero})` : ""}. Assinado digitalmente.`,
+      });
+
+      toast.success("Recibo arquivado na pasta do colaborador!");
+    } catch (error: any) {
+      console.error("Erro ao arquivar PDF:", error);
+      // Não exibir erro ao usuário - o documento pode ser gerado manualmente se necessário
+    }
+  }, [formData, generatePDFBlob, uploadDocumento]);
+
+  // Arquivar PDF automaticamente quando o step muda para "complete"
+  useEffect(() => {
+    if (step === "complete" && entregaResult && !pdfArquivado) {
+      setPdfArquivado(true);
+      // Aguardar um pouco para o recibo renderizar antes de arquivar
+      const timer = setTimeout(() => {
+        arquivarPDFDocumentos();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, entregaResult, pdfArquivado, arquivarPDFDocumentos]);
 
   const canProceedFromForm = 
     formData.colaboradorId && 

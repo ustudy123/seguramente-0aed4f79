@@ -38,6 +38,7 @@ export const TIPOS_DOCUMENTO = [
   "Título de Eleitor",
   "Carteira de Reservista",
   "CNH",
+  "Recibo de EPI",
   "Outros",
 ];
 
