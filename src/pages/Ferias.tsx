@@ -8,7 +8,9 @@ import {
   XCircle,
   Clock,
   Sun,
-  Plane
+  Plane,
+  ChevronsUpDown,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +33,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useColaboradores } from "@/hooks/useColaboradores";
 
 interface FeriasItem {
   id: number;
@@ -211,12 +216,14 @@ const Ferias = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("solicitacoes");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [comboOpen, setComboOpen] = useState(false);
   const [newSolicitacao, setNewSolicitacao] = useState({
     colaborador: "",
     departamento: "",
     dataInicio: "",
     dataFim: "",
   });
+  const { colaboradores, isLoading: loadingColabs } = useColaboradores();
 
   const handleAprovar = (id: number) => {
     setFerias(prev => prev.map(f => 
@@ -409,22 +416,60 @@ const Ferias = () => {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="colaborador">Nome do Colaborador *</Label>
-              <Input
-                id="colaborador"
-                placeholder="Nome completo"
-                value={newSolicitacao.colaborador}
-                onChange={(e) => setNewSolicitacao(prev => ({ ...prev, colaborador: e.target.value }))}
-              />
+              <Label>Colaborador *</Label>
+              <Popover open={comboOpen} onOpenChange={setComboOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {newSolicitacao.colaborador || "Selecione o colaborador..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar colaborador..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {colaboradores.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.nome_completo}
+                            onSelect={() => {
+                              setNewSolicitacao(prev => ({
+                                ...prev,
+                                colaborador: c.nome_completo,
+                                departamento: c.departamento || "",
+                              }));
+                              setComboOpen(false);
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", newSolicitacao.colaborador === c.nome_completo ? "opacity-100" : "opacity-0")} />
+                            <div>
+                              <p className="text-sm">{c.nome_completo}</p>
+                              {c.departamento && <p className="text-xs text-muted-foreground">{c.departamento}</p>}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="departamento">Departamento</Label>
               <Input
                 id="departamento"
-                placeholder="Ex: Tecnologia"
+                placeholder="Preenchido automaticamente"
                 value={newSolicitacao.departamento}
-                onChange={(e) => setNewSolicitacao(prev => ({ ...prev, departamento: e.target.value }))}
+                readOnly
+                className="bg-muted/50"
               />
             </div>
             
