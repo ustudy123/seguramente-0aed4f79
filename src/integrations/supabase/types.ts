@@ -1232,6 +1232,206 @@ export type Database = {
           },
         ]
       }
+      documento_audit_log: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          documento_id: string
+          documento_nome: string
+          id: string
+          ip_address: string | null
+          pasta_destino_id: string | null
+          pasta_destino_nome: string | null
+          pasta_origem_id: string | null
+          pasta_origem_nome: string | null
+          tenant_id: string
+          user_agent: string | null
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          documento_id: string
+          documento_nome: string
+          id?: string
+          ip_address?: string | null
+          pasta_destino_id?: string | null
+          pasta_destino_nome?: string | null
+          pasta_origem_id?: string | null
+          pasta_origem_nome?: string | null
+          tenant_id: string
+          user_agent?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          documento_id?: string
+          documento_nome?: string
+          id?: string
+          ip_address?: string | null
+          pasta_destino_id?: string | null
+          pasta_destino_nome?: string | null
+          pasta_origem_id?: string | null
+          pasta_origem_nome?: string | null
+          tenant_id?: string
+          user_agent?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_categorias_padrao: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          grupo: string
+          icone: string | null
+          id: string
+          nome: string
+          obrigatorio: boolean | null
+          ordem: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          grupo: string
+          icone?: string | null
+          id?: string
+          nome: string
+          obrigatorio?: boolean | null
+          ordem?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          grupo?: string
+          icone?: string | null
+          id?: string
+          nome?: string
+          obrigatorio?: boolean | null
+          ordem?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_categorias_padrao_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_pastas: {
+        Row: {
+          ano: number | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          cor: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          filial_id: string | null
+          icone: string | null
+          id: string
+          mes: number | null
+          nome: string
+          ordem: number | null
+          pasta_pai_id: string | null
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ano?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          cor?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          filial_id?: string | null
+          icone?: string | null
+          id?: string
+          mes?: number | null
+          nome: string
+          ordem?: number | null
+          pasta_pai_id?: string | null
+          tenant_id: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          cor?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          filial_id?: string | null
+          icone?: string | null
+          id?: string
+          mes?: number | null
+          nome?: string
+          ordem?: number | null
+          pasta_pai_id?: string | null
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_pastas_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "filiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_pastas_pasta_pai_id_fkey"
+            columns: ["pasta_pai_id"]
+            isOneToOne: false
+            referencedRelation: "documento_pastas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_pastas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documentos: {
         Row: {
           colaborador_cpf: string | null
@@ -1246,6 +1446,7 @@ export type Database = {
           nome_arquivo: string
           nome_original: string
           observacoes: string | null
+          pasta_id: string | null
           status: string
           storage_path: string
           tamanho: number
@@ -1266,6 +1467,7 @@ export type Database = {
           nome_arquivo: string
           nome_original: string
           observacoes?: string | null
+          pasta_id?: string | null
           status?: string
           storage_path: string
           tamanho: number
@@ -1286,6 +1488,7 @@ export type Database = {
           nome_arquivo?: string
           nome_original?: string
           observacoes?: string | null
+          pasta_id?: string | null
           status?: string
           storage_path?: string
           tamanho?: number
@@ -1294,6 +1497,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "documentos_pasta_id_fkey"
+            columns: ["pasta_id"]
+            isOneToOne: false
+            referencedRelation: "documento_pastas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documentos_tenant_id_fkey"
             columns: ["tenant_id"]
