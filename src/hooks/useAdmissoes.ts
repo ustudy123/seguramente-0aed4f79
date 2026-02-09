@@ -68,12 +68,17 @@ export function useAdmissoes() {
           .order('created_at', { ascending: false }),
       ]);
 
+      // Garantir arrays vazios se houver erro
+      const documentosData = documentosRes.data || [];
+      const workflowData = workflowRes.data || [];
+      const historicoData = historicoRes.data || [];
+
       // Map related data to each admissão
       return admissoesData.map(admissao => ({
         ...admissao,
-        documentos: documentosRes.data?.filter(d => d.admissao_id === admissao.id) || [],
-        workflow: workflowRes.data?.filter(w => w.admissao_id === admissao.id) || [],
-        historico: historicoRes.data?.filter(h => h.admissao_id === admissao.id) || [],
+        documentos: documentosData.filter(d => d.admissao_id === admissao.id),
+        workflow: workflowData.filter(w => w.admissao_id === admissao.id),
+        historico: historicoData.filter(h => h.admissao_id === admissao.id),
       }));
     },
     enabled: !!tenantId,
