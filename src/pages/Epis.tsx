@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, HardHat, Package, Users, History, Settings } from "lucide-react";
+import { Plus, HardHat, Package, Users, History, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEpis } from "@/hooks/useEpis";
@@ -12,6 +12,7 @@ import { EpiEntregaWizard } from "@/components/epi/entrega/EpiEntregaWizard";
 import { EpiEntregaList } from "@/components/epi/EpiEntregaList";
 import { EpiMovimentacoes } from "@/components/epi/EpiMovimentacoes";
 import { AjustarEstoqueModal } from "@/components/epi/AjustarEstoqueModal";
+import { MatrizProtecaoTab } from "@/components/epi/MatrizProtecaoTab";
 import type { EpiCompleto } from "@/types/epi";
 
 const Epis = () => {
@@ -99,7 +100,7 @@ const Epis = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-lg grid-cols-4">
           <TabsTrigger value="estoque" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
             Estoque
@@ -107,6 +108,10 @@ const Epis = () => {
           <TabsTrigger value="entregas" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             Entregas
+          </TabsTrigger>
+          <TabsTrigger value="matriz" className="flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            Matriz
           </TabsTrigger>
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="w-4 h-4" />
@@ -145,6 +150,15 @@ const Epis = () => {
                 await registrarDevolucao({ entregaId: id, observacoes: obs });
               }}
             />
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="matriz" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <MatrizProtecaoTab />
           </motion.div>
         </TabsContent>
 
