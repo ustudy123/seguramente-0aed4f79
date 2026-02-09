@@ -1322,6 +1322,50 @@ export type Database = {
           },
         ]
       }
+      condicoes_especiais_trabalho: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          norma_regulamentadora: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          norma_regulamentadora?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          norma_regulamentadora?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condicoes_especiais_trabalho_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departamentos: {
         Row: {
           ativo: boolean
@@ -1637,6 +1681,52 @@ export type Database = {
           },
           {
             foreignKeyName: "documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_cets: {
+        Row: {
+          cet_id: string
+          created_at: string
+          epi_tipo_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          cet_id: string
+          created_at?: string
+          epi_tipo_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          cet_id?: string
+          created_at?: string
+          epi_tipo_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_cets_cet_id_fkey"
+            columns: ["cet_id"]
+            isOneToOne: false
+            referencedRelation: "condicoes_especiais_trabalho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_cets_epi_tipo_id_fkey"
+            columns: ["epi_tipo_id"]
+            isOneToOne: false
+            referencedRelation: "epi_tipos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_cets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2707,6 +2797,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "folha_periodos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_cets: {
+        Row: {
+          cargo_id: string
+          cet_id: string
+          created_at: string
+          id: string
+          observacao: string | null
+          tenant_id: string
+        }
+        Insert: {
+          cargo_id: string
+          cet_id: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          tenant_id: string
+        }
+        Update: {
+          cargo_id?: string
+          cet_id?: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_cets_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_cets_cet_id_fkey"
+            columns: ["cet_id"]
+            isOneToOne: false
+            referencedRelation: "condicoes_especiais_trabalho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_cets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_epis: {
+        Row: {
+          cargo_id: string
+          created_at: string
+          epi_tipo_id: string
+          id: string
+          justificativa: string | null
+          obrigatorio: boolean
+          tenant_id: string
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string
+          epi_tipo_id: string
+          id?: string
+          justificativa?: string | null
+          obrigatorio?: boolean
+          tenant_id: string
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string
+          epi_tipo_id?: string
+          id?: string
+          justificativa?: string | null
+          obrigatorio?: boolean
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_epis_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_epis_epi_tipo_id_fkey"
+            columns: ["epi_tipo_id"]
+            isOneToOne: false
+            referencedRelation: "epi_tipos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_epis_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
