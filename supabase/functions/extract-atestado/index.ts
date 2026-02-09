@@ -77,9 +77,9 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY não configurada");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY não configurada");
     }
 
     const formData = await req.formData();
@@ -97,66 +97,57 @@ serve(async (req) => {
       throw new Error("Formato de arquivo não suportado. Use PDF ou imagem (PNG, JPG).");
     }
 
-    let response;
-
-    if (isImage) {
-      // Para imagens, usar Vision API
-      const arrayBuffer = await file.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
-
-      console.log("Enviando imagem para OpenAI Vision...");
-
-      response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { 
-              role: "user", 
-              content: [
-                { type: "text", text: "Extraia as informações deste atestado médico:" },
-                { 
-                  type: "image_url", 
-                  image_url: { 
-                    url: `data:${mimeType};base64,${base64}` 
-                  } 
-                }
-              ]
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.1,
-        }),
-      });
-    } else {
-      // Para PDFs - a maioria dos atestados médicos são imagens escaneadas
-      // OpenAI Vision não suporta PDF diretamente, então sugerimos conversão
-      console.log("PDF detectado - PDFs escaneados não são suportados diretamente");
-      
+    if (isPdf) {
       return new Response(
         JSON.stringify({ 
           success: false,
           error: "PDF não suportado para extração automática",
-          message: "Para usar a extração automática com IA, por favor tire uma foto do atestado ou converta o PDF para imagem (JPG/PNG). PDFs escaneados não são processados diretamente."
+          message: "Para usar a extração automática com IA, por favor tire uma foto do atestado ou converta o PDF para imagem (JPG/PNG)."
         }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Para imagens, usar Lovable AI Gateway com Gemini
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = btoa(
+      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+
+    console.log("Enviando imagem para Lovable AI Gateway (Gemini)...");
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.0-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { 
+            role: "user", 
+            content: [
+              { type: "text", text: "Extraia as informações deste atestado médico:" },
+              { 
+                type: "image_url", 
+                image_url: { 
+                  url: `data:${mimeType};base64,${base64}` 
+                } 
+              }
+            ]
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.1,
+      }),
+    });
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
-      throw new Error(`Erro na API OpenAI: ${response.status}`);
+      console.error("AI Gateway error:", response.status, errorText);
+      throw new Error(`Erro na API de IA: ${response.status}`);
     }
 
     const result = await response.json();
@@ -187,9 +178,7 @@ serve(async (req) => {
         data: extractedData,
         message: "Dados extraídos com sucesso. Revise as informações antes de salvar."
       }),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
@@ -200,10 +189,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : "Erro desconhecido",
         message: "Não foi possível extrair os dados automaticamente. Preencha manualmente."
       }),
-      { 
-        status: 200, // Retornar 200 para o frontend tratar a mensagem
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
