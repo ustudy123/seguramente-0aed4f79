@@ -1027,6 +1027,75 @@ export type Database = {
           },
         ]
       }
+      beneficios_colaboradores: {
+        Row: {
+          beneficio_tipo_id: string
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          id: string
+          motivo_cancelamento: string | null
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          valor: number
+          valor_desconto: number | null
+        }
+        Insert: {
+          beneficio_tipo_id: string
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          valor?: number
+          valor_desconto?: number | null
+        }
+        Update: {
+          beneficio_tipo_id?: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          valor?: number
+          valor_desconto?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beneficios_colaboradores_beneficio_tipo_id_fkey"
+            columns: ["beneficio_tipo_id"]
+            isOneToOne: false
+            referencedRelation: "beneficios_tipos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beneficios_colaboradores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beneficios_inss: {
         Row: {
           afastamento_id: string | null
@@ -1121,6 +1190,68 @@ export type Database = {
           },
           {
             foreignKeyName: "beneficios_inss_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beneficios_tipos: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          percentual_desconto: number | null
+          regras_cargo: string[] | null
+          regras_unidade: string[] | null
+          regras_vinculo: string[] | null
+          tenant_id: string
+          tipo_desconto: string | null
+          updated_at: string
+          valor_desconto_fixo: number | null
+          valor_padrao: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          percentual_desconto?: number | null
+          regras_cargo?: string[] | null
+          regras_unidade?: string[] | null
+          regras_vinculo?: string[] | null
+          tenant_id: string
+          tipo_desconto?: string | null
+          updated_at?: string
+          valor_desconto_fixo?: number | null
+          valor_padrao?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          percentual_desconto?: number | null
+          regras_cargo?: string[] | null
+          regras_unidade?: string[] | null
+          regras_vinculo?: string[] | null
+          tenant_id?: string
+          tipo_desconto?: string | null
+          updated_at?: string
+          valor_desconto_fixo?: number | null
+          valor_padrao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beneficios_tipos_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2385,6 +2516,197 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "filiais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_eventos: {
+        Row: {
+          codigo: string | null
+          created_at: string
+          descricao: string
+          folha_item_id: string
+          id: string
+          origem: string | null
+          origem_id: string | null
+          referencia: string | null
+          tenant_id: string
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          codigo?: string | null
+          created_at?: string
+          descricao: string
+          folha_item_id: string
+          id?: string
+          origem?: string | null
+          origem_id?: string | null
+          referencia?: string | null
+          tenant_id: string
+          tipo: string
+          valor?: number
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string
+          descricao?: string
+          folha_item_id?: string
+          id?: string
+          origem?: string | null
+          origem_id?: string | null
+          referencia?: string | null
+          tenant_id?: string
+          tipo?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_eventos_folha_item_id_fkey"
+            columns: ["folha_item_id"]
+            isOneToOne: false
+            referencedRelation: "folha_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_eventos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_itens: {
+        Row: {
+          cargo: string | null
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          departamento: string | null
+          id: string
+          observacoes: string | null
+          periodo_id: string
+          salario_base: number
+          status: string
+          tenant_id: string
+          total_descontos: number | null
+          total_liquido: number | null
+          total_proventos: number | null
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          departamento?: string | null
+          id?: string
+          observacoes?: string | null
+          periodo_id: string
+          salario_base?: number
+          status?: string
+          tenant_id: string
+          total_descontos?: number | null
+          total_liquido?: number | null
+          total_proventos?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          departamento?: string | null
+          id?: string
+          observacoes?: string | null
+          periodo_id?: string
+          salario_base?: number
+          status?: string
+          tenant_id?: string
+          total_descontos?: number | null
+          total_liquido?: number | null
+          total_proventos?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_itens_periodo_id_fkey"
+            columns: ["periodo_id"]
+            isOneToOne: false
+            referencedRelation: "folha_periodos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_periodos: {
+        Row: {
+          competencia: string
+          created_at: string
+          data_abertura: string | null
+          data_fechamento: string | null
+          fechado_por: string | null
+          fechado_por_nome: string | null
+          id: string
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          total_bruto: number | null
+          total_colaboradores: number | null
+          total_descontos: number | null
+          total_liquido: number | null
+          updated_at: string
+        }
+        Insert: {
+          competencia: string
+          created_at?: string
+          data_abertura?: string | null
+          data_fechamento?: string | null
+          fechado_por?: string | null
+          fechado_por_nome?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          total_bruto?: number | null
+          total_colaboradores?: number | null
+          total_descontos?: number | null
+          total_liquido?: number | null
+          updated_at?: string
+        }
+        Update: {
+          competencia?: string
+          created_at?: string
+          data_abertura?: string | null
+          data_fechamento?: string | null
+          fechado_por?: string | null
+          fechado_por_nome?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          total_bruto?: number | null
+          total_colaboradores?: number | null
+          total_descontos?: number | null
+          total_liquido?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_periodos_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

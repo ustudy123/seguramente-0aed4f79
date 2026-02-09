@@ -31,6 +31,7 @@ import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
 import Avaliacoes from "./pages/Avaliacoes";
 import Atestados from "./pages/Atestados";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import Financeiro from "./pages/Financeiro";
 import NotFound from "./pages/NotFound";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 
@@ -88,8 +89,7 @@ const App = () => (
               <Route path="/cadastros/departamentos" element={<Departamentos />} />
               <Route path="/cadastros/cargos" element={<Cargos />} />
               <Route path="/cadastros/filiais" element={<Filiais />} />
-              <Route path="/financeiro/folha" element={<PlaceholderPage />} />
-              <Route path="/financeiro/beneficios" element={<PlaceholderPage />} />
+              <Route path="/financeiro" element={<Financeiro />} />
               <Route path="/ponto" element={<Ponto />} />
               <Route path="/admissao" element={<Admissao />} />
               <Route path="/ferias" element={<Ferias />} />

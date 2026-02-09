@@ -46,14 +46,7 @@ const menuItems: MenuItem[] = [
       { title: "Filiais", path: "/cadastros/filiais" },
     ],
   },
-  {
-    title: "Financeiro",
-    icon: DollarSign,
-    children: [
-      { title: "Folha de Pagamento", path: "/financeiro/folha" },
-      { title: "Benefícios", path: "/financeiro/beneficios" },
-    ],
-  },
+  { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
   { title: "Ponto", icon: Clock, path: "/ponto" },
   { title: "Admissão", icon: UserPlus, path: "/admissao" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
