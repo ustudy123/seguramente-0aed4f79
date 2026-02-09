@@ -178,7 +178,7 @@ export function PostForm() {
                     <Button
                       size="sm"
                       onClick={handleSubmit}
-                      disabled={!conteudo.trim() || isPending}
+                      disabled={(!conteudo.trim() && !imagemFile) || isPending}
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Publicar
