@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.ai-chat]
 verify_jwt = false
+
+[functions.ai-epi-fiscal]
+verify_jwt = false
+
+[functions.extract-atestado]
+verify_jwt = false
