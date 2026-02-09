@@ -2714,6 +2714,78 @@ export type Database = {
           },
         ]
       }
+      holerite_assinaturas: {
+        Row: {
+          assinado_em: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          competencia: string
+          created_at: string
+          documento_id: string | null
+          enviado_em: string
+          enviado_por: string | null
+          enviado_por_nome: string | null
+          folha_item_id: string
+          id: string
+          ip_assinatura: string | null
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          assinado_em?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          competencia: string
+          created_at?: string
+          documento_id?: string | null
+          enviado_em?: string
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          folha_item_id: string
+          id?: string
+          ip_assinatura?: string | null
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          assinado_em?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          competencia?: string
+          created_at?: string
+          documento_id?: string | null
+          enviado_em?: string
+          enviado_por?: string | null
+          enviado_por_nome?: string | null
+          folha_item_id?: string
+          id?: string
+          ip_assinatura?: string | null
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holerite_assinaturas_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holerite_assinaturas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       humor_diario: {
         Row: {
           created_at: string
