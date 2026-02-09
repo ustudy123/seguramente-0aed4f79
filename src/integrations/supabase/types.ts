@@ -1905,6 +1905,7 @@ export type Database = {
       epi_tipos: {
         Row: {
           ca_numero: string | null
+          ca_validade: string | null
           categoria: string | null
           created_at: string
           descricao: string | null
@@ -1922,6 +1923,7 @@ export type Database = {
         }
         Insert: {
           ca_numero?: string | null
+          ca_validade?: string | null
           categoria?: string | null
           created_at?: string
           descricao?: string | null
@@ -1939,6 +1941,7 @@ export type Database = {
         }
         Update: {
           ca_numero?: string | null
+          ca_validade?: string | null
           categoria?: string | null
           created_at?: string
           descricao?: string | null

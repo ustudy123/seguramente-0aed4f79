@@ -34,6 +34,7 @@ const schema = z.object({
   categoria: z.string().min(1, "Selecione uma categoria"),
   validade_meses: z.coerce.number().min(0).optional().nullable(),
   ca_numero: z.string().optional(),
+  ca_validade: z.string().optional(),
   marca: z.string().optional(),
   fabricante: z.string().optional(),
   estoque_minimo: z.coerce.number().min(0).optional().nullable(),
@@ -51,6 +52,7 @@ interface EpiTipoFormProps {
     categoria?: string;
     validade_meses?: number | null;
     ca_numero?: string;
+    ca_validade?: string;
     marca?: string;
     fabricante?: string;
     estoque_minimo?: number | null;
@@ -96,6 +98,7 @@ export function EpiTipoForm({
       categoria: data.categoria,
       validade_meses: data.validade_meses,
       ca_numero: data.ca_numero,
+      ca_validade: data.ca_validade || undefined,
       marca: data.marca,
       fabricante: data.fabricante,
       estoque_minimo: data.estoque_minimo,
@@ -161,6 +164,20 @@ export function EpiTipoForm({
                     <FormLabel>C.A. (Certificado de Aprovação)</FormLabel>
                     <FormControl>
                       <Input placeholder="Ex: 12345" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ca_validade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Validade do C.A.</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
