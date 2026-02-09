@@ -51,7 +51,7 @@ export function PostForm() {
   };
 
   const handleSubmit = async () => {
-    if (!conteudo.trim()) return;
+    if (!conteudo.trim() && !imagemFile) return;
 
     try {
       let imagem_url: string | undefined;
