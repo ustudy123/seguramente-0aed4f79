@@ -325,7 +325,7 @@ export default function Admissao() {
       tipoConta: a.tipo_conta || '',
       chavePix: a.chave_pix || '',
     },
-    documentos: a.documentos.map(d => ({
+    documentos: (a.documentos || []).map(d => ({
       id: d.id,
       nome: d.nome,
       tipo: d.tipo,
@@ -338,7 +338,7 @@ export default function Admissao() {
       observacao: d.observacao || undefined,
     })),
     status: a.status,
-    historicoAprovacao: a.workflow.map(w => ({
+    historicoAprovacao: (a.workflow || []).map(w => ({
       id: w.id,
       etapa: w.etapa,
       status: w.status,
