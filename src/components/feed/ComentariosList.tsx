@@ -4,9 +4,9 @@ import { ptBR } from "date-fns/locale";
 import { Send, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { FeedComentario, useFeed } from "@/hooks/useFeed";
+import { MentionInput } from "./MentionInput";
 
 interface ComentariosListProps {
   postId: string;
@@ -27,8 +27,8 @@ export function ComentariosList({ postId, comentarios }: ComentariosListProps) {
       .slice(0, 2);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!novoComentario.trim()) return;
 
     await adicionarComentario.mutateAsync({
@@ -91,11 +91,12 @@ export function ComentariosList({ postId, comentarios }: ComentariosListProps) {
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 flex gap-2">
-          <Input
-            placeholder="Escreva um comentário..."
+          <MentionInput
+            placeholder="Escreva um comentário... Use @ para mencionar"
             value={novoComentario}
-            onChange={(e) => setNovoComentario(e.target.value)}
+            onChange={setNovoComentario}
             className="h-8 text-sm"
+            onSubmit={handleSubmit}
           />
           <Button
             type="submit"

@@ -29,6 +29,7 @@ import {
 import { useAuthContext } from "@/contexts/AuthContext";
 import { FeedPost, useFeed, REACOES_CONFIG, TipoReacao } from "@/hooks/useFeed";
 import { ComentariosList } from "./ComentariosList";
+import { ImageLightbox } from "./ImageLightbox";
 
 interface PostCardProps {
   post: FeedPost;
@@ -38,6 +39,7 @@ export function PostCard({ post }: PostCardProps) {
   const { user, hasMinimumRole } = useAuthContext();
   const { toggleReacao, deletarPost, toggleFixar } = useFeed();
   const [showComentarios, setShowComentarios] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const isAutor = user?.id === post.autor_id;
   const canDelete = isAutor || hasMinimumRole("admin");
@@ -178,11 +180,20 @@ export function PostCard({ post }: PostCardProps) {
           </p>
 
           {post.imagem_url && (
-            <img
-              src={post.imagem_url}
-              alt="Imagem do post"
-              className="rounded-lg max-h-96 w-full object-cover mb-3"
-            />
+            <>
+              <img
+                src={post.imagem_url}
+                alt="Imagem do post"
+                className="rounded-lg max-h-96 w-full object-cover mb-3 cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setLightboxOpen(true)}
+              />
+              <ImageLightbox
+                imageUrl={post.imagem_url}
+                isOpen={lightboxOpen}
+                onClose={() => setLightboxOpen(false)}
+                alt="Imagem do post"
+              />
+            </>
           )}
 
           {/* Resumo de reações */}
