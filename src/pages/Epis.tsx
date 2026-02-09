@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, HardHat, Package, Users, History, Settings, Shield } from "lucide-react";
+import { Plus, HardHat, Package, Users, History, Settings, Shield, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEpis } from "@/hooks/useEpis";
@@ -13,6 +13,7 @@ import { EpiEntregaList } from "@/components/epi/EpiEntregaList";
 import { EpiMovimentacoes } from "@/components/epi/EpiMovimentacoes";
 import { AjustarEstoqueModal } from "@/components/epi/AjustarEstoqueModal";
 import { MatrizProtecaoTab } from "@/components/epi/MatrizProtecaoTab";
+import { EpiAlertasTab } from "@/components/epi/EpiAlertasTab";
 import type { EpiCompleto } from "@/types/epi";
 
 const Epis = () => {
@@ -100,7 +101,7 @@ const Epis = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-lg grid-cols-4">
+        <TabsList className="grid w-full max-w-2xl grid-cols-5">
           <TabsTrigger value="estoque" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
             Estoque
@@ -112,6 +113,10 @@ const Epis = () => {
           <TabsTrigger value="matriz" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             Matriz
+          </TabsTrigger>
+          <TabsTrigger value="alertas" className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Alertas
           </TabsTrigger>
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="w-4 h-4" />
@@ -159,6 +164,19 @@ const Epis = () => {
             animate={{ opacity: 1 }}
           >
             <MatrizProtecaoTab />
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="alertas" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <EpiAlertasTab
+              epis={epis}
+              entregas={entregas}
+              tipos={tipos}
+            />
           </motion.div>
         </TabsContent>
 

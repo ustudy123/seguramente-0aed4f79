@@ -9,6 +9,7 @@ export type EpiTipo = Database["public"]["Tables"]["epi_tipos"]["Row"] & {
   // Campos adicionados pela migração
   categoria?: string | null;
   ca_numero?: string | null;
+  ca_validade?: string | null;
   marca?: string | null;
   fabricante?: string | null;
   estoque_minimo?: number | null;
