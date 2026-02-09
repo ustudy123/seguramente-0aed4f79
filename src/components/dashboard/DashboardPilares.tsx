@@ -41,7 +41,7 @@ export const DashboardPilares = () => {
         delay={0.1}
         metrics={[
           {
-            label: "Cargos Definidos",
+            label: "Funções Definidas",
             value: data.organizacao.cargosDefinidos,
             link: "/cadastros/cargos",
           },

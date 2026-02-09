@@ -42,7 +42,7 @@ const menuItems: MenuItem[] = [
     icon: FolderOpen,
     children: [
       { title: "Departamentos", path: "/cadastros/departamentos" },
-      { title: "Cargos", path: "/cadastros/cargos" },
+      { title: "Funções", path: "/cadastros/cargos" },
       { title: "Filiais", path: "/cadastros/filiais" },
     ],
   },

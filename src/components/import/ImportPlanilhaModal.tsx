@@ -48,7 +48,7 @@ export function ImportPlanilhaModal({
   onOpenChange,
   onSuccess,
   titulo = "Importar Planilha",
-  descricao = "Importe colaboradores e cargos a partir de uma planilha Excel ou CSV",
+  descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
   const { lerArquivo, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
   
@@ -122,7 +122,7 @@ export function ImportPlanilhaModal({
   };
 
   const templateData = [
-    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO ( 0 para inativo; 1 para ativo)", "BR/PDH", "Nome cargo", "Departamento", "Nível"],
+    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO ( 0 para inativo; 1 para ativo)", "BR/PDH", "Nome função", "Departamento", "Nível"],
     ["Joana da Silva", "338.172.580-70", "Masculino", "15/03/1990", "1 ( ativo)", "Matriz", "Analista de RH", "Recursos Humanos", "Pleno"],
     ["Ana Paula Padrao", "987.654.321-00", "Feminino", "22/08/1985", "1 (ativo)", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente"],
     ["Maria Aparecida Meneghel", "408.785.550-30", "Masculino", "10/01/1995", "0 ( inativo)", "Matriz", "Desenvolvedor", "TI", "Junior"],
@@ -171,7 +171,7 @@ export function ImportPlanilhaModal({
       ["Data Nascimento", "NÃO", "Data de nascimento", "DD/MM/AAAA ou AAAA-MM-DD", "15/03/1990"],
       ["SITUAÇÃO", "NÃO", "Status do colaborador no sistema", "0 = Inativo (desligado), 1 = Ativo", "1"],
       ["BR/PDH", "NÃO", "Filial/Unidade do colaborador", "Nome da filial cadastrada", "Matriz, Filial SP"],
-      ["Nome cargo", "SIM", "Cargo/Função do colaborador", "Nome do cargo", "Analista de RH"],
+      ["Nome função", "SIM", "Função do colaborador", "Nome da função", "Analista de RH"],
       ["Departamento", "NÃO", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
       [""],
@@ -181,7 +181,7 @@ export function ImportPlanilhaModal({
       [""],
       ["1. As colunas marcadas como OBRIGATÓRIO devem ser preenchidas para que o registro seja importado."],
       ["2. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
-      ["3. Departamentos e Cargos não cadastrados serão criados automaticamente."],
+      ["3. Departamentos e Funções não cadastrados serão criados automaticamente."],
       ["4. A primeira linha deve conter os cabeçalhos (não apagar)."],
       ["5. Linhas completamente vazias serão ignoradas."],
       ["6. Registros com erros serão listados ao final da importação."],
@@ -309,7 +309,7 @@ export function ImportPlanilhaModal({
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
-                    {["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO (0=Inativo; 1=Ativo)", "BR/PDH", "Nome cargo", "Departamento", "Nível"].map(col => (
+                    {["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO (0=Inativo; 1=Ativo)", "BR/PDH", "Nome função", "Departamento", "Nível"].map(col => (
                       <Badge key={col} variant="secondary" className="text-xs">
                         {col}
                       </Badge>
@@ -368,7 +368,7 @@ export function ImportPlanilhaModal({
                         <TableHead className="w-12">Linha</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>CPF</TableHead>
-                        <TableHead>Cargo</TableHead>
+                        <TableHead>Função</TableHead>
                         <TableHead>Departamento</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>

@@ -407,7 +407,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                       <div>
                         <strong>{colaboradorSelecionado.nome_completo}</strong>
                         <p className="text-xs text-muted-foreground">
-                          CPF: {colaboradorSelecionado.cpf} • Cargo: {colaboradorSelecionado.cargo}
+                          CPF: {colaboradorSelecionado.cpf} • Função: {colaboradorSelecionado.cargo}
                           {colaboradorSelecionado.departamento && ` • ${colaboradorSelecionado.departamento}`}
                         </p>
                       </div>
@@ -548,7 +548,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                     name="colaborador_cargo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cargo</FormLabel>
+                        <FormLabel>Função</FormLabel>
                         <FormControl>
                           <Input {...field} readOnly className="bg-muted" />
                         </FormControl>

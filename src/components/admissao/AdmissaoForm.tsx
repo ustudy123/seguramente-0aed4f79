@@ -611,7 +611,7 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="cargo">Cargo *</Label>
+                <Label htmlFor="cargo">Função *</Label>
                 <Input 
                   id="cargo"
                   {...formProfissionais.register('cargo')}

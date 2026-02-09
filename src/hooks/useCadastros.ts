@@ -172,10 +172,10 @@ export function useCargos() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cargos"] });
-      toast.success("Cargo criado com sucesso!");
+      toast.success("Função criada com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao criar cargo: " + error.message);
+      toast.error("Erro ao criar função: " + error.message);
     },
   });
 
@@ -194,10 +194,10 @@ export function useCargos() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cargos"] });
-      toast.success("Cargo atualizado com sucesso!");
+      toast.success("Função atualizada com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao atualizar cargo: " + error.message);
+      toast.error("Erro ao atualizar função: " + error.message);
     },
   });
 
@@ -212,10 +212,10 @@ export function useCargos() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cargos"] });
-      toast.success("Cargo excluído com sucesso!");
+      toast.success("Função excluída com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir cargo: " + error.message);
+      toast.error("Erro ao excluir função: " + error.message);
     },
   });
 

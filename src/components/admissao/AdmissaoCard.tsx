@@ -70,7 +70,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Briefcase className="h-3.5 w-3.5" />
-              <span>{dadosProfissionais?.cargo || 'Cargo não definido'}</span>
+              <span>{dadosProfissionais?.cargo || 'Função não definida'}</span>
             </div>
           </div>
         </div>

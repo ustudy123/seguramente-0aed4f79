@@ -71,7 +71,7 @@ export function AdmissaoList({ admissoes, onView, onEdit, onDelete, onNew }: Adm
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nome, cargo ou CPF..."
+            placeholder="Buscar por nome, função ou CPF..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"

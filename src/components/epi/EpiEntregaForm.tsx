@@ -267,7 +267,7 @@ export function EpiEntregaForm({
                     <PopoverContent className="w-[400px] p-0" align="start">
                       <Command shouldFilter={false}>
                         <CommandInput 
-                          placeholder="Buscar por nome, CPF ou cargo..." 
+                          placeholder="Buscar por nome, CPF ou função..." 
                           value={searchQuery}
                           onValueChange={setSearchQuery}
                         />
@@ -367,10 +367,10 @@ export function EpiEntregaForm({
                 name="colaborador_cargo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cargo</FormLabel>
+                    <FormLabel>Função</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Cargo do colaborador" 
+                        placeholder="Função do colaborador" 
                         {...field} 
                         disabled={!!selectedColaborador}
                       />
