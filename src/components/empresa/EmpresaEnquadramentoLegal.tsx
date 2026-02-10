@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -5,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Shield, Users } from 'lucide-react';
+import { getGrauRiscoByCnae } from '@/lib/cnaeGrauRisco';
+import { toast } from 'sonner';
 import type { EmpresaCadastro } from '@/types/empresa';
 interface Props {
   data: Partial<EmpresaCadastro>;
@@ -15,6 +18,19 @@ export function EmpresaEnquadramentoLegal({
   onChange
 }: Props) {
   const grauRisco = data.grau_risco_ajustado || data.grau_risco || 0;
+  const prevCnaeRef = useRef(data.cnae_principal);
+
+  // Auto-fill grau de risco when CNAE changes
+  useEffect(() => {
+    if (data.cnae_principal && data.cnae_principal !== prevCnaeRef.current) {
+      prevCnaeRef.current = data.cnae_principal;
+      const gr = getGrauRiscoByCnae(data.cnae_principal);
+      if (gr) {
+        onChange({ grau_risco: gr });
+        toast.info(`Grau de Risco ${gr} identificado automaticamente pelo CNAE.`);
+      }
+    }
+  }, [data.cnae_principal]);
   return <div className="space-y-8">
       {/* CNAE e Grau de Risco */}
       <section className="space-y-4">
