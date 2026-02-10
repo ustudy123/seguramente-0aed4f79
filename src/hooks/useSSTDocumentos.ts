@@ -26,8 +26,21 @@ export interface SSTDocumento {
   updated_at: string;
 }
 
+async function findSSTFolder(tenantId: string): Promise<string | null> {
+  // Find the "SST da Empresa" folder under "Documentos Administrativos"
+  const { data } = await supabase
+    .from("documento_pastas")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("nome", "SST da Empresa")
+    .eq("tipo", "categoria")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
 export function useSSTDocumentos() {
-  const { tenantId, user } = useAuth();
+  const { tenantId, user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: documentos = [], isLoading } = useQuery({
@@ -57,18 +70,15 @@ export function useSSTDocumentos() {
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
-      // Upload file to storage
-      const fileExt = params.file.name.split(".").pop();
-      const filePath = `${tenantId}/${Date.now()}_${params.file.name}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("sst-documentos")
-        .upload(filePath, params.file);
-      if (uploadError) throw uploadError;
+      // Upload to the shared "documentos" bucket (same as Documentos module)
+      const timestamp = Date.now();
+      const safeFileName = params.file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const storagePath = `${tenantId}/sst/${timestamp}_${safeFileName}`;
 
-      const { data: urlData } = supabase.storage
-        .from("sst-documentos")
-        .getPublicUrl(filePath);
+      const { error: uploadError } = await supabase.storage
+        .from("documentos")
+        .upload(storagePath, params.file, { cacheControl: "3600", upsert: false });
+      if (uploadError) throw uploadError;
 
       // Determine status based on vigencia
       let status = "vigente";
@@ -77,11 +87,11 @@ export function useSSTDocumentos() {
         if (vigencia < new Date()) status = "vencido";
       }
 
-      // Insert record
-      const { data, error } = await supabase.from("sst_documentos").insert({
+      // 1. Insert into sst_documentos (SST module's own table)
+      const { data: sstDoc, error: sstError } = await supabase.from("sst_documentos").insert({
         tenant_id: tenantId,
         tipo: params.tipo,
-        arquivo_url: filePath,
+        arquivo_url: storagePath,
         arquivo_nome: params.file.name,
         arquivo_tamanho: params.file.size,
         data_emissao: params.data_emissao || null,
@@ -90,15 +100,53 @@ export function useSSTDocumentos() {
         empresa_emissora: params.empresa_emissora || null,
         status,
         criado_por: user.id,
-        criado_por_nome: user.user_metadata?.nome || user.email,
+        criado_por_nome: profile?.nome_completo || user.user_metadata?.nome || user.email,
         observacoes: params.observacoes || null,
       }).select().single();
 
-      if (error) throw error;
-      return data;
+      if (sstError) {
+        // Cleanup storage on error
+        await supabase.storage.from("documentos").remove([storagePath]);
+        throw sstError;
+      }
+
+      // 2. Also insert into "documentos" table (Documentos module) linked to "SST da Empresa" folder
+      const pastaId = await findSSTFolder(tenantId);
+
+      const docStatus = status === "vencido" ? "vencido" : "valido";
+      const { error: docError } = await supabase
+        .from("documentos" as never)
+        .insert({
+          tenant_id: tenantId,
+          colaborador_id: null,
+          colaborador_nome: "Empresa",
+          colaborador_cpf: null,
+          nome_arquivo: storagePath,
+          nome_original: params.file.name,
+          tipo: `SST - ${params.tipo}`,
+          tamanho: params.file.size,
+          mime_type: params.file.type,
+          storage_path: storagePath,
+          data_validade: params.data_vigencia || null,
+          status: docStatus,
+          observacoes: params.observacoes
+            ? `${params.tipo} | ${params.observacoes}`
+            : `Documento SST: ${params.tipo}`,
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo || user.user_metadata?.nome || null,
+          pasta_id: pastaId,
+        } as never);
+
+      if (docError) {
+        console.warn("Aviso: documento SST salvo, mas não foi possível vincular ao módulo Documentos:", docError.message);
+      }
+
+      return sstDoc;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sst-documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
       toast.success("Documento enviado com sucesso!");
     },
     onError: (err: any) => {
@@ -108,14 +156,27 @@ export function useSSTDocumentos() {
 
   const deleteDocumento = useMutation({
     mutationFn: async (doc: SSTDocumento) => {
+      // Remove from storage
       if (doc.arquivo_url) {
-        await supabase.storage.from("sst-documentos").remove([doc.arquivo_url]);
+        await supabase.storage.from("documentos").remove([doc.arquivo_url]);
       }
+
+      // Remove from sst_documentos
       const { error } = await supabase.from("sst_documentos").delete().eq("id", doc.id);
       if (error) throw error;
+
+      // Also remove from documentos table (by matching storage_path)
+      if (doc.arquivo_url) {
+        await supabase
+          .from("documentos" as never)
+          .delete()
+          .eq("storage_path", doc.arquivo_url);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sst-documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
       toast.success("Documento excluído!");
     },
     onError: (err: any) => {
