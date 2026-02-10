@@ -704,7 +704,7 @@ serve(async (req) => {
     const systemPrompt = getSystemPrompt(meta);
 
     // Truncate PDF text to stay within token limits (~4 chars per token, reserve 20K tokens for prompt+response)
-    const MAX_PDF_CHARS = 380000; // ~95K tokens, leaving room for system prompt + response
+    const MAX_PDF_CHARS = 280000; // ~70K tokens, leaving room for large system prompts + response (16K)
     let truncatedPdfText = pdfText;
     let wasTruncated = false;
     if (hasPdfContent && pdfText!.length > MAX_PDF_CHARS) {
