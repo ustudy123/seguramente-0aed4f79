@@ -164,14 +164,16 @@ Para cada alerta:
 
 ---
 
-## REGRAS DE QUALIDADE:
+## REGRAS DE QUALIDADE E FORMATAÇÃO:
 1. Cite SEMPRE NR-07 com itens específicos (ex: item 7.5.8).
 2. ${meta.hasPdf ? "Use EXCLUSIVAMENTE dados reais do documento. Cite trechos. NÃO invente." : "Indique claramente quando precisa de verificação manual."}
 3. Tabelas com dados concretos, NUNCA genéricos.
 4. Cada alerta com fundamentação legal específica.
 5. Relatório EXTENSO e MINUCIOSO — mínimo 3000 palavras.
 6. Linguagem técnica de auditoria. Português brasileiro.
-7. NÃO resuma — detalhe CADA item.`;
+7. NÃO resuma — detalhe CADA item.
+8. **FORMATAÇÃO MARKDOWN OBRIGATÓRIA:** Use SEMPRE tabelas markdown com cabeçalho e separadores (|---|). Use ## para títulos de seção, ### para subtítulos. Use **negrito** para destaques. Use emojis de status (✅ ⚠️ ❌ 🔴 🟠 🟡) nas tabelas e alertas. Use blocos de citação (>) para alertas críticos. NUNCA escreva tabelas como texto corrido.
+9. **ESTRUTURA DE ALERTAS:** Cada alerta 🔴 🟠 🟡 deve usar blockquote (>) para destaque visual.`;
 }
 
 // ─── Generic / fallback prompt ───────────────────────────────────────────────
@@ -221,12 +223,13 @@ ${meta.profissional ? `**Profissional Responsável:** ${meta.profissional}` : ""
 
 ---
 
-## REGRAS:
+## REGRAS DE QUALIDADE E FORMATAÇÃO:
 1. Cite NRs com itens específicos.
 2. ${meta.hasPdf ? "Use EXCLUSIVAMENTE dados reais. Cite trechos. NÃO invente." : "Indique verificação manual quando necessário."}
 3. Tabelas com dados concretos.
 4. Alertas com fundamentação legal.
-5. Mínimo 3000 palavras. Linguagem técnica. Português brasileiro.`;
+5. Mínimo 3000 palavras. Linguagem técnica. Português brasileiro.
+6. **FORMATAÇÃO MARKDOWN OBRIGATÓRIA:** Use SEMPRE tabelas markdown com cabeçalho e separadores (|---|). Use ## para títulos de seção, ### para subtítulos. Use **negrito** para destaques. Use emojis de status (✅ ⚠️ ❌ 🔴 🟠 🟡) nas tabelas e alertas. Use blocos de citação (>) para alertas críticos. NUNCA escreva tabelas como texto corrido.`;
 }
 
 // ─── Prompt metadata type ────────────────────────────────────────────────────
@@ -428,7 +431,7 @@ Para cada alerta:
 
 ---
 
-## REGRAS DE QUALIDADE:
+## REGRAS DE QUALIDADE E FORMATAÇÃO:
 1. Cite SEMPRE Decreto 3.048/99, NR-15, NR-16, NHOs e jurisprudência (STF Tema 555) com referências específicas.
 2. ${meta.hasPdf ? "Use EXCLUSIVAMENTE dados reais do documento. Cite trechos. NÃO invente." : "Indique claramente quando precisa de verificação manual."}
 3. Tabelas com dados concretos, NUNCA genéricos.
@@ -436,7 +439,9 @@ Para cada alerta:
 5. Relatório EXTENSO e MINUCIOSO — mínimo 3000 palavras.
 6. Linguagem técnica de auditoria fiscal/previdenciária. Português brasileiro.
 7. NÃO resuma — detalhe CADA item.
-8. Diferencie SEMPRE o âmbito trabalhista (NR-15/16) do previdenciário (Decreto 3.048).`;
+8. Diferencie SEMPRE o âmbito trabalhista (NR-15/16) do previdenciário (Decreto 3.048).
+9. **FORMATAÇÃO MARKDOWN OBRIGATÓRIA:** Use SEMPRE tabelas markdown com cabeçalho e separadores (|---|). Use ## para títulos de seção, ### para subtítulos. Use **negrito** para destaques. Use emojis de status (✅ ⚠️ ❌ 🔴 🟠 🟡) nas tabelas e alertas. Use blocos de citação (>) para alertas críticos. NUNCA escreva tabelas como texto corrido.
+10. **ESTRUTURA DE ALERTAS:** Cada alerta 🔴 🟠 🟡 deve usar blockquote (>) para destaque visual.`;
 }
 
 function buildPGRPrompt(meta: PromptMeta): string {
@@ -614,14 +619,16 @@ Para cada alerta:
 
 ---
 
-## REGRAS DE QUALIDADE:
+## REGRAS DE QUALIDADE E FORMATAÇÃO:
 1. Cite SEMPRE NR-01, NR-09, NR-15 com itens específicos (ex: item 1.5.4.4.2).
 2. ${meta.hasPdf ? "Use EXCLUSIVAMENTE dados reais do documento. Cite trechos. NÃO invente." : "Indique claramente quando precisa de verificação manual."}
 3. Tabelas com dados concretos, NUNCA genéricos.
 4. Cada alerta com fundamentação legal específica.
 5. Relatório EXTENSO e MINUCIOSO — mínimo 3000 palavras.
 6. Linguagem técnica de auditoria. Português brasileiro.
-7. NÃO resuma — detalhe CADA item.`;
+7. NÃO resuma — detalhe CADA item.
+8. **FORMATAÇÃO MARKDOWN OBRIGATÓRIA:** Use SEMPRE tabelas markdown com cabeçalho e separadores (|---|). Use ## para títulos de seção, ### para subtítulos. Use **negrito** para destaques. Use emojis de status (✅ ⚠️ ❌ 🔴 🟠 🟡) nas tabelas e alertas. Use blocos de citação (>) para alertas críticos. NUNCA escreva tabelas como texto corrido — SEMPRE use a sintaxe markdown completa com pipes (|).
+9. **ESTRUTURA DE ALERTAS:** Cada alerta 🔴 🟠 🟡 deve estar dentro de um bloco formatado com > (blockquote) para destaque visual.`;
 }
 
 function getSystemPrompt(meta: PromptMeta): string {
@@ -716,7 +723,7 @@ serve(async (req) => {
     let userMessage = "";
     if (hasPdfContent) {
       const truncNote = wasTruncated ? `\n\n⚠️ NOTA: O documento original possui ${pdfPageCount} páginas e ${pdfText!.length} caracteres. O conteúdo foi truncado para caber no limite de processamento. Analise o conteúdo disponível e indique que a análise cobre parcialmente o documento.` : "";
-      userMessage = `## CONTEÚDO DO DOCUMENTO (${pdfPageCount} páginas)\n\n---\n${truncatedPdfText}\n---${truncNote}\n\nCom base no conteúdo acima, realize a auditoria técnica detalhada seguindo TODAS as seções da estrutura obrigatória. O relatório deve ser extenso e minucioso.`;
+      userMessage = `## CONTEÚDO DO DOCUMENTO (${pdfPageCount} páginas)\n\n---\n${truncatedPdfText}\n---${truncNote}\n\nCom base no conteúdo acima, realize a auditoria técnica detalhada seguindo TODAS as seções da estrutura obrigatória. O relatório deve ser extenso e minucioso. IMPORTANTE: Use OBRIGATORIAMENTE formatação Markdown com tabelas (|---|), cabeçalhos (##), negrito (**) e emojis de status. Todas as tabelas DEVEM usar a sintaxe markdown com pipes e separadores.`;
     } else {
       userMessage = `O conteúdo do documento "${documento_nome}" do tipo ${documento_tipo} não pôde ser extraído (possivelmente PDF escaneado/imagem). ${contextoProfissional ? `Informações adicionais: ${contextoProfissional}.` : ""} Gere o relatório de auditoria sinalizando itens que precisam ser verificados manualmente.`;
     }
