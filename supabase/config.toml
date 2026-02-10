@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.extract-atestado]
 verify_jwt = false
+
+[functions.ai-sst-analise]
+verify_jwt = false

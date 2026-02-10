@@ -42,6 +42,7 @@ export function SSTAnaliseIAModal({ open, onOpenChange, documento }: Props) {
             documento_nome: documento.arquivo_nome || documento.tipo,
             empresa_emissora: documento.empresa_emissora || "",
             profissional_responsavel: documento.profissional_responsavel || "",
+            arquivo_url: documento.arquivo_url || "",
             action: "analise",
           }),
         }

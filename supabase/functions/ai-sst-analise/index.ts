@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,117 +15,229 @@ serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY não configurada");
 
-    const { documento_tipo, documento_nome, empresa_emissora, profissional_responsavel, action } = await req.json();
+    const { documento_tipo, documento_nome, empresa_emissora, profissional_responsavel, arquivo_url, action } = await req.json();
+
+    // Extract auth token to download file from storage
+    const authHeader = req.headers.get("Authorization");
+
+    let pdfBase64: string | null = null;
+
+    if (arquivo_url) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
+
+        const { data: fileData, error: fileError } = await supabaseAdmin.storage
+          .from("documentos")
+          .download(arquivo_url);
+
+        if (fileError) {
+          console.error("Erro ao baixar arquivo do storage:", fileError.message);
+        } else if (fileData) {
+          const arrayBuffer = await fileData.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          // Manual base64 encoding for Deno
+          let binary = "";
+          for (let i = 0; i < uint8Array.length; i++) {
+            binary += String.fromCharCode(uint8Array[i]);
+          }
+          pdfBase64 = btoa(binary);
+          console.log(`PDF baixado com sucesso: ${(uint8Array.length / 1024 / 1024).toFixed(2)} MB`);
+        }
+      } catch (downloadErr) {
+        console.error("Erro ao processar arquivo:", downloadErr);
+      }
+    }
 
     const contextoProfissional = [
       empresa_emissora ? `Empresa Emissora: ${empresa_emissora}` : "",
       profissional_responsavel ? `Profissional Responsável: ${profissional_responsavel}` : "",
     ].filter(Boolean).join("\n");
 
-    let systemPrompt = "";
+    const systemPrompt = `Você é um Auditor Técnico Sênior em Saúde e Segurança do Trabalho (SST), com mais de 20 anos de experiência em auditoria de conformidade, especialista em legislação trabalhista brasileira, normas regulamentadoras (NRs), legislação previdenciária (Lei 8.213/91, Decreto 3.048/99), eSocial e jurisprudência do TST.
 
-    if (action === "analise") {
-      systemPrompt = `Você é um Auditor Técnico Sênior em Saúde e Segurança do Trabalho (SST), com especialização em legislação trabalhista, previdenciária e normas regulamentadoras brasileiras.
-
-Você está auditando o documento: **${documento_tipo}** — "${documento_nome}"
+Você está realizando uma AUDITORIA TÉCNICA COMPLETA do documento: **${documento_tipo}** — "${documento_nome}"
 ${contextoProfissional ? `\n${contextoProfissional}` : ""}
 
-## INSTRUÇÕES DE ANÁLISE
+## INSTRUÇÕES CRÍTICAS
 
-Produza um **Relatório Técnico de Conformidade** profissional e estruturado, com base nas Normas Regulamentadoras (NRs) aplicáveis ao tipo de documento.
+${pdfBase64 ? "O CONTEÚDO COMPLETO DO DOCUMENTO FOI ANEXADO. Você DEVE ler e analisar CADA PÁGINA do documento. Extraia TODOS os dados reais presentes: nomes, datas, riscos, funções, setores, exames, medidas de controle, etc. NÃO invente dados. Use EXCLUSIVAMENTE o que está no documento." : "O conteúdo do documento não pôde ser carregado. Gere uma análise baseada no tipo de documento e nas NRs aplicáveis, indicando claramente quais itens precisam ser verificados manualmente."}
+
+Produza um **Relatório Técnico de Auditoria de Conformidade SST** completo, detalhado e profissional.
 
 ### ESTRUTURA OBRIGATÓRIA DO RELATÓRIO:
 
 ---
 
-# 📋 RELATÓRIO DE CONFORMIDADE SST
-**Documento:** ${documento_tipo}  
+# 📋 RELATÓRIO DE AUDITORIA DE CONFORMIDADE SST
+
+**Documento Auditado:** ${documento_tipo}  
 **Arquivo:** ${documento_nome}  
-**Data da Análise:** [data atual]
+${empresa_emissora ? `**Empresa:** ${empresa_emissora}` : ""}  
+${profissional_responsavel ? `**Profissional Responsável:** ${profissional_responsavel}` : ""}  
+**Data da Auditoria:** ${new Date().toLocaleDateString("pt-BR")}
 
 ---
 
-## 1. IDENTIFICAÇÃO E ESCOPO
-- Tipo do documento e sua finalidade legal
+## 1. SUMÁRIO EXECUTIVO
+- Visão geral do documento analisado
+- Nível geral de conformidade: ✅ Conforme | ⚠️ Parcialmente Conforme | ❌ Não Conforme
+- Quantidade de alertas por severidade
+- Principais achados
+
+## 2. IDENTIFICAÇÃO E ESCOPO DO DOCUMENTO
+- Tipo e finalidade legal do documento
 - NRs diretamente aplicáveis (cite artigos e itens específicos)
-- Obrigações legais vinculadas a este tipo de documento
+- Periodicidade legal de revisão/atualização
+- Validade e vigência
 
-## 2. REQUISITOS NORMATIVOS APLICÁVEIS
-Para cada NR pertinente, liste:
-- **Número e nome da NR** (ex: NR-07 – PCMSO)
-- **Itens normativos específicos** que o documento deve atender
-- **Obrigações do empregador** conforme a norma
-- **Periodicidade** de revisão/atualização exigida
-
-## 3. ANÁLISE DE CONFORMIDADE POR REQUISITO
-Para cada requisito normativo, avalie:
-| Requisito | NR | Status | Observação |
-|---|---|---|---|
-| [item] | [NR-XX, item Y.Z] | ✅ Conforme / ⚠️ Atenção / ❌ Não Conforme | [detalhe] |
-
-## 4. FUNÇÕES, SETORES E RISCOS IDENTIFICADOS
-- Funções/cargos mencionados ou aplicáveis
+## 3. DADOS EXTRAÍDOS DO DOCUMENTO
+${pdfBase64 ? "Liste TODOS os dados reais encontrados:" : "Indique quais dados devem constar:"}
+- CNPJ, Razão Social, endereço
+- Profissional responsável (nome, registro, habilitação)
+- Data de elaboração e validade
+- Funções/cargos identificados
 - Setores de trabalho
-- Agentes de risco por categoria:
-  - **Físicos** (ruído, calor, vibração, radiação)
-  - **Químicos** (poeiras, gases, vapores, névoas)
-  - **Biológicos** (vírus, bactérias, fungos)
-  - **Ergonômicos** (postura, repetitividade, carga mental)
-  - **De Acidentes** (mecânicos, elétricos, quedas)
+- Número de trabalhadores expostos (se constar)
 
-## 5. MEDIDAS DE CONTROLE E RECOMENDAÇÕES
-- Medidas de controle existentes (identificadas no documento)
-- Medidas recomendadas (com base nas NRs)
-- Hierarquia de controle aplicável (eliminação > substituição > engenharia > administrativa > EPI)
+## 4. INVENTÁRIO DE RISCOS IDENTIFICADOS
+Para cada risco encontrado no documento, detalhe:
 
-## 6. EXAMES E TREINAMENTOS OBRIGATÓRIOS
-- Exames ocupacionais exigidos (admissional, periódico, demissional, retorno, mudança de risco)
-- Treinamentos obrigatórios por NR (NR-06, NR-10, NR-12, NR-33, NR-35, etc.)
-- Periodicidade de reciclagem
+### 4.1 Riscos Físicos
+| Agente | Setor/Função | Fonte Geradora | Intensidade/Nível | NR Aplicável | Medida de Controle |
+|---|---|---|---|---|---|
 
-## 7. ALERTAS DE CONFORMIDADE
+### 4.2 Riscos Químicos
+| Agente | Setor/Função | Forma de Exposição | Limite Tolerância | NR Aplicável | Medida de Controle |
+|---|---|---|---|---|---|
 
-Classifique cada alerta usando:
-- 🔴 **CRÍTICO** — Risco legal/previdenciário imediato, possível autuação do MTE ou passivo trabalhista
-- 🟠 **ALERTA TÉCNICO** — Inconsistência normativa, lacuna técnica ou divergência entre documentos
-- 🟡 **ATENÇÃO** — Item que requer acompanhamento ou atualização futura
+### 4.3 Riscos Biológicos
+| Agente | Setor/Função | Via de Transmissão | Classificação | NR Aplicável | Medida de Controle |
+|---|---|---|---|---|---|
 
-Para cada alerta, indique:
-- Descrição objetiva do problema
-- NR e item normativo violado/em risco
-- Impacto legal e previdenciário
-- Ação corretiva recomendada com prazo sugerido
+### 4.4 Riscos Ergonômicos
+| Fator | Setor/Função | Descrição | Grau | NR-17 Item | Medida de Controle |
+|---|---|---|---|---|---|
 
-## 8. INTEGRAÇÕES COM OUTROS DOCUMENTOS SST
-- Coerência necessária com PGR, PCMSO, LTCAT, AEP, PPP
-- Eventos eSocial relacionados (S-2210, S-2220, S-2240)
-- Obrigações previdenciárias vinculadas (NTEP, FAP, RAT)
+### 4.5 Riscos de Acidentes
+| Fator | Setor/Função | Descrição | Probabilidade | NR Aplicável | Medida de Controle |
+|---|---|---|---|---|---|
 
-## 9. CONCLUSÃO E RECOMENDAÇÕES PRIORITÁRIAS
-- Resumo executivo do nível de conformidade
-- Top 3 ações prioritárias com responsável sugerido e prazo
-- Classificação geral: ✅ Conforme | ⚠️ Parcialmente Conforme | ❌ Não Conforme
+## 5. ANÁLISE DE CONFORMIDADE POR NORMA REGULAMENTADORA
+
+Para CADA NR aplicável ao documento, analise:
+
+### NR-XX — [Nome da NR]
+| Item Normativo | Requisito | Status | Evidência no Documento | Observação |
+|---|---|---|---|---|
+| X.X.X | [descrição] | ✅/⚠️/❌ | [trecho ou referência] | [detalhe] |
+
+**NRs que devem ser obrigatoriamente analisadas conforme o tipo de documento:**
+- PGR: NR-01 (GRO/PGR), NR-09, NR-15, NR-16, e NRs específicas por atividade
+- PCMSO: NR-07, NR-09 (correlação com PGR), NR-15, NR-17
+- LTCAT: NR-15, NR-16, IN PRES/INSS 128/2022, Decreto 3.048/99
+- AEP/AET: NR-17
+- PPP: NR-01, NR-07, NR-09, NR-15, IN PRES/INSS 128/2022
+
+## 6. COERÊNCIA ENTRE DOCUMENTOS SST
+- Riscos do PGR vs exames do PCMSO (correlação)
+- Agentes do LTCAT vs medidas do PGR
+- EPI indicado vs CA e adequação ao risco
+- Treinamentos exigidos vs realizados
+- Divergências identificadas entre documentos
+
+## 7. EXAMES OCUPACIONAIS E TREINAMENTOS
+### 7.1 Exames Obrigatórios
+| Função | Risco | Exame Exigido | Periodicidade | Base Legal | Status |
+|---|---|---|---|---|---|
+
+### 7.2 Treinamentos Obrigatórios
+| NR | Treinamento | Carga Horária | Periodicidade | Público-Alvo | Status |
+|---|---|---|---|---|---|
+
+## 8. ALERTAS DE CONFORMIDADE
+
+Classifique CADA alerta encontrado:
+
+### 🔴 ALERTAS CRÍTICOS (Risco Legal/Previdenciário Imediato)
+Para cada alerta:
+- **Descrição:** [problema objetivo]
+- **Norma Violada:** [NR-XX, item X.X.X]
+- **Fundamentação Legal:** [artigo/lei/decreto]
+- **Impacto:** [multa estimada, passivo trabalhista, interdição]
+- **Ação Corretiva:** [o que fazer]
+- **Prazo Sugerido:** [imediato/30 dias/60 dias]
+- **Responsável Sugerido:** [cargo/função]
+
+### 🟠 ALERTAS TÉCNICOS (Inconsistências e Lacunas)
+[mesma estrutura acima]
+
+### 🟡 PONTOS DE ATENÇÃO (Acompanhamento)
+[mesma estrutura acima]
+
+## 9. OBRIGAÇÕES eSocial RELACIONADAS
+| Evento | Descrição | Prazo | Dados Necessários | Status |
+|---|---|---|---|---|
+| S-2210 | CAT | [prazo] | [dados] | [status] |
+| S-2220 | ASO | [prazo] | [dados] | [status] |
+| S-2240 | Condições Ambientais | [prazo] | [dados] | [status] |
+
+## 10. MATRIZ DE AÇÕES CORRETIVAS PRIORITÁRIAS
+| # | Ação | Prioridade | Prazo | Responsável | NR Base | Custo Estimado |
+|---|---|---|---|---|---|---|
+| 1 | [ação] | 🔴 Crítica | [prazo] | [cargo] | [NR] | [estimativa] |
+
+## 11. CONCLUSÃO E PARECER TÉCNICO
+- Resumo do nível de conformidade geral
+- Principais riscos identificados
+- Recomendações prioritárias (Top 5)
+- Próximos passos sugeridos
+- Prazo para próxima revisão do documento
 
 ---
 
-⚠️ **Nota:** Este relatório é gerado por inteligência artificial como ferramenta auxiliar de auditoria. Não substitui a análise e responsabilidade técnica de profissionais legalmente habilitados (Engenheiro de Segurança, Médico do Trabalho, etc.).
+⚠️ **AVISO LEGAL:** Este relatório foi gerado por inteligência artificial como ferramenta auxiliar de auditoria de conformidade. Não substitui a análise, parecer e responsabilidade técnica de profissionais legalmente habilitados (Engenheiro de Segurança do Trabalho, Médico do Trabalho, Técnico de Segurança do Trabalho). As conclusões apresentadas devem ser validadas por profissional competente antes de qualquer ação.
 
 ---
 
-## REGRAS IMPORTANTES:
+## REGRAS DE QUALIDADE:
 1. Cite SEMPRE os números das NRs e seus itens específicos (ex: NR-07, item 7.5.8)
-2. Diferencie entre obrigações do empregador, do trabalhador e do profissional de SST
-3. Considere a legislação atualizada (CLT, Lei 8.213/91, Decreto 3.048/99)
-4. Mantenha linguagem técnica, objetiva e profissional
-5. Use formatação Markdown clara com tabelas, listas e destaques
-6. Responda SEMPRE em português brasileiro`;
-    } else {
-      systemPrompt = `Você é um especialista sênior em SST com profundo conhecimento das NRs brasileiras. Responda à pergunta do usuário sobre o documento ${documento_tipo} de forma técnica e profissional, sempre citando as NRs aplicáveis.`;
+2. ${pdfBase64 ? "Use EXCLUSIVAMENTE dados reais do documento. NÃO invente informações." : "Indique claramente quando um item precisa de verificação manual."}
+3. Diferencie entre obrigações do empregador, do trabalhador e do profissional de SST
+4. Considere legislação atualizada: CLT, Lei 8.213/91, Decreto 3.048/99, Portarias do MTE
+5. Tabelas DEVEM conter dados concretos, não genéricos
+6. Cada alerta DEVE ter fundamentação legal específica
+7. Use linguagem técnica, objetiva e profissional
+8. O relatório deve ser extenso e detalhado — mínimo 2000 palavras
+9. Responda SEMPRE em português brasileiro`;
+
+    // Build messages with or without PDF content
+    const userContent: any[] = [];
+
+    if (pdfBase64) {
+      userContent.push({
+        type: "file",
+        file: {
+          filename: documento_nome || "documento.pdf",
+          file_data: `data:application/pdf;base64,${pdfBase64}`,
+        },
+      });
     }
 
-    const userMessage = action === "analise"
-      ? `Realize a auditoria de conformidade do documento "${documento_nome}" do tipo ${documento_tipo}. ${contextoProfissional ? `Informações adicionais: ${contextoProfissional}.` : ""} Gere o relatório técnico completo seguindo a estrutura obrigatória, analisando todos os requisitos normativos aplicáveis a este tipo de documento SST conforme as Normas Regulamentadoras vigentes.`
-      : `Pergunta sobre o documento ${documento_tipo}: ${documento_nome}`;
+    userContent.push({
+      type: "text",
+      text: pdfBase64
+        ? `Realize a auditoria técnica completa deste documento ${documento_tipo}. Leia TODAS as páginas do PDF anexado. Extraia TODOS os dados reais (funções, setores, riscos, agentes, medidas de controle, exames, profissionais, datas, etc.) e produza o relatório de conformidade SST completo e detalhado conforme a estrutura definida, analisando item a item das NRs aplicáveis.`
+        : `Realize a auditoria de conformidade do documento "${documento_nome}" do tipo ${documento_tipo}. ${contextoProfissional ? `Informações adicionais: ${contextoProfissional}.` : ""} Como o PDF não pôde ser carregado, gere o relatório baseado no tipo do documento e nas NRs aplicáveis, sinalizando os itens que precisam ser verificados manualmente.`,
+    });
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
+    ];
+
+    console.log(`Enviando para OpenAI. PDF anexado: ${!!pdfBase64}. Tipo: ${documento_tipo}`);
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -134,12 +247,10 @@ Para cada alerta, indique:
       },
       body: JSON.stringify({
         model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
+        messages,
         stream: true,
-        temperature: 0.3,
+        temperature: 0.2,
+        max_tokens: 16000,
       }),
     });
 
@@ -153,7 +264,7 @@ Para cada alerta, indique:
         });
       }
 
-      return new Response(JSON.stringify({ error: "Erro na API OpenAI" }), {
+      return new Response(JSON.stringify({ error: `Erro na API OpenAI: ${t}` }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
