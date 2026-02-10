@@ -18,19 +18,24 @@ export function EmpresaEnquadramentoLegal({
   onChange
 }: Props) {
   const grauRisco = data.grau_risco_ajustado || data.grau_risco || 0;
-  const prevCnaeRef = useRef(data.cnae_principal);
+  const prevCnaeRef = useRef<string | undefined>(undefined);
 
-  // Auto-fill grau de risco when CNAE changes
+  // Auto-fill grau de risco when CNAE changes or is loaded for the first time
   useEffect(() => {
-    if (data.cnae_principal && data.cnae_principal !== prevCnaeRef.current) {
+    if (!data.cnae_principal) return;
+    
+    const cnaeChanged = data.cnae_principal !== prevCnaeRef.current;
+    const grauMissing = !data.grau_risco;
+    
+    if (cnaeChanged || grauMissing) {
       prevCnaeRef.current = data.cnae_principal;
       const gr = getGrauRiscoByCnae(data.cnae_principal);
-      if (gr) {
+      if (gr && gr !== data.grau_risco) {
         onChange({ grau_risco: gr });
         toast.info(`Grau de Risco ${gr} identificado automaticamente pelo CNAE.`);
       }
     }
-  }, [data.cnae_principal]);
+  }, [data.cnae_principal, data.grau_risco]);
   return <div className="space-y-8">
       {/* CNAE e Grau de Risco */}
       <section className="space-y-4">
