@@ -81,25 +81,6 @@ export function EmpresaDadosBasicos({ data, onChange }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Razão Social</Label>
-          <Input
-            placeholder="Razão Social completa"
-            value={data.razao_social || ''}
-            onChange={(e) => onChange({ razao_social: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Nome Fantasia</Label>
-          <Input
-            placeholder="Nome Fantasia"
-            value={data.nome_fantasia || ''}
-            onChange={(e) => onChange({ nome_fantasia: e.target.value })}
-          />
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>CNPJ</Label>
@@ -143,6 +124,25 @@ export function EmpresaDadosBasicos({ data, onChange }: Props) {
             placeholder="Inscrição Municipal"
             value={data.inscricao_municipal || ''}
             onChange={(e) => onChange({ inscricao_municipal: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Razão Social</Label>
+          <Input
+            placeholder="Razão Social completa"
+            value={data.razao_social || ''}
+            onChange={(e) => onChange({ razao_social: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Nome Fantasia</Label>
+          <Input
+            placeholder="Nome Fantasia"
+            value={data.nome_fantasia || ''}
+            onChange={(e) => onChange({ nome_fantasia: e.target.value })}
           />
         </div>
       </div>
