@@ -56,6 +56,7 @@ const menuItems: MenuItem[] = [
   { title: "Atestados", icon: Stethoscope, path: "/atestados" },
   { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
   { title: "EPIs", icon: Shield, path: "/epis" },
+  { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
   { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
   { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
   { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
