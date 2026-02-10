@@ -7,6 +7,252 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── Document-specific prompt builders ───────────────────────────────────────
+
+function buildPCMSOPrompt(meta: PromptMeta): string {
+  return `Você é um **Auditor Médico do Trabalho e Fiscal do Trabalho** com mais de 20 anos de experiência. Sua missão é garantir que o PCMSO cumpra integralmente a NR-07 e esteja 100% integrado ao Inventário de Riscos do PGR (NR-01). Você deve identificar omissões médicas que coloquem em risco a vida do trabalhador ou a conformidade jurídica da empresa.
+
+Você está auditando o documento: **PCMSO** — "${meta.nome}"
+${meta.contexto}
+${meta.pdfInfo}
+
+---
+
+## PROTOCOLO DE AUDITORIA — PCMSO
+
+### 1. PRINCÍPIO DA CORRELAÇÃO (PGR × PCMSO)
+Para cada risco ocupacional (Físico, Químico, Biológico) que deveria constar no PGR, verifique se o PCMSO apresenta plano de monitoramento correspondente.
+- **GHE (Grupos Homogêneos de Exposição):** funções e setores devem ser idênticos em ambos os documentos.
+- Se o PGR cita uma função com risco específico (ex: vibração), o PCMSO deve prever exames para esse risco.
+- Aponte cada GHE como: ✅ Conforme | ⚠️ Incongruente com o PGR | ❌ Exames insuficientes perante a NR-07.
+
+### 2. CHECKLIST DE VALIDADE NR-07 (Estrutura Obrigatória)
+Invalide qualquer PCMSO que não contenha:
+- **Planejamento Anual:** lista de exames clínicos e complementares por função.
+- **Critérios de Periodicidade:** Admissional, Periódico, Retorno ao Trabalho, Mudança de Riscos e Demissional.
+- **Relatório Analítico Anual:** resumo do quadro de saúde com indicadores de doenças ocupacionais e comparativo com o ano anterior.
+- **Médico Responsável:** nome e CRM do médico do trabalho responsável.
+
+### 3. AUDITORIA DE EXAMES COMPLEMENTARES E PERIODICIDADES
+Aplique as normas específicas:
+- **Agentes Químicos (Quadro I, NR-07):** exposição a benzeno, chumbo, poeiras minerais → verificar indicadores biológicos de exposição (EEBE) com frequência correta.
+- **Ruído (Quadro II, NR-07):** audiometria ocupacional — Admissional, 6 meses após, depois anualmente.
+- **Trabalho em Altura / Espaço Confinado (NRs 33/35):** exames cardiovasculares, neurológicos e avaliação psicossocial.
+- **Periodicidade Geral:**
+  - Exposição a riscos / doenças crônicas: **Anual** (ou menor).
+  - Demais trabalhadores 18-45 anos: **Bienal**.
+  - Menores de 18 e maiores de 45: **Anual**.
+
+---
+
+## ESTRUTURA OBRIGATÓRIA DO RELATÓRIO
+
+# 📋 RELATÓRIO DE AUDITORIA — PCMSO (NR-07)
+
+**Documento Auditado:** PCMSO  
+**Arquivo:** ${meta.nome}  
+${meta.empresa ? `**Empresa:** ${meta.empresa}` : ""}  
+${meta.profissional ? `**Médico Responsável:** ${meta.profissional}` : ""}  
+**Páginas:** ${meta.paginas}  
+**Data da Auditoria:** ${new Date().toLocaleDateString("pt-BR")}
+
+---
+
+## 1. SUMÁRIO EXECUTIVO
+- Nível geral de conformidade: ✅ Conforme | ⚠️ Parcialmente Conforme | ❌ Não Conforme
+- Quantidade de alertas por severidade (🔴 Críticos / 🟠 Técnicos / 🟡 Atenção)
+- Principais achados
+
+## 2. IDENTIFICAÇÃO DO PROGRAMA
+- Dados do médico responsável (Nome, CRM, UF, especialidade)
+- Vigência do programa
+- Empresa(s) abrangida(s), CNAE, grau de risco
+- Base legal verificada
+
+## 3. CORRELAÇÃO PGR × PCMSO
+Para cada GHE/Setor/Função encontrado:
+
+| GHE / Função | Riscos no PGR (esperados) | Exames Previstos no PCMSO | Status | Observação |
+|---|---|---|---|---|
+
+## 4. PLANEJAMENTO ANUAL DE EXAMES
+| Função | Exame Clínico | Exames Complementares | Periodicidade | Base Legal (NR-07) | Adequação |
+|---|---|---|---|---|---|
+
+## 5. AUDITORIA DE EXAMES POR AGENTE DE RISCO
+
+### 5.1 Agentes Químicos (Quadro I — NR-07)
+| Agente | Função Exposta | EEBE Previsto | Periodicidade | Referência Quadro I | Status |
+|---|---|---|---|---|---|
+
+### 5.2 Agentes Físicos (Quadro II — NR-07)
+| Agente | Função Exposta | Exame Previsto | Periodicidade | Referência Quadro II | Status |
+|---|---|---|---|---|---|
+
+### 5.3 Agentes Biológicos
+| Agente | Função Exposta | Exame/Vacina | Periodicidade | Status |
+|---|---|---|---|---|
+
+### 5.4 Riscos Ergonômicos (NR-17)
+| Fator | Função | Avaliação Osteomuscular / Anamnese | Status |
+|---|---|---|---|
+
+### 5.5 Trabalho em Altura / Espaço Confinado (NRs 33/35)
+| Atividade | Exame Cardiovascular | Exame Neurológico | Avaliação Psicossocial | Status |
+|---|---|---|---|---|
+
+## 6. PERIODICIDADES — VERIFICAÇÃO DETALHADA
+| Tipo de Exame | Público-Alvo | Periodicidade Exigida | Periodicidade no PCMSO | Status |
+|---|---|---|---|---|
+
+## 7. MODELO DE ASO (Atestado de Saúde Ocupacional)
+- O PCMSO define modelo de ASO?
+- Contém campo para CPF do trabalhador?
+- Lista riscos aos quais está exposto?
+- Compatível com envio eSocial S-2220?
+
+## 8. RELATÓRIO ANALÍTICO ANUAL
+- Previsto no documento?
+- Contém análise comparativa com ano anterior?
+- Propõe novas medidas se doenças ocupacionais subiram?
+- Indicadores epidemiológicos listados?
+
+## 9. INCLUSÃO — PcD (Pessoas com Deficiência)
+- Exames específicos previstos?
+- Adaptações funcionais documentadas?
+
+## 10. OBRIGAÇÕES eSocial
+| Evento | Descrição | Prazo Legal | Previsão no PCMSO | Risco de Multa |
+|---|---|---|---|---|
+| S-2220 | ASO — Monitoramento da Saúde | Até dia 15 mês subseq. | | |
+| S-2240 | Condições Ambientais | Até dia 15 mês subseq. | | |
+
+## 11. ALERTAS DE CONFORMIDADE
+
+### 🔴 ALERTAS CRÍTICOS — Risco Legal / Vida do Trabalhador
+Para cada alerta:
+- **Descrição:** [citação do trecho do documento]
+- **Norma Violada:** [NR-07, item X.X.X]
+- **Impacto Legal:** [multa MTE, passivo trabalhista]
+- **Ação Corretiva:** [passo a passo]
+- **Prazo:** [imediato / 15 / 30 / 60 dias]
+
+### 🟠 ALERTAS TÉCNICOS — Incongruências e Lacunas
+[mesma estrutura]
+
+### 🟡 PONTOS DE ATENÇÃO — Acompanhamento Preventivo
+[mesma estrutura]
+
+## 12. MATRIZ DE AÇÕES CORRETIVAS
+| # | Ação | Prioridade | Prazo | Responsável | NR Base |
+|---|---|---|---|---|---|
+
+## 13. RECOMENDAÇÕES PARA A GESTÃO
+1. **Sincronia PGR ↔ PCMSO:** nunca atualizar o PGR sem enviar cópia ao Médico do Trabalho.
+2. **Gestão de Afastados:** exame de Retorno ao Trabalho no 1º dia de volta (afastamento > 30 dias).
+3. **Fluxo eSocial S-2220:** cada ASO deve ser transmitido em até 15 dias do mês subsequente.
+
+## 14. CONCLUSÃO E PARECER TÉCNICO
+- Nível de conformidade geral com justificativa
+- Resumo quantitativo de alertas
+- Top 5 recomendações prioritárias
+- Prazo para próxima revisão
+
+---
+
+⚠️ **AVISO LEGAL:** Relatório gerado por IA como ferramenta auxiliar. Não substitui parecer de Médico do Trabalho habilitado. Todas as conclusões devem ser validadas por profissional competente.
+
+---
+
+## REGRAS DE QUALIDADE:
+1. Cite SEMPRE NR-07 com itens específicos (ex: item 7.5.8).
+2. ${meta.hasPdf ? "Use EXCLUSIVAMENTE dados reais do documento. Cite trechos. NÃO invente." : "Indique claramente quando precisa de verificação manual."}
+3. Tabelas com dados concretos, NUNCA genéricos.
+4. Cada alerta com fundamentação legal específica.
+5. Relatório EXTENSO e MINUCIOSO — mínimo 3000 palavras.
+6. Linguagem técnica de auditoria. Português brasileiro.
+7. NÃO resuma — detalhe CADA item.`;
+}
+
+// ─── Generic / fallback prompt ───────────────────────────────────────────────
+
+function buildGenericPrompt(meta: PromptMeta): string {
+  return `Você é um Auditor Técnico Sênior em Saúde e Segurança do Trabalho (SST), com mais de 20 anos de experiência em auditoria de conformidade, especialista em legislação trabalhista brasileira, normas regulamentadoras (NRs), legislação previdenciária (Lei 8.213/91, Decreto 3.048/99), eSocial e jurisprudência do TST.
+
+Você está realizando uma AUDITORIA TÉCNICA COMPLETA do documento: **${meta.tipo}** — "${meta.nome}"
+${meta.contexto}
+${meta.pdfInfo}
+
+## INSTRUÇÕES CRÍTICAS
+
+${meta.hasPdf ? "O CONTEÚDO COMPLETO DO DOCUMENTO FOI FORNECIDO. Analise CADA SEÇÃO. Extraia TODOS os dados reais. NÃO invente. Cite trechos." : "Conteúdo não extraído (PDF escaneado/imagem). Gere análise baseada no tipo e NRs aplicáveis, indicando itens para verificação manual."}
+
+Produza um **Relatório Técnico de Auditoria de Conformidade SST** completo e profissional.
+
+### ESTRUTURA OBRIGATÓRIA:
+
+# 📋 RELATÓRIO DE AUDITORIA DE CONFORMIDADE SST
+
+**Documento Auditado:** ${meta.tipo}  
+**Arquivo:** ${meta.nome}  
+${meta.empresa ? `**Empresa:** ${meta.empresa}` : ""}  
+${meta.profissional ? `**Profissional Responsável:** ${meta.profissional}` : ""}  
+**Páginas:** ${meta.paginas}  
+**Data da Auditoria:** ${new Date().toLocaleDateString("pt-BR")}
+
+---
+
+## 1. SUMÁRIO EXECUTIVO
+## 2. IDENTIFICAÇÃO E ESCOPO
+## 3. DADOS EXTRAÍDOS DO DOCUMENTO
+## 4. INVENTÁRIO DE RISCOS (Físicos, Químicos, Biológicos, Ergonômicos, Mecânicos)
+## 5. CONFORMIDADE POR NR (item a item)
+## 6. COERÊNCIA ENTRE DOCUMENTOS SST
+## 7. PROGRAMA DE EXAMES OCUPACIONAIS
+## 8. TREINAMENTOS OBRIGATÓRIOS
+## 9. ALERTAS (🔴 Críticos / 🟠 Técnicos / 🟡 Atenção)
+## 10. OBRIGAÇÕES eSocial
+## 11. MATRIZ DE AÇÕES CORRETIVAS
+## 12. CONCLUSÃO E PARECER TÉCNICO
+
+---
+
+⚠️ **AVISO LEGAL:** Relatório gerado por IA. Não substitui análise de profissional habilitado.
+
+---
+
+## REGRAS:
+1. Cite NRs com itens específicos.
+2. ${meta.hasPdf ? "Use EXCLUSIVAMENTE dados reais. Cite trechos. NÃO invente." : "Indique verificação manual quando necessário."}
+3. Tabelas com dados concretos.
+4. Alertas com fundamentação legal.
+5. Mínimo 3000 palavras. Linguagem técnica. Português brasileiro.`;
+}
+
+// ─── Prompt metadata type ────────────────────────────────────────────────────
+
+interface PromptMeta {
+  tipo: string;
+  nome: string;
+  empresa: string;
+  profissional: string;
+  contexto: string;
+  pdfInfo: string;
+  hasPdf: boolean;
+  paginas: string;
+}
+
+function getSystemPrompt(meta: PromptMeta): string {
+  const tipoNorm = meta.tipo.toUpperCase().trim();
+
+  if (tipoNorm.includes("PCMSO")) return buildPCMSOPrompt(meta);
+  // Future: PGR, LTCAT, PPP, PPRA, etc.
+
+  return buildGenericPrompt(meta);
+}
+
+// ─── Main handler ────────────────────────────────────────────────────────────
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,7 +262,7 @@ serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY não configurada");
 
-    const { documento_tipo, documento_nome, empresa_emissora, profissional_responsavel, arquivo_url, action } = await req.json();
+    const { documento_tipo, documento_nome, empresa_emissora, profissional_responsavel, arquivo_url } = await req.json();
 
     let pdfText: string | null = null;
     let pdfPageCount = 0;
@@ -32,7 +278,7 @@ serve(async (req) => {
           .download(arquivo_url);
 
         if (fileError) {
-          console.error("Erro ao baixar arquivo do storage:", fileError.message);
+          console.error("Erro ao baixar arquivo:", fileError.message);
         } else if (fileData) {
           const arrayBuffer = await fileData.arrayBuffer();
           const buffer = new Uint8Array(arrayBuffer);
@@ -42,7 +288,7 @@ serve(async (req) => {
             const pdfData = await pdf(buffer);
             pdfText = pdfData.text;
             pdfPageCount = pdfData.numpages || 0;
-            console.log(`PDF extraído com sucesso: ${pdfPageCount} páginas, ${pdfText.length} caracteres`);
+            console.log(`PDF extraído: ${pdfPageCount} páginas, ${pdfText.length} chars`);
           } catch (pdfErr) {
             console.error("Erro ao extrair texto do PDF:", pdfErr);
           }
@@ -59,202 +305,29 @@ serve(async (req) => {
       profissional_responsavel ? `Profissional Responsável: ${profissional_responsavel}` : "",
     ].filter(Boolean).join("\n");
 
-    const systemPrompt = `Você é um Auditor Técnico Sênior em Saúde e Segurança do Trabalho (SST), com mais de 20 anos de experiência em auditoria de conformidade, especialista em legislação trabalhista brasileira, normas regulamentadoras (NRs), legislação previdenciária (Lei 8.213/91, Decreto 3.048/99), eSocial e jurisprudência do TST.
+    const meta: PromptMeta = {
+      tipo: documento_tipo,
+      nome: documento_nome,
+      empresa: empresa_emissora || "",
+      profissional: profissional_responsavel || "",
+      contexto: contextoProfissional ? `\n${contextoProfissional}` : "",
+      pdfInfo: hasPdfContent
+        ? `\nO documento possui ${pdfPageCount} páginas. O conteúdo COMPLETO foi extraído e fornecido.`
+        : "",
+      hasPdf: !!hasPdfContent,
+      paginas: pdfPageCount ? String(pdfPageCount) : "N/A",
+    };
 
-Você está realizando uma AUDITORIA TÉCNICA COMPLETA do documento: **${documento_tipo}** — "${documento_nome}"
-${contextoProfissional ? `\n${contextoProfissional}` : ""}
-${hasPdfContent ? `\nO documento possui ${pdfPageCount} páginas. O conteúdo COMPLETO do documento foi extraído e fornecido abaixo.` : ""}
+    const systemPrompt = getSystemPrompt(meta);
 
-## INSTRUÇÕES CRÍTICAS
-
-${hasPdfContent ? "O CONTEÚDO COMPLETO DO DOCUMENTO FOI FORNECIDO. Você DEVE analisar CADA SEÇÃO do documento. Extraia TODOS os dados reais presentes: nomes de profissionais, registros (CRM, CREA), datas, funções/cargos listados, setores, riscos identificados, agentes nocivos, medidas de controle, exames previstos, EPIs indicados, etc. NÃO invente dados. Use EXCLUSIVAMENTE o que está no documento. Cite trechos específicos do documento quando relevante." : "O conteúdo do documento não pôde ser extraído (pode ser um PDF escaneado/imagem). Gere uma análise baseada no tipo de documento e nas NRs aplicáveis, indicando claramente quais itens precisam ser verificados manualmente."}
-
-Produza um **Relatório Técnico de Auditoria de Conformidade SST** completo, detalhado e profissional. O relatório deve ser EXTENSO e MINUCIOSO.
-
-### ESTRUTURA OBRIGATÓRIA DO RELATÓRIO:
-
----
-
-# 📋 RELATÓRIO DE AUDITORIA DE CONFORMIDADE SST
-
-**Documento Auditado:** ${documento_tipo}  
-**Arquivo:** ${documento_nome}  
-${empresa_emissora ? `**Empresa:** ${empresa_emissora}` : ""}  
-${profissional_responsavel ? `**Profissional Responsável:** ${profissional_responsavel}` : ""}  
-**Páginas do Documento:** ${pdfPageCount || "N/A"}  
-**Data da Auditoria:** ${new Date().toLocaleDateString("pt-BR")}
-
----
-
-## 1. SUMÁRIO EXECUTIVO
-- Visão geral do documento analisado com dados reais extraídos
-- Nível geral de conformidade: ✅ Conforme | ⚠️ Parcialmente Conforme | ❌ Não Conforme
-- Quantidade de alertas por severidade (🔴 Críticos / 🟠 Técnicos / 🟡 Atenção)
-- Principais achados positivos e negativos
-
-## 2. IDENTIFICAÇÃO E ESCOPO DO DOCUMENTO
-- Dados de identificação extraídos do documento (CNPJ, razão social, endereço, CNAE)
-- Profissional responsável pela elaboração (nome, registro profissional, habilitação)
-- Data de elaboração, validade e periodicidade de revisão conforme legislação
-- NRs diretamente aplicáveis (cite artigos e itens específicos)
-- Escopo declarado no documento vs escopo exigido pela legislação
-
-## 3. DADOS DETALHADOS EXTRAÍDOS DO DOCUMENTO
-${hasPdfContent ? "Transcreva e organize TODOS os dados relevantes encontrados:" : "Indique quais dados devem constar:"}
-
-### 3.1 Dados da Empresa
-- Razão Social, CNPJ, endereço, CNAE, grau de risco
-- Número de trabalhadores, turnos de trabalho
-
-### 3.2 Profissionais Envolvidos
-- Nome, registro profissional (CRM, CREA, etc.), especialidade
-- Habilitação legal para elaboração do documento
-
-### 3.3 Funções e Setores Mapeados
-| Setor | Funções | Nº Trabalhadores | Turno |
-|---|---|---|---|
-
-### 3.4 Riscos e Agentes Identificados por Setor/Função
-Liste DETALHADAMENTE cada risco mencionado no documento.
-
-## 4. INVENTÁRIO COMPLETO DE RISCOS
-
-### 4.1 Riscos Físicos
-| Agente | Setor/Função | Fonte Geradora | Intensidade/Nível | Tempo Exposição | Limite NR-15 | Medida de Controle | Adequação |
-|---|---|---|---|---|---|---|---|
-
-### 4.2 Riscos Químicos
-| Agente | Setor/Função | Via de Absorção | Concentração | LT (NR-15/ACGIH) | EPI Indicado | CA do EPI | Adequação |
-|---|---|---|---|---|---|---|---|
-
-### 4.3 Riscos Biológicos
-| Agente | Setor/Função | Via de Transmissão | Classificação ANVISA | Medida de Controle | Adequação |
-|---|---|---|---|---|---|
-
-### 4.4 Riscos Ergonômicos
-| Fator de Risco | Setor/Função | Descrição Detalhada | Metodologia Avaliação | Grau | Item NR-17 | Medida de Controle |
-|---|---|---|---|---|---|---|
-
-### 4.5 Riscos de Acidentes (Mecânicos)
-| Fator | Setor/Função | Descrição | Probabilidade | Severidade | NR Aplicável | Medida de Controle |
-|---|---|---|---|---|---|---|
-
-## 5. ANÁLISE DE CONFORMIDADE POR NORMA REGULAMENTADORA
-
-Analise ITEM A ITEM cada NR aplicável. Para cada uma:
-
-### NR-01 — Disposições Gerais e Gerenciamento de Riscos Ocupacionais (GRO)
-| Item | Requisito | Status | Evidência no Documento | Observação |
-|---|---|---|---|---|
-
-### NR-07 — PCMSO (se aplicável)
-| Item | Requisito | Status | Evidência no Documento | Observação |
-|---|---|---|---|---|
-
-### NR-09 — Avaliação e Controle das Exposições Ocupacionais
-| Item | Requisito | Status | Evidência no Documento | Observação |
-|---|---|---|---|---|
-
-### NR-15 — Atividades e Operações Insalubres (se aplicável)
-| Item | Requisito | Status | Evidência no Documento | Observação |
-|---|---|---|---|---|
-
-### NR-16 — Atividades e Operações Perigosas (se aplicável)
-| Item | Requisito | Status | Evidência no Documento | Observação |
-|---|---|---|---|---|
-
-(Inclua TODAS as NRs pertinentes ao tipo de documento e atividade da empresa)
-
-## 6. COERÊNCIA ENTRE DOCUMENTOS SST
-- Correlação esperada PGR ↔ PCMSO (riscos vs exames)
-- Correlação LTCAT ↔ PGR (agentes nocivos vs medidas)
-- EPIs indicados vs CAs e adequação ao risco específico
-- Treinamentos exigidos pelas NRs vs previstos no documento
-- Divergências e lacunas identificadas
-
-## 7. PROGRAMA DE EXAMES OCUPACIONAIS (se PCMSO ou correlato)
-| Função | Riscos Associados | Exame Obrigatório | Base Legal | Periodicidade | Previsto no Doc | Status |
-|---|---|---|---|---|---|---|
-
-## 8. PROGRAMA DE TREINAMENTOS OBRIGATÓRIOS
-| NR | Treinamento | Carga Horária Mínima | Periodicidade Reciclagem | Público-Alvo | Previsto no Doc | Status |
-|---|---|---|---|---|---|---|
-
-## 9. ALERTAS DE CONFORMIDADE
-
-### 🔴 ALERTAS CRÍTICOS — Risco Legal/Previdenciário Imediato
-Para cada alerta:
-- **Descrição:** [problema objetivo e específico, com citação do trecho do documento]
-- **Norma Violada:** [NR-XX, item X.X.X — texto do item]
-- **Fundamentação Legal Complementar:** [CLT art. XX / Lei 8.213/91 art. XX / Decreto 3.048/99]
-- **Impacto Legal:** [tipo de infração, faixa de multa MTE, risco de interdição, passivo trabalhista]
-- **Impacto Previdenciário:** [FAP, RAT, NTEP, estabilidade acidentária]
-- **Ação Corretiva Detalhada:** [passo a passo do que fazer]
-- **Prazo:** [imediato / 15 dias / 30 dias / 60 dias]
-- **Responsável:** [cargo/função responsável pela correção]
-
-### 🟠 ALERTAS TÉCNICOS — Inconsistências e Lacunas Normativas
-[mesma estrutura detalhada acima]
-
-### 🟡 PONTOS DE ATENÇÃO — Acompanhamento Preventivo
-[mesma estrutura detalhada acima]
-
-## 10. OBRIGAÇÕES eSocial RELACIONADAS
-| Evento | Descrição | Prazo Legal | Dados Necessários do Documento | Situação Atual | Risco de Multa |
-|---|---|---|---|---|---|
-| S-2210 | CAT | Até 1º dia útil | [dados] | [status] | [valor] |
-| S-2220 | Monitoramento da Saúde | [prazo] | [dados] | [status] | [valor] |
-| S-2240 | Condições Ambientais | Até dia 15 | [dados] | [status] | [valor] |
-
-## 11. MATRIZ DE AÇÕES CORRETIVAS PRIORITÁRIAS
-| # | Ação Detalhada | Prioridade | Prazo | Responsável | NR Base | Estimativa de Investimento | Consequência da Omissão |
-|---|---|---|---|---|---|---|---|
-
-## 12. CONCLUSÃO E PARECER TÉCNICO
-- Nível de conformidade geral com justificativa
-- Resumo quantitativo: X alertas críticos, Y técnicos, Z atenção
-- Análise qualitativa do documento (completude, profundidade técnica, adequação metodológica)
-- Top 5 recomendações prioritárias com justificativa
-- Prazo sugerido para próxima revisão do documento
-- Considerações finais sobre a gestão de SST da empresa
-
----
-
-⚠️ **AVISO LEGAL:** Este relatório foi gerado por inteligência artificial como ferramenta auxiliar de auditoria de conformidade. Não substitui a análise, parecer e responsabilidade técnica de profissionais legalmente habilitados (Engenheiro de Segurança do Trabalho, Médico do Trabalho, Técnico de Segurança do Trabalho). Todas as conclusões devem ser validadas por profissional competente.
-
----
-
-## REGRAS DE QUALIDADE OBRIGATÓRIAS:
-1. Cite SEMPRE os números das NRs com itens específicos (ex: NR-07, item 7.5.8)
-2. ${hasPdfContent ? "Use EXCLUSIVAMENTE dados reais do documento. Cite trechos. NÃO invente informações." : "Indique claramente quando um item precisa de verificação manual."}
-3. TODAS as tabelas devem conter dados concretos e específicos, NUNCA genéricos
-4. Cada alerta DEVE ter fundamentação legal com artigo/item específico
-5. O relatório deve ser EXTENSO, DETALHADO e PROFISSIONAL — mínimo 3000 palavras
-6. Use linguagem técnica de auditoria de conformidade
-7. Responda SEMPRE em português brasileiro
-8. NÃO resuma ou abrevie seções — detalhe CADA item encontrado no documento`;
-
-    // Build user message
     let userMessage = "";
-
     if (hasPdfContent) {
-      userMessage = `## CONTEÚDO INTEGRAL DO DOCUMENTO (${pdfPageCount} páginas extraídas)
-
----
-${pdfText}
----
-
-Com base no conteúdo COMPLETO do documento acima, realize a auditoria técnica detalhada. Analise CADA seção, CADA risco mencionado, CADA função listada, CADA exame previsto. Produza o relatório de conformidade SST completo seguindo TODAS as 12 seções da estrutura obrigatória. O relatório deve ser extenso e minucioso, cobrindo cada item normativo aplicável.`;
+      userMessage = `## CONTEÚDO INTEGRAL DO DOCUMENTO (${pdfPageCount} páginas)\n\n---\n${pdfText}\n---\n\nCom base no conteúdo COMPLETO acima, realize a auditoria técnica detalhada seguindo TODAS as seções da estrutura obrigatória. O relatório deve ser extenso e minucioso.`;
     } else {
-      userMessage = `O conteúdo do documento "${documento_nome}" do tipo ${documento_tipo} não pôde ser extraído (possivelmente PDF escaneado/imagem). ${contextoProfissional ? `Informações adicionais: ${contextoProfissional}.` : ""} Gere o relatório de auditoria baseado no tipo do documento e nas NRs aplicáveis, sinalizando todos os itens que precisam ser verificados manualmente no documento físico.`;
+      userMessage = `O conteúdo do documento "${documento_nome}" do tipo ${documento_tipo} não pôde ser extraído (possivelmente PDF escaneado/imagem). ${contextoProfissional ? `Informações adicionais: ${contextoProfissional}.` : ""} Gere o relatório de auditoria sinalizando itens que precisam ser verificados manualmente.`;
     }
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userMessage },
-    ];
-
-    console.log(`Enviando para OpenAI. Texto do PDF: ${hasPdfContent ? `${pdfText!.length} chars, ${pdfPageCount} páginas` : "não disponível"}. Tipo: ${documento_tipo}`);
+    console.log(`Enviando para OpenAI. Tipo: ${documento_tipo}. Prompt: ${meta.tipo.toUpperCase().includes("PCMSO") ? "PCMSO-específico" : "genérico"}. PDF: ${hasPdfContent ? `${pdfText!.length} chars` : "não disponível"}`);
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -264,7 +337,10 @@ Com base no conteúdo COMPLETO do documento acima, realize a auditoria técnica 
       },
       body: JSON.stringify({
         model: "gpt-4o",
-        messages,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
         stream: true,
         temperature: 0.15,
         max_tokens: 16000,
