@@ -177,9 +177,16 @@ const Documentos = () => {
   }, []);
 
   const handleDownload = async (doc: DocumentoItem) => {
-    const url = await getSignedUrl(doc.storage_path);
-    if (url) {
-      window.open(url, "_blank");
+    try {
+      const url = await getSignedUrl(doc.storage_path);
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        toast.error("Não foi possível gerar o link do documento. Verifique se o arquivo ainda existe.");
+      }
+    } catch (err: any) {
+      console.error("Erro ao baixar documento:", err);
+      toast.error("Erro ao acessar documento: " + (err.message || "Erro desconhecido"));
     }
   };
 
