@@ -207,12 +207,18 @@ export function useDocumentos() {
 
   // Obter URL assinada para download
   const getSignedUrl = async (storagePath: string): Promise<string | null> => {
+    if (!storagePath) {
+      toast.error("Caminho do arquivo não encontrado");
+      return null;
+    }
+
     const { data, error } = await supabase.storage
       .from("documentos")
       .createSignedUrl(storagePath, 3600); // 1 hora
 
     if (error) {
-      toast.error("Erro ao gerar link de download");
+      console.error("Erro ao gerar signed URL:", error.message, "Path:", storagePath);
+      toast.error("Erro ao gerar link: " + error.message);
       return null;
     }
 
