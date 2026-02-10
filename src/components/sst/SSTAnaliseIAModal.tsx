@@ -40,6 +40,8 @@ export function SSTAnaliseIAModal({ open, onOpenChange, documento }: Props) {
           body: JSON.stringify({
             documento_tipo: documento.tipo,
             documento_nome: documento.arquivo_nome || documento.tipo,
+            empresa_emissora: documento.empresa_emissora || "",
+            profissional_responsavel: documento.profissional_responsavel || "",
             action: "analise",
           }),
         }
@@ -110,84 +112,80 @@ export function SSTAnaliseIAModal({ open, onOpenChange, documento }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-primary" />
-            Análise IA — {documento?.tipo}
+            Relatório de Conformidade SST — {documento?.tipo}
           </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">{documento?.arquivo_nome}</Badge>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline" className="text-xs">{documento?.arquivo_nome}</Badge>
             {documento?.profissional_responsavel && (
-              <Badge variant="secondary">{documento.profissional_responsavel}</Badge>
+              <Badge variant="secondary" className="text-xs">{documento.profissional_responsavel}</Badge>
+            )}
+            {documento?.empresa_emissora && (
+              <Badge variant="secondary" className="text-xs">{documento.empresa_emissora}</Badge>
             )}
           </div>
+        </DialogHeader>
 
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {!resultado && !isAnalyzing && hasExistingAnalysis && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Análise anterior disponível:</p>
-              <ScrollArea className="h-[400px] border rounded-lg p-4">
+            <div className="flex flex-col flex-1 min-h-0">
+              <ScrollArea className="flex-1 px-6 py-4">
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   <ReactMarkdown>{documento.analise_ia.resultado}</ReactMarkdown>
                 </div>
               </ScrollArea>
-              <Button onClick={iniciarAnalise} variant="outline">
-                <Brain className="w-4 h-4 mr-2" />
-                Gerar Nova Análise
-              </Button>
+              <div className="px-6 py-4 border-t flex-shrink-0 flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">Análise anterior salva</p>
+                <Button onClick={iniciarAnalise} variant="outline" size="sm">
+                  <Brain className="w-4 h-4 mr-2" />
+                  Gerar Nova Análise
+                </Button>
+              </div>
             </div>
           )}
 
           {!resultado && !isAnalyzing && !hasExistingAnalysis && (
-            <div className="text-center py-8">
-              <Brain className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">
-                A IA irá realizar uma leitura semântica e estrutural do documento, identificando riscos, medidas de controle, alertas de conformidade e recomendações.
-              </p>
-              <Button onClick={iniciarAnalise}>
-                <Brain className="w-4 h-4 mr-2" />
-                Iniciar Análise
-              </Button>
+            <div className="flex-1 flex items-center justify-center px-6">
+              <div className="text-center py-8">
+                <Brain className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-2">
+                  Análise de conformidade baseada nas Normas Regulamentadoras (NRs)
+                </p>
+                <p className="text-xs text-muted-foreground mb-6">
+                  A IA irá auditar o documento identificando riscos, medidas de controle, obrigações legais e gerar alertas de conformidade.
+                </p>
+                <Button onClick={iniciarAnalise}>
+                  <Brain className="w-4 h-4 mr-2" />
+                  Iniciar Análise de Conformidade
+                </Button>
+              </div>
             </div>
           )}
 
-          {(isAnalyzing || resultado) && !hasExistingAnalysis && (
-            <ScrollArea className="h-[400px] border rounded-lg p-4">
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <ReactMarkdown>{resultado}</ReactMarkdown>
-                {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin inline-block ml-1" />}
-              </div>
-            </ScrollArea>
-          )}
-
-          {resultado && !hasExistingAnalysis && (
-            <ScrollArea className="h-[400px] border rounded-lg p-4">
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <ReactMarkdown>{resultado}</ReactMarkdown>
-                {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin inline-block ml-1" />}
-              </div>
-            </ScrollArea>
-          )}
-
-          {/* Show streaming result when re-analyzing existing */}
-          {resultado && hasExistingAnalysis && (
-            <ScrollArea className="h-[400px] border rounded-lg p-4">
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <ReactMarkdown>{resultado}</ReactMarkdown>
-                {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin inline-block ml-1" />}
-              </div>
-            </ScrollArea>
-          )}
-
-          {isDone && resultado && (
-            <div className="flex justify-end">
-              <Button onClick={salvarAnalise} disabled={updateAnaliseIA.isPending}>
-                <Save className="w-4 h-4 mr-2" />
-                Salvar Análise
-              </Button>
+          {(isAnalyzing || resultado) && (
+            <div className="flex flex-col flex-1 min-h-0">
+              <ScrollArea className="flex-1 px-6 py-4">
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <ReactMarkdown>{resultado}</ReactMarkdown>
+                  {isAnalyzing && (
+                    <div className="flex items-center gap-2 mt-4 text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-xs">Analisando documento conforme NRs...</span>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              {isDone && resultado && (
+                <div className="px-6 py-4 border-t flex-shrink-0 flex justify-end">
+                  <Button onClick={salvarAnalise} disabled={updateAnaliseIA.isPending}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Salvar Relatório
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
