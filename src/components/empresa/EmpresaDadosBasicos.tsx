@@ -1,6 +1,13 @@
+import { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CepInput } from '@/components/ui/cep-input';
+import { Loader2, Search } from 'lucide-react';
+import { toast } from 'sonner';
+import { formatCnpj, cleanCnpj, validateCnpj, buscarCnpj } from '@/lib/brasilapi';
+import type { EnderecoData } from '@/lib/viacep';
 import type { EmpresaCadastro } from '@/types/empresa';
 
 const ESTADOS = [
@@ -14,6 +21,64 @@ interface Props {
 }
 
 export function EmpresaDadosBasicos({ data, onChange }: Props) {
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = cleanCnpj(e.target.value);
+    if (cleaned.length <= 14) {
+      onChange({ cnpj: formatCnpj(cleaned) });
+    }
+  };
+
+  const handleBuscarCnpj = useCallback(async () => {
+    if (!data.cnpj || !validateCnpj(data.cnpj)) {
+      toast.error('Digite um CNPJ válido com 14 dígitos.');
+      return;
+    }
+    setCnpjLoading(true);
+    try {
+      const result = await buscarCnpj(data.cnpj);
+      if (!result) {
+        toast.error('CNPJ não encontrado na base da Receita Federal.');
+        return;
+      }
+      onChange({
+        razao_social: result.razao_social || data.razao_social,
+        nome_fantasia: result.nome_fantasia || data.nome_fantasia,
+        endereco: result.logradouro || data.endereco,
+        numero: result.numero || data.numero,
+        complemento: result.complemento || data.complemento,
+        bairro: result.bairro || data.bairro,
+        cidade: result.municipio || data.cidade,
+        estado: result.uf || data.estado,
+        cep: result.cep?.replace(/\D/g, '') || data.cep,
+        email: result.email || data.email,
+        telefone: result.telefone || data.telefone,
+        cnae_principal: String(result.cnae_fiscal) || data.cnae_principal,
+        cnae_descricao: result.cnae_fiscal_descricao || data.cnae_descricao,
+        cnaes_secundarios: result.cnaes_secundarios?.map(c => ({
+          codigo: String(c.codigo),
+          descricao: c.descricao,
+        })) ?? data.cnaes_secundarios,
+      });
+      toast.success('Dados do CNPJ carregados com sucesso!');
+    } catch {
+      toast.error('Erro ao buscar CNPJ.');
+    } finally {
+      setCnpjLoading(false);
+    }
+  }, [data, onChange]);
+
+  const handleAddressFound = useCallback((endereco: EnderecoData) => {
+    onChange({
+      endereco: endereco.logradouro,
+      bairro: endereco.bairro,
+      cidade: endereco.cidade,
+      estado: endereco.estado,
+    });
+    toast.success('Endereço preenchido automaticamente!');
+  }, [onChange]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -38,11 +103,31 @@ export function EmpresaDadosBasicos({ data, onChange }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>CNPJ</Label>
-          <Input
-            placeholder="00.000.000/0000-00"
-            value={data.cnpj || ''}
-            onChange={(e) => onChange({ cnpj: e.target.value })}
-          />
+          <div className="flex gap-2">
+            <Input
+              placeholder="00.000.000/0000-00"
+              value={data.cnpj || ''}
+              onChange={handleCnpjChange}
+              maxLength={18}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleBuscarCnpj}
+              disabled={cnpjLoading || !validateCnpj(data.cnpj || '')}
+              title="Buscar dados na Receita Federal"
+            >
+              {cnpjLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Clique na lupa para preencher automaticamente
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Inscrição Estadual</Label>
@@ -95,10 +180,10 @@ export function EmpresaDadosBasicos({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>CEP</Label>
-            <Input
-              placeholder="00000-000"
+            <CepInput
               value={data.cep || ''}
-              onChange={(e) => onChange({ cep: e.target.value })}
+              onChange={(value) => onChange({ cep: value })}
+              onAddressFound={handleAddressFound}
             />
           </div>
           <div className="md:col-span-2 space-y-2">
