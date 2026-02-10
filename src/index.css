@@ -169,4 +169,98 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.5);
   }
+
+  /* SST Report Professional Styles */
+  .sst-report h1 {
+    @apply text-2xl font-extrabold tracking-tight pb-3 mb-5;
+    color: hsl(var(--primary));
+    border-bottom: 3px solid hsl(var(--primary));
+  }
+
+  .sst-report h2 {
+    @apply text-base font-bold uppercase tracking-wider mt-8 mb-4 px-4 py-2.5 rounded-md;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    letter-spacing: 0.05em;
+  }
+
+  .sst-report h3 {
+    @apply text-sm font-bold mt-5 mb-3 pl-3 py-1;
+    color: hsl(var(--primary));
+    border-left: 3px solid hsl(var(--primary) / 0.4);
+  }
+
+  .sst-report h4 {
+    @apply text-sm font-semibold mt-4 mb-2;
+    color: hsl(var(--foreground));
+  }
+
+  .sst-report table {
+    @apply w-full border-collapse rounded-lg overflow-hidden text-xs mb-6;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .sst-report thead {
+    background: hsl(var(--primary));
+  }
+
+  .sst-report thead th {
+    @apply px-3 py-2.5 text-left font-semibold uppercase tracking-wider;
+    color: hsl(var(--primary-foreground)) !important;
+    background: hsl(var(--primary)) !important;
+    border: 1px solid hsl(var(--primary) / 0.7) !important;
+    font-size: 0.65rem;
+  }
+
+  .sst-report tbody td {
+    @apply px-3 py-2 text-sm align-top;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground) / 0.85);
+  }
+
+  .sst-report tbody tr:nth-child(even) {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .sst-report tbody tr:hover {
+    background: hsl(var(--primary) / 0.05);
+  }
+
+  .sst-report ul {
+    @apply space-y-1.5 my-3;
+  }
+
+  .sst-report ul li {
+    @apply text-sm leading-relaxed;
+  }
+
+  .sst-report ol {
+    @apply space-y-1.5 my-3;
+  }
+
+  .sst-report ol li {
+    @apply text-sm leading-relaxed;
+  }
+
+  .sst-report p {
+    @apply text-sm leading-relaxed mb-3;
+    color: hsl(var(--foreground) / 0.8);
+  }
+
+  .sst-report strong {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+  }
+
+  .sst-report hr {
+    @apply my-6;
+    border-color: hsl(var(--border));
+  }
+
+  .sst-report blockquote {
+    @apply border-l-4 pl-4 py-2 my-4 rounded-r-md;
+    border-color: hsl(var(--warning));
+    background: hsl(var(--warning) / 0.08);
+    color: hsl(var(--foreground) / 0.85);
+  }
 }

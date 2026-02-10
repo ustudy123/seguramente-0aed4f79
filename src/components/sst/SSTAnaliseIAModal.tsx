@@ -256,20 +256,8 @@ export function SSTAnaliseIAModal({ open, onOpenChange, documento }: Props) {
           {(isAnalyzing || displayContent) && (
             <div className="flex flex-col flex-1 min-h-0">
               <ScrollArea className="flex-1">
-                <div ref={reportRef} className="px-8 py-6">
-                  <div className="sst-report prose prose-sm max-w-none dark:prose-invert
-                    prose-headings:text-foreground prose-headings:font-bold
-                    prose-h1:text-2xl prose-h1:border-b prose-h1:border-border prose-h1:pb-3 prose-h1:mb-4
-                    prose-h2:text-lg prose-h2:text-primary prose-h2:border-l-4 prose-h2:border-primary prose-h2:pl-3 prose-h2:py-1 prose-h2:mt-8 prose-h2:mb-4
-                    prose-h3:text-base prose-h3:text-foreground/90 prose-h3:mt-6 prose-h3:mb-3
-                    prose-p:text-foreground/80 prose-p:leading-relaxed
-                    prose-strong:text-foreground
-                    prose-li:text-foreground/80
-                    prose-table:border prose-table:border-border prose-table:rounded-lg prose-table:overflow-hidden
-                    prose-th:bg-muted prose-th:text-foreground prose-th:font-semibold prose-th:text-xs prose-th:uppercase prose-th:tracking-wider prose-th:px-3 prose-th:py-2.5 prose-th:border prose-th:border-border prose-th:text-left
-                    prose-td:px-3 prose-td:py-2 prose-td:border prose-td:border-border prose-td:text-sm prose-td:align-top
-                    prose-tr:even:bg-muted/30
-                  ">
+                <div ref={reportRef} className="px-8 py-6 bg-white dark:bg-card">
+                  <div className="sst-report max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayContent}</ReactMarkdown>
                     {isAnalyzing && (
                       <div className="flex items-center gap-3 mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
