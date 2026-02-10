@@ -11,8 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY não configurada");
 
     const { documento_tipo, documento_nome, action } = await req.json();
 
@@ -45,14 +45,14 @@ Responda sempre em português brasileiro.`;
       systemPrompt = `Você é um especialista em SST. Responda à pergunta do usuário sobre o documento ${documento_tipo}.`;
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Analise o documento "${documento_nome}" do tipo ${documento_tipo}. Gere um relatório completo de análise de conformidade SST com os itens identificados, alertas e recomendações. Como este é um documento carregado recentemente, faça uma análise baseada no tipo do documento e nas normas aplicáveis.` },
@@ -62,19 +62,16 @@ Responda sempre em português brasileiro.`;
     });
 
     if (!response.ok) {
+      const t = await response.text();
+      console.error("OpenAI API error:", response.status, t);
+
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Erro no gateway de IA" }), {
+
+      return new Response(JSON.stringify({ error: "Erro na API OpenAI" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
