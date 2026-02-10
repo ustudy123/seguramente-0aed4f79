@@ -179,11 +179,25 @@ const Documentos = () => {
   const handleDownload = async (doc: DocumentoItem) => {
     try {
       const url = await getSignedUrl(doc.storage_path);
-      if (url) {
-        window.open(url, "_blank");
-      } else {
+      if (!url) {
         toast.error("Não foi possível gerar o link do documento. Verifique se o arquivo ainda existe.");
+        return;
       }
+      // Usar fetch + blob para evitar bloqueio do browser (ERR_BLOCKED_BY_CLIENT)
+      const response = await fetch(url);
+      if (!response.ok) {
+        toast.error("Erro ao baixar arquivo: " + response.statusText);
+        return;
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = doc.nome_original || "documento";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
     } catch (err: any) {
       console.error("Erro ao baixar documento:", err);
       toast.error("Erro ao acessar documento: " + (err.message || "Erro desconhecido"));
