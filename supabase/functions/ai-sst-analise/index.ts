@@ -695,7 +695,7 @@ serve(async (req) => {
       profissional: profissional_responsavel || "",
       contexto: contextoProfissional ? `\n${contextoProfissional}` : "",
       pdfInfo: hasPdfContent
-        ? `\nO documento possui ${pdfPageCount} páginas. O conteúdo COMPLETO foi extraído e fornecido.`
+        ? `\nO documento possui ${pdfPageCount} páginas. O conteúdo foi extraído e fornecido.`
         : "",
       hasPdf: !!hasPdfContent,
       paginas: pdfPageCount ? String(pdfPageCount) : "N/A",
@@ -703,15 +703,27 @@ serve(async (req) => {
 
     const systemPrompt = getSystemPrompt(meta);
 
+    // Truncate PDF text to stay within token limits (~4 chars per token, reserve 20K tokens for prompt+response)
+    const MAX_PDF_CHARS = 380000; // ~95K tokens, leaving room for system prompt + response
+    let truncatedPdfText = pdfText;
+    let wasTruncated = false;
+    if (hasPdfContent && pdfText!.length > MAX_PDF_CHARS) {
+      truncatedPdfText = pdfText!.substring(0, MAX_PDF_CHARS);
+      wasTruncated = true;
+      console.log(`PDF truncado de ${pdfText!.length} para ${MAX_PDF_CHARS} chars`);
+    }
+
     let userMessage = "";
     if (hasPdfContent) {
-      userMessage = `## CONTEÚDO INTEGRAL DO DOCUMENTO (${pdfPageCount} páginas)\n\n---\n${pdfText}\n---\n\nCom base no conteúdo COMPLETO acima, realize a auditoria técnica detalhada seguindo TODAS as seções da estrutura obrigatória. O relatório deve ser extenso e minucioso.`;
+      const truncNote = wasTruncated ? `\n\n⚠️ NOTA: O documento original possui ${pdfPageCount} páginas e ${pdfText!.length} caracteres. O conteúdo foi truncado para caber no limite de processamento. Analise o conteúdo disponível e indique que a análise cobre parcialmente o documento.` : "";
+      userMessage = `## CONTEÚDO DO DOCUMENTO (${pdfPageCount} páginas)\n\n---\n${truncatedPdfText}\n---${truncNote}\n\nCom base no conteúdo acima, realize a auditoria técnica detalhada seguindo TODAS as seções da estrutura obrigatória. O relatório deve ser extenso e minucioso.`;
     } else {
       userMessage = `O conteúdo do documento "${documento_nome}" do tipo ${documento_tipo} não pôde ser extraído (possivelmente PDF escaneado/imagem). ${contextoProfissional ? `Informações adicionais: ${contextoProfissional}.` : ""} Gere o relatório de auditoria sinalizando itens que precisam ser verificados manualmente.`;
     }
 
-    console.log(`Enviando para OpenAI. Tipo: ${documento_tipo}. Prompt: ${meta.tipo.toUpperCase().includes("PCMSO") ? "PCMSO-específico" : "genérico"}. PDF: ${hasPdfContent ? `${pdfText!.length} chars` : "não disponível"}`);
-
+    const tipoNorm = documento_tipo?.toUpperCase?.() || "";
+    const promptType = tipoNorm.includes("PCMSO") ? "PCMSO" : tipoNorm.includes("LTCAT") ? "LTCAT" : tipoNorm.includes("PGR") ? "PGR" : "genérico";
+    console.log(`Enviando para OpenAI. Tipo: ${documento_tipo}. Prompt: ${promptType}. PDF: ${hasPdfContent ? `${(truncatedPdfText?.length || 0)} chars${wasTruncated ? " (truncado)" : ""}` : "não disponível"}`);
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
