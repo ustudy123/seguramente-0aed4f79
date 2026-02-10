@@ -4823,6 +4823,83 @@ export type Database = {
           },
         ]
       }
+      sst_documentos: {
+        Row: {
+          analise_ia: Json | null
+          analise_ia_status: string | null
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          cnpj_relacionado: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_emissao: string | null
+          data_vigencia: string | null
+          empresa_emissora: string | null
+          id: string
+          observacoes: string | null
+          profissional_responsavel: string | null
+          status: string
+          tenant_id: string
+          tipo: string
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          analise_ia?: Json | null
+          analise_ia_status?: string | null
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          cnpj_relacionado?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string | null
+          data_vigencia?: string | null
+          empresa_emissora?: string | null
+          id?: string
+          observacoes?: string | null
+          profissional_responsavel?: string | null
+          status?: string
+          tenant_id: string
+          tipo: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          analise_ia?: Json | null
+          analise_ia_status?: string | null
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          cnpj_relacionado?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string | null
+          data_vigencia?: string | null
+          empresa_emissora?: string | null
+          id?: string
+          observacoes?: string | null
+          profissional_responsavel?: string | null
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sst_documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       superadmins: {
         Row: {
           ativo: boolean
