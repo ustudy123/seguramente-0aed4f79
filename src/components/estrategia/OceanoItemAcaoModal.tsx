@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Target, Sparkles, ArrowRight, Loader2, Bot } from "lucide-react";
+import { Target, Sparkles, ArrowRight, Loader2, Bot, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
@@ -35,33 +36,6 @@ interface SugestaoIA {
   prioridade: "baixa" | "media" | "alta" | "urgente";
 }
 
-const SUGESTOES_POR_QUADRANTE: Record<OceanoQuadrante, string[]> = {
-  eliminar: [
-    "Descontinuar o processo/prática obsoleta e comunicar stakeholders",
-    "Substituir por alternativa mais eficiente e documentar a transição",
-    "Automatizar para eliminar atividade manual desnecessária",
-    "Revisar normas internas e remover exigências que não agregam valor",
-  ],
-  reduzir: [
-    "Simplificar o processo reduzindo etapas desnecessárias",
-    "Reduzir frequência de execução com base em análise de risco",
-    "Otimizar recursos alocados mantendo qualidade mínima aceitável",
-    "Renegociar SLAs e expectativas com partes envolvidas",
-  ],
-  elevar: [
-    "Investir em capacitação e treinamento da equipe nesta competência",
-    "Ampliar escopo e abrangência da prática para outras áreas",
-    "Implementar indicadores de desempenho e metas mais ambiciosas",
-    "Adotar tecnologia/ferramenta de ponta para potencializar resultados",
-  ],
-  criar: [
-    "Desenvolver programa piloto e validar com grupo de teste",
-    "Benchmarking com empresas referência e adaptar melhores práticas",
-    "Criar equipe multidisciplinar para concepção e implementação",
-    "Lançar MVP (mínimo produto viável) e iterar com feedback contínuo",
-  ],
-};
-
 const QUADRANTE_COLORS: Record<OceanoQuadrante, string> = {
   eliminar: "text-red-700",
   reduzir: "text-amber-700",
@@ -83,17 +57,26 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
   });
 
   const [sugestoesIA, setSugestoesIA] = useState<SugestaoIA[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [loadingIA, setLoadingIA] = useState(false);
   const [iaGerada, setIaGerada] = useState(false);
+  const [criandoMultiplas, setCriandoMultiplas] = useState(false);
 
-  const sugestoes = SUGESTOES_POR_QUADRANTE[item.quadrante];
+  const toggleSelection = (idx: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
 
-  const handleUsarSugestao = (sugestao: string) => {
-    setForm((prev) => ({
-      ...prev,
-      titulo: prev.titulo || `${OCEANO_QUADRANTE_LABELS[item.quadrante]}: ${item.descricao}`,
-      como: sugestao,
-    }));
+  const selectAll = () => {
+    if (selectedIndices.size === sugestoesIA.length) {
+      setSelectedIndices(new Set());
+    } else {
+      setSelectedIndices(new Set(sugestoesIA.map((_, i) => i)));
+    }
   };
 
   const handleUsarSugestaoIA = (s: SugestaoIA) => {
@@ -105,10 +88,15 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
       como: s.como,
       tipo: s.tipo,
     });
+    // Scroll to form
+    setTimeout(() => {
+      document.getElementById("oceano-form-titulo")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
   };
 
   const handleGerarSugestoesIA = async () => {
     setLoadingIA(true);
+    setSelectedIndices(new Set());
     try {
       const { data, error } = await supabase.functions.invoke("ai-oceano-azul", {
         body: {
@@ -136,7 +124,47 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
     }
   };
 
-  const handleSubmit = async () => {
+  const buildAcaoPayload = (s: SugestaoIA) => ({
+    titulo: s.titulo,
+    descricao: s.descricao || undefined,
+    porque: s.porque || undefined,
+    como: s.como || undefined,
+    tipo: s.tipo,
+    origem_modulo: "manual" as const,
+    origem_descricao: `Oceano Azul: ${oceanoTitulo} → ${OCEANO_QUADRANTE_LABELS[item.quadrante]}`,
+    gravidade: item.quadrante === "eliminar" ? 4 : item.quadrante === "reduzir" ? 3 : 3,
+    urgencia: item.quadrante === "eliminar" ? 4 : item.quadrante === "reduzir" ? 3 : 2,
+    tendencia: item.quadrante === "criar" ? 4 : 3,
+    prioridade: item.quadrante === "eliminar" ? "urgente" as const : "medio" as const,
+    exige_evidencia: false,
+  });
+
+  const handleCriarSelecionadas = async () => {
+    if (selectedIndices.size === 0) {
+      toast.error("Selecione pelo menos uma sugestão");
+      return;
+    }
+    setCriandoMultiplas(true);
+    let criadas = 0;
+    try {
+      for (const idx of selectedIndices) {
+        const s = sugestoesIA[idx];
+        await createAcao(buildAcaoPayload(s));
+        criadas++;
+      }
+      toast.success(`${criadas} ação(ões) criada(s) no Plano de Ação!`);
+      onOpenChange(false);
+      setSugestoesIA([]);
+      setSelectedIndices(new Set());
+      setIaGerada(false);
+    } catch {
+      toast.error(`Erro ao criar ações. ${criadas} de ${selectedIndices.size} criadas.`);
+    } finally {
+      setCriandoMultiplas(false);
+    }
+  };
+
+  const handleSubmitManual = async () => {
     if (!form.titulo.trim()) return;
 
     await createAcao({
@@ -158,16 +186,7 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
     });
 
     onOpenChange(false);
-    setForm({
-      titulo: "",
-      descricao: "",
-      porque: "",
-      como: "",
-      onde: "",
-      prazo: "",
-      responsavel_nome: "",
-      tipo: "melhoria",
-    });
+    setForm({ titulo: "", descricao: "", porque: "", como: "", onde: "", prazo: "", responsavel_nome: "", tipo: "melhoria" });
     setSugestoesIA([]);
     setIaGerada(false);
   };
@@ -189,99 +208,123 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
         </DialogHeader>
 
         {/* Botão de IA */}
-        <div className="space-y-3">
-          <Button
-            onClick={handleGerarSugestoesIA}
-            disabled={loadingIA}
-            variant="outline"
-            className="w-full border-primary/30 hover:bg-primary/5"
-          >
-            {loadingIA ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Bot className="w-4 h-4 mr-2 text-primary" />
-            )}
-            {loadingIA ? "Gerando sugestões com IA..." : iaGerada ? "Gerar novas sugestões com IA" : "🤖 Sugerir ações com IA"}
-          </Button>
+        <Button
+          onClick={handleGerarSugestoesIA}
+          disabled={loadingIA}
+          variant="outline"
+          className="w-full border-primary/30 hover:bg-primary/5"
+        >
+          {loadingIA ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Bot className="w-4 h-4 mr-2 text-primary" />
+          )}
+          {loadingIA ? "Gerando sugestões com IA..." : iaGerada ? "Gerar novas sugestões com IA" : "🤖 Sugerir ações com IA"}
+        </Button>
 
-          {/* Sugestões da IA */}
-          {sugestoesIA.length > 0 && (
-            <div className="space-y-2">
+        {/* Sugestões da IA */}
+        {sugestoesIA.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
               <p className="text-sm font-medium flex items-center gap-1.5">
                 <Bot className="w-4 h-4 text-primary" />
                 Sugestões da IA para "{item.descricao}"
               </p>
-              <div className="grid gap-2">
-                {sugestoesIA.map((s, i) => (
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={selectAll}>
+                {selectedIndices.size === sugestoesIA.length ? "Desmarcar todas" : "Selecionar todas"}
+              </Button>
+            </div>
+
+            <div className="grid gap-2">
+              {sugestoesIA.map((s, i) => {
+                const isSelected = selectedIndices.has(i);
+                return (
                   <Card
                     key={i}
-                    className="cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
-                    onClick={() => handleUsarSugestaoIA(s)}
+                    className={`cursor-pointer transition-all ${
+                      isSelected ? "border-primary ring-1 ring-primary/30 shadow-sm" : "hover:border-primary/40"
+                    }`}
+                    onClick={() => toggleSelection(i)}
                   >
                     <CardContent className="p-3 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{s.titulo}</p>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Badge variant="secondary" className="text-[10px]">{s.tipo}</Badge>
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] ${
-                              s.prioridade === "urgente"
-                                ? "border-red-500 text-red-700"
-                                : s.prioridade === "alta"
-                                ? "border-amber-500 text-amber-700"
-                                : "border-muted"
-                            }`}
-                          >
-                            {s.prioridade}
-                          </Badge>
-                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelection(i)}
+                          className="mt-0.5 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium">{s.titulo}</p>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge variant="secondary" className="text-[10px]">{s.tipo}</Badge>
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] ${
+                                  s.prioridade === "urgente"
+                                    ? "border-red-500 text-red-700"
+                                    : s.prioridade === "alta"
+                                    ? "border-amber-500 text-amber-700"
+                                    : "border-muted"
+                                }`}
+                              >
+                                {s.prioridade}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                title="Usar apenas esta sugestão"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUsarSugestaoIA(s);
+                                }}
+                              >
+                                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{s.como}</p>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{s.como}</p>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
-        </div>
 
-        <Separator />
-
-        {/* Sugestões estáticas */}
-        {!iaGerada && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Sugestões rápidas de como {OCEANO_QUADRANTE_LABELS[item.quadrante].toLowerCase()}
-            </p>
-            <div className="grid gap-2">
-              {sugestoes.map((s, i) => (
-                <Card
-                  key={i}
-                  className="cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
-                  onClick={() => handleUsarSugestao(s)}
-                >
-                  <CardContent className="p-3 flex items-center justify-between gap-2">
-                    <p className="text-sm">{s}</p>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* Botão criar selecionadas */}
+            <Button
+              onClick={handleCriarSelecionadas}
+              disabled={selectedIndices.size === 0 || criandoMultiplas}
+              className="w-full"
+            >
+              {criandoMultiplas ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              {criandoMultiplas
+                ? "Criando ações..."
+                : `Criar ${selectedIndices.size} ação(ões) selecionada(s) no Plano`}
+            </Button>
           </div>
         )}
 
-        {iaGerada && <div />}
-
         <Separator />
 
-        {/* Formulário da ação */}
+        {/* Formulário manual */}
         <div className="space-y-3">
+          <p className="text-sm font-medium flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Ou crie uma ação manualmente
+          </p>
+
           <div className="space-y-1">
             <Label>Título da Ação *</Label>
             <Input
+              id="oceano-form-titulo"
               value={form.titulo}
               onChange={(e) => setForm({ ...form, titulo: e.target.value })}
               placeholder={`${OCEANO_QUADRANTE_LABELS[item.quadrante]}: ${item.descricao}`}
@@ -303,7 +346,7 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
               value={form.como}
               onChange={(e) => setForm({ ...form, como: e.target.value })}
               rows={2}
-              placeholder="Selecione uma sugestão acima ou descreva..."
+              placeholder="Descreva como executar a ação..."
             />
           </div>
 
@@ -347,14 +390,14 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
               </Select>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={!form.titulo.trim() || isCreatingAcao}>
-            <Target className="w-4 h-4 mr-1" />
-            Criar Ação no Plano
-          </Button>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={handleSubmitManual} disabled={!form.titulo.trim() || isCreatingAcao}>
+              <Target className="w-4 h-4 mr-1" />
+              Criar Ação Manual
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
