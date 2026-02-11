@@ -72,15 +72,32 @@ export function OrganogramaSection() {
   const { cargos } = useCargos();
   const { departamentos } = useDepartamentos();
   const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao" });
+  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" });
 
   const tree = buildTree(organograma);
+
+  const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
+  const deptAtivos = (departamentos || []).filter((d: any) => d.ativo);
+
+  const handleTipoChange = (tipo: string) => {
+    setForm({ ...form, tipo, titulo: "", cargo_id: "", departamento_id: "" });
+  };
+
+  const handleCargoSelect = (cargoId: string) => {
+    const cargo = cargosAtivos.find((c: any) => c.id === cargoId);
+    setForm({ ...form, cargo_id: cargoId, titulo: cargo?.nome || "" });
+  };
+
+  const handleDeptSelect = (deptId: string) => {
+    const dept = deptAtivos.find((d: any) => d.id === deptId);
+    setForm({ ...form, departamento_id: deptId, titulo: dept?.nome || "" });
+  };
 
   const handleCreate = () => {
     if (!form.titulo.trim()) return;
     createOrgNode.mutate(
       { titulo: form.titulo, nome_ocupante: form.nome_ocupante || undefined, parent_id: form.parent_id || undefined, tipo: form.tipo },
-      { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao" }); } },
+      { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" }); } },
     );
   };
 
@@ -101,16 +118,8 @@ export function OrganogramaSection() {
             <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label>Título / Cargo</Label>
-                <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Diretor de RH" />
-              </div>
-              <div className="space-y-1">
-                <Label>Ocupante (opcional)</Label>
-                <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa" />
-              </div>
-              <div className="space-y-1">
                 <Label>Tipo</Label>
-                <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
+                <Select value={form.tipo} onValueChange={handleTipoChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="funcao">Função</SelectItem>
@@ -119,6 +128,52 @@ export function OrganogramaSection() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {form.tipo === "funcao" && cargosAtivos.length > 0 ? (
+                <div className="space-y-1">
+                  <Label>Função cadastrada</Label>
+                  <Select value={form.cargo_id || "_none"} onValueChange={(v) => v === "_none" ? setForm({ ...form, cargo_id: "", titulo: "" }) : handleCargoSelect(v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione uma função" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">— Selecione —</SelectItem>
+                      {cargosAtivos.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : form.tipo === "departamento" && deptAtivos.length > 0 ? (
+                <div className="space-y-1">
+                  <Label>Departamento cadastrado</Label>
+                  <Select value={form.departamento_id || "_none"} onValueChange={(v) => v === "_none" ? setForm({ ...form, departamento_id: "", titulo: "" }) : handleDeptSelect(v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione um departamento" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">— Selecione —</SelectItem>
+                      {deptAtivos.map((d: any) => (
+                        <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Label>Título</Label>
+                  <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Diretor de RH" />
+                </div>
+              )}
+
+              {(form.tipo === "funcao" || form.tipo === "departamento") && (
+                <div className="space-y-1">
+                  <Label>Ou digite manualmente</Label>
+                  <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "", departamento_id: "" })} placeholder="Nome personalizado" />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <Label>Ocupante (opcional)</Label>
+                <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa" />
+              </div>
+
               {organograma.length > 0 && (
                 <div className="space-y-1">
                   <Label>Superior (opcional)</Label>
@@ -131,7 +186,8 @@ export function OrganogramaSection() {
                   </Select>
                 </div>
               )}
-              <Button onClick={handleCreate} disabled={createOrgNode.isPending} className="w-full">Adicionar</Button>
+
+              <Button onClick={handleCreate} disabled={!form.titulo.trim() || createOrgNode.isPending} className="w-full">Adicionar</Button>
             </div>
           </DialogContent>
         </Dialog>
