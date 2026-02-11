@@ -41,9 +41,10 @@ const TIPO_CONFIG = {
   },
 };
 
-function OrgCard({ node, onDelete, ocupante }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; ocupante?: string }) {
+function OrgCard({ node, onDelete, ocupantes }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; ocupantes?: string[] }) {
   const config = TIPO_CONFIG.funcao;
   const Icon = config.icon;
+  const displayOcupantes = ocupantes && ocupantes.length > 0 ? ocupantes : node.nome_ocupante ? [node.nome_ocupante] : [];
 
   return (
     <div className={cn(
@@ -56,11 +57,15 @@ function OrgCard({ node, onDelete, ocupante }: { node: EstrategiaOrganograma; on
         </div>
       </div>
       <p className="text-sm font-semibold text-foreground leading-tight">{node.titulo}</p>
-      {(ocupante || node.nome_ocupante) && (
-        <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-          <User className="w-3 h-3" />
-          {ocupante || node.nome_ocupante}
-        </p>
+      {displayOcupantes.length > 0 && (
+        <div className="mt-1 space-y-0.5">
+          {displayOcupantes.map((nome, i) => (
+            <p key={i} className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <User className="w-3 h-3" />
+              {nome}
+            </p>
+          ))}
+        </div>
       )}
       <Badge variant="outline" className={cn("mt-2 text-[10px] border", config.badge)}>
         {config.badgeText}
@@ -77,9 +82,9 @@ function OrgCard({ node, onDelete, ocupante }: { node: EstrategiaOrganograma; on
   );
 }
 
-function OrgBranch({ node, onDelete, isRoot, colaboradoresMap }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; isRoot?: boolean; colaboradoresMap: Map<string, string> }) {
+function OrgBranch({ node, onDelete, isRoot, colaboradoresMap }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; isRoot?: boolean; colaboradoresMap: Map<string, string[]> }) {
   const hasChildren = node.children && node.children.length > 0;
-  const ocupante = colaboradoresMap.get(node.titulo.toLowerCase());
+  const ocupantes = colaboradoresMap.get(node.titulo.toLowerCase());
 
   return (
     <div className="flex flex-col items-center">
@@ -89,7 +94,7 @@ function OrgBranch({ node, onDelete, isRoot, colaboradoresMap }: { node: Estrate
       )}
 
       {/* The card */}
-      <OrgCard node={node} onDelete={onDelete} ocupante={ocupante} />
+      <OrgCard node={node} onDelete={onDelete} ocupantes={ocupantes} />
 
       {/* Children */}
       {hasChildren && (
@@ -121,7 +126,7 @@ function OrgBranch({ node, onDelete, isRoot, colaboradoresMap }: { node: Estrate
   );
 }
 
-function OrgTreeVisual({ roots, onDelete, colaboradoresMap }: { roots: EstrategiaOrganograma[]; onDelete: (id: string) => void; colaboradoresMap: Map<string, string> }) {
+function OrgTreeVisual({ roots, onDelete, colaboradoresMap }: { roots: EstrategiaOrganograma[]; onDelete: (id: string) => void; colaboradoresMap: Map<string, string[]> }) {
   return (
     <div className="flex gap-8 justify-center flex-wrap overflow-x-auto py-6 px-4">
       {roots.map((root) => (
@@ -144,13 +149,13 @@ export function OrganogramaSection() {
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
 
   // Map cargo name (lowercase) -> colaborador name for auto-identification
-  const colaboradoresMap = new Map<string, string>();
+  const colaboradoresMap = new Map<string, string[]>();
   (colaboradores || []).forEach((c) => {
     if (c.cargo) {
       const key = c.cargo.toLowerCase();
-      if (!colaboradoresMap.has(key)) {
-        colaboradoresMap.set(key, c.nome_completo);
-      }
+      const arr = colaboradoresMap.get(key) || [];
+      arr.push(c.nome_completo);
+      colaboradoresMap.set(key, arr);
     }
   });
 
@@ -174,7 +179,8 @@ export function OrganogramaSection() {
     }
 
     // Auto-detect ocupante from colaboradores
-    const ocupante = form.nome_ocupante || colaboradoresMap.get(titulo.toLowerCase()) || undefined;
+    const detected = colaboradoresMap.get(titulo.toLowerCase());
+    const ocupante = form.nome_ocupante || (detected ? detected.join(", ") : undefined);
 
     createOrgNode.mutate(
       { titulo, nome_ocupante: ocupante, parent_id: form.parent_id || undefined, tipo: "funcao" },
@@ -250,7 +256,7 @@ export function OrganogramaSection() {
                 {form.titulo.trim() && colaboradoresMap.get(form.titulo.trim().toLowerCase()) && (
                   <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
                     <User className="w-3 h-3" />
-                    Ocupante detectado: {colaboradoresMap.get(form.titulo.trim().toLowerCase())}
+                    Ocupantes detectados: {colaboradoresMap.get(form.titulo.trim().toLowerCase())!.join(", ")}
                   </p>
                 )}
               </div>
