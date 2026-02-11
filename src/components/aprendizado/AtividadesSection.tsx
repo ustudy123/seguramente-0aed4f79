@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
 import type { FuncaoAtividade } from "@/types/aprendizado";
 
@@ -151,25 +152,54 @@ export function AtividadesSection({ cargoId }: AtividadesSectionProps) {
                   {/* Responsabilidades */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <Users className="w-4 h-4" /> Responsabilidades
+                      <Users className="w-4 h-4" /> Matriz de Responsabilidade
                     </div>
                     {respForm?.atividadeId === at.id ? (
-                      <div className="grid grid-cols-3 gap-2">
-                        <Input placeholder="Responsável direto" value={respForm.responsavel} onChange={(e) => setRespForm({ ...respForm, responsavel: e.target.value })} />
-                        <Input placeholder="Interfaces" value={respForm.interfaces} onChange={(e) => setRespForm({ ...respForm, interfaces: e.target.value })} />
-                        <div className="flex gap-1">
-                          <Input placeholder="Consequência de erro" value={respForm.consequencia} onChange={(e) => setRespForm({ ...respForm, consequencia: e.target.value })} />
-                          <Button size="sm" onClick={async () => {
-                            await salvarResponsabilidade({ atividade_id: at.id, responsavel_direto: respForm.responsavel, interfaces: respForm.interfaces, consequencia_erro: respForm.consequencia });
-                            setRespForm(null);
-                          }}>OK</Button>
+                      <TooltipProvider>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Label className="text-xs">Quem executa</Label>
+                              <Tooltip>
+                                <TooltipTrigger asChild><HelpCircle className="w-3 h-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-52"><p>Cargo ou pessoa diretamente responsável por realizar esta atividade no dia a dia.</p></TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <Input placeholder="Ex: Técnico de Segurança" value={respForm.responsavel} onChange={(e) => setRespForm({ ...respForm, responsavel: e.target.value })} />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Label className="text-xs">Áreas envolvidas</Label>
+                              <Tooltip>
+                                <TooltipTrigger asChild><HelpCircle className="w-3 h-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-52"><p>Setores ou pessoas que participam ou precisam ser consultados para esta atividade.</p></TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <Input placeholder="Ex: RH, SESMT, Gestor" value={respForm.interfaces} onChange={(e) => setRespForm({ ...respForm, interfaces: e.target.value })} />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Label className="text-xs">Risco se falhar</Label>
+                              <Tooltip>
+                                <TooltipTrigger asChild><HelpCircle className="w-3 h-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-52"><p>O que pode acontecer se esta atividade for executada incorretamente ou não for feita.</p></TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <div className="flex gap-1">
+                              <Input placeholder="Ex: Multa, acidente" value={respForm.consequencia} onChange={(e) => setRespForm({ ...respForm, consequencia: e.target.value })} />
+                              <Button size="sm" onClick={async () => {
+                                await salvarResponsabilidade({ atividade_id: at.id, responsavel_direto: respForm.responsavel, interfaces: respForm.interfaces, consequencia_erro: respForm.consequencia });
+                                setRespForm(null);
+                              }}>OK</Button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      </TooltipProvider>
                     ) : atResp ? (
                       <div className="text-xs bg-muted/50 rounded-lg p-2 grid grid-cols-3 gap-2 cursor-pointer" onClick={() => setRespForm({ atividadeId: at.id, responsavel: atResp.responsavel_direto || "", interfaces: atResp.interfaces || "", consequencia: atResp.consequencia_erro || "" })}>
-                        <span><strong>Responsável:</strong> {atResp.responsavel_direto || "—"}</span>
-                        <span><strong>Interfaces:</strong> {atResp.interfaces || "—"}</span>
-                        <span><strong>Consequência:</strong> {atResp.consequencia_erro || "—"}</span>
+                        <span><strong>Quem executa:</strong> {atResp.responsavel_direto || "—"}</span>
+                        <span><strong>Áreas envolvidas:</strong> {atResp.interfaces || "—"}</span>
+                        <span><strong>Risco se falhar:</strong> {atResp.consequencia_erro || "—"}</span>
                       </div>
                     ) : (
                       <Button variant="ghost" size="sm" onClick={() => setRespForm({ atividadeId: at.id, responsavel: "", interfaces: "", consequencia: "" })}>
