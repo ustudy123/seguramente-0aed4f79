@@ -18,6 +18,7 @@ import {
   MessageSquare,
   History,
   ListTodo,
+  Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,15 @@ const prioridadeConfig: Record<AcaoGutPrioridade, { label: string; color: string
   medio: { label: "Média", color: "bg-blue-100 text-blue-700" },
   urgente: { label: "Urgente", color: "bg-orange-100 text-orange-700" },
   imediato: { label: "Imediata", color: "bg-red-100 text-red-700" },
+};
+
+const ORIGEM_DETAIL_LABELS: Record<string, { label: string; icon: string; color: string }> = {
+  manual: { label: "Criação Manual", icon: "✏️", color: "text-muted-foreground" },
+  ergonomia: { label: "Ergonomia Inteligente", icon: "🧠", color: "text-blue-700" },
+  ouvidoria: { label: "Ouvidoria", icon: "📢", color: "text-purple-700" },
+  epi: { label: "Gestão de EPIs", icon: "🦺", color: "text-amber-700" },
+  ponto: { label: "Gestão de Ponto", icon: "⏰", color: "text-green-700" },
+  humor: { label: "Humor Diário", icon: "😊", color: "text-pink-700" },
 };
 
 export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
@@ -147,6 +157,12 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
               <Badge className={prioridade.color}>
                 {prioridade.label}
               </Badge>
+              {acao.origem_modulo && acao.origem_modulo !== "manual" && (
+                <Badge variant="outline" className="text-xs">
+                  {ORIGEM_DETAIL_LABELS[acao.origem_modulo]?.icon}{" "}
+                  {ORIGEM_DETAIL_LABELS[acao.origem_modulo]?.label || acao.origem_modulo}
+                </Badge>
+              )}
             </div>
             <h1 className="text-xl font-bold">{acao.titulo}</h1>
             {acao.descricao && (
@@ -253,6 +269,19 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
             </CardContent>
           </Card>
         )}
+
+        {/* Origem */}
+        <ClickableInfoCard cardKey="origem" icon={Navigation} title="Origem">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">
+              {ORIGEM_DETAIL_LABELS[acao.origem_modulo]?.icon}{" "}
+              {ORIGEM_DETAIL_LABELS[acao.origem_modulo]?.label || acao.origem_modulo}
+            </p>
+            {acao.origem_descricao && (
+              <p className="text-xs text-muted-foreground">{acao.origem_descricao}</p>
+            )}
+          </div>
+        </ClickableInfoCard>
       </div>
 
       {/* Tabs */}
@@ -383,6 +412,30 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
               {' '}({((acao.custo_real - acao.custo_estimado) / acao.custo_estimado * 100).toFixed(1)}%)
             </p>
           </div>
+        )}
+      </InfoCardModal>
+
+      {/* Modal Origem */}
+      <InfoCardModal
+        open={selectedInfoCard === "origem"}
+        onOpenChange={(open) => !open && setSelectedInfoCard(null)}
+        title="Origem da Ação"
+        subtitle="De onde esta ação foi gerada"
+        icon={Navigation}
+      >
+        <W5H2Detail 
+          label="Módulo de Origem" 
+          value={`${ORIGEM_DETAIL_LABELS[acao.origem_modulo]?.icon || ""} ${ORIGEM_DETAIL_LABELS[acao.origem_modulo]?.label || acao.origem_modulo}`} 
+        />
+        {acao.origem_descricao && (
+          <W5H2Detail label="Detalhes" value={acao.origem_descricao} />
+        )}
+        <W5H2Detail label="Criado por" value={acao.criado_por_nome} />
+        {acao.created_at && (
+          <W5H2Detail 
+            label="Data de Criação" 
+            value={format(new Date(acao.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} 
+          />
         )}
       </InfoCardModal>
 
