@@ -26,6 +26,7 @@ import Epis from "./pages/Epis";
 import Feed from "./pages/Feed";
 import Ouvidoria from "./pages/Ouvidoria";
 import FeedbackOcorrencias from "./pages/FeedbackOcorrencias";
+import AprendizadoPapeis from "./pages/AprendizadoPapeis";
 import Ergonomia from "./pages/Ergonomia";
 import ComplianceSST from "./pages/ComplianceSST";
 import PlanoAcao from "./pages/PlanoAcao";
@@ -104,6 +105,7 @@ const App = () => (
               <Route path="/epis" element={<Epis />} />
               <Route path="/compliance-sst" element={<ComplianceSST />} />
               <Route path="/feedback-ocorrencias" element={<FeedbackOcorrencias />} />
+              <Route path="/aprendizado-papeis" element={<AprendizadoPapeis />} />
               <Route path="/ouvidoria" element={<Ouvidoria />} />
               <Route path="/ergonomia" element={<Ergonomia />} />
               <Route path="/felicidade" element={<PlaceholderPage />} />
