@@ -4,7 +4,8 @@ export type AdmissaoStatus =
   | 'em_analise'
   | 'aprovado'
   | 'reprovado'
-  | 'concluido';
+  | 'concluido'
+  | 'desligado';
 
 export type DocumentoStatus = 'pendente' | 'enviado' | 'aprovado' | 'rejeitado';
 
@@ -111,6 +112,7 @@ export const STATUS_LABELS: Record<AdmissaoStatus, string> = {
   aprovado: 'Aprovado',
   reprovado: 'Reprovado',
   concluido: 'Concluído',
+  desligado: 'Desligado',
 };
 
 export const STATUS_COLORS: Record<AdmissaoStatus, string> = {
@@ -120,4 +122,5 @@ export const STATUS_COLORS: Record<AdmissaoStatus, string> = {
   aprovado: 'bg-success/10 text-success',
   reprovado: 'bg-destructive/10 text-destructive',
   concluido: 'bg-primary/10 text-primary',
+  desligado: 'bg-destructive/20 text-destructive',
 };

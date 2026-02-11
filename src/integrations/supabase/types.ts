@@ -5020,6 +5020,7 @@ export type Database = {
         | "aprovado"
         | "reprovado"
         | "concluido"
+        | "desligado"
       afastamento_status: "ativo" | "encerrado" | "beneficio_inss"
       app_role: "owner" | "admin" | "manager" | "user" | "superadmin"
       aptidao_ocupacional:
@@ -5237,6 +5238,7 @@ export const Constants = {
         "aprovado",
         "reprovado",
         "concluido",
+        "desligado",
       ],
       afastamento_status: ["ativo", "encerrado", "beneficio_inss"],
       app_role: ["owner", "admin", "manager", "user", "superadmin"],

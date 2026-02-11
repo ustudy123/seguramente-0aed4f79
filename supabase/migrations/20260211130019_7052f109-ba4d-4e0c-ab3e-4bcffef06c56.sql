@@ -1,0 +1,1 @@
+ALTER TYPE admissao_status ADD VALUE IF NOT EXISTS 'desligado';
