@@ -274,6 +274,7 @@ export function OrganogramaSection() {
             roots={tree}
             onDelete={(id) => deleteOrgNode.mutate(id)}
             onAddChild={openDialogForParent}
+            onAddSibling={(parentId) => openDialogForParent(parentId || "")}
           />
         </OrgCanvas>
       )}
