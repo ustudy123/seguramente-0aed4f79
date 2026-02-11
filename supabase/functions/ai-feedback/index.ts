@@ -54,7 +54,7 @@ Retorne APENAS o texto reescrito, sem explicações adicionais.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.4,
         max_tokens: 1000,
