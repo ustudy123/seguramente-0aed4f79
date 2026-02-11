@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Trash2, Users, User, Loader2, Info, Check, ChevronsUpDown, Briefcase } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -141,7 +141,7 @@ export function OrganogramaSection() {
   const { cargos, createCargo } = useCargos();
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "" });
+  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] });
   const [cargoOpen, setCargoOpen] = useState(false);
 
   const tree = buildTree(organograma);
@@ -161,7 +161,23 @@ export function OrganogramaSection() {
 
   const handleCargoSelect = (cargoId: string) => {
     const cargo = cargosAtivos.find((c: any) => c.id === cargoId);
-    setForm({ ...form, cargo_id: cargoId, titulo: cargo?.nome || "" });
+    setForm({ ...form, cargo_id: cargoId, titulo: cargo?.nome || "", selectedOcupantes: [], nome_ocupante: "" });
+  };
+
+  // Colaboradores matching the current titulo
+  const ocupantesDisponiveis = useMemo(() => {
+    const key = form.titulo.trim().toLowerCase();
+    if (!key) return [];
+    return colaboradoresMap.get(key) || [];
+  }, [form.titulo, colaboradoresMap]);
+
+  const toggleOcupante = (nome: string) => {
+    setForm(prev => {
+      const selected = prev.selectedOcupantes.includes(nome)
+        ? prev.selectedOcupantes.filter(n => n !== nome)
+        : [...prev.selectedOcupantes, nome];
+      return { ...prev, selectedOcupantes: selected };
+    });
   };
 
   const handleCreate = async () => {
@@ -178,13 +194,14 @@ export function OrganogramaSection() {
       }
     }
 
-    // Auto-detect ocupante from colaboradores
-    const detected = colaboradoresMap.get(titulo.toLowerCase());
-    const ocupante = form.nome_ocupante || (detected ? detected.join(", ") : undefined);
+    // Build ocupante string from selection or manual input
+    const ocupante = form.selectedOcupantes.length > 0
+      ? form.selectedOcupantes.join(", ")
+      : form.nome_ocupante || undefined;
 
     createOrgNode.mutate(
       { titulo, nome_ocupante: ocupante, parent_id: form.parent_id || undefined, tipo: "funcao" },
-      { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "" }); } },
+      { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] }); } },
     );
   };
 
@@ -244,7 +261,7 @@ export function OrganogramaSection() {
                 <Label>Nome da função</Label>
                 <Input
                   value={form.titulo}
-                  onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "" })}
+                  onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "", selectedOcupantes: [] })}
                   placeholder="Ex: Analista de RH"
                 />
                 {!form.cargo_id && form.titulo.trim() && (
@@ -253,17 +270,29 @@ export function OrganogramaSection() {
                     Será cadastrado automaticamente no módulo de Cadastros
                   </p>
                 )}
-                {form.titulo.trim() && colaboradoresMap.get(form.titulo.trim().toLowerCase()) && (
-                  <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                    <User className="w-3 h-3" />
-                    Ocupantes detectados: {colaboradoresMap.get(form.titulo.trim().toLowerCase())!.join(", ")}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-1">
-                <Label>Ocupante (opcional — preenchido automaticamente se houver colaborador)</Label>
-                <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa" />
+                <Label>Ocupante</Label>
+                {ocupantesDisponiveis.length > 0 ? (
+                  <div className="border rounded-md p-2 space-y-1 max-h-40 overflow-y-auto">
+                    <p className="text-xs text-muted-foreground mb-1">Selecione os ocupantes desta função:</p>
+                    {ocupantesDisponiveis.map((nome) => (
+                      <label key={nome} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.selectedOcupantes.includes(nome)}
+                          onChange={() => toggleOcupante(nome)}
+                          className="rounded border-input"
+                        />
+                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                        {nome}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa (opcional)" />
+                )}
               </div>
 
               {organograma.length > 0 && (
