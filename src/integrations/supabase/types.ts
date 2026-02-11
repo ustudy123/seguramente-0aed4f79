@@ -358,6 +358,72 @@ export type Database = {
           },
         ]
       }
+      advertencia_links: {
+        Row: {
+          created_at: string
+          destinatario_email: string
+          destinatario_nome: string | null
+          documento_nome: string | null
+          documento_url: string | null
+          enviado_em: string | null
+          expira_em: string
+          formalizado_em: string | null
+          id: string
+          ocorrencia_id: string
+          status: Database["public"]["Enums"]["advertencia_status"]
+          tenant_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destinatario_email: string
+          destinatario_nome?: string | null
+          documento_nome?: string | null
+          documento_url?: string | null
+          enviado_em?: string | null
+          expira_em?: string
+          formalizado_em?: string | null
+          id?: string
+          ocorrencia_id: string
+          status?: Database["public"]["Enums"]["advertencia_status"]
+          tenant_id: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destinatario_email?: string
+          destinatario_nome?: string | null
+          documento_nome?: string | null
+          documento_url?: string | null
+          enviado_em?: string | null
+          expira_em?: string
+          formalizado_em?: string | null
+          id?: string
+          ocorrencia_id?: string
+          status?: Database["public"]["Enums"]["advertencia_status"]
+          tenant_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertencia_links_ocorrencia_id_fkey"
+            columns: ["ocorrencia_id"]
+            isOneToOne: false
+            referencedRelation: "ocorrencias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advertencia_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       afastamentos: {
         Row: {
           alerta_15_dias: boolean | null
@@ -2817,6 +2883,71 @@ export type Database = {
           },
         ]
       }
+      feedbacks: {
+        Row: {
+          categoria: Database["public"]["Enums"]["feedback_categoria"]
+          colaborador_cargo: string | null
+          colaborador_departamento: string | null
+          colaborador_filial: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          descricao: string
+          descricao_ia: string | null
+          enviado_email: boolean | null
+          ia_utilizada: boolean | null
+          id: string
+          registrado_por: string
+          registrado_por_nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          categoria: Database["public"]["Enums"]["feedback_categoria"]
+          colaborador_cargo?: string | null
+          colaborador_departamento?: string | null
+          colaborador_filial?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          descricao: string
+          descricao_ia?: string | null
+          enviado_email?: boolean | null
+          ia_utilizada?: boolean | null
+          id?: string
+          registrado_por: string
+          registrado_por_nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["feedback_categoria"]
+          colaborador_cargo?: string | null
+          colaborador_departamento?: string | null
+          colaborador_filial?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          descricao?: string
+          descricao_ia?: string | null
+          enviado_email?: boolean | null
+          ia_utilizada?: boolean | null
+          id?: string
+          registrado_por?: string
+          registrado_por_nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filiais: {
         Row: {
           ativo: boolean
@@ -3497,6 +3628,71 @@ export type Database = {
             columns: ["vinculo_ciclo_id"]
             isOneToOne: false
             referencedRelation: "avaliacao_ciclos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ocorrencias: {
+        Row: {
+          bloqueado: boolean | null
+          colaborador_cargo: string | null
+          colaborador_departamento: string | null
+          colaborador_filial: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_ocorrencia: string
+          descricao: string
+          id: string
+          is_advertencia: boolean | null
+          registrado_por: string
+          registrado_por_nome: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["ocorrencia_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          bloqueado?: boolean | null
+          colaborador_cargo?: string | null
+          colaborador_departamento?: string | null
+          colaborador_filial?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_ocorrencia?: string
+          descricao: string
+          id?: string
+          is_advertencia?: boolean | null
+          registrado_por: string
+          registrado_por_nome: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["ocorrencia_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          bloqueado?: boolean | null
+          colaborador_cargo?: string | null
+          colaborador_departamento?: string | null
+          colaborador_filial?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_ocorrencia?: string
+          descricao?: string
+          id?: string
+          is_advertencia?: boolean | null
+          registrado_por?: string
+          registrado_por_nome?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["ocorrencia_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocorrencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -5021,6 +5217,7 @@ export type Database = {
         | "reprovado"
         | "concluido"
         | "desligado"
+      advertencia_status: "pendente" | "enviada" | "formalizada" | "arquivada"
       afastamento_status: "ativo" | "encerrado" | "beneficio_inss"
       app_role: "owner" | "admin" | "manager" | "user" | "superadmin"
       aptidao_ocupacional:
@@ -5074,6 +5271,7 @@ export type Database = {
         | "nao_atendido"
         | "nao_aplicavel"
       evento_saude_status: "aberto" | "em_acompanhamento" | "encerrado"
+      feedback_categoria: "reconhecimento" | "alinhamento" | "desenvolvimento"
       grupo_clinico:
         | "mental"
         | "osteomuscular"
@@ -5094,6 +5292,7 @@ export type Database = {
         | "cancelada"
         | "atrasada"
       nexo_trabalho: "nao" | "em_analise" | "sim"
+      ocorrencia_tipo: "positiva" | "neutra" | "negativa"
       okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
@@ -5240,6 +5439,7 @@ export const Constants = {
         "concluido",
         "desligado",
       ],
+      advertencia_status: ["pendente", "enviada", "formalizada", "arquivada"],
       afastamento_status: ["ativo", "encerrado", "beneficio_inss"],
       app_role: ["owner", "admin", "manager", "user", "superadmin"],
       aptidao_ocupacional: [
@@ -5300,6 +5500,7 @@ export const Constants = {
         "nao_aplicavel",
       ],
       evento_saude_status: ["aberto", "em_acompanhamento", "encerrado"],
+      feedback_categoria: ["reconhecimento", "alinhamento", "desenvolvimento"],
       grupo_clinico: [
         "mental",
         "osteomuscular",
@@ -5322,6 +5523,7 @@ export const Constants = {
         "atrasada",
       ],
       nexo_trabalho: ["nao", "em_analise", "sim"],
+      ocorrencia_tipo: ["positiva", "neutra", "negativa"],
       okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],

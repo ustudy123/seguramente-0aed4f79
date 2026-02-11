@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.ai-sst-analise]
 verify_jwt = false
+
+[functions.ai-feedback]
+verify_jwt = false
+
+[functions.advertencia-link]
+verify_jwt = false
