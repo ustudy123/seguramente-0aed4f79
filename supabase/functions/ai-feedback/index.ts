@@ -57,7 +57,7 @@ Retorne APENAS o texto reescrito, sem explicações adicionais.`;
         model: "openai/gpt-5-nano",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.4,
-        max_tokens: 1000,
+        max_completion_tokens: 1000,
       }),
     });
 
