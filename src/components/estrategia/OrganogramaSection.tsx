@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, Users, User, Loader2, Info, Check, ChevronsUpDown, Briefcase } from "lucide-react";
+import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -15,6 +14,8 @@ import { useCargos } from "@/hooks/useCadastros";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import { OrgCanvas } from "./organograma/OrgCanvas";
+import { OrgTree } from "./organograma/OrgTree";
 
 function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
   const map = new Map<string, EstrategiaOrganograma>();
@@ -31,134 +32,39 @@ function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
   return roots;
 }
 
-const TIPO_CONFIG = {
-  funcao: {
-    icon: Briefcase,
-    gradient: "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5",
-    border: "border-emerald-500/30 shadow-emerald-500/10",
-    badge: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
-    badgeText: "Função",
-  },
-};
-
-function OrgCard({ node, onDelete }: { node: EstrategiaOrganograma; onDelete: (id: string) => void }) {
-  const config = TIPO_CONFIG.funcao;
-  const Icon = config.icon;
-
-  return (
-    <div className={cn(
-      "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] text-center transition-all hover:shadow-lg",
-      config.gradient, config.border
-    )}>
-      <div className="flex justify-center mb-2">
-        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", config.badge)}>
-          <Icon className="w-5 h-5" />
-        </div>
-      </div>
-      <p className="text-sm font-semibold text-foreground leading-tight">{node.titulo}</p>
-      {node.nome_ocupante && (
-        <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-          <User className="w-3 h-3" />
-          {node.nome_ocupante}
-        </p>
-      )}
-      <Badge variant="outline" className={cn("mt-2 text-[10px] border", config.badge)}>
-        {config.badgeText}
-      </Badge>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        onClick={(e) => { e.stopPropagation(); onDelete(node.id); }}
-      >
-        <Trash2 className="w-3 h-3" />
-      </Button>
-    </div>
-  );
-}
-
-function OrgBranch({ node, onDelete, isRoot }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; isRoot?: boolean }) {
-  const hasChildren = node.children && node.children.length > 0;
-
-  return (
-    <div className="flex flex-col items-center">
-      {!isRoot && (
-        <div className="w-0.5 h-6 bg-border" />
-      )}
-
-      <OrgCard node={node} onDelete={onDelete} />
-
-      {/* Children */}
-      {hasChildren && (
-        <>
-          {/* Vertical line down from card */}
-          <div className="w-0.5 h-6 bg-border" />
-
-          {/* Horizontal connector bar + children */}
-          <div className="relative flex items-start">
-            {/* Horizontal line spanning children */}
-            {node.children!.length > 1 && (
-              <div
-                className="absolute top-0 h-0.5 bg-border"
-                style={{
-                  left: `calc(50% / ${node.children!.length})`,
-                  right: `calc(50% / ${node.children!.length})`,
-                }}
-              />
-            )}
-            <div className="flex gap-4">
-              {node.children!.map((child) => (
-                <OrgBranch key={child.id} node={child} onDelete={onDelete} />
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function OrgTreeVisual({ roots, onDelete }: { roots: EstrategiaOrganograma[]; onDelete: (id: string) => void }) {
-  return (
-    <div className="flex gap-8 justify-center flex-wrap overflow-x-auto py-6 px-4">
-      {roots.map((root) => (
-        <OrgBranch key={root.id} node={root} onDelete={onDelete} isRoot />
-      ))}
-    </div>
-  );
-}
+const INITIAL_FORM = { titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] };
 
 export function OrganogramaSection() {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia();
   const { cargos, createCargo } = useCargos();
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] });
+  const [form, setForm] = useState(INITIAL_FORM);
   const [cargoOpen, setCargoOpen] = useState(false);
   const [ocupanteSearch, setOcupanteSearch] = useState("");
 
   const tree = buildTree(organograma);
-
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
 
-  // Map cargo name (lowercase) -> colaborador name for auto-identification
-  const colaboradoresMap = new Map<string, string[]>();
-  (colaboradores || []).forEach((c) => {
-    if (c.cargo) {
-      const key = c.cargo.toLowerCase();
-      const arr = colaboradoresMap.get(key) || [];
-      arr.push(c.nome_completo);
-      colaboradoresMap.set(key, arr);
-    }
-  });
+  const colaboradoresMap = useMemo(() => {
+    const m = new Map<string, string[]>();
+    (colaboradores || []).forEach((c) => {
+      if (c.cargo) {
+        const key = c.cargo.toLowerCase();
+        const arr = m.get(key) || [];
+        arr.push(c.nome_completo);
+        m.set(key, arr);
+      }
+    });
+    return m;
+  }, [colaboradores]);
 
   const handleCargoSelect = (cargoId: string) => {
     const cargo = cargosAtivos.find((c: any) => c.id === cargoId);
-    setForm({ ...form, cargo_id: cargoId, titulo: cargo?.nome || "", selectedOcupantes: [], nome_ocupante: "" });
+    setForm({ ...INITIAL_FORM, cargo_id: cargoId, titulo: cargo?.nome || "", parent_id: form.parent_id });
     setOcupanteSearch("");
   };
 
-  // Colaboradores matching the current titulo
   const ocupantesDisponiveis = useMemo(() => {
     const key = form.titulo.trim().toLowerCase();
     if (!key) return [];
@@ -166,12 +72,18 @@ export function OrganogramaSection() {
   }, [form.titulo, colaboradoresMap]);
 
   const toggleOcupante = (nome: string) => {
-    setForm(prev => {
+    setForm((prev) => {
       const selected = prev.selectedOcupantes.includes(nome)
-        ? prev.selectedOcupantes.filter(n => n !== nome)
+        ? prev.selectedOcupantes.filter((n) => n !== nome)
         : [...prev.selectedOcupantes, nome];
       return { ...prev, selectedOcupantes: selected };
     });
+  };
+
+  const openDialogForParent = (parentId: string) => {
+    setForm({ ...INITIAL_FORM, parent_id: parentId });
+    setOcupanteSearch("");
+    setShowNew(true);
   };
 
   const handleCreate = async () => {
@@ -182,21 +94,27 @@ export function OrganogramaSection() {
       const exists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
       if (!exists) {
         try {
-          await createCargo.mutateAsync({ nome: titulo, ativo: true, descricao: null, departamento_id: null, nivel: null, faixa_salarial_min: null, faixa_salarial_max: null, periodicidade_exame_meses: null, exames_obrigatorios: null });
+          await createCargo.mutateAsync({
+            nome: titulo, ativo: true, descricao: null, departamento_id: null,
+            nivel: null, faixa_salarial_min: null, faixa_salarial_max: null,
+            periodicidade_exame_meses: null, exames_obrigatorios: null,
+          });
           toast.info(`Função "${titulo}" cadastrada automaticamente no módulo de Cadastros`);
         } catch { /* handled */ }
       }
     }
 
-    // Create one node per selected occupant (side-by-side), or one node with manual name
     const ocupantes = form.selectedOcupantes.length > 0
       ? form.selectedOcupantes
       : [form.nome_ocupante || ""];
 
     const parentId = form.parent_id || undefined;
-    const resetForm = () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] }); setOcupanteSearch(""); };
+    const resetForm = () => {
+      setShowNew(false);
+      setForm(INITIAL_FORM);
+      setOcupanteSearch("");
+    };
 
-    // Create nodes sequentially so they all appear
     let remaining = ocupantes.length;
     ocupantes.forEach((nome) => {
       createOrgNode.mutate(
@@ -215,11 +133,15 @@ export function OrganogramaSection() {
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" /> Organograma
           </h3>
-          <p className="text-sm text-muted-foreground">Estrutura hierárquica visual da empresa</p>
+          <p className="text-sm text-muted-foreground">
+            Arraste para mover · Scroll para zoom · Clique <Plus className="w-3 h-3 inline" /> nos cards para adicionar
+          </p>
         </div>
         <Dialog open={showNew} onOpenChange={setShowNew}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" /> Nova Posição</Button>
+            <Button size="sm" onClick={() => setForm(INITIAL_FORM)}>
+              <Plus className="w-4 h-4 mr-1" /> Nova Posição
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
@@ -285,7 +207,7 @@ export function OrganogramaSection() {
                     />
                     <div className="max-h-40 overflow-y-auto space-y-0.5">
                       {ocupantesDisponiveis
-                        .filter(nome => nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
+                        .filter((nome) => nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
                         .map((nome) => (
                           <label key={nome} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
                             <input
@@ -298,24 +220,30 @@ export function OrganogramaSection() {
                             {nome}
                           </label>
                         ))}
-                      {ocupantesDisponiveis.filter(nome => nome.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
+                      {ocupantesDisponiveis.filter((n) => n.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
                         <p className="text-xs text-muted-foreground px-2 py-1">Nenhum ocupante encontrado</p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa (opcional)" />
+                  <Input
+                    value={form.nome_ocupante}
+                    onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })}
+                    placeholder="Nome da pessoa (opcional)"
+                  />
                 )}
               </div>
 
               {organograma.length > 0 && (
                 <div className="space-y-1">
-                  <Label>Superior (opcional)</Label>
+                  <Label>Superior {form.parent_id ? "" : "(opcional)"}</Label>
                   <Select value={form.parent_id || "_none"} onValueChange={(v) => setForm({ ...form, parent_id: v === "_none" ? "" : v })}>
                     <SelectTrigger><SelectValue placeholder="Raiz (sem superior)" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">Raiz (sem superior)</SelectItem>
-                      {organograma.map((n) => <SelectItem key={n.id} value={n.id}>{n.titulo}</SelectItem>)}
+                      {organograma.map((n) => (
+                        <SelectItem key={n.id} value={n.id}>{n.titulo}{n.nome_ocupante ? ` (${n.nome_ocupante})` : ""}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -341,11 +269,13 @@ export function OrganogramaSection() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-2 overflow-x-auto">
-            <OrgTreeVisual roots={tree} onDelete={(id) => deleteOrgNode.mutate(id)} />
-          </CardContent>
-        </Card>
+        <OrgCanvas>
+          <OrgTree
+            roots={tree}
+            onDelete={(id) => deleteOrgNode.mutate(id)}
+            onAddChild={openDialogForParent}
+          />
+        </OrgCanvas>
       )}
     </div>
   );
