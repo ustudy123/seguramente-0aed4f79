@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Users, User, Building2, ChevronRight, ChevronDown, Loader2, Info } from "lucide-react";
+import { Plus, Trash2, Users, User, Building2, ChevronRight, ChevronDown, Loader2, Info, Search, Check, ChevronsUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos, useDepartamentos } from "@/hooks/useCadastros";
 import { toast } from "sonner";
@@ -74,6 +77,8 @@ export function OrganogramaSection() {
   const { departamentos, createDepartamento } = useDepartamentos();
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" });
+  const [cargoOpen, setCargoOpen] = useState(false);
+  const [deptOpen, setDeptOpen] = useState(false);
 
   const tree = buildTree(organograma);
 
@@ -160,34 +165,72 @@ export function OrganogramaSection() {
                 </Select>
               </div>
 
-              {/* Dropdown de cadastros existentes */}
+              {/* Combobox pesquisável de cadastros existentes */}
               {form.tipo === "funcao" && cargosAtivos.length > 0 && (
                 <div className="space-y-1">
                   <Label>Função cadastrada</Label>
-                  <Select value={form.cargo_id || "_none"} onValueChange={(v) => v === "_none" ? setForm({ ...form, cargo_id: "", titulo: "" }) : handleCargoSelect(v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione ou digite abaixo" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">— Nenhuma (digitar nova) —</SelectItem>
-                      {cargosAtivos.map((c: any) => (
-                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={cargoOpen} onOpenChange={setCargoOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={cargoOpen} className="w-full justify-between font-normal">
+                        {form.cargo_id ? cargosAtivos.find((c: any) => c.id === form.cargo_id)?.nome : "Pesquisar ou selecionar função..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar função..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhuma função encontrada</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="_none" onSelect={() => { setForm({ ...form, cargo_id: "", titulo: "" }); setCargoOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", !form.cargo_id ? "opacity-100" : "opacity-0")} />
+                              — Nenhuma (digitar nova) —
+                            </CommandItem>
+                            {cargosAtivos.map((c: any) => (
+                              <CommandItem key={c.id} value={c.nome} onSelect={() => { handleCargoSelect(c.id); setCargoOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", form.cargo_id === c.id ? "opacity-100" : "opacity-0")} />
+                                {c.nome}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
 
               {form.tipo === "departamento" && deptAtivos.length > 0 && (
                 <div className="space-y-1">
                   <Label>Departamento cadastrado</Label>
-                  <Select value={form.departamento_id || "_none"} onValueChange={(v) => v === "_none" ? setForm({ ...form, departamento_id: "", titulo: "" }) : handleDeptSelect(v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione ou digite abaixo" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">— Nenhum (digitar novo) —</SelectItem>
-                      {deptAtivos.map((d: any) => (
-                        <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={deptOpen} onOpenChange={setDeptOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={deptOpen} className="w-full justify-between font-normal">
+                        {form.departamento_id ? deptAtivos.find((d: any) => d.id === form.departamento_id)?.nome : "Pesquisar ou selecionar departamento..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar departamento..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum departamento encontrado</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="_none" onSelect={() => { setForm({ ...form, departamento_id: "", titulo: "" }); setDeptOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", !form.departamento_id ? "opacity-100" : "opacity-0")} />
+                              — Nenhum (digitar novo) —
+                            </CommandItem>
+                            {deptAtivos.map((d: any) => (
+                              <CommandItem key={d.id} value={d.nome} onSelect={() => { handleDeptSelect(d.id); setDeptOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", form.departamento_id === d.id ? "opacity-100" : "opacity-0")} />
+                                {d.nome}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
 
