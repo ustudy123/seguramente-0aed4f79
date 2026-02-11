@@ -14,6 +14,7 @@ import {
   Eye,
   Edit,
   Trash2,
+  MapPin,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,13 +51,13 @@ const STATUS_CONFIG = {
   cancelada: { label: "Cancelada", color: "bg-destructive/10 text-destructive", icon: Trash2 },
 };
 
-const ORIGEM_LABELS: Record<string, string> = {
-  manual: "Manual",
-  ergonomia: "Ergonomia",
-  ouvidoria: "Ouvidoria",
-  epi: "EPIs",
-  ponto: "Ponto",
-  humor: "Humor",
+const ORIGEM_LABELS: Record<string, { label: string; icon: string }> = {
+  manual: { label: "Manual", icon: "✏️" },
+  ergonomia: { label: "Ergonomia", icon: "🧠" },
+  ouvidoria: { label: "Ouvidoria", icon: "📢" },
+  epi: { label: "EPIs", icon: "🦺" },
+  ponto: { label: "Ponto", icon: "⏰" },
+  humor: { label: "Humor", icon: "😊" },
 };
 
 export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação encontrada" }: PlanoAcaoListProps) {
@@ -183,9 +184,18 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
                             <span>{format(new Date(acao.prazo), "dd/MM/yyyy", { locale: ptBR })}</span>
                           </div>
                         )}
-                        <Badge variant="secondary" className="text-xs">
-                          {ORIGEM_LABELS[acao.origem_modulo] || acao.origem_modulo}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          <Badge variant="secondary" className="text-xs">
+                            {ORIGEM_LABELS[acao.origem_modulo]?.icon}{" "}
+                            {ORIGEM_LABELS[acao.origem_modulo]?.label || acao.origem_modulo}
+                          </Badge>
+                        </div>
+                        {acao.origem_descricao && (
+                          <span className="text-xs text-muted-foreground italic truncate max-w-[200px]" title={acao.origem_descricao}>
+                            {acao.origem_descricao}
+                          </span>
+                        )}
                       </div>
 
                       {/* Progress */}
