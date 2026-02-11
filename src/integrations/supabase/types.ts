@@ -2672,6 +2672,349 @@ export type Database = {
           },
         ]
       }
+      estrategia_cultura: {
+        Row: {
+          comportamentos_esperados: Json | null
+          comportamentos_nao_tolerados: Json | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          id: string
+          missao: string | null
+          principios: Json | null
+          tenant_id: string
+          updated_at: string
+          valores: Json | null
+          visao: string | null
+        }
+        Insert: {
+          comportamentos_esperados?: Json | null
+          comportamentos_nao_tolerados?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          id?: string
+          missao?: string | null
+          principios?: Json | null
+          tenant_id: string
+          updated_at?: string
+          valores?: Json | null
+          visao?: string | null
+        }
+        Update: {
+          comportamentos_esperados?: Json | null
+          comportamentos_nao_tolerados?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          id?: string
+          missao?: string | null
+          principios?: Json | null
+          tenant_id?: string
+          updated_at?: string
+          valores?: Json | null
+          visao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_cultura_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_oceano_azul: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          id: string
+          swot_id: string | null
+          tenant_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          swot_id?: string | null
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          swot_id?: string | null
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_oceano_azul_swot_id_fkey"
+            columns: ["swot_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_swot"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_oceano_azul_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_oceano_itens: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          oceano_id: string
+          ordem: number | null
+          quadrante: Database["public"]["Enums"]["oceano_quadrante"]
+          swot_item_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          oceano_id: string
+          ordem?: number | null
+          quadrante: Database["public"]["Enums"]["oceano_quadrante"]
+          swot_item_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          oceano_id?: string
+          ordem?: number | null
+          quadrante?: Database["public"]["Enums"]["oceano_quadrante"]
+          swot_item_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_oceano_itens_oceano_id_fkey"
+            columns: ["oceano_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_oceano_azul"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_oceano_itens_swot_item_id_fkey"
+            columns: ["swot_item_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_swot_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_oceano_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_organograma: {
+        Row: {
+          cargo_id: string | null
+          created_at: string
+          departamento_id: string | null
+          id: string
+          nome_ocupante: string | null
+          ordem: number | null
+          parent_id: string | null
+          tenant_id: string
+          tipo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          cargo_id?: string | null
+          created_at?: string
+          departamento_id?: string | null
+          id?: string
+          nome_ocupante?: string | null
+          ordem?: number | null
+          parent_id?: string | null
+          tenant_id: string
+          tipo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          cargo_id?: string | null
+          created_at?: string
+          departamento_id?: string | null
+          id?: string
+          nome_ocupante?: string | null
+          ordem?: number | null
+          parent_id?: string | null
+          tenant_id?: string
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_organograma_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_organograma_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_organograma_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_organograma"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_organograma_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_swot: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          escopo: string | null
+          id: string
+          periodo: string | null
+          projeto: string | null
+          tenant_id: string
+          titulo: string
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          escopo?: string | null
+          id?: string
+          periodo?: string | null
+          projeto?: string | null
+          tenant_id: string
+          titulo: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          escopo?: string | null
+          id?: string
+          periodo?: string | null
+          projeto?: string | null
+          tenant_id?: string
+          titulo?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_swot_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_swot_itens: {
+        Row: {
+          classificacao:
+            | Database["public"]["Enums"]["swot_classificacao"]
+            | null
+          created_at: string
+          descricao: string
+          id: string
+          impacto: Database["public"]["Enums"]["swot_impacto"] | null
+          ordem: number | null
+          swot_id: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["swot_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          classificacao?:
+            | Database["public"]["Enums"]["swot_classificacao"]
+            | null
+          created_at?: string
+          descricao: string
+          id?: string
+          impacto?: Database["public"]["Enums"]["swot_impacto"] | null
+          ordem?: number | null
+          swot_id: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["swot_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          classificacao?:
+            | Database["public"]["Enums"]["swot_classificacao"]
+            | null
+          created_at?: string
+          descricao?: string
+          id?: string
+          impacto?: Database["public"]["Enums"]["swot_impacto"] | null
+          ordem?: number | null
+          swot_id?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["swot_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_swot_itens_swot_id_fkey"
+            columns: ["swot_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_swot"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_swot_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos_saude: {
         Row: {
           codigo: string
@@ -5861,10 +6204,19 @@ export type Database = {
         | "atrasada"
       nexo_trabalho: "nao" | "em_analise" | "sim"
       obrigatoriedade_epi: "obrigatorio" | "recomendado" | "condicional"
+      oceano_quadrante: "eliminar" | "reduzir" | "elevar" | "criar"
       ocorrencia_tipo: "positiva" | "neutra" | "negativa"
       okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
+      swot_classificacao:
+        | "estrategico"
+        | "operacional"
+        | "cultural"
+        | "pessoas"
+        | "mercado"
+      swot_impacto: "baixo" | "medio" | "alto"
+      swot_tipo: "forca" | "fraqueza" | "oportunidade" | "ameaca"
       tarefa_status: "nao_iniciada" | "em_andamento" | "bloqueada" | "concluida"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
       tipo_avaliador: "auto" | "gestor" | "par" | "subordinado"
@@ -6106,10 +6458,20 @@ export const Constants = {
       ],
       nexo_trabalho: ["nao", "em_analise", "sim"],
       obrigatoriedade_epi: ["obrigatorio", "recomendado", "condicional"],
+      oceano_quadrante: ["eliminar", "reduzir", "elevar", "criar"],
       ocorrencia_tipo: ["positiva", "neutra", "negativa"],
       okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
+      swot_classificacao: [
+        "estrategico",
+        "operacional",
+        "cultural",
+        "pessoas",
+        "mercado",
+      ],
+      swot_impacto: ["baixo", "medio", "alto"],
+      swot_tipo: ["forca", "fraqueza", "oportunidade", "ameaca"],
       tarefa_status: ["nao_iniciada", "em_andamento", "bloqueada", "concluida"],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
       tipo_avaliador: ["auto", "gestor", "par", "subordinado"],
