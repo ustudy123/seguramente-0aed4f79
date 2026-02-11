@@ -132,7 +132,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         cargo: colaborador.cargo || "",
         departamento: colaborador.departamento || "",
         filial: colaborador.filial || "",
-        data_admissao: colaborador.data_admissao || new Date().toISOString().split("T")[0],
+        data_admissao: colaborador.data_admissao || "",
       });
     } else if (open && !colaborador) {
       form.reset({
