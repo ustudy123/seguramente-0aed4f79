@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Plus, X, Save, Loader2, FileText, Sparkles } from "lucide-react";
+import { Heart, Plus, X, Save, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ManualCulturaModal } from "./ManualCulturaModal";
+
+type ListField = "valores" | "principios" | "comportamentos_esperados" | "comportamentos_nao_tolerados";
 
 export function CulturaSection() {
   const { cultura, loadingCultura, upsertCultura } = useEstrategia();
@@ -26,6 +28,7 @@ export function CulturaSection() {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualHtml, setManualHtml] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (cultura) {
@@ -40,19 +43,70 @@ export function CulturaSection() {
     }
   }, [cultura]);
 
-  const addItem = (field: keyof typeof newValue) => {
+  const addItem = (field: ListField) => {
     const val = newValue[field].trim();
     if (!val) return;
     setForm({ ...form, [field]: [...form[field], val] });
     setNewValue({ ...newValue, [field]: "" });
   };
 
-  const removeItem = (field: keyof typeof newValue, idx: number) => {
+  const removeItem = (field: ListField, idx: number) => {
     setForm({ ...form, [field]: form[field].filter((_, i) => i !== idx) });
   };
 
   const handleSave = () => {
     upsertCultura.mutate(form);
+  };
+
+  const handleAiSuggest = async (campo: string) => {
+    setAiLoading(campo);
+    try {
+      const contexto: Record<string, any> = {
+        missao: form.missao,
+        visao: form.visao,
+        valores: form.valores,
+        principios: form.principios,
+      };
+
+      if (campo === "valores") contexto.valores_existentes = form.valores;
+      if (campo === "principios") contexto.principios_existentes = form.principios;
+      if (campo === "comportamentos_esperados") contexto.existentes = form.comportamentos_esperados;
+      if (campo === "comportamentos_nao_tolerados") contexto.existentes = form.comportamentos_nao_tolerados;
+
+      const { data, error } = await supabase.functions.invoke("ai-cultura-sugestao", {
+        body: { campo, contexto },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (campo === "missao" || campo === "visao") {
+        setForm(prev => ({ ...prev, [campo]: data.texto || "" }));
+        toast.success(`${campo === "missao" ? "Missão" : "Visão"} gerada pela IA!`);
+      } else {
+        const items: string[] = data.items || [];
+        if (items.length === 0) {
+          toast.info("A IA não retornou sugestões. Tente novamente.");
+          return;
+        }
+        const existing = new Set(form[campo as ListField].map(s => s.toLowerCase()));
+        const newItems = items.filter(i => !existing.has(i.toLowerCase()));
+        if (newItems.length === 0) {
+          toast.info("Todas as sugestões já estão na lista.");
+          return;
+        }
+        setForm(prev => ({ ...prev, [campo]: [...prev[campo as ListField], ...newItems] }));
+        toast.success(`${newItems.length} sugestão(ões) adicionada(s)!`);
+      }
+    } catch (err: any) {
+      console.error("Erro IA:", err);
+      toast.error("Erro ao gerar sugestão. Tente novamente.");
+    } finally {
+      setAiLoading(null);
+    }
   };
 
   const handleGenerateManual = async () => {
@@ -102,6 +156,23 @@ export function CulturaSection() {
     { key: "comportamentos_nao_tolerados" as const, label: "Comportamentos Não Tolerados", color: "bg-red-100 text-red-800" },
   ];
 
+  const AiButton = ({ campo, label }: { campo: string; label: string }) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="text-xs gap-1 h-7 text-primary hover:text-primary/80"
+      onClick={() => handleAiSuggest(campo)}
+      disabled={aiLoading !== null}
+    >
+      {aiLoading === campo ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : (
+        <Wand2 className="w-3 h-3" />
+      )}
+      {aiLoading === campo ? "Gerando..." : `Sugerir com IA`}
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -123,13 +194,19 @@ export function CulturaSection() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Missão</CardTitle></CardHeader>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Missão</CardTitle>
+            <AiButton campo="missao" label="Missão" />
+          </CardHeader>
           <CardContent>
             <Textarea value={form.missao} onChange={(e) => setForm({ ...form, missao: e.target.value })} placeholder="Por que existimos? Qual o propósito da empresa?" rows={4} />
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Visão</CardTitle></CardHeader>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Visão</CardTitle>
+            <AiButton campo="visao" label="Visão" />
+          </CardHeader>
           <CardContent>
             <Textarea value={form.visao} onChange={(e) => setForm({ ...form, visao: e.target.value })} placeholder="Onde queremos chegar? Como será o futuro?" rows={4} />
           </CardContent>
@@ -138,7 +215,10 @@ export function CulturaSection() {
 
       {listFields.map(({ key, label, color }) => (
         <Card key={key}>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">{label}</CardTitle></CardHeader>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">{label}</CardTitle>
+            <AiButton campo={key} label={label} />
+          </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-2">
               <Input
