@@ -112,12 +112,31 @@ export function OceanoAzulSection() {
   );
 }
 
+// Map SWOT types to suggested Oceano quadrants
+const SWOT_TO_OCEANO: Record<string, OceanoQuadrante> = {
+  fraqueza: "eliminar",
+  ameaca: "reduzir",
+  forca: "elevar",
+  oportunidade: "criar",
+};
+
+const SWOT_TIPO_LABELS: Record<string, string> = {
+  forca: "Força",
+  fraqueza: "Fraqueza",
+  oportunidade: "Oportunidade",
+  ameaca: "Ameaça",
+};
+
 // Detail view
 function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack: () => void }) {
-  const { useOceanoItens, createOceanoItem, deleteOceanoItem, deleteOceano } = useEstrategia();
+  const { useOceanoItens, createOceanoItem, deleteOceanoItem, deleteOceano, useSwotItens } = useEstrategia();
   const { data: itens = [] } = useOceanoItens(oceano.id);
+  const { data: swotItens = [] } = useSwotItens(oceano.swot_id || null);
   const [newItemQuad, setNewItemQuad] = useState<OceanoQuadrante>("eliminar");
   const [newItemDesc, setNewItemDesc] = useState("");
+
+  // Track which swot items are already imported
+  const importedSwotIds = new Set(itens.map((i) => i.swot_item_id).filter(Boolean));
 
   const handleAdd = () => {
     if (!newItemDesc.trim()) return;
@@ -126,7 +145,17 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
     });
   };
 
+  const handleImportSwotItem = (swotItem: { id: string; tipo: string; descricao: string }, quadrante: OceanoQuadrante) => {
+    createOceanoItem.mutate({ oceano_id: oceano.id, quadrante, descricao: swotItem.descricao, swot_item_id: swotItem.id });
+  };
+
   const quadrantes: OceanoQuadrante[] = ["eliminar", "reduzir", "elevar", "criar"];
+
+  // Group SWOT suggestions by quadrant
+  const suggestionsByQuadrant = quadrantes.reduce((acc, q) => {
+    acc[q] = swotItens.filter((si) => SWOT_TO_OCEANO[si.tipo] === q && !importedSwotIds.has(si.id));
+    return acc;
+  }, {} as Record<OceanoQuadrante, typeof swotItens>);
 
   return (
     <div className="space-y-4">
@@ -161,6 +190,7 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
         {quadrantes.map((q) => {
           const config = QUADRANT_CONFIG[q];
           const qItens = itens.filter((i) => i.quadrante === q);
+          const suggestions = suggestionsByQuadrant[q] || [];
           return (
             <Card key={q} className={`${config.border} border-2`}>
               <CardHeader className={`pb-2 ${config.bg} rounded-t-lg`}>
@@ -171,17 +201,38 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
                 <p className="text-[10px] text-muted-foreground">{config.description}</p>
               </CardHeader>
               <CardContent className="p-3 space-y-2">
-                {qItens.length === 0 ? (
+                {qItens.length === 0 && suggestions.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4">Nenhum item</p>
                 ) : (
-                  qItens.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-background border">
-                      <p className="text-sm flex-1">{item.descricao}</p>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteOceanoItem.mutate(item.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  ))
+                  <>
+                    {qItens.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-background border">
+                        <p className="text-sm flex-1">{item.descricao}</p>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteOceanoItem.mutate(item.id)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                    {/* SWOT suggestions */}
+                    {suggestions.length > 0 && (
+                      <div className="pt-2 border-t border-dashed space-y-1.5">
+                        <p className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" /> Sugestões da SWOT
+                        </p>
+                        {suggestions.map((si) => (
+                          <div key={si.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40 border border-dashed">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm truncate">{si.descricao}</p>
+                              <Badge variant="outline" className="text-[10px] mt-0.5">{SWOT_TIPO_LABELS[si.tipo] || si.tipo}</Badge>
+                            </div>
+                            <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => handleImportSwotItem(si, q)}>
+                              <Plus className="w-3 h-3 mr-1" /> Usar
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
