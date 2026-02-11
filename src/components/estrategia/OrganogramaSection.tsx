@@ -143,6 +143,7 @@ export function OrganogramaSection() {
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] });
   const [cargoOpen, setCargoOpen] = useState(false);
+  const [ocupanteSearch, setOcupanteSearch] = useState("");
 
   const tree = buildTree(organograma);
 
@@ -162,6 +163,7 @@ export function OrganogramaSection() {
   const handleCargoSelect = (cargoId: string) => {
     const cargo = cargosAtivos.find((c: any) => c.id === cargoId);
     setForm({ ...form, cargo_id: cargoId, titulo: cargo?.nome || "", selectedOcupantes: [], nome_ocupante: "" });
+    setOcupanteSearch("");
   };
 
   // Colaboradores matching the current titulo
@@ -275,20 +277,32 @@ export function OrganogramaSection() {
               <div className="space-y-1">
                 <Label>Ocupante</Label>
                 {ocupantesDisponiveis.length > 0 ? (
-                  <div className="border rounded-md p-2 space-y-1 max-h-40 overflow-y-auto">
-                    <p className="text-xs text-muted-foreground mb-1">Selecione os ocupantes desta função:</p>
-                    {ocupantesDisponiveis.map((nome) => (
-                      <label key={nome} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
-                        <input
-                          type="checkbox"
-                          checked={form.selectedOcupantes.includes(nome)}
-                          onChange={() => toggleOcupante(nome)}
-                          className="rounded border-input"
-                        />
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        {nome}
-                      </label>
-                    ))}
+                  <div className="border rounded-md p-2 space-y-1">
+                    <Input
+                      value={ocupanteSearch}
+                      onChange={(e) => setOcupanteSearch(e.target.value)}
+                      placeholder="Pesquisar ocupante..."
+                      className="h-8 text-sm mb-1"
+                    />
+                    <div className="max-h-40 overflow-y-auto space-y-0.5">
+                      {ocupantesDisponiveis
+                        .filter(nome => nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
+                        .map((nome) => (
+                          <label key={nome} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
+                            <input
+                              type="checkbox"
+                              checked={form.selectedOcupantes.includes(nome)}
+                              onChange={() => toggleOcupante(nome)}
+                              className="rounded border-input"
+                            />
+                            <User className="w-3.5 h-3.5 text-muted-foreground" />
+                            {nome}
+                          </label>
+                        ))}
+                      {ocupantesDisponiveis.filter(nome => nome.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
+                        <p className="text-xs text-muted-foreground px-2 py-1">Nenhum ocupante encontrado</p>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa (opcional)" />
