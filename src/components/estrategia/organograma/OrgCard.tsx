@@ -1,6 +1,7 @@
-import { Plus, Trash2, User, Briefcase } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 
@@ -14,9 +15,10 @@ interface OrgCardProps {
   node: EstrategiaOrganograma;
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
+  onAddSibling: (parentId: string | undefined) => void;
 }
 
-export function OrgCard({ node, onDelete, onAddChild }: OrgCardProps) {
+export function OrgCard({ node, onDelete, onAddChild, onAddSibling }: OrgCardProps) {
   return (
     <div
       className={cn(
@@ -24,6 +26,7 @@ export function OrgCard({ node, onDelete, onAddChild }: OrgCardProps) {
         CARD_STYLE.gradient,
         CARD_STYLE.border
       )}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex justify-center mb-2">
         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", CARD_STYLE.badge)}>
@@ -57,18 +60,41 @@ export function OrgCard({ node, onDelete, onAddChild }: OrgCardProps) {
         <Trash2 className="w-3 h-3" />
       </Button>
 
-      {/* Add child button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-primary text-primary-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/90"
-        onClick={(e) => {
-          e.stopPropagation();
-          onAddChild(node.id);
-        }}
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </Button>
+      {/* Add child (below) */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-primary text-primary-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/90"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddChild(node.id);
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="text-xs">Adicionar abaixo</TooltipContent>
+      </Tooltip>
+
+      {/* Add sibling (side) */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-1/2 -right-3 -translate-y-1/2 h-6 w-6 rounded-full bg-secondary text-secondary-foreground border shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-secondary/80"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddSibling(node.parent_id);
+            }}
+          >
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">Adicionar ao lado</TooltipContent>
+      </Tooltip>
     </div>
   );
 }

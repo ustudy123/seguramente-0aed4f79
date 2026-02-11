@@ -21,8 +21,8 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
   }, []);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
-    // Only pan with middle button or when clicking on empty canvas area
-    if (e.button === 1 || (e.button === 0 && (e.target as HTMLElement).dataset.canvas === "true")) {
+    // Pan with any left-click (we stop propagation on buttons/interactive elements)
+    if (e.button === 0 || e.button === 1) {
       e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX - translate.x, y: e.clientY - translate.y });
