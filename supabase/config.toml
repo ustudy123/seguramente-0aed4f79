@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.ai-cultura-sugestao]
 verify_jwt = false
+
+[functions.ai-oceano-azul]
+verify_jwt = false
