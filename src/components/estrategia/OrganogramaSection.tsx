@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Users, User, Building2, ChevronRight, ChevronDown, Loader2, Info, Search, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Trash2, Users, User, Building2, Loader2, Info, Check, ChevronsUpDown, Crown, Briefcase } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,43 +30,115 @@ function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
   return roots;
 }
 
-function OrgNode({ node, level, onDelete }: { node: EstrategiaOrganograma; level: number; onDelete: (id: string) => void }) {
-  const [expanded, setExpanded] = useState(true);
+const TIPO_CONFIG: Record<string, { icon: typeof Users; gradient: string; border: string; badge: string; badgeText: string }> = {
+  diretoria: {
+    icon: Crown,
+    gradient: "bg-gradient-to-br from-primary/10 to-primary/5",
+    border: "border-primary/30 shadow-primary/10",
+    badge: "bg-primary/15 text-primary border-primary/20",
+    badgeText: "Diretoria",
+  },
+  departamento: {
+    icon: Building2,
+    gradient: "bg-gradient-to-br from-blue-500/10 to-blue-500/5",
+    border: "border-blue-500/30 shadow-blue-500/10",
+    badge: "bg-blue-500/15 text-blue-700 border-blue-500/20",
+    badgeText: "Departamento",
+  },
+  funcao: {
+    icon: Briefcase,
+    gradient: "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5",
+    border: "border-emerald-500/30 shadow-emerald-500/10",
+    badge: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
+    badgeText: "Função",
+  },
+};
+
+function OrgCard({ node, onDelete }: { node: EstrategiaOrganograma; onDelete: (id: string) => void }) {
+  const config = TIPO_CONFIG[node.tipo] || TIPO_CONFIG.funcao;
+  const Icon = config.icon;
+
+  return (
+    <div className={cn(
+      "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] text-center transition-all hover:shadow-lg",
+      config.gradient, config.border
+    )}>
+      <div className="flex justify-center mb-2">
+        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", config.badge)}>
+          <Icon className="w-5 h-5" />
+        </div>
+      </div>
+      <p className="text-sm font-semibold text-foreground leading-tight">{node.titulo}</p>
+      {node.nome_ocupante && (
+        <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+          <User className="w-3 h-3" />
+          {node.nome_ocupante}
+        </p>
+      )}
+      <Badge variant="outline" className={cn("mt-2 text-[10px] border", config.badge)}>
+        {config.badgeText}
+      </Badge>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+        onClick={(e) => { e.stopPropagation(); onDelete(node.id); }}
+      >
+        <Trash2 className="w-3 h-3" />
+      </Button>
+    </div>
+  );
+}
+
+function OrgBranch({ node, onDelete, isRoot }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; isRoot?: boolean }) {
   const hasChildren = node.children && node.children.length > 0;
 
   return (
-    <div className={level > 0 ? "ml-6 border-l-2 border-muted pl-4" : ""}>
-      <div className="flex items-center gap-2 py-2 group">
-        {hasChildren ? (
-          <button onClick={() => setExpanded(!expanded)} className="text-muted-foreground hover:text-foreground">
-            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-        ) : (
-          <div className="w-4" />
-        )}
-        <div className="flex items-center gap-2 flex-1 bg-card border rounded-lg px-3 py-2 shadow-sm">
-          {node.tipo === "departamento" ? (
-            <Building2 className="w-4 h-4 text-primary flex-shrink-0" />
-          ) : (
-            <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{node.titulo}</p>
-            {node.nome_ocupante && <p className="text-xs text-muted-foreground">{node.nome_ocupante}</p>}
-          </div>
-          <Badge variant="outline" className="text-[10px]">{node.tipo}</Badge>
-          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive" onClick={() => onDelete(node.id)}>
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      </div>
-      {expanded && hasChildren && (
-        <div>
-          {node.children!.map((child) => (
-            <OrgNode key={child.id} node={child} level={level + 1} onDelete={onDelete} />
-          ))}
-        </div>
+    <div className="flex flex-col items-center">
+      {/* Connector line from parent */}
+      {!isRoot && (
+        <div className="w-0.5 h-6 bg-border" />
       )}
+
+      {/* The card */}
+      <OrgCard node={node} onDelete={onDelete} />
+
+      {/* Children */}
+      {hasChildren && (
+        <>
+          {/* Vertical line down from card */}
+          <div className="w-0.5 h-6 bg-border" />
+
+          {/* Horizontal connector bar + children */}
+          <div className="relative flex items-start">
+            {/* Horizontal line spanning children */}
+            {node.children!.length > 1 && (
+              <div
+                className="absolute top-0 h-0.5 bg-border"
+                style={{
+                  left: `calc(50% / ${node.children!.length})`,
+                  right: `calc(50% / ${node.children!.length})`,
+                }}
+              />
+            )}
+            <div className="flex gap-4">
+              {node.children!.map((child) => (
+                <OrgBranch key={child.id} node={child} onDelete={onDelete} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function OrgTreeVisual({ roots, onDelete }: { roots: EstrategiaOrganograma[]; onDelete: (id: string) => void }) {
+  return (
+    <div className="flex gap-8 justify-center flex-wrap overflow-x-auto py-6 px-4">
+      {roots.map((root) => (
+        <OrgBranch key={root.id} node={root} onDelete={onDelete} isRoot />
+      ))}
     </div>
   );
 }
@@ -103,29 +175,23 @@ export function OrganogramaSection() {
     if (!form.titulo.trim()) return;
     const titulo = form.titulo.trim();
 
-    // If typing a new function name not from the dropdown, auto-create in cadastros
     if (form.tipo === "funcao" && !form.cargo_id) {
       const exists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
       if (!exists) {
         try {
           await createCargo.mutateAsync({ nome: titulo, ativo: true, descricao: null, departamento_id: null, nivel: null, faixa_salarial_min: null, faixa_salarial_max: null, periodicidade_exame_meses: null, exames_obrigatorios: null });
           toast.info(`Função "${titulo}" cadastrada automaticamente no módulo de Cadastros`);
-        } catch {
-          // toast already handled by hook
-        }
+        } catch { /* handled */ }
       }
     }
 
-    // If typing a new department name not from the dropdown, auto-create in cadastros
     if (form.tipo === "departamento" && !form.departamento_id) {
       const exists = deptAtivos.some((d: any) => d.nome.toLowerCase() === titulo.toLowerCase());
       if (!exists) {
         try {
           await createDepartamento.mutateAsync({ nome: titulo, ativo: true, descricao: null, responsavel_id: null });
           toast.info(`Departamento "${titulo}" cadastrado automaticamente no módulo de Cadastros`);
-        } catch {
-          // toast already handled by hook
-        }
+        } catch { /* handled */ }
       }
     }
 
@@ -165,7 +231,6 @@ export function OrganogramaSection() {
                 </Select>
               </div>
 
-              {/* Combobox pesquisável de cadastros existentes */}
               {form.tipo === "funcao" && cargosAtivos.length > 0 && (
                 <div className="space-y-1">
                   <Label>Função cadastrada</Label>
@@ -234,7 +299,6 @@ export function OrganogramaSection() {
                 </div>
               )}
 
-              {/* Campo de texto — sempre visível */}
               <div className="space-y-1">
                 <Label>{form.tipo === "departamento" ? "Nome do departamento" : form.tipo === "diretoria" ? "Nome da diretoria" : "Nome da função"}</Label>
                 <Input
@@ -289,10 +353,8 @@ export function OrganogramaSection() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="p-4">
-            {tree.map((node) => (
-              <OrgNode key={node.id} node={node} level={0} onDelete={(id) => deleteOrgNode.mutate(id)} />
-            ))}
+          <CardContent className="p-2 overflow-x-auto">
+            <OrgTreeVisual roots={tree} onDelete={(id) => deleteOrgNode.mutate(id)} />
           </CardContent>
         </Card>
       )}
