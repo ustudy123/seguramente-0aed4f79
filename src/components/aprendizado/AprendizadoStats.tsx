@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, AlertTriangle, ClipboardList, Brain, Shield, Wrench } from "lucide-react";
+import { BarChart3, AlertTriangle, ClipboardList, Brain, Shield, Wrench, LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { IndicadorDetailModal } from "./IndicadorDetailModal";
 
 interface Cargo {
   id: string;
@@ -91,20 +93,74 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
   const cargosComComp = new Set(competencias.map((c) => c.cargo_id));
   const cargosSemCompetencias = cargos.filter((c) => !cargosComComp.has(c.id));
 
+  const [selectedStat, setSelectedStat] = useState<string | null>(null);
+
+  // Build detail data per indicator
+  const getDetailData = (key: string) => {
+    const cargoMap = new Map(cargos.map((c) => [c.id, c.nome]));
+    switch (key) {
+      case "total":
+        return atividades.map((a) => ({
+          cargo: cargoMap.get(a.cargo_id) || "—",
+          detalhe: a.classificacao || "—",
+          extra: a.complexidade || "—",
+        }));
+      case "alta":
+        return atividades
+          .filter((a) => a.complexidade === "alta")
+          .map((a) => ({
+            cargo: cargoMap.get(a.cargo_id) || "—",
+            detalhe: a.classificacao || "—",
+            extra: "Alta",
+          }));
+      case "criticas":
+        return atividades
+          .filter((a) => a.classificacao === "critica")
+          .map((a) => ({
+            cargo: cargoMap.get(a.cargo_id) || "—",
+            detalhe: "Crítica",
+            extra: a.complexidade || "—",
+          }));
+      case "competencias":
+        return competencias.map((c) => ({
+          cargo: cargoMap.get(c.cargo_id) || "—",
+          detalhe: c.tipo || "—",
+        }));
+      case "ferramentas":
+        return ferramentas.map(() => ({
+          cargo: "—",
+          detalhe: "Ferramenta vinculada",
+        }));
+      case "conteudos":
+        return conteudos.map(() => ({
+          cargo: "—",
+          detalhe: "Conteúdo vinculado",
+        }));
+      default:
+        return [];
+    }
+  };
+
   const stats = [
-    { label: "Total de Atividades", value: totalAtividades, icon: ClipboardList, color: "text-blue-600" },
-    { label: "Complexidade Alta", value: altaComplexidade, icon: AlertTriangle, color: "text-red-600" },
-    { label: "Atividades Críticas", value: criticas, icon: AlertTriangle, color: "text-orange-600" },
-    { label: "Competências", value: competencias.length, icon: Brain, color: "text-purple-600" },
-    { label: "Ferramentas", value: totalFerramentas, icon: Wrench, color: "text-teal-600" },
-    { label: "Conteúdos Vinculados", value: totalConteudos, icon: Shield, color: "text-green-600" },
+    { key: "total", label: "Total de Atividades", value: totalAtividades, icon: ClipboardList, color: "text-primary", columns: [{ label: "Função", key: "cargo" as const }, { label: "Classificação", key: "detalhe" as const }, { label: "Complexidade", key: "extra" as const }] },
+    { key: "alta", label: "Complexidade Alta", value: altaComplexidade, icon: AlertTriangle, color: "text-destructive", columns: [{ label: "Função", key: "cargo" as const }, { label: "Classificação", key: "detalhe" as const }, { label: "Complexidade", key: "extra" as const }] },
+    { key: "criticas", label: "Atividades Críticas", value: criticas, icon: AlertTriangle, color: "text-warning", columns: [{ label: "Função", key: "cargo" as const }, { label: "Classificação", key: "detalhe" as const }, { label: "Complexidade", key: "extra" as const }] },
+    { key: "competencias", label: "Competências", value: competencias.length, icon: Brain, color: "text-accent-foreground", columns: [{ label: "Função", key: "cargo" as const }, { label: "Tipo", key: "detalhe" as const }] },
+    { key: "ferramentas", label: "Ferramentas", value: totalFerramentas, icon: Wrench, color: "text-primary", columns: [{ label: "Função", key: "cargo" as const }, { label: "Detalhe", key: "detalhe" as const }] },
+    { key: "conteudos", label: "Conteúdos Vinculados", value: totalConteudos, icon: Shield, color: "text-primary", columns: [{ label: "Função", key: "cargo" as const }, { label: "Detalhe", key: "detalhe" as const }] },
   ];
+
+  const activeStat = stats.find((s) => s.key === selectedStat);
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.map((s) => (
-          <Card key={s.label}>
+          <Card
+            key={s.key}
+            className="cursor-pointer hover:shadow-md hover:border-primary/40 transition-all"
+            onClick={() => setSelectedStat(s.key)}
+          >
             <CardContent className="p-4 text-center">
               <s.icon className={`w-6 h-6 mx-auto mb-2 ${s.color}`} />
               <p className="text-2xl font-bold">{s.value}</p>
@@ -136,7 +192,7 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-amber-600 flex items-center gap-2">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
               <Brain className="w-4 h-4" /> Funções sem Competências ({cargosSemCompetencias.length})
             </CardTitle>
           </CardHeader>
@@ -153,6 +209,19 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {activeStat && (
+        <IndicadorDetailModal
+          open={!!selectedStat}
+          onOpenChange={(open) => !open && setSelectedStat(null)}
+          title={activeStat.label}
+          icon={activeStat.icon}
+          color={activeStat.color}
+          total={activeStat.value}
+          items={getDetailData(activeStat.key)}
+          columns={activeStat.columns}
+        />
+      )}
     </div>
   );
 }
