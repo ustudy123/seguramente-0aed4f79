@@ -8,8 +8,7 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
-  Plus,
-  Brain
+  Plus
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,13 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { useMetas } from "@/hooks/useMetas";
-import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { AvaliacaoInbox } from "@/components/avaliacoes/resposta/AvaliacaoInbox";
 import { CicloList } from "@/components/avaliacoes/ciclos/CicloList";
 import { MetasList } from "@/components/avaliacoes/metas/MetasList";
 import { TemplateList } from "@/components/avaliacoes/templates/TemplateList";
 import { Matriz9Box } from "@/components/avaliacoes/resultados/Matriz9Box";
-import { PsicossocialDashboard } from "@/components/avaliacoes/psicossocial/PsicossocialDashboard";
 
 export default function Avaliacoes() {
   const [activeTab, setActiveTab] = useState("inbox");
@@ -40,8 +37,6 @@ export default function Avaliacoes() {
     progressoMedio,
     isLoadingMetas,
   } = useMetas();
-
-  const { campanhasAtivas } = usePsicossocial();
 
   const isLoading = isLoadingCiclos || isLoadingMetas;
 
@@ -111,7 +106,7 @@ export default function Avaliacoes() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="inbox" className="flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Minha Caixa</span>
@@ -137,15 +132,6 @@ export default function Avaliacoes() {
             <LayoutGrid className="h-4 w-4" />
             <span className="hidden sm:inline">9-Box</span>
           </TabsTrigger>
-          <TabsTrigger value="psicossocial" className="flex items-center gap-2">
-            <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">Psicossocial</span>
-            {campanhasAtivas > 0 && (
-              <Badge className="h-5 px-1.5 bg-purple-500">
-                {campanhasAtivas}
-              </Badge>
-            )}
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="inbox" className="space-y-4">
@@ -166,10 +152,6 @@ export default function Avaliacoes() {
 
         <TabsContent value="9box" className="space-y-4">
           <Matriz9Box />
-        </TabsContent>
-
-        <TabsContent value="psicossocial" className="space-y-4">
-          <PsicossocialDashboard />
         </TabsContent>
       </Tabs>
     </div>

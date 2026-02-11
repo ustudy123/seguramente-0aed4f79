@@ -33,6 +33,9 @@ import { AnaliseIASection } from "@/components/ergonomia/AnaliseIASection";
 import { IntegracaoCognitiva } from "@/components/ergonomia/IntegracaoCognitiva";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
+import { PsicossocialDashboard } from "@/components/avaliacoes/psicossocial/PsicossocialDashboard";
+import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ITENS_NR17_PADRAO,
@@ -86,6 +89,8 @@ export default function Ergonomia() {
     dadosCognitivos, 
     isLoading: isLoadingInteligente 
   } = useErgonomiaInteligente();
+
+  const { campanhasAtivas } = usePsicossocial();
 
   const handleViewItem = (item: ItemNR17) => {
     setSelectedItem(item);
@@ -210,6 +215,15 @@ export default function Ergonomia() {
                 <TabsTrigger value="hub" className="gap-2">
                   <BookOpen className="h-4 w-4" />
                   Hub de Serviços
+                </TabsTrigger>
+                <TabsTrigger value="psicossocial" className="gap-2">
+                  <Brain className="h-4 w-4" />
+                  Psicossocial
+                  {campanhasAtivas > 0 && (
+                    <Badge className="h-5 px-1.5 bg-purple-500">
+                      {campanhasAtivas}
+                    </Badge>
+                  )}
                 </TabsTrigger>
               </TabsList>
 
@@ -418,7 +432,17 @@ export default function Ergonomia() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <HubServicos />
+              <HubServicos />
+              </motion.div>
+            </TabsContent>
+
+            {/* Tab: Psicossocial */}
+            <TabsContent value="psicossocial" className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <PsicossocialDashboard />
               </motion.div>
             </TabsContent>
           </Tabs>
