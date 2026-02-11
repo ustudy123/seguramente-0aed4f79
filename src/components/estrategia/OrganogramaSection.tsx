@@ -122,10 +122,10 @@ export function OrganogramaSection() {
               {organograma.length > 0 && (
                 <div className="space-y-1">
                   <Label>Superior (opcional)</Label>
-                  <Select value={form.parent_id} onValueChange={(v) => setForm({ ...form, parent_id: v })}>
+                  <Select value={form.parent_id || "_none"} onValueChange={(v) => setForm({ ...form, parent_id: v === "_none" ? "" : v })}>
                     <SelectTrigger><SelectValue placeholder="Raiz (sem superior)" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Raiz (sem superior)</SelectItem>
+                      <SelectItem value="_none">Raiz (sem superior)</SelectItem>
                       {organograma.map((n) => <SelectItem key={n.id} value={n.id}>{n.titulo}</SelectItem>)}
                     </SelectContent>
                   </Select>
