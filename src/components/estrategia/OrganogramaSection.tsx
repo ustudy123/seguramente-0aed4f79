@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Users, User, Building2, Loader2, Info, Check, ChevronsUpDown, Crown, Briefcase } from "lucide-react";
+import { Plus, Trash2, Users, User, Loader2, Info, Check, ChevronsUpDown, Briefcase } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useEstrategia } from "@/hooks/useEstrategia";
-import { useCargos, useDepartamentos } from "@/hooks/useCadastros";
+import { useCargos } from "@/hooks/useCadastros";
+import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 
@@ -30,21 +31,7 @@ function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
   return roots;
 }
 
-const TIPO_CONFIG: Record<string, { icon: typeof Users; gradient: string; border: string; badge: string; badgeText: string }> = {
-  diretoria: {
-    icon: Crown,
-    gradient: "bg-gradient-to-br from-primary/10 to-primary/5",
-    border: "border-primary/30 shadow-primary/10",
-    badge: "bg-primary/15 text-primary border-primary/20",
-    badgeText: "Diretoria",
-  },
-  departamento: {
-    icon: Building2,
-    gradient: "bg-gradient-to-br from-blue-500/10 to-blue-500/5",
-    border: "border-blue-500/30 shadow-blue-500/10",
-    badge: "bg-blue-500/15 text-blue-700 border-blue-500/20",
-    badgeText: "Departamento",
-  },
+const TIPO_CONFIG = {
   funcao: {
     icon: Briefcase,
     gradient: "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5",
@@ -54,8 +41,8 @@ const TIPO_CONFIG: Record<string, { icon: typeof Users; gradient: string; border
   },
 };
 
-function OrgCard({ node, onDelete }: { node: EstrategiaOrganograma; onDelete: (id: string) => void }) {
-  const config = TIPO_CONFIG[node.tipo] || TIPO_CONFIG.funcao;
+function OrgCard({ node, onDelete, ocupante }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; ocupante?: string }) {
+  const config = TIPO_CONFIG.funcao;
   const Icon = config.icon;
 
   return (
@@ -69,10 +56,10 @@ function OrgCard({ node, onDelete }: { node: EstrategiaOrganograma; onDelete: (i
         </div>
       </div>
       <p className="text-sm font-semibold text-foreground leading-tight">{node.titulo}</p>
-      {node.nome_ocupante && (
+      {(ocupante || node.nome_ocupante) && (
         <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
           <User className="w-3 h-3" />
-          {node.nome_ocupante}
+          {ocupante || node.nome_ocupante}
         </p>
       )}
       <Badge variant="outline" className={cn("mt-2 text-[10px] border", config.badge)}>
@@ -90,8 +77,9 @@ function OrgCard({ node, onDelete }: { node: EstrategiaOrganograma; onDelete: (i
   );
 }
 
-function OrgBranch({ node, onDelete, isRoot }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; isRoot?: boolean }) {
+function OrgBranch({ node, onDelete, isRoot, colaboradoresMap }: { node: EstrategiaOrganograma; onDelete: (id: string) => void; isRoot?: boolean; colaboradoresMap: Map<string, string> }) {
   const hasChildren = node.children && node.children.length > 0;
+  const ocupante = colaboradoresMap.get(node.titulo.toLowerCase());
 
   return (
     <div className="flex flex-col items-center">
@@ -101,7 +89,7 @@ function OrgBranch({ node, onDelete, isRoot }: { node: EstrategiaOrganograma; on
       )}
 
       {/* The card */}
-      <OrgCard node={node} onDelete={onDelete} />
+      <OrgCard node={node} onDelete={onDelete} ocupante={ocupante} />
 
       {/* Children */}
       {hasChildren && (
@@ -123,7 +111,7 @@ function OrgBranch({ node, onDelete, isRoot }: { node: EstrategiaOrganograma; on
             )}
             <div className="flex gap-4">
               {node.children!.map((child) => (
-                <OrgBranch key={child.id} node={child} onDelete={onDelete} />
+                <OrgBranch key={child.id} node={child} onDelete={onDelete} colaboradoresMap={colaboradoresMap} />
               ))}
             </div>
           </div>
@@ -133,11 +121,11 @@ function OrgBranch({ node, onDelete, isRoot }: { node: EstrategiaOrganograma; on
   );
 }
 
-function OrgTreeVisual({ roots, onDelete }: { roots: EstrategiaOrganograma[]; onDelete: (id: string) => void }) {
+function OrgTreeVisual({ roots, onDelete, colaboradoresMap }: { roots: EstrategiaOrganograma[]; onDelete: (id: string) => void; colaboradoresMap: Map<string, string> }) {
   return (
     <div className="flex gap-8 justify-center flex-wrap overflow-x-auto py-6 px-4">
       {roots.map((root) => (
-        <OrgBranch key={root.id} node={root} onDelete={onDelete} isRoot />
+        <OrgBranch key={root.id} node={root} onDelete={onDelete} isRoot colaboradoresMap={colaboradoresMap} />
       ))}
     </div>
   );
@@ -146,36 +134,36 @@ function OrgTreeVisual({ roots, onDelete }: { roots: EstrategiaOrganograma[]; on
 export function OrganogramaSection() {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia();
   const { cargos, createCargo } = useCargos();
-  const { departamentos, createDepartamento } = useDepartamentos();
+  const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" });
+  const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "" });
   const [cargoOpen, setCargoOpen] = useState(false);
-  const [deptOpen, setDeptOpen] = useState(false);
 
   const tree = buildTree(organograma);
 
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
-  const deptAtivos = (departamentos || []).filter((d: any) => d.ativo);
 
-  const handleTipoChange = (tipo: string) => {
-    setForm({ ...form, tipo, titulo: "", cargo_id: "", departamento_id: "" });
-  };
+  // Map cargo name (lowercase) -> colaborador name for auto-identification
+  const colaboradoresMap = new Map<string, string>();
+  (colaboradores || []).forEach((c) => {
+    if (c.cargo) {
+      const key = c.cargo.toLowerCase();
+      if (!colaboradoresMap.has(key)) {
+        colaboradoresMap.set(key, c.nome_completo);
+      }
+    }
+  });
 
   const handleCargoSelect = (cargoId: string) => {
     const cargo = cargosAtivos.find((c: any) => c.id === cargoId);
     setForm({ ...form, cargo_id: cargoId, titulo: cargo?.nome || "" });
   };
 
-  const handleDeptSelect = (deptId: string) => {
-    const dept = deptAtivos.find((d: any) => d.id === deptId);
-    setForm({ ...form, departamento_id: deptId, titulo: dept?.nome || "" });
-  };
-
   const handleCreate = async () => {
     if (!form.titulo.trim()) return;
     const titulo = form.titulo.trim();
 
-    if (form.tipo === "funcao" && !form.cargo_id) {
+    if (!form.cargo_id) {
       const exists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
       if (!exists) {
         try {
@@ -185,23 +173,16 @@ export function OrganogramaSection() {
       }
     }
 
-    if (form.tipo === "departamento" && !form.departamento_id) {
-      const exists = deptAtivos.some((d: any) => d.nome.toLowerCase() === titulo.toLowerCase());
-      if (!exists) {
-        try {
-          await createDepartamento.mutateAsync({ nome: titulo, ativo: true, descricao: null, responsavel_id: null });
-          toast.info(`Departamento "${titulo}" cadastrado automaticamente no módulo de Cadastros`);
-        } catch { /* handled */ }
-      }
-    }
+    // Auto-detect ocupante from colaboradores
+    const ocupante = form.nome_ocupante || colaboradoresMap.get(titulo.toLowerCase()) || undefined;
 
     createOrgNode.mutate(
-      { titulo, nome_ocupante: form.nome_ocupante || undefined, parent_id: form.parent_id || undefined, tipo: form.tipo },
-      { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" }); } },
+      { titulo, nome_ocupante: ocupante, parent_id: form.parent_id || undefined, tipo: "funcao" },
+      { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "" }); } },
     );
   };
 
-  const isCreating = createOrgNode.isPending || createCargo.isPending || createDepartamento.isPending;
+  const isCreating = createOrgNode.isPending || createCargo.isPending;
 
   return (
     <div className="space-y-4">
@@ -219,19 +200,7 @@ export function OrganogramaSection() {
           <DialogContent>
             <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div className="space-y-1">
-                <Label>Tipo</Label>
-                <Select value={form.tipo} onValueChange={handleTipoChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="funcao">Função</SelectItem>
-                    <SelectItem value="departamento">Departamento</SelectItem>
-                    <SelectItem value="diretoria">Diretoria</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {form.tipo === "funcao" && cargosAtivos.length > 0 && (
+              {cargosAtivos.length > 0 && (
                 <div className="space-y-1">
                   <Label>Função cadastrada</Label>
                   <Popover open={cargoOpen} onOpenChange={setCargoOpen}>
@@ -265,57 +234,29 @@ export function OrganogramaSection() {
                 </div>
               )}
 
-              {form.tipo === "departamento" && deptAtivos.length > 0 && (
-                <div className="space-y-1">
-                  <Label>Departamento cadastrado</Label>
-                  <Popover open={deptOpen} onOpenChange={setDeptOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={deptOpen} className="w-full justify-between font-normal">
-                        {form.departamento_id ? deptAtivos.find((d: any) => d.id === form.departamento_id)?.nome : "Pesquisar ou selecionar departamento..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar departamento..." />
-                        <CommandList>
-                          <CommandEmpty>Nenhum departamento encontrado</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="_none" onSelect={() => { setForm({ ...form, departamento_id: "", titulo: "" }); setDeptOpen(false); }}>
-                              <Check className={cn("mr-2 h-4 w-4", !form.departamento_id ? "opacity-100" : "opacity-0")} />
-                              — Nenhum (digitar novo) —
-                            </CommandItem>
-                            {deptAtivos.map((d: any) => (
-                              <CommandItem key={d.id} value={d.nome} onSelect={() => { handleDeptSelect(d.id); setDeptOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", form.departamento_id === d.id ? "opacity-100" : "opacity-0")} />
-                                {d.nome}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-
               <div className="space-y-1">
-                <Label>{form.tipo === "departamento" ? "Nome do departamento" : form.tipo === "diretoria" ? "Nome da diretoria" : "Nome da função"}</Label>
+                <Label>Nome da função</Label>
                 <Input
                   value={form.titulo}
-                  onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "", departamento_id: "" })}
-                  placeholder={form.tipo === "departamento" ? "Ex: Recursos Humanos" : form.tipo === "diretoria" ? "Ex: Diretoria Financeira" : "Ex: Analista de RH"}
+                  onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "" })}
+                  placeholder="Ex: Analista de RH"
                 />
-                {form.tipo !== "diretoria" && !form.cargo_id && !form.departamento_id && form.titulo.trim() && (
+                {!form.cargo_id && form.titulo.trim() && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     <Info className="w-3 h-3" />
                     Será cadastrado automaticamente no módulo de Cadastros
                   </p>
                 )}
+                {form.titulo.trim() && colaboradoresMap.get(form.titulo.trim().toLowerCase()) && (
+                  <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                    <User className="w-3 h-3" />
+                    Ocupante detectado: {colaboradoresMap.get(form.titulo.trim().toLowerCase())}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
-                <Label>Ocupante (opcional)</Label>
+                <Label>Ocupante (opcional — preenchido automaticamente se houver colaborador)</Label>
                 <Input value={form.nome_ocupante} onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })} placeholder="Nome da pessoa" />
               </div>
 
@@ -354,7 +295,7 @@ export function OrganogramaSection() {
       ) : (
         <Card>
           <CardContent className="p-2 overflow-x-auto">
-            <OrgTreeVisual roots={tree} onDelete={(id) => deleteOrgNode.mutate(id)} />
+            <OrgTreeVisual roots={tree} onDelete={(id) => deleteOrgNode.mutate(id)} colaboradoresMap={colaboradoresMap} />
           </CardContent>
         </Card>
       )}
