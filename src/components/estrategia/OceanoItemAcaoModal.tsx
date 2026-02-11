@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Target, Sparkles, ArrowRight } from "lucide-react";
+import { Target, Sparkles, ArrowRight, Loader2, Bot } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { OceanoQuadrante } from "@/types/estrategia";
 import { OCEANO_QUADRANTE_LABELS } from "@/types/estrategia";
 
@@ -22,6 +24,15 @@ interface OceanoItemAcaoModalProps {
     quadrante: OceanoQuadrante;
   };
   oceanoTitulo: string;
+}
+
+interface SugestaoIA {
+  titulo: string;
+  descricao: string;
+  porque: string;
+  como: string;
+  tipo: "corretiva" | "preventiva" | "melhoria";
+  prioridade: "baixa" | "media" | "alta" | "urgente";
 }
 
 const SUGESTOES_POR_QUADRANTE: Record<OceanoQuadrante, string[]> = {
@@ -71,6 +82,10 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
     tipo: "melhoria" as "corretiva" | "preventiva" | "melhoria",
   });
 
+  const [sugestoesIA, setSugestoesIA] = useState<SugestaoIA[]>([]);
+  const [loadingIA, setLoadingIA] = useState(false);
+  const [iaGerada, setIaGerada] = useState(false);
+
   const sugestoes = SUGESTOES_POR_QUADRANTE[item.quadrante];
 
   const handleUsarSugestao = (sugestao: string) => {
@@ -79,6 +94,46 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
       titulo: prev.titulo || `${OCEANO_QUADRANTE_LABELS[item.quadrante]}: ${item.descricao}`,
       como: sugestao,
     }));
+  };
+
+  const handleUsarSugestaoIA = (s: SugestaoIA) => {
+    setForm({
+      ...form,
+      titulo: s.titulo,
+      descricao: s.descricao,
+      porque: s.porque,
+      como: s.como,
+      tipo: s.tipo,
+    });
+  };
+
+  const handleGerarSugestoesIA = async () => {
+    setLoadingIA(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-oceano-azul", {
+        body: {
+          quadrante: item.quadrante,
+          descricao_item: item.descricao,
+          oceano_titulo: oceanoTitulo,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.sugestoes?.length) {
+        setSugestoesIA(data.sugestoes);
+        setIaGerada(true);
+        toast.success(`${data.sugestoes.length} sugestões geradas pela IA!`);
+      } else {
+        toast.error("Nenhuma sugestão retornada pela IA");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao gerar sugestões";
+      toast.error(msg);
+    } finally {
+      setLoadingIA(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -113,6 +168,8 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
       responsavel_nome: "",
       tipo: "melhoria",
     });
+    setSugestoesIA([]);
+    setIaGerada(false);
   };
 
   return (
@@ -131,27 +188,92 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
           </div>
         </DialogHeader>
 
-        {/* Sugestões de como executar */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Sugestões de como {OCEANO_QUADRANTE_LABELS[item.quadrante].toLowerCase()}
-          </p>
-          <div className="grid gap-2">
-            {sugestoes.map((s, i) => (
-              <Card
-                key={i}
-                className="cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
-                onClick={() => handleUsarSugestao(s)}
-              >
-                <CardContent className="p-3 flex items-center justify-between gap-2">
-                  <p className="text-sm">{s}</p>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Botão de IA */}
+        <div className="space-y-3">
+          <Button
+            onClick={handleGerarSugestoesIA}
+            disabled={loadingIA}
+            variant="outline"
+            className="w-full border-primary/30 hover:bg-primary/5"
+          >
+            {loadingIA ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Bot className="w-4 h-4 mr-2 text-primary" />
+            )}
+            {loadingIA ? "Gerando sugestões com IA..." : iaGerada ? "Gerar novas sugestões com IA" : "🤖 Sugerir ações com IA"}
+          </Button>
+
+          {/* Sugestões da IA */}
+          {sugestoesIA.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium flex items-center gap-1.5">
+                <Bot className="w-4 h-4 text-primary" />
+                Sugestões da IA para "{item.descricao}"
+              </p>
+              <div className="grid gap-2">
+                {sugestoesIA.map((s, i) => (
+                  <Card
+                    key={i}
+                    className="cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+                    onClick={() => handleUsarSugestaoIA(s)}
+                  >
+                    <CardContent className="p-3 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{s.titulo}</p>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant="secondary" className="text-[10px]">{s.tipo}</Badge>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] ${
+                              s.prioridade === "urgente"
+                                ? "border-red-500 text-red-700"
+                                : s.prioridade === "alta"
+                                ? "border-amber-500 text-amber-700"
+                                : "border-muted"
+                            }`}
+                          >
+                            {s.prioridade}
+                          </Badge>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{s.como}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        <Separator />
+
+        {/* Sugestões estáticas */}
+        {!iaGerada && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Sugestões rápidas de como {OCEANO_QUADRANTE_LABELS[item.quadrante].toLowerCase()}
+            </p>
+            <div className="grid gap-2">
+              {sugestoes.map((s, i) => (
+                <Card
+                  key={i}
+                  className="cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+                  onClick={() => handleUsarSugestao(s)}
+                >
+                  <CardContent className="p-3 flex items-center justify-between gap-2">
+                    <p className="text-sm">{s}</p>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {iaGerada && <div />}
 
         <Separator />
 

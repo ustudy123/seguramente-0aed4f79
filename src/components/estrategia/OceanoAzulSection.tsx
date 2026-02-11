@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, ChevronRight, Waves, MinusCircle, ArrowDownCircle, ArrowUpCircle, Sparkles, Target } from "lucide-react";
+import { Plus, Trash2, ChevronRight, Waves, MinusCircle, ArrowDownCircle, ArrowUpCircle, Sparkles, Target, Bot } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -215,10 +215,10 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
                             variant="outline"
                             size="icon"
                             className="h-7 w-7 text-primary hover:text-primary"
-                            title="Criar ação no Plano de Ação"
+                            title="Sugerir ações com IA"
                             onClick={() => setAcaoModalItem({ id: item.id, descricao: item.descricao, quadrante: q })}
                           >
-                            <Target className="w-3.5 h-3.5" />
+                            <Bot className="w-3.5 h-3.5" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteOceanoItem.mutate(item.id)}>
                             <Trash2 className="w-3.5 h-3.5" />
