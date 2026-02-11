@@ -3198,6 +3198,60 @@ export type Database = {
           },
         ]
       }
+      funcao_atividades: {
+        Row: {
+          cargo_id: string
+          classificacao: Database["public"]["Enums"]["classificacao_atividade"]
+          complexidade: Database["public"]["Enums"]["complexidade_atividade"]
+          created_at: string
+          descricao: string | null
+          frequencia: Database["public"]["Enums"]["frequencia_atividade"]
+          id: string
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cargo_id: string
+          classificacao?: Database["public"]["Enums"]["classificacao_atividade"]
+          complexidade?: Database["public"]["Enums"]["complexidade_atividade"]
+          created_at?: string
+          descricao?: string | null
+          frequencia?: Database["public"]["Enums"]["frequencia_atividade"]
+          id?: string
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cargo_id?: string
+          classificacao?: Database["public"]["Enums"]["classificacao_atividade"]
+          complexidade?: Database["public"]["Enums"]["complexidade_atividade"]
+          created_at?: string
+          descricao?: string | null
+          frequencia?: Database["public"]["Enums"]["frequencia_atividade"]
+          id?: string
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_atividades_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_atividades_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcao_cets: {
         Row: {
           cargo_id: string
@@ -3240,6 +3294,339 @@ export type Database = {
           },
           {
             foreignKeyName: "funcao_cets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_competencia_recursos: {
+        Row: {
+          competencia_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo: string
+          url: string
+        }
+        Insert: {
+          competencia_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo: string
+          url: string
+        }
+        Update: {
+          competencia_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_competencia_recursos_competencia_id_fkey"
+            columns: ["competencia_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_competencias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_competencia_recursos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_competencias: {
+        Row: {
+          cargo_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["tipo_competencia"]
+          updated_at: string
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["tipo_competencia"]
+          updated_at?: string
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_competencia"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_competencias_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_competencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_config: {
+        Row: {
+          ativar_mudanca_funcao: boolean | null
+          ativar_onboarding: boolean | null
+          created_at: string
+          id: string
+          nota_minima_padrao: number | null
+          reaplicacao_meses: number | null
+          tenant_id: string
+          treinamento_epi_obrigatorio: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          ativar_mudanca_funcao?: boolean | null
+          ativar_onboarding?: boolean | null
+          created_at?: string
+          id?: string
+          nota_minima_padrao?: number | null
+          reaplicacao_meses?: number | null
+          tenant_id: string
+          treinamento_epi_obrigatorio?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          ativar_mudanca_funcao?: boolean | null
+          ativar_onboarding?: boolean | null
+          created_at?: string
+          id?: string
+          nota_minima_padrao?: number | null
+          reaplicacao_meses?: number | null
+          tenant_id?: string
+          treinamento_epi_obrigatorio?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_conteudos: {
+        Row: {
+          atividade_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo: string
+          url: string
+        }
+        Insert: {
+          atividade_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo: string
+          url: string
+        }
+        Update: {
+          atividade_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_conteudos_atividade_id_fkey"
+            columns: ["atividade_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_atividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_conteudos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_epi_conteudos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo: string
+          url: string
+          vinculacao_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo: string
+          url: string
+          vinculacao_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_conteudo_funcao"]
+          titulo?: string
+          url?: string
+          vinculacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_epi_conteudos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_epi_conteudos_vinculacao_id_fkey"
+            columns: ["vinculacao_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_epi_vinculacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_epi_questionarios: {
+        Row: {
+          created_at: string
+          id: string
+          opcoes: Json
+          ordem: number
+          pergunta: string
+          resposta_correta: number
+          tenant_id: string
+          vinculacao_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opcoes?: Json
+          ordem?: number
+          pergunta: string
+          resposta_correta?: number
+          tenant_id: string
+          vinculacao_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opcoes?: Json
+          ordem?: number
+          pergunta?: string
+          resposta_correta?: number
+          tenant_id?: string
+          vinculacao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_epi_questionarios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_epi_questionarios_vinculacao_id_fkey"
+            columns: ["vinculacao_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_epi_vinculacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_epi_vinculacoes: {
+        Row: {
+          cargo_id: string
+          created_at: string
+          epi_tipo_id: string
+          id: string
+          obrigatoriedade: Database["public"]["Enums"]["obrigatoriedade_epi"]
+          tenant_id: string
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string
+          epi_tipo_id: string
+          id?: string
+          obrigatoriedade?: Database["public"]["Enums"]["obrigatoriedade_epi"]
+          tenant_id: string
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string
+          epi_tipo_id?: string
+          id?: string
+          obrigatoriedade?: Database["public"]["Enums"]["obrigatoriedade_epi"]
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_epi_vinculacoes_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_epi_vinculacoes_epi_tipo_id_fkey"
+            columns: ["epi_tipo_id"]
+            isOneToOne: false
+            referencedRelation: "epi_tipos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_epi_vinculacoes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -3295,6 +3682,184 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_ferramentas: {
+        Row: {
+          atividade_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["tipo_ferramenta"]
+          url_manual: string | null
+        }
+        Insert: {
+          atividade_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["tipo_ferramenta"]
+          url_manual?: string | null
+        }
+        Update: {
+          atividade_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_ferramenta"]
+          url_manual?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_ferramentas_atividade_id_fkey"
+            columns: ["atividade_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_atividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_ferramentas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_responsabilidades: {
+        Row: {
+          atividade_id: string
+          consequencia_erro: string | null
+          created_at: string
+          id: string
+          interfaces: string | null
+          responsavel_direto: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          atividade_id: string
+          consequencia_erro?: string | null
+          created_at?: string
+          id?: string
+          interfaces?: string | null
+          responsavel_direto?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          atividade_id?: string
+          consequencia_erro?: string | null
+          created_at?: string
+          id?: string
+          interfaces?: string | null
+          responsavel_direto?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_responsabilidades_atividade_id_fkey"
+            columns: ["atividade_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_atividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_responsabilidades_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_treinamento_evidencias: {
+        Row: {
+          aceite_eletronico: boolean | null
+          aprovado: boolean | null
+          cargo_id: string
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          data_acesso: string
+          data_conclusao: string | null
+          detalhes: Json | null
+          id: string
+          nota: number | null
+          nota_minima: number | null
+          tenant_id: string
+          tentativa: number | null
+          tipo_treinamento: string
+          vinculacao_id: string | null
+        }
+        Insert: {
+          aceite_eletronico?: boolean | null
+          aprovado?: boolean | null
+          cargo_id: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          data_acesso?: string
+          data_conclusao?: string | null
+          detalhes?: Json | null
+          id?: string
+          nota?: number | null
+          nota_minima?: number | null
+          tenant_id: string
+          tentativa?: number | null
+          tipo_treinamento?: string
+          vinculacao_id?: string | null
+        }
+        Update: {
+          aceite_eletronico?: boolean | null
+          aprovado?: boolean | null
+          cargo_id?: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          data_acesso?: string
+          data_conclusao?: string | null
+          detalhes?: Json | null
+          id?: string
+          nota?: number | null
+          nota_minima?: number | null
+          tenant_id?: string
+          tentativa?: number | null
+          tipo_treinamento?: string
+          vinculacao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_treinamento_evidencias_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_treinamento_evidencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_treinamento_evidencias_vinculacao_id_fkey"
+            columns: ["vinculacao_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_epi_vinculacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -5243,6 +5808,8 @@ export type Database = {
       avaliacao_tipo: "simples" | "360"
       beneficio_inss_especie: "b31" | "b91"
       campanha_psicossocial_status: "rascunho" | "ativa" | "encerrada"
+      classificacao_atividade: "rotineira" | "critica" | "excepcional"
+      complexidade_atividade: "baixa" | "media" | "alta"
       convite_enviado_via: "link" | "qrcode" | "whatsapp" | "email"
       convite_psicossocial_status:
         | "pendente"
@@ -5272,6 +5839,7 @@ export type Database = {
         | "nao_aplicavel"
       evento_saude_status: "aberto" | "em_acompanhamento" | "encerrado"
       feedback_categoria: "reconhecimento" | "alinhamento" | "desenvolvimento"
+      frequencia_atividade: "diaria" | "semanal" | "mensal" | "eventual"
       grupo_clinico:
         | "mental"
         | "osteomuscular"
@@ -5292,6 +5860,7 @@ export type Database = {
         | "cancelada"
         | "atrasada"
       nexo_trabalho: "nao" | "em_analise" | "sim"
+      obrigatoriedade_epi: "obrigatorio" | "recomendado" | "condicional"
       ocorrencia_tipo: "positiva" | "neutra" | "negativa"
       okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
       resposta_status: "pendente" | "em_andamento" | "concluida"
@@ -5299,6 +5868,16 @@ export type Database = {
       tarefa_status: "nao_iniciada" | "em_andamento" | "bloqueada" | "concluida"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
       tipo_avaliador: "auto" | "gestor" | "par" | "subordinado"
+      tipo_competencia: "tecnica" | "comportamental" | "cognitiva"
+      tipo_conteudo_funcao:
+        | "manual"
+        | "pop"
+        | "instrucao"
+        | "video"
+        | "apresentacao"
+        | "documento"
+        | "link"
+      tipo_ferramenta: "sistema" | "software" | "planilha" | "equipamento"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
     CompositeTypes: {
@@ -5468,6 +6047,8 @@ export const Constants = {
       avaliacao_tipo: ["simples", "360"],
       beneficio_inss_especie: ["b31", "b91"],
       campanha_psicossocial_status: ["rascunho", "ativa", "encerrada"],
+      classificacao_atividade: ["rotineira", "critica", "excepcional"],
+      complexidade_atividade: ["baixa", "media", "alta"],
       convite_enviado_via: ["link", "qrcode", "whatsapp", "email"],
       convite_psicossocial_status: [
         "pendente",
@@ -5501,6 +6082,7 @@ export const Constants = {
       ],
       evento_saude_status: ["aberto", "em_acompanhamento", "encerrado"],
       feedback_categoria: ["reconhecimento", "alinhamento", "desenvolvimento"],
+      frequencia_atividade: ["diaria", "semanal", "mensal", "eventual"],
       grupo_clinico: [
         "mental",
         "osteomuscular",
@@ -5523,6 +6105,7 @@ export const Constants = {
         "atrasada",
       ],
       nexo_trabalho: ["nao", "em_analise", "sim"],
+      obrigatoriedade_epi: ["obrigatorio", "recomendado", "condicional"],
       ocorrencia_tipo: ["positiva", "neutra", "negativa"],
       okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
       resposta_status: ["pendente", "em_andamento", "concluida"],
@@ -5530,6 +6113,17 @@ export const Constants = {
       tarefa_status: ["nao_iniciada", "em_andamento", "bloqueada", "concluida"],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
       tipo_avaliador: ["auto", "gestor", "par", "subordinado"],
+      tipo_competencia: ["tecnica", "comportamental", "cognitiva"],
+      tipo_conteudo_funcao: [
+        "manual",
+        "pop",
+        "instrucao",
+        "video",
+        "apresentacao",
+        "documento",
+        "link",
+      ],
+      tipo_ferramenta: ["sistema", "software", "planilha", "equipamento"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },
   },

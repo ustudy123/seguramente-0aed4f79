@@ -24,6 +24,7 @@ import {
   Settings,
   Stethoscope,
   Building2,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -60,6 +61,7 @@ const menuItems: MenuItem[] = [
   { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
   { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
   { title: "Feedback & Ocorrências", icon: MessageCircle, path: "/feedback-ocorrencias" },
+  { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
   { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
   { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
   { title: "Documentos", icon: FileText, path: "/documentos" },
