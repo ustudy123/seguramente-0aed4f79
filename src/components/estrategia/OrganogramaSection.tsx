@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2, Users, User, Building2, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Trash2, Users, User, Building2, ChevronRight, ChevronDown, Loader2, Info } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos, useDepartamentos } from "@/hooks/useCadastros";
+import { toast } from "sonner";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 
 function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
@@ -69,8 +70,8 @@ function OrgNode({ node, level, onDelete }: { node: EstrategiaOrganograma; level
 
 export function OrganogramaSection() {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia();
-  const { cargos } = useCargos();
-  const { departamentos } = useDepartamentos();
+  const { cargos, createCargo } = useCargos();
+  const { departamentos, createDepartamento } = useDepartamentos();
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" });
 
@@ -93,13 +94,43 @@ export function OrganogramaSection() {
     setForm({ ...form, departamento_id: deptId, titulo: dept?.nome || "" });
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!form.titulo.trim()) return;
+    const titulo = form.titulo.trim();
+
+    // If typing a new function name not from the dropdown, auto-create in cadastros
+    if (form.tipo === "funcao" && !form.cargo_id) {
+      const exists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
+      if (!exists) {
+        try {
+          await createCargo.mutateAsync({ nome: titulo, ativo: true, descricao: null, departamento_id: null, nivel: null, faixa_salarial_min: null, faixa_salarial_max: null, periodicidade_exame_meses: null, exames_obrigatorios: null });
+          toast.info(`Função "${titulo}" cadastrada automaticamente no módulo de Cadastros`);
+        } catch {
+          // toast already handled by hook
+        }
+      }
+    }
+
+    // If typing a new department name not from the dropdown, auto-create in cadastros
+    if (form.tipo === "departamento" && !form.departamento_id) {
+      const exists = deptAtivos.some((d: any) => d.nome.toLowerCase() === titulo.toLowerCase());
+      if (!exists) {
+        try {
+          await createDepartamento.mutateAsync({ nome: titulo, ativo: true, descricao: null, responsavel_id: null });
+          toast.info(`Departamento "${titulo}" cadastrado automaticamente no módulo de Cadastros`);
+        } catch {
+          // toast already handled by hook
+        }
+      }
+    }
+
     createOrgNode.mutate(
-      { titulo: form.titulo, nome_ocupante: form.nome_ocupante || undefined, parent_id: form.parent_id || undefined, tipo: form.tipo },
+      { titulo, nome_ocupante: form.nome_ocupante || undefined, parent_id: form.parent_id || undefined, tipo: form.tipo },
       { onSuccess: () => { setShowNew(false); setForm({ titulo: "", nome_ocupante: "", parent_id: "", tipo: "funcao", cargo_id: "", departamento_id: "" }); } },
     );
   };
+
+  const isCreating = createOrgNode.isPending || createCargo.isPending || createDepartamento.isPending;
 
   return (
     <div className="space-y-4">
@@ -129,45 +160,52 @@ export function OrganogramaSection() {
                 </Select>
               </div>
 
-              {form.tipo === "funcao" && cargosAtivos.length > 0 ? (
+              {/* Dropdown de cadastros existentes */}
+              {form.tipo === "funcao" && cargosAtivos.length > 0 && (
                 <div className="space-y-1">
                   <Label>Função cadastrada</Label>
                   <Select value={form.cargo_id || "_none"} onValueChange={(v) => v === "_none" ? setForm({ ...form, cargo_id: "", titulo: "" }) : handleCargoSelect(v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione uma função" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Selecione ou digite abaixo" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="_none">— Selecione —</SelectItem>
+                      <SelectItem value="_none">— Nenhuma (digitar nova) —</SelectItem>
                       {cargosAtivos.map((c: any) => (
                         <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              ) : form.tipo === "departamento" && deptAtivos.length > 0 ? (
+              )}
+
+              {form.tipo === "departamento" && deptAtivos.length > 0 && (
                 <div className="space-y-1">
                   <Label>Departamento cadastrado</Label>
                   <Select value={form.departamento_id || "_none"} onValueChange={(v) => v === "_none" ? setForm({ ...form, departamento_id: "", titulo: "" }) : handleDeptSelect(v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione um departamento" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Selecione ou digite abaixo" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="_none">— Selecione —</SelectItem>
+                      <SelectItem value="_none">— Nenhum (digitar novo) —</SelectItem>
                       {deptAtivos.map((d: any) => (
                         <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              ) : (
-                <div className="space-y-1">
-                  <Label>Título</Label>
-                  <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Diretor de RH" />
-                </div>
               )}
 
-              {(form.tipo === "funcao" || form.tipo === "departamento") && (
-                <div className="space-y-1">
-                  <Label>Ou digite manualmente</Label>
-                  <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "", departamento_id: "" })} placeholder="Nome personalizado" />
-                </div>
-              )}
+              {/* Campo de texto — sempre visível */}
+              <div className="space-y-1">
+                <Label>{form.tipo === "departamento" ? "Nome do departamento" : form.tipo === "diretoria" ? "Nome da diretoria" : "Nome da função"}</Label>
+                <Input
+                  value={form.titulo}
+                  onChange={(e) => setForm({ ...form, titulo: e.target.value, cargo_id: "", departamento_id: "" })}
+                  placeholder={form.tipo === "departamento" ? "Ex: Recursos Humanos" : form.tipo === "diretoria" ? "Ex: Diretoria Financeira" : "Ex: Analista de RH"}
+                />
+                {form.tipo !== "diretoria" && !form.cargo_id && !form.departamento_id && form.titulo.trim() && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Info className="w-3 h-3" />
+                    Será cadastrado automaticamente no módulo de Cadastros
+                  </p>
+                )}
+              </div>
 
               <div className="space-y-1">
                 <Label>Ocupante (opcional)</Label>
@@ -187,7 +225,10 @@ export function OrganogramaSection() {
                 </div>
               )}
 
-              <Button onClick={handleCreate} disabled={!form.titulo.trim() || createOrgNode.isPending} className="w-full">Adicionar</Button>
+              <Button onClick={handleCreate} disabled={!form.titulo.trim() || isCreating} className="w-full">
+                {isCreating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                Adicionar
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
