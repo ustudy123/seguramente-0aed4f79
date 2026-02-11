@@ -54,7 +54,7 @@ Retorne APENAS o texto reescrito, sem explicações adicionais.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "openai/gpt-5-nano",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.4,
         max_tokens: 1000,
