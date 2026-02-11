@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
-import { Heart, Plus, X, Save, Loader2 } from "lucide-react";
+import { Heart, Plus, X, Save, Loader2, FileText, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useEstrategia } from "@/hooks/useEstrategia";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { ManualCulturaModal } from "./ManualCulturaModal";
 
 export function CulturaSection() {
   const { cultura, loadingCultura, upsertCultura } = useEstrategia();
+  const { profile } = useAuth();
   const [form, setForm] = useState({
     missao: "",
     visao: "",
@@ -19,6 +23,9 @@ export function CulturaSection() {
     comportamentos_nao_tolerados: [] as string[],
   });
   const [newValue, setNewValue] = useState({ valores: "", principios: "", comportamentos_esperados: "", comportamentos_nao_tolerados: "" });
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualHtml, setManualHtml] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
 
   useEffect(() => {
     if (cultura) {
@@ -48,6 +55,42 @@ export function CulturaSection() {
     upsertCultura.mutate(form);
   };
 
+  const handleGenerateManual = async () => {
+    const hasContent = form.missao || form.visao || form.valores.length > 0 || form.principios.length > 0;
+    if (!hasContent) {
+      toast.error("Preencha ao menos Missão, Visão ou Valores antes de gerar o manual.");
+      return;
+    }
+
+    setManualOpen(true);
+    setManualLoading(true);
+    setManualHtml("");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-cultura-manual", {
+        body: {
+          ...form,
+          empresa_nome: profile?.nome_completo || "Nossa Empresa",
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        setManualOpen(false);
+        return;
+      }
+
+      setManualHtml(data.html || "");
+    } catch (err: any) {
+      console.error("Erro ao gerar manual:", err);
+      toast.error("Erro ao gerar o manual. Tente novamente.");
+      setManualOpen(false);
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
   if (loadingCultura) {
     return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   }
@@ -61,16 +104,21 @@ export function CulturaSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Heart className="w-5 h-5 text-primary" /> Missão, Visão e Valores
           </h3>
           <p className="text-sm text-muted-foreground">Formalize a identidade cultural da empresa</p>
         </div>
-        <Button onClick={handleSave} disabled={upsertCultura.isPending}>
-          <Save className="w-4 h-4 mr-1" /> {upsertCultura.isPending ? "Salvando..." : "Salvar"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleGenerateManual} disabled={manualLoading}>
+            <Sparkles className="w-4 h-4 mr-1" /> Gerar Manual com IA
+          </Button>
+          <Button onClick={handleSave} disabled={upsertCultura.isPending}>
+            <Save className="w-4 h-4 mr-1" /> {upsertCultura.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -113,6 +161,13 @@ export function CulturaSection() {
           </CardContent>
         </Card>
       ))}
+
+      <ManualCulturaModal
+        open={manualOpen}
+        onClose={() => setManualOpen(false)}
+        html={manualHtml}
+        loading={manualLoading}
+      />
     </div>
   );
 }
