@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, ChevronRight, Waves, MinusCircle, ArrowDownCircle, ArrowUpCircle, Sparkles } from "lucide-react";
+import { Plus, Trash2, ChevronRight, Waves, MinusCircle, ArrowDownCircle, ArrowUpCircle, Sparkles, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useEstrategia } from "@/hooks/useEstrategia";
+import { OceanoItemAcaoModal } from "./OceanoItemAcaoModal";
 import type { EstrategiaOceanoAzul, OceanoQuadrante } from "@/types/estrategia";
 import { OCEANO_QUADRANTE_LABELS } from "@/types/estrategia";
 
@@ -134,6 +135,7 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
   const { data: swotItens = [] } = useSwotItens(oceano.swot_id || null);
   const [newItemQuad, setNewItemQuad] = useState<OceanoQuadrante>("eliminar");
   const [newItemDesc, setNewItemDesc] = useState("");
+  const [acaoModalItem, setAcaoModalItem] = useState<{ id: string; descricao: string; quadrante: OceanoQuadrante } | null>(null);
 
   // Track which swot items are already imported
   const importedSwotIds = new Set(itens.map((i) => i.swot_item_id).filter(Boolean));
@@ -208,9 +210,20 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
                     {qItens.map((item) => (
                       <div key={item.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-background border">
                         <p className="text-sm flex-1">{item.descricao}</p>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteOceanoItem.mutate(item.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 text-primary hover:text-primary"
+                            title="Criar ação no Plano de Ação"
+                            onClick={() => setAcaoModalItem({ id: item.id, descricao: item.descricao, quadrante: q })}
+                          >
+                            <Target className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteOceanoItem.mutate(item.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                     {/* SWOT suggestions */}
@@ -239,6 +252,16 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
           );
         })}
       </div>
+
+      {/* Modal para criar ação no Plano de Ação */}
+      {acaoModalItem && (
+        <OceanoItemAcaoModal
+          open={!!acaoModalItem}
+          onOpenChange={(open) => !open && setAcaoModalItem(null)}
+          item={acaoModalItem}
+          oceanoTitulo={oceano.titulo}
+        />
+      )}
     </div>
   );
 }
