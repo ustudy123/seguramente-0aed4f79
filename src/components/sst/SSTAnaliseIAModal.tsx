@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +28,14 @@ export function SSTAnaliseIAModal({ open, onOpenChange, documento }: Props) {
   const [isDone, setIsDone] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  // Reset state when documento changes
+  useEffect(() => {
+    setResultado("");
+    setIsAnalyzing(false);
+    setIsDone(false);
+    setIsExporting(false);
+  }, [documento?.id]);
 
   const iniciarAnalise = async () => {
     if (!documento) return;
