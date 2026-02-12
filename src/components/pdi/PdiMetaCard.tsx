@@ -36,7 +36,7 @@ const statusIcon: Record<PdiAcaoStatus, React.ElementType> = {
   nao_iniciada: Circle,
   em_andamento: Clock,
   concluida: CheckCircle2,
-  bloqueada: Ban,
+  bloqueada: Ban
 };
 
 export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta, onCreateAcao, onUpdateAcao, onDeleteAcao }: PdiMetaCardProps) => {
@@ -47,7 +47,7 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
   const [planoSugestoes, setPlanoSugestoes] = useState<PlanoSugestao[]>([]);
   const [showPlanoSugestoes, setShowPlanoSugestoes] = useState(false);
   const [creatingSugestao, setCreatingSugestao] = useState<number | null>(null);
-  const [planoAcoesVinculadas, setPlanoAcoesVinculadas] = useState<{ id: string; titulo: string; codigo: string; status: string; progresso: number }[]>([]);
+  const [planoAcoesVinculadas, setPlanoAcoesVinculadas] = useState<{id: string;titulo: string;codigo: string;status: string;progresso: number;}[]>([]);
 
   const navigate = useNavigate();
   const { createAcao: createPlanoAcao } = usePlanoAcao();
@@ -56,10 +56,10 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
   useEffect(() => {
     const fetchPlanoAcoes = async () => {
       const searchTerm = `Meta: ${meta.titulo}`;
-      const { data } = await supabase
-        .from("plano_acoes")
-        .select("id, titulo, codigo, status, progresso")
-        .ilike("origem_descricao", `%${searchTerm}%`);
+      const { data } = await supabase.
+      from("plano_acoes").
+      select("id, titulo, codigo, status, progresso").
+      ilike("origem_descricao", `%${searchTerm}%`);
       setPlanoAcoesVinculadas(data || []);
     };
     fetchPlanoAcoes();
@@ -77,12 +77,12 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
     await onUpdateAcao({ id: acao.id, status: next });
     const acoes = meta.acoes || [];
     const totalAcoes = acoes.length;
-    const concluidas = acoes.filter(a => a.id === acao.id ? next === "concluida" : a.status === "concluida").length;
-    const prog = totalAcoes > 0 ? Math.round((concluidas / totalAcoes) * 100) : 0;
+    const concluidas = acoes.filter((a) => a.id === acao.id ? next === "concluida" : a.status === "concluida").length;
+    const prog = totalAcoes > 0 ? Math.round(concluidas / totalAcoes * 100) : 0;
     await onUpdateMeta({
       id: meta.id,
       progresso: prog,
-      status: prog >= 100 ? "concluida" : prog > 0 ? "em_andamento" : "nao_iniciada",
+      status: prog >= 100 ? "concluida" : prog > 0 ? "em_andamento" : "nao_iniciada"
     });
   };
 
@@ -99,9 +99,9 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
             mensuravel: meta.mensuravel,
             atingivel: meta.atingivel,
             relevante: meta.relevante,
-            temporal: meta.temporal,
-          },
-        },
+            temporal: meta.temporal
+          }
+        }
       });
       if (error) throw error;
       setPlanoSugestoes(data.sugestoes || []);
@@ -129,23 +129,23 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
         exige_evidencia: false,
         gravidade: 3,
         urgencia: 3,
-        tendencia: 3,
+        tendencia: 3
       });
       toast.success("Ação criada no Plano de Ação!", {
         action: {
           label: "Ver Plano",
-          onClick: () => navigate("/plano-acao"),
-        },
+          onClick: () => navigate("/plano-acao")
+        }
       });
       // Refresh vinculadas
       const searchTerm = `Meta: ${meta.titulo}`;
-      const { data } = await supabase
-        .from("plano_acoes")
-        .select("id, titulo, codigo, status, progresso")
-        .ilike("origem_descricao", `%${searchTerm}%`);
+      const { data } = await supabase.
+      from("plano_acoes").
+      select("id, titulo, codigo, status, progresso").
+      ilike("origem_descricao", `%${searchTerm}%`);
       setPlanoAcoesVinculadas(data || []);
       // Remove from list
-      setPlanoSugestoes(prev => prev.filter((_, i) => i !== index));
+      setPlanoSugestoes((prev) => prev.filter((_, i) => i !== index));
       if (planoSugestoes.length <= 1) {
         setShowPlanoSugestoes(false);
       }
@@ -177,7 +177,7 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
                   <span className="text-[10px] text-muted-foreground">Peso {meta.peso}</span>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteMeta(meta.id); }}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => {e.stopPropagation();onDeleteMeta(meta.id);}}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -187,45 +187,45 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
         <CollapsibleContent>
           <div className="px-4 pb-4 space-y-3 border-t pt-3">
             {/* SMART details */}
-            {(meta.especifica || meta.mensuravel || meta.atingivel || meta.relevante || meta.temporal) && (
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs">
+            {(meta.especifica || meta.mensuravel || meta.atingivel || meta.relevante || meta.temporal) &&
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs">
                 {[
-                  { label: "S — Específica", value: meta.especifica },
-                  { label: "M — Mensurável", value: meta.mensuravel },
-                  { label: "A — Atingível", value: meta.atingivel },
-                  { label: "R — Relevante", value: meta.relevante },
-                  { label: "T — Temporal", value: meta.temporal },
-                ].map(s => s.value && (
-                  <div key={s.label} className="bg-muted/50 rounded-lg p-2">
+              { label: "S — Específica", value: meta.especifica },
+              { label: "M — Mensurável", value: meta.mensuravel },
+              { label: "A — Atingível", value: meta.atingivel },
+              { label: "R — Relevante", value: meta.relevante },
+              { label: "T — Temporal", value: meta.temporal }].
+              map((s) => s.value &&
+              <div key={s.label} className="bg-muted/50 rounded-lg p-2">
                     <p className="font-semibold text-primary">{s.label}</p>
                     <p className="text-muted-foreground mt-0.5">{s.value}</p>
                   </div>
-                ))}
+              )}
               </div>
-            )}
+            }
 
             {/* Indicador */}
-            {meta.indicador_sucesso && (
-              <div className="text-xs bg-accent/30 rounded-lg p-2">
+            {meta.indicador_sucesso &&
+            <div className="text-xs bg-accent/30 rounded-lg p-2">
                 <span className="font-medium text-accent-foreground">KPI:</span> {meta.indicador_sucesso}
-                {meta.valor_base !== null && meta.valor_alvo !== null && (
-                  <span className="ml-2 text-muted-foreground">({meta.valor_base} → {meta.valor_alvo} {meta.unidade || ""})</span>
-                )}
+                {meta.valor_base !== null && meta.valor_alvo !== null &&
+              <span className="ml-2 text-muted-foreground">({meta.valor_base} → {meta.valor_alvo} {meta.unidade || ""})</span>
+              }
               </div>
-            )}
+            }
 
             {/* Ações */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-foreground">Ações ({meta.acoes?.length || 0})</span>
+                
                 <div className="flex gap-1.5">
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs gap-1"
                     onClick={handleAiPlanoAcao}
-                    disabled={aiLoading}
-                  >
+                    disabled={aiLoading}>
+
                     {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                     Sugerir Plano de Ação
                   </Button>
@@ -236,34 +236,34 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
               </div>
 
               {/* AI Plano Sugestões */}
-              {showPlanoSugestoes && planoSugestoes.length > 0 && (
-                <div className="space-y-2 border rounded-lg p-3 bg-muted/30 mb-3">
+              {showPlanoSugestoes && planoSugestoes.length > 0 &&
+              <div className="space-y-2 border rounded-lg p-3 bg-muted/30 mb-3">
                   <p className="text-xs font-medium text-muted-foreground">Selecione para criar no Plano de Ação:</p>
-                  {planoSugestoes.map((s, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSelectSugestao(s, i)}
-                      disabled={creatingSugestao !== null}
-                      className="w-full text-left text-sm p-3 rounded-md border bg-background hover:bg-accent hover:border-primary/30 transition-colors cursor-pointer disabled:opacity-50 space-y-1"
-                    >
+                  {planoSugestoes.map((s, i) =>
+                <button
+                  key={i}
+                  onClick={() => handleSelectSugestao(s, i)}
+                  disabled={creatingSugestao !== null}
+                  className="w-full text-left text-sm p-3 rounded-md border bg-background hover:bg-accent hover:border-primary/30 transition-colors cursor-pointer disabled:opacity-50 space-y-1">
+
                       <div className="flex items-center gap-2">
-                        {creatingSugestao === i ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary flex-shrink-0" />
-                        ) : (
-                          <Plus className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                        )}
+                        {creatingSugestao === i ?
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary flex-shrink-0" /> :
+
+                    <Plus className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    }
                         <span className="font-medium">{s.titulo}</span>
                       </div>
                       <p className="text-xs text-muted-foreground pl-5.5">{s.descricao}</p>
                     </button>
-                  ))}
+                )}
                   <Button variant="ghost" size="sm" className="text-xs w-full" onClick={() => setShowPlanoSugestoes(false)}>
                     Fechar sugestões
                   </Button>
                 </div>
-              )}
+              }
 
-              {(meta.acoes || []).map(acao => {
+              {(meta.acoes || []).map((acao) => {
                 const Icon = statusIcon[acao.status];
                 return (
                   <div key={acao.id} className="flex items-center gap-2 py-1.5 group">
@@ -275,37 +275,37 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
                     <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={() => onDeleteAcao(acao.id)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
-                  </div>
-                );
+                  </div>);
+
               })}
 
-              {showAcaoForm && (
-                <div className="flex gap-2 mt-2">
+              {showAcaoForm &&
+              <div className="flex gap-2 mt-2">
                   <Input
-                    value={novaAcao}
-                    onChange={e => setNovaAcao(e.target.value)}
-                    placeholder="Título da ação"
-                    className="h-8 text-sm"
-                    onKeyDown={e => e.key === "Enter" && handleAddAcao()}
-                    autoFocus
-                  />
+                  value={novaAcao}
+                  onChange={(e) => setNovaAcao(e.target.value)}
+                  placeholder="Título da ação"
+                  className="h-8 text-sm"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddAcao()}
+                  autoFocus />
+
                   <Button size="sm" className="h-8" onClick={handleAddAcao}>Adicionar</Button>
                   <Button size="sm" variant="ghost" className="h-8" onClick={() => setShowAcaoForm(false)}>✕</Button>
                 </div>
-              )}
+              }
             </div>
 
             {/* Plano de Ação vinculado */}
-            {planoAcoesVinculadas.length > 0 && (
-              <div className="border-t pt-3">
+            {planoAcoesVinculadas.length > 0 &&
+            <div className="border-t pt-3">
                 <span className="text-sm font-medium text-foreground">📋 Plano de Ação vinculado ({planoAcoesVinculadas.length})</span>
                 <div className="space-y-1.5 mt-2">
-                  {planoAcoesVinculadas.map(pa => (
-                    <div
-                      key={pa.id}
-                      className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors"
-                      onClick={() => navigate(`/plano-acao/${pa.id}`)}
-                    >
+                  {planoAcoesVinculadas.map((pa) =>
+                <div
+                  key={pa.id}
+                  className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/plano-acao/${pa.id}`)}>
+
                       <Badge variant="outline" className="text-[9px] font-mono">{pa.codigo}</Badge>
                       <span className="flex-1 truncate">{pa.titulo}</span>
                       <Badge variant={pa.status === "concluida" ? "default" : "secondary"} className="text-[9px]">
@@ -313,13 +313,13 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
                       </Badge>
                       <span className="text-xs text-muted-foreground">{pa.progresso}%</span>
                     </div>
-                  ))}
+                )}
                 </div>
               </div>
-            )}
+            }
           </div>
         </CollapsibleContent>
       </Collapsible>
-    </Card>
-  );
+    </Card>);
+
 };
