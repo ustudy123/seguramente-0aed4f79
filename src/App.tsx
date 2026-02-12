@@ -35,6 +35,7 @@ import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
 import Avaliacoes from "./pages/Avaliacoes";
 import Atestados from "./pages/Atestados";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import Pdi from "./pages/Pdi";
 import Financeiro from "./pages/Financeiro";
 import Empresa from "./pages/Empresa";
 import NotFound from "./pages/NotFound";
@@ -103,6 +104,7 @@ const App = () => (
               <Route path="/atestados" element={<Atestados />} />
               <Route path="/plano-acao" element={<PlanoAcao />} />
               <Route path="/plano-acao/:id" element={<PlanoAcaoDetalhe />} />
+              <Route path="/pdi" element={<Pdi />} />
               <Route path="/epis" element={<Epis />} />
               <Route path="/compliance-sst" element={<ComplianceSST />} />
               <Route path="/feedback-ocorrencias" element={<FeedbackOcorrencias />} />

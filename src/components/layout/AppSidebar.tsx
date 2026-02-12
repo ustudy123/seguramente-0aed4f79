@@ -56,6 +56,7 @@ const menuItems: MenuItem[] = [
   { title: "Admissão", icon: UserPlus, path: "/admissao" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
   { title: "Avaliações", icon: Star, path: "/avaliacoes" },
+  { title: "PDI", icon: Target, path: "/pdi" },
   { title: "Atestados", icon: Stethoscope, path: "/atestados" },
   { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
   { title: "EPIs", icon: Shield, path: "/epis" },
