@@ -216,7 +216,7 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
                 <LabelWithHelp label="O que será medido (indicador)" tooltip="O número ou dado que mostra se a pessoa está evoluindo. Ex: nota da avaliação, NPS, quantidade de entregas." />
                 <Input value={form.indicador_sucesso} onChange={e => setForm(f => ({ ...f, indicador_sucesso: e.target.value }))} placeholder="Ex: Nota na avaliação prática" />
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <LabelWithHelp label="Situação atual" tooltip="O valor de hoje, o ponto de partida. Ex: se a nota atual é 50, coloque 50." />
                   <Input type="number" value={form.valor_base} onChange={e => setForm(f => ({ ...f, valor_base: e.target.value }))} placeholder="Ex: 50" />
@@ -225,10 +225,11 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
                   <LabelWithHelp label="Onde queremos chegar" tooltip="O resultado esperado ao final da meta. Ex: se quer atingir nota 80, coloque 80." />
                   <Input type="number" value={form.valor_alvo} onChange={e => setForm(f => ({ ...f, valor_alvo: e.target.value }))} placeholder="Ex: 80" />
                 </div>
-                <div>
-                  <LabelWithHelp label="Unidade" tooltip="Como esse número é medido: porcentagem (%), pontos (pts), horas, etc." />
-                  <Input value={form.unidade} onChange={e => setForm(f => ({ ...f, unidade: e.target.value }))} placeholder="%, pts, horas" />
-                </div>
+              </div>
+              <div>
+                <Label>Unidade de medida</Label>
+                <FieldHint text="Como esse número é medido: porcentagem (%), pontos (pts), horas, etc." />
+                <Input value={form.unidade} onChange={e => setForm(f => ({ ...f, unidade: e.target.value }))} placeholder="Ex: %, pontos, horas" />
               </div>
             </>
           )}
