@@ -103,8 +103,8 @@ export function useDocumentoPastas() {
     mutationFn: async () => {
       if (!tenantId || !user || pastas.length === 0) return 0;
 
-      // Encontrar pasta "Prontuários de Colaboradores"
-      const prontuariosRoot = pastas.find(p => p.tipo === "root" && p.nome === "Prontuários de Colaboradores");
+      // Encontrar pasta raiz de colaboradores
+      const prontuariosRoot = pastas.find(p => p.tipo === "root" && (p.nome === "Documentos de Colaboradores" || p.nome === "Prontuários de Colaboradores"));
       if (!prontuariosRoot) return 0;
 
       // Encontrar pastas de unidade
@@ -488,11 +488,11 @@ export function useDocumentoPastas() {
         });
       });
 
-      // 2. Criar pasta raiz "Prontuários de Colaboradores"
+      // 2. Criar pasta raiz "Documentos de Colaboradores"
       const rhRootId = crypto.randomUUID();
       pastasToCreate.push({
         id: rhRootId,
-        nome: "Prontuários de Colaboradores",
+        nome: "Documentos de Colaboradores",
         tipo: "root",
         ordem: 1,
         icone: "Users",
