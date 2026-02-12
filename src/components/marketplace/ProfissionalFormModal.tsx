@@ -6,11 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Shield, UserPlus, X, AlertTriangle } from "lucide-react";
+import { Shield, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { DocumentUploadSection, DOC_CATEGORIES, type UploadedDoc } from "./DocumentUploadSection";
+import { SelfieCapture } from "./SelfieCapture";
 
 const CONSELHOS = [
   "CREA", "CRP", "CREFITO", "CRM", "CRN", "CREF", "OAB", "CRA", "COREN", "CONFEA", "Outro"
@@ -30,6 +31,9 @@ interface ProfissionalFormModalProps {
 export function ProfissionalFormModal({ open, onClose, onSuccess }: ProfissionalFormModalProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [documents, setDocuments] = useState<UploadedDoc[]>([]);
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [form, setForm] = useState({
     nome_completo: "",
     email: "",
@@ -63,6 +67,37 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
     }));
   };
 
+  const handleSelfieChange = (file: File | null, preview: string | null) => {
+    setSelfieFile(file);
+    setSelfiePreview(preview);
+  };
+
+  const uploadDocuments = async (profissionalId: string) => {
+    const allFiles = [...documents.map((d) => ({ file: d.file, categoria: d.categoria }))];
+    if (selfieFile) {
+      allFiles.push({ file: selfieFile, categoria: "selfie_verificacao" });
+    }
+
+    for (const doc of allFiles) {
+      const filePath = `${user?.id}/${profissionalId}/${doc.categoria}/${Date.now()}-${doc.file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("marketplace-docs")
+        .upload(filePath, doc.file);
+      if (uploadError) throw new Error(`Erro ao enviar ${doc.file.name}: ${uploadError.message}`);
+
+      const { data: urlData } = supabase.storage.from("marketplace-docs").getPublicUrl(filePath);
+
+      await supabase.from("marketplace_profissional_documentos").insert({
+        profissional_id: profissionalId,
+        categoria: doc.categoria,
+        nome_arquivo: doc.file.name,
+        arquivo_url: urlData.publicUrl,
+        tamanho_bytes: doc.file.size,
+        mime_type: doc.file.type,
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.nome_completo || !form.email || !form.registro_profissional || !form.conselho) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -77,9 +112,23 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
       return;
     }
 
+    // Validate required documents
+    const requiredCategories = DOC_CATEGORIES.filter((c) => c.obrigatorio).map((c) => c.id);
+    const uploadedCategories = new Set(documents.map((d) => d.categoria));
+    const missing = requiredCategories.filter((c) => !uploadedCategories.has(c));
+    if (missing.length > 0) {
+      toast.error("Envie todos os documentos obrigatórios antes de continuar");
+      return;
+    }
+
+    if (!selfieFile) {
+      toast.error("A selfie de verificação é obrigatória");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("marketplace_profissionais").insert({
+      const { data, error } = await supabase.from("marketplace_profissionais").insert({
         user_id: user?.id || null,
         nome_completo: form.nome_completo,
         email: form.email,
@@ -100,9 +149,12 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
         aceite_codigo_etica: true,
         aceite_codigo_etica_data: new Date().toISOString(),
         status: "pendente" as const,
-      });
+      }).select("id").single();
       if (error) throw error;
-      toast.success("Cadastro enviado! Aguarde validação documental.");
+
+      await uploadDocuments(data.id);
+
+      toast.success("Cadastro enviado com documentos! Aguarde validação.");
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -118,7 +170,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Cadastro de Profissional
+            Cadastro de Profissional — Rede de Parceiros
           </DialogTitle>
         </DialogHeader>
 
@@ -126,7 +178,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
           {/* Info banner */}
           <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-800">
             <p className="font-medium mb-1">📌 Validação obrigatória</p>
-            <p>Seu perfil será analisado antes de ficar visível no marketplace. Profissionais com registro vencido são bloqueados automaticamente.</p>
+            <p>Seu perfil será analisado antes de ficar visível na Rede de Parceiros. É obrigatório enviar documentos comprobatórios e selfie de verificação. Profissionais com registro vencido são bloqueados automaticamente.</p>
           </div>
 
           {/* Dados pessoais */}
@@ -236,7 +288,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
                   onClick={() => toggleModalidade(mod)}
                   className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                     form.modalidades.includes(mod)
-                      ? "bg-indigo-100 border-indigo-300 text-indigo-700"
+                      ? "bg-primary/10 border-primary/30 text-primary"
                       : "bg-card border-border text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -245,6 +297,16 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
               ))}
             </div>
           </div>
+
+          {/* Documents Upload */}
+          <DocumentUploadSection documents={documents} onChange={setDocuments} />
+
+          {/* Selfie Capture */}
+          <SelfieCapture
+            selfieFile={selfieFile}
+            selfiePreview={selfiePreview}
+            onChange={handleSelfieChange}
+          />
 
           {/* Código de ética */}
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
@@ -280,7 +342,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
             disabled={isLoading}
             className="w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0"
           >
-            {isLoading ? "Enviando..." : "Enviar Cadastro para Validação"}
+            {isLoading ? "Enviando cadastro e documentos..." : "Enviar Cadastro para Validação"}
           </Button>
         </div>
       </DialogContent>

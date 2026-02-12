@@ -4813,6 +4813,47 @@ export type Database = {
           },
         ]
       }
+      marketplace_profissional_documentos: {
+        Row: {
+          arquivo_url: string
+          categoria: string
+          created_at: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          profissional_id: string
+          tamanho_bytes: number | null
+        }
+        Insert: {
+          arquivo_url: string
+          categoria: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          profissional_id: string
+          tamanho_bytes?: number | null
+        }
+        Update: {
+          arquivo_url?: string
+          categoria?: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          profissional_id?: string
+          tamanho_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_profissional_documentos_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_servicos: {
         Row: {
           ativo: boolean | null
