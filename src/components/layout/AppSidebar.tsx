@@ -69,7 +69,7 @@ const menuItems: MenuItem[] = [
   { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
   { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
   { title: "Documentos", icon: FileText, path: "/documentos" },
-  { title: "Marketplace", icon: Store, path: "/marketplace" },
+  { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
 ];
 
 interface SidebarItemProps {
