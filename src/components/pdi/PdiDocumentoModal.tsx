@@ -329,6 +329,17 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
                 </div>
               ) : signatureLinks.length > 0 ? (
                 <div className="space-y-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-2 mb-2"
+                    onClick={() => {
+                      setSignatureLinks([]);
+                      handleCreateSignatureLinks();
+                    }}
+                  >
+                    🔄 Gerar novos links
+                  </Button>
                   {signatureLinks.map((sl, idx) => (
                     <div key={idx} className="bg-background rounded-lg p-3 border space-y-2">
                       <div>
