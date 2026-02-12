@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Target, Calendar, User, TrendingUp, MessageSquare, FileCheck, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, Target, Calendar, User, TrendingUp, MessageSquare, FileCheck, Pencil, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { PdiMetaCard } from "./PdiMetaCard";
 import { PdiCheckinForm } from "./PdiCheckinForm";
 import { PdiFeedbackForm } from "./PdiFeedbackForm";
 import { PdiEditModal } from "./PdiEditModal";
+import { PdiDocumentoModal } from "./PdiDocumentoModal";
 
 interface PdiDetailProps {
   pdi: Pdi;
@@ -28,6 +29,7 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
   const [showCheckinForm, setShowCheckinForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDocumentoModal, setShowDocumentoModal] = useState(false);
 
   const pdiCheckins = checkins.filter(c => pdi.metas?.some(m => m.id === c.meta_id));
   const pdiFeedbacks = feedbacks.filter(f => f.pdi_id === pdi.id);
@@ -51,6 +53,9 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowDocumentoModal(true)} className="gap-1.5">
+            <FileText className="w-4 h-4" /> Gerar Documento
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)} className="gap-1.5">
             <Pencil className="w-4 h-4" /> Editar
           </Button>
@@ -172,6 +177,15 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
         onOpenChange={setShowEditModal}
         pdi={pdi}
         onUpdate={updatePdi}
+      />
+
+      {/* Modal de documento */}
+      <PdiDocumentoModal
+        open={showDocumentoModal}
+        onClose={() => setShowDocumentoModal(false)}
+        pdi={pdi}
+        checkins={pdiCheckins}
+        feedbacks={pdiFeedbacks}
       />
     </div>
   );
