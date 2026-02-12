@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles, Wand2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { PdiMetaInsert, PdiMetaCategoria, PdiCheckinFrequencia } from "@/types/pdi";
 import { PDI_META_CATEGORIA_LABELS, PDI_CHECKIN_FREQ_LABELS } from "@/types/pdi";
 
@@ -14,6 +17,16 @@ interface PdiMetaFormProps {
   pdiId: string;
   onCreate: (data: PdiMetaInsert) => Promise<any>;
 }
+
+type StepField = "especifica" | "mensuravel" | "atingivel" | "relevante" | "temporal";
+
+const STEP_FIELD_MAP: Record<number, StepField> = {
+  1: "especifica",
+  2: "mensuravel",
+  3: "atingivel",
+  4: "relevante",
+  5: "temporal",
+};
 
 export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaFormProps) => {
   const [step, setStep] = useState(0);
@@ -36,6 +49,10 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
     dependencias: "",
   });
 
+  const [aiLoading, setAiLoading] = useState(false);
+  const [sugestoes, setSugestoes] = useState<string[]>([]);
+  const [showSugestoes, setShowSugestoes] = useState(false);
+
   const steps = [
     { title: "Definição", fields: ["titulo", "categoria"] },
     { title: "S — Específica", fields: ["especifica"] },
@@ -44,6 +61,44 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
     { title: "R — Relevante", fields: ["relevante"] },
     { title: "T — Temporal", fields: ["temporal", "data_inicio", "data_fim", "frequencia_checkin", "peso"] },
   ];
+
+  const currentField = STEP_FIELD_MAP[step];
+
+  const callAi = async (mode: "sugestoes" | "melhorar") => {
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-pdi-smart", {
+        body: {
+          mode,
+          step: currentField,
+          titulo: form.titulo,
+          categoria: form.categoria,
+          texto: mode === "melhorar" ? form[currentField] : undefined,
+        },
+      });
+      if (error) throw error;
+
+      if (mode === "sugestoes") {
+        setSugestoes(data.sugestoes || []);
+        setShowSugestoes(true);
+      } else if (mode === "melhorar" && data.texto_melhorado) {
+        setForm(f => ({ ...f, [currentField]: data.texto_melhorado }));
+        toast.success("Texto melhorado pela IA!");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao consultar IA");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const selectSugestao = (texto: string) => {
+    if (currentField) {
+      setForm(f => ({ ...f, [currentField]: texto }));
+    }
+    setShowSugestoes(false);
+    setSugestoes([]);
+  };
 
   const handleSubmit = async () => {
     if (!form.titulo) return;
@@ -67,12 +122,23 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
     });
     onOpenChange(false);
     setStep(0);
+    setSugestoes([]);
+    setShowSugestoes(false);
     setForm({ titulo: "", categoria: "tecnica", especifica: "", mensuravel: "", atingivel: "", relevante: "", temporal: "", indicador_sucesso: "", valor_base: "", valor_alvo: "", unidade: "", data_inicio: "", data_fim: "", frequencia_checkin: "quinzenal", peso: "3", dependencias: "" });
   };
 
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    setShowSugestoes(false);
+    setSugestoes([]);
+  };
+
+  const hasAiStep = step >= 1 && step <= 5;
+  const fieldHasText = currentField ? form[currentField]?.trim().length > 0 : false;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nova Meta SMART — {steps[step].title}</DialogTitle>
           <DialogDescription>Passo {step + 1} de {steps.length}</DialogDescription>
@@ -185,14 +251,60 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
               </div>
             </>
           )}
+
+          {/* AI Buttons */}
+          {hasAiStep && (
+            <div className="flex gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => callAi("sugestoes")}
+                disabled={aiLoading}
+                className="gap-1.5 text-xs"
+              >
+                {aiLoading && !fieldHasText ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                Sugestões IA
+              </Button>
+              {fieldHasText && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => callAi("melhorar")}
+                  disabled={aiLoading}
+                  className="gap-1.5 text-xs"
+                >
+                  {aiLoading && fieldHasText ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                  Melhorar texto
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Suggestions Panel */}
+          {showSugestoes && sugestoes.length > 0 && (
+            <div className="space-y-2 border rounded-lg p-3 bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Selecione uma sugestão:</p>
+              {sugestoes.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => selectSugestao(s)}
+                  className="w-full text-left text-sm p-2.5 rounded-md border bg-background hover:bg-accent hover:border-primary/30 transition-colors cursor-pointer"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-between pt-2">
-          <Button variant="ghost" onClick={() => step > 0 ? setStep(step - 1) : onOpenChange(false)}>
+          <Button variant="ghost" onClick={() => step > 0 ? handleStepChange(step - 1) : onOpenChange(false)}>
             {step > 0 ? "Voltar" : "Cancelar"}
           </Button>
           {step < steps.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} disabled={step === 0 && !form.titulo}>Próximo</Button>
+            <Button onClick={() => handleStepChange(step + 1)} disabled={step === 0 && !form.titulo}>Próximo</Button>
           ) : (
             <Button onClick={handleSubmit} disabled={!form.titulo}>Criar Meta</Button>
           )}
