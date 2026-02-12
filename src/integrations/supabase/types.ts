@@ -4688,6 +4688,179 @@ export type Database = {
           },
         ]
       }
+      marketplace_denuncias: {
+        Row: {
+          acao_tomada: string | null
+          analisado_em: string | null
+          analisado_por: string | null
+          contratacao_id: string | null
+          created_at: string
+          denunciante_id: string | null
+          denunciante_nome: string | null
+          descricao: string
+          evidencias: string[] | null
+          gravidade: string
+          id: string
+          profissional_id: string
+          status: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          acao_tomada?: string | null
+          analisado_em?: string | null
+          analisado_por?: string | null
+          contratacao_id?: string | null
+          created_at?: string
+          denunciante_id?: string | null
+          denunciante_nome?: string | null
+          descricao: string
+          evidencias?: string[] | null
+          gravidade?: string
+          id?: string
+          profissional_id: string
+          status?: string
+          tenant_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          acao_tomada?: string | null
+          analisado_em?: string | null
+          analisado_por?: string | null
+          contratacao_id?: string | null
+          created_at?: string
+          denunciante_id?: string | null
+          denunciante_nome?: string | null
+          descricao?: string
+          evidencias?: string[] | null
+          gravidade?: string
+          id?: string
+          profissional_id?: string
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_denuncias_contratacao_id_fkey"
+            columns: ["contratacao_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_contratacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_denuncias_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_denuncias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_escopo_habilitacao: {
+        Row: {
+          categoria_id: string | null
+          categoria_nome: string
+          conselho: string
+          created_at: string
+          descricao: string | null
+          id: string
+        }
+        Insert: {
+          categoria_id?: string | null
+          categoria_nome: string
+          conselho: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+        }
+        Update: {
+          categoria_id?: string | null
+          categoria_nome?: string
+          conselho?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_escopo_habilitacao_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_pacotes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          desconto_percentual: number | null
+          descricao: string | null
+          duracao_total_minutos: number | null
+          id: string
+          modalidade: string
+          nome: string
+          preco_individual_soma: number | null
+          preco_pacote: number
+          profissional_id: string
+          publico_alvo: string | null
+          servicos_ids: string[]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          desconto_percentual?: number | null
+          descricao?: string | null
+          duracao_total_minutos?: number | null
+          id?: string
+          modalidade?: string
+          nome: string
+          preco_individual_soma?: number | null
+          preco_pacote: number
+          profissional_id: string
+          publico_alvo?: string | null
+          servicos_ids?: string[]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          desconto_percentual?: number | null
+          descricao?: string | null
+          duracao_total_minutos?: number | null
+          id?: string
+          modalidade?: string
+          nome?: string
+          preco_individual_soma?: number | null
+          preco_pacote?: number
+          profissional_id?: string
+          publico_alvo?: string | null
+          servicos_ids?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_pacotes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_profissionais: {
         Row: {
           aceite_codigo_etica: boolean | null

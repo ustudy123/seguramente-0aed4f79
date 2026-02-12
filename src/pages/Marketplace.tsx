@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2, MapPin, Locate, Shield, Star, Link2 } from "lucide-react";
+import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2, MapPin, Locate, Shield, Star, Link2, ShieldAlert, Package, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,10 @@ import { ConfirmacaoExecucaoModal } from "@/components/marketplace/ConfirmacaoEx
 import { AvaliacaoModal } from "@/components/marketplace/AvaliacaoModal";
 import { ValidacaoProfissionais } from "@/components/marketplace/ValidacaoProfissionais";
 import { AfiliadosDashboard } from "@/components/marketplace/AfiliadosDashboard";
+import { DenunciasList } from "@/components/marketplace/DenunciasList";
+import { DenunciaForm } from "@/components/marketplace/DenunciaForm";
+import { PacotesServicos } from "@/components/marketplace/PacotesServicos";
+import { PerformanceDashboard } from "@/components/marketplace/PerformanceDashboard";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -40,6 +44,7 @@ export default function Marketplace() {
   const [showServicoForm, setShowServicoForm] = useState(false);
   const [contratacaoParaConfirmar, setContratacaoParaConfirmar] = useState<MarketplaceContratacao | null>(null);
   const [contratacaoParaAvaliar, setContratacaoParaAvaliar] = useState<MarketplaceContratacao | null>(null);
+  const [denunciaTarget, setDenunciaTarget] = useState<{ id: string; nome: string } | null>(null);
   const [localizando, setLocalizando] = useState(false);
 
   // Demo contratações for visualization
@@ -226,6 +231,15 @@ export default function Marketplace() {
           <TabsTrigger value="afiliados" className="gap-1.5">
             <Link2 className="h-4 w-4" /> Afiliados
           </TabsTrigger>
+          <TabsTrigger value="pacotes" className="gap-1.5">
+            <Package className="h-4 w-4" /> Pacotes
+          </TabsTrigger>
+          <TabsTrigger value="denuncias" className="gap-1.5">
+            <ShieldAlert className="h-4 w-4" /> Denúncias
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="gap-1.5">
+            <BarChart3 className="h-4 w-4" /> Performance
+          </TabsTrigger>
         </TabsList>
 
         {/* Serviços */}
@@ -271,6 +285,7 @@ export default function Marketplace() {
                     setFilters((f) => ({ ...f, busca: "" }));
                     setActiveTab("servicos");
                   }}
+                  onDenunciar={(id, nome) => setDenunciaTarget({ id, nome })}
                 />
               ))}
             </div>
@@ -294,6 +309,21 @@ export default function Marketplace() {
         {/* Afiliados */}
         <TabsContent value="afiliados" className="mt-4">
           <AfiliadosDashboard />
+        </TabsContent>
+
+        {/* Pacotes */}
+        <TabsContent value="pacotes" className="mt-4">
+          <PacotesServicos />
+        </TabsContent>
+
+        {/* Denúncias */}
+        <TabsContent value="denuncias" className="mt-4">
+          <DenunciasList />
+        </TabsContent>
+
+        {/* Performance */}
+        <TabsContent value="performance" className="mt-4">
+          <PerformanceDashboard />
         </TabsContent>
       </Tabs>
 
@@ -343,6 +373,17 @@ export default function Marketplace() {
         onClose={() => setContratacaoParaAvaliar(null)}
         onSuccess={invalidateAll}
       />
+
+      {/* Denúncia form */}
+      {denunciaTarget && (
+        <DenunciaForm
+          profissionalId={denunciaTarget.id}
+          profissionalNome={denunciaTarget.nome}
+          open={!!denunciaTarget}
+          onClose={() => setDenunciaTarget(null)}
+          onSuccess={invalidateAll}
+        />
+      )}
     </div>
   );
 }
