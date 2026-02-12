@@ -12,6 +12,16 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,8 +62,10 @@ const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = 
 };
 
 export function MetasList() {
-  const { metas, isLoadingMetas, deleteMeta, deleteOkr } = useMetas();
+  const { metas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, isCreatingMeta } = useMetas();
   const [showForm, setShowForm] = useState(false);
+  const [okrMetaId, setOkrMetaId] = useState<string | null>(null);
+  const [okrForm, setOkrForm] = useState({ key_result: "", descricao: "", tipo: "quantitativo" as string, valor_alvo: 100, unidade: "" });
   const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
@@ -72,6 +84,22 @@ export function MetasList() {
     if (confirm("Tem certeza que deseja excluir esta meta e todos os seus OKRs?")) {
       await deleteMeta(id);
     }
+  };
+
+  const handleAddOkr = async () => {
+    if (!okrMetaId || !okrForm.key_result) return;
+    await createOkr({
+      meta_id: okrMetaId,
+      key_result: okrForm.key_result,
+      descricao: okrForm.descricao || undefined,
+      tipo: okrForm.tipo as any,
+      valor_inicial: 0,
+      valor_atual: 0,
+      valor_alvo: okrForm.valor_alvo,
+      unidade: okrForm.unidade || undefined,
+    });
+    setOkrMetaId(null);
+    setOkrForm({ key_result: "", descricao: "", tipo: "quantitativo", valor_alvo: 100, unidade: "" });
   };
 
   const handleDeleteOkr = async (id: string) => {
@@ -201,7 +229,7 @@ export function MetasList() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="gap-2">
+                          <DropdownMenuItem className="gap-2" onClick={() => setOkrMetaId(meta.id)}>
                             <Plus className="h-4 w-4" />
                             Adicionar OKR
                           </DropdownMenuItem>
@@ -290,6 +318,66 @@ export function MetasList() {
             </DialogDescription>
           </DialogHeader>
           <MetaForm onSuccess={() => setShowForm(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!okrMetaId} onOpenChange={(open) => !open && setOkrMetaId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novo Key Result</DialogTitle>
+            <DialogDescription>Adicione um resultado-chave à meta</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Key Result *</Label>
+              <Input
+                placeholder="Ex: Aumentar vendas em 20%"
+                value={okrForm.key_result}
+                onChange={(e) => setOkrForm(f => ({ ...f, key_result: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea
+                placeholder="Detalhe o resultado esperado"
+                value={okrForm.descricao}
+                onChange={(e) => setOkrForm(f => ({ ...f, descricao: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={okrForm.tipo} onValueChange={(v) => setOkrForm(f => ({ ...f, tipo: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent position="popper">
+                    <SelectItem value="quantitativo">Quantitativo</SelectItem>
+                    <SelectItem value="qualitativo">Qualitativo</SelectItem>
+                    <SelectItem value="marco">Marco</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Valor Alvo</Label>
+                <Input
+                  type="number"
+                  value={okrForm.valor_alvo}
+                  onChange={(e) => setOkrForm(f => ({ ...f, valor_alvo: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Unidade</Label>
+              <Input
+                placeholder="Ex: %, R$, unidades"
+                value={okrForm.unidade}
+                onChange={(e) => setOkrForm(f => ({ ...f, unidade: e.target.value }))}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOkrMetaId(null)}>Cancelar</Button>
+              <Button onClick={handleAddOkr} disabled={!okrForm.key_result}>Adicionar</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
