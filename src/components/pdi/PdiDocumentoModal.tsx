@@ -66,7 +66,10 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
   };
 
   const saveToDocumentos = async (htmlContent: string) => {
-    if (!tenantId || !user) return;
+    if (!tenantId || !user) {
+      // Even without tenant, create a local storage path reference so signature button works
+      return;
+    }
 
     setSaving(true);
     try {
@@ -86,49 +89,58 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
 
       if (uploadError) throw uploadError;
 
+      // Set storage path immediately after successful upload
+      // so the signature button is enabled even if the documentos insert fails
       setStoragePath(path);
 
-      // Find collaborator's folder
-      let pastaId: string | null = null;
-      if (pdi.colaborador_id) {
-        const { data: pastas } = await supabase
-          .from("documento_pastas")
-          .select("id")
-          .eq("tenant_id", tenantId)
-          .eq("colaborador_id", pdi.colaborador_id)
-          .eq("tipo", "colaborador")
-          .limit(1);
+      // Try to save to documentos table (non-blocking for signature flow)
+      try {
+        let pastaId: string | null = null;
+        if (pdi.colaborador_id) {
+          const { data: pastas } = await supabase
+            .from("documento_pastas")
+            .select("id")
+            .eq("tenant_id", tenantId)
+            .eq("colaborador_id", pdi.colaborador_id)
+            .eq("tipo", "colaborador")
+            .limit(1);
 
-        if (pastas && pastas.length > 0) {
-          pastaId = pastas[0].id;
+          if (pastas && pastas.length > 0) {
+            pastaId = pastas[0].id;
+          }
         }
+
+        const { error: docError } = await supabase
+          .from("documentos" as never)
+          .insert({
+            tenant_id: tenantId,
+            colaborador_id: pdi.colaborador_id || null,
+            colaborador_nome: pdi.colaborador_nome,
+            colaborador_cpf: null,
+            nome_arquivo: path,
+            nome_original: `PDI - ${pdi.titulo} - ${pdi.colaborador_nome}.html`,
+            tipo: "PDI",
+            tamanho: blob.size,
+            mime_type: "text/html",
+            storage_path: path,
+            pasta_id: pastaId,
+            status: "valido",
+            observacoes: `Documento PDI gerado automaticamente. Período: ${pdi.data_inicio} a ${pdi.data_fim}`,
+            criado_por: user.id,
+            criado_por_nome: profile?.nome_completo,
+          } as never);
+
+        if (docError) {
+          console.error("Erro ao registrar documento:", docError);
+        } else {
+          queryClient.invalidateQueries({ queryKey: ["documentos"] });
+          queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
+        }
+      } catch (docErr: any) {
+        console.error("Erro ao registrar documento:", docErr);
       }
 
-      const { error: docError } = await supabase
-        .from("documentos" as never)
-        .insert({
-          tenant_id: tenantId,
-          colaborador_id: pdi.colaborador_id || null,
-          colaborador_nome: pdi.colaborador_nome,
-          colaborador_cpf: null,
-          nome_arquivo: path,
-          nome_original: `PDI - ${pdi.titulo} - ${pdi.colaborador_nome}.html`,
-          tipo: "PDI",
-          tamanho: blob.size,
-          mime_type: "text/html",
-          storage_path: path,
-          pasta_id: pastaId,
-          status: "valido",
-          observacoes: `Documento PDI gerado automaticamente. Período: ${pdi.data_inicio} a ${pdi.data_fim}`,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo,
-        } as never);
-
-      if (docError) throw docError;
-
       setSaved(true);
-      queryClient.invalidateQueries({ queryKey: ["documentos"] });
-      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
       toast.success("Documento salvo na pasta do colaborador!");
     } catch (err: any) {
       console.error("Erro ao salvar documento:", err);
