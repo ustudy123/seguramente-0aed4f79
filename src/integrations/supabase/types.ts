@@ -4796,6 +4796,84 @@ export type Database = {
           },
         ]
       }
+      pdi_assinatura_links: {
+        Row: {
+          assinado_em: string | null
+          assinatura_url: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          documento_storage_path: string | null
+          expira_em: string
+          id: string
+          ip_assinatura: string | null
+          pdi_id: string
+          signatario_nome: string
+          signatario_papel: string
+          signatario_telefone: string | null
+          status: string
+          tenant_id: string
+          token: string
+          updated_at: string
+          user_agent_assinatura: string | null
+        }
+        Insert: {
+          assinado_em?: string | null
+          assinatura_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          documento_storage_path?: string | null
+          expira_em?: string
+          id?: string
+          ip_assinatura?: string | null
+          pdi_id: string
+          signatario_nome: string
+          signatario_papel: string
+          signatario_telefone?: string | null
+          status?: string
+          tenant_id: string
+          token?: string
+          updated_at?: string
+          user_agent_assinatura?: string | null
+        }
+        Update: {
+          assinado_em?: string | null
+          assinatura_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          documento_storage_path?: string | null
+          expira_em?: string
+          id?: string
+          ip_assinatura?: string | null
+          pdi_id?: string
+          signatario_nome?: string
+          signatario_papel?: string
+          signatario_telefone?: string | null
+          status?: string
+          tenant_id?: string
+          token?: string
+          updated_at?: string
+          user_agent_assinatura?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdi_assinatura_links_pdi_id_fkey"
+            columns: ["pdi_id"]
+            isOneToOne: false
+            referencedRelation: "pdis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_assinatura_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pdi_checkins: {
         Row: {
           avancos: string | null

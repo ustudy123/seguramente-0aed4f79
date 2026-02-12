@@ -40,6 +40,7 @@ import Financeiro from "./pages/Financeiro";
 import Empresa from "./pages/Empresa";
 import NotFound from "./pages/NotFound";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
+import PdiAssinatura from "./pages/PdiAssinatura";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -70,6 +71,7 @@ const App = () => (
 
             {/* Rota Pública - Questionário Psicossocial */}
             <Route path="/questionario/:token" element={<QuestionarioPsicossocial />} />
+            <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
 
           {/* Super Admin Routes */}
           <Route
