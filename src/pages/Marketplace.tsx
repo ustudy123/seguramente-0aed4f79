@@ -42,6 +42,48 @@ export default function Marketplace() {
   const [contratacaoParaAvaliar, setContratacaoParaAvaliar] = useState<MarketplaceContratacao | null>(null);
   const [localizando, setLocalizando] = useState(false);
 
+  // Demo contratações for visualization
+  const demoContratacoes: MarketplaceContratacao[] = [
+    {
+      id: "demo-c1", tenant_id: "", profissional_id: "p1", servico_id: "s1", status: "concluida",
+      valor: 1200, data_agendamento: new Date(Date.now() - 5 * 86400000).toISOString(),
+      hora_agendamento: "14:00", observacoes: null, created_at: new Date().toISOString(),
+      solicitante_nome: "Empresa ABC Ltda", modalidade: "presencial", duracao_minutos: 120,
+      profissional_confirmou: true, data_conclusao: new Date(Date.now() - 4 * 86400000).toISOString(),
+      profissional: { nome_completo: "Mariana Silva", conselho: "CREFITO", foto_url: "/avatars/mariana-silva.jpg" } as any,
+      servico: { nome: "Análise Ergonômica do Trabalho (AET)" } as any,
+    },
+    {
+      id: "demo-c2", tenant_id: "", profissional_id: "p2", servico_id: "s2", status: "em_andamento",
+      valor: 800, data_agendamento: new Date(Date.now() - 1 * 86400000).toISOString(),
+      hora_agendamento: "09:30", observacoes: null, created_at: new Date().toISOString(),
+      solicitante_nome: "Indústria XYZ", modalidade: "online", duracao_minutos: 60,
+      profissional_confirmou: false, data_conclusao: null,
+      profissional: { nome_completo: "Ricardo Mendes", conselho: "CREA", foto_url: "/avatars/ricardo-mendes.jpg" } as any,
+      servico: { nome: "Laudo Técnico (LTCAT)" } as any,
+    },
+    {
+      id: "demo-c3", tenant_id: "", profissional_id: "p3", servico_id: "s3", status: "concluida",
+      valor: 650, data_agendamento: new Date(Date.now() - 15 * 86400000).toISOString(),
+      hora_agendamento: "10:00", observacoes: null, created_at: new Date().toISOString(),
+      solicitante_nome: "Tech Solutions", modalidade: "online", duracao_minutos: 90,
+      profissional_confirmou: true, data_conclusao: new Date(Date.now() - 14 * 86400000).toISOString(),
+      profissional: { nome_completo: "Fernanda Costa", conselho: "CRP", foto_url: "/avatars/fernanda-costa.jpg" } as any,
+      servico: { nome: "Avaliação Psicossocial" } as any,
+    },
+    {
+      id: "demo-c4", tenant_id: "", profissional_id: "p4", servico_id: "s4", status: "solicitada",
+      valor: 2500, data_agendamento: new Date(Date.now() + 3 * 86400000).toISOString(),
+      hora_agendamento: "08:00", observacoes: null, created_at: new Date().toISOString(),
+      solicitante_nome: "Construmax", modalidade: "presencial", duracao_minutos: 480,
+      profissional_confirmou: false, data_conclusao: null,
+      profissional: { nome_completo: "Paulo Nascimento", conselho: "CREA", foto_url: "/avatars/paulo-nascimento.jpg" } as any,
+      servico: { nome: "Programa de Gerenciamento de Riscos (PGR)" } as any,
+    },
+  ];
+
+  const displayContratacoes = contratacoes.length > 0 ? contratacoes : demoContratacoes;
+
   const ativarLocalizacao = useCallback(() => {
     if (!navigator.geolocation) {
       toast.error("Seu navegador não suporta geolocalização");
@@ -65,7 +107,7 @@ export default function Marketplace() {
     );
   }, [setFilters]);
 
-  const totalConcluidas = contratacoes.filter((c) => c.status === "concluida").length;
+  const totalConcluidas = displayContratacoes.filter((c) => c.status === "concluida").length;
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["marketplace-profissionais"] });
@@ -132,7 +174,7 @@ export default function Marketplace() {
       <MarketplaceStats
         totalProfissionais={profissionais.length}
         totalServicos={servicos.length}
-        totalContratacoes={contratacoes.length}
+        totalContratacoes={displayContratacoes.length}
         totalConcluidas={totalConcluidas}
       />
 
@@ -238,7 +280,7 @@ export default function Marketplace() {
         {/* Contratações */}
         <TabsContent value="contratacoes" className="mt-4">
           <ContratacoesList
-            contratacoes={contratacoes}
+            contratacoes={displayContratacoes}
             onConfirmarExecucao={setContratacaoParaConfirmar}
             onAvaliar={setContratacaoParaAvaliar}
           />
