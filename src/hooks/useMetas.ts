@@ -158,10 +158,10 @@ export function useMetas() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["metas"] });
-      toast.success("Key Result adicionado!");
+      toast.success("Resultado-Chave adicionado!");
     },
     onError: (error) => {
-      toast.error(`Erro ao adicionar Key Result: ${error.message}`);
+      toast.error(`Erro ao adicionar Resultado-Chave: ${error.message}`);
     },
   });
 
@@ -176,10 +176,10 @@ export function useMetas() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["metas"] });
-      toast.success("Key Result atualizado!");
+      toast.success("Resultado-Chave atualizado!");
     },
     onError: (error) => {
-      toast.error(`Erro ao atualizar Key Result: ${error.message}`);
+      toast.error(`Erro ao atualizar Resultado-Chave: ${error.message}`);
     },
   });
 
@@ -194,10 +194,10 @@ export function useMetas() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["metas"] });
-      toast.success("Key Result excluído!");
+      toast.success("Resultado-Chave excluído!");
     },
     onError: (error) => {
-      toast.error(`Erro ao excluir Key Result: ${error.message}`);
+      toast.error(`Erro ao excluir Resultado-Chave: ${error.message}`);
     },
   });
 

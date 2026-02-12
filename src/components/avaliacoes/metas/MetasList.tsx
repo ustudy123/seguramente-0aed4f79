@@ -103,7 +103,7 @@ export function MetasList() {
   };
 
   const handleDeleteOkr = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este Key Result?")) {
+    if (confirm("Tem certeza que deseja excluir este Resultado-Chave?")) {
       await deleteOkr(id);
     }
   };
@@ -216,7 +216,7 @@ export function MetasList() {
                               ) : (
                                 <ChevronRight className="h-4 w-4" />
                               )}
-                              {meta.okrs?.length} Key Result(s)
+                              {meta.okrs?.length} Resultado(s)-Chave
                             </Button>
                           </CollapsibleTrigger>
                         )}
@@ -329,7 +329,7 @@ export function MetasList() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Key Result *</Label>
+              <Label>Resultado-Chave *</Label>
               <Input
                 placeholder="Ex: Aumentar vendas em 20%"
                 value={okrForm.key_result}
