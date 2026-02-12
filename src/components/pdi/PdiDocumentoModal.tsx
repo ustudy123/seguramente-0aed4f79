@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Printer, FileText, FolderCheck, Send, CheckCircle2 } from "lucide-react";
+import { Loader2, Download, Printer, FileText, Send, CheckCircle2, MessageCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,12 +16,21 @@ interface PdiDocumentoModalProps {
   feedbacks: PdiFeedback[];
 }
 
+interface Signatario {
+  nome: string;
+  papel: string;
+  papelLabel: string;
+}
+
 export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: PdiDocumentoModalProps) {
   const [html, setHtml] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [sendingSignature, setSendingSignature] = useState(false);
+  const [storagePath, setStoragePath] = useState<string | null>(null);
+  const [showSignaturePanel, setShowSignaturePanel] = useState(false);
+  const [creatingLinks, setCreatingLinks] = useState(false);
+  const [signatureLinks, setSignatureLinks] = useState<{ nome: string; papel: string; link: string }[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { tenantId, user, profile } = useAuth();
   const queryClient = useQueryClient();
@@ -30,13 +39,12 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
     setLoading(true);
     setHtml("");
     setSaved(false);
+    setStoragePath(null);
+    setSignatureLinks([]);
+    setShowSignaturePanel(false);
     try {
       const payload = {
-        pdi: {
-          ...pdi,
-          checkins,
-          feedbacks,
-        },
+        pdi: { ...pdi, checkins, feedbacks },
       };
 
       const { data, error } = await supabase.functions.invoke("ai-pdi-documento", { body: payload });
@@ -47,7 +55,6 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
       const generatedHtml = data.html || "";
       setHtml(generatedHtml);
 
-      // Auto-save to collaborator's folder
       if (generatedHtml) {
         await saveToDocumentos(generatedHtml);
       }
@@ -66,19 +73,20 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
       const timestamp = Date.now();
       const safeColabName = pdi.colaborador_nome.replace(/[^a-zA-Z0-9]/g, "_");
       const fileName = `pdi-${safeColabName}-${timestamp}.html`;
-      const storagePath = pdi.colaborador_id
+      const path = pdi.colaborador_id
         ? `${tenantId}/colaboradores/${pdi.colaborador_id}/${fileName}`
         : `${tenantId}/${fileName}`;
 
-      // Upload HTML to storage
       const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
       const file = new File([blob], fileName, { type: "text/html" });
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(storagePath, file, { cacheControl: "3600", upsert: false });
+        .upload(path, file, { cacheControl: "3600", upsert: false });
 
       if (uploadError) throw uploadError;
+
+      setStoragePath(path);
 
       // Find collaborator's folder
       let pastaId: string | null = null;
@@ -96,7 +104,6 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
         }
       }
 
-      // Create document record
       const { error: docError } = await supabase
         .from("documentos" as never)
         .insert({
@@ -104,12 +111,12 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
           colaborador_id: pdi.colaborador_id || null,
           colaborador_nome: pdi.colaborador_nome,
           colaborador_cpf: null,
-          nome_arquivo: storagePath,
+          nome_arquivo: path,
           nome_original: `PDI - ${pdi.titulo} - ${pdi.colaborador_nome}.html`,
           tipo: "PDI",
           tamanho: blob.size,
           mime_type: "text/html",
-          storage_path: storagePath,
+          storage_path: path,
           pasta_id: pastaId,
           status: "valido",
           observacoes: `Documento PDI gerado automaticamente. Período: ${pdi.data_inicio} a ${pdi.data_fim}`,
@@ -147,26 +154,69 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
     URL.revokeObjectURL(url);
   };
 
-  const handleSendSignature = async () => {
-    setSendingSignature(true);
-    try {
-      // For now, simulate sending — in a real implementation this would integrate with 
-      // an e-signature service or the existing advertencia-link pattern
-      const signatarios = [
-        { nome: pdi.colaborador_nome, papel: "Colaborador(a)" },
-        ...(pdi.responsavel_nome ? [{ nome: pdi.responsavel_nome, papel: "Líder/Responsável" }] : []),
-        { nome: "Representante de RH", papel: "Recursos Humanos" },
-      ];
-
-      toast.success(
-        `Documento enviado para assinatura digital de: ${signatarios.map(s => s.nome).join(", ")}`,
-        { duration: 5000 }
-      );
-    } catch (err: any) {
-      toast.error("Erro ao enviar para assinatura: " + err.message);
-    } finally {
-      setSendingSignature(false);
+  const getSignatarios = (): Signatario[] => {
+    const list: Signatario[] = [
+      { nome: pdi.colaborador_nome, papel: "colaborador", papelLabel: "Colaborador(a)" },
+    ];
+    if (pdi.responsavel_nome) {
+      list.push({ nome: pdi.responsavel_nome, papel: "lider", papelLabel: "Líder/Responsável" });
     }
+    return list;
+  };
+
+  const handleCreateSignatureLinks = async () => {
+    if (!tenantId || !user) return;
+
+    setCreatingLinks(true);
+    try {
+      const signatarios = getSignatarios();
+      const links: { nome: string; papel: string; link: string }[] = [];
+
+      for (const sig of signatarios) {
+        const { data, error } = await supabase
+          .from("pdi_assinatura_links")
+          .insert({
+            tenant_id: tenantId,
+            pdi_id: pdi.id,
+            signatario_nome: sig.nome,
+            signatario_papel: sig.papelLabel,
+            documento_storage_path: storagePath,
+            criado_por: user.id,
+            criado_por_nome: profile?.nome_completo,
+          } as never)
+          .select("token")
+          .single();
+
+        if (error) throw error;
+
+        const baseUrl = window.location.origin;
+        links.push({
+          nome: sig.nome,
+          papel: sig.papelLabel,
+          link: `${baseUrl}/pdi-assinatura/${(data as any).token}`,
+        });
+      }
+
+      setSignatureLinks(links);
+      toast.success("Links de assinatura criados!");
+    } catch (err: any) {
+      toast.error("Erro ao criar links: " + err.message);
+    } finally {
+      setCreatingLinks(false);
+    }
+  };
+
+  const handleShareWhatsApp = (sigLink: { nome: string; papel: string; link: string }) => {
+    const message = encodeURIComponent(
+      `📝 *Assinatura PDI - ${pdi.titulo}*\n\n` +
+      `Olá ${sigLink.nome}!\n\n` +
+      `Você recebeu um Plano de Desenvolvimento Individual (PDI) para assinar digitalmente.\n\n` +
+      `👤 Colaborador: ${pdi.colaborador_nome}\n` +
+      `📅 Período: ${pdi.data_inicio} a ${pdi.data_fim}\n\n` +
+      `Clique no link abaixo para visualizar e assinar:\n${sigLink.link}\n\n` +
+      `⚠️ Este link é válido por 30 dias.`
+    );
+    window.open(`https://wa.me/?text=${message}`, "_blank");
   };
 
   // Auto-generate on open
@@ -190,7 +240,7 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
                 <>
                   {saved && (
                     <span className="flex items-center gap-1 text-xs text-success">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Salvo nos Documentos
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Salvo
                     </span>
                   )}
                   {saving && (
@@ -209,11 +259,18 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
                   </Button>
                   <Button
                     size="sm"
-                    onClick={handleSendSignature}
-                    disabled={sendingSignature}
+                    onClick={() => {
+                      if (signatureLinks.length > 0) {
+                        setShowSignaturePanel(!showSignaturePanel);
+                      } else {
+                        handleCreateSignatureLinks();
+                        setShowSignaturePanel(true);
+                      }
+                    }}
+                    disabled={creatingLinks || !storagePath}
                     className="gap-1.5"
                   >
-                    {sendingSignature ? (
+                    {creatingLinks ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Send className="w-4 h-4" />
@@ -226,26 +283,88 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <div className="text-center">
-                <p className="text-lg font-medium text-foreground">Gerando documento do PDI...</p>
-                <p className="text-sm text-muted-foreground mt-1">A IA está elaborando um documento completo e profissional. Isso pode levar até 1 minuto.</p>
+        <div className="flex-1 overflow-hidden flex">
+          {/* Main content */}
+          <div className={`flex-1 overflow-hidden ${showSignaturePanel ? "border-r" : ""}`}>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <div className="text-center">
+                  <p className="text-lg font-medium text-foreground">Gerando documento do PDI...</p>
+                  <p className="text-sm text-muted-foreground mt-1">A IA está elaborando um documento completo e profissional. Isso pode levar até 1 minuto.</p>
+                </div>
               </div>
-            </div>
-          ) : html ? (
-            <iframe
-              ref={iframeRef}
-              srcDoc={html}
-              className="w-full h-full border-0"
-              title="Documento PDI"
-              sandbox="allow-same-origin allow-popups allow-scripts"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Nenhum conteúdo gerado.
+            ) : html ? (
+              <iframe
+                ref={iframeRef}
+                srcDoc={html}
+                className="w-full h-full border-0"
+                title="Documento PDI"
+                sandbox="allow-same-origin allow-popups allow-scripts"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Nenhum conteúdo gerado.
+              </div>
+            )}
+          </div>
+
+          {/* Signature panel */}
+          {showSignaturePanel && (
+            <div className="w-80 flex-shrink-0 overflow-y-auto p-4 space-y-4 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">Enviar para Assinatura</h3>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSignaturePanel(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Envie o link por WhatsApp para cada signatário. Eles poderão visualizar o documento e assinar digitalmente.
+              </p>
+
+              {creatingLinks ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : signatureLinks.length > 0 ? (
+                <div className="space-y-3">
+                  {signatureLinks.map((sl, idx) => (
+                    <div key={idx} className="bg-background rounded-lg p-3 border space-y-2">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{sl.nome}</p>
+                        <p className="text-xs text-muted-foreground">{sl.papel}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => handleShareWhatsApp(sl)}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Enviar via WhatsApp
+                      </Button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(sl.link);
+                          toast.success("Link copiado!");
+                        }}
+                        className="text-xs text-primary hover:underline w-full text-center"
+                      >
+                        Copiar link
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  Gerando links...
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                ⏳ Links válidos por 30 dias
+              </p>
             </div>
           )}
         </div>

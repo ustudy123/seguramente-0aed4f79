@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.ai-pdi-documento]
 verify_jwt = false
+
+[functions.pdi-assinatura]
+verify_jwt = false
