@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Wand2, Loader2 } from "lucide-react";
+import { Sparkles, Wand2, Loader2, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { PdiMetaInsert, PdiMetaCategoria, PdiCheckinFrequencia } from "@/types/pdi";
@@ -27,6 +28,26 @@ const STEP_FIELD_MAP: Record<number, StepField> = {
   4: "relevante",
   5: "temporal",
 };
+
+const FieldHint = ({ text }: { text: string }) => (
+  <p className="text-xs text-muted-foreground mt-0.5 mb-1">{text}</p>
+);
+
+const LabelWithHelp = ({ label, tooltip }: { label: string; tooltip: string }) => (
+  <div className="flex items-center gap-1.5">
+    <Label>{label}</Label>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+        </TooltipTrigger>
+        <TooltipContent side="right" className="max-w-[220px] text-xs">
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  </div>
+);
 
 export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaFormProps) => {
   const [step, setStep] = useState(0);
@@ -152,14 +173,16 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
         </div>
 
         <div className="space-y-4 min-h-[180px]">
+          {/* STEP 0 — Definição */}
           {step === 0 && (
             <>
               <div>
-                <Label>Título da Meta *</Label>
+                <Label>Nome da meta *</Label>
+                <FieldHint text="Dê um nome curto e claro para identificar essa meta." />
                 <Input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} placeholder="Ex: Melhorar comunicação com equipe" />
               </div>
               <div>
-                <Label>Categoria</Label>
+                <LabelWithHelp label="Área de desenvolvimento" tooltip="Escolha a área que mais se relaciona com essa meta: habilidade técnica, comportamento, liderança, etc." />
                 <Select value={form.categoria} onValueChange={v => setForm(f => ({ ...f, categoria: v as PdiMetaCategoria }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -172,64 +195,89 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
             </>
           )}
 
+          {/* STEP 1 — Específica */}
           {step === 1 && (
             <div>
               <Label>O que exatamente será desenvolvido?</Label>
-              <Textarea value={form.especifica} onChange={e => setForm(f => ({ ...f, especifica: e.target.value }))} rows={4} placeholder="Descreva de forma clara e específica o que o colaborador deve alcançar" />
+              <FieldHint text="Descreva com clareza o que a pessoa precisa aprender, melhorar ou entregar." />
+              <Textarea value={form.especifica} onChange={e => setForm(f => ({ ...f, especifica: e.target.value }))} rows={4} placeholder="Ex: Realizar apresentações para clientes com confiança e clareza, dominando a estrutura de pitch e storytelling." />
             </div>
           )}
 
+          {/* STEP 2 — Mensurável */}
           {step === 2 && (
             <>
               <div>
-                <Label>Como vamos medir que foi alcançada?</Label>
-                <Textarea value={form.mensuravel} onChange={e => setForm(f => ({ ...f, mensuravel: e.target.value }))} rows={2} placeholder="Defina o critério de medição" />
+                <Label>Como saberemos que a meta foi alcançada?</Label>
+                <FieldHint text="Defina um critério objetivo para medir o progresso. Ex: nota em prova, número de entregas, feedback positivo." />
+                <Textarea value={form.mensuravel} onChange={e => setForm(f => ({ ...f, mensuravel: e.target.value }))} rows={2} placeholder="Ex: Aprovação com nota mínima de 80% na avaliação prática" />
               </div>
               <div>
-                <Label>Indicador de sucesso (KPI)</Label>
-                <Input value={form.indicador_sucesso} onChange={e => setForm(f => ({ ...f, indicador_sucesso: e.target.value }))} placeholder="Ex: NPS do time" />
+                <LabelWithHelp label="O que será medido (indicador)" tooltip="O número ou dado que mostra se a pessoa está evoluindo. Ex: nota da avaliação, NPS, quantidade de entregas." />
+                <Input value={form.indicador_sucesso} onChange={e => setForm(f => ({ ...f, indicador_sucesso: e.target.value }))} placeholder="Ex: Nota na avaliação prática" />
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div><Label>Valor base</Label><Input type="number" value={form.valor_base} onChange={e => setForm(f => ({ ...f, valor_base: e.target.value }))} /></div>
-                <div><Label>Meta-alvo</Label><Input type="number" value={form.valor_alvo} onChange={e => setForm(f => ({ ...f, valor_alvo: e.target.value }))} /></div>
-                <div><Label>Unidade</Label><Input value={form.unidade} onChange={e => setForm(f => ({ ...f, unidade: e.target.value }))} placeholder="%, pts" /></div>
+                <div>
+                  <LabelWithHelp label="Situação atual" tooltip="O valor de hoje, o ponto de partida. Ex: se a nota atual é 50, coloque 50." />
+                  <Input type="number" value={form.valor_base} onChange={e => setForm(f => ({ ...f, valor_base: e.target.value }))} placeholder="Ex: 50" />
+                </div>
+                <div>
+                  <LabelWithHelp label="Onde queremos chegar" tooltip="O resultado esperado ao final da meta. Ex: se quer atingir nota 80, coloque 80." />
+                  <Input type="number" value={form.valor_alvo} onChange={e => setForm(f => ({ ...f, valor_alvo: e.target.value }))} placeholder="Ex: 80" />
+                </div>
+                <div>
+                  <LabelWithHelp label="Unidade" tooltip="Como esse número é medido: porcentagem (%), pontos (pts), horas, etc." />
+                  <Input value={form.unidade} onChange={e => setForm(f => ({ ...f, unidade: e.target.value }))} placeholder="%, pts, horas" />
+                </div>
               </div>
             </>
           )}
 
+          {/* STEP 3 — Atingível */}
           {step === 3 && (
             <>
               <div>
-                <Label>Quais recursos a pessoa tem para alcançar?</Label>
-                <Textarea value={form.atingivel} onChange={e => setForm(f => ({ ...f, atingivel: e.target.value }))} rows={3} placeholder="Recursos disponíveis: cursos, mentoria, ferramentas..." />
+                <Label>Quais recursos e apoio a pessoa terá?</Label>
+                <FieldHint text="Liste o que está disponível para ajudar: cursos, mentoria, tempo dedicado, ferramentas, etc." />
+                <Textarea value={form.atingivel} onChange={e => setForm(f => ({ ...f, atingivel: e.target.value }))} rows={3} placeholder="Ex: Acesso a plataforma de cursos, 2h semanais de mentoria com o líder técnico, licença do software X" />
               </div>
               <div>
-                <Label>Dependências</Label>
-                <Input value={form.dependencias} onChange={e => setForm(f => ({ ...f, dependencias: e.target.value }))} placeholder="Materiais, cursos, mentorias necessárias" />
+                <LabelWithHelp label="O que precisa ser providenciado?" tooltip="Materiais, inscrições, acessos ou aprovações que ainda não foram garantidos." />
+                <Input value={form.dependencias} onChange={e => setForm(f => ({ ...f, dependencias: e.target.value }))} placeholder="Ex: Inscrição no curso, acesso à ferramenta Y" />
               </div>
             </>
           )}
 
+          {/* STEP 4 — Relevante */}
           {step === 4 && (
             <div>
-              <Label>Por que isso é importante para a função e empresa?</Label>
-              <Textarea value={form.relevante} onChange={e => setForm(f => ({ ...f, relevante: e.target.value }))} rows={4} placeholder="Explique a relevância estratégica desta meta" />
+              <Label>Por que essa meta é importante?</Label>
+              <FieldHint text="Explique como essa meta contribui para o crescimento da pessoa e para os objetivos da empresa." />
+              <Textarea value={form.relevante} onChange={e => setForm(f => ({ ...f, relevante: e.target.value }))} rows={4} placeholder="Ex: Essa competência é essencial para o próximo nível de carreira e está alinhada com a meta do time de aumentar a satisfação do cliente." />
             </div>
           )}
 
+          {/* STEP 5 — Temporal */}
           {step === 5 && (
             <>
               <div>
-                <Label>Até quando?</Label>
-                <Textarea value={form.temporal} onChange={e => setForm(f => ({ ...f, temporal: e.target.value }))} rows={2} placeholder="Defina prazos e marcos intermediários" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Data início</Label><Input type="date" value={form.data_inicio} onChange={e => setForm(f => ({ ...f, data_inicio: e.target.value }))} /></div>
-                <div><Label>Data fim</Label><Input type="date" value={form.data_fim} onChange={e => setForm(f => ({ ...f, data_fim: e.target.value }))} /></div>
+                <Label>Qual o prazo e as etapas intermediárias?</Label>
+                <FieldHint text="Defina quando começa, quando termina e se há marcos no meio do caminho." />
+                <Textarea value={form.temporal} onChange={e => setForm(f => ({ ...f, temporal: e.target.value }))} rows={2} placeholder="Ex: Iniciar o curso no 1º mês, prática assistida no 2º mês, avaliação no 3º mês." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Frequência check-in</Label>
+                  <Label>Início</Label>
+                  <Input type="date" value={form.data_inicio} onChange={e => setForm(f => ({ ...f, data_inicio: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Prazo final</Label>
+                  <Input type="date" value={form.data_fim} onChange={e => setForm(f => ({ ...f, data_fim: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <LabelWithHelp label="Acompanhamento" tooltip="De quanto em quanto tempo você vai verificar o progresso dessa meta." />
                   <Select value={form.frequencia_checkin} onValueChange={v => setForm(f => ({ ...f, frequencia_checkin: v as PdiCheckinFrequencia }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -240,7 +288,7 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
                   </Select>
                 </div>
                 <div>
-                  <Label>Peso (1–5)</Label>
+                  <LabelWithHelp label="Importância (1–5)" tooltip="Quanto maior o número, mais essa meta influencia o progresso geral do PDI." />
                   <Select value={form.peso} onValueChange={v => setForm(f => ({ ...f, peso: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
