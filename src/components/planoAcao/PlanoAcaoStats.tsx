@@ -10,11 +10,13 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import type { PlanoAcaoStats as StatsType } from "@/types/planoAcao";
+import type { PlanoAcaoStats as StatsType, AcaoStatus } from "@/types/planoAcao";
 
 interface PlanoAcaoStatsProps {
   stats: StatsType | undefined;
   isLoading: boolean;
+  activeStatFilter?: string | null;
+  onStatClick?: (key: string) => void;
 }
 
 const statCards = [
@@ -55,7 +57,7 @@ const statCards = [
   },
 ];
 
-export function PlanoAcaoStats({ stats, isLoading }: PlanoAcaoStatsProps) {
+export function PlanoAcaoStats({ stats, isLoading, activeStatFilter, onStatClick }: PlanoAcaoStatsProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -76,6 +78,7 @@ export function PlanoAcaoStats({ stats, isLoading }: PlanoAcaoStatsProps) {
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           const value = stats?.[card.key as keyof StatsType] ?? 0;
+          const isActive = activeStatFilter === card.key;
           
           return (
             <motion.div
@@ -84,7 +87,13 @@ export function PlanoAcaoStats({ stats, isLoading }: PlanoAcaoStatsProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
             >
-              <Card className="hover:shadow-md transition-shadow">
+              <Card 
+                className={cn(
+                  "hover:shadow-md transition-all cursor-pointer",
+                  isActive && "ring-2 ring-primary shadow-md"
+                )}
+                onClick={() => onStatClick?.(card.key)}
+              >
                 <CardContent className="pt-4 pb-3">
                   <div className="flex items-center gap-3">
                     <div className={cn("p-2 rounded-lg", card.bgColor)}>
