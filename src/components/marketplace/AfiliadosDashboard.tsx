@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export function AfiliadosDashboard() {
   const { user } = useAuth();
 
-  const { data: profissional } = useQuery({
+  const { data: realProfissional } = useQuery({
     queryKey: ["marketplace-meu-perfil", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -25,20 +25,42 @@ export function AfiliadosDashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: comissoes = [] } = useQuery({
-    queryKey: ["marketplace-comissoes", profissional?.id],
+  const demoProfissional = {
+    id: "demo-prof",
+    nome_completo: "Mariana Silva",
+    link_afiliado: "https://seguramente.app/ref/mariana-silva",
+    codigo_afiliado: "MARIANA2026",
+    plano: "profissional",
+    selo_verificado: true,
+  };
+
+  const demoComissoes = [
+    { id: "dc-1", tipo: "indicacao_empresa", valor: 320, status: "pago", created_at: new Date(Date.now() - 3 * 86400000).toISOString() },
+    { id: "dc-2", tipo: "indicacao_empresa", valor: 280, status: "pago", created_at: new Date(Date.now() - 12 * 86400000).toISOString() },
+    { id: "dc-3", tipo: "recorrencia_mensal", valor: 150, status: "pendente", created_at: new Date(Date.now() - 1 * 86400000).toISOString() },
+    { id: "dc-4", tipo: "indicacao_empresa", valor: 320, status: "pendente", created_at: new Date(Date.now() - 0.5 * 86400000).toISOString() },
+    { id: "dc-5", tipo: "recorrencia_mensal", valor: 150, status: "pago", created_at: new Date(Date.now() - 30 * 86400000).toISOString() },
+  ];
+
+  const profissional = realProfissional || demoProfissional;
+  const isDemo = !realProfissional;
+
+  const { data: realComissoes = [] } = useQuery({
+    queryKey: ["marketplace-comissoes", realProfissional?.id],
     queryFn: async () => {
-      if (!profissional?.id) return [];
+      if (!realProfissional?.id) return [];
       const { data, error } = await supabase
         .from("marketplace_afiliados_comissoes")
         .select("*")
-        .eq("profissional_id", profissional.id)
+        .eq("profissional_id", realProfissional.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!profissional?.id,
+    enabled: !!realProfissional?.id,
   });
+
+  const comissoes = isDemo ? demoComissoes : realComissoes;
 
   const copyLink = () => {
     if (profissional?.link_afiliado) {
@@ -65,6 +87,11 @@ export function AfiliadosDashboard() {
 
   return (
     <div className="space-y-6">
+      {isDemo && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex items-center gap-2">
+          <span>⚠️ <strong>Modo Demonstração</strong> — dados fictícios. Cadastre-se como profissional para ver seu painel real.</span>
+        </div>
+      )}
       {/* Link de afiliado */}
       <div className="p-5 bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl space-y-3">
         <div className="flex items-center gap-2">

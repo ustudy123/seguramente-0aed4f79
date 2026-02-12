@@ -65,7 +65,7 @@ export function ValidacaoProfissionais() {
   const [showRejeitar, setShowRejeitar] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const { data: pendentes = [], isLoading } = useQuery({
+  const { data: realPendentes = [], isLoading } = useQuery({
     queryKey: ["marketplace-profissionais-pendentes"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -78,8 +78,60 @@ export function ValidacaoProfissionais() {
     },
   });
 
+  const demoPendentes: ProfissionalPendente[] = [
+    {
+      id: "demo-1", nome_completo: "Tatiane Ribeiro", email: "tatiane.ribeiro@email.com",
+      telefone: "(11) 98765-4321", cpf_cnpj: "123.456.789-00", foto_url: "/avatars/camila-torres.jpg",
+      bio: "Fisioterapeuta do trabalho com 8 anos de experiência em ergonomia industrial e prevenção de LER/DORT.",
+      formacao_academica: "Mestrado em Fisioterapia Ocupacional - USP",
+      registro_profissional: "CREFITO-3/12345-F", conselho: "CREFITO",
+      uf_registro: "SP", registro_validade: "2027-06-15",
+      especialidades: ["Ergonomia", "Fisioterapia do Trabalho", "Pilates Clínico"],
+      areas_atuacao: ["SST", "Ergonomia"], cidade: "São Paulo", estado: "SP",
+      created_at: new Date(Date.now() - 2 * 86400000).toISOString(), tem_atestado_capacidade: true,
+    },
+    {
+      id: "demo-2", nome_completo: "Carlos Eduardo Braga", email: "carlos.braga@email.com",
+      telefone: "(21) 99876-5432", cpf_cnpj: "987.654.321-00", foto_url: null,
+      bio: "Engenheiro de Segurança com especialização em NR-12 e NR-35.",
+      formacao_academica: "Engenharia Civil + Pós em Eng. de Segurança - UFRJ",
+      registro_profissional: "CREA-RJ/2023-123456", conselho: "CREA",
+      uf_registro: "RJ", registro_validade: "2026-12-31",
+      especialidades: ["NR-12", "NR-35", "PPRA", "LTCAT"],
+      areas_atuacao: ["SST", "Compliance"], cidade: "Rio de Janeiro", estado: "RJ",
+      created_at: new Date(Date.now() - 5 * 86400000).toISOString(), tem_atestado_capacidade: false,
+    },
+    {
+      id: "demo-3", nome_completo: "Bianca Moura Lopes", email: "bianca.moura@email.com",
+      telefone: "(31) 97654-3210", cpf_cnpj: "456.789.123-00", foto_url: "/avatars/juliana-barros.jpg",
+      bio: "Psicóloga organizacional focada em saúde mental no trabalho e prevenção de burnout.",
+      formacao_academica: "Psicologia - PUC Minas + MBA Gestão de Pessoas",
+      registro_profissional: "CRP-04/56789", conselho: "CRP",
+      uf_registro: "MG", registro_validade: "2025-03-10",
+      especialidades: ["Saúde Mental", "Avaliação Psicossocial", "Gestão de Conflitos"],
+      areas_atuacao: ["Saúde Mental", "RH"], cidade: "Belo Horizonte", estado: "MG",
+      created_at: new Date(Date.now() - 1 * 86400000).toISOString(), tem_atestado_capacidade: true,
+    },
+  ];
+
+  const pendentes = realPendentes.length > 0 ? realPendentes : demoPendentes;
+  const isDemo = realPendentes.length === 0 && pendentes.length > 0;
+
+  const demoDocumentos: Documento[] = [
+    { id: "dd-1", categoria: "documento_pessoal", nome_arquivo: "RG_frente.jpg", arquivo_url: "#", tamanho_bytes: 245000, mime_type: "image/jpeg", created_at: new Date().toISOString() },
+    { id: "dd-2", categoria: "registro_conselho", nome_arquivo: "carteira_crefito.pdf", arquivo_url: "#", tamanho_bytes: 512000, mime_type: "application/pdf", created_at: new Date().toISOString() },
+    { id: "dd-3", categoria: "formacao", nome_arquivo: "diploma_mestrado.pdf", arquivo_url: "#", tamanho_bytes: 1024000, mime_type: "application/pdf", created_at: new Date().toISOString() },
+    { id: "dd-4", categoria: "selfie_verificacao", nome_arquivo: "selfie_verificacao.jpg", arquivo_url: "#", tamanho_bytes: 180000, mime_type: "image/jpeg", created_at: new Date().toISOString() },
+    { id: "dd-5", categoria: "atestado_capacidade_tecnica", nome_arquivo: "atestado_capacidade.pdf", arquivo_url: "#", tamanho_bytes: 320000, mime_type: "application/pdf", created_at: new Date().toISOString() },
+  ];
+
   const openProfile = async (prof: ProfissionalPendente) => {
     setSelectedProf(prof);
+    if (prof.id.startsWith("demo-")) {
+      setDocs(demoDocumentos);
+      setLoadingDocs(false);
+      return;
+    }
     setLoadingDocs(true);
     try {
       const { data, error } = await supabase
@@ -175,6 +227,12 @@ export function ValidacaoProfissionais() {
   return (
     <>
       <div className="space-y-3">
+        {isDemo && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span><strong>Modo Demonstração</strong> — dados fictícios para visualização. Profissionais reais aparecerão quando houver cadastros pendentes.</span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground">Profissionais Pendentes de Validação</h3>
           <Badge variant="secondary" className="text-xs">{pendentes.length} pendente(s)</Badge>
