@@ -4416,6 +4416,64 @@ export type Database = {
           },
         ]
       }
+      marketplace_audit_log: {
+        Row: {
+          acao: string
+          contratacao_id: string | null
+          created_at: string
+          dados: Json | null
+          descricao: string | null
+          id: string
+          profissional_id: string | null
+          tenant_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          contratacao_id?: string | null
+          created_at?: string
+          dados?: Json | null
+          descricao?: string | null
+          id?: string
+          profissional_id?: string | null
+          tenant_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          contratacao_id?: string | null
+          created_at?: string
+          dados?: Json | null
+          descricao?: string | null
+          id?: string
+          profissional_id?: string | null
+          tenant_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_audit_log_contratacao_id_fkey"
+            columns: ["contratacao_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_contratacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_audit_log_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_avaliacoes: {
         Row: {
           aderencia_escopo: number | null
@@ -7093,6 +7151,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bloquear_profissionais_expirados: { Args: never; Returns: undefined }
       get_user_tenant_id: { Args: never; Returns: string }
       has_minimum_role: {
         Args: {
