@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2 } from "lucide-react";
+import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2, MapPin, Locate } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import { ProfissionalFormModal } from "@/components/marketplace/ProfissionalForm
 import { ServicoFormModal } from "@/components/marketplace/ServicoFormModal";
 import { ConfirmacaoExecucaoModal } from "@/components/marketplace/ConfirmacaoExecucaoModal";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export default function Marketplace() {
   const queryClient = useQueryClient();
@@ -35,6 +36,30 @@ export default function Marketplace() {
   const [showProfissionalForm, setShowProfissionalForm] = useState(false);
   const [showServicoForm, setShowServicoForm] = useState(false);
   const [contratacaoParaConfirmar, setContratacaoParaConfirmar] = useState<MarketplaceContratacao | null>(null);
+  const [localizando, setLocalizando] = useState(false);
+
+  const ativarLocalizacao = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error("Seu navegador não suporta geolocalização");
+      return;
+    }
+    setLocalizando(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setFilters((f) => ({
+          ...f,
+          userLat: pos.coords.latitude,
+          userLng: pos.coords.longitude,
+        }));
+        setLocalizando(false);
+        toast.success("Localização ativada! Profissionais serão ordenados por proximidade.");
+      },
+      () => {
+        setLocalizando(false);
+        toast.error("Não foi possível obter sua localização");
+      }
+    );
+  }, [setFilters]);
 
   const totalConcluidas = contratacoes.filter((c) => c.status === "concluida").length;
 
@@ -107,15 +132,27 @@ export default function Marketplace() {
         totalConcluidas={totalConcluidas}
       />
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar serviços, profissionais ou especialidades..."
-          value={filters.busca || ""}
-          onChange={(e) => setFilters((f) => ({ ...f, busca: e.target.value }))}
-          className="pl-10"
-        />
+      {/* Search + Location */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar serviços, profissionais ou especialidades..."
+            value={filters.busca || ""}
+            onChange={(e) => setFilters((f) => ({ ...f, busca: e.target.value }))}
+            className="pl-10"
+          />
+        </div>
+        <Button
+          variant={filters.userLat ? "default" : "outline"}
+          size="sm"
+          onClick={ativarLocalizacao}
+          disabled={localizando}
+          className="shrink-0 gap-1.5"
+        >
+          <Locate className="h-4 w-4" />
+          {localizando ? "Localizando..." : filters.userLat ? "Proximidade ativa" : "Buscar por proximidade"}
+        </Button>
       </div>
 
       {/* Categories */}

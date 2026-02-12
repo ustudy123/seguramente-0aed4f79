@@ -4706,7 +4706,9 @@ export type Database = {
           formacao_academica: string | null
           foto_url: string | null
           id: string
+          latitude: number | null
           link_afiliado: string | null
+          longitude: number | null
           modalidades_atendimento:
             | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
             | null
@@ -4745,7 +4747,9 @@ export type Database = {
           formacao_academica?: string | null
           foto_url?: string | null
           id?: string
+          latitude?: number | null
           link_afiliado?: string | null
+          longitude?: number | null
           modalidades_atendimento?:
             | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
             | null
@@ -4784,7 +4788,9 @@ export type Database = {
           formacao_academica?: string | null
           foto_url?: string | null
           id?: string
+          latitude?: number | null
           link_afiliado?: string | null
+          longitude?: number | null
           modalidades_atendimento?:
             | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
             | null
@@ -7196,6 +7202,33 @@ export type Database = {
     }
     Functions: {
       bloquear_profissionais_expirados: { Args: never; Returns: undefined }
+      buscar_profissionais_proximos: {
+        Args: { p_lat: number; p_lon: number; p_raio_km?: number }
+        Returns: {
+          areas_atuacao: string[]
+          bio: string
+          cidade: string
+          conselho: string
+          distancia_km: number
+          email: string
+          especialidades: string[]
+          estado: string
+          foto_url: string
+          id: string
+          latitude: number
+          longitude: number
+          modalidades_atendimento: string[]
+          nome_completo: string
+          nota_media: number
+          registro_profissional: string
+          selo_verificado: boolean
+          status: string
+          telefone: string
+          tem_atestado_capacidade: boolean
+          total_avaliacoes: number
+          total_servicos_executados: number
+        }[]
+      }
       get_user_tenant_id: { Args: never; Returns: string }
       has_minimum_role: {
         Args: {
@@ -7210,6 +7243,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      haversine_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
     }

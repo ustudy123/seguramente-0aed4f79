@@ -10,6 +10,7 @@ import { Shield, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { geocodeCidade } from "@/lib/nominatim";
 import { DocumentUploadSection, DOC_CATEGORIES, type UploadedDoc } from "./DocumentUploadSection";
 import { SelfieCapture } from "./SelfieCapture";
 
@@ -128,6 +129,9 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
 
     setIsLoading(true);
     try {
+      // Geocode city/state via Nominatim
+      const geo = await geocodeCidade(form.cidade, form.estado);
+
       const { data, error } = await supabase.from("marketplace_profissionais").insert({
         user_id: user?.id || null,
         nome_completo: form.nome_completo,
@@ -146,6 +150,8 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
         modalidades_atendimento: form.modalidades as ("presencial" | "online" | "hibrido")[],
         cidade: form.cidade || null,
         estado: form.estado || null,
+        latitude: geo?.lat ?? null,
+        longitude: geo?.lng ?? null,
         aceite_codigo_etica: true,
         aceite_codigo_etica_data: new Date().toISOString(),
         tem_atestado_capacidade: documents.some((d) => d.categoria === "atestado_capacidade_tecnica"),
