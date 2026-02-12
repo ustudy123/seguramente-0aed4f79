@@ -97,6 +97,7 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
       try {
         let pastaId: string | null = null;
         if (pdi.colaborador_id) {
+          // Try to find existing collaborator folder
           const { data: pastas } = await supabase
             .from("documento_pastas")
             .select("id")
@@ -107,6 +108,21 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
 
           if (pastas && pastas.length > 0) {
             pastaId = pastas[0].id;
+
+            // Try to find year subfolder for better organization
+            const ano = new Date().getFullYear();
+            const { data: anoPastas } = await supabase
+              .from("documento_pastas")
+              .select("id")
+              .eq("tenant_id", tenantId)
+              .eq("pasta_pai_id", pastaId)
+              .eq("tipo", "ano")
+              .eq("ano", ano)
+              .limit(1);
+
+            if (anoPastas && anoPastas.length > 0) {
+              pastaId = anoPastas[0].id;
+            }
           }
         }
 
