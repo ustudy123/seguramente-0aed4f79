@@ -324,7 +324,7 @@ export function MetasList() {
       <Dialog open={!!okrMetaId} onOpenChange={(open) => !open && setOkrMetaId(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Novo Key Result</DialogTitle>
+            <DialogTitle>Novo Resultado-Chave</DialogTitle>
             <DialogDescription>Adicione um resultado-chave à meta</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
