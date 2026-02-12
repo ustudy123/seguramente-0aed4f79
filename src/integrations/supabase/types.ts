@@ -4371,6 +4371,459 @@ export type Database = {
           },
         ]
       }
+      marketplace_afiliados_comissoes: {
+        Row: {
+          created_at: string
+          id: string
+          profissional_id: string
+          status: string | null
+          tenant_indicado_id: string | null
+          tipo: string | null
+          valor: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profissional_id: string
+          status?: string | null
+          tenant_indicado_id?: string | null
+          tipo?: string | null
+          valor?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profissional_id?: string
+          status?: string | null
+          tenant_indicado_id?: string | null
+          tipo?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_afiliados_comissoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_afiliados_comissoes_tenant_indicado_id_fkey"
+            columns: ["tenant_indicado_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_avaliacoes: {
+        Row: {
+          aderencia_escopo: number | null
+          avaliador_id: string | null
+          clareza: number | null
+          comentario: string | null
+          contratacao_id: string
+          created_at: string
+          id: string
+          nota_geral: number | null
+          pontualidade: number | null
+          profissional_id: string
+          profissionalismo: number | null
+          servico_id: string
+          tenant_id: string
+        }
+        Insert: {
+          aderencia_escopo?: number | null
+          avaliador_id?: string | null
+          clareza?: number | null
+          comentario?: string | null
+          contratacao_id: string
+          created_at?: string
+          id?: string
+          nota_geral?: number | null
+          pontualidade?: number | null
+          profissional_id: string
+          profissionalismo?: number | null
+          servico_id: string
+          tenant_id: string
+        }
+        Update: {
+          aderencia_escopo?: number | null
+          avaliador_id?: string | null
+          clareza?: number | null
+          comentario?: string | null
+          contratacao_id?: string
+          created_at?: string
+          id?: string
+          nota_geral?: number | null
+          pontualidade?: number | null
+          profissional_id?: string
+          profissionalismo?: number | null
+          servico_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_avaliacoes_contratacao_id_fkey"
+            columns: ["contratacao_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_contratacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_avaliacoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_avaliacoes_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_avaliacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_categorias: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_contratacoes: {
+        Row: {
+          acao_vinculada_id: string | null
+          created_at: string
+          data_agendamento: string | null
+          data_conclusao: string | null
+          duracao_minutos: number | null
+          hora_agendamento: string | null
+          id: string
+          modalidade: Database["public"]["Enums"]["marketplace_servico_modalidade"]
+          observacoes: string | null
+          profissional_confirmou: boolean | null
+          profissional_id: string
+          servico_id: string
+          solicitante_id: string | null
+          solicitante_nome: string | null
+          status:
+            | Database["public"]["Enums"]["marketplace_contratacao_status"]
+            | null
+          tenant_id: string
+          termo_aceito: boolean | null
+          termo_aceito_data: string | null
+          updated_at: string
+          valor: number | null
+        }
+        Insert: {
+          acao_vinculada_id?: string | null
+          created_at?: string
+          data_agendamento?: string | null
+          data_conclusao?: string | null
+          duracao_minutos?: number | null
+          hora_agendamento?: string | null
+          id?: string
+          modalidade: Database["public"]["Enums"]["marketplace_servico_modalidade"]
+          observacoes?: string | null
+          profissional_confirmou?: boolean | null
+          profissional_id: string
+          servico_id: string
+          solicitante_id?: string | null
+          solicitante_nome?: string | null
+          status?:
+            | Database["public"]["Enums"]["marketplace_contratacao_status"]
+            | null
+          tenant_id: string
+          termo_aceito?: boolean | null
+          termo_aceito_data?: string | null
+          updated_at?: string
+          valor?: number | null
+        }
+        Update: {
+          acao_vinculada_id?: string | null
+          created_at?: string
+          data_agendamento?: string | null
+          data_conclusao?: string | null
+          duracao_minutos?: number | null
+          hora_agendamento?: string | null
+          id?: string
+          modalidade?: Database["public"]["Enums"]["marketplace_servico_modalidade"]
+          observacoes?: string | null
+          profissional_confirmou?: boolean | null
+          profissional_id?: string
+          servico_id?: string
+          solicitante_id?: string | null
+          solicitante_nome?: string | null
+          status?:
+            | Database["public"]["Enums"]["marketplace_contratacao_status"]
+            | null
+          tenant_id?: string
+          termo_aceito?: boolean | null
+          termo_aceito_data?: string | null
+          updated_at?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_contratacoes_acao_vinculada_id_fkey"
+            columns: ["acao_vinculada_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_contratacoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_contratacoes_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_contratacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_profissionais: {
+        Row: {
+          aceite_codigo_etica: boolean | null
+          aceite_codigo_etica_data: string | null
+          areas_atuacao: string[] | null
+          bio: string | null
+          certificacoes: string[] | null
+          cidade: string | null
+          codigo_afiliado: string | null
+          conselho: string
+          cpf_cnpj: string | null
+          created_at: string
+          email: string
+          especialidades: string[] | null
+          estado: string | null
+          formacao_academica: string | null
+          foto_url: string | null
+          id: string
+          link_afiliado: string | null
+          modalidades_atendimento:
+            | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
+            | null
+          nome_completo: string
+          nota_media: number | null
+          plano: Database["public"]["Enums"]["marketplace_plano_tipo"] | null
+          registro_profissional: string
+          registro_validade: string | null
+          selo_verificado: boolean | null
+          status:
+            | Database["public"]["Enums"]["marketplace_profissional_status"]
+            | null
+          telefone: string | null
+          tenant_id: string | null
+          total_avaliacoes: number | null
+          total_servicos_executados: number | null
+          uf_registro: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          aceite_codigo_etica?: boolean | null
+          aceite_codigo_etica_data?: string | null
+          areas_atuacao?: string[] | null
+          bio?: string | null
+          certificacoes?: string[] | null
+          cidade?: string | null
+          codigo_afiliado?: string | null
+          conselho: string
+          cpf_cnpj?: string | null
+          created_at?: string
+          email: string
+          especialidades?: string[] | null
+          estado?: string | null
+          formacao_academica?: string | null
+          foto_url?: string | null
+          id?: string
+          link_afiliado?: string | null
+          modalidades_atendimento?:
+            | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
+            | null
+          nome_completo: string
+          nota_media?: number | null
+          plano?: Database["public"]["Enums"]["marketplace_plano_tipo"] | null
+          registro_profissional: string
+          registro_validade?: string | null
+          selo_verificado?: boolean | null
+          status?:
+            | Database["public"]["Enums"]["marketplace_profissional_status"]
+            | null
+          telefone?: string | null
+          tenant_id?: string | null
+          total_avaliacoes?: number | null
+          total_servicos_executados?: number | null
+          uf_registro?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          aceite_codigo_etica?: boolean | null
+          aceite_codigo_etica_data?: string | null
+          areas_atuacao?: string[] | null
+          bio?: string | null
+          certificacoes?: string[] | null
+          cidade?: string | null
+          codigo_afiliado?: string | null
+          conselho?: string
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string
+          especialidades?: string[] | null
+          estado?: string | null
+          formacao_academica?: string | null
+          foto_url?: string | null
+          id?: string
+          link_afiliado?: string | null
+          modalidades_atendimento?:
+            | Database["public"]["Enums"]["marketplace_servico_modalidade"][]
+            | null
+          nome_completo?: string
+          nota_media?: number | null
+          plano?: Database["public"]["Enums"]["marketplace_plano_tipo"] | null
+          registro_profissional?: string
+          registro_validade?: string | null
+          selo_verificado?: boolean | null
+          status?:
+            | Database["public"]["Enums"]["marketplace_profissional_status"]
+            | null
+          telefone?: string | null
+          tenant_id?: string | null
+          total_avaliacoes?: number | null
+          total_servicos_executados?: number | null
+          uf_registro?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_profissionais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_servicos: {
+        Row: {
+          ativo: boolean | null
+          base_legal: string | null
+          categoria_id: string | null
+          created_at: string
+          descricao: string
+          duracao_estimada_minutos: number | null
+          evidencia_minima: string | null
+          id: string
+          modalidade: Database["public"]["Enums"]["marketplace_servico_modalidade"]
+          nome: string
+          preco_referencia: number | null
+          profissional_id: string
+          publico_alvo: string | null
+          updated_at: string
+          vinculo_tipo_acao: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          base_legal?: string | null
+          categoria_id?: string | null
+          created_at?: string
+          descricao: string
+          duracao_estimada_minutos?: number | null
+          evidencia_minima?: string | null
+          id?: string
+          modalidade?: Database["public"]["Enums"]["marketplace_servico_modalidade"]
+          nome: string
+          preco_referencia?: number | null
+          profissional_id: string
+          publico_alvo?: string | null
+          updated_at?: string
+          vinculo_tipo_acao?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          base_legal?: string | null
+          categoria_id?: string | null
+          created_at?: string
+          descricao?: string
+          duracao_estimada_minutos?: number | null
+          evidencia_minima?: string | null
+          id?: string
+          modalidade?: Database["public"]["Enums"]["marketplace_servico_modalidade"]
+          nome?: string
+          preco_referencia?: number | null
+          profissional_id?: string
+          publico_alvo?: string | null
+          updated_at?: string
+          vinculo_tipo_acao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_servicos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_servicos_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meta_okrs: {
         Row: {
           created_at: string
@@ -6739,6 +7192,20 @@ export type Database = {
         | "oncologico"
         | "endocrino"
         | "outro"
+      marketplace_contratacao_status:
+        | "solicitada"
+        | "aceita"
+        | "em_andamento"
+        | "concluida"
+        | "cancelada"
+        | "recusada"
+      marketplace_plano_tipo: "base" | "profissional" | "parceiro"
+      marketplace_profissional_status:
+        | "pendente"
+        | "ativo"
+        | "suspenso"
+        | "bloqueado"
+      marketplace_servico_modalidade: "presencial" | "online" | "hibrido"
       meta_periodo: "mensal" | "trimestral" | "semestral" | "anual"
       meta_status:
         | "nao_iniciada"
@@ -7020,6 +7487,22 @@ export const Constants = {
         "endocrino",
         "outro",
       ],
+      marketplace_contratacao_status: [
+        "solicitada",
+        "aceita",
+        "em_andamento",
+        "concluida",
+        "cancelada",
+        "recusada",
+      ],
+      marketplace_plano_tipo: ["base", "profissional", "parceiro"],
+      marketplace_profissional_status: [
+        "pendente",
+        "ativo",
+        "suspenso",
+        "bloqueado",
+      ],
+      marketplace_servico_modalidade: ["presencial", "online", "hibrido"],
       meta_periodo: ["mensal", "trimestral", "semestral", "anual"],
       meta_status: [
         "nao_iniciada",
