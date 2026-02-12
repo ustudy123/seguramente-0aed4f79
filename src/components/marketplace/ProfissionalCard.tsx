@@ -1,4 +1,4 @@
-import { Star, MapPin, BadgeCheck, Video, Building2, Award } from "lucide-react";
+import { Star, MapPin, BadgeCheck, Video, Building2, Award, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { MarketplaceProfissional } from "@/hooks/useMarketplace";
@@ -6,6 +6,7 @@ import type { MarketplaceProfissional } from "@/hooks/useMarketplace";
 interface ProfissionalCardProps {
   profissional: MarketplaceProfissional & { distancia_km?: number };
   onVerServicos?: (id: string) => void;
+  onDenunciar?: (profissionalId: string, nome: string) => void;
 }
 
 const planoLabels: Record<string, { label: string; class: string }> = {
@@ -14,7 +15,7 @@ const planoLabels: Record<string, { label: string; class: string }> = {
   parceiro: { label: "Parceiro Premium", class: "bg-gradient-to-r from-amber-400 to-orange-500 text-white" },
 };
 
-export function ProfissionalCard({ profissional, onVerServicos }: ProfissionalCardProps) {
+export function ProfissionalCard({ profissional, onVerServicos, onDenunciar }: ProfissionalCardProps) {
   const plano = planoLabels[profissional.plano] || planoLabels.base;
 
   return (
@@ -107,14 +108,27 @@ export function ProfissionalCard({ profissional, onVerServicos }: ProfissionalCa
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
         <Badge className={plano.class}>{plano.label}</Badge>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onVerServicos?.(profissional.id)}
-          className="hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200"
-        >
-          Ver Serviços
-        </Button>
+        <div className="flex gap-1.5">
+          {onDenunciar && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onDenunciar(profissional.id, profissional.nome_completo)}
+              className="text-muted-foreground hover:text-destructive"
+              title="Denunciar"
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onVerServicos?.(profissional.id)}
+            className="hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200"
+          >
+            Ver Serviços
+          </Button>
+        </div>
       </div>
     </div>
   );
