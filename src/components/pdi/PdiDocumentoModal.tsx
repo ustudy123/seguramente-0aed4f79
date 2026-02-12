@@ -82,7 +82,7 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, file, { cacheControl: "3600", upsert: true });
 
       if (uploadError) throw uploadError;
 
