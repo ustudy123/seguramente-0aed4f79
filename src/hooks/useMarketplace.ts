@@ -84,6 +84,9 @@ export interface MarketplaceFilters {
   modalidade?: string;
   busca?: string;
   estado?: string;
+  userLat?: number;
+  userLng?: number;
+  raioKm?: number;
 }
 
 export function useMarketplace() {
@@ -131,6 +134,30 @@ export function useMarketplace() {
   const { data: profissionais = [], isLoading: isLoadingProfissionais } = useQuery({
     queryKey: ["marketplace-profissionais", filters],
     queryFn: async () => {
+      // If user location is available, use proximity search
+      if (filters.userLat && filters.userLng) {
+        const { data, error } = await supabase.rpc("buscar_profissionais_proximos", {
+          p_lat: filters.userLat,
+          p_lon: filters.userLng,
+          p_raio_km: filters.raioKm || 500,
+        });
+        if (error) throw error;
+        let results = (data || []) as unknown as (MarketplaceProfissional & { distancia_km: number })[];
+        if (filters.estado) {
+          results = results.filter((p) => p.estado === filters.estado);
+        }
+        if (filters.busca) {
+          const b = filters.busca.toLowerCase();
+          results = results.filter(
+            (p) =>
+              p.nome_completo.toLowerCase().includes(b) ||
+              p.especialidades?.some((e) => e.toLowerCase().includes(b))
+          );
+        }
+        return results;
+      }
+
+      // Fallback: normal query
       let query = supabase
         .from("marketplace_profissionais")
         .select("*")
@@ -143,7 +170,9 @@ export function useMarketplace() {
         query = query.or(`nome_completo.ilike.%${filters.busca}%,especialidades.cs.{${filters.busca}}`);
       }
 
-      const { data, error } = await query.order("nota_media", { ascending: false });
+      const { data, error } = await query
+        .order("tem_atestado_capacidade", { ascending: false })
+        .order("nota_media", { ascending: false });
       if (error) throw error;
       return data as MarketplaceProfissional[];
     },

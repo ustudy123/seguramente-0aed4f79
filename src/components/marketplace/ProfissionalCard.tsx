@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { MarketplaceProfissional } from "@/hooks/useMarketplace";
 
 interface ProfissionalCardProps {
-  profissional: MarketplaceProfissional;
+  profissional: MarketplaceProfissional & { distancia_km?: number };
   onVerServicos?: (id: string) => void;
 }
 
@@ -39,11 +39,16 @@ export function ProfissionalCard({ profissional, onVerServicos }: ProfissionalCa
           <h3 className="font-semibold text-foreground truncate">{profissional.nome_completo}</h3>
           <p className="text-sm text-muted-foreground">{profissional.conselho} - {profissional.registro_profissional}</p>
 
-          {/* Location */}
-          {(profissional.cidade || profissional.estado) && (
+          {/* Location + distance */}
+          {(profissional.cidade || profissional.estado || profissional.distancia_km != null) && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
               <MapPin className="h-3 w-3" />
               {[profissional.cidade, profissional.estado].filter(Boolean).join(", ")}
+              {profissional.distancia_km != null && (
+                <span className="ml-1 text-primary font-medium">
+                  · {profissional.distancia_km < 1 ? "< 1 km" : `${Math.round(profissional.distancia_km)} km`}
+                </span>
+              )}
             </div>
           )}
 
