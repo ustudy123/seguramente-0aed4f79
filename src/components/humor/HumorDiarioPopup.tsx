@@ -33,19 +33,6 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
 
   const microPergunta: MicroPergunta = useMemo(() => getMicroPerguntaAleatoria(), []);
 
-  const handleNextStep = () => {
-    if (!selectedHumor) {
-      toast.error("Selecione como você está se sentindo");
-      return;
-    }
-    // No primeiro acesso do dia, pular micro-pergunta e salvar direto
-    if (!isAtualizacao) {
-      handleSubmit(true);
-      return;
-    }
-    setStep("micropergunta");
-  };
-
   const handleSubmit = async (skipMicroPergunta = false) => {
     if (!selectedHumor) return;
 
@@ -63,7 +50,7 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
       if (isAtualizacao) {
         await atualizarHumor.mutateAsync({
           ...payload,
-          motivo: "Check-in periódico (6h)",
+          motivo: "Check-in periódico (5h)",
         });
         toast.success("Humor atualizado! 🎉");
       } else {
@@ -79,6 +66,20 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
     } catch (error) {
       toast.error("Erro ao registrar humor");
     }
+  };
+
+  const handleNextStep = () => {
+    if (!selectedHumor) {
+      toast.error("Selecione como você está se sentindo");
+      return;
+    }
+    // Primeiro registro do dia: salvar direto SEM micro-pergunta
+    if (!isAtualizacao) {
+      handleSubmit(true);
+      return;
+    }
+    // Atualização (após 5h): mostrar micro-pergunta
+    setStep("micropergunta");
   };
 
   const isPending = registrarHumor.isPending || atualizarHumor.isPending;
