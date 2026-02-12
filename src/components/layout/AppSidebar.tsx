@@ -26,6 +26,7 @@ import {
   Building2,
   BookOpen,
   Compass,
+  Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -68,6 +69,7 @@ const menuItems: MenuItem[] = [
   { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
   { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
   { title: "Documentos", icon: FileText, path: "/documentos" },
+  { title: "Marketplace", icon: Store, path: "/marketplace" },
 ];
 
 interface SidebarItemProps {

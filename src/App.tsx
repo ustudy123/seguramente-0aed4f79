@@ -38,6 +38,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import Pdi from "./pages/Pdi";
 import Financeiro from "./pages/Financeiro";
 import Empresa from "./pages/Empresa";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
@@ -116,6 +117,7 @@ const App = () => (
               <Route path="/ergonomia" element={<Ergonomia />} />
               <Route path="/felicidade" element={<PlaceholderPage />} />
               <Route path="/documentos" element={<Documentos />} />
+              <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/configuracoes" element={<PlaceholderPage />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />
