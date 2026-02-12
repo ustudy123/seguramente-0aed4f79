@@ -90,6 +90,7 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
                 <PdiMetaCard
                   key={meta.id}
                   meta={meta}
+                  colaboradorNome={pdi.colaborador_nome}
                   onUpdateMeta={updateMeta}
                   onDeleteMeta={deleteMeta}
                   onCreateAcao={createAcao}
