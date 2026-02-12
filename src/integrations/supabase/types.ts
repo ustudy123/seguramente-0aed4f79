@@ -4720,6 +4720,7 @@ export type Database = {
             | Database["public"]["Enums"]["marketplace_profissional_status"]
             | null
           telefone: string | null
+          tem_atestado_capacidade: boolean
           tenant_id: string | null
           total_avaliacoes: number | null
           total_servicos_executados: number | null
@@ -4758,6 +4759,7 @@ export type Database = {
             | Database["public"]["Enums"]["marketplace_profissional_status"]
             | null
           telefone?: string | null
+          tem_atestado_capacidade?: boolean
           tenant_id?: string | null
           total_avaliacoes?: number | null
           total_servicos_executados?: number | null
@@ -4796,6 +4798,7 @@ export type Database = {
             | Database["public"]["Enums"]["marketplace_profissional_status"]
             | null
           telefone?: string | null
+          tem_atestado_capacidade?: boolean
           tenant_id?: string | null
           total_avaliacoes?: number | null
           total_servicos_executados?: number | null

@@ -15,6 +15,7 @@ interface DocCategory {
   descricao: string;
   obrigatorio: boolean;
   accept: string[];
+  destaque?: boolean;
 }
 
 const DOC_CATEGORIES: DocCategory[] = [
@@ -59,6 +60,14 @@ const DOC_CATEGORIES: DocCategory[] = [
     descricao: "Conta de luz, água ou correspondência recente",
     obrigatorio: false,
     accept: ["image/*", "application/pdf"],
+  },
+  {
+    id: "atestado_capacidade_tecnica",
+    label: "Atestado de Capacidade Técnica",
+    descricao: "Comprova experiência no serviço. Profissionais com atestado são priorizados no ranking",
+    obrigatorio: false,
+    accept: ["image/*", "application/pdf"],
+    destaque: true,
   },
 ];
 
@@ -151,11 +160,16 @@ function CategoryUpload({
   const hasFiles = docs.length > 0;
 
   return (
-    <div className="border rounded-lg p-3 space-y-2">
+    <div className={`border rounded-lg p-3 space-y-2 ${category.destaque ? "border-amber-300 bg-amber-50/50" : ""}`}>
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-foreground">
           {category.label}
         </span>
+        {category.destaque && !hasFiles && (
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-400 text-amber-700">
+            ⭐ Melhora ranking
+          </Badge>
+        )}
         {category.obrigatorio && (
           <Badge variant={hasFiles ? "default" : "destructive"} className="text-[10px] px-1.5 py-0">
             {hasFiles ? "✓" : "Obrigatório"}
