@@ -720,7 +720,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       
       const { data: updated, error } = await supabase
         .from("plano_acoes")
-        .update(data)
+        .update(data as any)
         .eq("id", id)
         .select()
         .single();

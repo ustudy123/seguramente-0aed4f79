@@ -229,7 +229,11 @@ export type CreatePlanoAcaoDTO = Omit<PlanoAcao,
   'id' | 'tenant_id' | 'codigo' | 'pontuacao_gut' | 'progresso' | 'status' | 'tempo_gasto_minutos' | 'created_at' | 'updated_at' | 'tarefas' | 'participantes' | 'comentarios' | 'evidencias'
 >;
 
-export type UpdatePlanoAcaoDTO = Partial<CreatePlanoAcaoDTO>;
+export type UpdatePlanoAcaoDTO = Partial<CreatePlanoAcaoDTO> & {
+  status?: AcaoStatus;
+  progresso?: number;
+  data_conclusao?: string;
+};
 
 export type CreatePlanoTarefaDTO = Omit<PlanoTarefa, 
   'id' | 'tenant_id' | 'tempo_gasto_minutos' | 'created_at' | 'updated_at'
