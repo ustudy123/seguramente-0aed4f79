@@ -4730,6 +4730,472 @@ export type Database = {
           },
         ]
       }
+      pdi_acoes: {
+        Row: {
+          created_at: string
+          data_vencimento: string | null
+          descricao: string | null
+          duracao_estimada: string | null
+          evidencia_obrigatoria: boolean | null
+          frequencia: string | null
+          id: string
+          material_vinculado: string | null
+          meta_id: string
+          status: Database["public"]["Enums"]["pdi_acao_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["pdi_acao_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_vencimento?: string | null
+          descricao?: string | null
+          duracao_estimada?: string | null
+          evidencia_obrigatoria?: boolean | null
+          frequencia?: string | null
+          id?: string
+          material_vinculado?: string | null
+          meta_id: string
+          status?: Database["public"]["Enums"]["pdi_acao_status"]
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["pdi_acao_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_vencimento?: string | null
+          descricao?: string | null
+          duracao_estimada?: string | null
+          evidencia_obrigatoria?: boolean | null
+          frequencia?: string | null
+          id?: string
+          material_vinculado?: string | null
+          meta_id?: string
+          status?: Database["public"]["Enums"]["pdi_acao_status"]
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["pdi_acao_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdi_acoes_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "pdi_metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_acoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdi_checkins: {
+        Row: {
+          avancos: string | null
+          bloqueios: string | null
+          created_at: string
+          id: string
+          meta_id: string
+          proximo_passo: string | null
+          realizado_por: string | null
+          realizado_por_nome: string | null
+          tenant_id: string
+          valor_atualizado: number | null
+        }
+        Insert: {
+          avancos?: string | null
+          bloqueios?: string | null
+          created_at?: string
+          id?: string
+          meta_id: string
+          proximo_passo?: string | null
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id: string
+          valor_atualizado?: number | null
+        }
+        Update: {
+          avancos?: string | null
+          bloqueios?: string | null
+          created_at?: string
+          id?: string
+          meta_id?: string
+          proximo_passo?: string | null
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id?: string
+          valor_atualizado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdi_checkins_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "pdi_metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_checkins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdi_evidencias: {
+        Row: {
+          acao_id: string | null
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          id: string
+          link_url: string | null
+          meta_id: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          validado_em: string | null
+          validado_por: string | null
+          validado_por_nome: string | null
+        }
+        Insert: {
+          acao_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          link_url?: string | null
+          meta_id?: string | null
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          validado_em?: string | null
+          validado_por?: string | null
+          validado_por_nome?: string | null
+        }
+        Update: {
+          acao_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          link_url?: string | null
+          meta_id?: string | null
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          validado_em?: string | null
+          validado_por?: string | null
+          validado_por_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdi_evidencias_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "pdi_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_evidencias_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "pdi_metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_evidencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdi_feedbacks: {
+        Row: {
+          autor_id: string | null
+          autor_nome: string | null
+          comentario: string | null
+          created_at: string
+          id: string
+          meta_id: string | null
+          pdi_id: string
+          ponto_forte: string | null
+          ponto_melhorar: string | null
+          recomendacao: string | null
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nome?: string | null
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          meta_id?: string | null
+          pdi_id: string
+          ponto_forte?: string | null
+          ponto_melhorar?: string | null
+          recomendacao?: string | null
+          tenant_id: string
+          tipo?: string
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nome?: string | null
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          meta_id?: string | null
+          pdi_id?: string
+          ponto_forte?: string | null
+          ponto_melhorar?: string | null
+          recomendacao?: string | null
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdi_feedbacks_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "pdi_metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_feedbacks_pdi_id_fkey"
+            columns: ["pdi_id"]
+            isOneToOne: false
+            referencedRelation: "pdis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_feedbacks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdi_metas: {
+        Row: {
+          atingivel: string | null
+          categoria: Database["public"]["Enums"]["pdi_meta_categoria"]
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          dependencias: string | null
+          descricao: string | null
+          especifica: string | null
+          frequencia_checkin:
+            | Database["public"]["Enums"]["pdi_checkin_frequencia"]
+            | null
+          id: string
+          indicador_sucesso: string | null
+          mensuravel: string | null
+          observacoes: string | null
+          pdi_id: string
+          peso: number | null
+          progresso: number
+          relevante: string | null
+          status: Database["public"]["Enums"]["pdi_meta_status"]
+          temporal: string | null
+          tenant_id: string
+          titulo: string
+          unidade: string | null
+          updated_at: string
+          valor_alvo: number | null
+          valor_atual: number | null
+          valor_base: number | null
+        }
+        Insert: {
+          atingivel?: string | null
+          categoria?: Database["public"]["Enums"]["pdi_meta_categoria"]
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          dependencias?: string | null
+          descricao?: string | null
+          especifica?: string | null
+          frequencia_checkin?:
+            | Database["public"]["Enums"]["pdi_checkin_frequencia"]
+            | null
+          id?: string
+          indicador_sucesso?: string | null
+          mensuravel?: string | null
+          observacoes?: string | null
+          pdi_id: string
+          peso?: number | null
+          progresso?: number
+          relevante?: string | null
+          status?: Database["public"]["Enums"]["pdi_meta_status"]
+          temporal?: string | null
+          tenant_id: string
+          titulo: string
+          unidade?: string | null
+          updated_at?: string
+          valor_alvo?: number | null
+          valor_atual?: number | null
+          valor_base?: number | null
+        }
+        Update: {
+          atingivel?: string | null
+          categoria?: Database["public"]["Enums"]["pdi_meta_categoria"]
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          dependencias?: string | null
+          descricao?: string | null
+          especifica?: string | null
+          frequencia_checkin?:
+            | Database["public"]["Enums"]["pdi_checkin_frequencia"]
+            | null
+          id?: string
+          indicador_sucesso?: string | null
+          mensuravel?: string | null
+          observacoes?: string | null
+          pdi_id?: string
+          peso?: number | null
+          progresso?: number
+          relevante?: string | null
+          status?: Database["public"]["Enums"]["pdi_meta_status"]
+          temporal?: string | null
+          tenant_id?: string
+          titulo?: string
+          unidade?: string | null
+          updated_at?: string
+          valor_alvo?: number | null
+          valor_atual?: number | null
+          valor_base?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdi_metas_pdi_id_fkey"
+            columns: ["pdi_id"]
+            isOneToOne: false
+            referencedRelation: "pdis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdi_metas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdis: {
+        Row: {
+          ciclo_avaliacao_id: string | null
+          co_responsavel_id: string | null
+          co_responsavel_nome: string | null
+          colaborador_cargo: string | null
+          colaborador_departamento: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_fim: string
+          data_inicio: string
+          descricao: string | null
+          gatilho: string | null
+          id: string
+          observacoes: string | null
+          periodo: Database["public"]["Enums"]["pdi_periodo"]
+          pontuacao: number
+          progresso: number
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: Database["public"]["Enums"]["pdi_status"]
+          tenant_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ciclo_avaliacao_id?: string | null
+          co_responsavel_id?: string | null
+          co_responsavel_nome?: string | null
+          colaborador_cargo?: string | null
+          colaborador_departamento?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim: string
+          data_inicio: string
+          descricao?: string | null
+          gatilho?: string | null
+          id?: string
+          observacoes?: string | null
+          periodo?: Database["public"]["Enums"]["pdi_periodo"]
+          pontuacao?: number
+          progresso?: number
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["pdi_status"]
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ciclo_avaliacao_id?: string | null
+          co_responsavel_id?: string | null
+          co_responsavel_nome?: string | null
+          colaborador_cargo?: string | null
+          colaborador_departamento?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string
+          data_inicio?: string
+          descricao?: string | null
+          gatilho?: string | null
+          id?: string
+          observacoes?: string | null
+          periodo?: Database["public"]["Enums"]["pdi_periodo"]
+          pontuacao?: number
+          progresso?: number
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: Database["public"]["Enums"]["pdi_status"]
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdis_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plano_acoes: {
         Row: {
           codigo: string
@@ -6207,6 +6673,34 @@ export type Database = {
       oceano_quadrante: "eliminar" | "reduzir" | "elevar" | "criar"
       ocorrencia_tipo: "positiva" | "neutra" | "negativa"
       okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
+      pdi_acao_status:
+        | "nao_iniciada"
+        | "em_andamento"
+        | "concluida"
+        | "bloqueada"
+      pdi_acao_tipo:
+        | "tarefa"
+        | "habito"
+        | "rotina"
+        | "projeto"
+        | "mentoria"
+        | "treinamento"
+      pdi_checkin_frequencia: "semanal" | "quinzenal" | "mensal"
+      pdi_meta_categoria:
+        | "tecnica"
+        | "comportamental"
+        | "processos"
+        | "lideranca"
+        | "cultura"
+        | "saude_bem_estar"
+      pdi_meta_status:
+        | "nao_iniciada"
+        | "em_andamento"
+        | "concluida"
+        | "atrasada"
+        | "cancelada"
+      pdi_periodo: "trimestral" | "semestral" | "anual" | "personalizado"
+      pdi_status: "rascunho" | "ativo" | "pausado" | "concluido" | "cancelado"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
       swot_classificacao:
@@ -6461,6 +6955,38 @@ export const Constants = {
       oceano_quadrante: ["eliminar", "reduzir", "elevar", "criar"],
       ocorrencia_tipo: ["positiva", "neutra", "negativa"],
       okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
+      pdi_acao_status: [
+        "nao_iniciada",
+        "em_andamento",
+        "concluida",
+        "bloqueada",
+      ],
+      pdi_acao_tipo: [
+        "tarefa",
+        "habito",
+        "rotina",
+        "projeto",
+        "mentoria",
+        "treinamento",
+      ],
+      pdi_checkin_frequencia: ["semanal", "quinzenal", "mensal"],
+      pdi_meta_categoria: [
+        "tecnica",
+        "comportamental",
+        "processos",
+        "lideranca",
+        "cultura",
+        "saude_bem_estar",
+      ],
+      pdi_meta_status: [
+        "nao_iniciada",
+        "em_andamento",
+        "concluida",
+        "atrasada",
+        "cancelada",
+      ],
+      pdi_periodo: ["trimestral", "semestral", "anual", "personalizado"],
+      pdi_status: ["rascunho", "ativo", "pausado", "concluido", "cancelado"],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
       swot_classificacao: [

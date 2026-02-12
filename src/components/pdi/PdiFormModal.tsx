@@ -1,0 +1,136 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useColaboradores } from "@/hooks/useColaboradores";
+import type { PdiInsert, PdiPeriodo } from "@/types/pdi";
+import { PDI_PERIODO_LABELS } from "@/types/pdi";
+
+interface PdiFormModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreate: (data: PdiInsert) => Promise<any>;
+  isCreating: boolean;
+}
+
+export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFormModalProps) => {
+  const { colaboradores } = useColaboradores();
+  const [form, setForm] = useState({
+    colaborador_id: "",
+    titulo: "",
+    descricao: "",
+    periodo: "trimestral" as PdiPeriodo,
+    data_inicio: new Date().toISOString().split("T")[0],
+    data_fim: "",
+    responsavel_nome: "",
+    gatilho: "",
+    observacoes: "",
+  });
+
+  const selectedColab = colaboradores.find(c => c.id === form.colaborador_id);
+
+  const handleSubmit = async () => {
+    if (!form.colaborador_id || !form.titulo || !form.data_inicio || !form.data_fim) return;
+    await onCreate({
+      colaborador_id: form.colaborador_id,
+      colaborador_nome: selectedColab?.nome_completo || "",
+      colaborador_cargo: selectedColab?.cargo,
+      colaborador_departamento: selectedColab?.departamento || undefined,
+      titulo: form.titulo,
+      descricao: form.descricao || undefined,
+      periodo: form.periodo,
+      data_inicio: form.data_inicio,
+      data_fim: form.data_fim,
+      responsavel_nome: form.responsavel_nome || undefined,
+      gatilho: form.gatilho || undefined,
+      observacoes: form.observacoes || undefined,
+    });
+    onOpenChange(false);
+    setForm({ colaborador_id: "", titulo: "", descricao: "", periodo: "trimestral", data_inicio: new Date().toISOString().split("T")[0], data_fim: "", responsavel_nome: "", gatilho: "", observacoes: "" });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Novo PDI</DialogTitle>
+          <DialogDescription>Crie um plano de desenvolvimento para um colaborador</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <Label>Colaborador *</Label>
+            <Select value={form.colaborador_id} onValueChange={v => setForm(f => ({ ...f, colaborador_id: v }))}>
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                {colaboradores.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome_completo} — {c.cargo}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Título *</Label>
+            <Input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} placeholder="Ex: PDI Q1 2026 — João Silva" />
+          </div>
+
+          <div>
+            <Label>Descrição</Label>
+            <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} rows={2} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Período</Label>
+              <Select value={form.periodo} onValueChange={v => setForm(f => ({ ...f, periodo: v as PdiPeriodo }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PDI_PERIODO_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Gatilho</Label>
+              <Select value={form.gatilho} onValueChange={v => setForm(f => ({ ...f, gatilho: v }))}>
+                <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admissao">Admissão</SelectItem>
+                  <SelectItem value="avaliacao">Avaliação</SelectItem>
+                  <SelectItem value="cargo">Mudança de cargo</SelectItem>
+                  <SelectItem value="ergonomia">Ergonomia</SelectItem>
+                  <SelectItem value="solicitacao">Solicitação</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Data início *</Label>
+              <Input type="date" value={form.data_inicio} onChange={e => setForm(f => ({ ...f, data_inicio: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Data fim *</Label>
+              <Input type="date" value={form.data_fim} onChange={e => setForm(f => ({ ...f, data_fim: e.target.value }))} />
+            </div>
+          </div>
+
+          <div>
+            <Label>Responsável (líder)</Label>
+            <Input value={form.responsavel_nome} onChange={e => setForm(f => ({ ...f, responsavel_nome: e.target.value }))} placeholder="Nome do líder responsável" />
+          </div>
+
+          <Button onClick={handleSubmit} disabled={isCreating || !form.colaborador_id || !form.titulo || !form.data_fim} className="w-full">
+            {isCreating ? "Criando..." : "Criar PDI"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
