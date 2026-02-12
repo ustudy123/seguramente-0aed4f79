@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { geocodeCidade } from "@/lib/nominatim";
 import { DocumentUploadSection, DOC_CATEGORIES, type UploadedDoc } from "./DocumentUploadSection";
 import { SelfieCapture } from "./SelfieCapture";
+import { ProfilePhotoUpload } from "./ProfilePhotoUpload";
 
 const CONSELHOS = [
   "CREA", "CRP", "CREFITO", "CRM", "CRN", "CREF", "OAB", "CRA", "COREN", "CONFEA", "Outro"
@@ -35,6 +36,8 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [form, setForm] = useState({
     nome_completo: "",
     email: "",
@@ -126,6 +129,10 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
       toast.error("A selfie de verificação é obrigatória");
       return;
     }
+    if (!profilePhoto) {
+      toast.error("A foto de perfil é obrigatória");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -161,6 +168,13 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
 
       await uploadDocuments(data.id);
 
+      // Upload profile photo
+      const photoPath = `${user?.id}/${data.id}/foto_perfil/${Date.now()}-${profilePhoto.name}`;
+      const { error: photoUpError } = await supabase.storage.from("marketplace-docs").upload(photoPath, profilePhoto);
+      if (photoUpError) throw new Error(`Erro ao enviar foto de perfil: ${photoUpError.message}`);
+      const { data: photoUrl } = supabase.storage.from("marketplace-docs").getPublicUrl(photoPath);
+      await supabase.from("marketplace_profissionais").update({ foto_url: photoUrl.publicUrl }).eq("id", data.id);
+
       toast.success("Cadastro enviado com documentos! Aguarde validação.");
       onSuccess();
       onClose();
@@ -187,6 +201,13 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
             <p className="font-medium mb-1">📌 Validação obrigatória</p>
             <p>Seu perfil será analisado antes de ficar visível na Rede de Parceiros. É obrigatório enviar documentos comprobatórios e selfie de verificação. Profissionais com registro vencido são bloqueados automaticamente.</p>
           </div>
+
+          {/* Foto de Perfil */}
+          <ProfilePhotoUpload
+            file={profilePhoto}
+            preview={profilePhotoPreview}
+            onChange={(f, p) => { setProfilePhoto(f); setProfilePhotoPreview(p); }}
+          />
 
           {/* Dados pessoais */}
           <div className="space-y-3">
