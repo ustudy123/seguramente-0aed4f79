@@ -107,8 +107,8 @@ export interface HumorDiario {
 const humorDiarioTable = () => (supabase as any).from('humor_diario');
 const humorHistoricoTable = () => (supabase as any).from('humor_historico');
 
-// Intervalo em horas para solicitar novo registro de humor
-const INTERVALO_HORAS = 6;
+// Intervalo em horas para solicitar novo registro de humor (com micro-pergunta)
+const INTERVALO_HORAS = 5;
 
 // Verifica se passaram X horas desde o último registro
 function passaramHorasDesdeRegistro(updatedAt: string, horas: number): boolean {

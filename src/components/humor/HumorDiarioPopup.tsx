@@ -38,6 +38,11 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
       toast.error("Selecione como você está se sentindo");
       return;
     }
+    // No primeiro acesso do dia, pular micro-pergunta e salvar direto
+    if (!isAtualizacao) {
+      handleSubmit(true);
+      return;
+    }
     setStep("micropergunta");
   };
 
@@ -155,12 +160,23 @@ export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
 
               <Button
                 onClick={handleNextStep}
-                disabled={!selectedHumor}
+                disabled={!selectedHumor || isPending}
                 className="w-full"
                 size="lg"
               >
-                Continuar
-                <ChevronRight className="w-4 h-4 ml-2" />
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : isAtualizacao ? (
+                  <>
+                    Continuar
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  "Registrar"
+                )}
               </Button>
             </motion.div>
           ) : (
