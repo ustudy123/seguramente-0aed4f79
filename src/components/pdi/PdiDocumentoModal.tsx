@@ -80,12 +80,12 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
         ? `${tenantId}/colaboradores/${pdi.colaborador_id}/${fileName}`
         : `${tenantId}/${fileName}`;
 
-      const blob = new Blob([htmlContent], { type: "application/octet-stream" });
-      const file = new File([blob], fileName, { type: "application/octet-stream" });
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const file = new File([blob], fileName, { type: "text/html" });
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: "application/octet-stream" });
+        .upload(path, file, { cacheControl: "3600", upsert: true });
 
       if (uploadError) throw uploadError;
 
