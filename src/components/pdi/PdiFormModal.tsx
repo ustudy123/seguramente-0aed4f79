@@ -65,10 +65,14 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
             <Label>Colaborador *</Label>
             <Select value={form.colaborador_id} onValueChange={v => setForm(f => ({ ...f, colaborador_id: v }))}>
               <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                {colaboradores.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.nome_completo} — {c.cargo}</SelectItem>
-                ))}
+              <SelectContent position="popper" className="max-h-60 overflow-y-auto z-[9999]">
+                {colaboradores.length === 0 ? (
+                  <div className="p-3 text-sm text-muted-foreground text-center">Nenhum colaborador encontrado</div>
+                ) : (
+                  colaboradores.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome_completo} — {c.cargo}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
