@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +47,23 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
   const [planoSugestoes, setPlanoSugestoes] = useState<PlanoSugestao[]>([]);
   const [showPlanoSugestoes, setShowPlanoSugestoes] = useState(false);
   const [creatingSugestao, setCreatingSugestao] = useState<number | null>(null);
+  const [planoAcoesVinculadas, setPlanoAcoesVinculadas] = useState<{ id: string; titulo: string; codigo: string; status: string; progresso: number }[]>([]);
 
   const navigate = useNavigate();
   const { createAcao: createPlanoAcao } = usePlanoAcao();
+
+  // Buscar ações do Plano de Ação vinculadas a esta meta
+  useEffect(() => {
+    const fetchPlanoAcoes = async () => {
+      const searchTerm = `Meta: ${meta.titulo}`;
+      const { data } = await supabase
+        .from("plano_acoes")
+        .select("id, titulo, codigo, status, progresso")
+        .ilike("origem_descricao", `%${searchTerm}%`);
+      setPlanoAcoesVinculadas(data || []);
+    };
+    fetchPlanoAcoes();
+  }, [meta.titulo, meta.id]);
 
   const handleAddAcao = async () => {
     if (!novaAcao.trim()) return;
@@ -123,6 +137,13 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
           onClick: () => navigate("/plano-acao"),
         },
       });
+      // Refresh vinculadas
+      const searchTerm = `Meta: ${meta.titulo}`;
+      const { data } = await supabase
+        .from("plano_acoes")
+        .select("id, titulo, codigo, status, progresso")
+        .ilike("origem_descricao", `%${searchTerm}%`);
+      setPlanoAcoesVinculadas(data || []);
       // Remove from list
       setPlanoSugestoes(prev => prev.filter((_, i) => i !== index));
       if (planoSugestoes.length <= 1) {
@@ -273,6 +294,29 @@ export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta,
                 </div>
               )}
             </div>
+
+            {/* Plano de Ação vinculado */}
+            {planoAcoesVinculadas.length > 0 && (
+              <div className="border-t pt-3">
+                <span className="text-sm font-medium text-foreground">📋 Plano de Ação vinculado ({planoAcoesVinculadas.length})</span>
+                <div className="space-y-1.5 mt-2">
+                  {planoAcoesVinculadas.map(pa => (
+                    <div
+                      key={pa.id}
+                      className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/plano-acao/${pa.id}`)}
+                    >
+                      <Badge variant="outline" className="text-[9px] font-mono">{pa.codigo}</Badge>
+                      <span className="flex-1 truncate">{pa.titulo}</span>
+                      <Badge variant={pa.status === "concluida" ? "default" : "secondary"} className="text-[9px]">
+                        {pa.status === "concluida" ? "Concluída" : pa.status === "em_andamento" ? "Em andamento" : pa.status === "atrasada" ? "Atrasada" : "Pendente"}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{pa.progresso}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </CollapsibleContent>
       </Collapsible>
