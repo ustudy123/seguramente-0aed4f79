@@ -31,9 +31,13 @@ export function ProfissionalCard({ profissional, onVerServicos }: ProfissionalCa
 
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xl font-bold shrink-0 shadow-lg shadow-indigo-500/20">
-          {profissional.nome_completo.charAt(0)}
-        </div>
+        {profissional.foto_url ? (
+          <img src={profissional.foto_url} alt={profissional.nome_completo} className="w-14 h-14 rounded-2xl object-cover shrink-0 shadow-lg shadow-indigo-500/20" />
+        ) : (
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xl font-bold shrink-0 shadow-lg shadow-indigo-500/20">
+            {profissional.nome_completo.charAt(0)}
+          </div>
+        )}
 
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">{profissional.nome_completo}</h3>
