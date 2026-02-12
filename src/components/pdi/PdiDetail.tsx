@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Target, Calendar, User, TrendingUp, MessageSquare, FileCheck } from "lucide-react";
+import { ArrowLeft, Plus, Target, Calendar, User, TrendingUp, MessageSquare, FileCheck, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { PdiMetaForm } from "./PdiMetaForm";
 import { PdiMetaCard } from "./PdiMetaCard";
 import { PdiCheckinForm } from "./PdiCheckinForm";
 import { PdiFeedbackForm } from "./PdiFeedbackForm";
+import { PdiEditModal } from "./PdiEditModal";
 
 interface PdiDetailProps {
   pdi: Pdi;
@@ -26,6 +27,7 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
   const [showMetaForm, setShowMetaForm] = useState(false);
   const [showCheckinForm, setShowCheckinForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const pdiCheckins = checkins.filter(c => pdi.metas?.some(m => m.id === c.meta_id));
   const pdiFeedbacks = feedbacks.filter(f => f.pdi_id === pdi.id);
@@ -48,9 +50,14 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
             <Badge variant="outline">{PDI_PERIODO_LABELS[pdi.periodo]}</Badge>
           </div>
         </div>
-        {pdi.status === "rascunho" && (
-          <Button onClick={handleActivate} className="gap-2"><Target className="w-4 h-4" /> Ativar PDI</Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)} className="gap-1.5">
+            <Pencil className="w-4 h-4" /> Editar
+          </Button>
+          {pdi.status === "rascunho" && (
+            <Button onClick={handleActivate} className="gap-2"><Target className="w-4 h-4" /> Ativar PDI</Button>
+          )}
+        </div>
       </motion.div>
 
       {/* Progress */}
@@ -158,6 +165,14 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
           <PdiFeedbackForm open={showFeedbackForm} onOpenChange={setShowFeedbackForm} pdiId={pdi.id} onCreate={createFeedback} />
         </TabsContent>
       </Tabs>
+
+      {/* Modal de edição */}
+      <PdiEditModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        pdi={pdi}
+        onUpdate={updatePdi}
+      />
     </div>
   );
 };
