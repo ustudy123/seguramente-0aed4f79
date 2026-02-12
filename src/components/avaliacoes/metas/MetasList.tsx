@@ -65,7 +65,7 @@ export function MetasList() {
   const { metas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, isCreatingMeta } = useMetas();
   const [showForm, setShowForm] = useState(false);
   const [okrMetaId, setOkrMetaId] = useState<string | null>(null);
-  const [okrForm, setOkrForm] = useState({ key_result: "", descricao: "", tipo: "quantitativo" as string, valor_alvo: 100, unidade: "" });
+  const [okrForm, setOkrForm] = useState({ key_result: "", descricao: "", tipo: "percentual" as string, valor_alvo: 100, unidade: "" });
   const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
@@ -99,7 +99,7 @@ export function MetasList() {
       unidade: okrForm.unidade || undefined,
     });
     setOkrMetaId(null);
-    setOkrForm({ key_result: "", descricao: "", tipo: "quantitativo", valor_alvo: 100, unidade: "" });
+    setOkrForm({ key_result: "", descricao: "", tipo: "percentual", valor_alvo: 100, unidade: "" });
   };
 
   const handleDeleteOkr = async (id: string) => {
@@ -350,9 +350,10 @@ export function MetasList() {
                 <Select value={okrForm.tipo} onValueChange={(v) => setOkrForm(f => ({ ...f, tipo: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent position="popper">
-                    <SelectItem value="quantitativo">Quantitativo</SelectItem>
-                    <SelectItem value="qualitativo">Qualitativo</SelectItem>
-                    <SelectItem value="marco">Marco</SelectItem>
+                    <SelectItem value="percentual">Percentual</SelectItem>
+                    <SelectItem value="quantidade">Quantidade</SelectItem>
+                    <SelectItem value="binario">Binário</SelectItem>
+                    <SelectItem value="monetario">Monetário</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
