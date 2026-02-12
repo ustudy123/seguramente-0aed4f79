@@ -1,7 +1,13 @@
-import { X } from "lucide-react";
+import { useState } from "react";
+import { X, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import type { PlanoAcaoFilters as FilterType, AcaoStatus, AcaoGutPrioridade, OrigemModulo } from "@/types/planoAcao";
 
@@ -60,11 +66,64 @@ export function PlanoAcaoFilters({ filters, onChange, onClear }: PlanoAcaoFilter
     onChange({ ...filters, origem_modulo: updated.length ? updated : undefined });
   };
 
-  const hasFilters = filters.status?.length || filters.prioridade?.length || filters.origem_modulo?.length;
+  const hasFilters = filters.status?.length || filters.prioridade?.length || filters.origem_modulo?.length || filters.responsavel_id || filters.prazo_inicio || filters.prazo_fim;
 
   return (
     <Card>
       <CardContent className="pt-4 space-y-4">
+        {/* Período */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Período (Prazo)</label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[160px] justify-start text-left font-normal", !filters.prazo_inicio && "text-muted-foreground")}>
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {filters.prazo_inicio ? format(new Date(filters.prazo_inicio), "dd/MM/yyyy", { locale: ptBR }) : "Data início"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filters.prazo_inicio ? new Date(filters.prazo_inicio) : undefined}
+                  onSelect={(date) => onChange({ ...filters, prazo_inicio: date ? format(date, "yyyy-MM-dd") : undefined })}
+                  className={cn("p-3 pointer-events-auto")}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+            <span className="text-sm text-muted-foreground">até</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[160px] justify-start text-left font-normal", !filters.prazo_fim && "text-muted-foreground")}>
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {filters.prazo_fim ? format(new Date(filters.prazo_fim), "dd/MM/yyyy", { locale: ptBR }) : "Data fim"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filters.prazo_fim ? new Date(filters.prazo_fim) : undefined}
+                  onSelect={(date) => onChange({ ...filters, prazo_fim: date ? format(date, "yyyy-MM-dd") : undefined })}
+                  className={cn("p-3 pointer-events-auto")}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        {/* Responsável */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Responsável</label>
+          <Input
+            placeholder="Buscar por nome do responsável..."
+            value={filters.responsavel_id || ""}
+            onChange={(e) => onChange({ ...filters, responsavel_id: e.target.value || undefined })}
+            className="max-w-xs"
+          />
+        </div>
+
         {/* Status */}
         <div>
           <label className="text-sm font-medium mb-2 block">Status</label>

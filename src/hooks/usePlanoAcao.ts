@@ -238,7 +238,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         query = query.in("origem_modulo", filters.origem_modulo);
       }
       if (filters?.responsavel_id) {
-        query = query.eq("responsavel_id", filters.responsavel_id);
+        query = query.ilike("responsavel_nome", `%${filters.responsavel_id}%`);
       }
       if (filters?.prazo_inicio) {
         query = query.gte("prazo", filters.prazo_inicio);

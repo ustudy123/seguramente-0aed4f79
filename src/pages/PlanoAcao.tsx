@@ -27,6 +27,7 @@ export default function PlanoAcao() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterType>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
 
   const { 
     acoes, 
@@ -42,6 +43,35 @@ export default function PlanoAcao() {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
+  };
+
+  const handleStatClick = (key: string) => {
+    if (activeStatFilter === key) {
+      // Toggle off
+      setActiveStatFilter(null);
+      setFilters(prev => ({ ...prev, status: undefined }));
+      setActiveTab("todas");
+      return;
+    }
+
+    setActiveStatFilter(key);
+    setActiveTab("todas");
+
+    const statusMap: Record<string, FilterType["status"]> = {
+      pendentes: ["pendente"],
+      em_andamento: ["em_andamento"],
+      concluidas: ["concluida"],
+    };
+
+    if (key === "total") {
+      setFilters(prev => ({ ...prev, status: undefined }));
+    } else if (key === "atrasadas") {
+      // "Atrasadas" is not a status, handled via tab
+      setFilters(prev => ({ ...prev, status: undefined }));
+      setActiveTab("criticas");
+    } else if (statusMap[key]) {
+      setFilters(prev => ({ ...prev, status: statusMap[key] }));
+    }
   };
 
   return (
@@ -80,7 +110,7 @@ export default function PlanoAcao() {
       </motion.div>
 
       {/* Stats */}
-      <PlanoAcaoStats stats={stats} isLoading={isLoadingStats} />
+      <PlanoAcaoStats stats={stats} isLoading={isLoadingStats} activeStatFilter={activeStatFilter} onStatClick={handleStatClick} />
 
       {/* Assistente IA */}
       <PlanoAcaoIAAssistant />
