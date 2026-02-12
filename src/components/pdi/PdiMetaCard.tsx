@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Plus, Trash2, CheckCircle2, Circle, Clock, Ban } from "lucide-react";
+import { ChevronDown, Plus, Trash2, CheckCircle2, Circle, Clock, Ban, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import type { PdiMeta, PdiAcao, PdiAcaoInsert, PdiAcaoStatus } from "@/types/pdi";
 import { PDI_META_CATEGORIA_LABELS, PDI_META_STATUS_LABELS, PDI_ACAO_TIPO_LABELS, PDI_ACAO_STATUS_LABELS } from "@/types/pdi";
 import { Input } from "@/components/ui/input";
@@ -20,6 +24,13 @@ interface PdiMetaCardProps {
   onDeleteAcao: (id: string) => Promise<any>;
 }
 
+interface PlanoSugestao {
+  titulo: string;
+  descricao: string;
+  porque: string;
+  como: string;
+}
+
 const statusIcon: Record<PdiAcaoStatus, React.ElementType> = {
   nao_iniciada: Circle,
   em_andamento: Clock,
@@ -31,6 +42,13 @@ export const PdiMetaCard = ({ meta, onUpdateMeta, onDeleteMeta, onCreateAcao, on
   const [isOpen, setIsOpen] = useState(false);
   const [showAcaoForm, setShowAcaoForm] = useState(false);
   const [novaAcao, setNovaAcao] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [planoSugestoes, setPlanoSugestoes] = useState<PlanoSugestao[]>([]);
+  const [showPlanoSugestoes, setShowPlanoSugestoes] = useState(false);
+  const [creatingSugestao, setCreatingSugestao] = useState<number | null>(null);
+
+  const navigate = useNavigate();
+  const { createAcao: createPlanoAcao } = usePlanoAcao();
 
   const handleAddAcao = async () => {
     if (!novaAcao.trim()) return;
@@ -42,7 +60,6 @@ export const PdiMetaCard = ({ meta, onUpdateMeta, onDeleteMeta, onCreateAcao, on
   const toggleAcaoStatus = async (acao: PdiAcao) => {
     const next: PdiAcaoStatus = acao.status === "concluida" ? "nao_iniciada" : "concluida";
     await onUpdateAcao({ id: acao.id, status: next });
-    // Recalcular progresso da meta
     const acoes = meta.acoes || [];
     const totalAcoes = acoes.length;
     const concluidas = acoes.filter(a => a.id === acao.id ? next === "concluida" : a.status === "concluida").length;
@@ -52,6 +69,68 @@ export const PdiMetaCard = ({ meta, onUpdateMeta, onDeleteMeta, onCreateAcao, on
       progresso: prog,
       status: prog >= 100 ? "concluida" : prog > 0 ? "em_andamento" : "nao_iniciada",
     });
+  };
+
+  const handleAiPlanoAcao = async () => {
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-pdi-smart", {
+        body: {
+          mode: "plano_acao",
+          titulo: meta.titulo,
+          categoria: meta.categoria,
+          contexto: {
+            especifica: meta.especifica,
+            mensuravel: meta.mensuravel,
+            atingivel: meta.atingivel,
+            relevante: meta.relevante,
+            temporal: meta.temporal,
+          },
+        },
+      });
+      if (error) throw error;
+      setPlanoSugestoes(data.sugestoes || []);
+      setShowPlanoSugestoes(true);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao consultar IA");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSelectSugestao = async (sugestao: PlanoSugestao, index: number) => {
+    setCreatingSugestao(index);
+    try {
+      await createPlanoAcao({
+        titulo: sugestao.titulo,
+        descricao: sugestao.descricao,
+        porque: sugestao.porque,
+        como: sugestao.como,
+        origem_modulo: "manual",
+        origem_descricao: `PDI — Meta: ${meta.titulo}`,
+        tipo: "melhoria",
+        prioridade: "medio",
+        exige_evidencia: false,
+        gravidade: 3,
+        urgencia: 3,
+        tendencia: 3,
+      });
+      toast.success("Ação criada no Plano de Ação!", {
+        action: {
+          label: "Ver Plano",
+          onClick: () => navigate("/plano-acao"),
+        },
+      });
+      // Remove from list
+      setPlanoSugestoes(prev => prev.filter((_, i) => i !== index));
+      if (planoSugestoes.length <= 1) {
+        setShowPlanoSugestoes(false);
+      }
+    } catch (e: any) {
+      toast.error("Erro ao criar ação: " + (e.message || ""));
+    } finally {
+      setCreatingSugestao(null);
+    }
   };
 
   return (
@@ -116,10 +195,50 @@ export const PdiMetaCard = ({ meta, onUpdateMeta, onDeleteMeta, onCreateAcao, on
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-foreground">Ações ({meta.acoes?.length || 0})</span>
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAcaoForm(true)}>
-                  <Plus className="w-3 h-3" /> Ação
-                </Button>
+                <div className="flex gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={handleAiPlanoAcao}
+                    disabled={aiLoading}
+                  >
+                    {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    Sugerir Plano de Ação
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAcaoForm(true)}>
+                    <Plus className="w-3 h-3" /> Ação
+                  </Button>
+                </div>
               </div>
+
+              {/* AI Plano Sugestões */}
+              {showPlanoSugestoes && planoSugestoes.length > 0 && (
+                <div className="space-y-2 border rounded-lg p-3 bg-muted/30 mb-3">
+                  <p className="text-xs font-medium text-muted-foreground">Selecione para criar no Plano de Ação:</p>
+                  {planoSugestoes.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSelectSugestao(s, i)}
+                      disabled={creatingSugestao !== null}
+                      className="w-full text-left text-sm p-3 rounded-md border bg-background hover:bg-accent hover:border-primary/30 transition-colors cursor-pointer disabled:opacity-50 space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        {creatingSugestao === i ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary flex-shrink-0" />
+                        ) : (
+                          <Plus className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        )}
+                        <span className="font-medium">{s.titulo}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-5.5">{s.descricao}</p>
+                    </button>
+                  ))}
+                  <Button variant="ghost" size="sm" className="text-xs w-full" onClick={() => setShowPlanoSugestoes(false)}>
+                    Fechar sugestões
+                  </Button>
+                </div>
+              )}
 
               {(meta.acoes || []).map(acao => {
                 const Icon = statusIcon[acao.status];
