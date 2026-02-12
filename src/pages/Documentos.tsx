@@ -77,6 +77,9 @@ const Documentos = () => {
     movingDoc,
     initializeDefaultStructure,
     initializing,
+    needsSync,
+    syncColaboradores,
+    syncing,
   } = useDocumentoPastas();
 
   const {
@@ -103,6 +106,13 @@ const Documentos = () => {
       if (pasta) setSelectedPasta(pasta);
     }
   }, [colaboradorIdFromUrl, tree]);
+
+  // Auto-sync: criar pastas para colaboradores novos
+  useEffect(() => {
+    if (needsSync && !syncing) {
+      syncColaboradores();
+    }
+  }, [needsSync, syncing, syncColaboradores]);
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
