@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface PdiMetaCardProps {
   meta: PdiMeta;
+  colaboradorNome?: string;
   onUpdateMeta: (data: any) => Promise<any>;
   onDeleteMeta: (id: string) => Promise<any>;
   onCreateAcao: (data: PdiAcaoInsert) => Promise<any>;
@@ -38,7 +39,7 @@ const statusIcon: Record<PdiAcaoStatus, React.ElementType> = {
   bloqueada: Ban,
 };
 
-export const PdiMetaCard = ({ meta, onUpdateMeta, onDeleteMeta, onCreateAcao, onUpdateAcao, onDeleteAcao }: PdiMetaCardProps) => {
+export const PdiMetaCard = ({ meta, colaboradorNome, onUpdateMeta, onDeleteMeta, onCreateAcao, onUpdateAcao, onDeleteAcao }: PdiMetaCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAcaoForm, setShowAcaoForm] = useState(false);
   const [novaAcao, setNovaAcao] = useState("");
@@ -107,7 +108,7 @@ export const PdiMetaCard = ({ meta, onUpdateMeta, onDeleteMeta, onCreateAcao, on
         porque: sugestao.porque,
         como: sugestao.como,
         origem_modulo: "manual",
-        origem_descricao: `PDI — Meta: ${meta.titulo}`,
+        origem_descricao: `PDI — Colaborador: ${colaboradorNome || "N/A"} | Meta: ${meta.titulo}`,
         tipo: "melhoria",
         prioridade: "medio",
         exige_evidencia: false,
