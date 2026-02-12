@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2, MapPin, Locate } from "lucide-react";
+import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2, MapPin, Locate, Shield, Star, Link2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +14,9 @@ import { ContratacaoModal } from "@/components/marketplace/ContratacaoModal";
 import { ProfissionalFormModal } from "@/components/marketplace/ProfissionalFormModal";
 import { ServicoFormModal } from "@/components/marketplace/ServicoFormModal";
 import { ConfirmacaoExecucaoModal } from "@/components/marketplace/ConfirmacaoExecucaoModal";
+import { AvaliacaoModal } from "@/components/marketplace/AvaliacaoModal";
+import { ValidacaoProfissionais } from "@/components/marketplace/ValidacaoProfissionais";
+import { AfiliadosDashboard } from "@/components/marketplace/AfiliadosDashboard";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -36,6 +39,7 @@ export default function Marketplace() {
   const [showProfissionalForm, setShowProfissionalForm] = useState(false);
   const [showServicoForm, setShowServicoForm] = useState(false);
   const [contratacaoParaConfirmar, setContratacaoParaConfirmar] = useState<MarketplaceContratacao | null>(null);
+  const [contratacaoParaAvaliar, setContratacaoParaAvaliar] = useState<MarketplaceContratacao | null>(null);
   const [localizando, setLocalizando] = useState(false);
 
   const ativarLocalizacao = useCallback(() => {
@@ -164,7 +168,7 @@ export default function Marketplace() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="servicos" className="gap-1.5">
             <ShoppingBag className="h-4 w-4" /> Serviços
           </TabsTrigger>
@@ -173,6 +177,12 @@ export default function Marketplace() {
           </TabsTrigger>
           <TabsTrigger value="contratacoes" className="gap-1.5">
             <History className="h-4 w-4" /> Minhas Contratações
+          </TabsTrigger>
+          <TabsTrigger value="validacao" className="gap-1.5">
+            <Shield className="h-4 w-4" /> Validação
+          </TabsTrigger>
+          <TabsTrigger value="afiliados" className="gap-1.5">
+            <Link2 className="h-4 w-4" /> Afiliados
           </TabsTrigger>
         </TabsList>
 
@@ -227,7 +237,21 @@ export default function Marketplace() {
 
         {/* Contratações */}
         <TabsContent value="contratacoes" className="mt-4">
-          <ContratacoesList contratacoes={contratacoes} onConfirmarExecucao={setContratacaoParaConfirmar} />
+          <ContratacoesList
+            contratacoes={contratacoes}
+            onConfirmarExecucao={setContratacaoParaConfirmar}
+            onAvaliar={setContratacaoParaAvaliar}
+          />
+        </TabsContent>
+
+        {/* Validação Admin */}
+        <TabsContent value="validacao" className="mt-4">
+          <ValidacaoProfissionais />
+        </TabsContent>
+
+        {/* Afiliados */}
+        <TabsContent value="afiliados" className="mt-4">
+          <AfiliadosDashboard />
         </TabsContent>
       </Tabs>
 
@@ -267,6 +291,14 @@ export default function Marketplace() {
         contratacao={contratacaoParaConfirmar}
         open={!!contratacaoParaConfirmar}
         onClose={() => setContratacaoParaConfirmar(null)}
+        onSuccess={invalidateAll}
+      />
+
+      {/* Avaliação pós-serviço */}
+      <AvaliacaoModal
+        contratacao={contratacaoParaAvaliar}
+        open={!!contratacaoParaAvaliar}
+        onClose={() => setContratacaoParaAvaliar(null)}
         onSuccess={invalidateAll}
       />
     </div>
