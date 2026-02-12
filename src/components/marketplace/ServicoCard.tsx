@@ -68,9 +68,13 @@ export function ServicoCard({ servico, onContratar }: ServicoCardProps) {
         {/* Professional */}
         {prof && (
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-              {prof.nome_completo.charAt(0)}
-            </div>
+            {prof.foto_url ? (
+              <img src={prof.foto_url} alt={prof.nome_completo} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                {prof.nome_completo.charAt(0)}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-medium truncate">{prof.nome_completo}</span>
