@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Printer, FileText } from "lucide-react";
@@ -61,17 +61,14 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
   };
 
   // Auto-generate on open
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen && !html && !loading) {
+  useEffect(() => {
+    if (open && !html && !loading) {
       handleGenerate();
     }
-    if (!isOpen) {
-      onClose();
-    }
-  };
+  }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-6xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <div className="flex items-center justify-between">

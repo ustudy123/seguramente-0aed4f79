@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.ai-pdi-smart]
 verify_jwt = false
+
+[functions.ai-pdi-documento]
+verify_jwt = false
