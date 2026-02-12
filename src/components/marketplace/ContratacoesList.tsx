@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { MarketplaceContratacao } from "@/hooks/useMarketplace";
@@ -8,6 +8,7 @@ import type { MarketplaceContratacao } from "@/hooks/useMarketplace";
 interface ContratacoesListProps {
   contratacoes: MarketplaceContratacao[];
   onConfirmarExecucao?: (contratacao: MarketplaceContratacao) => void;
+  onAvaliar?: (contratacao: MarketplaceContratacao) => void;
 }
 
 const statusConfig: Record<string, { label: string; class: string }> = {
@@ -19,7 +20,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
   recusada: { label: "Recusada", class: "bg-gray-100 text-gray-700" },
 };
 
-export function ContratacoesList({ contratacoes, onConfirmarExecucao }: ContratacoesListProps) {
+export function ContratacoesList({ contratacoes, onConfirmarExecucao, onAvaliar }: ContratacoesListProps) {
   if (contratacoes.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -34,9 +35,13 @@ export function ContratacoesList({ contratacoes, onConfirmarExecucao }: Contrata
         const st = statusConfig[c.status] || statusConfig.solicitada;
         return (
           <div key={c.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-              {c.profissional?.nome_completo?.charAt(0) || "?"}
-            </div>
+            {c.profissional?.foto_url ? (
+              <img src={c.profissional.foto_url} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                {c.profissional?.nome_completo?.charAt(0) || "?"}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{c.servico?.nome || "Serviço"}</p>
               <p className="text-xs text-muted-foreground">{c.profissional?.nome_completo}</p>
@@ -59,6 +64,17 @@ export function ContratacoesList({ contratacoes, onConfirmarExecucao }: Contrata
                 >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   Confirmar
+                </Button>
+              )}
+              {onAvaliar && c.status === "concluida" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onAvaliar(c)}
+                  className="mt-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50"
+                >
+                  <Star className="h-3 w-3 mr-1" />
+                  Avaliar
                 </Button>
               )}
             </div>
