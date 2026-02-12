@@ -17,6 +17,7 @@ export default function PdiAssinatura() {
   const [signing, setSigning] = useState(false);
   const [signed, setSigned] = useState(false);
   const [showSignPad, setShowSignPad] = useState(false);
+  const [docHtml, setDocHtml] = useState<string | null>(null);
   const sigCanvasRef = useRef<SignatureCanvas>(null);
 
   useEffect(() => {
@@ -34,6 +35,17 @@ export default function PdiAssinatura() {
       if (!res.ok) throw new Error(json.error || "Erro ao carregar");
       setData(json);
       if (json.status === "assinado") setSigned(true);
+      
+      // Fetch HTML content for document preview
+      if (json.documento_url) {
+        try {
+          const docRes = await fetch(json.documento_url);
+          const html = await docRes.text();
+          setDocHtml(html);
+        } catch (e) {
+          console.error("Erro ao carregar documento HTML:", e);
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -156,17 +168,18 @@ export default function PdiAssinatura() {
         </Card>
 
         {/* Document Preview */}
-        {data?.documento_url && (
+        {docHtml && (
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium">Visualizar Documento</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <iframe
-                src={data.documento_url}
+                srcDoc={docHtml}
                 className="w-full border-0 rounded-b-lg"
                 style={{ height: "60vh" }}
                 title="Documento PDI"
+                sandbox="allow-same-origin"
               />
             </CardContent>
           </Card>
