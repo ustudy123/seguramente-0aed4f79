@@ -26,6 +26,16 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import { PlanoAcaoTarefas } from "./PlanoAcaoTarefas";
 import { PlanoAcaoHistorico } from "./PlanoAcaoHistorico";
@@ -68,8 +78,9 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedInfoCard, setSelectedInfoCard] = useState<string | null>(null);
   const [showGutModal, setShowGutModal] = useState(false);
+  const [showConcluirDialog, setShowConcluirDialog] = useState(false);
   
-  const { useAcao, useTarefas, useHistorico, useComentarios } = usePlanoAcao();
+  const { useAcao, useTarefas, useHistorico, useComentarios, updateAcao, isUpdatingAcao } = usePlanoAcao();
   
   const { data: acao, isLoading } = useAcao(acaoId);
   const { data: tarefas = [] } = useTarefas(acaoId);
@@ -172,6 +183,16 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {acao.status !== "concluida" && (
+            <Button 
+              size="sm" 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => setShowConcluirDialog(true)}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Concluir Ação
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
@@ -449,6 +470,47 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
         pontuacao={acao.pontuacao_gut || 27}
         prioridade={acao.prioridade}
       />
+
+      {/* Dialog de Conclusão Direta */}
+      <AlertDialog open={showConcluirDialog} onOpenChange={setShowConcluirDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              Concluir Ação
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja marcar esta ação como concluída?
+              {tarefas.length > 0 && tarefas.some(t => t.status !== "concluida") && (
+                <span className="block mt-2 text-yellow-600 font-medium">
+                  ⚠️ Existem {tarefas.filter(t => t.status !== "concluida").length} tarefa(s) ainda não concluída(s). 
+                  Elas serão mantidas como estão.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={isUpdatingAcao}
+              onClick={async () => {
+                await updateAcao({
+                  id: acaoId,
+                  data: {
+                    status: "concluida" as AcaoStatus,
+                    progresso: 100,
+                    data_conclusao: new Date().toISOString(),
+                  },
+                });
+                setShowConcluirDialog(false);
+              }}
+            >
+              {isUpdatingAcao ? "Concluindo..." : "Sim, concluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
