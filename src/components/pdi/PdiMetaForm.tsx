@@ -41,7 +41,7 @@ const LabelWithHelp = ({ label, tooltip }: { label: string; tooltip: string }) =
         <TooltipTrigger asChild>
           <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
         </TooltipTrigger>
-        <TooltipContent side="right" className="max-w-[220px] text-xs">
+        <TooltipContent side="bottom" align="start" className="max-w-[220px] text-xs">
           {tooltip}
         </TooltipContent>
       </Tooltip>
