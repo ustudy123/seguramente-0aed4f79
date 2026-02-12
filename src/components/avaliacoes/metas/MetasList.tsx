@@ -62,10 +62,13 @@ const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = 
 };
 
 export function MetasList() {
-  const { metas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, isCreatingMeta } = useMetas();
+  const { metas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, createCheckin, isCreatingCheckin } = useMetas();
   const [showForm, setShowForm] = useState(false);
   const [okrMetaId, setOkrMetaId] = useState<string | null>(null);
   const [okrForm, setOkrForm] = useState({ key_result: "", descricao: "", tipo: "percentual" as string, valor_alvo: 100, unidade: "" });
+  const [checkinOkrId, setCheckinOkrId] = useState<string | null>(null);
+  const [checkinValor, setCheckinValor] = useState("");
+  const [checkinObs, setCheckinObs] = useState("");
   const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
@@ -106,6 +109,20 @@ export function MetasList() {
     if (confirm("Tem certeza que deseja excluir este Resultado-Chave?")) {
       await deleteOkr(id);
     }
+  };
+
+  const handleCheckin = async (okrId: string, valorAtual: number) => {
+    const valor = Number(checkinValor);
+    if (isNaN(valor)) return;
+    await createCheckin({
+      okr_id: okrId,
+      valor_anterior: valorAtual,
+      valor_novo: valor,
+      observacao: checkinObs || undefined,
+    });
+    setCheckinOkrId(null);
+    setCheckinValor("");
+    setCheckinObs("");
   };
 
   if (isLoadingMetas) {
@@ -277,14 +294,29 @@ export function MetasList() {
                                     </p>
                                   )}
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8"
-                                  onClick={() => handleDeleteOkr(okr.id)}
-                                >
-                                  <Trash2 className="h-3 w-3 text-muted-foreground" />
-                                </Button>
+                                <div className="flex gap-1">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 text-xs gap-1"
+                                    onClick={() => {
+                                      setCheckinOkrId(checkinOkrId === okr.id ? null : okr.id);
+                                      setCheckinValor(String(okr.valor_atual || 0));
+                                      setCheckinObs("");
+                                    }}
+                                  >
+                                    <TrendingUp className="h-3 w-3" />
+                                    Check-in
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleDeleteOkr(okr.id)}
+                                  >
+                                    <Trash2 className="h-3 w-3 text-muted-foreground" />
+                                  </Button>
+                                </div>
                               </div>
 
                               <div className="space-y-1">
@@ -296,6 +328,47 @@ export function MetasList() {
                                 </div>
                                 <Progress value={okr.progresso} className="h-1.5" />
                               </div>
+
+                              {checkinOkrId === okr.id && (
+                                <div className="mt-2 p-3 bg-background border rounded-lg space-y-3">
+                                  <p className="text-sm font-medium">Atualizar progresso</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Valor atual</Label>
+                                      <Input
+                                        type="number"
+                                        value={checkinValor}
+                                        onChange={(e) => setCheckinValor(e.target.value)}
+                                        placeholder="Novo valor"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Alvo</Label>
+                                      <Input value={`${okr.valor_alvo} ${okr.unidade || ""}`} disabled />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Observação (opcional)</Label>
+                                    <Input
+                                      value={checkinObs}
+                                      onChange={(e) => setCheckinObs(e.target.value)}
+                                      placeholder="O que mudou?"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => setCheckinOkrId(null)}>
+                                      Cancelar
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => handleCheckin(okr.id, okr.valor_atual || 0)}
+                                      disabled={isCreatingCheckin}
+                                    >
+                                      Salvar
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
