@@ -57,8 +57,32 @@ Reescreva este texto de forma mais completa, profissional e estruturada, mantend
 - Ter entre 3-6 frases
 
 Retorne APENAS o texto melhorado, sem explicações ou aspas.`;
+    } else if (mode === "plano_acao") {
+      systemPrompt = "Você é um especialista em gestão de pessoas e planos de ação corporativos (5W2H). Gere sugestões de ações práticas para apoiar o desenvolvimento de uma meta SMART de PDI.";
+      
+      const smartCtx = [
+        contexto?.especifica ? `Específica: ${contexto.especifica}` : "",
+        contexto?.mensuravel ? `Mensurável: ${contexto.mensuravel}` : "",
+        contexto?.atingivel ? `Atingível: ${contexto.atingivel}` : "",
+        contexto?.relevante ? `Relevante: ${contexto.relevante}` : "",
+        contexto?.temporal ? `Temporal: ${contexto.temporal}` : "",
+      ].filter(Boolean).join("\n");
+
+      userPrompt = `${ctxMeta}
+${smartCtx ? `\nDetalhes SMART:\n${smartCtx}` : ""}
+
+Gere exatamente 5 sugestões de AÇÕES para um Plano de Ação que apoiem o alcance dessa meta de PDI.
+
+Para cada ação retorne um objeto JSON com:
+- "titulo": título curto e claro da ação (máx 80 caracteres)
+- "descricao": descrição detalhada do que fazer (2-3 frases)
+- "porque": por que essa ação é necessária (1-2 frases)
+- "como": como executar essa ação (1-2 frases)
+
+Retorne APENAS um JSON array com 5 objetos, sem markdown. Exemplo:
+[{"titulo":"...","descricao":"...","porque":"...","como":"..."}]`;
     } else {
-      return new Response(JSON.stringify({ error: "Mode inválido. Use 'sugestoes' ou 'melhorar'" }), {
+      return new Response(JSON.stringify({ error: "Mode inválido. Use 'sugestoes', 'melhorar' ou 'plano_acao'" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -100,9 +124,8 @@ Retorne APENAS o texto melhorado, sem explicações ou aspas.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content?.trim() || "";
 
-    if (mode === "sugestoes") {
+    if (mode === "sugestoes" || mode === "plano_acao") {
       try {
-        // Try to extract JSON array from the response
         const jsonMatch = content.match(/\[[\s\S]*\]/);
         const sugestoes = jsonMatch ? JSON.parse(jsonMatch[0]) : [content];
         return new Response(JSON.stringify({ sugestoes }), {
