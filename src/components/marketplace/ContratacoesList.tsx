@@ -1,10 +1,13 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { MarketplaceContratacao } from "@/hooks/useMarketplace";
 
 interface ContratacoesListProps {
   contratacoes: MarketplaceContratacao[];
+  onConfirmarExecucao?: (contratacao: MarketplaceContratacao) => void;
 }
 
 const statusConfig: Record<string, { label: string; class: string }> = {
@@ -16,7 +19,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
   recusada: { label: "Recusada", class: "bg-gray-100 text-gray-700" },
 };
 
-export function ContratacoesList({ contratacoes }: ContratacoesListProps) {
+export function ContratacoesList({ contratacoes, onConfirmarExecucao }: ContratacoesListProps) {
   if (contratacoes.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -47,6 +50,17 @@ export function ContratacoesList({ contratacoes }: ContratacoesListProps) {
             <div className="text-right space-y-1">
               <Badge className={st.class}>{st.label}</Badge>
               {c.valor && <p className="text-sm font-medium">R$ {c.valor.toFixed(2)}</p>}
+              {onConfirmarExecucao && (c.status === "aceita" || c.status === "em_andamento") && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onConfirmarExecucao(c)}
+                  className="mt-1 text-xs"
+                >
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Confirmar
+                </Button>
+              )}
             </div>
           </div>
         );

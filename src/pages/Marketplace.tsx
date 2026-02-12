@@ -1,17 +1,23 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Store, Users, ShoppingBag, History } from "lucide-react";
+import { Search, Store, Users, ShoppingBag, History, UserPlus, Briefcase, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMarketplace, type MarketplaceServico } from "@/hooks/useMarketplace";
+import { useMarketplace, type MarketplaceServico, type MarketplaceContratacao } from "@/hooks/useMarketplace";
 import { MarketplaceStats } from "@/components/marketplace/MarketplaceStats";
 import { MarketplaceCategorias } from "@/components/marketplace/MarketplaceCategorias";
 import { ProfissionalCard } from "@/components/marketplace/ProfissionalCard";
 import { ServicoCard } from "@/components/marketplace/ServicoCard";
 import { ContratacoesList } from "@/components/marketplace/ContratacoesList";
 import { ContratacaoModal } from "@/components/marketplace/ContratacaoModal";
+import { ProfissionalFormModal } from "@/components/marketplace/ProfissionalFormModal";
+import { ServicoFormModal } from "@/components/marketplace/ServicoFormModal";
+import { ConfirmacaoExecucaoModal } from "@/components/marketplace/ConfirmacaoExecucaoModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Marketplace() {
+  const queryClient = useQueryClient();
   const {
     categorias,
     servicos,
@@ -26,8 +32,17 @@ export default function Marketplace() {
 
   const [activeTab, setActiveTab] = useState("servicos");
   const [servicoSelecionado, setServicoSelecionado] = useState<MarketplaceServico | null>(null);
+  const [showProfissionalForm, setShowProfissionalForm] = useState(false);
+  const [showServicoForm, setShowServicoForm] = useState(false);
+  const [contratacaoParaConfirmar, setContratacaoParaConfirmar] = useState<MarketplaceContratacao | null>(null);
 
   const totalConcluidas = contratacoes.filter((c) => c.status === "concluida").length;
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["marketplace-profissionais"] });
+    queryClient.invalidateQueries({ queryKey: ["marketplace-servicos"] });
+    queryClient.invalidateQueries({ queryKey: ["marketplace-contratacoes"] });
+  };
 
   return (
     <div className="space-y-6">
@@ -63,6 +78,24 @@ export default function Marketplace() {
             Conecte sua empresa a profissionais legalmente habilitados. Cada serviço gera evidência, 
             cada evidência gera proteção. Segurança jurídica e ética profissional garantidas.
           </p>
+          <div className="flex gap-2 mt-4">
+            <Button
+              size="sm"
+              onClick={() => setShowProfissionalForm(true)}
+              className="bg-white/10 text-white border border-white/20 hover:bg-white/20"
+            >
+              <UserPlus className="h-4 w-4 mr-1.5" />
+              Cadastrar como Profissional
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setShowServicoForm(true)}
+              className="bg-white/10 text-white border border-white/20 hover:bg-white/20"
+            >
+              <Briefcase className="h-4 w-4 mr-1.5" />
+              Ofertar Serviço
+            </Button>
+          </div>
         </div>
       </motion.div>
 
@@ -157,7 +190,7 @@ export default function Marketplace() {
 
         {/* Contratações */}
         <TabsContent value="contratacoes" className="mt-4">
-          <ContratacoesList contratacoes={contratacoes} />
+          <ContratacoesList contratacoes={contratacoes} onConfirmarExecucao={setContratacaoParaConfirmar} />
         </TabsContent>
       </Tabs>
 
@@ -172,6 +205,32 @@ export default function Marketplace() {
           });
         }}
         isLoading={contratar.isPending}
+      />
+
+      {/* Professional registration */}
+      <ProfissionalFormModal
+        open={showProfissionalForm}
+        onClose={() => setShowProfissionalForm(false)}
+        onSuccess={invalidateAll}
+      />
+
+      {/* Service offering - needs a profissional_id, use first one for now */}
+      {showServicoForm && (
+        <ServicoFormModal
+          open={showServicoForm}
+          onClose={() => setShowServicoForm(false)}
+          onSuccess={invalidateAll}
+          profissionalId={profissionais[0]?.id || ""}
+          categorias={categorias}
+        />
+      )}
+
+      {/* Confirmation flow */}
+      <ConfirmacaoExecucaoModal
+        contratacao={contratacaoParaConfirmar}
+        open={!!contratacaoParaConfirmar}
+        onClose={() => setContratacaoParaConfirmar(null)}
+        onSuccess={invalidateAll}
       />
     </div>
   );
