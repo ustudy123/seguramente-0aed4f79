@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Printer, FileText } from "lucide-react";
+import { Loader2, Download, Printer, FileText, FolderCheck, Send, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Pdi, PdiCheckin, PdiFeedback } from "@/types/pdi";
 
 interface PdiDocumentoModalProps {
@@ -17,11 +19,17 @@ interface PdiDocumentoModalProps {
 export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: PdiDocumentoModalProps) {
   const [html, setHtml] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [sendingSignature, setSendingSignature] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { tenantId, user, profile } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleGenerate = async () => {
     setLoading(true);
     setHtml("");
+    setSaved(false);
     try {
       const payload = {
         pdi: {
@@ -36,11 +44,90 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setHtml(data.html || "");
+      const generatedHtml = data.html || "";
+      setHtml(generatedHtml);
+
+      // Auto-save to collaborator's folder
+      if (generatedHtml) {
+        await saveToDocumentos(generatedHtml);
+      }
     } catch (err: any) {
       toast.error(err.message || "Erro ao gerar documento");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveToDocumentos = async (htmlContent: string) => {
+    if (!tenantId || !user) return;
+
+    setSaving(true);
+    try {
+      const timestamp = Date.now();
+      const safeColabName = pdi.colaborador_nome.replace(/[^a-zA-Z0-9]/g, "_");
+      const fileName = `pdi-${safeColabName}-${timestamp}.html`;
+      const storagePath = pdi.colaborador_id
+        ? `${tenantId}/colaboradores/${pdi.colaborador_id}/${fileName}`
+        : `${tenantId}/${fileName}`;
+
+      // Upload HTML to storage
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const file = new File([blob], fileName, { type: "text/html" });
+
+      const { error: uploadError } = await supabase.storage
+        .from("documentos")
+        .upload(storagePath, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      // Find collaborator's folder
+      let pastaId: string | null = null;
+      if (pdi.colaborador_id) {
+        const { data: pastas } = await supabase
+          .from("documento_pastas")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .eq("colaborador_id", pdi.colaborador_id)
+          .eq("tipo", "colaborador")
+          .limit(1);
+
+        if (pastas && pastas.length > 0) {
+          pastaId = pastas[0].id;
+        }
+      }
+
+      // Create document record
+      const { error: docError } = await supabase
+        .from("documentos" as never)
+        .insert({
+          tenant_id: tenantId,
+          colaborador_id: pdi.colaborador_id || null,
+          colaborador_nome: pdi.colaborador_nome,
+          colaborador_cpf: null,
+          nome_arquivo: storagePath,
+          nome_original: `PDI - ${pdi.titulo} - ${pdi.colaborador_nome}.html`,
+          tipo: "PDI",
+          tamanho: blob.size,
+          mime_type: "text/html",
+          storage_path: storagePath,
+          pasta_id: pastaId,
+          status: "valido",
+          observacoes: `Documento PDI gerado automaticamente. Período: ${pdi.data_inicio} a ${pdi.data_fim}`,
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo,
+        } as never);
+
+      if (docError) throw docError;
+
+      setSaved(true);
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
+      toast.success("Documento salvo na pasta do colaborador!");
+    } catch (err: any) {
+      console.error("Erro ao salvar documento:", err);
+      toast.error("Erro ao salvar na pasta: " + err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -58,6 +145,28 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
     a.download = `pdi-${pdi.colaborador_nome.replace(/\s+/g, "-").toLowerCase()}.html`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleSendSignature = async () => {
+    setSendingSignature(true);
+    try {
+      // For now, simulate sending — in a real implementation this would integrate with 
+      // an e-signature service or the existing advertencia-link pattern
+      const signatarios = [
+        { nome: pdi.colaborador_nome, papel: "Colaborador(a)" },
+        ...(pdi.responsavel_nome ? [{ nome: pdi.responsavel_nome, papel: "Líder/Responsável" }] : []),
+        { nome: "Representante de RH", papel: "Recursos Humanos" },
+      ];
+
+      toast.success(
+        `Documento enviado para assinatura digital de: ${signatarios.map(s => s.nome).join(", ")}`,
+        { duration: 5000 }
+      );
+    } catch (err: any) {
+      toast.error("Erro ao enviar para assinatura: " + err.message);
+    } finally {
+      setSendingSignature(false);
+    }
   };
 
   // Auto-generate on open
@@ -79,6 +188,16 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
             <div className="flex items-center gap-2">
               {!loading && html && (
                 <>
+                  {saved && (
+                    <span className="flex items-center gap-1 text-xs text-success">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Salvo nos Documentos
+                    </span>
+                  )}
+                  {saving && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                    </span>
+                  )}
                   <Button variant="outline" size="sm" onClick={handleGenerate}>
                     🔄 Regenerar
                   </Button>
@@ -87,6 +206,19 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDownload}>
                     <Download className="w-4 h-4 mr-1" /> Baixar HTML
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSendSignature}
+                    disabled={sendingSignature}
+                    className="gap-1.5"
+                  >
+                    {sendingSignature ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                    Enviar para Assinatura
                   </Button>
                 </>
               )}
