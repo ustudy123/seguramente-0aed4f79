@@ -67,7 +67,7 @@ export default function Marketplace() {
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent">
-                Marketplace de Serviços
+                Rede de Parceiros
               </h1>
               <p className="text-indigo-300/80 text-sm">
                 Hub de serviços especializados orientado por risco, norma e ação
