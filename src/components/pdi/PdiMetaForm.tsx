@@ -276,27 +276,27 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
                   <Input type="date" value={form.data_fim} onChange={e => setForm(f => ({ ...f, data_fim: e.target.value }))} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <LabelWithHelp label="Acompanhamento" tooltip="De quanto em quanto tempo você vai verificar o progresso dessa meta." />
-                  <Select value={form.frequencia_checkin} onValueChange={v => setForm(f => ({ ...f, frequencia_checkin: v as PdiCheckinFrequencia }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(PDI_CHECKIN_FREQ_LABELS).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <LabelWithHelp label="Importância (1–5)" tooltip="Quanto maior o número, mais essa meta influencia o progresso geral do PDI." />
-                  <Select value={form.peso} onValueChange={v => setForm(f => ({ ...f, peso: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label>Acompanhamento</Label>
+                <FieldHint text="De quanto em quanto tempo você vai verificar o progresso dessa meta." />
+                <Select value={form.frequencia_checkin} onValueChange={v => setForm(f => ({ ...f, frequencia_checkin: v as PdiCheckinFrequencia }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PDI_CHECKIN_FREQ_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Importância (1–5)</Label>
+                <FieldHint text="Quanto maior o número, mais essa meta influencia o progresso geral do PDI." />
+                <Select value={form.peso} onValueChange={v => setForm(f => ({ ...f, peso: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </>
           )}
