@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { PackagePlus, Search, ArrowDownCircle, Calendar, MapPin, Package } from "lucide-react";
+import { PackagePlus, Search, ArrowDownCircle, ArrowRightLeft, Calendar, MapPin, Package } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,10 @@ import {
 import { useEpis } from "@/hooks/useEpis";
 import { useEpiLocais } from "@/hooks/useEpiLocais";
 import { useEntradaEstoque } from "@/hooks/useEntradaEstoque";
+import { useTransferenciaEstoque } from "@/hooks/useTransferenciaEstoque";
 import { EntradaEstoqueForm } from "./EntradaEstoqueForm";
 import { SUBTIPOS_ENTRADA } from "./EntradaEstoqueForm";
+import { TransferenciaEstoqueForm } from "./TransferenciaEstoqueForm";
 
 const SUBTIPO_LABELS: Record<string, string> = {
   inventario_inicial: "Inventário Inicial",
@@ -31,8 +33,10 @@ export function EntradasEstoqueTab() {
   const { epis, episLoading, movimentacoes, movimentacoesLoading } = useEpis();
   const { locais, locaisAtivos } = useEpiLocais();
   const { registrarEntrada, registrando } = useEntradaEstoque();
+  const { transferir, transferindo } = useTransferenciaEstoque();
 
   const [showForm, setShowForm] = useState(false);
+  const [showTransferForm, setShowTransferForm] = useState(false);
   const [search, setSearch] = useState("");
 
   // Filter movimentacoes to show only manual entries (entrada type with subtipo)
@@ -71,10 +75,16 @@ export function EntradasEstoqueTab() {
                   Registre entradas manuais: inventário inicial, ajustes, doações e compras sem nota
                 </CardDescription>
               </div>
-              <Button onClick={() => setShowForm(true)}>
-                <PackagePlus className="w-4 h-4 mr-2" />
-                Nova Entrada
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowTransferForm(true)}>
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
+                  Transferir
+                </Button>
+                <Button onClick={() => setShowForm(true)}>
+                  <PackagePlus className="w-4 h-4 mr-2" />
+                  Nova Entrada
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -186,6 +196,15 @@ export function EntradasEstoqueTab() {
         epis={epis}
         locais={locais}
         isLoading={registrando}
+      />
+
+      <TransferenciaEstoqueForm
+        open={showTransferForm}
+        onOpenChange={setShowTransferForm}
+        onSubmit={transferir}
+        epis={epis}
+        locais={locais}
+        isLoading={transferindo}
       />
     </div>
   );
