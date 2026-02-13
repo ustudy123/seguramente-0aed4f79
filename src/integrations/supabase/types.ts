@@ -2060,6 +2060,38 @@ export type Database = {
           },
         ]
       }
+      epi_config: {
+        Row: {
+          created_at: string
+          id: string
+          tenant_id: string
+          updated_at: string
+          usar_controle_estoque: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+          usar_controle_estoque?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+          usar_controle_estoque?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_entregas: {
         Row: {
           assinatura_url: string | null
@@ -2161,6 +2193,118 @@ export type Database = {
           },
           {
             foreignKeyName: "epi_entregas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_estoque_local: {
+        Row: {
+          created_at: string
+          epi_id: string
+          id: string
+          local_estoque_id: string
+          quantidade: number
+          quantidade_minima: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          epi_id: string
+          id?: string
+          local_estoque_id: string
+          quantidade?: number
+          quantidade_minima?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          epi_id?: string
+          id?: string
+          local_estoque_id?: string
+          quantidade?: number
+          quantidade_minima?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_estoque_local_epi_id_fkey"
+            columns: ["epi_id"]
+            isOneToOne: false
+            referencedRelation: "epis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_estoque_local_local_estoque_id_fkey"
+            columns: ["local_estoque_id"]
+            isOneToOne: false
+            referencedRelation: "epi_locais_estoque"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_estoque_local_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_locais_estoque: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          filial_id: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          tenant_id: string
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          filial_id?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          tenant_id: string
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          filial_id?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          tenant_id?: string
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_locais_estoque_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "filiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_locais_estoque_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2302,6 +2446,7 @@ export type Database = {
           data_fabricacao: string | null
           data_validade: string | null
           id: string
+          local_estoque_id: string | null
           localizacao: string | null
           marca: string | null
           modelo: string | null
@@ -2322,6 +2467,7 @@ export type Database = {
           data_fabricacao?: string | null
           data_validade?: string | null
           id?: string
+          local_estoque_id?: string | null
           localizacao?: string | null
           marca?: string | null
           modelo?: string | null
@@ -2342,6 +2488,7 @@ export type Database = {
           data_fabricacao?: string | null
           data_validade?: string | null
           id?: string
+          local_estoque_id?: string | null
           localizacao?: string | null
           marca?: string | null
           modelo?: string | null
@@ -2355,6 +2502,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "epis_local_estoque_id_fkey"
+            columns: ["local_estoque_id"]
+            isOneToOne: false
+            referencedRelation: "epi_locais_estoque"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "epis_tenant_id_fkey"
             columns: ["tenant_id"]
