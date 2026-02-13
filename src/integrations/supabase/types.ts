@@ -2318,12 +2318,14 @@ export type Database = {
           documento_referencia: string | null
           epi_id: string
           id: string
+          local_estoque_id: string | null
           motivo: string | null
           quantidade: number
           quantidade_anterior: number
           quantidade_atual: number
           realizado_por: string | null
           realizado_por_nome: string | null
+          subtipo: string | null
           tenant_id: string
           tipo: string
         }
@@ -2332,12 +2334,14 @@ export type Database = {
           documento_referencia?: string | null
           epi_id: string
           id?: string
+          local_estoque_id?: string | null
           motivo?: string | null
           quantidade: number
           quantidade_anterior: number
           quantidade_atual: number
           realizado_por?: string | null
           realizado_por_nome?: string | null
+          subtipo?: string | null
           tenant_id: string
           tipo: string
         }
@@ -2346,12 +2350,14 @@ export type Database = {
           documento_referencia?: string | null
           epi_id?: string
           id?: string
+          local_estoque_id?: string | null
           motivo?: string | null
           quantidade?: number
           quantidade_anterior?: number
           quantidade_atual?: number
           realizado_por?: string | null
           realizado_por_nome?: string | null
+          subtipo?: string | null
           tenant_id?: string
           tipo?: string
         }
@@ -2361,6 +2367,13 @@ export type Database = {
             columns: ["epi_id"]
             isOneToOne: false
             referencedRelation: "epis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_movimentacoes_local_estoque_id_fkey"
+            columns: ["local_estoque_id"]
+            isOneToOne: false
+            referencedRelation: "epi_locais_estoque"
             referencedColumns: ["id"]
           },
           {
