@@ -63,6 +63,7 @@ import {
 import { useEpiConfig } from "@/hooks/useEpiConfig";
 import { useEpiLocais, LOCAL_TIPO_LABELS, type LocalEstoqueTipo } from "@/hooks/useEpiLocais";
 import { useFiliais } from "@/hooks/useCadastros";
+import { useColaboradores } from "@/hooks/useColaboradores";
 
 interface LocalFormData {
   nome: string;
@@ -84,6 +85,7 @@ export function EpiConfiguracaoTab() {
   const { usarControleEstoque, toggleControleEstoque, toggling, configLoading } = useEpiConfig();
   const { locais, locaisLoading, criarLocal, criandoLocal, atualizarLocal, atualizandoLocal, toggleAtivoLocal } = useEpiLocais();
   const { filiais } = useFiliais();
+  const { colaboradores } = useColaboradores();
 
   const [showLocalForm, setShowLocalForm] = useState(false);
   const [editingLocal, setEditingLocal] = useState<string | null>(null);
@@ -446,11 +448,24 @@ export function EpiConfiguracaoTab() {
 
             <div className="space-y-2">
               <Label>Responsável pelo Local</Label>
-              <Input
-                placeholder="Nome do responsável"
-                value={formData.responsavel_nome}
-                onChange={(e) => setFormData({ ...formData, responsavel_nome: e.target.value })}
-              />
+              <Select
+                value={formData.responsavel_nome || "__none__"}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, responsavel_nome: val === "__none__" ? "" : val })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nenhum</SelectItem>
+                  {colaboradores.map((c) => (
+                    <SelectItem key={c.id} value={c.nome_completo}>
+                      {c.nome_completo} {c.cargo ? `– ${c.cargo}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
