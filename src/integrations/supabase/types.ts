@@ -5400,12 +5400,15 @@ export type Database = {
           autor_id: string | null
           autor_nome: string | null
           created_at: string
+          departamento_destino: string | null
           id: string
           mensagem: string
           prioridade: string | null
           respondido_em: string | null
           respondido_por: string | null
           respondido_por_nome: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
           resposta: string | null
           status: string
           tenant_id: string
@@ -5421,12 +5424,15 @@ export type Database = {
           autor_id?: string | null
           autor_nome?: string | null
           created_at?: string
+          departamento_destino?: string | null
           id?: string
           mensagem: string
           prioridade?: string | null
           respondido_em?: string | null
           respondido_por?: string | null
           respondido_por_nome?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
           resposta?: string | null
           status?: string
           tenant_id: string
@@ -5442,12 +5448,15 @@ export type Database = {
           autor_id?: string | null
           autor_nome?: string | null
           created_at?: string
+          departamento_destino?: string | null
           id?: string
           mensagem?: string
           prioridade?: string | null
           respondido_em?: string | null
           respondido_por?: string | null
           respondido_por_nome?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
           resposta?: string | null
           status?: string
           tenant_id?: string
@@ -5457,6 +5466,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ouvidoria_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ouvidoria_roteamento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          departamento_responsavel: string | null
+          id: string
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          tenant_id: string
+          tipo_manifestacao: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          departamento_responsavel?: string | null
+          id?: string
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          tenant_id: string
+          tipo_manifestacao: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          departamento_responsavel?: string | null
+          id?: string
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          tenant_id?: string
+          tipo_manifestacao?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ouvidoria_roteamento_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

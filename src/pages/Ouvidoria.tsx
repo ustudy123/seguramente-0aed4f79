@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquareHeart, Plus, List } from "lucide-react";
+import { MessageSquareHeart, Plus, List, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOuvidoria } from "@/hooks/useOuvidoria";
 import { useAuth } from "@/hooks/useAuth";
 import { OuvidoriaForm } from "@/components/ouvidoria/OuvidoriaForm";
 import { OuvidoriaList } from "@/components/ouvidoria/OuvidoriaList";
 import { OuvidoriaStats } from "@/components/ouvidoria/OuvidoriaStats";
+import { OuvidoriaRoteamentoConfig } from "@/components/ouvidoria/OuvidoriaRoteamentoConfig";
 import type { StatusManifestacao, PrioridadeManifestacao } from "@/types/ouvidoria";
 
 const Ouvidoria = () => {
@@ -66,7 +67,7 @@ const Ouvidoria = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className={`grid w-full max-w-lg ${isAdmin ? "grid-cols-3" : "grid-cols-2"}`}>
           <TabsTrigger value="enviar" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Nova Manifestação
@@ -75,6 +76,12 @@ const Ouvidoria = () => {
             <List className="w-4 h-4" />
             {isManager ? "Todas Manifestações" : "Minhas Manifestações"}
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="configuracoes" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Configurações
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="enviar" className="mt-6">
@@ -109,6 +116,18 @@ const Ouvidoria = () => {
             />
           </motion.div>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="configuracoes" className="mt-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="max-w-3xl mx-auto"
+            >
+              <OuvidoriaRoteamentoConfig />
+            </motion.div>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
