@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, HardHat, Package, Users, History, Settings, Shield, AlertTriangle, Bot, Wrench, ArrowDownCircle } from "lucide-react";
+import { Plus, HardHat, Package, Users, History, Settings, Shield, AlertTriangle, Bot, Wrench, ArrowDownCircle, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEpis } from "@/hooks/useEpis";
@@ -17,6 +17,7 @@ import { EpiAlertasTab } from "@/components/epi/EpiAlertasTab";
 import { EpiFiscalIATab } from "@/components/epi/EpiFiscalIATab";
 import { EpiConfiguracaoTab } from "@/components/epi/EpiConfiguracaoTab";
 import { EntradasEstoqueTab } from "@/components/epi/EntradasEstoqueTab";
+import { SaldoLocalDashboard } from "@/components/epi/SaldoLocalDashboard";
 import type { EpiCompleto } from "@/types/epi";
 
 const Epis = () => {
@@ -104,14 +105,18 @@ const Epis = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-5xl grid-cols-8">
+        <TabsList className="grid w-full max-w-6xl grid-cols-9">
           <TabsTrigger value="estoque" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
             Estoque
           </TabsTrigger>
           <TabsTrigger value="entradas" className="flex items-center gap-2">
             <ArrowDownCircle className="w-4 h-4" />
-            Entradas
+            Movimentar
+          </TabsTrigger>
+          <TabsTrigger value="saldo-local" className="flex items-center gap-2">
+            <Warehouse className="w-4 h-4" />
+            Por Local
           </TabsTrigger>
           <TabsTrigger value="entregas" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -162,6 +167,15 @@ const Epis = () => {
             animate={{ opacity: 1 }}
           >
             <EntradasEstoqueTab />
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="saldo-local" className="mt-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <SaldoLocalDashboard />
           </motion.div>
         </TabsContent>
 
