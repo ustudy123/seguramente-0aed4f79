@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -12,8 +13,11 @@ import {
   Send,
   Trash2,
   Paperclip,
-  ClipboardList
+  ClipboardList,
+  CheckCircle2,
+  ExternalLink
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,6 +76,22 @@ export function OuvidoriaCard({
   const [resposta, setResposta] = useState("");
   const [showRespostaForm, setShowRespostaForm] = useState(false);
   const [showAcoesModal, setShowAcoesModal] = useState(false);
+
+  const isValidUuid = /^[0-9a-f]{8}-/.test(manifestacao.id);
+
+  const { data: acoesVinculadas = [] } = useQuery({
+    queryKey: ["ouvidoria-acoes-vinculadas", manifestacao.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plano_acoes")
+        .select("id, codigo, titulo, status")
+        .eq("origem_modulo", "ouvidoria")
+        .eq("origem_id", manifestacao.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isValidUuid,
+  });
 
   const handleResponder = async () => {
     if (!resposta.trim() || !onResponder) return;
@@ -200,6 +220,27 @@ export function OuvidoriaCard({
           {/* Anexos */}
           {manifestacao.anexos && manifestacao.anexos.length > 0 && (
             <AnexosList anexos={manifestacao.anexos} />
+          )}
+
+          {/* Ações vinculadas ao Plano de Ação */}
+          {acoesVinculadas.length > 0 && (
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <span className="font-medium text-sm">
+                  {acoesVinculadas.length} ação(ões) no Plano de Ação
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {acoesVinculadas.map((acao) => (
+                  <Badge key={acao.id} variant="outline" className="text-xs gap-1">
+                    <span className="font-mono">{acao.codigo}</span>
+                    <span className="text-muted-foreground">—</span>
+                    <span className="max-w-[200px] truncate">{acao.titulo}</span>
+                  </Badge>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Resposta existente */}
