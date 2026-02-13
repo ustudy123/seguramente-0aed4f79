@@ -42,10 +42,12 @@ import { EpiEntregaRecibo } from "./EpiEntregaRecibo";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
 import { useDocumentos } from "@/hooks/useDocumentos";
+import { useEpiLocais } from "@/hooks/useEpiLocais";
+import { useEpiConfig } from "@/hooks/useEpiConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
-import { Loader2, Download, ArrowLeft, ArrowRight, XCircle, Check, ChevronsUpDown, AlertCircle, User } from "lucide-react";
+import { Loader2, Download, ArrowLeft, ArrowRight, XCircle, Check, ChevronsUpDown, AlertCircle, User, MapPin } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { EpiTipo } from "@/types/epi";
@@ -68,6 +70,7 @@ interface FormData {
   colaboradorDepartamento: string;
   epiTipoId: string;
   epiTipo: EpiTipo | null;
+  localEstoqueId: string;
   quantidade: number;
   dataEntrega: string;
   dataValidade: string;
@@ -83,6 +86,8 @@ export function EpiEntregaWizard({
   const { tenantId, user, profile } = useAuth();
   const { colaboradores, isLoading: colaboradoresLoading } = useColaboradores();
   const { upload: uploadDocumento } = useDocumentos();
+  const { locaisAtivos } = useEpiLocais();
+  const { usarControleEstoque } = useEpiConfig();
   const reciboRef = useRef<HTMLDivElement>(null);
   const [colaboradorPopoverOpen, setColaboradorPopoverOpen] = useState(false);
   const [colaboradorSearch, setColaboradorSearch] = useState("");
@@ -109,6 +114,7 @@ export function EpiEntregaWizard({
     colaboradorDepartamento: "",
     epiTipoId: "",
     epiTipo: null,
+    localEstoqueId: "",
     quantidade: 1,
     dataEntrega: format(new Date(), "yyyy-MM-dd"),
     dataValidade: "",
@@ -144,6 +150,7 @@ export function EpiEntregaWizard({
       colaboradorDepartamento: "",
       epiTipoId: "",
       epiTipo: null,
+      localEstoqueId: "",
       quantidade: 1,
       dataEntrega: format(new Date(), "yyyy-MM-dd"),
       dataValidade: "",
@@ -255,13 +262,13 @@ export function EpiEntregaWizard({
           quantidade: formData.quantidade,
           data_entrega: formData.dataEntrega,
           data_validade: formData.dataValidade || null,
-          status: status === "recusado" ? "extraviado" : "ativa", // usando status existente
+          status: status === "recusado" ? "extraviado" : "ativa",
           foto_entrega_url: fotoUrl,
           assinatura_url: assinaturaUrl,
           signed_at: status === "entregue" ? signedAt : null,
           liveness_detected: livenessData !== null,
           liveness_data: livenessData || { actions: [], timestamps: [] },
-          ip_address: "", // Seria preenchido via backend
+          ip_address: "",
           user_agent: navigator.userAgent,
           observacoes: status === "recusado" 
             ? `RECUSADO: Colaborador recusou assinar. ${formData.observacoes}`
@@ -273,6 +280,47 @@ export function EpiEntregaWizard({
         .single();
 
       if (error) throw error;
+
+      // RF-EPI-EST-08: Se controle de estoque ativo e local selecionado, baixar estoque do local
+      if (usarControleEstoque && formData.localEstoqueId && status === "entregue") {
+        // Buscar saldo atual no local
+        const { data: estoqueLocal } = await supabase
+          .from("epi_estoque_local")
+          .select("id, quantidade")
+          .eq("epi_id", epiId)
+          .eq("local_estoque_id", formData.localEstoqueId)
+          .eq("tenant_id", tenantId)
+          .maybeSingle();
+
+        if (estoqueLocal) {
+          const novaQtd = Math.max(0, estoqueLocal.quantidade - formData.quantidade);
+          await supabase
+            .from("epi_estoque_local")
+            .update({ quantidade: novaQtd })
+            .eq("id", estoqueLocal.id);
+        }
+
+        // Registrar movimentação com local
+        const { data: epiAtual } = await supabase
+          .from("epis")
+          .select("quantidade_estoque")
+          .eq("id", epiId)
+          .single();
+
+        await supabase.from("epi_movimentacoes").insert({
+          tenant_id: tenantId,
+          epi_id: epiId,
+          tipo: "saida",
+          subtipo: "entrega",
+          local_estoque_id: formData.localEstoqueId,
+          quantidade: formData.quantidade,
+          quantidade_anterior: (epiAtual?.quantidade_estoque || 0) + formData.quantidade,
+          quantidade_atual: epiAtual?.quantidade_estoque || 0,
+          motivo: `Entrega para ${formData.colaboradorNome}`,
+          realizado_por: user?.id,
+          realizado_por_nome: profile?.nome_completo,
+        });
+      }
 
       setEntregaResult({
         ...data,
@@ -414,7 +462,8 @@ export function EpiEntregaWizard({
     formData.colaboradorId && 
     formData.epiTipoId && 
     formData.quantidade > 0 && 
-    formData.dataEntrega;
+    formData.dataEntrega &&
+    (!usarControleEstoque || formData.localEstoqueId);
 
   return (
     <>
@@ -568,6 +617,38 @@ export function EpiEntregaWizard({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* RF-EPI-EST-08: Seleção de Local de Estoque (se controle ativo) */}
+                {usarControleEstoque && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      Local de Estoque {usarControleEstoque ? "*" : ""}
+                    </Label>
+                    <Select
+                      value={formData.localEstoqueId}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, localEstoqueId: val }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o local de saída" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locaisAtivos.map((local) => (
+                          <SelectItem key={local.id} value={local.id}>
+                            {local.nome} {local.filial?.nome ? `(${local.filial.nome})` : ""}
+                          </SelectItem>
+                        ))}
+                        {locaisAtivos.length === 0 && (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            Nenhum local cadastrado. Vá em Config para criar.
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
