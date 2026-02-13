@@ -2385,6 +2385,146 @@ export type Database = {
           },
         ]
       }
+      epi_nf_itens: {
+        Row: {
+          created_at: string
+          descricao_nf: string | null
+          epi_id: string
+          id: string
+          local_estoque_id: string
+          movimentacao_id: string | null
+          nota_fiscal_id: string
+          quantidade: number
+          tenant_id: string
+          valor_total: number | null
+          valor_unitario: number | null
+        }
+        Insert: {
+          created_at?: string
+          descricao_nf?: string | null
+          epi_id: string
+          id?: string
+          local_estoque_id: string
+          movimentacao_id?: string | null
+          nota_fiscal_id: string
+          quantidade: number
+          tenant_id: string
+          valor_total?: number | null
+          valor_unitario?: number | null
+        }
+        Update: {
+          created_at?: string
+          descricao_nf?: string | null
+          epi_id?: string
+          id?: string
+          local_estoque_id?: string
+          movimentacao_id?: string | null
+          nota_fiscal_id?: string
+          quantidade?: number
+          tenant_id?: string
+          valor_total?: number | null
+          valor_unitario?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_nf_itens_epi_id_fkey"
+            columns: ["epi_id"]
+            isOneToOne: false
+            referencedRelation: "epis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_nf_itens_local_estoque_id_fkey"
+            columns: ["local_estoque_id"]
+            isOneToOne: false
+            referencedRelation: "epi_locais_estoque"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_nf_itens_movimentacao_id_fkey"
+            columns: ["movimentacao_id"]
+            isOneToOne: false
+            referencedRelation: "epi_movimentacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_nf_itens_nota_fiscal_id_fkey"
+            columns: ["nota_fiscal_id"]
+            isOneToOne: false
+            referencedRelation: "epi_notas_fiscais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_nf_itens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      epi_notas_fiscais: {
+        Row: {
+          chave_acesso: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_emissao: string | null
+          fornecedor_cnpj: string | null
+          fornecedor_nome: string | null
+          id: string
+          numero_nf: string
+          observacoes: string | null
+          origem: string
+          serie: string | null
+          tenant_id: string
+          updated_at: string
+          valor_total: number | null
+        }
+        Insert: {
+          chave_acesso?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string | null
+          fornecedor_cnpj?: string | null
+          fornecedor_nome?: string | null
+          id?: string
+          numero_nf: string
+          observacoes?: string | null
+          origem?: string
+          serie?: string | null
+          tenant_id: string
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Update: {
+          chave_acesso?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string | null
+          fornecedor_cnpj?: string | null
+          fornecedor_nome?: string | null
+          id?: string
+          numero_nf?: string
+          observacoes?: string | null
+          origem?: string
+          serie?: string | null
+          tenant_id?: string
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_notas_fiscais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_tipos: {
         Row: {
           ca_numero: string | null

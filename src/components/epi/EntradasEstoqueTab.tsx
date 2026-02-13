@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { PackagePlus, PackageMinus, Search, ArrowDownCircle, ArrowUpCircle, ArrowRightLeft, Calendar, MapPin, Package } from "lucide-react";
+import { PackagePlus, PackageMinus, Search, ArrowDownCircle, ArrowUpCircle, ArrowRightLeft, Calendar, MapPin, Package, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,12 @@ import { useEpiLocais } from "@/hooks/useEpiLocais";
 import { useEntradaEstoque } from "@/hooks/useEntradaEstoque";
 import { useTransferenciaEstoque } from "@/hooks/useTransferenciaEstoque";
 import { useSaidaEstoque } from "@/hooks/useSaidaEstoque";
+import { useImportacaoNF } from "@/hooks/useImportacaoNF";
 import { EntradaEstoqueForm } from "./EntradaEstoqueForm";
 import { SUBTIPOS_ENTRADA } from "./EntradaEstoqueForm";
 import { TransferenciaEstoqueForm } from "./TransferenciaEstoqueForm";
 import { SaidaEstoqueForm, SUBTIPOS_SAIDA } from "./SaidaEstoqueForm";
+import { ImportacaoNFForm } from "./ImportacaoNFForm";
 
 const SUBTIPO_LABELS: Record<string, string> = {
   inventario_inicial: "Inventário Inicial",
@@ -44,10 +46,12 @@ export function EntradasEstoqueTab() {
   const { registrarEntrada, registrando } = useEntradaEstoque();
   const { transferir, transferindo } = useTransferenciaEstoque();
   const { registrarSaida, registrandoSaida } = useSaidaEstoque();
+  const { importarNF, importando } = useImportacaoNF();
 
   const [showForm, setShowForm] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
   const [showSaidaForm, setShowSaidaForm] = useState(false);
+  const [showNFForm, setShowNFForm] = useState(false);
   const [search, setSearch] = useState("");
 
   // Filter movimentacoes to show only manual entries (entrada type with subtipo)
@@ -87,6 +91,10 @@ export function EntradasEstoqueTab() {
                 </CardDescription>
               </div>
               <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowNFForm(true)}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Importar NF
+                </Button>
                 <Button variant="outline" onClick={() => setShowSaidaForm(true)}>
                   <PackageMinus className="w-4 h-4 mr-2" />
                   Saída
@@ -229,6 +237,15 @@ export function EntradasEstoqueTab() {
         epis={epis}
         locais={locais}
         isLoading={registrandoSaida}
+      />
+
+      <ImportacaoNFForm
+        open={showNFForm}
+        onOpenChange={setShowNFForm}
+        onSubmit={importarNF}
+        epis={epis}
+        locais={locais}
+        isLoading={importando}
       />
     </div>
   );
