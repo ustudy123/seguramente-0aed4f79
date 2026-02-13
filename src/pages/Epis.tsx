@@ -4,6 +4,7 @@ import { Plus, HardHat, Package, Users, History, Settings, Shield, AlertTriangle
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEpis } from "@/hooks/useEpis";
+import { useEpiPermissions } from "@/hooks/useEpiPermissions";
 import { EpiStats } from "@/components/epi/EpiStats";
 import { EpiList } from "@/components/epi/EpiList";
 import { EpiForm } from "@/components/epi/EpiForm";
@@ -43,6 +44,8 @@ const Epis = () => {
     registrandoEntrega,
     registrarDevolucao,
   } = useEpis();
+
+  const perm = useEpiPermissions();
 
   const [activeTab, setActiveTab] = useState("estoque");
   const [showTipoForm, setShowTipoForm] = useState(false);
@@ -85,18 +88,24 @@ const Epis = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowTipoForm(true)}>
-            <Settings className="w-4 h-4 mr-2" />
-            Novo Tipo
-          </Button>
-          <Button variant="outline" onClick={() => setShowEntregaForm(true)}>
-            <Users className="w-4 h-4 mr-2" />
-            Registrar Entrega
-          </Button>
-          <Button onClick={() => setShowEpiForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo EPI
-          </Button>
+          {perm.podeCriarTipo && (
+            <Button variant="outline" onClick={() => setShowTipoForm(true)}>
+              <Settings className="w-4 h-4 mr-2" />
+              Novo Tipo
+            </Button>
+          )}
+          {perm.podeRegistrarEntrega && (
+            <Button variant="outline" onClick={() => setShowEntregaForm(true)}>
+              <Users className="w-4 h-4 mr-2" />
+              Registrar Entrega
+            </Button>
+          )}
+          {perm.podeCriarEpi && (
+            <Button onClick={() => setShowEpiForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo EPI
+            </Button>
+          )}
         </div>
       </motion.div>
 
@@ -105,15 +114,17 @@ const Epis = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-6xl grid-cols-9">
+        <TabsList className="flex w-full max-w-6xl flex-wrap">
           <TabsTrigger value="estoque" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
             Estoque
           </TabsTrigger>
-          <TabsTrigger value="entradas" className="flex items-center gap-2">
-            <ArrowDownCircle className="w-4 h-4" />
-            Movimentar
-          </TabsTrigger>
+          {perm.podeMovimentarEstoque && (
+            <TabsTrigger value="entradas" className="flex items-center gap-2">
+              <ArrowDownCircle className="w-4 h-4" />
+              Movimentar
+            </TabsTrigger>
+          )}
           <TabsTrigger value="saldo-local" className="flex items-center gap-2">
             <Warehouse className="w-4 h-4" />
             Por Local
@@ -122,26 +133,32 @@ const Epis = () => {
             <Users className="w-4 h-4" />
             Entregas
           </TabsTrigger>
-          <TabsTrigger value="matriz" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Matriz
-          </TabsTrigger>
+          {perm.podeGerenciarMatriz && (
+            <TabsTrigger value="matriz" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Matriz
+            </TabsTrigger>
+          )}
           <TabsTrigger value="alertas" className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             Alertas
           </TabsTrigger>
-          <TabsTrigger value="fiscal" className="flex items-center gap-2">
-            <Bot className="w-4 h-4" />
-            IA Fiscal
-          </TabsTrigger>
+          {perm.podeUsarIAFiscal && (
+            <TabsTrigger value="fiscal" className="flex items-center gap-2">
+              <Bot className="w-4 h-4" />
+              IA Fiscal
+            </TabsTrigger>
+          )}
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="w-4 h-4" />
             Histórico
           </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Wrench className="w-4 h-4" />
-            Config
-          </TabsTrigger>
+          {perm.podeConfigurar && (
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              Config
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="estoque" className="mt-6">
@@ -154,9 +171,9 @@ const Epis = () => {
             <EpiList
               epis={epis}
               isLoading={episLoading}
-              onEdit={handleEditEpi}
-              onDelete={excluirEpi}
-              onAjustarEstoque={setAjustarEstoqueEpi}
+              onEdit={perm.podeEditarEpi ? handleEditEpi : undefined}
+              onDelete={perm.podeExcluirEpi ? excluirEpi : undefined}
+              onAjustarEstoque={perm.podeAjustarEstoque ? setAjustarEstoqueEpi : undefined}
             />
           </motion.div>
         </TabsContent>
@@ -189,9 +206,9 @@ const Epis = () => {
             <EpiEntregaList
               entregas={entregas}
               isLoading={entregasLoading}
-              onDevolucao={async (id, obs) => {
+              onDevolucao={perm.podeRegistrarDevolucao ? async (id, obs) => {
                 await registrarDevolucao({ entregaId: id, observacoes: obs });
-              }}
+              } : undefined}
             />
           </motion.div>
         </TabsContent>

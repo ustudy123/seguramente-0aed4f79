@@ -51,7 +51,7 @@ import { ENTREGA_STATUS_LABELS, ENTREGA_STATUS_COLORS } from "@/types/epi";
 interface EpiEntregaListProps {
   entregas: (EpiEntrega & { epi: EpiCompleto })[];
   isLoading?: boolean;
-  onDevolucao: (entregaId: string, observacoes?: string) => Promise<void>;
+  onDevolucao?: (entregaId: string, observacoes?: string) => Promise<void>;
 }
 
 export function EpiEntregaList({
@@ -153,6 +153,7 @@ export function EpiEntregaList({
     dataFim;
 
   const handleDevolucao = async () => {
+    if (!onDevolucao) return;
     setProcessando(true);
     try {
       await onDevolucao(devolucaoModal.entregaId, observacoes);
@@ -391,7 +392,7 @@ export function EpiEntregaList({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {entrega.status === "ativa" && (
+                    {entrega.status === "ativa" && onDevolucao && (
                       <Button
                         variant="outline"
                         size="sm"
