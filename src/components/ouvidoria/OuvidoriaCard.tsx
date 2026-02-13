@@ -78,19 +78,26 @@ export function OuvidoriaCard({
   const [showAcoesModal, setShowAcoesModal] = useState(false);
 
   const isValidUuid = /^[0-9a-f]{8}-/.test(manifestacao.id);
+  const origemDescSearch = `${TIPO_MANIFESTACAO_LABELS[manifestacao.tipo]}: ${manifestacao.assunto}`;
 
   const { data: acoesVinculadas = [] } = useQuery({
-    queryKey: ["ouvidoria-acoes-vinculadas", manifestacao.id],
+    queryKey: ["ouvidoria-acoes-vinculadas", manifestacao.id, manifestacao.assunto],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("plano_acoes")
         .select("id, codigo, titulo, status")
-        .eq("origem_modulo", "ouvidoria")
-        .eq("origem_id", manifestacao.id);
+        .eq("origem_modulo", "ouvidoria");
+
+      if (isValidUuid) {
+        query = query.or(`origem_id.eq.${manifestacao.id},origem_descricao.eq.${origemDescSearch}`);
+      } else {
+        query = query.eq("origem_descricao", origemDescSearch);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
-    enabled: isValidUuid,
   });
 
   const handleResponder = async () => {
