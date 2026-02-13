@@ -149,8 +149,19 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks. O HTM
     const data = await response.json();
     let html = data.choices?.[0]?.message?.content?.trim() || "";
 
+    // Remove markdown code fences if present
     if (html.startsWith("```")) {
-      html = html.replace(/^```html?\n?/, "").replace(/\n?```$/, "");
+      html = html.replace(/^```(?:html)?\s*\n?/, "").replace(/\n?\s*```\s*$/, "");
+    }
+
+    // Ensure the HTML is a complete document with proper viewport for iframe rendering
+    if (html && !html.toLowerCase().includes("<!doctype")) {
+      html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:20px;font-family:'Segoe UI','Inter',system-ui,sans-serif;}</style></head><body>${html}</body></html>`;
+    }
+
+    // Inject viewport meta if missing (some AI responses include <html> but skip viewport)
+    if (html && !html.toLowerCase().includes("viewport")) {
+      html = html.replace(/<head>/i, '<head><meta name="viewport" content="width=device-width, initial-scale=1.0">');
     }
 
     return new Response(JSON.stringify({ html }), {
