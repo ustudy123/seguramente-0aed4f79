@@ -131,7 +131,7 @@ export function OuvidoriaAcoesModal({
           tendencia: s.tendencia,
           prioridade: calcPrioridade(s.gravidade, s.urgencia, s.tendencia) as any,
           origem_modulo: "ouvidoria",
-          origem_id: manifestacao.id,
+          origem_id: manifestacao.id?.match(/^[0-9a-f]{8}-/) ? manifestacao.id : undefined,
           origem_descricao: `${TIPO_MANIFESTACAO_LABELS[manifestacao.tipo]}: ${manifestacao.assunto}`,
           exige_evidencia: false,
         });
@@ -164,7 +164,7 @@ export function OuvidoriaAcoesModal({
         tendencia: s.tendencia,
         prioridade: calcPrioridade(s.gravidade, s.urgencia, s.tendencia) as any,
         origem_modulo: "ouvidoria",
-        origem_id: manifestacao.id,
+        origem_id: manifestacao.id?.match(/^[0-9a-f]{8}-/) ? manifestacao.id : undefined,
         origem_descricao: `${TIPO_MANIFESTACAO_LABELS[manifestacao.tipo]}: ${manifestacao.assunto}`,
         exige_evidencia: false,
       });
