@@ -85,13 +85,31 @@ export function useOuvidoria() {
     return anexosUploadados;
   };
 
-  // Criar nova manifestação
+  // Criar nova manifestação (com roteamento automático)
   const criarManifestacaoMutation = useMutation({
     mutationFn: async (data: CriarManifestacaoData) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
       if (!user && !data.anonimo) throw new Error("Usuário não autenticado");
 
-      // Primeiro criar a manifestação sem anexos
+      // Buscar roteamento configurado para o tipo
+      let responsavelId: string | null = null;
+      let responsavelNome: string | null = null;
+      let departamentoDestino: string | null = null;
+
+      const { data: roteamento } = await supabase
+        .from("ouvidoria_roteamento")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .eq("tipo_manifestacao", data.tipo)
+        .eq("ativo", true)
+        .maybeSingle();
+
+      if (roteamento) {
+        responsavelId = roteamento.responsavel_id;
+        responsavelNome = roteamento.responsavel_nome;
+        departamentoDestino = roteamento.departamento_responsavel;
+      }
+
       const manifestacao = {
         tenant_id: tenantId,
         tipo: data.tipo,
@@ -105,6 +123,9 @@ export function useOuvidoria() {
         status: "pendente" as StatusManifestacao,
         prioridade: "normal" as PrioridadeManifestacao,
         anexos: [] as AnexoData[],
+        responsavel_id: responsavelId,
+        responsavel_nome: responsavelNome,
+        departamento_destino: departamentoDestino,
       };
 
       const { data: result, error } = await supabase

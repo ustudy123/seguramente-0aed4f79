@@ -143,6 +143,22 @@ export function OuvidoriaCard({
                   {format(new Date(manifestacao.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </span>
               </div>
+              {isManager && (manifestacao as any).departamento_destino && (
+                <>
+                  <span>•</span>
+                  <Badge variant="outline" className="text-xs">
+                    📋 {(manifestacao as any).departamento_destino}
+                  </Badge>
+                </>
+              )}
+              {isManager && (manifestacao as any).responsavel_nome && (
+                <>
+                  <span>•</span>
+                  <Badge variant="outline" className="text-xs">
+                    👤 {(manifestacao as any).responsavel_nome}
+                  </Badge>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
