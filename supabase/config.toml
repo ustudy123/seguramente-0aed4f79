@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.pdi-assinatura]
 verify_jwt = false
+
+[functions.ai-ouvidoria-acoes]
+verify_jwt = false

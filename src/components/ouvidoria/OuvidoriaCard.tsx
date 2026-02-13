@@ -11,7 +11,8 @@ import {
   ChevronUp,
   Send,
   Trash2,
-  Paperclip
+  Paperclip,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ import {
   PRIORIDADE_COLORS,
 } from "@/types/ouvidoria";
 import { AnexosList } from "./AnexosList";
+import { OuvidoriaAcoesModal } from "./OuvidoriaAcoesModal";
 import type { AnexoManifestacao } from "@/types/ouvidoria";
 
 interface OuvidoriaCardProps {
@@ -69,6 +71,7 @@ export function OuvidoriaCard({
   const [expanded, setExpanded] = useState(false);
   const [resposta, setResposta] = useState("");
   const [showRespostaForm, setShowRespostaForm] = useState(false);
+  const [showAcoesModal, setShowAcoesModal] = useState(false);
 
   const handleResponder = async () => {
     if (!resposta.trim() || !onResponder) return;
@@ -246,6 +249,15 @@ export function OuvidoriaCard({
               </div>
 
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAcoesModal(true)}
+                >
+                  <ClipboardList className="w-4 h-4 mr-1" />
+                  Criar Ações
+                </Button>
+
                 {!manifestacao.resposta && (
                   <Button
                     variant="outline"
@@ -325,6 +337,15 @@ export function OuvidoriaCard({
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Ações */}
+      {isManager && (
+        <OuvidoriaAcoesModal
+          manifestacao={manifestacao}
+          open={showAcoesModal}
+          onOpenChange={setShowAcoesModal}
+        />
+      )}
     </motion.div>
   );
 }
