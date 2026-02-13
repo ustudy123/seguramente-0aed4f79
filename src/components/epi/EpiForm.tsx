@@ -64,6 +64,8 @@ interface EpiFormProps {
     nome: string;
     descricao?: string;
     categoria?: string;
+    unidade_medida?: string;
+    tipo_durabilidade?: string;
     validade_meses?: number | null;
     ca_numero?: string;
     marca?: string;
