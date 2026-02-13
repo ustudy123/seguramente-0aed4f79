@@ -43,9 +43,9 @@ import { EPI_STATUS_LABELS, EPI_STATUS_COLORS } from "@/types/epi";
 interface EpiListProps {
   epis: EpiCompleto[];
   isLoading?: boolean;
-  onEdit: (epi: EpiCompleto) => void;
-  onDelete: (id: string) => Promise<void>;
-  onAjustarEstoque: (epi: EpiCompleto) => void;
+  onEdit?: (epi: EpiCompleto) => void;
+  onDelete?: (id: string) => Promise<void>;
+  onAjustarEstoque?: (epi: EpiCompleto) => void;
 }
 
 export function EpiList({
@@ -194,30 +194,40 @@ export function EpiList({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(epi)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onAjustarEstoque(epi)}>
-                          <Package className="w-4 h-4 mr-2" />
-                          Ajustar Estoque
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeleteId(epi.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {(onEdit || onAjustarEstoque || onDelete) ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {onEdit && (
+                            <DropdownMenuItem onClick={() => onEdit(epi)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                          )}
+                          {onAjustarEstoque && (
+                            <DropdownMenuItem onClick={() => onAjustarEstoque(epi)}>
+                              <Package className="w-4 h-4 mr-2" />
+                              Ajustar Estoque
+                            </DropdownMenuItem>
+                          )}
+                          {onDelete && (
+                            <DropdownMenuItem
+                              onClick={() => setDeleteId(epi.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </motion.tr>
               ))}
@@ -239,7 +249,7 @@ export function EpiList({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                if (deleteId) {
+                if (deleteId && onDelete) {
                   await onDelete(deleteId);
                   setDeleteId(null);
                 }
