@@ -15,6 +15,8 @@ export type EpiTipo = Database["public"]["Tables"]["epi_tipos"]["Row"] & {
   estoque_minimo?: number | null;
   quantidade_estoque?: number | null;
   is_active?: boolean | null;
+  unidade_medida?: string | null;
+  tipo_durabilidade?: string | null;
 };
 export type EpiTipoInsert = Database["public"]["Tables"]["epi_tipos"]["Insert"];
 
@@ -95,6 +97,22 @@ export const CATEGORIAS_EPI = [
 ] as const;
 
 export type CategoriaEpi = typeof CATEGORIAS_EPI[number];
+
+// Unidades de medida
+export const UNIDADES_MEDIDA = [
+  { value: "unidade", label: "Unidade" },
+  { value: "par", label: "Par" },
+  { value: "caixa", label: "Caixa" },
+  { value: "pacote", label: "Pacote" },
+  { value: "rolo", label: "Rolo" },
+  { value: "kit", label: "Kit" },
+] as const;
+
+// Tipos de durabilidade
+export const TIPOS_DURABILIDADE = [
+  { value: "duravel", label: "Durável" },
+  { value: "descartavel", label: "Descartável" },
+] as const;
 
 // Tipos de EPI padrão (para seed inicial)
 export const TIPOS_EPI_PADRAO = [

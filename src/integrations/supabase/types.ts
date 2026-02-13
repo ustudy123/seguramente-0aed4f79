@@ -2388,6 +2388,8 @@ export type Database = {
           obrigatorio_para_funcoes: string[] | null
           quantidade_estoque: number | null
           tenant_id: string
+          tipo_durabilidade: string
+          unidade_medida: string
           updated_at: string
           validade_meses: number | null
         }
@@ -2406,6 +2408,8 @@ export type Database = {
           obrigatorio_para_funcoes?: string[] | null
           quantidade_estoque?: number | null
           tenant_id: string
+          tipo_durabilidade?: string
+          unidade_medida?: string
           updated_at?: string
           validade_meses?: number | null
         }
@@ -2424,6 +2428,8 @@ export type Database = {
           obrigatorio_para_funcoes?: string[] | null
           quantidade_estoque?: number | null
           tenant_id?: string
+          tipo_durabilidade?: string
+          unidade_medida?: string
           updated_at?: string
           validade_meses?: number | null
         }

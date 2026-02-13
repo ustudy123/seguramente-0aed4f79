@@ -26,12 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIAS_EPI } from "@/types/epi";
+import { CATEGORIAS_EPI, UNIDADES_MEDIDA, TIPOS_DURABILIDADE } from "@/types/epi";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   descricao: z.string().optional(),
   categoria: z.string().min(1, "Selecione uma categoria"),
+  unidade_medida: z.string().min(1, "Selecione a unidade de medida"),
+  tipo_durabilidade: z.string().min(1, "Selecione o tipo"),
   validade_meses: z.coerce.number().min(0).optional().nullable(),
   ca_numero: z.string().optional(),
   ca_validade: z.string().optional(),
@@ -50,6 +52,8 @@ interface EpiTipoFormProps {
     nome: string;
     descricao?: string;
     categoria?: string;
+    unidade_medida?: string;
+    tipo_durabilidade?: string;
     validade_meses?: number | null;
     ca_numero?: string;
     ca_validade?: string;
@@ -75,6 +79,8 @@ export function EpiTipoForm({
       nome: "",
       descricao: "",
       categoria: defaultCategoria || "",
+      unidade_medida: "unidade",
+      tipo_durabilidade: "duravel",
       validade_meses: undefined,
       ca_numero: "",
       marca: "",
@@ -96,6 +102,8 @@ export function EpiTipoForm({
       nome: data.nome,
       descricao: data.descricao,
       categoria: data.categoria,
+      unidade_medida: data.unidade_medida,
+      tipo_durabilidade: data.tipo_durabilidade,
       validade_meses: data.validade_meses,
       ca_numero: data.ca_numero,
       ca_validade: data.ca_validade || undefined,
@@ -147,6 +155,56 @@ export function EpiTipoForm({
                         {CATEGORIAS_EPI.map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unidade_medida"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidade de Medida *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "unidade"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {UNIDADES_MEDIDA.map((um) => (
+                          <SelectItem key={um.value} value={um.value}>
+                            {um.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tipo_durabilidade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "duravel"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {TIPOS_DURABILIDADE.map((td) => (
+                          <SelectItem key={td.value} value={td.value}>
+                            {td.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
