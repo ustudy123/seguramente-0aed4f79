@@ -6374,6 +6374,160 @@ export type Database = {
           },
         ]
       }
+      permissao_trabalhadores: {
+        Row: {
+          apto: boolean
+          aso_ok: boolean
+          created_at: string
+          docs_ok: boolean
+          id: string
+          motivo_bloqueio: string | null
+          permissao_id: string
+          tenant_id: string
+          trabalhador_id: string
+          treins_ok: boolean
+        }
+        Insert: {
+          apto?: boolean
+          aso_ok?: boolean
+          created_at?: string
+          docs_ok?: boolean
+          id?: string
+          motivo_bloqueio?: string | null
+          permissao_id: string
+          tenant_id: string
+          trabalhador_id: string
+          treins_ok?: boolean
+        }
+        Update: {
+          apto?: boolean
+          aso_ok?: boolean
+          created_at?: string
+          docs_ok?: boolean
+          id?: string
+          motivo_bloqueio?: string | null
+          permissao_id?: string
+          tenant_id?: string
+          trabalhador_id?: string
+          treins_ok?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permissao_trabalhadores_permissao_id_fkey"
+            columns: ["permissao_id"]
+            isOneToOne: false
+            referencedRelation: "permissoes_trabalho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permissao_trabalhadores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permissao_trabalhadores_trabalhador_id_fkey"
+            columns: ["trabalhador_id"]
+            isOneToOne: false
+            referencedRelation: "terceiro_trabalhadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permissoes_trabalho: {
+        Row: {
+          atividade: string
+          atividades_risco: string[] | null
+          codigo: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_fim: string
+          data_inicio: string
+          descricao: string | null
+          encerrado_em: string | null
+          encerrado_por: string | null
+          encerrado_por_nome: string | null
+          id: string
+          liberado_em: string | null
+          liberado_por: string | null
+          liberado_por_nome: string | null
+          local: string
+          motivo_bloqueio: string | null
+          observacoes: string | null
+          status: Database["public"]["Enums"]["pt_status"]
+          tenant_id: string
+          terceiro_id: string
+          updated_at: string
+        }
+        Insert: {
+          atividade: string
+          atividades_risco?: string[] | null
+          codigo: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim: string
+          data_inicio: string
+          descricao?: string | null
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          encerrado_por_nome?: string | null
+          id?: string
+          liberado_em?: string | null
+          liberado_por?: string | null
+          liberado_por_nome?: string | null
+          local: string
+          motivo_bloqueio?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["pt_status"]
+          tenant_id: string
+          terceiro_id: string
+          updated_at?: string
+        }
+        Update: {
+          atividade?: string
+          atividades_risco?: string[] | null
+          codigo?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_fim?: string
+          data_inicio?: string
+          descricao?: string | null
+          encerrado_em?: string | null
+          encerrado_por?: string | null
+          encerrado_por_nome?: string | null
+          id?: string
+          liberado_em?: string | null
+          liberado_por?: string | null
+          liberado_por_nome?: string | null
+          local?: string
+          motivo_bloqueio?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["pt_status"]
+          tenant_id?: string
+          terceiro_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permissoes_trabalho_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permissoes_trabalho_terceiro_id_fkey"
+            columns: ["terceiro_id"]
+            isOneToOne: false
+            referencedRelation: "terceiros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plano_acoes: {
         Row: {
           codigo: string
@@ -8293,6 +8447,12 @@ export type Database = {
         | "cancelada"
       pdi_periodo: "trimestral" | "semestral" | "anual" | "personalizado"
       pdi_status: "rascunho" | "ativo" | "pausado" | "concluido" | "cancelado"
+      pt_status:
+        | "rascunho"
+        | "liberada"
+        | "bloqueada"
+        | "encerrada"
+        | "cancelada"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
       swot_classificacao:
@@ -8598,6 +8758,13 @@ export const Constants = {
       ],
       pdi_periodo: ["trimestral", "semestral", "anual", "personalizado"],
       pdi_status: ["rascunho", "ativo", "pausado", "concluido", "cancelado"],
+      pt_status: [
+        "rascunho",
+        "liberada",
+        "bloqueada",
+        "encerrada",
+        "cancelada",
+      ],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
       swot_classificacao: [
