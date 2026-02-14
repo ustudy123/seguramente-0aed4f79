@@ -31,6 +31,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     email: initial?.email || "",
     telefone: initial?.telefone || "",
     tipo_servico: initial?.tipo_servico || [],
+    unidades: initial?.unidades || [],
+    setores: initial?.setores || [],
     tipo_acesso: initial?.tipo_acesso || "eventual",
     contrato_inicio: initial?.contrato_inicio || "",
     contrato_fim: initial?.contrato_fim || "",
@@ -114,6 +116,25 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
                   {form.tipo_servico?.includes(s) && <X className="w-3 h-3 ml-1" />}
                 </Badge>
               ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Unidades onde atua</Label>
+              <Input
+                value={(form.unidades || []).join(", ")}
+                onChange={(e) => set("unidades", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                placeholder="Ex: Matriz, Filial SP (separar por vírgula)"
+              />
+            </div>
+            <div>
+              <Label>Setores onde pode atuar</Label>
+              <Input
+                value={(form.setores || []).join(", ")}
+                onChange={(e) => set("setores", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                placeholder="Ex: Produção, Manutenção (separar por vírgula)"
+              />
             </div>
           </div>
 

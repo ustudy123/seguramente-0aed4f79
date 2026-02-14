@@ -192,6 +192,18 @@ export function useTerceiros() {
         await supabase.storage.from("documentos").remove([path]);
         throw error;
       }
+
+      // Audit log
+      await supabase.from("terceiro_audit_log" as never).insert({
+        tenant_id: tenantId,
+        entidade_tipo: "documento",
+        entidade_id: params.terceiro_id,
+        acao: "criado",
+        descricao: `Documento "${params.nome}" (${params.tipo}) enviado`,
+        dados_novos: { tipo: params.tipo, nome: params.nome, arquivo: params.file.name },
+        usuario_id: user.id,
+        usuario_nome: profile?.nome_completo || user.email,
+      } as never);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiro-documentos"] });
@@ -210,6 +222,20 @@ export function useTerceiros() {
         .delete()
         .eq("id", doc.id);
       if (error) throw error;
+
+      // Audit log
+      if (tenantId && user) {
+        await supabase.from("terceiro_audit_log" as never).insert({
+          tenant_id: tenantId,
+          entidade_tipo: "documento",
+          entidade_id: doc.id,
+          acao: "removido",
+          descricao: `Documento "${doc.nome}" (${doc.tipo}) removido`,
+          dados_anteriores: { tipo: doc.tipo, nome: doc.nome, arquivo: doc.arquivo_nome },
+          usuario_id: user.id,
+          usuario_nome: profile?.nome_completo || user.email,
+        } as never);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiro-documentos"] });
