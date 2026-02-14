@@ -79,7 +79,7 @@ export function ErgonomiaStats({
       label: "Riscos Altos",
       value: estatisticas.riscosAltos,
       icon: AlertTriangle,
-      color: "text-orange-500",
+      color: "text-warning",
     },
     {
       label: "Ações Pendentes",

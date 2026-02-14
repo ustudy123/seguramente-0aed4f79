@@ -222,48 +222,48 @@ const Ponto = () => {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-2 md:grid-cols-5 gap-4"
       >
-        <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
+        <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+            <CheckCircle className="w-8 h-8 text-success" />
             <div>
-              <p className="text-2xl font-bold text-green-700">{stats.regulares}</p>
-              <p className="text-sm text-green-600">Regulares</p>
+              <p className="text-2xl font-bold">{stats.regulares}</p>
+              <p className="text-sm text-muted-foreground">Regulares</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+        <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <AlertCircle className="w-8 h-8 text-yellow-600" />
+            <AlertCircle className="w-8 h-8 text-warning" />
             <div>
-              <p className="text-2xl font-bold text-yellow-700">{stats.atrasos}</p>
-              <p className="text-sm text-yellow-600">Atrasos</p>
+              <p className="text-2xl font-bold">{stats.atrasos}</p>
+              <p className="text-sm text-muted-foreground">Atrasos</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+        <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <XCircle className="w-8 h-8 text-red-600" />
+            <XCircle className="w-8 h-8 text-destructive" />
             <div>
-              <p className="text-2xl font-bold text-red-700">{stats.faltas}</p>
-              <p className="text-sm text-red-600">Faltas</p>
+              <p className="text-2xl font-bold">{stats.faltas}</p>
+              <p className="text-sm text-muted-foreground">Faltas</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+        <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <Clock className="w-8 h-8 text-orange-600" />
+            <Clock className="w-8 h-8 text-warning" />
             <div>
-              <p className="text-2xl font-bold text-orange-700">{stats.incompletos}</p>
-              <p className="text-sm text-orange-600">Incompletos</p>
+              <p className="text-2xl font-bold">{stats.incompletos}</p>
+              <p className="text-sm text-muted-foreground">Incompletos</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+        <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <FileText className="w-8 h-8 text-blue-600" />
+            <FileText className="w-8 h-8 text-info" />
             <div>
-              <p className="text-2xl font-bold text-blue-700">{stats.ajustesPendentes}</p>
-              <p className="text-sm text-blue-600">Ajustes Pendentes</p>
+              <p className="text-2xl font-bold">{stats.ajustesPendentes}</p>
+              <p className="text-sm text-muted-foreground">Ajustes Pendentes</p>
             </div>
           </CardContent>
         </Card>
@@ -475,7 +475,7 @@ const Ponto = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="text-success hover:text-success hover:bg-success/10"
                             onClick={() => handleProcessarAjuste(ajuste.id, true)}
                             disabled={processandoAjuste}
                           >
@@ -485,7 +485,7 @@ const Ponto = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => handleProcessarAjuste(ajuste.id, false)}
                             disabled={processandoAjuste}
                           >
@@ -520,27 +520,27 @@ const Ponto = () => {
                 <h4 className="font-medium mb-2">Garantias do Sistema:</h4>
                 <ul className="space-y-1 text-sm">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                     Registro fiel da jornada com hash de integridade
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                     Impossibilidade de exclusão de marcações
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                     Rastreabilidade total com IP, dispositivo e geolocalização
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                     Logs de todas as alterações e ajustes
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                     Identificação do usuário em cada operação
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-success" />
                     Integridade garantida por hash SHA-256
                   </li>
                 </ul>

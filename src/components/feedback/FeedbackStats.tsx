@@ -20,12 +20,12 @@ interface FeedbackStatsProps {
 export function FeedbackStats({ feedbackStats, ocorrenciaStats }: FeedbackStatsProps) {
   const cards = [
     { label: "Feedbacks", value: feedbackStats.total, icon: MessageCircle, color: "text-primary" },
-    { label: "Reconhecimentos", value: feedbackStats.reconhecimento, icon: Award, color: "text-emerald-500" },
-    { label: "Alinhamentos", value: feedbackStats.alinhamento, icon: Target, color: "text-amber-500" },
-    { label: "Desenvolvimento", value: feedbackStats.desenvolvimento, icon: TrendingUp, color: "text-blue-500" },
+    { label: "Reconhecimentos", value: feedbackStats.reconhecimento, icon: Award, color: "text-success" },
+    { label: "Alinhamentos", value: feedbackStats.alinhamento, icon: Target, color: "text-warning" },
+    { label: "Desenvolvimento", value: feedbackStats.desenvolvimento, icon: TrendingUp, color: "text-info" },
     { label: "Ocorrências", value: ocorrenciaStats.total, icon: AlertOctagon, color: "text-muted-foreground" },
-    { label: "Positivas", value: ocorrenciaStats.positiva, icon: ThumbsUp, color: "text-emerald-500" },
-    { label: "Negativas", value: ocorrenciaStats.negativa, icon: ThumbsDown, color: "text-red-500" },
+    { label: "Positivas", value: ocorrenciaStats.positiva, icon: ThumbsUp, color: "text-success" },
+    { label: "Negativas", value: ocorrenciaStats.negativa, icon: ThumbsDown, color: "text-destructive" },
     { label: "Advertências", value: ocorrenciaStats.advertencias, icon: AlertOctagon, color: "text-destructive" },
   ];
 
