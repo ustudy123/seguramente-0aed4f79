@@ -13,6 +13,10 @@ interface Props {
     tipo: string;
     status: string;
     search: string;
+    dataInicio?: string;
+    dataFim?: string;
+    unidade?: string;
+    turno?: string;
   };
 }
 
@@ -34,6 +38,10 @@ export const EventoSSTList = ({ eventos, onSelect, filters }: Props) => {
   const filtered = eventos.filter((e) => {
     if (filters.tipo && filters.tipo !== "todos" && e.tipo !== filters.tipo) return false;
     if (filters.status && filters.status !== "todos" && e.status !== filters.status) return false;
+    if (filters.unidade && filters.unidade !== "todos" && e.unidade !== filters.unidade) return false;
+    if (filters.turno && filters.turno !== "todos" && e.turno !== filters.turno) return false;
+    if (filters.dataInicio && e.data_evento < filters.dataInicio) return false;
+    if (filters.dataFim && e.data_evento > filters.dataFim) return false;
     if (filters.search) {
       const s = filters.search.toLowerCase();
       return (
