@@ -1,14 +1,16 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Download, AlertTriangle, Shield, FileText } from "lucide-react";
+import { Eye, Pencil, AlertTriangle, Shield, FileText, CheckCircle2, Printer } from "lucide-react";
 import type { EventoSST } from "@/types/eventoSST";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
 
 interface Props {
   eventos: EventoSST[];
   onSelect: (e: EventoSST) => void;
+  onEdit?: (e: EventoSST) => void;
   filters: {
     tipo: string;
     status: string;
@@ -34,7 +36,7 @@ const lesaoMap: Record<string, string> = {
   grave: "Grave",
 };
 
-export const EventoSSTList = ({ eventos, onSelect, filters }: Props) => {
+export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => {
   const filtered = eventos.filter((e) => {
     if (filters.tipo && filters.tipo !== "todos" && e.tipo !== filters.tipo) return false;
     if (filters.status && filters.status !== "todos" && e.status !== filters.status) return false;
@@ -118,10 +120,12 @@ export const EventoSSTList = ({ eventos, onSelect, filters }: Props) => {
                 <TableCell className="text-center">
                   <div className="flex gap-1 justify-center">
                     {e.status === "acoes_andamento" && (
-                      <span title="Ação vinculada" className="text-primary">✅</span>
+                      <span title="Ação vinculada">
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                      </span>
                     )}
                     {e.tipo === "acidente" && e.cat_emitida && (
-                      <span title="CAT anexada"><FileText className="w-4 h-4 text-success" /></span>
+                      <span title="CAT anexada"><FileText className="w-4 h-4 text-green-600" /></span>
                     )}
                     {e.tipo === "acidente" && !e.cat_emitida && (
                       <span title="CAT pendente"><FileText className="w-4 h-4 text-destructive" /></span>
@@ -129,9 +133,33 @@ export const EventoSSTList = ({ eventos, onSelect, filters }: Props) => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm" onClick={(ev) => { ev.stopPropagation(); onSelect(e); }}>
-                    <Eye className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    {e.tipo === "acidente" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        title="Baixar relatório CAT"
+                        onClick={(ev) => { ev.stopPropagation(); gerarRelatorioCATpdf(e); }}
+                      >
+                        <Printer className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        title="Editar"
+                        onClick={(ev) => { ev.stopPropagation(); onEdit(e); }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Ver detalhes" onClick={(ev) => { ev.stopPropagation(); onSelect(e); }}>
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );

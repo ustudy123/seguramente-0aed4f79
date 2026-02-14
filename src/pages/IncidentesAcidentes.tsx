@@ -130,7 +130,12 @@ export default function IncidentesAcidentes() {
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">Carregando...</p>
           ) : (
-            <EventoSSTList eventos={eventos} onSelect={setSelected} filters={filters} />
+            <EventoSSTList
+              eventos={eventos}
+              onSelect={setSelected}
+              onEdit={(e) => { setEditing(e); setShowForm(true); }}
+              filters={filters}
+            />
           )}
         </TabsContent>
 
