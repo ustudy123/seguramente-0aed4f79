@@ -3328,6 +3328,106 @@ export type Database = {
           },
         ]
       }
+      evento_sst_acoes: {
+        Row: {
+          acao_id: string
+          created_at: string
+          evento_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          acao_id: string
+          created_at?: string
+          evento_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          acao_id?: string
+          created_at?: string
+          evento_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evento_sst_acoes_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_sst_acoes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_sst"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_sst_acoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evento_sst_anexos: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tamanho: number | null
+          arquivo_url: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          evento_id: string
+          id: string
+          tenant_id: string
+          tipo: string | null
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tamanho?: number | null
+          arquivo_url: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          evento_id: string
+          id?: string
+          tenant_id: string
+          tipo?: string | null
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tamanho?: number | null
+          arquivo_url?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          evento_id?: string
+          id?: string
+          tenant_id?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evento_sst_anexos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_sst"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_sst_anexos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos_saude: {
         Row: {
           codigo: string
@@ -3411,6 +3511,149 @@ export type Database = {
           },
           {
             foreignKeyName: "eventos_saude_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos_sst: {
+        Row: {
+          afastamento:
+            | Database["public"]["Enums"]["acidente_afastamento"]
+            | null
+          atendimento:
+            | Database["public"]["Enums"]["acidente_atendimento"]
+            | null
+          cat_arquivo_nome: string | null
+          cat_arquivo_url: string | null
+          cat_data_emissao: string | null
+          cat_emitida: boolean | null
+          cat_numero: string | null
+          cat_observacoes: string | null
+          cat_tipo: Database["public"]["Enums"]["cat_tipo"] | null
+          categoria_principal: string | null
+          codigo: string | null
+          colaborador_funcao: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          colaborador_tempo_empresa: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_evento: string
+          descricao: string | null
+          fatores_ergonomicos: string[] | null
+          gravidade_lesao:
+            | Database["public"]["Enums"]["acidente_gravidade_lesao"]
+            | null
+          hora_evento: string | null
+          id: string
+          local_especifico: string | null
+          obito: boolean | null
+          origem_predominante: string | null
+          outros_envolvidos: string | null
+          percepcao_causa: string | null
+          setor: string | null
+          status: Database["public"]["Enums"]["evento_sst_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["evento_sst_tipo"]
+          turno: string | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          afastamento?:
+            | Database["public"]["Enums"]["acidente_afastamento"]
+            | null
+          atendimento?:
+            | Database["public"]["Enums"]["acidente_atendimento"]
+            | null
+          cat_arquivo_nome?: string | null
+          cat_arquivo_url?: string | null
+          cat_data_emissao?: string | null
+          cat_emitida?: boolean | null
+          cat_numero?: string | null
+          cat_observacoes?: string | null
+          cat_tipo?: Database["public"]["Enums"]["cat_tipo"] | null
+          categoria_principal?: string | null
+          codigo?: string | null
+          colaborador_funcao?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          colaborador_tempo_empresa?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_evento: string
+          descricao?: string | null
+          fatores_ergonomicos?: string[] | null
+          gravidade_lesao?:
+            | Database["public"]["Enums"]["acidente_gravidade_lesao"]
+            | null
+          hora_evento?: string | null
+          id?: string
+          local_especifico?: string | null
+          obito?: boolean | null
+          origem_predominante?: string | null
+          outros_envolvidos?: string | null
+          percepcao_causa?: string | null
+          setor?: string | null
+          status?: Database["public"]["Enums"]["evento_sst_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["evento_sst_tipo"]
+          turno?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          afastamento?:
+            | Database["public"]["Enums"]["acidente_afastamento"]
+            | null
+          atendimento?:
+            | Database["public"]["Enums"]["acidente_atendimento"]
+            | null
+          cat_arquivo_nome?: string | null
+          cat_arquivo_url?: string | null
+          cat_data_emissao?: string | null
+          cat_emitida?: boolean | null
+          cat_numero?: string | null
+          cat_observacoes?: string | null
+          cat_tipo?: Database["public"]["Enums"]["cat_tipo"] | null
+          categoria_principal?: string | null
+          codigo?: string | null
+          colaborador_funcao?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          colaborador_tempo_empresa?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_evento?: string
+          descricao?: string | null
+          fatores_ergonomicos?: string[] | null
+          gravidade_lesao?:
+            | Database["public"]["Enums"]["acidente_gravidade_lesao"]
+            | null
+          hora_evento?: string | null
+          id?: string
+          local_especifico?: string | null
+          obito?: boolean | null
+          origem_predominante?: string | null
+          outros_envolvidos?: string | null
+          percepcao_causa?: string | null
+          setor?: string | null
+          status?: Database["public"]["Enums"]["evento_sst_status"]
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["evento_sst_tipo"]
+          turno?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_sst_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -8315,6 +8558,9 @@ export type Database = {
       acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"
       acao_prioridade: "baixa" | "media" | "alta" | "urgente"
       acao_status: "pendente" | "em_andamento" | "concluida" | "cancelada"
+      acidente_afastamento: "sem_afastamento" | "ate_15_dias" | "mais_15_dias"
+      acidente_atendimento: "nao_necessario" | "ambulatorial" | "hospitalar"
+      acidente_gravidade_lesao: "sem_lesao" | "leve" | "moderada" | "grave"
       admissao_status:
         | "rascunho"
         | "aguardando_documentos"
@@ -8349,6 +8595,7 @@ export type Database = {
       avaliacao_tipo: "simples" | "360"
       beneficio_inss_especie: "b31" | "b91"
       campanha_psicossocial_status: "rascunho" | "ativa" | "encerrada"
+      cat_tipo: "inicial" | "reabertura" | "comunicacao_obito"
       classificacao_atividade: "rotineira" | "critica" | "excepcional"
       complexidade_atividade: "baixa" | "media" | "alta"
       convite_enviado_via: "link" | "qrcode" | "whatsapp" | "email"
@@ -8379,6 +8626,12 @@ export type Database = {
         | "nao_atendido"
         | "nao_aplicavel"
       evento_saude_status: "aberto" | "em_acompanhamento" | "encerrado"
+      evento_sst_status:
+        | "em_aberto"
+        | "em_analise"
+        | "acoes_andamento"
+        | "concluido"
+      evento_sst_tipo: "incidente" | "acidente"
       feedback_categoria: "reconhecimento" | "alinhamento" | "desenvolvimento"
       frequencia_atividade: "diaria" | "semanal" | "mensal" | "eventual"
       grupo_clinico:
@@ -8610,6 +8863,9 @@ export const Constants = {
       acao_gut_prioridade: ["baixo", "medio", "urgente", "imediato"],
       acao_prioridade: ["baixa", "media", "alta", "urgente"],
       acao_status: ["pendente", "em_andamento", "concluida", "cancelada"],
+      acidente_afastamento: ["sem_afastamento", "ate_15_dias", "mais_15_dias"],
+      acidente_atendimento: ["nao_necessario", "ambulatorial", "hospitalar"],
+      acidente_gravidade_lesao: ["sem_lesao", "leve", "moderada", "grave"],
       admissao_status: [
         "rascunho",
         "aguardando_documentos",
@@ -8648,6 +8904,7 @@ export const Constants = {
       avaliacao_tipo: ["simples", "360"],
       beneficio_inss_especie: ["b31", "b91"],
       campanha_psicossocial_status: ["rascunho", "ativa", "encerrada"],
+      cat_tipo: ["inicial", "reabertura", "comunicacao_obito"],
       classificacao_atividade: ["rotineira", "critica", "excepcional"],
       complexidade_atividade: ["baixa", "media", "alta"],
       convite_enviado_via: ["link", "qrcode", "whatsapp", "email"],
@@ -8682,6 +8939,13 @@ export const Constants = {
         "nao_aplicavel",
       ],
       evento_saude_status: ["aberto", "em_acompanhamento", "encerrado"],
+      evento_sst_status: [
+        "em_aberto",
+        "em_analise",
+        "acoes_andamento",
+        "concluido",
+      ],
+      evento_sst_tipo: ["incidente", "acidente"],
       feedback_categoria: ["reconhecimento", "alinhamento", "desenvolvimento"],
       frequencia_atividade: ["diaria", "semanal", "mensal", "eventual"],
       grupo_clinico: [

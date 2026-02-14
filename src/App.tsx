@@ -40,6 +40,7 @@ import Financeiro from "./pages/Financeiro";
 import Empresa from "./pages/Empresa";
 import Marketplace from "./pages/Marketplace";
 import Terceiros from "./pages/Terceiros";
+import IncidentesAcidentes from "./pages/IncidentesAcidentes";
 import NotFound from "./pages/NotFound";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/terceiros" element={<Terceiros />} />
+              <Route path="/incidentes-acidentes" element={<IncidentesAcidentes />} />
               <Route path="/configuracoes" element={<PlaceholderPage />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />
