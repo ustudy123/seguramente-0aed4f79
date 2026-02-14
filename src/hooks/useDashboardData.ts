@@ -30,6 +30,9 @@ export interface PilarData {
     acoesConcluidas: number;
     acoesTotal: number;
     evidenciasEnviadas: number;
+    terceirosAtivos: number;
+    terceirosConformes: number;
+    ptsBloqueadas: number;
     score: number;
   };
 }
@@ -55,6 +58,8 @@ export const useDashboardData = () => {
         feedRes,
         acoesRes,
         evidenciasRes,
+        terceirosRes,
+        ptsRes,
       ] = await Promise.all([
         // Pilar 1 - Organização
         supabase.from("cargos").select("id", { count: "exact" }).eq("tenant_id", tenant.id).eq("ativo", true),
@@ -74,6 +79,9 @@ export const useDashboardData = () => {
         // Pilar 4 - Governança
         supabase.from("ergonomia_acoes").select("id, status").eq("tenant_id", tenant.id),
         supabase.from("ergonomia_evidencias").select("id").eq("tenant_id", tenant.id),
+        // Terceiros cross-module
+        supabase.from("terceiros" as never).select("id, status").eq("tenant_id", tenant.id),
+        supabase.from("permissoes_trabalho" as never).select("id, status").eq("tenant_id", tenant.id),
       ]);
 
       // Calcular métricas Pilar 1
@@ -109,8 +117,20 @@ export const useDashboardData = () => {
       const acoesConcluidas = acoes.filter(a => a.status === "concluida").length;
       const acoesEmAndamento = acoes.filter(a => a.status === "em_andamento").length;
       const evidencias = evidenciasRes.count || 0;
+      
+      // Terceiros metrics
+      const terceirosData = (terceirosRes.data as any[]) || [];
+      const terceirosAtivos = terceirosData.length;
+      const terceirosConformes = terceirosData.filter((t: any) => t.status === "liberado").length;
+      const ptsData = (ptsRes.data as any[]) || [];
+      const ptsBloqueadas = ptsData.filter((p: any) => p.status === "bloqueada").length;
+      
+      const terceirosBonus = terceirosAtivos > 0
+        ? Math.round((terceirosConformes / terceirosAtivos) * 10) - (ptsBloqueadas * 2)
+        : 0;
+      
       const scoreGovernanca = acoes.length > 0 
-        ? Math.round((acoesConcluidas / acoes.length) * 60 + (evidencias > 0 ? 20 : 0) + (acoesEmAndamento > 0 ? 20 : 0))
+        ? Math.min(100, Math.round((acoesConcluidas / acoes.length) * 50 + (evidencias > 0 ? 15 : 0) + (acoesEmAndamento > 0 ? 15 : 0) + Math.max(0, terceirosBonus) + (ptsBloqueadas === 0 && terceirosAtivos > 0 ? 10 : 0)))
         : 35;
 
       return {
@@ -141,6 +161,9 @@ export const useDashboardData = () => {
           acoesConcluidas: acoesConcluidas,
           acoesTotal: acoes.length,
           evidenciasEnviadas: evidencias,
+          terceirosAtivos,
+          terceirosConformes,
+          ptsBloqueadas,
           score: scoreGovernanca,
         },
       };

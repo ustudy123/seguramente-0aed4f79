@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Building2, LayoutDashboard, List, Clock } from "lucide-react";
+import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck } from "lucide-react";
 import { useTerceiros } from "@/hooks/useTerceiros";
 import { TerceiroDashboard } from "@/components/terceiros/TerceiroDashboard";
 import { TerceiroList } from "@/components/terceiros/TerceiroList";
 import { TerceiroForm } from "@/components/terceiros/TerceiroForm";
 import { TerceiroDetail } from "@/components/terceiros/TerceiroDetail";
 import { VencimentosPanel } from "@/components/terceiros/VencimentosPanel";
+import { PermissaoTrabalhoPanel } from "@/components/terceiros/PermissaoTrabalhoPanel";
 import type { Terceiro } from "@/types/terceiros";
 
 export default function Terceiros() {
@@ -55,6 +56,7 @@ export default function Terceiros() {
         <TabsList>
           <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</TabsTrigger>
           <TabsTrigger value="terceiros"><List className="w-4 h-4 mr-1" /> Terceiros</TabsTrigger>
+          <TabsTrigger value="permissoes"><ClipboardCheck className="w-4 h-4 mr-1" /> Permissões de Trabalho</TabsTrigger>
           <TabsTrigger value="vencimentos"><Clock className="w-4 h-4 mr-1" /> Vencimentos</TabsTrigger>
         </TabsList>
 
@@ -84,6 +86,10 @@ export default function Terceiros() {
               onDelete={(id) => deleteTerceiro.mutate(id)}
             />
           )}
+        </TabsContent>
+
+        <TabsContent value="permissoes">
+          <PermissaoTrabalhoPanel />
         </TabsContent>
 
         <TabsContent value="vencimentos">
