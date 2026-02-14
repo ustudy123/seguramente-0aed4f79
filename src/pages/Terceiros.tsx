@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Building2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, Building2, LayoutDashboard, List, Clock } from "lucide-react";
 import { useTerceiros } from "@/hooks/useTerceiros";
 import { TerceiroDashboard } from "@/components/terceiros/TerceiroDashboard";
 import { TerceiroList } from "@/components/terceiros/TerceiroList";
 import { TerceiroForm } from "@/components/terceiros/TerceiroForm";
 import { TerceiroDetail } from "@/components/terceiros/TerceiroDetail";
+import { VencimentosPanel } from "@/components/terceiros/VencimentosPanel";
 import type { Terceiro } from "@/types/terceiros";
 
 export default function Terceiros() {
@@ -49,31 +51,45 @@ export default function Terceiros() {
         </Button>
       </div>
 
-      {/* Dashboard */}
-      <TerceiroDashboard terceiros={terceiros} />
+      <Tabs defaultValue="dashboard">
+        <TabsList>
+          <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</TabsTrigger>
+          <TabsTrigger value="terceiros"><List className="w-4 h-4 mr-1" /> Terceiros</TabsTrigger>
+          <TabsTrigger value="vencimentos"><Clock className="w-4 h-4 mr-1" /> Vencimentos</TabsTrigger>
+        </TabsList>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          className="pl-10"
-          placeholder="Buscar por razão social, CNPJ..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+        <TabsContent value="dashboard">
+          <TerceiroDashboard terceiros={terceiros} />
+        </TabsContent>
 
-      {/* List */}
-      {isLoading ? (
-        <p className="text-center text-muted-foreground py-8">Carregando...</p>
-      ) : (
-        <TerceiroList
-          terceiros={filtered}
-          onSelect={setSelected}
-          onEdit={(t) => { setEditing(t); setShowForm(true); }}
-          onDelete={(id) => deleteTerceiro.mutate(id)}
-        />
-      )}
+        <TabsContent value="terceiros" className="space-y-4">
+          {/* Search */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-10"
+              placeholder="Buscar por razão social, CNPJ..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {isLoading ? (
+            <p className="text-center text-muted-foreground py-8">Carregando...</p>
+          ) : (
+            <TerceiroList
+              terceiros={filtered}
+              onSelect={setSelected}
+              onEdit={(t) => { setEditing(t); setShowForm(true); }}
+              onDelete={(id) => deleteTerceiro.mutate(id)}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="vencimentos">
+          <VencimentosPanel />
+        </TabsContent>
+      </Tabs>
 
       {/* Form */}
       <TerceiroForm

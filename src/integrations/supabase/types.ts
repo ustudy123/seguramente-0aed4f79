@@ -8098,6 +8098,14 @@ export type Database = {
         Returns: number
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      recalcular_status_terceiro: {
+        Args: { p_terceiro_id: string }
+        Returns: undefined
+      }
+      recalcular_status_trabalhador: {
+        Args: { p_trabalhador_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"
