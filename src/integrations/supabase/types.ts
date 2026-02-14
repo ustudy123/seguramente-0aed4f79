@@ -7714,6 +7714,316 @@ export type Database = {
         }
         Relationships: []
       }
+      terceiro_documentos: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_emissao: string | null
+          data_validade: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["terceiro_doc_status"] | null
+          tenant_id: string
+          terceiro_id: string
+          tipo: string
+          trabalhador_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string | null
+          data_validade?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["terceiro_doc_status"] | null
+          tenant_id: string
+          terceiro_id: string
+          tipo: string
+          trabalhador_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_emissao?: string | null
+          data_validade?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["terceiro_doc_status"] | null
+          tenant_id?: string
+          terceiro_id?: string
+          tipo?: string
+          trabalhador_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terceiro_documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terceiro_documentos_terceiro_id_fkey"
+            columns: ["terceiro_id"]
+            isOneToOne: false
+            referencedRelation: "terceiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terceiro_documentos_trabalhador_id_fkey"
+            columns: ["trabalhador_id"]
+            isOneToOne: false
+            referencedRelation: "terceiro_trabalhadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      terceiro_trabalhadores: {
+        Row: {
+          atividades: string[] | null
+          atividades_risco: string[] | null
+          ativo: boolean | null
+          cpf: string | null
+          created_at: string
+          funcao: string | null
+          id: string
+          nome: string
+          setor: string | null
+          status: Database["public"]["Enums"]["terceiro_status"] | null
+          tenant_id: string
+          terceiro_id: string
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          atividades?: string[] | null
+          atividades_risco?: string[] | null
+          ativo?: boolean | null
+          cpf?: string | null
+          created_at?: string
+          funcao?: string | null
+          id?: string
+          nome: string
+          setor?: string | null
+          status?: Database["public"]["Enums"]["terceiro_status"] | null
+          tenant_id: string
+          terceiro_id: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          atividades?: string[] | null
+          atividades_risco?: string[] | null
+          ativo?: boolean | null
+          cpf?: string | null
+          created_at?: string
+          funcao?: string | null
+          id?: string
+          nome?: string
+          setor?: string | null
+          status?: Database["public"]["Enums"]["terceiro_status"] | null
+          tenant_id?: string
+          terceiro_id?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terceiro_trabalhadores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terceiro_trabalhadores_terceiro_id_fkey"
+            columns: ["terceiro_id"]
+            isOneToOne: false
+            referencedRelation: "terceiros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      terceiro_treinamentos: {
+        Row: {
+          carga_horaria: number | null
+          certificado_nome: string | null
+          certificado_url: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_realizacao: string | null
+          data_validade: string | null
+          descricao: string | null
+          id: string
+          status: Database["public"]["Enums"]["terceiro_doc_status"] | null
+          tenant_id: string
+          terceiro_id: string
+          tipo: string
+          trabalhador_id: string
+          updated_at: string
+        }
+        Insert: {
+          carga_horaria?: number | null
+          certificado_nome?: string | null
+          certificado_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_realizacao?: string | null
+          data_validade?: string | null
+          descricao?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["terceiro_doc_status"] | null
+          tenant_id: string
+          terceiro_id: string
+          tipo: string
+          trabalhador_id: string
+          updated_at?: string
+        }
+        Update: {
+          carga_horaria?: number | null
+          certificado_nome?: string | null
+          certificado_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_realizacao?: string | null
+          data_validade?: string | null
+          descricao?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["terceiro_doc_status"] | null
+          tenant_id?: string
+          terceiro_id?: string
+          tipo?: string
+          trabalhador_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terceiro_treinamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terceiro_treinamentos_terceiro_id_fkey"
+            columns: ["terceiro_id"]
+            isOneToOne: false
+            referencedRelation: "terceiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terceiro_treinamentos_trabalhador_id_fkey"
+            columns: ["trabalhador_id"]
+            isOneToOne: false
+            referencedRelation: "terceiro_trabalhadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      terceiros: {
+        Row: {
+          atividade_principal: string | null
+          atividade_risco: boolean | null
+          cnae: string | null
+          cnpj: string
+          contrato_fim: string | null
+          contrato_inicio: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome_fantasia: string | null
+          observacoes: string | null
+          razao_social: string
+          responsavel_cargo: string | null
+          responsavel_nome: string | null
+          setores: string[] | null
+          status: Database["public"]["Enums"]["terceiro_status"] | null
+          telefone: string | null
+          tenant_id: string
+          tipo_acesso: Database["public"]["Enums"]["terceiro_acesso"] | null
+          tipo_servico: string[] | null
+          unidades: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          atividade_principal?: string | null
+          atividade_risco?: boolean | null
+          cnae?: string | null
+          cnpj: string
+          contrato_fim?: string | null
+          contrato_inicio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          razao_social: string
+          responsavel_cargo?: string | null
+          responsavel_nome?: string | null
+          setores?: string[] | null
+          status?: Database["public"]["Enums"]["terceiro_status"] | null
+          telefone?: string | null
+          tenant_id: string
+          tipo_acesso?: Database["public"]["Enums"]["terceiro_acesso"] | null
+          tipo_servico?: string[] | null
+          unidades?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          atividade_principal?: string | null
+          atividade_risco?: boolean | null
+          cnae?: string | null
+          cnpj?: string
+          contrato_fim?: string | null
+          contrato_inicio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          razao_social?: string
+          responsavel_cargo?: string | null
+          responsavel_nome?: string | null
+          setores?: string[] | null
+          status?: Database["public"]["Enums"]["terceiro_status"] | null
+          telefone?: string | null
+          tenant_id?: string
+          tipo_acesso?: Database["public"]["Enums"]["terceiro_acesso"] | null
+          tipo_servico?: string[] | null
+          unidades?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terceiros_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -7937,6 +8247,9 @@ export type Database = {
       swot_tipo: "forca" | "fraqueza" | "oportunidade" | "ameaca"
       tarefa_status: "nao_iniciada" | "em_andamento" | "bloqueada" | "concluida"
       tenant_plan: "free" | "starter" | "professional" | "enterprise"
+      terceiro_acesso: "eventual" | "recorrente" | "continuo"
+      terceiro_doc_status: "valido" | "a_vencer" | "vencido" | "pendente"
+      terceiro_status: "liberado" | "restrito" | "bloqueado"
       tipo_avaliador: "auto" | "gestor" | "par" | "subordinado"
       tipo_competencia: "tecnica" | "comportamental" | "cognitiva"
       tipo_conteudo_funcao:
@@ -8240,6 +8553,9 @@ export const Constants = {
       swot_tipo: ["forca", "fraqueza", "oportunidade", "ameaca"],
       tarefa_status: ["nao_iniciada", "em_andamento", "bloqueada", "concluida"],
       tenant_plan: ["free", "starter", "professional", "enterprise"],
+      terceiro_acesso: ["eventual", "recorrente", "continuo"],
+      terceiro_doc_status: ["valido", "a_vencer", "vencido", "pendente"],
+      terceiro_status: ["liberado", "restrito", "bloqueado"],
       tipo_avaliador: ["auto", "gestor", "par", "subordinado"],
       tipo_competencia: ["tecnica", "comportamental", "cognitiva"],
       tipo_conteudo_funcao: [
