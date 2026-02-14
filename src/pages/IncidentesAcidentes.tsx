@@ -18,7 +18,15 @@ export default function IncidentesAcidentes() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<EventoSST | null>(null);
   const [selected, setSelected] = useState<EventoSST | null>(null);
-  const [filters, setFilters] = useState({ tipo: "todos", status: "todos", search: "" });
+  const [filters, setFilters] = useState({
+    tipo: "todos",
+    status: "todos",
+    search: "",
+    dataInicio: "",
+    dataFim: "",
+    unidade: "todos",
+    turno: "todos",
+  });
 
   if (selected) {
     return (
@@ -37,8 +45,8 @@ export default function IncidentesAcidentes() {
             <Shield className="w-7 h-7 text-primary" />
             Incidentes & Acidentes
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Registro, rastreabilidade e ações preventivas/corretivas em SST.
+          <p className="text-sm text-muted-foreground mt-1 italic">
+            Cada incidente registrado é uma oportunidade de evitar o próximo acidente.
           </p>
         </div>
         <Button onClick={() => { setEditing(null); setShowForm(true); }}>
@@ -57,7 +65,7 @@ export default function IncidentesAcidentes() {
 
         <TabsContent value="lista" className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 items-end">
             <div className="relative max-w-xs flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -76,7 +84,7 @@ export default function IncidentesAcidentes() {
               </SelectContent>
             </Select>
             <Select value={filters.status} onValueChange={(v) => setFilters((f) => ({ ...f, status: v }))}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os Status</SelectItem>
                 <SelectItem value="em_aberto">Em Aberto</SelectItem>
@@ -85,6 +93,38 @@ export default function IncidentesAcidentes() {
                 <SelectItem value="concluido">Concluído</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={filters.unidade} onValueChange={(v) => setFilters((f) => ({ ...f, unidade: v }))}>
+              <SelectTrigger className="w-36"><SelectValue placeholder="Unidade" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas Unidades</SelectItem>
+                {[...new Set(eventos.map((e) => e.unidade).filter(Boolean))].map((u) => (
+                  <SelectItem key={u!} value={u!}>{u}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.turno} onValueChange={(v) => setFilters((f) => ({ ...f, turno: v }))}>
+              <SelectTrigger className="w-32"><SelectValue placeholder="Turno" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Turnos</SelectItem>
+                {["1º Turno", "2º Turno", "3º Turno", "Outro"].map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              className="w-36"
+              placeholder="Data início"
+              value={filters.dataInicio}
+              onChange={(e) => setFilters((f) => ({ ...f, dataInicio: e.target.value }))}
+            />
+            <Input
+              type="date"
+              className="w-36"
+              placeholder="Data fim"
+              value={filters.dataFim}
+              onChange={(e) => setFilters((f) => ({ ...f, dataFim: e.target.value }))}
+            />
           </div>
 
           {isLoading ? (

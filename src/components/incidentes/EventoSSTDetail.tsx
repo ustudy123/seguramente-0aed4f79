@@ -19,6 +19,7 @@ import {
   MapPin,
   User,
   Clock,
+  Printer,
 } from "lucide-react";
 import type { EventoSST, EventoSSTAnexo } from "@/types/eventoSST";
 import { format } from "date-fns";
@@ -26,6 +27,7 @@ import { ptBR } from "date-fns/locale";
 import { useEventosSST } from "@/hooks/useEventosSST";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
 
 interface Props {
   evento: EventoSST;
@@ -140,6 +142,11 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
           </div>
         </div>
         <div className="flex gap-2">
+          {evento.tipo === "acidente" && (
+            <Button variant="outline" size="sm" onClick={() => gerarRelatorioCATpdf(evento)}>
+              <Printer className="w-4 h-4 mr-1" /> Baixar Relatório CAT
+            </Button>
+          )}
           {evento.status !== "concluido" && (
             <Button variant="outline" size="sm" onClick={handleConcluir}>
               Concluir Evento
