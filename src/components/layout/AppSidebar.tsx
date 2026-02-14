@@ -28,6 +28,7 @@ import {
   Compass,
   Store,
   HardHat,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -70,6 +71,7 @@ const menuItems: MenuItem[] = [
   { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
   { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
   { title: "Documentos", icon: FileText, path: "/documentos" },
+  { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
   { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
   { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" },
 ];
