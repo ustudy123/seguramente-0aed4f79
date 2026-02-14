@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Brain, Cog, Heart, BarChart3, Loader2, Expand } from "lucide-react";
+import { Brain, Cog, Heart, BarChart3, Loader2, Expand, Trophy, TrendingUp, ShieldCheck, Wrench, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { IndicatorDetailModal, IndicatorType } from "./IndicatorDetailModal";
@@ -23,8 +23,8 @@ const pilares: PilarSummary[] = [
     shortTitle: "Organização",
     icon: Brain,
     scoreKey: "organizacao",
-    color: "text-[hsl(215,50%,23%)]",
-    bgColor: "bg-[hsl(215,50%,23%)]",
+    color: "text-primary",
+    bgColor: "bg-primary",
     indicatorType: "organizacao",
   },
   {
@@ -33,8 +33,8 @@ const pilares: PilarSummary[] = [
     shortTitle: "Condições",
     icon: Cog,
     scoreKey: "condicoes",
-    color: "text-[hsl(145,55%,45%)]",
-    bgColor: "bg-[hsl(145,55%,45%)]",
+    color: "text-success",
+    bgColor: "bg-success",
     indicatorType: "condicoes",
   },
   {
@@ -43,8 +43,8 @@ const pilares: PilarSummary[] = [
     shortTitle: "Experiência",
     icon: Heart,
     scoreKey: "experiencia",
-    color: "text-[hsl(280,55%,55%)]",
-    bgColor: "bg-[hsl(280,55%,55%)]",
+    color: "text-info",
+    bgColor: "bg-info",
     indicatorType: "experiencia",
   },
   {
@@ -53,8 +53,8 @@ const pilares: PilarSummary[] = [
     shortTitle: "Governança",
     icon: BarChart3,
     scoreKey: "governanca",
-    color: "text-[hsl(38,92%,50%)]",
-    bgColor: "bg-[hsl(38,92%,50%)]",
+    color: "text-warning",
+    bgColor: "bg-warning",
     indicatorType: "governanca",
   },
 ];
@@ -83,11 +83,11 @@ export const PilaresSummaryLive = () => {
     : 0;
 
   const getOverallLabel = (score: number) => {
-    if (score >= 80) return { label: "Cultura Saudável", emoji: "🏆" };
-    if (score >= 60) return { label: "Estratégico", emoji: "📈" };
-    if (score >= 40) return { label: "Preventivo", emoji: "🛡️" };
-    if (score >= 20) return { label: "Corretivo", emoji: "🔧" };
-    return { label: "Reativo", emoji: "⚠️" };
+    if (score >= 80) return { label: "Cultura Saudável", icon: Trophy, color: "text-success" };
+    if (score >= 60) return { label: "Estratégico", icon: TrendingUp, color: "text-primary" };
+    if (score >= 40) return { label: "Preventivo", icon: ShieldCheck, color: "text-info" };
+    if (score >= 20) return { label: "Corretivo", icon: Wrench, color: "text-warning" };
+    return { label: "Reativo", icon: AlertTriangle, color: "text-destructive" };
   };
 
   const overall = getOverallLabel(averageScore);
@@ -129,7 +129,7 @@ export const PilaresSummaryLive = () => {
             </p>
           </div>
           <div className="flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3">
-            <span className="text-2xl">{overall.emoji}</span>
+            <overall.icon className={cn("w-6 h-6", overall.color)} />
             <div>
               <p className="text-xs text-muted-foreground">Nível de Maturidade</p>
               <p className="font-bold text-foreground">{overall.label}</p>

@@ -54,10 +54,10 @@ export function PlanoAcaoInbox({ acoes, isLoading }: PlanoAcaoInboxProps) {
   const outras = acoes.filter(a => !atrasadas.includes(a) && !imediatas.includes(a) && !urgentes.includes(a));
 
   const sections = [
-    { title: "🚨 Atrasadas", items: atrasadas, highlight: true },
-    { title: "⚡ Prioridade Imediata", items: imediatas, highlight: false },
-    { title: "🔥 Urgentes", items: urgentes, highlight: false },
-    { title: "📋 Outras Ações", items: outras, highlight: false },
+    { title: "Atrasadas", items: atrasadas, highlight: true },
+    { title: "Prioridade Imediata", items: imediatas, highlight: false },
+    { title: "Urgentes", items: urgentes, highlight: false },
+    { title: "Outras Ações", items: outras, highlight: false },
   ].filter(s => s.items.length > 0);
 
   if (acoes.length === 0) {

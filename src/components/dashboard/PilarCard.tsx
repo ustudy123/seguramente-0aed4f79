@@ -26,31 +26,31 @@ interface PilarCardProps {
 
 const colorClasses = {
   navy: {
-    bg: "bg-gradient-to-br from-[hsl(215,50%,23%)] to-[hsl(215,45%,30%)]",
-    icon: "bg-white/20 text-white",
-    badge: "bg-white/20 text-white",
-    progress: "bg-white/30",
+    bg: "bg-gradient-to-br from-primary to-primary/80",
+    icon: "bg-white/15 text-white",
+    badge: "bg-white/15 text-white",
+    progress: "bg-white/20",
     progressFill: "bg-white",
   },
   green: {
-    bg: "bg-gradient-to-br from-[hsl(145,55%,45%)] to-[hsl(145,50%,35%)]",
-    icon: "bg-white/20 text-white",
-    badge: "bg-white/20 text-white",
-    progress: "bg-white/30",
+    bg: "bg-gradient-to-br from-success to-success/80",
+    icon: "bg-white/15 text-white",
+    badge: "bg-white/15 text-white",
+    progress: "bg-white/20",
     progressFill: "bg-white",
   },
   purple: {
-    bg: "bg-gradient-to-br from-[hsl(280,55%,55%)] to-[hsl(280,50%,45%)]",
-    icon: "bg-white/20 text-white",
-    badge: "bg-white/20 text-white",
-    progress: "bg-white/30",
+    bg: "bg-gradient-to-br from-info to-info/80",
+    icon: "bg-white/15 text-white",
+    badge: "bg-white/15 text-white",
+    progress: "bg-white/20",
     progressFill: "bg-white",
   },
   amber: {
-    bg: "bg-gradient-to-br from-[hsl(38,92%,50%)] to-[hsl(38,85%,40%)]",
-    icon: "bg-white/20 text-white",
-    badge: "bg-white/20 text-white",
-    progress: "bg-white/30",
+    bg: "bg-gradient-to-br from-warning to-warning/80",
+    icon: "bg-white/15 text-white",
+    badge: "bg-white/15 text-white",
+    progress: "bg-white/20",
     progressFill: "bg-white",
   },
 };
@@ -168,10 +168,10 @@ export const PilarCard = ({
                     className={cn(
                       "flex items-center text-xs",
                       metric.change > 0
-                        ? "text-green-200"
+                        ? "text-white/90"
                         : metric.change < 0
-                        ? "text-red-200"
-                        : "text-white/60"
+                        ? "text-white/70"
+                        : "text-white/50"
                     )}
                   >
                     {metric.change > 0 ? (
