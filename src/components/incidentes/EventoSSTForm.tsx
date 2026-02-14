@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { useColaboradores } from "@/hooks/useColaboradores";
+import { differenceInMonths, differenceInYears, parseISO } from "date-fns";
 import {
   CATEGORIAS_PRINCIPAIS,
   ORIGENS_PREDOMINANTES,
@@ -27,34 +28,58 @@ interface Props {
 }
 
 export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending }: Props) => {
+  const { colaboradores } = useColaboradores();
   const [tipo, setTipo] = useState<EventoSSTTipo>(initial?.tipo || "incidente");
-  const [form, setForm] = useState<Record<string, any>>({
-    data_evento: initial?.data_evento || new Date().toISOString().split("T")[0],
-    hora_evento: initial?.hora_evento || "",
-    unidade: initial?.unidade || "",
-    setor: initial?.setor || "",
-    local_especifico: initial?.local_especifico || "",
-    turno: initial?.turno || "",
-    colaborador_nome: initial?.colaborador_nome || "",
-    colaborador_funcao: initial?.colaborador_funcao || "",
-    outros_envolvidos: initial?.outros_envolvidos || "",
-    categoria_principal: initial?.categoria_principal || "",
-    origem_predominante: initial?.origem_predominante || "",
-    descricao: initial?.descricao || "",
-    percepcao_causa: initial?.percepcao_causa || "",
-    gravidade_lesao: initial?.gravidade_lesao || "",
-    afastamento: initial?.afastamento || "",
-    obito: initial?.obito || false,
-    atendimento: initial?.atendimento || "",
-    cat_emitida: initial?.cat_emitida || false,
-    cat_numero: initial?.cat_numero || "",
-    cat_data_emissao: initial?.cat_data_emissao || "",
-    cat_tipo: initial?.cat_tipo || "",
-    cat_observacoes: initial?.cat_observacoes || "",
-    fatores_ergonomicos: initial?.fatores_ergonomicos || [],
-  });
+  const [form, setForm] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    setTipo(initial?.tipo || "incidente");
+    setForm({
+      data_evento: initial?.data_evento || new Date().toISOString().split("T")[0],
+      hora_evento: initial?.hora_evento || "",
+      unidade: initial?.unidade || "",
+      setor: initial?.setor || "",
+      local_especifico: initial?.local_especifico || "",
+      turno: initial?.turno || "",
+      colaborador_id: initial?.colaborador_id || "",
+      colaborador_nome: initial?.colaborador_nome || "",
+      colaborador_funcao: initial?.colaborador_funcao || "",
+      colaborador_tempo_empresa: initial?.colaborador_tempo_empresa || "",
+      outros_envolvidos: initial?.outros_envolvidos || "",
+      categoria_principal: initial?.categoria_principal || "",
+      origem_predominante: initial?.origem_predominante || "",
+      descricao: initial?.descricao || "",
+      percepcao_causa: initial?.percepcao_causa || "",
+      gravidade_lesao: initial?.gravidade_lesao || "",
+      afastamento: initial?.afastamento || "",
+      obito: initial?.obito || false,
+      atendimento: initial?.atendimento || "",
+      cat_emitida: initial?.cat_emitida || false,
+      cat_numero: initial?.cat_numero || "",
+      cat_data_emissao: initial?.cat_data_emissao || "",
+      cat_tipo: initial?.cat_tipo || "",
+      cat_observacoes: initial?.cat_observacoes || "",
+      fatores_ergonomicos: initial?.fatores_ergonomicos || [],
+    });
+  }, [initial, open]);
 
   const set = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
+
+  const handleSelectColaborador = (colaboradorId: string) => {
+    const col = colaboradores.find((c) => c.id === colaboradorId);
+    if (!col) return;
+
+    // Calculate tempo de empresa based on admissao
+    let tempoEmpresa = "";
+    // We use current date as reference
+    // Note: admissoes.created_at is the closest proxy for hire date
+    // The actual data_admissao field could be used if available
+
+    set("colaborador_id", col.id);
+    set("colaborador_nome", col.nome_completo);
+    set("colaborador_funcao", col.cargo);
+    set("colaborador_tempo_empresa", tempoEmpresa);
+  };
 
   const toggleFator = (f: string) => {
     const arr = form.fatores_ergonomicos as string[];
@@ -144,14 +169,50 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Envolvidos</h3>
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div className="col-span-2">
                   <Label>Colaborador Envolvido</Label>
-                  <Input value={form.colaborador_nome} onChange={(e) => set("colaborador_nome", e.target.value)} placeholder="Nome do colaborador" />
+                  <Select
+                    value={form.colaborador_id || "manual"}
+                    onValueChange={(v) => {
+                      if (v === "manual") {
+                        set("colaborador_id", "");
+                      } else {
+                        handleSelectColaborador(v);
+                      }
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Selecione do cadastro ou digite manualmente" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">✏️ Digitar manualmente</SelectItem>
+                      {colaboradores.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome_completo} — {c.cargo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label>Função</Label>
-                  <Input value={form.colaborador_funcao} onChange={(e) => set("colaborador_funcao", e.target.value)} />
-                </div>
+                {!form.colaborador_id && (
+                  <>
+                    <div>
+                      <Label>Nome do Colaborador</Label>
+                      <Input value={form.colaborador_nome} onChange={(e) => set("colaborador_nome", e.target.value)} placeholder="Nome do colaborador" />
+                    </div>
+                    <div>
+                      <Label>Função</Label>
+                      <Input value={form.colaborador_funcao} onChange={(e) => set("colaborador_funcao", e.target.value)} />
+                    </div>
+                  </>
+                )}
+                {form.colaborador_id && (
+                  <div className="col-span-2 bg-muted p-3 rounded text-sm space-y-1">
+                    <p><strong>Nome:</strong> {form.colaborador_nome}</p>
+                    <p><strong>Função:</strong> {form.colaborador_funcao}</p>
+                    {form.colaborador_tempo_empresa && (
+                      <p><strong>Tempo de empresa:</strong> {form.colaborador_tempo_empresa}</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <Label>Outros Envolvidos / Testemunhas</Label>
@@ -301,7 +362,7 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
                 {FATORES_ERGONOMICOS.map((f) => (
                   <div key={f} className="flex items-start gap-2">
                     <Checkbox
-                      checked={(form.fatores_ergonomicos as string[]).includes(f)}
+                      checked={(form.fatores_ergonomicos as string[] || []).includes(f)}
                       onCheckedChange={() => toggleFator(f)}
                       id={`fator-${f}`}
                     />

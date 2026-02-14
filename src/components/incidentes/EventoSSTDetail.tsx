@@ -1,11 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useDropzone } from "react-dropzone";
 import {
   ArrowLeft,
@@ -20,6 +19,7 @@ import {
   User,
   Clock,
   Printer,
+  ExternalLink,
 } from "lucide-react";
 import type { EventoSST, EventoSSTAnexo } from "@/types/eventoSST";
 import { format } from "date-fns";
@@ -58,11 +58,21 @@ const atendLabels: Record<string, string> = {
   hospitalar: "Hospitalar",
 };
 
+interface AcaoVinculada {
+  id: string;
+  titulo: string;
+  status: string;
+  prazo: string | null;
+  responsavel_nome: string | null;
+}
+
 export const EventoSSTDetail = ({ evento, onBack }: Props) => {
   const { uploadAnexo, getAnexos, uploadCAT, criarAcaoVinculada, updateEvento } = useEventosSST();
   const [anexos, setAnexos] = useState<EventoSSTAnexo[]>([]);
   const [loadingAnexos, setLoadingAnexos] = useState(false);
   const [catFile, setCatFile] = useState<File | null>(null);
+  const [acoes, setAcoes] = useState<AcaoVinculada[]>([]);
+  const [loadingAcoes, setLoadingAcoes] = useState(false);
 
   const st = statusMap[evento.status] || statusMap.em_aberto;
 
@@ -78,7 +88,35 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
     setLoadingAnexos(false);
   }, [evento.id, getAnexos]);
 
-  useState(() => { loadAnexos(); });
+  // Load linked actions
+  const loadAcoes = useCallback(async () => {
+    setLoadingAcoes(true);
+    try {
+      const { data: links } = await supabase
+        .from("evento_sst_acoes")
+        .select("acao_id")
+        .eq("evento_id", evento.id);
+      
+      if (links && links.length > 0) {
+        const acoesIds = links.map((l: any) => l.acao_id);
+        const { data: acoesData } = await supabase
+          .from("plano_acoes")
+          .select("id, titulo, status, prazo, responsavel_nome")
+          .in("id", acoesIds);
+        setAcoes((acoesData as AcaoVinculada[]) || []);
+      } else {
+        setAcoes([]);
+      }
+    } catch {
+      setAcoes([]);
+    }
+    setLoadingAcoes(false);
+  }, [evento.id]);
+
+  useEffect(() => {
+    loadAnexos();
+    loadAcoes();
+  }, [loadAnexos, loadAcoes]);
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -98,16 +136,16 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
     setCatFile(null);
   };
 
-  const handleDownloadAnexo = async (anexo: EventoSSTAnexo) => {
+  const handleDownloadFile = async (path: string, fileName: string) => {
     try {
       const { data } = await supabase.storage
         .from("eventos-sst")
-        .download(anexo.arquivo_url);
+        .download(path);
       if (data) {
         const url = URL.createObjectURL(data);
         const a = document.createElement("a");
         a.href = url;
-        a.download = anexo.arquivo_nome;
+        a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -118,10 +156,19 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
 
   const handleCriarAcao = async () => {
     await criarAcaoVinculada(evento.id, evento);
+    loadAcoes();
   };
 
   const handleConcluir = async () => {
     await updateEvento.mutateAsync({ id: evento.id, status: "concluido" } as any);
+  };
+
+  const statusAcaoMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    pendente: { label: "Pendente", variant: "secondary" },
+    em_andamento: { label: "Em Andamento", variant: "default" },
+    concluida: { label: "Concluída", variant: "outline" },
+    atrasada: { label: "Atrasada", variant: "destructive" },
+    pausada: { label: "Pausada", variant: "secondary" },
   };
 
   return (
@@ -262,22 +309,34 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
                     <div><p className="text-xs text-muted-foreground">Tipo</p><p>{evento.cat_tipo || "-"}</p></div>
                     {evento.cat_arquivo_nome && (
                       <div>
-                        <p className="text-xs text-muted-foreground">Arquivo</p>
-                        <p className="text-primary cursor-pointer">{evento.cat_arquivo_nome}</p>
+                        <p className="text-xs text-muted-foreground">Arquivo CAT</p>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-primary"
+                          onClick={() => handleDownloadFile(evento.cat_arquivo_url!, evento.cat_arquivo_nome!)}
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          {evento.cat_arquivo_nome}
+                        </Button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-muted-foreground">CAT ainda não emitida.</p>
-                    <div className="flex items-center gap-2">
-                      <Input type="file" onChange={(e) => setCatFile(e.target.files?.[0] || null)} />
-                      <Button size="sm" disabled={!catFile} onClick={handleUploadCAT}>
-                        <Upload className="w-4 h-4 mr-1" /> Anexar CAT
-                      </Button>
-                    </div>
                   </div>
                 )}
+                <Separator />
+                <div>
+                  <Label className="text-xs">Anexar / Atualizar arquivo da CAT</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input type="file" onChange={(e) => setCatFile(e.target.files?.[0] || null)} />
+                    <Button size="sm" disabled={!catFile} onClick={handleUploadCAT}>
+                      <Upload className="w-4 h-4 mr-1" /> Enviar
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -295,9 +354,46 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
               </CardContent>
             </Card>
           )}
+
+          {/* Linked Actions */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">Ações Vinculadas</CardTitle>
+                <Button size="sm" variant="outline" onClick={handleCriarAcao}>
+                  <Plus className="w-3 h-3 mr-1" /> Nova Ação
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingAcoes ? (
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              ) : acoes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma ação vinculada a este evento.</p>
+              ) : (
+                <div className="space-y-2">
+                  {acoes.map((a) => {
+                    const stAcao = statusAcaoMap[a.status] || statusAcaoMap.pendente;
+                    return (
+                      <div key={a.id} className="flex items-center justify-between p-3 bg-muted rounded text-sm">
+                        <div className="flex-1">
+                          <p className="font-medium">{a.titulo}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {a.responsavel_nome && `Responsável: ${a.responsavel_nome}`}
+                            {a.prazo && ` | Prazo: ${format(new Date(a.prazo), "dd/MM/yyyy")}`}
+                          </p>
+                        </div>
+                        <Badge variant={stAcao.variant} className="text-xs">{stAcao.label}</Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right column: Attachments */}
+        {/* Right column: Attachments & Info */}
         <div className="space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-sm">Anexos</CardTitle></CardHeader>
@@ -322,7 +418,12 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
                     <div key={a.id} className="flex items-center gap-2 text-xs p-2 bg-muted rounded">
                       <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <span className="flex-1 truncate">{a.arquivo_nome}</span>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleDownloadAnexo(a)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => handleDownloadFile(a.arquivo_url, a.arquivo_nome)}
+                      >
                         <Download className="w-3 h-3" />
                       </Button>
                     </div>
