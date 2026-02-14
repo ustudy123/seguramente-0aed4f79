@@ -35,16 +35,16 @@ export function AtestadoStats({ stats }: AtestadoStatsProps) {
       value: stats.totalAtestados,
       subtitle: `${stats.atestadosAssistenciais} assistenciais · ${stats.atestadosOcupacionais} ocupacionais`,
       icon: FileText,
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-100 dark:bg-blue-900/30",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "Afastamentos Ativos",
       value: stats.afastamentosAtivos,
       subtitle: `${stats.totalDiasAfastamento} dias no período`,
       icon: Calendar,
-      color: "text-orange-600 dark:text-orange-400",
-      bgColor: "bg-orange-100 dark:bg-orange-900/30",
+      color: "text-warning",
+      bgColor: "bg-warning/10",
     },
     {
       title: "Alertas Pendentes",
@@ -54,27 +54,27 @@ export function AtestadoStats({ stats }: AtestadoStatsProps) {
         : "Nenhum alerta crítico",
       icon: AlertTriangle,
       color: stats.alertasPendentes > 0 
-        ? "text-red-600 dark:text-red-400" 
-        : "text-green-600 dark:text-green-400",
+        ? "text-destructive" 
+        : "text-success",
       bgColor: stats.alertasPendentes > 0 
-        ? "bg-red-100 dark:bg-red-900/30" 
-        : "bg-green-100 dark:bg-green-900/30",
+        ? "bg-destructive/10" 
+        : "bg-success/10",
     },
     {
       title: "Saúde Mental",
       value: stats.saudeMental,
       subtitle: "Atestados com CID mental",
       icon: Brain,
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-100 dark:bg-purple-900/30",
+      color: "text-info",
+      bgColor: "bg-info/10",
     },
     {
       title: "Benefícios INSS",
       value: stats.beneficiosAtivos,
       subtitle: `${stats.colaboradoresEstabilidade} em estabilidade`,
       icon: Shield,
-      color: "text-teal-600 dark:text-teal-400",
-      bgColor: "bg-teal-100 dark:bg-teal-900/30",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "ASO Retorno Pendente",
@@ -82,11 +82,11 @@ export function AtestadoStats({ stats }: AtestadoStatsProps) {
       subtitle: "Afastamentos ≥30 dias sem ASO",
       icon: Clock,
       color: stats.asoRetornoPendente > 0 
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-gray-600 dark:text-gray-400",
+        ? "text-warning"
+        : "text-muted-foreground",
       bgColor: stats.asoRetornoPendente > 0 
-        ? "bg-amber-100 dark:bg-amber-900/30"
-        : "bg-gray-100 dark:bg-gray-900/30",
+        ? "bg-warning/10"
+        : "bg-muted",
     },
   ];
 
