@@ -93,11 +93,11 @@ const SidebarItem = ({ item, isCollapsed, isActive }: SidebarItemProps) => {
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-            "hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground",
-            isOpen && "bg-sidebar-accent text-sidebar-foreground"
+            "hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground",
+            isOpen && "bg-sidebar-accent/60 text-sidebar-foreground"
           )}
         >
-          <item.icon className="w-5 h-5 flex-shrink-0" />
+          <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.75} />
           {!isCollapsed && (
             <>
               <span className="flex-1 text-left text-sm font-medium">{item.title}</span>
@@ -126,10 +126,10 @@ const SidebarItem = ({ item, isCollapsed, isActive }: SidebarItemProps) => {
                     to={child.path}
                     className={({ isActive }) =>
                       cn(
-                        "block px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                        "block px-3 py-1.5 rounded-md text-[13px] transition-all duration-200",
                         isActive
                           ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
                       )
                     }
                   >
@@ -149,15 +149,15 @@ const SidebarItem = ({ item, isCollapsed, isActive }: SidebarItemProps) => {
       to={item.path || "/"}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
           isActive
-            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-glow"
-            : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
         )
       }
     >
-      <item.icon className="w-5 h-5 flex-shrink-0" />
-      {!isCollapsed && <span className="text-sm font-medium">{item.title}</span>}
+      <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.75} />
+      {!isCollapsed && <span className="text-[13px]">{item.title}</span>}
     </NavLink>
   );
 };
@@ -205,20 +205,20 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-sidebar-border space-y-1">
+      <div className="p-3 border-t border-sidebar-border">
         <NavLink
           to="/configuracoes"
           className={({ isActive }) =>
             cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+              "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
               isActive
                 ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
             )
           }
         >
-          <Settings className="w-5 h-5" />
-          {!isCollapsed && <span className="text-sm font-medium">Configurações</span>}
+          <Settings className="w-[18px] h-[18px]" strokeWidth={1.75} />
+          {!isCollapsed && <span className="text-[13px]">Configurações</span>}
         </NavLink>
       </div>
 
