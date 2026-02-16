@@ -28,6 +28,7 @@ import {
   Store,
   HardHat,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -85,6 +86,7 @@ const menuSections: MenuSection[] = [
       { title: "Feedback & Ocorrências", icon: MessageCircle, path: "/feedback-ocorrencias" },
       { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
       { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
+      { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Ponto", icon: Clock, path: "/ponto" },
     ],
   },
