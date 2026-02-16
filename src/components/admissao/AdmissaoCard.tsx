@@ -9,7 +9,8 @@ import {
   MoreVertical,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  UserMinus
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,9 +31,10 @@ interface AdmissaoCardProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onDesligar?: (id: string) => void;
 }
 
-export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
+export function AdmissaoCard({ admissao, onView, onEdit, onDelete, onDesligar }: AdmissaoCardProps) {
   const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
 
   const documentosEnviados = documentos.filter(d => d.status !== 'pendente').length;
@@ -92,6 +94,14 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
               <DropdownMenuItem onClick={() => onEdit(admissao.id)}>
                 <FileText className="h-4 w-4 mr-2" /> Editar
               </DropdownMenuItem>
+              {status === 'concluido' && onDesligar && (
+                <DropdownMenuItem 
+                  onClick={() => onDesligar(admissao.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <UserMinus className="h-4 w-4 mr-2" /> Desligar
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem 
                 onClick={() => onDelete(admissao.id)}
                 className="text-destructive focus:text-destructive"
