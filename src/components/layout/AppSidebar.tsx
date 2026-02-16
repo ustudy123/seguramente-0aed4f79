@@ -28,6 +28,7 @@ import {
   Store,
   HardHat,
   ShieldAlert,
+  HeartPulse,
   Sparkles,
   Newspaper,
   Route,
@@ -62,9 +63,9 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Riscos & Conformidade",
+    label: "Saúde & Segurança",
     color: "text-amber-400",
-    sectionIcon: ShieldAlert,
+    sectionIcon: HeartPulse,
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
