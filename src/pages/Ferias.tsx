@@ -547,11 +547,45 @@ const Ferias = () => {
     (f) => statusFilter === "all" || f.status === statusFilter
   );
 
+  const [statsDetail, setStatsDetail] = useState<{ title: string; items: FeriasItem[] } | null>(null);
+
   const stats = {
     pendentes: ferias.filter((f) => f.status === "pendente").length,
     aprovados: ferias.filter((f) => f.status === "aprovado").length,
     emFerias: 3,
     comAbono: ferias.filter((f) => f.abonoPecuniario && f.status !== "recusado").length,
+  };
+
+  const handleStatClick = (type: string) => {
+    let title = "";
+    let items: FeriasItem[] = [];
+    switch (type) {
+      case "pendentes":
+        title = "Solicitações Pendentes";
+        items = ferias.filter((f) => f.status === "pendente");
+        break;
+      case "aprovados":
+        title = "Férias Aprovadas";
+        items = ferias.filter((f) => f.status === "aprovado");
+        break;
+      case "emFerias":
+        title = "Colaboradores em Férias";
+        items = ferias.filter((f) => {
+          if (f.status !== "aprovado") return false;
+          const hoje = new Date();
+          return new Date(f.dataInicio) <= hoje && new Date(f.dataFim) >= hoje;
+        });
+        break;
+      case "comAbono":
+        title = "Férias com Abono Pecuniário";
+        items = ferias.filter((f) => f.abonoPecuniario && f.status !== "recusado");
+        break;
+      case "provisao":
+        title = "Provisão Estimada por Colaborador";
+        items = ferias.filter((f) => f.salarioBase && f.salarioBase > 0);
+        break;
+    }
+    setStatsDetail({ title, items });
   };
 
   return (
@@ -580,7 +614,10 @@ const Ferias = () => {
         transition={{ duration: 0.4, delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-5 gap-4"
       >
-        <div className="bg-warning/5 border border-warning/20 rounded-xl p-5 flex items-center gap-4">
+        <div
+          onClick={() => handleStatClick("pendentes")}
+          className="bg-warning/5 border border-warning/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-warning/40 transition-all"
+        >
           <div className="p-3 rounded-xl bg-warning/10">
             <Clock className="w-6 h-6 text-warning" />
           </div>
@@ -589,7 +626,10 @@ const Ferias = () => {
             <p className="text-sm text-muted-foreground">Pendentes</p>
           </div>
         </div>
-        <div className="bg-success/5 border border-success/20 rounded-xl p-5 flex items-center gap-4">
+        <div
+          onClick={() => handleStatClick("aprovados")}
+          className="bg-success/5 border border-success/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-success/40 transition-all"
+        >
           <div className="p-3 rounded-xl bg-success/10">
             <CheckCircle className="w-6 h-6 text-success" />
           </div>
@@ -598,7 +638,10 @@ const Ferias = () => {
             <p className="text-sm text-muted-foreground">Aprovados</p>
           </div>
         </div>
-        <div className="bg-info/5 border border-info/20 rounded-xl p-5 flex items-center gap-4">
+        <div
+          onClick={() => handleStatClick("emFerias")}
+          className="bg-info/5 border border-info/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-info/40 transition-all"
+        >
           <div className="p-3 rounded-xl bg-info/10">
             <Plane className="w-6 h-6 text-info" />
           </div>
@@ -607,7 +650,10 @@ const Ferias = () => {
             <p className="text-sm text-muted-foreground">Em Férias</p>
           </div>
         </div>
-        <div className="bg-accent/50 border border-accent rounded-xl p-5 flex items-center gap-4">
+        <div
+          onClick={() => handleStatClick("comAbono")}
+          className="bg-accent/50 border border-accent rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
+        >
           <div className="p-3 rounded-xl bg-primary/10">
             <Banknote className="w-6 h-6 text-primary" />
           </div>
@@ -618,7 +664,10 @@ const Ferias = () => {
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-5 flex items-center gap-4 cursor-help">
+            <div
+              onClick={() => handleStatClick("provisao")}
+              className="bg-destructive/5 border border-destructive/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-destructive/40 transition-all"
+            >
               <div className="p-3 rounded-xl bg-destructive/10">
                 <TrendingUp className="w-6 h-6 text-destructive" />
               </div>
@@ -930,6 +979,89 @@ const Ferias = () => {
               Criar Solicitação
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stats Detail Dialog */}
+      <Dialog open={!!statsDetail} onOpenChange={(open) => !open && setStatsDetail(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{statsDetail?.title}</DialogTitle>
+            <DialogDescription>
+              {statsDetail?.items.length === 0
+                ? "Nenhum registro encontrado nesta categoria."
+                : `${statsDetail?.items.length} registro(s)`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {statsDetail?.title === "Provisão Estimada por Colaborador" ? (
+            <div className="space-y-2">
+              {colaboradores.map((c) => {
+                const sal = ferias.find((f) => f.colaborador === c.nome_completo)?.salarioBase || 0;
+                if (!sal) return null;
+                const prov = sal + sal / 3;
+                return (
+                  <div key={c.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                          {c.nome_completo.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{c.nome_completo}</p>
+                        <p className="text-xs text-muted-foreground">{c.departamento || "—"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-foreground">R$ {prov.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                      <p className="text-[10px] text-muted-foreground">Base: R$ {sal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="border-t border-border pt-3 flex justify-between items-center">
+                <span className="text-sm font-semibold text-foreground">Total Provisão</span>
+                <span className="text-lg font-bold text-foreground">
+                  R$ {provisaoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {statsDetail?.items.map((item) => {
+                const config = statusConfig[item.status];
+                return (
+                  <div key={item.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                          {item.colaborador.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{item.colaborador}</p>
+                        <p className="text-xs text-muted-foreground">{item.departamento}</p>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <Badge className={cn("text-[10px]", config.style)}>
+                        <config.icon className="w-3 h-3 mr-1" />
+                        {config.label}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(item.dataInicio).toLocaleDateString("pt-BR")} — {new Date(item.dataFim).toLocaleDateString("pt-BR")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{item.diasSolicitados} dias</p>
+                      {item.abonoPecuniario && (
+                        <p className="text-[10px] text-success">+ Abono {item.diasAbono}d</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
