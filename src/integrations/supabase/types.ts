@@ -8930,6 +8930,162 @@ export type Database = {
           },
         ]
       }
+      trilha_certificados: {
+        Row: {
+          codigo: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_conclusao: string
+          id: string
+          pontos_obtidos: number
+          tenant_id: string
+          trilha_id: string
+        }
+        Insert: {
+          codigo?: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_conclusao?: string
+          id?: string
+          pontos_obtidos?: number
+          tenant_id: string
+          trilha_id: string
+        }
+        Update: {
+          codigo?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_conclusao?: string
+          id?: string
+          pontos_obtidos?: number
+          tenant_id?: string
+          trilha_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_certificados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_certificados_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilha_medalhas: {
+        Row: {
+          ativo: boolean
+          cor: string
+          created_at: string
+          criterio: Json
+          descricao: string | null
+          icone: string
+          id: string
+          nome: string
+          pontos_bonus: number
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          criterio?: Json
+          descricao?: string | null
+          icone?: string
+          id?: string
+          nome: string
+          pontos_bonus?: number
+          tenant_id: string
+          tipo?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          criterio?: Json
+          descricao?: string | null
+          icone?: string
+          id?: string
+          nome?: string
+          pontos_bonus?: number
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_medalhas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilha_medalhas_colaboradores: {
+        Row: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_conquista: string
+          id: string
+          medalha_id: string
+          tenant_id: string
+          trilha_id: string | null
+        }
+        Insert: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_conquista?: string
+          id?: string
+          medalha_id: string
+          tenant_id: string
+          trilha_id?: string | null
+        }
+        Update: {
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_conquista?: string
+          id?: string
+          medalha_id?: string
+          tenant_id?: string
+          trilha_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_medalhas_colaboradores_medalha_id_fkey"
+            columns: ["medalha_id"]
+            isOneToOne: false
+            referencedRelation: "trilha_medalhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_medalhas_colaboradores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_medalhas_colaboradores_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trilha_modulos: {
         Row: {
           acao_pdi_id: string | null
