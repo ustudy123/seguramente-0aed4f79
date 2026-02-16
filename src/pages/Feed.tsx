@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { MessageSquare, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,8 @@ import { useFeed } from "@/hooks/useFeed";
 function FeedSkeleton() {
   return (
     <div className="space-y-4">
-      {[1, 2, 3].map((i) =>
-      <div key={i} className="bg-card rounded-lg p-4 space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-card rounded-lg p-4 space-y-3">
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 rounded-full" />
             <div className="space-y-1">
@@ -27,9 +28,9 @@ function FeedSkeleton() {
             <Skeleton className="h-8 w-16" />
           </div>
         </div>
-      )}
-    </div>);
-
+      ))}
+    </div>
+  );
 }
 
 function EmptyState() {
@@ -37,8 +38,8 @@ function EmptyState() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-center py-12">
-
+      className="text-center py-12"
+    >
       <div className="inline-flex p-4 rounded-2xl bg-primary/10 mb-4">
         <MessageSquare className="w-10 h-10 text-primary" />
       </div>
@@ -47,22 +48,27 @@ function EmptyState() {
         Seja o primeiro a compartilhar algo com a equipe! Use o formulário acima
         para criar sua primeira publicação.
       </p>
-    </motion.div>);
-
+    </motion.div>
+  );
 }
 
 export default function Feed() {
   const { posts, isLoading, refetch } = useFeed();
+  const [prefillContent, setPrefillContent] = useState("");
+
+  const handleFelicitacao = (mensagem: string) => {
+    setPrefillContent(mensagem);
+  };
 
   return (
     <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between">
-
+        className="flex items-center justify-between"
+      >
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mural Interno </h1>
+          <h1 className="text-2xl font-bold text-foreground">Mural Interno</h1>
           <p className="text-muted-foreground">
             Conecte-se e compartilhe com sua equipe
           </p>
@@ -74,29 +80,30 @@ export default function Feed() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Coluna principal - Feed */}
         <div className="lg:col-span-2">
-          <PostForm />
+          <PostForm
+            prefillContent={prefillContent}
+            onPrefillConsumed={() => setPrefillContent("")}
+          />
 
-          {isLoading ?
-          <FeedSkeleton /> :
-          posts.length === 0 ?
-          <EmptyState /> :
-
-          <div>
-              {posts.map((post) =>
-            <PostCard key={post.id} post={post} />
-            )}
+          {isLoading ? (
+            <FeedSkeleton />
+          ) : posts.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div>
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
             </div>
-          }
+          )}
         </div>
 
-        {/* Sidebar - Widgets */}
         <div className="space-y-4">
-          <AniversariantesWidget />
-          <TempoEmpresaWidget />
+          <AniversariantesWidget onFelicitar={handleFelicitacao} />
+          <TempoEmpresaWidget onFelicitar={handleFelicitacao} />
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

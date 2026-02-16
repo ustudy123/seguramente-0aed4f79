@@ -1,13 +1,22 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Award, Star } from "lucide-react";
+import { Award, Star, Sparkles, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTempoEmpresa } from "@/hooks/useFeed";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export function TempoEmpresaWidget() {
+interface TempoEmpresaWidgetProps {
+  onFelicitar?: (mensagem: string) => void;
+}
+
+export function TempoEmpresaWidget({ onFelicitar }: TempoEmpresaWidgetProps) {
   const { data: colaboradores = [], isLoading } = useTempoEmpresa();
+  const [gerando, setGerando] = useState<string | null>(null);
 
   const getInitials = (name: string) => {
     return name
@@ -24,6 +33,26 @@ export function TempoEmpresaWidget() {
     return (
       date.getDate() === today.getDate() && date.getMonth() === today.getMonth()
     );
+  };
+
+  const handleFelicitar = async (nome: string, anos: number) => {
+    setGerando(nome);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-felicitacao", {
+        body: { nome, tipo: "tempo_casa", anos },
+      });
+      if (error) throw error;
+      const mensagem = data?.mensagem;
+      if (mensagem && onFelicitar) {
+        onFelicitar(mensagem);
+        toast.success("Mensagem gerada! Edite e publique no mural.");
+      }
+    } catch (err) {
+      console.error("Erro ao gerar felicitação:", err);
+      toast.error("Erro ao gerar mensagem. Tente novamente.");
+    } finally {
+      setGerando(null);
+    }
   };
 
   if (isLoading) {
@@ -69,7 +98,7 @@ export function TempoEmpresaWidget() {
               key={index}
               className={`flex items-center gap-3 ${
                 isAnniversaryToday
-                  ? "bg-blue-500/10 -mx-2 px-2 py-1 rounded-lg"
+                  ? "bg-blue-500/10 -mx-2 px-2 py-1.5 rounded-lg"
                   : ""
               }`}
             >
@@ -102,6 +131,24 @@ export function TempoEmpresaWidget() {
                       )}`}
                 </p>
               </div>
+              {isAnniversaryToday && onFelicitar && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 shrink-0"
+                  disabled={gerando === pessoa.nome_completo}
+                  onClick={() => handleFelicitar(pessoa.nome_completo, pessoa.anos_empresa)}
+                >
+                  {gerando === pessoa.nome_completo ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Felicitar
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           );
         })}
