@@ -132,9 +132,13 @@ interface FeriasCardProps {
   index: number;
   onAprovar: (id: number) => void;
   onRecusar: (id: number) => void;
+  onGerarAviso: (item: FeriasItem) => void;
+  onGerarRecibo: (item: FeriasItem) => void;
+  onGerarFinanceiro: (item: FeriasItem) => void;
+  onLinkAssinatura: (item: FeriasItem) => void;
 }
 
-const FeriasCard = ({ item, index, onAprovar, onRecusar }: FeriasCardProps) => {
+const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura }: FeriasCardProps) => {
   const config = statusConfig[item.status];
   const startDate = new Date(item.dataInicio).toLocaleDateString("pt-BR");
   const endDate = new Date(item.dataFim).toLocaleDateString("pt-BR");
@@ -217,6 +221,30 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar }: FeriasCardProps) => {
           </Button>
         </div>
       )}
+
+      {item.status === "aprovado" && (
+        <div className="mt-4 pt-4 border-t border-border space-y-2">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Ações pós-aprovação:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarAviso(item)}>
+              <FileText className="w-3.5 h-3.5 mr-1" />
+              Gerar Aviso
+            </Button>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarRecibo(item)}>
+              <Banknote className="w-3.5 h-3.5 mr-1" />
+              Gerar Recibo
+            </Button>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarFinanceiro(item)}>
+              <DollarSign className="w-3.5 h-3.5 mr-1" />
+              Reg. Financeiro
+            </Button>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onLinkAssinatura(item)}>
+              <Send className="w-3.5 h-3.5 mr-1" />
+              Link Assinatura
+            </Button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -236,6 +264,7 @@ const Ferias = () => {
     diasAbono: 10,
     salarioBase: 0,
   });
+  const [linkAssinaturaDialog, setLinkAssinaturaDialog] = useState<{ url: string; colaborador: string } | null>(null);
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
 
   const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
@@ -309,105 +338,6 @@ const Ferias = () => {
     return date.toISOString().split("T")[0];
   };
 
-  // ========== GERAR DOCUMENTOS + ARQUIVAR ==========
-  const gerarDocumentosFerias = async (item: FeriasItem) => {
-    if (!tenantId || !user) return;
-    try {
-      const docData = {
-        colaboradorNome: item.colaborador,
-        colaboradorCpf: undefined,
-        departamento: item.departamento,
-        dataInicio: item.dataInicio,
-        dataFim: item.dataFim,
-        diasSolicitados: item.diasSolicitados,
-        abonoPecuniario: item.abonoPecuniario,
-        diasAbono: item.diasAbono,
-        salarioBase: item.salarioBase || 0,
-      };
-
-      // Gerar Aviso de Férias PDF
-      const avisoPdf = gerarAvisoFeriasPDF(docData);
-      const avisoBlob = avisoPdf.output("blob");
-      const avisoFileName = `${tenantId}/ferias/${Date.now()}_aviso_ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`;
-
-      await supabase.storage
-        .from("documentos")
-        .upload(avisoFileName, avisoBlob, { contentType: "application/pdf", upsert: false });
-
-      // Gerar Recibo de Férias PDF
-      const reciboPdf = gerarReciboFeriasPDF(docData);
-      const reciboBlob = reciboPdf.output("blob");
-      const reciboFileName = `${tenantId}/ferias/${Date.now()}_recibo_ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`;
-
-      await supabase.storage
-        .from("documentos")
-        .upload(reciboFileName, reciboBlob, { contentType: "application/pdf", upsert: false });
-
-      // Arquivar no módulo de documentos
-      const docsToArchive = [
-        { path: avisoFileName, nome: `Aviso de Férias - ${new Date(item.dataInicio).toLocaleDateString("pt-BR")}`, tipo: "Aviso de Férias" },
-        { path: reciboFileName, nome: `Recibo de Férias - ${new Date(item.dataInicio).toLocaleDateString("pt-BR")}`, tipo: "Recibo de Férias" },
-      ];
-
-      for (const doc of docsToArchive) {
-        await supabase.from("documentos" as never).insert({
-          tenant_id: tenantId,
-          colaborador_nome: item.colaborador,
-          colaborador_cpf: null,
-          nome_arquivo: doc.path,
-          nome_original: doc.nome + ".pdf",
-          tipo: doc.tipo,
-          tamanho: 0,
-          mime_type: "application/pdf",
-          storage_path: doc.path,
-          status: "valido",
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo,
-        } as never);
-      }
-
-      toast.success("Documentos de férias gerados e arquivados!");
-      return avisoFileName;
-    } catch (err) {
-      console.error("Erro ao gerar documentos:", err);
-      toast.error("Erro ao gerar documentos de férias");
-      return null;
-    }
-  };
-
-  // ========== ASSINATURA DIGITAL ==========
-  const criarLinkAssinatura = async (item: FeriasItem, documentoPath?: string) => {
-    if (!tenantId) return;
-    try {
-      const { data, error } = await supabase
-        .from("ferias_assinatura_links" as never)
-        .insert({
-          tenant_id: tenantId,
-          colaborador_nome: item.colaborador,
-          departamento: item.departamento,
-          data_inicio_ferias: item.dataInicio,
-          data_fim_ferias: item.dataFim,
-          dias_ferias: item.diasSolicitados,
-          abono_pecuniario: item.abonoPecuniario,
-          dias_abono: item.diasAbono,
-          salario_base: item.salarioBase || 0,
-          documento_storage_path: documentoPath || null,
-        } as never)
-        .select("token")
-        .single();
-
-      if (error) throw error;
-
-      const token = (data as any)?.token;
-      if (token) {
-        const url = `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ferias-assinatura?token=${token}`;
-        await navigator.clipboard.writeText(url);
-        toast.success("Link de assinatura copiado! Envie ao colaborador.", { duration: 5000 });
-      }
-    } catch (err) {
-      console.error("Erro ao criar link de assinatura:", err);
-    }
-  };
 
   // ========== REGISTRO FINANCEIRO ==========
   const gerarRegistroFinanceiro = async (item: FeriasItem) => {
@@ -454,12 +384,12 @@ const Ferias = () => {
     }
   };
 
-  // ========== APROVAR COM TODOS OS FLUXOS ==========
+  // ========== APROVAR (apenas muda status) ==========
   const handleAprovar = async (id: number) => {
     const item = ferias.find(f => f.id === id);
     if (!item) return;
 
-    // 1. Verificar sobreposição
+    // Verificar sobreposição
     const sobrepostos = verificarSobreposicao(item);
     if (sobrepostos.length > 0) {
       toast.warning(
@@ -468,20 +398,91 @@ const Ferias = () => {
       );
     }
 
-    // 2. Aprovar
     setFerias(prev => prev.map(f => 
       f.id === id ? { ...f, status: "aprovado" as const } : f
     ));
-    toast.success(`Férias aprovadas para ${item.colaborador}`);
+    toast.success(`Férias aprovadas para ${item.colaborador}. Use os botões no card para gerar documentos.`);
+  };
 
-    // 3. Gerar documentos PDF + arquivar
-    const avisoPath = await gerarDocumentosFerias(item);
+  // ========== GERAR AVISO PDF ==========
+  const handleGerarAviso = async (item: FeriasItem) => {
+    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
+    try {
+      const docData = {
+        colaboradorNome: item.colaborador, colaboradorCpf: undefined,
+        departamento: item.departamento, dataInicio: item.dataInicio,
+        dataFim: item.dataFim, diasSolicitados: item.diasSolicitados,
+        abonoPecuniario: item.abonoPecuniario, diasAbono: item.diasAbono,
+        salarioBase: item.salarioBase || 0,
+      };
+      const avisoPdf = gerarAvisoFeriasPDF(docData);
+      avisoPdf.save(`Aviso_Ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`);
+      toast.success("Aviso de Férias gerado e baixado!");
+    } catch (err) {
+      console.error("Erro ao gerar aviso:", err);
+      toast.error("Erro ao gerar aviso de férias");
+    }
+  };
 
-    // 4. Gerar registro financeiro
+  // ========== GERAR RECIBO PDF ==========
+  const handleGerarRecibo = async (item: FeriasItem) => {
+    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
+    try {
+      const docData = {
+        colaboradorNome: item.colaborador, colaboradorCpf: undefined,
+        departamento: item.departamento, dataInicio: item.dataInicio,
+        dataFim: item.dataFim, diasSolicitados: item.diasSolicitados,
+        abonoPecuniario: item.abonoPecuniario, diasAbono: item.diasAbono,
+        salarioBase: item.salarioBase || 0,
+      };
+      const reciboPdf = gerarReciboFeriasPDF(docData);
+      reciboPdf.save(`Recibo_Ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`);
+      toast.success("Recibo de Férias gerado e baixado!");
+    } catch (err) {
+      console.error("Erro ao gerar recibo:", err);
+      toast.error("Erro ao gerar recibo de férias");
+    }
+  };
+
+  // ========== GERAR REGISTRO FINANCEIRO (separado) ==========
+  const handleGerarFinanceiro = async (item: FeriasItem) => {
     await gerarRegistroFinanceiro({ ...item, status: "aprovado" });
+  };
 
-    // 5. Criar link de assinatura
-    await criarLinkAssinatura(item, avisoPath || undefined);
+  // ========== LINK ASSINATURA (com dialog para copiar/WhatsApp) ==========
+  const handleLinkAssinatura = async (item: FeriasItem) => {
+    if (!tenantId) { toast.error("Tenant não encontrado"); return; }
+    try {
+      const { data, error } = await supabase
+        .from("ferias_assinatura_links" as never)
+        .insert({
+          tenant_id: tenantId,
+          colaborador_nome: item.colaborador,
+          departamento: item.departamento,
+          data_inicio_ferias: item.dataInicio,
+          data_fim_ferias: item.dataFim,
+          dias_ferias: item.diasSolicitados,
+          abono_pecuniario: item.abonoPecuniario,
+          dias_abono: item.diasAbono,
+          salario_base: item.salarioBase || 0,
+          documento_storage_path: null,
+        } as never)
+        .select("token")
+        .single();
+
+      if (error) throw error;
+
+      const token = (data as any)?.token;
+      if (token) {
+        const url = `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ferias-assinatura?token=${token}`;
+        setLinkAssinaturaDialog({ url, colaborador: item.colaborador });
+      } else {
+        toast.error("Não foi possível gerar o link.");
+      }
+    } catch (err) {
+      console.error("Erro ao criar link de assinatura:", err);
+      toast.error("Erro ao gerar link de assinatura. Verifique se a tabela existe.");
+    }
   };
 
   const handleRecusar = (id: number) => {
@@ -734,6 +735,10 @@ const Ferias = () => {
                 index={index}
                 onAprovar={handleAprovar}
                 onRecusar={handleRecusar}
+                onGerarAviso={handleGerarAviso}
+                onGerarRecibo={handleGerarRecibo}
+                onGerarFinanceiro={handleGerarFinanceiro}
+                onLinkAssinatura={handleLinkAssinatura}
               />
             ))}
           </div>
@@ -1062,6 +1067,54 @@ const Ferias = () => {
               })}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Link Assinatura Dialog */}
+      <Dialog open={!!linkAssinaturaDialog} onOpenChange={(open) => !open && setLinkAssinaturaDialog(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Link de Assinatura</DialogTitle>
+            <DialogDescription>
+              Link gerado para {linkAssinaturaDialog?.colaborador}. Copie ou envie via WhatsApp.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={linkAssinaturaDialog?.url || ""}
+                className="text-xs flex-1"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (linkAssinaturaDialog?.url) {
+                    navigator.clipboard.writeText(linkAssinaturaDialog.url);
+                    toast.success("Link copiado!");
+                  }
+                }}
+              >
+                Copiar
+              </Button>
+            </div>
+            <Button
+              className="w-full bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white"
+              onClick={() => {
+                if (linkAssinaturaDialog) {
+                  const msg = encodeURIComponent(
+                    `Olá ${linkAssinaturaDialog.colaborador}, segue o link para assinatura das suas férias:\n\n${linkAssinaturaDialog.url}`
+                  );
+                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                }
+              }}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Enviar via WhatsApp
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
