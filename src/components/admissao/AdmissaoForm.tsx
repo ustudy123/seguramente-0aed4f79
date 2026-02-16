@@ -260,6 +260,8 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>('');
+  const hasUserInteracted = useRef(false);
+  const mountedRef = useRef(false);
 
   const getAllFormData = useCallback(() => ({
     dadosPessoais: formPessoais.getValues(),
@@ -269,8 +271,17 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     exameAdmissional: formExame.getValues(),
   }), [formPessoais, formContato, formProfissionais, formBancarios, formExame]);
 
+  // Initialize lastSavedRef with initial data to prevent saving on mount
+  useEffect(() => {
+    const initialHash = JSON.stringify(getAllFormData());
+    lastSavedRef.current = initialHash;
+    // Mark as mounted after a short delay to skip initial renders
+    const t = setTimeout(() => { mountedRef.current = true; }, 1000);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const performAutoSave = useCallback(async () => {
-    if (!onAutoSave) return;
+    if (!onAutoSave || !hasUserInteracted.current) return;
     const data = getAllFormData();
     const dataHash = JSON.stringify(data);
     if (dataHash === lastSavedRef.current) return;
@@ -283,11 +294,13 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
       setTimeout(() => setAutoSaveStatus((s) => s === 'saved' ? 'idle' : s), 3000);
     } catch {
       setAutoSaveStatus('error');
+      setTimeout(() => setAutoSaveStatus((s) => s === 'error' ? 'idle' : s), 5000);
     }
   }, [onAutoSave, getAllFormData]);
 
   const scheduleAutoSave = useCallback(() => {
-    if (!onAutoSave) return;
+    if (!onAutoSave || !mountedRef.current) return;
+    hasUserInteracted.current = true;
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(performAutoSave, 3000);
   }, [onAutoSave, performAutoSave]);
