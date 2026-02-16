@@ -474,7 +474,7 @@ const Ferias = () => {
 
       const token = (data as any)?.token;
       if (token) {
-        const url = `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ferias-assinatura?token=${token}`;
+        const url = `${window.location.origin}/ferias-assinatura/${token}`;
         setLinkAssinaturaDialog({ url, colaborador: item.colaborador });
       } else {
         toast.error("Não foi possível gerar o link.");
