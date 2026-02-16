@@ -299,8 +299,12 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               <Badge variant="outline" className="text-base font-bold">{diasAvisoPrevio} dias</Badge>
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <Switch checked={form.aviso_previo_cumprido} onCheckedChange={v => set("aviso_previo_cumprido", v)} />
-              <Label className="text-sm">Aviso prévio cumprido</Label>
+              <Switch
+                checked={form.aviso_previo_cumprido}
+                onCheckedChange={v => set("aviso_previo_cumprido", v)}
+                disabled={form.tipo_aviso_previo !== "trabalhado"}
+              />
+              <Label className={`text-sm ${form.tipo_aviso_previo !== "trabalhado" ? "text-muted-foreground" : ""}`}>Aviso prévio cumprido</Label>
             </div>
           </div>
 
