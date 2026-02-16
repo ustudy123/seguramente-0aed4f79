@@ -47,6 +47,7 @@ import { toast } from "sonner";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useFinanceiro } from "@/hooks/useFinanceiro";
 import { useAuth } from "@/hooks/useAuth";
+import { validarFracionamentoCLT } from "@/lib/feriasPeriodo";
 
 interface FeriasItem {
   id: number;
@@ -319,6 +320,17 @@ const Ferias = () => {
     const dataInicio = new Date(newSolicitacao.dataInicio);
     const dataFim = new Date(newSolicitacao.dataFim);
     const diasSolicitados = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Validação de fracionamento CLT
+    const fracionamentosAnteriores = ferias
+      .filter((f) => f.colaborador === newSolicitacao.colaborador && f.status !== "recusado")
+      .map((f) => f.diasSolicitados);
+
+    const validacao = validarFracionamentoCLT(diasSolicitados, fracionamentosAnteriores);
+    if (!validacao.valido) {
+      toast.error(validacao.erro || "Fracionamento inválido");
+      return;
+    }
 
     const novaSolicitacao: FeriasItem = {
       id: Math.max(...ferias.map(f => f.id)) + 1,
