@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useColaboradores } from "@/hooks/useColaboradores";
 import type { CulturaAcao } from "@/types/cultura";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_LABELS, STATUS_ACAO_COLORS } from "@/types/cultura";
 
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStatus, onDelete }: Props) => {
+  const { colaboradores } = useColaboradores();
   const [showForm, setShowForm] = useState(false);
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -161,7 +163,20 @@ export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStat
             </div>
             <div>
               <Label>Colaborador</Label>
-              <Input value={form.colaborador_nome} onChange={e => setForm(f => ({ ...f, colaborador_nome: e.target.value }))} placeholder="Nome do colaborador (opcional)" />
+              <Select
+                value={form.colaborador_nome}
+                onValueChange={v => setForm(f => ({ ...f, colaborador_nome: v === "_none" ? "" : v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione um colaborador (opcional)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Nenhum (geral)</SelectItem>
+                  {colaboradores.map(c => (
+                    <SelectItem key={c.id} value={c.nome_completo}>
+                      {c.nome_completo}{c.cargo ? ` · ${c.cargo}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
