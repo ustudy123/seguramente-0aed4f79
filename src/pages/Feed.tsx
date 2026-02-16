@@ -121,8 +121,8 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
               size="sm"
               className="h-6 text-[10px] text-primary self-end"
               onClick={() => {
-                onFelicitar("");
-                // Focus the textarea by scrolling to top
+                const nome = acao.colaborador_nome || "Colaborador";
+                onFelicitar(`Parabéns, ${nome}! `);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
