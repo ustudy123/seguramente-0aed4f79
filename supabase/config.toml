@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.ai-felicitacao]
 verify_jwt = false
+
+[functions.trilha-notificacoes]
+verify_jwt = false

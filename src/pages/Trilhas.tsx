@@ -10,6 +10,7 @@ import { MinhasTrilhas } from "@/components/trilhas/MinhasTrilhas";
 import { TrilhaExecucao } from "@/components/trilhas/TrilhaExecucao";
 import { GamificacaoTab } from "@/components/trilhas/GamificacaoTab";
 import { AnalyticsDashboard } from "@/components/trilhas/AnalyticsDashboard";
+import { TrilhaNotificacoesBell } from "@/components/trilhas/TrilhaNotificacoesBell";
 import type { Trilha, TrilhaModulo, TrilhaComProgresso } from "@/types/trilha";
 
 export default function Trilhas() {
@@ -48,16 +49,19 @@ export default function Trilhas() {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-primary/10">
-          <Route className="w-6 h-6 text-primary" strokeWidth={1.75} />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10">
+            <Route className="w-6 h-6 text-primary" strokeWidth={1.75} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Trilhas</h1>
+            <p className="text-sm text-muted-foreground">
+              Trilhas de conhecimento e desenvolvimento contínuo
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Trilhas</h1>
-          <p className="text-sm text-muted-foreground">
-            Trilhas de conhecimento e desenvolvimento contínuo
-          </p>
-        </div>
+        <TrilhaNotificacoesBell />
       </div>
 
       {/* Execução mode */}
