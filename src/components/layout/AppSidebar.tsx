@@ -88,7 +88,7 @@ const menuSections: MenuSection[] = [
       { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
       { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
       { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
-      { title: "Feed Social", icon: Newspaper, path: "/feed" },
+      { title: "Mural Interno", icon: Newspaper, path: "/feed" },
       { title: "Ponto", icon: Clock, path: "/ponto" },
     ],
   },
