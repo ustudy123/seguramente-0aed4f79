@@ -567,6 +567,66 @@ function AdmissoesTab() {
   };
   const handleBack = () => { setSelectedId(null); setViewMode("list"); };
 
+  // Auto-save handler for draft mode
+  const handleAutoSave = async (dados: {
+    dadosPessoais: any; dadosContato: any; dadosProfissionais: any; dadosBancarios: any; exameAdmissional?: any;
+  }) => {
+    const formData: Partial<AdmissaoFormData> = {
+      nome_completo: dados.dadosPessoais.nomeCompleto || undefined,
+      cpf: dados.dadosPessoais.cpf || undefined,
+      rg: dados.dadosPessoais.rg || undefined,
+      data_nascimento: dados.dadosPessoais.dataNascimento || undefined,
+      estado_civil: dados.dadosPessoais.estadoCivil || undefined,
+      genero: dados.dadosPessoais.genero || undefined,
+      nacionalidade: dados.dadosPessoais.nacionalidade || undefined,
+      naturalidade: dados.dadosPessoais.naturalidade || undefined,
+      nome_mae: dados.dadosPessoais.nomeMae || undefined,
+      nome_pai: dados.dadosPessoais.nomePai || undefined,
+      email: dados.dadosContato.email || undefined,
+      telefone: dados.dadosContato.telefone || undefined,
+      celular: dados.dadosContato.celular || undefined,
+      endereco: dados.dadosContato.endereco || undefined,
+      numero: dados.dadosContato.numero || undefined,
+      complemento: dados.dadosContato.complemento || undefined,
+      bairro: dados.dadosContato.bairro || undefined,
+      cidade: dados.dadosContato.cidade || undefined,
+      estado: dados.dadosContato.estado || undefined,
+      cep: dados.dadosContato.cep || undefined,
+      cargo: dados.dadosProfissionais.cargo || undefined,
+      departamento: dados.dadosProfissionais.departamento || undefined,
+      filial: dados.dadosProfissionais.filial || undefined,
+      data_admissao: dados.dadosProfissionais.dataAdmissao || undefined,
+      tipo_contrato: dados.dadosProfissionais.tipoContrato || undefined,
+      jornada_trabalho: dados.dadosProfissionais.jornadaTrabalho || undefined,
+      salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
+      gestor_imediato: dados.dadosProfissionais.gestorImediato || undefined,
+      centro_custo: dados.dadosProfissionais.centroCusto || undefined,
+      banco: dados.dadosBancarios.banco || undefined,
+      agencia: dados.dadosBancarios.agencia || undefined,
+      conta: dados.dadosBancarios.conta || undefined,
+      tipo_conta: dados.dadosBancarios.tipoConta || undefined,
+      chave_pix: dados.dadosBancarios.chavePix || undefined,
+      exame_admissional_data: dados.exameAdmissional?.dataExame || undefined,
+      exame_admissional_validade: dados.exameAdmissional?.dataValidade || undefined,
+      exame_admissional_resultado: dados.exameAdmissional?.resultado || undefined,
+      exame_admissional_clinica: dados.exameAdmissional?.clinica || undefined,
+      exame_admissional_medico: dados.exameAdmissional?.medico || undefined,
+      exame_admissional_crm: dados.exameAdmissional?.crm || undefined,
+      exame_admissional_observacoes: dados.exameAdmissional?.observacoes || undefined,
+    };
+
+    if (viewMode === "edit" && selectedId) {
+      await atualizarAdmissao({ id: selectedId, dados: formData });
+    } else if (viewMode === "new") {
+      // For new, we need at least nome_completo, cpf, email and cargo to create
+      if (formData.nome_completo && formData.cpf && formData.email && formData.cargo) {
+        const novaAdmissao = await criarAdmissao(formData as AdmissaoFormData);
+        setSelectedId(novaAdmissao.id);
+        setViewMode("edit");
+      }
+    }
+  };
+
   const handleSubmitForm = async (dados: {
     dadosPessoais: any; dadosContato: any; dadosProfissionais: any; dadosBancarios: any; exameAdmissional?: any;
   }) => {
@@ -717,6 +777,7 @@ function AdmissoesTab() {
           <AdmissaoForm
             onSubmit={handleSubmitForm}
             onCancel={handleBack}
+            onAutoSave={handleAutoSave}
             initialData={selectedAdmissaoFormatted ? {
               dadosPessoais: selectedAdmissaoFormatted.dadosPessoais,
               dadosContato: selectedAdmissaoFormatted.dadosContato,

@@ -12,9 +12,10 @@ interface AdmissaoFormStepsProps {
   steps: Step[];
   currentStep: number;
   onStepClick?: (step: number) => void;
+  allowFreeNavigation?: boolean;
 }
 
-export function AdmissaoFormSteps({ steps, currentStep, onStepClick }: AdmissaoFormStepsProps) {
+export function AdmissaoFormSteps({ steps, currentStep, onStepClick, allowFreeNavigation }: AdmissaoFormStepsProps) {
   return (
     <div className="relative">
       {/* Progress bar */}
@@ -36,10 +37,10 @@ export function AdmissaoFormSteps({ steps, currentStep, onStepClick }: AdmissaoF
             <button
               key={step.id}
               onClick={() => onStepClick?.(step.id)}
-              disabled={step.id > currentStep}
+              disabled={!allowFreeNavigation && step.id > currentStep}
               className={cn(
                 "flex flex-col items-center group",
-                step.id > currentStep && "cursor-not-allowed"
+                !allowFreeNavigation && step.id > currentStep && "cursor-not-allowed"
               )}
             >
               <div className={cn(

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +13,11 @@ import {
   ChevronRight,
   Save,
   Send,
-  Stethoscope
+  Stethoscope,
+  Cloud,
+  CloudOff,
+  Loader2 as Loader2Icon,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -126,6 +130,8 @@ const exameAdmissionalSchema = z.object({
   observacoes: z.string().optional(),
 });
 
+type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 interface AdmissaoFormProps {
   onSubmit: (dados: {
     dadosPessoais: DadosPessoais;
@@ -135,6 +141,13 @@ interface AdmissaoFormProps {
     exameAdmissional?: DadosExameAdmissional;
   }) => void;
   onCancel: () => void;
+  onAutoSave?: (dados: {
+    dadosPessoais: Partial<DadosPessoais>;
+    dadosContato: Partial<DadosContato>;
+    dadosProfissionais: Partial<DadosProfissionais>;
+    dadosBancarios: Partial<DadosBancarios>;
+    exameAdmissional?: Partial<DadosExameAdmissional>;
+  }) => Promise<void>;
   initialData?: {
     dadosPessoais?: Partial<DadosPessoais>;
     dadosContato?: Partial<DadosContato>;
@@ -144,7 +157,7 @@ interface AdmissaoFormProps {
   };
 }
 
-export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormProps) {
+export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [documentos, setDocumentos] = useState<DocumentoAdmissao[]>(
     DOCUMENTOS_OBRIGATORIOS.map((doc, index) => ({
@@ -242,6 +255,54 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
       observacoes: '',
     },
   });
+
+  // ===== AUTO-SAVE LOGIC =====
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>('');
+
+  const getAllFormData = useCallback(() => ({
+    dadosPessoais: formPessoais.getValues(),
+    dadosContato: formContato.getValues(),
+    dadosProfissionais: formProfissionais.getValues(),
+    dadosBancarios: formBancarios.getValues(),
+    exameAdmissional: formExame.getValues(),
+  }), [formPessoais, formContato, formProfissionais, formBancarios, formExame]);
+
+  const performAutoSave = useCallback(async () => {
+    if (!onAutoSave) return;
+    const data = getAllFormData();
+    const dataHash = JSON.stringify(data);
+    if (dataHash === lastSavedRef.current) return;
+
+    try {
+      setAutoSaveStatus('saving');
+      await onAutoSave(data);
+      lastSavedRef.current = dataHash;
+      setAutoSaveStatus('saved');
+      setTimeout(() => setAutoSaveStatus((s) => s === 'saved' ? 'idle' : s), 3000);
+    } catch {
+      setAutoSaveStatus('error');
+    }
+  }, [onAutoSave, getAllFormData]);
+
+  const scheduleAutoSave = useCallback(() => {
+    if (!onAutoSave) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(performAutoSave, 3000);
+  }, [onAutoSave, performAutoSave]);
+
+  // Watch all forms for changes
+  const watchPessoais = formPessoais.watch();
+  const watchContato = formContato.watch();
+  const watchProfissionais = formProfissionais.watch();
+  const watchBancarios = formBancarios.watch();
+  const watchExame = formExame.watch();
+
+  useEffect(() => {
+    scheduleAutoSave();
+    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
+  }, [watchPessoais, watchContato, watchProfissionais, watchBancarios, watchExame, scheduleAutoSave]);
 
   const validateCurrentStep = async (): Promise<boolean> => {
     switch (currentStep) {
@@ -983,7 +1044,8 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
       <AdmissaoFormSteps 
         steps={STEPS} 
         currentStep={currentStep}
-        onStepClick={(step) => step < currentStep && setCurrentStep(step)}
+        onStepClick={(step) => (onAutoSave || step < currentStep) && setCurrentStep(step)}
+        allowFreeNavigation={!!onAutoSave}
       />
 
       {/* Step content */}
@@ -1017,6 +1079,36 @@ export function AdmissaoForm({ onSubmit, onCancel, initialData }: AdmissaoFormPr
           <ChevronLeft className="h-4 w-4 mr-1" />
           {currentStep === 1 ? 'Cancelar' : 'Voltar'}
         </Button>
+
+        {/* Auto-save status indicator */}
+        {onAutoSave && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {autoSaveStatus === 'saving' && (
+              <>
+                <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+                <span>Salvando rascunho...</span>
+              </>
+            )}
+            {autoSaveStatus === 'saved' && (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                <span className="text-primary">Rascunho salvo</span>
+              </>
+            )}
+            {autoSaveStatus === 'error' && (
+              <>
+                <CloudOff className="h-3.5 w-3.5 text-destructive" />
+                <span className="text-destructive">Erro ao salvar</span>
+              </>
+            )}
+            {autoSaveStatus === 'idle' && (
+              <>
+                <Cloud className="h-3.5 w-3.5" />
+                <span>Salvamento automático ativo</span>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-2">
           {currentStep === 6 ? (
