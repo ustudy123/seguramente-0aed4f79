@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QuizPlayer } from "./QuizPlayer";
+import { EvidenciaUpload } from "./EvidenciaUpload";
 import {
   ArrowLeft,
   BookOpen,
@@ -61,6 +62,7 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
 
   const [activeModuloId, setActiveModuloId] = useState<string | null>(null);
   const [evidenciaTexto, setEvidenciaTexto] = useState("");
+  const [evidenciaFile, setEvidenciaFile] = useState<File | null>(null);
 
   const getModuloStatus = (moduloId: string): TrilhaProgressoStatus => {
     const p = progresso.find((pr) => pr.modulo_id === moduloId);
@@ -78,6 +80,7 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
   const handleOpenModulo = async (modulo: TrilhaModulo) => {
     setActiveModuloId(modulo.id);
     setEvidenciaTexto("");
+    setEvidenciaFile(null);
     const status = getModuloStatus(modulo.id);
     if (status === "nao_iniciado") {
       await iniciarModulo({ trilhaId: trilha.id, moduloId: modulo.id });
@@ -90,10 +93,12 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
       trilhaId: trilha.id,
       moduloId: activeModulo.id,
       evidenciaTexto: evidenciaTexto || undefined,
+      evidenciaFile: evidenciaFile || undefined,
       pontosObtidos: activeModulo.pontuacao || 0,
     });
     setActiveModuloId(null);
     setEvidenciaTexto("");
+    setEvidenciaFile(null);
   };
 
   const statusIcon = (status: TrilhaProgressoStatus) => {
@@ -302,10 +307,28 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                     {/* Evidence submission (non-quiz) */}
                     {activeModulo.tipo !== "quiz" && activeStatus !== "concluido" && (
                       <div className="space-y-3 pt-2 border-t border-border">
+                        {/* File upload for evidence */}
+                        {(activeModulo.evidencia_obrigatoria ||
+                          activeModulo.tipo === "atividade_pratica" ||
+                          activeModulo.tipo === "reflexao" ||
+                          activeModulo.tipo === "microdesafio" ||
+                          activeModulo.tipo === "estudo_caso") && (
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-1.5 block">
+                              Anexar evidência (foto, PDF, documento)
+                            </label>
+                            <EvidenciaUpload
+                              file={evidenciaFile}
+                              onFileChange={setEvidenciaFile}
+                              disabled={concluindo}
+                            />
+                          </div>
+                        )}
+
                         {activeModulo.evidencia_obrigatoria && (
                           <div>
                             <label className="text-sm font-medium text-foreground mb-1.5 block">
-                              Evidência de aplicação
+                              Descrição da evidência
                             </label>
                             <Textarea
                               placeholder="Descreva como você aplicou este conhecimento no trabalho..."
@@ -338,7 +361,7 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                           onClick={handleConcluir}
                           disabled={
                             concluindo ||
-                            (activeModulo.evidencia_obrigatoria && !evidenciaTexto.trim())
+                            (activeModulo.evidencia_obrigatoria && !evidenciaTexto.trim() && !evidenciaFile)
                           }
                           className="w-full"
                         >

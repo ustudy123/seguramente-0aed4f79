@@ -97,16 +97,32 @@ export function useTrilhaProgresso() {
       trilhaId,
       moduloId,
       evidenciaTexto,
+      evidenciaFile,
       nota,
       pontosObtidos,
     }: {
       trilhaId: string;
       moduloId: string;
       evidenciaTexto?: string;
+      evidenciaFile?: File;
       nota?: number;
       pontosObtidos?: number;
     }) => {
       if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
+
+      let evidenciaUrl: string | null = null;
+
+      // Upload evidence file if provided
+      if (evidenciaFile) {
+        const ext = evidenciaFile.name.split(".").pop() || "file";
+        const filePath = `${colaboradorId}/${trilhaId}/${moduloId}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("trilha-evidencias")
+          .upload(filePath, evidenciaFile, { upsert: true });
+        if (uploadError) throw new Error(`Erro no upload: ${uploadError.message}`);
+        evidenciaUrl = filePath;
+      }
+
       const { data, error } = await supabase
         .from("trilha_progresso" as never)
         .upsert(
@@ -120,6 +136,7 @@ export function useTrilhaProgresso() {
             data_inicio: new Date().toISOString(),
             data_conclusao: new Date().toISOString(),
             evidencia_texto: evidenciaTexto || null,
+            evidencia_url: evidenciaUrl,
             nota: nota ?? null,
             pontos_obtidos: pontosObtidos ?? null,
           } as never,
