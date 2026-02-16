@@ -34,6 +34,7 @@ const CulturaCelebracoes = () => {
       <ProximasCelebracoes
         acoes={cultura.acoes}
         onCreateAcao={cultura.createAcao}
+        onUpdateStatus={cultura.updateAcaoStatus}
       />
 
       <Tabs defaultValue="experiencia" className="space-y-4">

@@ -74,9 +74,10 @@ const DEMO_CELEBRACOES: CelebracaoItem[] = [
 interface Props {
   acoes: CulturaAcao[];
   onCreateAcao?: (data: Partial<CulturaAcao>) => Promise<void>;
+  onUpdateStatus?: (id: string, status: string) => Promise<void>;
 }
 
-export const ProximasCelebracoes = ({ acoes, onCreateAcao }: Props) => {
+export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Props) => {
   const { tenantId } = useAuth();
   const [criandoAcao, setCriandoAcao] = useState<string | null>(null);
 
@@ -289,9 +290,19 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao }: Props) => {
                 </Button>
               )}
 
-              {item.tipo === "acao" && item.acao && (
-                <Badge className={`text-[10px] shrink-0 ${STATUS_ACAO_COLORS[item.acao.status]}`}>
-                  {STATUS_ACAO_LABELS[item.acao.status]}
+              {item.tipo === "acao" && item.acao && item.acao.status !== "concluida" && onUpdateStatus && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs shrink-0"
+                  onClick={() => onUpdateStatus(item.acao!.id, "concluida")}
+                >
+                  Concluir
+                </Button>
+              )}
+              {item.tipo === "acao" && item.acao && item.acao.status === "concluida" && (
+                <Badge className={`text-[10px] shrink-0 ${STATUS_ACAO_COLORS["concluida"]}`}>
+                  Concluída
                 </Badge>
               )}
             </motion.div>
