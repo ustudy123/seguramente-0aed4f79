@@ -9167,6 +9167,56 @@ export type Database = {
           },
         ]
       }
+      trilha_notificacoes: {
+        Row: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          descricao: string | null
+          id: string
+          lida: boolean
+          tenant_id: string
+          tipo: string
+          titulo: string
+          trilha_id: string
+          trilha_nome: string
+        }
+        Insert: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lida?: boolean
+          tenant_id: string
+          tipo: string
+          titulo: string
+          trilha_id: string
+          trilha_nome: string
+        }
+        Update: {
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lida?: boolean
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          trilha_id?: string
+          trilha_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_notificacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trilha_progresso: {
         Row: {
           colaborador_id: string
