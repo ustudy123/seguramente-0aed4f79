@@ -4229,6 +4229,83 @@ export type Database = {
           },
         ]
       }
+      ferias_assinatura_links: {
+        Row: {
+          abono_pecuniario: boolean | null
+          assinado_em: string | null
+          assinatura_ip: string | null
+          cargo: string | null
+          colaborador_cpf: string | null
+          colaborador_nome: string
+          created_at: string
+          data_fim_ferias: string
+          data_inicio_ferias: string
+          departamento: string | null
+          dias_abono: number | null
+          dias_ferias: number
+          documento_storage_path: string | null
+          expira_em: string
+          id: string
+          salario_base: number | null
+          status: string
+          tenant_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          abono_pecuniario?: boolean | null
+          assinado_em?: string | null
+          assinatura_ip?: string | null
+          cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome: string
+          created_at?: string
+          data_fim_ferias: string
+          data_inicio_ferias: string
+          departamento?: string | null
+          dias_abono?: number | null
+          dias_ferias: number
+          documento_storage_path?: string | null
+          expira_em?: string
+          id?: string
+          salario_base?: number | null
+          status?: string
+          tenant_id: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          abono_pecuniario?: boolean | null
+          assinado_em?: string | null
+          assinatura_ip?: string | null
+          cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          data_fim_ferias?: string
+          data_inicio_ferias?: string
+          departamento?: string | null
+          dias_abono?: number | null
+          dias_ferias?: number
+          documento_storage_path?: string | null
+          expira_em?: string
+          id?: string
+          salario_base?: number | null
+          status?: string
+          tenant_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferias_assinatura_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filiais: {
         Row: {
           ativo: boolean
