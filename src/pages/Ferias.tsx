@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
 import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
+import { FeriasCultura } from "@/components/ferias/FeriasCultura";
 import { useINR } from "@/hooks/useINR";
 import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
 import { 
@@ -24,6 +25,7 @@ import {
   Send,
   TrendingUp,
   Brain,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -655,6 +657,10 @@ const Ferias = () => {
                 </span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="cultura" className="flex items-center gap-1.5">
+              <Heart className="w-3.5 h-3.5" />
+              Cultura
+            </TabsTrigger>
           </TabsList>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -706,6 +712,9 @@ const Ferias = () => {
             onCriarAcaoPreventiva={handleCriarAcaoPreventiva}
             colaboradoresPorSetor={colaboradoresPorSetor}
           />
+        </TabsContent>
+        <TabsContent value="cultura">
+          <FeriasCultura ferias={ferias} />
         </TabsContent>
       </Tabs>
 
