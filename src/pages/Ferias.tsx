@@ -12,7 +12,10 @@ import {
   Sun,
   Plane,
   ChevronsUpDown,
-  Check
+  Check,
+  DollarSign,
+  Info,
+  Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +40,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useColaboradores } from "@/hooks/useColaboradores";
@@ -51,63 +56,41 @@ interface FeriasItem {
   saldoDias: number;
   status: "pendente" | "aprovado" | "recusado";
   dataSolicitacao: string;
+  abonoPecuniario: boolean;
+  diasAbono: number;
+  salarioBase?: number;
 }
 
 const initialFerias: FeriasItem[] = [
   {
-    id: 1,
-    colaborador: "Ana Carolina Silva",
-    departamento: "Recursos Humanos",
-    dataInicio: "2025-02-15",
-    dataFim: "2025-03-01",
-    diasSolicitados: 15,
-    saldoDias: 30,
-    status: "pendente",
-    dataSolicitacao: "2025-01-10",
+    id: 1, colaborador: "Ana Carolina Silva", departamento: "Recursos Humanos",
+    dataInicio: "2025-02-15", dataFim: "2025-03-01", diasSolicitados: 15,
+    saldoDias: 30, status: "pendente", dataSolicitacao: "2025-01-10",
+    abonoPecuniario: true, diasAbono: 10, salarioBase: 5500,
   },
   {
-    id: 2,
-    colaborador: "Carlos Eduardo Mendes",
-    departamento: "Tecnologia",
-    dataInicio: "2025-01-20",
-    dataFim: "2025-02-04",
-    diasSolicitados: 15,
-    saldoDias: 15,
-    status: "aprovado",
-    dataSolicitacao: "2024-12-15",
+    id: 2, colaborador: "Carlos Eduardo Mendes", departamento: "Tecnologia",
+    dataInicio: "2025-01-20", dataFim: "2025-02-04", diasSolicitados: 15,
+    saldoDias: 15, status: "aprovado", dataSolicitacao: "2024-12-15",
+    abonoPecuniario: false, diasAbono: 0, salarioBase: 7200,
   },
   {
-    id: 3,
-    colaborador: "Paula Santos Oliveira",
-    departamento: "Projetos",
-    dataInicio: "2025-03-10",
-    dataFim: "2025-03-25",
-    diasSolicitados: 15,
-    saldoDias: 30,
-    status: "pendente",
-    dataSolicitacao: "2025-01-15",
+    id: 3, colaborador: "Paula Santos Oliveira", departamento: "Projetos",
+    dataInicio: "2025-03-10", dataFim: "2025-03-25", diasSolicitados: 15,
+    saldoDias: 30, status: "pendente", dataSolicitacao: "2025-01-15",
+    abonoPecuniario: false, diasAbono: 0, salarioBase: 4800,
   },
   {
-    id: 4,
-    colaborador: "João Pedro Almeida",
-    departamento: "Financeiro",
-    dataInicio: "2025-02-01",
-    dataFim: "2025-02-10",
-    diasSolicitados: 10,
-    saldoDias: 20,
-    status: "recusado",
-    dataSolicitacao: "2025-01-05",
+    id: 4, colaborador: "João Pedro Almeida", departamento: "Financeiro",
+    dataInicio: "2025-02-01", dataFim: "2025-02-10", diasSolicitados: 10,
+    saldoDias: 20, status: "recusado", dataSolicitacao: "2025-01-05",
+    abonoPecuniario: false, diasAbono: 0, salarioBase: 6000,
   },
   {
-    id: 5,
-    colaborador: "Maria Fernanda Costa",
-    departamento: "Design",
-    dataInicio: "2025-04-01",
-    dataFim: "2025-04-20",
-    diasSolicitados: 20,
-    saldoDias: 30,
-    status: "pendente",
-    dataSolicitacao: "2025-01-16",
+    id: 5, colaborador: "Maria Fernanda Costa", departamento: "Design",
+    dataInicio: "2025-04-01", dataFim: "2025-04-20", diasSolicitados: 20,
+    saldoDias: 30, status: "pendente", dataSolicitacao: "2025-01-16",
+    abonoPecuniario: true, diasAbono: 10, salarioBase: 5000,
   },
 ];
 
@@ -175,6 +158,16 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar }: FeriasCardProps) => {
           </div>
         </div>
 
+        {item.abonoPecuniario && (
+          <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+            <Banknote className="w-4 h-4 text-emerald-600" />
+            <div>
+              <p className="text-sm font-medium text-emerald-700">Abono Pecuniário</p>
+              <p className="text-xs text-emerald-600/80">{item.diasAbono} dias vendidos</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Saldo disponível:</span>
           <span className="font-medium text-foreground">{item.saldoDias} dias</span>
@@ -224,6 +217,9 @@ const Ferias = () => {
     departamento: "",
     dataInicio: "",
     dataFim: "",
+    abonoPecuniario: false,
+    diasAbono: 10,
+    salarioBase: 0,
   });
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
 
@@ -249,6 +245,11 @@ const Ferias = () => {
       return;
     }
 
+    if (newSolicitacao.abonoPecuniario && newSolicitacao.diasAbono > 10) {
+      toast.error("O abono pecuniário não pode exceder 10 dias (1/3 das férias)");
+      return;
+    }
+
     const dataInicio = new Date(newSolicitacao.dataInicio);
     const dataFim = new Date(newSolicitacao.dataFim);
     const diasSolicitados = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -263,12 +264,19 @@ const Ferias = () => {
       saldoDias: 30,
       status: "pendente",
       dataSolicitacao: new Date().toISOString().split("T")[0],
+      abonoPecuniario: newSolicitacao.abonoPecuniario,
+      diasAbono: newSolicitacao.abonoPecuniario ? newSolicitacao.diasAbono : 0,
+      salarioBase: newSolicitacao.salarioBase,
     };
 
     setFerias(prev => [novaSolicitacao, ...prev]);
-    setNewSolicitacao({ colaborador: "", departamento: "", dataInicio: "", dataFim: "" });
+    setNewSolicitacao({ colaborador: "", departamento: "", dataInicio: "", dataFim: "", abonoPecuniario: false, diasAbono: 10, salarioBase: 0 });
     setIsModalOpen(false);
-    toast.success("Solicitação de férias criada com sucesso!");
+    toast.success(
+      newSolicitacao.abonoPecuniario
+        ? `Solicitação com abono pecuniário de ${newSolicitacao.diasAbono} dias criada!`
+        : "Solicitação de férias criada com sucesso!"
+    );
   };
 
   const filteredFerias = ferias.filter(
@@ -279,6 +287,7 @@ const Ferias = () => {
     pendentes: ferias.filter((f) => f.status === "pendente").length,
     aprovados: ferias.filter((f) => f.status === "aprovado").length,
     emFerias: 3,
+    comAbono: ferias.filter((f) => f.abonoPecuniario && f.status !== "recusado").length,
   };
 
   return (
@@ -305,7 +314,7 @@ const Ferias = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
       >
         <div className="bg-warning/5 border border-warning/20 rounded-xl p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-warning/10">
@@ -313,7 +322,7 @@ const Ferias = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">{stats.pendentes}</p>
-            <p className="text-sm text-muted-foreground">Pendentes de Aprovação</p>
+            <p className="text-sm text-muted-foreground">Pendentes</p>
           </div>
         </div>
         <div className="bg-success/5 border border-success/20 rounded-xl p-5 flex items-center gap-4">
@@ -322,7 +331,7 @@ const Ferias = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">{stats.aprovados}</p>
-            <p className="text-sm text-muted-foreground">Aprovados (Mês)</p>
+            <p className="text-sm text-muted-foreground">Aprovados</p>
           </div>
         </div>
         <div className="bg-info/5 border border-info/20 rounded-xl p-5 flex items-center gap-4">
@@ -331,7 +340,16 @@ const Ferias = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">{stats.emFerias}</p>
-            <p className="text-sm text-muted-foreground">Em Férias Agora</p>
+            <p className="text-sm text-muted-foreground">Em Férias</p>
+          </div>
+        </div>
+        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-emerald-500/10">
+            <Banknote className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{stats.comAbono}</p>
+            <p className="text-sm text-muted-foreground">Com Abono</p>
           </div>
         </div>
       </motion.div>
@@ -394,7 +412,7 @@ const Ferias = () => {
 
       {/* Modal Nova Solicitação */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova Solicitação de Férias</DialogTitle>
             <DialogDescription>
@@ -481,6 +499,117 @@ const Ferias = () => {
                   onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataFim: e.target.value }))}
                 />
               </div>
+            </div>
+
+            {/* Abono Pecuniário Section */}
+            <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-emerald-600" />
+                  <Label htmlFor="abono" className="text-sm font-medium cursor-pointer">
+                    Abono Pecuniário (Venda de Férias)
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[280px] text-xs">
+                      <p className="font-semibold mb-1">Art. 143, CLT</p>
+                      <p>O empregado pode converter até 1/3 do período de férias (10 dias) em abono pecuniário. O pedido deve ser feito até 15 dias antes do término do período aquisitivo.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Switch
+                  id="abono"
+                  checked={newSolicitacao.abonoPecuniario}
+                  onCheckedChange={(checked) => setNewSolicitacao(prev => ({ ...prev, abonoPecuniario: checked }))}
+                />
+              </div>
+
+              {newSolicitacao.abonoPecuniario && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3 pt-2"
+                >
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="diasAbono" className="text-xs">Dias a vender (máx. 10)</Label>
+                      <Input
+                        id="diasAbono"
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={newSolicitacao.diasAbono}
+                        onChange={(e) => setNewSolicitacao(prev => ({
+                          ...prev,
+                          diasAbono: Math.min(10, Math.max(1, parseInt(e.target.value) || 0))
+                        }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="salarioBase" className="text-xs">Salário Base (R$)</Label>
+                      <Input
+                        id="salarioBase"
+                        type="number"
+                        min={0}
+                        step={100}
+                        placeholder="0,00"
+                        value={newSolicitacao.salarioBase || ""}
+                        onChange={(e) => setNewSolicitacao(prev => ({ ...prev, salarioBase: parseFloat(e.target.value) || 0 }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Financial simulation */}
+                  {newSolicitacao.salarioBase > 0 && (
+                    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 space-y-2">
+                      <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        Simulação Financeira
+                      </p>
+                      {(() => {
+                        const salarioDia = newSolicitacao.salarioBase / 30;
+                        const valorFerias = newSolicitacao.salarioBase;
+                        const tercoConstitucional = valorFerias / 3;
+                        const valorAbono = salarioDia * newSolicitacao.diasAbono;
+                        const total = valorFerias + tercoConstitucional + valorAbono;
+                        return (
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Férias (30 dias)</span>
+                              <span className="font-medium">R$ {valorFerias.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">1/3 Constitucional</span>
+                              <span className="font-medium">R$ {tercoConstitucional.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between text-emerald-700">
+                              <span>Abono ({newSolicitacao.diasAbono} dias)</span>
+                              <span className="font-semibold">R$ {valorAbono.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="border-t border-emerald-500/20 pt-1 flex justify-between font-bold text-foreground">
+                              <span>Total Bruto</span>
+                              <span>R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              ⚠ O abono pecuniário não integra salário para fins de FGTS e INSS.
+                            </p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  <div className="text-[11px] text-muted-foreground space-y-0.5">
+                    <p>• Direito do empregado (Art. 143, CLT)</p>
+                    <p>• Máximo 1/3 das férias (10 dias)</p>
+                    <p>• Solicitar até 15 dias antes do fim do período aquisitivo</p>
+                    <p>• Pagamento junto com as férias (até 2 dias antes)</p>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
           

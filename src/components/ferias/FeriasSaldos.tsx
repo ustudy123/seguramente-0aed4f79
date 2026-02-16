@@ -24,6 +24,9 @@ interface FeriasItem {
   saldoDias: number;
   status: "pendente" | "aprovado" | "recusado";
   dataSolicitacao: string;
+  abonoPecuniario?: boolean;
+  diasAbono?: number;
+  salarioBase?: number;
 }
 
 interface FeriasSaldosProps {
