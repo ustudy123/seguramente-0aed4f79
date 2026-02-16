@@ -1,0 +1,20 @@
+-- Campos de desligamento na tabela admissoes (dados exigidos pelo MTE / eSocial)
+ALTER TABLE public.admissoes
+  ADD COLUMN IF NOT EXISTS data_desligamento DATE,
+  ADD COLUMN IF NOT EXISTS motivo_desligamento TEXT,
+  ADD COLUMN IF NOT EXISTS tipo_aviso_previo TEXT,
+  ADD COLUMN IF NOT EXISTS data_aviso_previo DATE,
+  ADD COLUMN IF NOT EXISTS dias_aviso_previo INTEGER,
+  ADD COLUMN IF NOT EXISTS aviso_previo_cumprido BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS data_exame_demissional DATE,
+  ADD COLUMN IF NOT EXISTS resultado_exame_demissional TEXT,
+  ADD COLUMN IF NOT EXISTS medico_exame_demissional TEXT,
+  ADD COLUMN IF NOT EXISTS crm_exame_demissional TEXT,
+  ADD COLUMN IF NOT EXISTS data_homologacao DATE,
+  ADD COLUMN IF NOT EXISTS sindicato_homologacao TEXT,
+  ADD COLUMN IF NOT EXISTS multa_fgts BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS seguro_desemprego_elegivel BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS chave_conectividade TEXT,
+  ADD COLUMN IF NOT EXISTS observacoes_desligamento TEXT,
+  ADD COLUMN IF NOT EXISTS desligado_por TEXT,
+  ADD COLUMN IF NOT EXISTS desligado_por_nome TEXT;

@@ -203,12 +203,14 @@ export type Database = {
       admissoes: {
         Row: {
           agencia: string | null
+          aviso_previo_cumprido: boolean | null
           bairro: string | null
           banco: string | null
           cargo: string
           celular: string | null
           centro_custo: string | null
           cep: string | null
+          chave_conectividade: string | null
           chave_pix: string | null
           cidade: string | null
           complemento: string | null
@@ -216,9 +218,17 @@ export type Database = {
           cpf: string
           created_at: string
           criado_por: string | null
+          crm_exame_demissional: string | null
           data_admissao: string | null
+          data_aviso_previo: string | null
+          data_desligamento: string | null
+          data_exame_demissional: string | null
+          data_homologacao: string | null
           data_nascimento: string | null
           departamento: string | null
+          desligado_por: string | null
+          desligado_por_nome: string | null
+          dias_aviso_previo: number | null
           email: string
           endereco: string | null
           estado: string | null
@@ -235,29 +245,39 @@ export type Database = {
           gestor_imediato: string | null
           id: string
           jornada_trabalho: string | null
+          medico_exame_demissional: string | null
+          motivo_desligamento: string | null
+          multa_fgts: boolean | null
           nacionalidade: string | null
           naturalidade: string | null
           nome_completo: string
           nome_mae: string | null
           nome_pai: string | null
           numero: string | null
+          observacoes_desligamento: string | null
+          resultado_exame_demissional: string | null
           rg: string | null
           salario: number | null
+          seguro_desemprego_elegivel: boolean | null
+          sindicato_homologacao: string | null
           status: Database["public"]["Enums"]["admissao_status"]
           telefone: string | null
           tenant_id: string
+          tipo_aviso_previo: string | null
           tipo_conta: string | null
           tipo_contrato: string | null
           updated_at: string
         }
         Insert: {
           agencia?: string | null
+          aviso_previo_cumprido?: boolean | null
           bairro?: string | null
           banco?: string | null
           cargo: string
           celular?: string | null
           centro_custo?: string | null
           cep?: string | null
+          chave_conectividade?: string | null
           chave_pix?: string | null
           cidade?: string | null
           complemento?: string | null
@@ -265,9 +285,17 @@ export type Database = {
           cpf: string
           created_at?: string
           criado_por?: string | null
+          crm_exame_demissional?: string | null
           data_admissao?: string | null
+          data_aviso_previo?: string | null
+          data_desligamento?: string | null
+          data_exame_demissional?: string | null
+          data_homologacao?: string | null
           data_nascimento?: string | null
           departamento?: string | null
+          desligado_por?: string | null
+          desligado_por_nome?: string | null
+          dias_aviso_previo?: number | null
           email: string
           endereco?: string | null
           estado?: string | null
@@ -284,29 +312,39 @@ export type Database = {
           gestor_imediato?: string | null
           id?: string
           jornada_trabalho?: string | null
+          medico_exame_demissional?: string | null
+          motivo_desligamento?: string | null
+          multa_fgts?: boolean | null
           nacionalidade?: string | null
           naturalidade?: string | null
           nome_completo: string
           nome_mae?: string | null
           nome_pai?: string | null
           numero?: string | null
+          observacoes_desligamento?: string | null
+          resultado_exame_demissional?: string | null
           rg?: string | null
           salario?: number | null
+          seguro_desemprego_elegivel?: boolean | null
+          sindicato_homologacao?: string | null
           status?: Database["public"]["Enums"]["admissao_status"]
           telefone?: string | null
           tenant_id: string
+          tipo_aviso_previo?: string | null
           tipo_conta?: string | null
           tipo_contrato?: string | null
           updated_at?: string
         }
         Update: {
           agencia?: string | null
+          aviso_previo_cumprido?: boolean | null
           bairro?: string | null
           banco?: string | null
           cargo?: string
           celular?: string | null
           centro_custo?: string | null
           cep?: string | null
+          chave_conectividade?: string | null
           chave_pix?: string | null
           cidade?: string | null
           complemento?: string | null
@@ -314,9 +352,17 @@ export type Database = {
           cpf?: string
           created_at?: string
           criado_por?: string | null
+          crm_exame_demissional?: string | null
           data_admissao?: string | null
+          data_aviso_previo?: string | null
+          data_desligamento?: string | null
+          data_exame_demissional?: string | null
+          data_homologacao?: string | null
           data_nascimento?: string | null
           departamento?: string | null
+          desligado_por?: string | null
+          desligado_por_nome?: string | null
+          dias_aviso_previo?: number | null
           email?: string
           endereco?: string | null
           estado?: string | null
@@ -333,17 +379,25 @@ export type Database = {
           gestor_imediato?: string | null
           id?: string
           jornada_trabalho?: string | null
+          medico_exame_demissional?: string | null
+          motivo_desligamento?: string | null
+          multa_fgts?: boolean | null
           nacionalidade?: string | null
           naturalidade?: string | null
           nome_completo?: string
           nome_mae?: string | null
           nome_pai?: string | null
           numero?: string | null
+          observacoes_desligamento?: string | null
+          resultado_exame_demissional?: string | null
           rg?: string | null
           salario?: number | null
+          seguro_desemprego_elegivel?: boolean | null
+          sindicato_homologacao?: string | null
           status?: Database["public"]["Enums"]["admissao_status"]
           telefone?: string | null
           tenant_id?: string
+          tipo_aviso_previo?: string | null
           tipo_conta?: string | null
           tipo_contrato?: string | null
           updated_at?: string
