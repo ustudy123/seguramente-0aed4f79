@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Route } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrilhaList } from "@/components/trilhas/TrilhaList";
 import { TrilhaDetail } from "@/components/trilhas/TrilhaDetail";
 import { TrilhaForm } from "@/components/trilhas/TrilhaForm";
 import { ModuloForm } from "@/components/trilhas/ModuloForm";
-import type { Trilha, TrilhaModulo } from "@/types/trilha";
+import { MinhasTrilhas } from "@/components/trilhas/MinhasTrilhas";
+import { TrilhaExecucao } from "@/components/trilhas/TrilhaExecucao";
+import type { Trilha, TrilhaModulo, TrilhaComProgresso } from "@/types/trilha";
 
 export default function Trilhas() {
   const [selectedTrilha, setSelectedTrilha] = useState<Trilha | null>(null);
@@ -13,6 +16,7 @@ export default function Trilhas() {
   const [showTrilhaForm, setShowTrilhaForm] = useState(false);
   const [showModuloForm, setShowModuloForm] = useState(false);
   const [editingModulo, setEditingModulo] = useState<TrilhaModulo | null>(null);
+  const [execucaoTrilha, setExecucaoTrilha] = useState<TrilhaComProgresso | null>(null);
 
   const handleNewTrilha = () => {
     setEditingTrilha(null);
@@ -54,21 +58,38 @@ export default function Trilhas() {
         </div>
       </div>
 
-      {/* Content */}
-      {selectedTrilha ? (
-        <TrilhaDetail
-          trilha={selectedTrilha}
-          onBack={() => setSelectedTrilha(null)}
-          onEdit={handleEditTrilha}
-          onAddModulo={handleAddModulo}
-          onEditModulo={handleEditModulo}
-        />
+      {/* Execução mode */}
+      {execucaoTrilha ? (
+        <TrilhaExecucao trilha={execucaoTrilha} onBack={() => setExecucaoTrilha(null)} />
       ) : (
-        <TrilhaList
-          onSelect={setSelectedTrilha}
-          onEdit={handleEditTrilha}
-          onNew={handleNewTrilha}
-        />
+        <Tabs defaultValue="minhas" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-xs">
+            <TabsTrigger value="minhas">Minhas Trilhas</TabsTrigger>
+            <TabsTrigger value="gestao">Gestão</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="minhas" className="mt-6">
+            <MinhasTrilhas onOpenTrilha={setExecucaoTrilha} />
+          </TabsContent>
+
+          <TabsContent value="gestao" className="mt-6">
+            {selectedTrilha ? (
+              <TrilhaDetail
+                trilha={selectedTrilha}
+                onBack={() => setSelectedTrilha(null)}
+                onEdit={handleEditTrilha}
+                onAddModulo={handleAddModulo}
+                onEditModulo={handleEditModulo}
+              />
+            ) : (
+              <TrilhaList
+                onSelect={setSelectedTrilha}
+                onEdit={handleEditTrilha}
+                onNew={handleNewTrilha}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Forms */}
@@ -78,7 +99,6 @@ export default function Trilhas() {
         trilha={editingTrilha}
         onSuccess={() => {
           if (selectedTrilha && editingTrilha?.id === selectedTrilha.id) {
-            // Refresh detail view
             setSelectedTrilha(null);
           }
         }}
@@ -90,7 +110,7 @@ export default function Trilhas() {
           onOpenChange={setShowModuloForm}
           trilhaId={selectedTrilha.id}
           modulo={editingModulo}
-          nextOrdem={(selectedTrilha.total_modulos || 0)}
+          nextOrdem={selectedTrilha.total_modulos || 0}
         />
       )}
     </motion.div>

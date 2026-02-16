@@ -61,6 +61,31 @@ export interface TrilhaQuizPergunta {
   created_at: string;
 }
 
+export interface TrilhaProgresso {
+  id: string;
+  tenant_id: string;
+  trilha_id: string;
+  modulo_id: string;
+  colaborador_id: string;
+  colaborador_nome: string;
+  status: TrilhaProgressoStatus;
+  data_inicio: string | null;
+  data_conclusao: string | null;
+  evidencia_texto: string | null;
+  evidencia_url: string | null;
+  nota: number | null;
+  pontos_obtidos: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrilhaComProgresso extends Trilha {
+  progressoModulos: TrilhaProgresso[];
+  totalConcluidos: number;
+  pontosObtidos: number;
+  percentual: number;
+}
+
 export const TRILHA_TIPO_LABELS: Record<TrilhaTipo, string> = {
   tecnica: "Técnica",
   comportamental: "Comportamental",
