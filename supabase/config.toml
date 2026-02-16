@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.trilha-notificacoes]
 verify_jwt = false
+
+[functions.ferias-assinatura]
+verify_jwt = false

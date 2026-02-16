@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
 import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
@@ -16,6 +16,10 @@ import {
   DollarSign,
   Info,
   Banknote,
+  AlertTriangle,
+  FileText,
+  Send,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +52,8 @@ import { useColaboradores } from "@/hooks/useColaboradores";
 import { useFinanceiro } from "@/hooks/useFinanceiro";
 import { useAuth } from "@/hooks/useAuth";
 import { validarFracionamentoCLT } from "@/lib/feriasPeriodo";
+import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF } from "@/lib/feriasDocumentos";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FeriasItem {
   id: number;
@@ -228,7 +234,31 @@ const Ferias = () => {
 
   const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
   const { data: periodos } = useFolhaPeriodos();
-  const { tenantId } = useAuth();
+  const { tenantId, user, profile } = useAuth();
+
+  // ========== PROVISÃO FINANCEIRA ==========
+  const provisaoTotal = useMemo(() => {
+    return colaboradores.reduce((sum, c) => {
+      // Each active employee accrues 30 days + 1/3 per year
+      // Simplified: assume full 30-day provision per employee
+      const salario = ferias.find(f => f.colaborador === c.nome_completo)?.salarioBase || 0;
+      return sum + salario + (salario / 3);
+    }, 0);
+  }, [colaboradores, ferias]);
+
+  // ========== SOBREPOSIÇÃO ==========
+  const verificarSobreposicao = (item: FeriasItem): string[] => {
+    const inicio = new Date(item.dataInicio);
+    const fim = new Date(item.dataFim);
+    const sobrepostos = ferias.filter(f => 
+      f.id !== item.id &&
+      f.departamento === item.departamento &&
+      f.status === "aprovado" &&
+      new Date(f.dataInicio) <= fim &&
+      new Date(f.dataFim) >= inicio
+    );
+    return sobrepostos.map(f => f.colaborador);
+  };
 
   // Calcula 2 dias úteis antes de uma data
   const calcularVencimento2DiasUteis = (dataInicio: string): string => {
@@ -242,11 +272,111 @@ const Ferias = () => {
     return date.toISOString().split("T")[0];
   };
 
+  // ========== GERAR DOCUMENTOS + ARQUIVAR ==========
+  const gerarDocumentosFerias = async (item: FeriasItem) => {
+    if (!tenantId || !user) return;
+    try {
+      const docData = {
+        colaboradorNome: item.colaborador,
+        colaboradorCpf: undefined,
+        departamento: item.departamento,
+        dataInicio: item.dataInicio,
+        dataFim: item.dataFim,
+        diasSolicitados: item.diasSolicitados,
+        abonoPecuniario: item.abonoPecuniario,
+        diasAbono: item.diasAbono,
+        salarioBase: item.salarioBase || 0,
+      };
+
+      // Gerar Aviso de Férias PDF
+      const avisoPdf = gerarAvisoFeriasPDF(docData);
+      const avisoBlob = avisoPdf.output("blob");
+      const avisoFileName = `${tenantId}/ferias/${Date.now()}_aviso_ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`;
+
+      await supabase.storage
+        .from("documentos")
+        .upload(avisoFileName, avisoBlob, { contentType: "application/pdf", upsert: false });
+
+      // Gerar Recibo de Férias PDF
+      const reciboPdf = gerarReciboFeriasPDF(docData);
+      const reciboBlob = reciboPdf.output("blob");
+      const reciboFileName = `${tenantId}/ferias/${Date.now()}_recibo_ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`;
+
+      await supabase.storage
+        .from("documentos")
+        .upload(reciboFileName, reciboBlob, { contentType: "application/pdf", upsert: false });
+
+      // Arquivar no módulo de documentos
+      const docsToArchive = [
+        { path: avisoFileName, nome: `Aviso de Férias - ${new Date(item.dataInicio).toLocaleDateString("pt-BR")}`, tipo: "Aviso de Férias" },
+        { path: reciboFileName, nome: `Recibo de Férias - ${new Date(item.dataInicio).toLocaleDateString("pt-BR")}`, tipo: "Recibo de Férias" },
+      ];
+
+      for (const doc of docsToArchive) {
+        await supabase.from("documentos" as never).insert({
+          tenant_id: tenantId,
+          colaborador_nome: item.colaborador,
+          colaborador_cpf: null,
+          nome_arquivo: doc.path,
+          nome_original: doc.nome + ".pdf",
+          tipo: doc.tipo,
+          tamanho: 0,
+          mime_type: "application/pdf",
+          storage_path: doc.path,
+          status: "valido",
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo,
+        } as never);
+      }
+
+      toast.success("Documentos de férias gerados e arquivados!");
+      return avisoFileName;
+    } catch (err) {
+      console.error("Erro ao gerar documentos:", err);
+      toast.error("Erro ao gerar documentos de férias");
+      return null;
+    }
+  };
+
+  // ========== ASSINATURA DIGITAL ==========
+  const criarLinkAssinatura = async (item: FeriasItem, documentoPath?: string) => {
+    if (!tenantId) return;
+    try {
+      const { data, error } = await supabase
+        .from("ferias_assinatura_links" as never)
+        .insert({
+          tenant_id: tenantId,
+          colaborador_nome: item.colaborador,
+          departamento: item.departamento,
+          data_inicio_ferias: item.dataInicio,
+          data_fim_ferias: item.dataFim,
+          dias_ferias: item.diasSolicitados,
+          abono_pecuniario: item.abonoPecuniario,
+          dias_abono: item.diasAbono,
+          salario_base: item.salarioBase || 0,
+          documento_storage_path: documentoPath || null,
+        } as never)
+        .select("token")
+        .single();
+
+      if (error) throw error;
+
+      const token = (data as any)?.token;
+      if (token) {
+        const url = `https://diayjpsrcerycycyaxst.supabase.co/functions/v1/ferias-assinatura?token=${token}`;
+        await navigator.clipboard.writeText(url);
+        toast.success("Link de assinatura copiado! Envie ao colaborador.", { duration: 5000 });
+      }
+    } catch (err) {
+      console.error("Erro ao criar link de assinatura:", err);
+    }
+  };
+
+  // ========== REGISTRO FINANCEIRO ==========
   const gerarRegistroFinanceiro = async (item: FeriasItem) => {
     if (!tenantId) return;
     try {
-      const competencia = item.dataInicio.slice(0, 7); // YYYY-MM
-      // Busca ou cria período
+      const competencia = item.dataInicio.slice(0, 7);
       let periodoId: string | undefined;
       const periodoExistente = periodos?.find(p => p.competencia === competencia);
       if (periodoExistente) {
@@ -283,19 +413,38 @@ const Ferias = () => {
       toast.success(`Registro financeiro gerado — vencimento ${new Date(vencimento + "T12:00:00").toLocaleDateString("pt-BR")}`);
     } catch (err) {
       console.error("Erro ao gerar registro financeiro:", err);
-      toast.error("Férias aprovadas, mas houve erro ao gerar registro financeiro");
+      toast.error("Erro ao gerar registro financeiro");
     }
   };
 
-  const handleAprovar = (id: number) => {
+  // ========== APROVAR COM TODOS OS FLUXOS ==========
+  const handleAprovar = async (id: number) => {
+    const item = ferias.find(f => f.id === id);
+    if (!item) return;
+
+    // 1. Verificar sobreposição
+    const sobrepostos = verificarSobreposicao(item);
+    if (sobrepostos.length > 0) {
+      toast.warning(
+        `⚠ Sobreposição no setor "${item.departamento}": ${sobrepostos.join(", ")} já está(ão) de férias no mesmo período.`,
+        { duration: 6000 }
+      );
+    }
+
+    // 2. Aprovar
     setFerias(prev => prev.map(f => 
       f.id === id ? { ...f, status: "aprovado" as const } : f
     ));
-    const item = ferias.find(f => f.id === id);
-    if (item) {
-      gerarRegistroFinanceiro({ ...item, status: "aprovado" });
-    }
-    toast.success(`Férias aprovadas para ${item?.colaborador}`);
+    toast.success(`Férias aprovadas para ${item.colaborador}`);
+
+    // 3. Gerar documentos PDF + arquivar
+    const avisoPath = await gerarDocumentosFerias(item);
+
+    // 4. Gerar registro financeiro
+    await gerarRegistroFinanceiro({ ...item, status: "aprovado" });
+
+    // 5. Criar link de assinatura
+    await criarLinkAssinatura(item, avisoPath || undefined);
   };
 
   const handleRecusar = (id: number) => {
@@ -392,7 +541,7 @@ const Ferias = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-5 gap-4"
       >
         <div className="bg-warning/5 border border-warning/20 rounded-xl p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-warning/10">
@@ -421,15 +570,33 @@ const Ferias = () => {
             <p className="text-sm text-muted-foreground">Em Férias</p>
           </div>
         </div>
-        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-emerald-500/10">
-            <Banknote className="w-6 h-6 text-emerald-600" />
+        <div className="bg-accent/50 border border-accent rounded-xl p-5 flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-primary/10">
+            <Banknote className="w-6 h-6 text-primary" />
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">{stats.comAbono}</p>
             <p className="text-sm text-muted-foreground">Com Abono</p>
           </div>
         </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-5 flex items-center gap-4 cursor-help">
+              <div className="p-3 rounded-xl bg-destructive/10">
+                <TrendingUp className="w-6 h-6 text-destructive" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-foreground">
+                  {provisaoTotal > 0 ? `R$ ${(provisaoTotal / 1000).toFixed(0)}k` : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">Provisão Estimada</p>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs max-w-[200px]">
+            Passivo total estimado de férias (salários + 1/3 constitucional) de todos os colaboradores ativos.
+          </TooltipContent>
+        </Tooltip>
       </motion.div>
 
       {/* Tabs */}
