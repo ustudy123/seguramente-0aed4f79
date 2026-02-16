@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { format, differenceInYears } from "date-fns";
-import { UserMinus, AlertTriangle, Shield, FileCheck } from "lucide-react";
+import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MOTIVOS_DESLIGAMENTO: Record<string, string> = {
   sem_justa_causa: "Dispensa sem justa causa",
@@ -51,7 +55,12 @@ interface Props {
 }
 
 export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: Props) => {
+  const { tenantId, user, profile } = useAuth();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [asoFile, setAsoFile] = useState<File | null>(null);
+  const [uploadingAso, setUploadingAso] = useState(false);
   const [form, setForm] = useState({
     data_desligamento: "",
     motivo_desligamento: "",
@@ -111,10 +120,81 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     return items;
   }, [form, admissao]);
 
+  // Upload ASO para storage e vincular à pasta do colaborador
+  const uploadAsoFile = async () => {
+    if (!asoFile || !tenantId || !user) return;
+    setUploadingAso(true);
+    try {
+      const timestamp = Date.now();
+      const safeFileName = asoFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const storagePath = `${tenantId}/colaboradores/${admissao.id}/${timestamp}_ASO_Demissional_${safeFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documentos")
+        .upload(storagePath, asoFile, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      // Encontrar a pasta do colaborador (ano atual)
+      const { data: pastasColab } = await supabase
+        .from("documento_pastas")
+        .select("id, tipo, ano, pasta_pai_id")
+        .eq("tenant_id", tenantId)
+        .eq("colaborador_id", admissao.id);
+
+      let pastaId: string | null = null;
+      if (pastasColab && pastasColab.length > 0) {
+        const anoAtual = new Date().getFullYear();
+        const pastaAno = pastasColab.find(p => p.tipo === "ano" && p.ano === anoAtual);
+        const pastaColab = pastasColab.find(p => p.tipo === "colaborador");
+        pastaId = pastaAno?.id || pastaColab?.id || null;
+      }
+
+      // Salvar metadados no banco
+      const { error: dbError } = await supabase
+        .from("documentos" as never)
+        .insert({
+          tenant_id: tenantId,
+          colaborador_id: admissao.id,
+          colaborador_nome: admissao.nome_completo,
+          nome_arquivo: storagePath,
+          nome_original: `ASO Demissional - ${admissao.nome_completo}.${asoFile.name.split('.').pop()}`,
+          tipo: "ASO",
+          tamanho: asoFile.size,
+          mime_type: asoFile.type,
+          storage_path: storagePath,
+          data_validade: null,
+          status: "valido",
+          observacoes: `ASO Demissional - Exame realizado em ${form.data_exame_demissional || "data não informada"} - Resultado: ${RESULTADOS_EXAME[form.resultado_exame_demissional] || "não informado"}`,
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo,
+          pasta_id: pastaId,
+        } as never);
+
+      if (dbError) {
+        await supabase.storage.from("documentos").remove([storagePath]);
+        throw dbError;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
+      toast.success("ASO Demissional salvo na pasta do colaborador!");
+    } catch (err: any) {
+      toast.error("Erro ao salvar ASO: " + err.message);
+    } finally {
+      setUploadingAso(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.data_desligamento || !form.motivo_desligamento) return;
     setSubmitting(true);
     try {
+      // Upload ASO se houver arquivo
+      if (asoFile) {
+        await uploadAsoFile();
+      }
+
       await onConfirmar(admissao.id, {
         ...form,
         dias_aviso_previo: diasAvisoPrevio,
@@ -257,6 +337,61 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
                 <Input value={form.crm_exame_demissional} onChange={e => set("crm_exame_demissional", e.target.value)} placeholder="CRM/UF 00000" />
               </div>
             </div>
+
+            {/* Upload ASO */}
+            <div className="mt-3">
+              <Label>Anexar ASO Demissional</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 10 * 1024 * 1024) {
+                      toast.error("Arquivo muito grande (máx. 10MB)");
+                      return;
+                    }
+                    setAsoFile(file);
+                  }
+                }}
+              />
+              {!asoFile ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-1 border-dashed"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Selecionar arquivo (PDF, JPG, PNG)
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2 mt-1 p-2 rounded-lg bg-muted/50 border">
+                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm truncate flex-1">{asoFile.name}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {(asoFile.size / 1024).toFixed(0)} KB
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => {
+                      setAsoFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                O documento será salvo na pasta de documentos do colaborador
+              </p>
+            </div>
           </div>
 
           <Separator />
@@ -327,9 +462,10 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
             <Button
               variant="destructive"
               onClick={handleSubmit}
-              disabled={!form.data_desligamento || !form.motivo_desligamento || submitting}
+              disabled={!form.data_desligamento || !form.motivo_desligamento || submitting || uploadingAso}
               className="flex-1"
             >
+              {(submitting || uploadingAso) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {submitting ? "Processando..." : "Confirmar Desligamento"}
             </Button>
           </div>
