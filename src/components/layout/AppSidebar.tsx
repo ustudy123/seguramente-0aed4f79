@@ -45,13 +45,15 @@ interface MenuItem {
 interface MenuSection {
   label: string;
   items: MenuItem[];
-  color: string; // tailwind color for the accent dot/border
+  color: string;
+  sectionIcon: React.ElementType;
 }
 
 const menuSections: MenuSection[] = [
   {
     label: "Visão Geral & Estratégia",
-    color: "bg-blue-400",
+    color: "text-blue-400",
+    sectionIcon: Compass,
     items: [
       { title: "Início", icon: Home, path: "/" },
       { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
@@ -59,7 +61,8 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Riscos & Conformidade",
-    color: "bg-amber-400",
+    color: "text-amber-400",
+    sectionIcon: ShieldAlert,
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
@@ -68,8 +71,9 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Planos, Avaliações & Desenvolvimento",
-    color: "bg-emerald-400",
+    label: "Planos & Desenvolvimento",
+    color: "text-emerald-400",
+    sectionIcon: Target,
     items: [
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
@@ -78,7 +82,8 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Pessoas & Cultura",
-    color: "bg-violet-400",
+    color: "text-violet-400",
+    sectionIcon: Users,
     items: [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Férias", icon: Calendar, path: "/ferias" },
@@ -95,7 +100,8 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Estrutura Organizacional",
-    color: "bg-cyan-400",
+    color: "text-cyan-400",
+    sectionIcon: Building2,
     items: [
       { title: "Empresa", icon: Building2, path: "/empresa" },
       {
@@ -112,15 +118,17 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Documentação & Registros",
-    color: "bg-rose-400",
+    label: "Documentos & Registros",
+    color: "text-rose-400",
+    sectionIcon: FileText,
     items: [
       { title: "Documentos", icon: FileText, path: "/documentos" },
     ],
   },
   {
     label: "Financeiro",
-    color: "bg-teal-400",
+    color: "text-teal-400",
+    sectionIcon: DollarSign,
     items: [
       { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
     ],
@@ -220,8 +228,8 @@ const CollapsibleSection = ({
   if (isCollapsed) {
     return (
       <div className="mb-1">
-        <div className="pt-1 flex items-center px-2 mb-1">
-          <span className={cn("w-full h-[2px] rounded-full", section.color, "opacity-30")} />
+        <div className="pt-1 flex items-center justify-center px-2 mb-1">
+          <section.sectionIcon className={cn("w-4 h-4", section.color, "opacity-50")} strokeWidth={1.75} />
         </div>
         {section.items.map((item) =>
           item.children ? (
@@ -252,12 +260,16 @@ const CollapsibleSection = ({
       <button
         onClick={onToggle}
         className={cn(
-          "w-full flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors",
-          "hover:bg-sidebar-accent/30 group cursor-pointer"
+          "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors",
+          "hover:bg-sidebar-accent/40 group cursor-pointer",
+          hasActiveChild && "bg-sidebar-accent/20"
         )}
       >
-        <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", section.color)} />
-        <p className="flex-1 text-left text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors">
+        <section.sectionIcon className={cn("w-4 h-4 flex-shrink-0 transition-colors", section.color)} strokeWidth={2} />
+        <p className={cn(
+          "flex-1 text-left text-[11px] font-bold uppercase tracking-wider transition-colors",
+          hasActiveChild ? "text-sidebar-foreground/70" : "text-sidebar-foreground/45 group-hover:text-sidebar-foreground/65"
+        )}>
           {section.label}
         </p>
         <ChevronDown
