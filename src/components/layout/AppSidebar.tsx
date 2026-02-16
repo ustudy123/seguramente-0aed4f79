@@ -30,6 +30,7 @@ import {
   ShieldAlert,
   Sparkles,
   Newspaper,
+  Route,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -86,6 +87,7 @@ const menuSections: MenuSection[] = [
       { title: "Feedback & Ocorrências", icon: MessageCircle, path: "/feedback-ocorrencias" },
       { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
       { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
+      { title: "Trilhas", icon: Route, path: "/trilhas" },
       { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Mural Interno", icon: Newspaper, path: "/feed" },
       { title: "Ponto", icon: Clock, path: "/ponto" },
