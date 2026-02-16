@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -21,7 +21,7 @@ import Colaboradores from "./pages/Colaboradores";
 import Ponto from "./pages/Ponto";
 import Ferias from "./pages/Ferias";
 import Documentos from "./pages/Documentos";
-import Admissao from "./pages/Admissao";
+// Admissao route redirects to /colaboradores
 import Epis from "./pages/Epis";
 import Feed from "./pages/Feed";
 import Ouvidoria from "./pages/Ouvidoria";
@@ -104,7 +104,7 @@ const App = () => (
               <Route path="/financeiro" element={<Financeiro />} />
               <Route path="/empresa" element={<Empresa />} />
               <Route path="/ponto" element={<Ponto />} />
-              <Route path="/admissao" element={<Admissao />} />
+              <Route path="/admissao" element={<Navigate to="/colaboradores" replace />} />
               <Route path="/ferias" element={<Ferias />} />
               <Route path="/avaliacoes" element={<Avaliacoes />} />
               <Route path="/atestados" element={<Atestados />} />
