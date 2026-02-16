@@ -5,6 +5,7 @@ import { useCultura } from "@/hooks/useCultura";
 import { CulturaStats } from "@/components/cultura/CulturaStats";
 import { AgendaCelebracoes } from "@/components/cultura/AgendaCelebracoes";
 import { RituaisReconhecimento } from "@/components/cultura/RituaisReconhecimento";
+import { ProximasCelebracoes } from "@/components/cultura/ProximasCelebracoes";
 
 const CulturaCelebracoes = () => {
   const cultura = useCultura();
@@ -28,6 +29,11 @@ const CulturaCelebracoes = () => {
         acoesPendentes={cultura.acoesPendentes}
         acoesConcluidas={cultura.acoesConcluidas}
         rituaisAtivos={cultura.rituaisAtivos}
+      />
+
+      <ProximasCelebracoes
+        acoes={cultura.acoes}
+        onCreateAcao={cultura.createAcao}
       />
 
       <Tabs defaultValue="experiencia" className="space-y-4">

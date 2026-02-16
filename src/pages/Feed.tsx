@@ -1,13 +1,21 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, RefreshCw } from "lucide-react";
+import { MessageSquare, RefreshCw, CalendarHeart, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { PostForm } from "@/components/feed/PostForm";
 import { PostCard } from "@/components/feed/PostCard";
 import { AniversariantesWidget } from "@/components/feed/AniversariantesWidget";
 import { TempoEmpresaWidget } from "@/components/feed/TempoEmpresaWidget";
 import { useFeed } from "@/hooks/useFeed";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { TIPO_ACAO_LABELS, STATUS_ACAO_COLORS, STATUS_ACAO_LABELS } from "@/types/cultura";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 function FeedSkeleton() {
   return (
@@ -49,6 +57,67 @@ function EmptyState() {
         para criar sua primeira publicação.
       </p>
     </motion.div>
+  );
+}
+
+// Widget de avisos de Cultura & Celebrações
+function AvisosCulturaWidget() {
+  const { tenantId } = useAuth();
+
+  const { data: acoesPendentes = [] } = useQuery({
+    queryKey: ["cultura-acoes-mural", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data, error } = await (supabase as any)
+        .from("cultura_acoes")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .in("status", ["pendente", "em_andamento"])
+        .order("data_referencia", { ascending: true })
+        .limit(5);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  if (acoesPendentes.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <CalendarHeart className="h-4 w-4 text-violet-500" />
+          Lembretes de Cultura
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {acoesPendentes.map((acao: any) => (
+          <div
+            key={acao.id}
+            className="flex items-start gap-2 p-2 rounded-lg bg-muted/50"
+          >
+            <Sparkles className="h-3.5 w-3.5 mt-0.5 text-violet-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate">{acao.titulo}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Badge variant="outline" className="text-[9px] h-4">
+                  {TIPO_ACAO_LABELS[acao.tipo] || acao.tipo}
+                </Badge>
+                <Badge className={`text-[9px] h-4 ${STATUS_ACAO_COLORS[acao.status]}`}>
+                  {STATUS_ACAO_LABELS[acao.status]}
+                </Badge>
+              </div>
+              {acao.colaborador_nome && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {acao.colaborador_nome} · {format(parseISO(acao.data_referencia), "dd/MM", { locale: ptBR })}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -100,6 +169,7 @@ export default function Feed() {
         </div>
 
         <div className="space-y-4">
+          <AvisosCulturaWidget />
           <AniversariantesWidget onFelicitar={handleFelicitacao} />
           <TempoEmpresaWidget onFelicitar={handleFelicitacao} />
         </div>
