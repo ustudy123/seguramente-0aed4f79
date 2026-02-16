@@ -5,7 +5,7 @@ import { AdmissaoStats } from '@/components/admissao/AdmissaoStats';
 import { AdmissaoList } from '@/components/admissao/AdmissaoList';
 import { AdmissaoForm } from '@/components/admissao/AdmissaoForm';
 import { AdmissaoDetail } from '@/components/admissao/AdmissaoDetail';
-import { DesligamentoForm } from '@/components/admissao/DesligamentoForm';
+
 import { useAdmissoes } from '@/hooks/useAdmissoes';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -29,7 +29,7 @@ export default function Admissao() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [desligarId, setDesligarId] = useState<string | null>(null);
+  
 
   const { hasMinimumRole, loading: authLoading } = useAuthContext();
   
@@ -90,29 +90,6 @@ export default function Admissao() {
     }
   };
 
-  const handleDesligar = (id: string) => {
-    if (!canManage) {
-      toast.error('Você não tem permissão para desligar colaboradores');
-      return;
-    }
-    setDesligarId(id);
-  };
-
-  const confirmarDesligamento = async (id: string, dados: Record<string, any>) => {
-    try {
-      await atualizarAdmissao({
-        id,
-        dados: {
-          ...dados,
-          status: 'desligado',
-        } as any,
-      });
-      toast.success('Desligamento registrado com sucesso');
-      setDesligarId(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao registrar desligamento');
-    }
-  };
 
   const handleNew = () => {
     if (!canManage) {
@@ -413,7 +390,7 @@ export default function Admissao() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onNew={handleNew}
-            onDesligar={handleDesligar}
+            
           />
         </>
       )}
@@ -490,25 +467,6 @@ export default function Admissao() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Desligamento Form */}
-      {desligarId && (() => {
-        const adm = admissoes.find(a => a.id === desligarId);
-        if (!adm) return null;
-        return (
-          <DesligamentoForm
-            open={!!desligarId}
-            onOpenChange={(open) => { if (!open) setDesligarId(null); }}
-            admissao={{
-              id: adm.id,
-              nome_completo: adm.nome_completo,
-              cargo: adm.cargo,
-              data_admissao: adm.data_admissao,
-              tipo_contrato: adm.tipo_contrato,
-            }}
-            onConfirmar={confirmarDesligamento}
-          />
-        );
-      })()}
     </motion.div>
   );
 }

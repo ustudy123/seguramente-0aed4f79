@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorForm, ColaboradorEditData } from "@/components/colaboradores/ColaboradorForm";
 import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
+import { DesligamentoForm } from "@/components/admissao/DesligamentoForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -107,6 +108,7 @@ const Colaboradores = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
+  const [desligarColab, setDesligarColab] = useState<ColaboradorExtendido | null>(null);
 
   const handleEditColaborador = (colab: ColaboradorExtendido) => {
     setEditingColaborador({
@@ -338,7 +340,7 @@ const Colaboradores = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         className="text-destructive"
-                        onClick={() => toast.info("Funcionalidade de desligamento em desenvolvimento")}
+                        onClick={() => setDesligarColab(colab)}
                       >
                         Desligar
                       </DropdownMenuItem>
@@ -458,7 +460,7 @@ const Colaboradores = () => {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-destructive"
-                          onClick={() => toast.info("Funcionalidade de desligamento em desenvolvimento")}
+                          onClick={() => setDesligarColab(colab)}
                         >
                           Desligar
                         </DropdownMenuItem>
@@ -591,6 +593,31 @@ const Colaboradores = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Desligamento Form */}
+      {desligarColab && (
+        <DesligamentoForm
+          open={!!desligarColab}
+          onOpenChange={(open) => { if (!open) setDesligarColab(null); }}
+          admissao={{
+            id: desligarColab.id,
+            nome_completo: desligarColab.nome_completo,
+            cargo: desligarColab.cargo,
+            data_admissao: desligarColab.data_admissao,
+            tipo_contrato: desligarColab.tipo_contrato,
+          }}
+          onConfirmar={async (id, dados) => {
+            const { error } = await supabase
+              .from("admissoes")
+              .update({ ...dados, status: "desligado" } as any)
+              .eq("id", id);
+            if (error) throw error;
+            toast.success("Desligamento registrado com sucesso");
+            setDesligarColab(null);
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 };
