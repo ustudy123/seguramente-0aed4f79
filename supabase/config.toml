@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.ai-ouvidoria-acoes]
 verify_jwt = false
+
+[functions.ai-felicitacao]
+verify_jwt = false

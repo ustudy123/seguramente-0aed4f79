@@ -1,13 +1,22 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Cake, PartyPopper } from "lucide-react";
+import { Cake, PartyPopper, Sparkles, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAniversariantes } from "@/hooks/useFeed";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export function AniversariantesWidget() {
+interface AniversariantesWidgetProps {
+  onFelicitar?: (mensagem: string) => void;
+}
+
+export function AniversariantesWidget({ onFelicitar }: AniversariantesWidgetProps) {
   const { data: aniversariantes = [], isLoading } = useAniversariantes();
+  const [gerando, setGerando] = useState<string | null>(null);
 
   const getInitials = (name: string) => {
     return name
@@ -24,6 +33,26 @@ export function AniversariantesWidget() {
     return (
       date.getDate() === today.getDate() && date.getMonth() === today.getMonth()
     );
+  };
+
+  const handleFelicitar = async (nome: string) => {
+    setGerando(nome);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-felicitacao", {
+        body: { nome, tipo: "aniversario" },
+      });
+      if (error) throw error;
+      const mensagem = data?.mensagem;
+      if (mensagem && onFelicitar) {
+        onFelicitar(mensagem);
+        toast.success("Mensagem gerada! Edite e publique no mural.");
+      }
+    } catch (err) {
+      console.error("Erro ao gerar felicitação:", err);
+      toast.error("Erro ao gerar mensagem. Tente novamente.");
+    } finally {
+      setGerando(null);
+    }
   };
 
   if (isLoading) {
@@ -68,7 +97,9 @@ export function AniversariantesWidget() {
             <div
               key={index}
               className={`flex items-center gap-3 ${
-                isBirthdayToday ? "bg-pink-500/10 -mx-2 px-2 py-1 rounded-lg" : ""
+                isBirthdayToday
+                  ? "bg-pink-500/10 -mx-2 px-2 py-1.5 rounded-lg"
+                  : ""
               }`}
             >
               <Avatar className="h-8 w-8">
@@ -97,6 +128,24 @@ export function AniversariantesWidget() {
                       })}
                 </p>
               </div>
+              {isBirthdayToday && onFelicitar && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-pink-600 hover:text-pink-700 hover:bg-pink-500/10 shrink-0"
+                  disabled={gerando === pessoa.nome_completo}
+                  onClick={() => handleFelicitar(pessoa.nome_completo)}
+                >
+                  {gerando === pessoa.nome_completo ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Felicitar
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           );
         })}

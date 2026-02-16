@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image, Send, X, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useFeed, TipoPost } from "@/hooks/useFeed";
 
-export function PostForm() {
+interface PostFormProps {
+  prefillContent?: string;
+  onPrefillConsumed?: () => void;
+}
+
+export function PostForm({ prefillContent, onPrefillConsumed }: PostFormProps) {
   const { profile, hasMinimumRole } = useAuthContext();
   const { criarPost, uploadImagem, isPending } = useFeed();
   const [conteudo, setConteudo] = useState("");
@@ -18,6 +23,18 @@ export function PostForm() {
   const [tipo, setTipo] = useState<TipoPost>("post");
   const [isExpanded, setIsExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Handle prefill from AI felicitação
+  useEffect(() => {
+    if (prefillContent) {
+      setConteudo(prefillContent);
+      setIsExpanded(true);
+      onPrefillConsumed?.();
+      // Focus textarea after a tick
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
+  }, [prefillContent, onPrefillConsumed]);
 
   const canCreateAnnouncement = hasMinimumRole("manager");
 
@@ -88,6 +105,7 @@ export function PostForm() {
 
           <div className="flex-1">
             <Textarea
+              ref={textareaRef}
               placeholder="No que você está pensando?"
               value={conteudo}
               onChange={(e) => setConteudo(e.target.value)}
