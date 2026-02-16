@@ -184,6 +184,21 @@ export function useCultura() {
     enabled: !!tenantId,
   });
 
+  const createPreferencia = async (payload: Partial<CulturaPreferencia>) => {
+    if (!tenantId) return;
+    const { error } = await supabase.from("cultura_preferencias").insert({ ...payload, tenant_id: tenantId } as any);
+    if (error) { toast.error("Erro ao salvar preferência"); throw error; }
+    toast.success("Preferência salva!");
+    qc.invalidateQueries({ queryKey: ["cultura-preferencias"] });
+  };
+
+  const deletePreferencia = async (id: string) => {
+    const { error } = await supabase.from("cultura_preferencias").delete().eq("id", id);
+    if (error) { toast.error("Erro ao excluir"); throw error; }
+    toast.success("Preferência removida");
+    qc.invalidateQueries({ queryKey: ["cultura-preferencias"] });
+  };
+
   // Stats
   const acoesPendentes = acoes.filter(a => a.status === "pendente").length;
   const acoesConcluidas = acoes.filter(a => a.status === "concluida").length;
@@ -196,7 +211,7 @@ export function useCultura() {
     rituais, isLoadingRituais, createRitual, toggleRitual, deleteRitual,
     config, saveConfig,
     marcos, createMarco,
-    preferencias,
+    preferencias, createPreferencia, deletePreferencia,
     acoesPendentes, acoesConcluidas, rituaisAtivos, datasAtivas,
   };
 }

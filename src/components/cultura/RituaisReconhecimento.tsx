@@ -229,6 +229,17 @@ export const RituaisReconhecimento = ({
               <Switch checked={config?.folga_permitida ?? false} onCheckedChange={v => onSaveConfig({ folga_permitida: v })} />
             </div>
             <div>
+              <Label>Limite de valor do presente (R$)</Label>
+              <Input
+                type="number"
+                className="w-32 mt-1"
+                placeholder="Sem limite"
+                value={config?.limite_valor_presente ?? ""}
+                onChange={e => onSaveConfig({ limite_valor_presente: e.target.value ? parseFloat(e.target.value) : null })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Deixe vazio para sem limite</p>
+            </div>
+            <div>
               <Label>Dias de antecedência para criar ação</Label>
               <Input
                 type="number"

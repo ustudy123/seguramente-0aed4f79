@@ -6,6 +6,8 @@ import { CulturaStats } from "@/components/cultura/CulturaStats";
 import { AgendaCelebracoes } from "@/components/cultura/AgendaCelebracoes";
 import { RituaisReconhecimento } from "@/components/cultura/RituaisReconhecimento";
 import { ProximasCelebracoes } from "@/components/cultura/ProximasCelebracoes";
+import { PreferenciasColaborador } from "@/components/cultura/PreferenciasColaborador";
+import { CulturaIndicadores } from "@/components/cultura/CulturaIndicadores";
 
 const CulturaCelebracoes = () => {
   const cultura = useCultura();
@@ -37,9 +39,15 @@ const CulturaCelebracoes = () => {
         onUpdateStatus={cultura.updateAcaoStatus}
       />
 
+      <CulturaIndicadores
+        acoes={cultura.acoes}
+        rituais={cultura.rituais}
+      />
+
       <Tabs defaultValue="experiencia" className="space-y-4">
         <TabsList>
           <TabsTrigger value="experiencia">Experiência do Colaborador</TabsTrigger>
+          <TabsTrigger value="preferencias">Preferências</TabsTrigger>
           <TabsTrigger value="rituais">Rituais e Reconhecimento</TabsTrigger>
         </TabsList>
 
@@ -50,6 +58,14 @@ const CulturaCelebracoes = () => {
             onCreateAcao={cultura.createAcao}
             onUpdateStatus={cultura.updateAcaoStatus}
             onDelete={cultura.deleteAcao}
+          />
+        </TabsContent>
+
+        <TabsContent value="preferencias">
+          <PreferenciasColaborador
+            preferencias={cultura.preferencias}
+            onCreatePreferencia={cultura.createPreferencia}
+            onDeletePreferencia={cultura.deletePreferencia}
           />
         </TabsContent>
 
