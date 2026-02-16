@@ -45,6 +45,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useFinanceiro } from "@/hooks/useFinanceiro";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FeriasItem {
   id: number;
@@ -223,11 +225,75 @@ const Ferias = () => {
   });
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
 
+  const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
+  const { data: periodos } = useFolhaPeriodos();
+  const { tenantId } = useAuth();
+
+  // Calcula 2 dias úteis antes de uma data
+  const calcularVencimento2DiasUteis = (dataInicio: string): string => {
+    const date = new Date(dataInicio + "T12:00:00");
+    let diasUteis = 0;
+    while (diasUteis < 2) {
+      date.setDate(date.getDate() - 1);
+      const dow = date.getDay();
+      if (dow !== 0 && dow !== 6) diasUteis++;
+    }
+    return date.toISOString().split("T")[0];
+  };
+
+  const gerarRegistroFinanceiro = async (item: FeriasItem) => {
+    if (!tenantId) return;
+    try {
+      const competencia = item.dataInicio.slice(0, 7); // YYYY-MM
+      // Busca ou cria período
+      let periodoId: string | undefined;
+      const periodoExistente = periodos?.find(p => p.competencia === competencia);
+      if (periodoExistente) {
+        periodoId = periodoExistente.id;
+      } else {
+        const novoPeriodo = await criarPeriodo({ competencia, observacoes: "Criado automaticamente - férias" });
+        periodoId = (novoPeriodo as any)?.id;
+      }
+      if (!periodoId) return;
+
+      const salarioBase = item.salarioBase || 0;
+      const salarioDia = salarioBase / 30;
+      const valorFerias = salarioDia * item.diasSolicitados;
+      const tercoConstitucional = valorFerias / 3;
+      const valorAbono = item.abonoPecuniario ? salarioDia * item.diasAbono : 0;
+      const totalBruto = valorFerias + tercoConstitucional + valorAbono;
+      const vencimento = calcularVencimento2DiasUteis(item.dataInicio);
+
+      await criarFolhaItem({
+        periodo_id: periodoId,
+        colaborador_id: item.id.toString(),
+        colaborador_nome: item.colaborador,
+        colaborador_cpf: null,
+        cargo: null,
+        departamento: item.departamento,
+        salario_base: salarioBase,
+        total_proventos: totalBruto,
+        total_descontos: 0,
+        total_liquido: totalBruto,
+        status: "pendente",
+        observacoes: `Férias ${item.diasSolicitados}d (${new Date(item.dataInicio).toLocaleDateString("pt-BR")} a ${new Date(item.dataFim).toLocaleDateString("pt-BR")})${item.abonoPecuniario ? ` + Abono ${item.diasAbono}d` : ""} | Vencimento: ${new Date(vencimento + "T12:00:00").toLocaleDateString("pt-BR")}`,
+      });
+
+      toast.success(`Registro financeiro gerado — vencimento ${new Date(vencimento + "T12:00:00").toLocaleDateString("pt-BR")}`);
+    } catch (err) {
+      console.error("Erro ao gerar registro financeiro:", err);
+      toast.error("Férias aprovadas, mas houve erro ao gerar registro financeiro");
+    }
+  };
+
   const handleAprovar = (id: number) => {
     setFerias(prev => prev.map(f => 
       f.id === id ? { ...f, status: "aprovado" as const } : f
     ));
     const item = ferias.find(f => f.id === id);
+    if (item) {
+      gerarRegistroFinanceiro({ ...item, status: "aprovado" });
+    }
     toast.success(`Férias aprovadas para ${item?.colaborador}`);
   };
 
