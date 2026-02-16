@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
@@ -31,6 +31,8 @@ import {
   Sparkles,
   Newspaper,
   Route,
+  Search,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -311,6 +313,32 @@ interface AppSidebarProps {
 
 export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Flatten all navigable items for search
+  const allItems = useMemo(() => {
+    const items: { title: string; path: string; icon: React.ElementType; sectionLabel: string }[] = [];
+    menuSections.forEach((section) => {
+      section.items.forEach((item) => {
+        if (item.path) items.push({ title: item.title, path: item.path, icon: item.icon, sectionLabel: section.label });
+        item.children?.forEach((child) => {
+          items.push({ title: child.title, path: child.path, icon: item.icon, sectionLabel: section.label });
+        });
+      });
+    });
+    // Add Configurações
+    items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
+    return items;
+  }, []);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return allItems.filter((item) => item.title.toLowerCase().includes(q));
+  }, [searchQuery, allItems]);
+
+  const isSearching = searchQuery.trim().length > 0;
 
   // Auto-open sections that contain the active route
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
@@ -347,16 +375,67 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
         )}
       </div>
 
+      {/* Search bar */}
+      {!isCollapsed && (
+        <div className="px-3 pt-3 pb-1">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/40" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar módulo..."
+              className="w-full pl-8 pr-8 py-2 rounded-lg bg-sidebar-accent/40 border border-sidebar-border text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/35 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/50 focus:bg-sidebar-accent/60 transition-all"
+            />
+            {isSearching && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <nav className="flex-1 p-3 space-y-3 overflow-y-auto scrollbar-thin">
-        {menuSections.map((section) => (
-          <CollapsibleSection
-            key={section.label}
-            section={section}
-            isCollapsed={isCollapsed}
-            isOpen={!!openSections[section.label]}
-            onToggle={() => toggleSection(section.label)}
-          />
-        ))}
+        {isSearching ? (
+          <div className="space-y-0.5">
+            {searchResults.length === 0 ? (
+              <p className="text-[12px] text-sidebar-foreground/40 text-center py-4">Nenhum resultado encontrado</p>
+            ) : (
+              searchResults.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => { navigate(item.path); setSearchQuery(""); }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-left",
+                    location.pathname === item.path
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                  )}
+                >
+                  <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.75} />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[13px] truncate">{item.title}</span>
+                    <span className="text-[10px] text-sidebar-foreground/35 truncate">{item.sectionLabel}</span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        ) : (
+          menuSections.map((section) => (
+            <CollapsibleSection
+              key={section.label}
+              section={section}
+              isCollapsed={isCollapsed}
+              isOpen={!!openSections[section.label]}
+              onToggle={() => toggleSection(section.label)}
+            />
+          ))
+        )}
       </nav>
 
       <div className="p-3 border-t border-sidebar-border">
