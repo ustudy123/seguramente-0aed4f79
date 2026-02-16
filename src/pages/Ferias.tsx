@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
+import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
 import { 
   Calendar, 
   Plus, 
@@ -376,31 +378,11 @@ const Ferias = () => {
         </TabsContent>
 
         <TabsContent value="calendario">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-xl border border-border p-8 shadow-sm text-center"
-          >
-            <Sun className="w-16 h-16 text-primary/30 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Calendário de Férias</h3>
-            <p className="text-muted-foreground">
-              Visualização em calendário será implementada em breve.
-            </p>
-          </motion.div>
+          <FeriasCalendario ferias={ferias} />
         </TabsContent>
 
         <TabsContent value="saldos">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-xl border border-border p-8 shadow-sm text-center"
-          >
-            <Calendar className="w-16 h-16 text-primary/30 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Saldos de Férias</h3>
-            <p className="text-muted-foreground">
-              Consulta de saldos por colaborador será implementada em breve.
-            </p>
-          </motion.div>
+          <FeriasSaldos ferias={ferias} />
         </TabsContent>
       </Tabs>
 
