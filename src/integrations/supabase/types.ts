@@ -8885,6 +8885,330 @@ export type Database = {
           },
         ]
       }
+      trilha_atribuicoes: {
+        Row: {
+          alvo_id: string | null
+          alvo_nome: string | null
+          created_at: string
+          id: string
+          tenant_id: string
+          tipo_alvo: string
+          trilha_id: string
+        }
+        Insert: {
+          alvo_id?: string | null
+          alvo_nome?: string | null
+          created_at?: string
+          id?: string
+          tenant_id: string
+          tipo_alvo?: string
+          trilha_id: string
+        }
+        Update: {
+          alvo_id?: string | null
+          alvo_nome?: string | null
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          tipo_alvo?: string
+          trilha_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_atribuicoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_atribuicoes_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilha_modulos: {
+        Row: {
+          acao_pdi_id: string | null
+          ativo: boolean | null
+          competencia_relacionada: string | null
+          conteudo_texto: string | null
+          conteudo_url: string | null
+          created_at: string
+          descricao: string | null
+          evidencia_obrigatoria: boolean | null
+          id: string
+          objetivo: string | null
+          ordem: number
+          ordem_tipo: Database["public"]["Enums"]["trilha_modulo_ordem_tipo"]
+          pontuacao: number | null
+          tempo_estimado_min: number | null
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["trilha_modulo_tipo"]
+          titulo: string
+          trilha_id: string
+          updated_at: string
+        }
+        Insert: {
+          acao_pdi_id?: string | null
+          ativo?: boolean | null
+          competencia_relacionada?: string | null
+          conteudo_texto?: string | null
+          conteudo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          evidencia_obrigatoria?: boolean | null
+          id?: string
+          objetivo?: string | null
+          ordem?: number
+          ordem_tipo?: Database["public"]["Enums"]["trilha_modulo_ordem_tipo"]
+          pontuacao?: number | null
+          tempo_estimado_min?: number | null
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["trilha_modulo_tipo"]
+          titulo: string
+          trilha_id: string
+          updated_at?: string
+        }
+        Update: {
+          acao_pdi_id?: string | null
+          ativo?: boolean | null
+          competencia_relacionada?: string | null
+          conteudo_texto?: string | null
+          conteudo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          evidencia_obrigatoria?: boolean | null
+          id?: string
+          objetivo?: string | null
+          ordem?: number
+          ordem_tipo?: Database["public"]["Enums"]["trilha_modulo_ordem_tipo"]
+          pontuacao?: number | null
+          tempo_estimado_min?: number | null
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["trilha_modulo_tipo"]
+          titulo?: string
+          trilha_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_modulos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_modulos_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilha_progresso: {
+        Row: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          evidencia_texto: string | null
+          evidencia_url: string | null
+          id: string
+          modulo_id: string
+          nota: number | null
+          pontos_obtidos: number | null
+          status: Database["public"]["Enums"]["trilha_progresso_status"]
+          tenant_id: string
+          trilha_id: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          evidencia_texto?: string | null
+          evidencia_url?: string | null
+          id?: string
+          modulo_id: string
+          nota?: number | null
+          pontos_obtidos?: number | null
+          status?: Database["public"]["Enums"]["trilha_progresso_status"]
+          tenant_id: string
+          trilha_id: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          evidencia_texto?: string | null
+          evidencia_url?: string | null
+          id?: string
+          modulo_id?: string
+          nota?: number | null
+          pontos_obtidos?: number | null
+          status?: Database["public"]["Enums"]["trilha_progresso_status"]
+          tenant_id?: string
+          trilha_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_progresso_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "trilha_modulos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_progresso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_progresso_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilha_quiz_perguntas: {
+        Row: {
+          created_at: string
+          id: string
+          modulo_id: string
+          opcoes: string[]
+          ordem: number
+          pergunta: string
+          resposta_correta: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          modulo_id: string
+          opcoes: string[]
+          ordem?: number
+          pergunta: string
+          resposta_correta?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          modulo_id?: string
+          opcoes?: string[]
+          ordem?: number
+          pergunta?: string
+          resposta_correta?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_quiz_perguntas_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "trilha_modulos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_quiz_perguntas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilhas: {
+        Row: {
+          conexao_indicadores: string[] | null
+          conexao_pdi: boolean | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          id: string
+          imagem_url: string | null
+          nome: string
+          objetivo: string | null
+          pontuacao_minima: number | null
+          prazo_dias: number | null
+          prioridade: Database["public"]["Enums"]["trilha_prioridade"]
+          status: Database["public"]["Enums"]["trilha_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["trilha_tipo"]
+          total_modulos: number | null
+          updated_at: string
+          visibilidade: Database["public"]["Enums"]["trilha_visibilidade"]
+        }
+        Insert: {
+          conexao_indicadores?: string[] | null
+          conexao_pdi?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          imagem_url?: string | null
+          nome: string
+          objetivo?: string | null
+          pontuacao_minima?: number | null
+          prazo_dias?: number | null
+          prioridade?: Database["public"]["Enums"]["trilha_prioridade"]
+          status?: Database["public"]["Enums"]["trilha_status"]
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["trilha_tipo"]
+          total_modulos?: number | null
+          updated_at?: string
+          visibilidade?: Database["public"]["Enums"]["trilha_visibilidade"]
+        }
+        Update: {
+          conexao_indicadores?: string[] | null
+          conexao_pdi?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          imagem_url?: string | null
+          nome?: string
+          objetivo?: string | null
+          pontuacao_minima?: number | null
+          prazo_dias?: number | null
+          prioridade?: Database["public"]["Enums"]["trilha_prioridade"]
+          status?: Database["public"]["Enums"]["trilha_status"]
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["trilha_tipo"]
+          total_modulos?: number | null
+          updated_at?: string
+          visibilidade?: Database["public"]["Enums"]["trilha_visibilidade"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilhas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -9146,6 +9470,30 @@ export type Database = {
         | "documento"
         | "link"
       tipo_ferramenta: "sistema" | "software" | "planilha" | "equipamento"
+      trilha_modulo_ordem_tipo: "sequencial" | "livre"
+      trilha_modulo_tipo:
+        | "video"
+        | "pdf"
+        | "link"
+        | "apresentacao"
+        | "conteudo_interno"
+        | "quiz"
+        | "atividade_pratica"
+        | "checklist"
+        | "reflexao"
+        | "estudo_caso"
+        | "microdesafio"
+      trilha_prioridade: "obrigatoria" | "recomendada" | "opcional"
+      trilha_progresso_status: "nao_iniciado" | "em_andamento" | "concluido"
+      trilha_status: "rascunho" | "ativa" | "arquivada"
+      trilha_tipo:
+        | "tecnica"
+        | "comportamental"
+        | "lideranca"
+        | "cultura"
+        | "ergonomia_saude"
+        | "processos"
+      trilha_visibilidade: "publica" | "restrita"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
     CompositeTypes: {
@@ -9471,6 +9819,32 @@ export const Constants = {
         "link",
       ],
       tipo_ferramenta: ["sistema", "software", "planilha", "equipamento"],
+      trilha_modulo_ordem_tipo: ["sequencial", "livre"],
+      trilha_modulo_tipo: [
+        "video",
+        "pdf",
+        "link",
+        "apresentacao",
+        "conteudo_interno",
+        "quiz",
+        "atividade_pratica",
+        "checklist",
+        "reflexao",
+        "estudo_caso",
+        "microdesafio",
+      ],
+      trilha_prioridade: ["obrigatoria", "recomendada", "opcional"],
+      trilha_progresso_status: ["nao_iniciado", "em_andamento", "concluido"],
+      trilha_status: ["rascunho", "ativa", "arquivada"],
+      trilha_tipo: [
+        "tecnica",
+        "comportamental",
+        "lideranca",
+        "cultura",
+        "ergonomia_saude",
+        "processos",
+      ],
+      trilha_visibilidade: ["publica", "restrita"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },
   },
