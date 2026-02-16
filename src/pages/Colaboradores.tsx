@@ -15,17 +15,20 @@ import {
   ChevronRight,
   Loader2,
   User,
+  Users,
   Briefcase,
   MapPin,
   X,
   LayoutGrid,
   List,
-  FolderOpen
+  FolderOpen,
+  UserPlus,
+  AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,14 +49,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { useColaboradores } from "@/hooks/useColaboradores";
 import { ColaboradorForm, ColaboradorEditData } from "@/components/colaboradores/ColaboradorForm";
 import { ImportPlanilhaModal } from "@/components/import/ImportPlanilhaModal";
 import { DesligamentoForm } from "@/components/admissao/DesligamentoForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Table,
@@ -64,6 +79,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
+// Admissão imports
+import { AdmissaoStats } from "@/components/admissao/AdmissaoStats";
+import { AdmissaoList } from "@/components/admissao/AdmissaoList";
+import { AdmissaoForm } from "@/components/admissao/AdmissaoForm";
+import { AdmissaoDetail } from "@/components/admissao/AdmissaoDetail";
+import { useAdmissoes } from "@/hooks/useAdmissoes";
+import { AdmissaoFormData } from "@/types/database";
 
 interface ColaboradorExtendido {
   id: string;
@@ -95,7 +118,8 @@ const statusLabels: Record<string, string> = {
   desligado: "Desligado",
 };
 
-const Colaboradores = () => {
+// ========== Ativos Tab Component ==========
+function AtivosTab() {
   const navigate = useNavigate();
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
@@ -128,9 +152,7 @@ const Colaboradores = () => {
 
   const handleCloseForm = (open: boolean) => {
     setShowForm(open);
-    if (!open) {
-      setEditingColaborador(null);
-    }
+    if (!open) setEditingColaborador(null);
   };
 
   const handleViewProfile = (colab: ColaboradorExtendido) => {
@@ -144,19 +166,16 @@ const Colaboradores = () => {
     queryClient.invalidateQueries({ queryKey: ["departamentos"] });
   };
 
-  // Buscar colaboradores do banco
   const { data: colaboradores = [], isLoading, refetch } = useQuery({
     queryKey: ["colaboradores-list", tenantId],
     queryFn: async (): Promise<ColaboradorExtendido[]> => {
       if (!tenantId) return [];
-
       const { data, error } = await supabase
         .from("admissoes")
         .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido")
         .order("nome_completo");
-
       if (error) throw error;
       return data || [];
     },
@@ -168,13 +187,8 @@ const Colaboradores = () => {
       colab.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       colab.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       colab.cargo.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDepartment = 
-      departmentFilter === "all" || colab.departamento === departmentFilter;
-    
-    const matchesStatus = 
-      statusFilter === "all" || colab.status === statusFilter;
-
+    const matchesDepartment = departmentFilter === "all" || colab.departamento === departmentFilter;
+    const matchesStatus = statusFilter === "all" || colab.status === statusFilter;
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
@@ -189,36 +203,20 @@ const Colaboradores = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
-          <p className="text-muted-foreground">Gerencie sua equipe</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowImport(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Importar Planilha
-          </Button>
-          <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Colaborador
-          </Button>
-        </div>
-      </motion.div>
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
+        <Button variant="outline" onClick={() => setShowImport(true)}>
+          <Upload className="w-4 h-4 mr-2" />
+          Importar Planilha
+        </Button>
+        <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Colaborador
+        </Button>
+      </div>
 
       {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-card rounded-xl border border-border p-4 shadow-sm"
-      >
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -236,29 +234,15 @@ const Colaboradores = () => {
             <SelectContent>
               <SelectItem value="all">Todos Departamentos</SelectItem>
               {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept}
-                </SelectItem>
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="concluido">Ativo</SelectItem>
-              <SelectItem value="ferias">Férias</SelectItem>
-              <SelectItem value="afastado">Afastado</SelectItem>
-              <SelectItem value="desligado">Desligado</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon">
             <Download className="w-4 h-4" />
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       {/* Results Count & View Toggle */}
       <div className="flex items-center justify-between">
@@ -276,32 +260,27 @@ const Colaboradores = () => {
         </ToggleGroup>
       </div>
 
-      {/* Loading State */}
+      {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : colaboradores.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12 bg-card rounded-xl border border-border"
-        >
+        <div className="text-center py-12 bg-card rounded-xl border border-border">
           <p className="text-muted-foreground mb-4">Nenhum colaborador cadastrado ainda.</p>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Cadastrar Primeiro Colaborador
           </Button>
-        </motion.div>
+        </div>
       ) : viewMode === "cards" ? (
-        /* Colaboradores Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredColaboradores.map((colab, index) => (
             <motion.div
               key={colab.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.15 + index * 0.05 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
               className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group cursor-pointer"
               onClick={() => handleViewProfile(colab)}
             >
@@ -327,28 +306,20 @@ const Colaboradores = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewProfile(colab)}>
-                        Ver perfil
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>
-                        Editar
-                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewProfile(colab)}>Ver perfil</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>Editar</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
                         <FolderOpen className="w-4 h-4 mr-2" />
                         Documentos
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onClick={() => setDesligarColab(colab)}
-                      >
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDesligarColab(colab)}>
                         Desligar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>
-
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="w-4 h-4" />
@@ -373,7 +344,6 @@ const Colaboradores = () => {
                   </div>
                 )}
               </div>
-
               <div className="mt-4 pt-4 border-t border-border">
                 <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
                   {statusLabels[colab.status] || "Ativo"}
@@ -383,13 +353,7 @@ const Colaboradores = () => {
           ))}
         </div>
       ) : (
-        /* Colaboradores List/Table */
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
-        >
+        <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -404,11 +368,7 @@ const Colaboradores = () => {
             </TableHeader>
             <TableBody>
               {filteredColaboradores.map((colab) => (
-                <TableRow 
-                  key={colab.id} 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleViewProfile(colab)}
-                >
+                <TableRow key={colab.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewProfile(colab)}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
@@ -423,16 +383,10 @@ const Colaboradores = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{colab.cargo}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    {colab.departamento || "-"}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                    {colab.celular || "-"}
-                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{colab.celular || "-"}</TableCell>
                   <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                    {colab.data_admissao 
-                      ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") 
-                      : "-"}
+                    {colab.data_admissao ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
@@ -447,21 +401,14 @@ const Colaboradores = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewProfile(colab)}>
-                          Ver perfil
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>
-                          Editar
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewProfile(colab)}>Ver perfil</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditColaborador(colab)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
                           <FolderOpen className="w-4 h-4 mr-2" />
                           Documentos
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => setDesligarColab(colab)}
-                        >
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDesligarColab(colab)}>
                           Desligar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -471,36 +418,11 @@ const Colaboradores = () => {
               ))}
             </TableBody>
           </Table>
-        </motion.div>
-      )}
-
-      {/* Pagination - only show if we have colaboradores */}
-      {colaboradores.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="flex items-center justify-center gap-2"
-        >
-          <Button variant="outline" size="icon" disabled>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
-            1
-          </Button>
-          <Button variant="outline" size="icon" disabled>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </motion.div>
+        </div>
       )}
 
       {/* Form Modal */}
-      <ColaboradorForm
-        open={showForm}
-        onOpenChange={handleCloseForm}
-        onSuccess={() => refetch()}
-        colaborador={editingColaborador}
-      />
+      <ColaboradorForm open={showForm} onOpenChange={handleCloseForm} onSuccess={() => refetch()} colaborador={editingColaborador} />
 
       {/* Import Modal */}
       <ImportPlanilhaModal
@@ -527,67 +449,47 @@ const Colaboradores = () => {
               </div>
             </DialogTitle>
           </DialogHeader>
-          
           {selectedColaborador && (
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <User className="w-3 h-3" /> CPF
-                  </p>
-                  <p className="text-sm font-medium">
-                    {selectedColaborador.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
-                  </p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="w-3 h-3" /> CPF</p>
+                  <p className="text-sm font-medium">{selectedColaborador.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Mail className="w-3 h-3" /> Email
-                  </p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" /> Email</p>
                   <p className="text-sm font-medium truncate">{selectedColaborador.email}</p>
                 </div>
                 {selectedColaborador.celular && (
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Phone className="w-3 h-3" /> Celular
-                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Celular</p>
                     <p className="text-sm font-medium">{selectedColaborador.celular}</p>
                   </div>
                 )}
                 {selectedColaborador.departamento && (
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Building2 className="w-3 h-3" /> Departamento
-                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" /> Departamento</p>
                     <p className="text-sm font-medium">{selectedColaborador.departamento}</p>
                   </div>
                 )}
                 {selectedColaborador.filial && (
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="w-3 h-3" /> Filial
-                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> Filial</p>
                     <p className="text-sm font-medium">{selectedColaborador.filial}</p>
                   </div>
                 )}
                 {selectedColaborador.data_admissao && (
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> Data de Admissão
-                    </p>
-                    <p className="text-sm font-medium">
-                      {new Date(selectedColaborador.data_admissao).toLocaleDateString("pt-BR")}
-                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> Data de Admissão</p>
+                    <p className="text-sm font-medium">{new Date(selectedColaborador.data_admissao).toLocaleDateString("pt-BR")}</p>
                   </div>
                 )}
               </div>
-
               <div className="pt-4 border-t flex justify-between items-center">
                 <Badge className={cn("text-xs", statusStyles[selectedColaborador.status] || statusStyles.concluido)}>
                   {statusLabels[selectedColaborador.status] || "Ativo"}
                 </Badge>
-                <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>
-                  Fechar
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowDetail(false)}>Fechar</Button>
               </div>
             </div>
           )}
@@ -618,6 +520,361 @@ const Colaboradores = () => {
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ========== Admissões Tab Component ==========
+function AdmissoesTab() {
+  type ViewMode = "list" | "new" | "edit" | "detail";
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const { hasMinimumRole, loading: authLoading } = useAuthContext();
+
+  const {
+    admissoes, isLoading, error, criarAdmissao, atualizarAdmissao, atualizarStatus,
+    atualizarDocumento, atualizarWorkflow, excluirAdmissao, buscarAdmissao,
+    uploadDocumento, isPending,
+  } = useAdmissoes();
+
+  const isAdmin = hasMinimumRole("admin");
+  const canManage = hasMinimumRole("manager");
+
+  const handleView = (id: string) => { setSelectedId(id); setViewMode("detail"); };
+  const handleEdit = (id: string) => {
+    if (!canManage) { toast.error("Você não tem permissão para editar admissões"); return; }
+    setSelectedId(id); setViewMode("edit");
+  };
+  const handleDelete = (id: string) => {
+    if (!isAdmin) { toast.error("Você não tem permissão para excluir admissões"); return; }
+    setDeleteId(id);
+  };
+  const confirmDelete = async () => {
+    if (deleteId) {
+      try {
+        await excluirAdmissao(deleteId);
+        toast.success("Admissão excluída com sucesso");
+        setDeleteId(null);
+        if (selectedId === deleteId) { setSelectedId(null); setViewMode("list"); }
+      } catch (error: any) { toast.error(error.message || "Erro ao excluir admissão"); }
+    }
+  };
+  const handleNew = () => {
+    if (!canManage) { toast.error("Você não tem permissão para criar admissões"); return; }
+    setSelectedId(null); setViewMode("new");
+  };
+  const handleBack = () => { setSelectedId(null); setViewMode("list"); };
+
+  const handleSubmitForm = async (dados: {
+    dadosPessoais: any; dadosContato: any; dadosProfissionais: any; dadosBancarios: any; exameAdmissional?: any;
+  }) => {
+    try {
+      const formData: AdmissaoFormData = {
+        nome_completo: dados.dadosPessoais.nomeCompleto, cpf: dados.dadosPessoais.cpf,
+        rg: dados.dadosPessoais.rg, data_nascimento: dados.dadosPessoais.dataNascimento,
+        estado_civil: dados.dadosPessoais.estadoCivil, genero: dados.dadosPessoais.genero,
+        nacionalidade: dados.dadosPessoais.nacionalidade, naturalidade: dados.dadosPessoais.naturalidade,
+        nome_mae: dados.dadosPessoais.nomeMae, nome_pai: dados.dadosPessoais.nomePai,
+        email: dados.dadosContato.email, telefone: dados.dadosContato.telefone,
+        celular: dados.dadosContato.celular, endereco: dados.dadosContato.endereco,
+        numero: dados.dadosContato.numero, complemento: dados.dadosContato.complemento,
+        bairro: dados.dadosContato.bairro, cidade: dados.dadosContato.cidade,
+        estado: dados.dadosContato.estado, cep: dados.dadosContato.cep,
+        cargo: dados.dadosProfissionais.cargo, departamento: dados.dadosProfissionais.departamento,
+        filial: dados.dadosProfissionais.filial, data_admissao: dados.dadosProfissionais.dataAdmissao,
+        tipo_contrato: dados.dadosProfissionais.tipoContrato, jornada_trabalho: dados.dadosProfissionais.jornadaTrabalho,
+        salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
+        gestor_imediato: dados.dadosProfissionais.gestorImediato, centro_custo: dados.dadosProfissionais.centroCusto,
+        banco: dados.dadosBancarios.banco, agencia: dados.dadosBancarios.agencia,
+        conta: dados.dadosBancarios.conta, tipo_conta: dados.dadosBancarios.tipoConta,
+        chave_pix: dados.dadosBancarios.chavePix,
+        exame_admissional_data: dados.exameAdmissional?.dataExame || undefined,
+        exame_admissional_validade: dados.exameAdmissional?.dataValidade || undefined,
+        exame_admissional_resultado: dados.exameAdmissional?.resultado || undefined,
+        exame_admissional_clinica: dados.exameAdmissional?.clinica || undefined,
+        exame_admissional_medico: dados.exameAdmissional?.medico || undefined,
+        exame_admissional_crm: dados.exameAdmissional?.crm || undefined,
+        exame_admissional_observacoes: dados.exameAdmissional?.observacoes || undefined,
+      };
+      if (viewMode === "new") {
+        const novaAdmissao = await criarAdmissao(formData);
+        toast.success("Admissão criada com sucesso!"); setSelectedId(novaAdmissao.id); setViewMode("detail");
+      } else if (viewMode === "edit" && selectedId) {
+        await atualizarAdmissao({ id: selectedId, dados: formData });
+        toast.success("Admissão atualizada com sucesso!"); setViewMode("detail");
+      }
+    } catch (error: any) { toast.error(error.message || "Erro ao salvar admissão"); }
+  };
+
+  const handleDocumentUpload = async (documentoId: string, file: File) => {
+    if (selectedId) {
+      try { await uploadDocumento(selectedId, documentoId, file); toast.success("Documento enviado com sucesso!"); }
+      catch (error: any) { toast.error(error.message || "Erro ao enviar documento"); }
+    }
+  };
+  const handleDocumentRemove = async (documentoId: string) => {
+    try {
+      await atualizarDocumento({ documentoId, dados: { arquivo_url: null, arquivo_nome: null, arquivo_tamanho: null, status: "pendente", data_envio: null } });
+      toast.info("Documento removido");
+    } catch (error: any) { toast.error(error.message || "Erro ao remover documento"); }
+  };
+  const handleDocumentApprove = async (documentoId: string) => {
+    try { await atualizarDocumento({ documentoId, dados: { status: "aprovado" } }); toast.success("Documento aprovado!"); }
+    catch (error: any) { toast.error(error.message || "Erro ao aprovar documento"); }
+  };
+  const handleDocumentReject = async (documentoId: string, motivo: string) => {
+    try { await atualizarDocumento({ documentoId, dados: { status: "rejeitado", observacao: motivo } }); toast.error("Documento rejeitado"); }
+    catch (error: any) { toast.error(error.message || "Erro ao rejeitar documento"); }
+  };
+  const handleAprovarEtapa = async (etapaId: string, observacao?: string) => {
+    if (selectedId) {
+      try { await atualizarWorkflow({ workflowId: etapaId, admissaoId: selectedId, aprovado: true, observacao }); toast.success("Etapa aprovada com sucesso!"); }
+      catch (error: any) { toast.error(error.message || "Erro ao aprovar etapa"); }
+    }
+  };
+  const handleRejeitarEtapa = async (etapaId: string, observacao: string) => {
+    if (selectedId) {
+      try { await atualizarWorkflow({ workflowId: etapaId, admissaoId: selectedId, aprovado: false, observacao }); toast.error("Etapa rejeitada"); }
+      catch (error: any) { toast.error(error.message || "Erro ao rejeitar etapa"); }
+    }
+  };
+
+  if (authLoading || isLoading) {
+    return <div className="flex items-center justify-center min-h-[400px]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar dados</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+      </div>
+    );
+  }
+
+  const admissoesFormatted = admissoes.map(a => ({
+    id: a.id,
+    dadosPessoais: {
+      nomeCompleto: a.nome_completo, cpf: a.cpf, rg: a.rg || "", dataNascimento: a.data_nascimento || "",
+      estadoCivil: a.estado_civil || "", genero: a.genero || "", nacionalidade: a.nacionalidade || "",
+      naturalidade: a.naturalidade || "", nomeMae: a.nome_mae || "", nomePai: a.nome_pai || "",
+    },
+    dadosContato: {
+      email: a.email, telefone: a.telefone || "", celular: a.celular || "", endereco: a.endereco || "",
+      numero: a.numero || "", complemento: a.complemento || "", bairro: a.bairro || "",
+      cidade: a.cidade || "", estado: a.estado || "", cep: a.cep || "",
+    },
+    dadosProfissionais: {
+      cargo: a.cargo, departamento: a.departamento || "", filial: a.filial || "",
+      dataAdmissao: a.data_admissao || "", tipoContrato: a.tipo_contrato || "",
+      jornadaTrabalho: a.jornada_trabalho || "",
+      salario: a.salario ? `R$ ${a.salario.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "",
+      gestorImediato: a.gestor_imediato || "", centroCusto: a.centro_custo || "",
+    },
+    dadosBancarios: {
+      banco: a.banco || "", agencia: a.agencia || "", conta: a.conta || "",
+      tipoConta: a.tipo_conta || "", chavePix: a.chave_pix || "",
+    },
+    documentos: (a.documentos || []).map(d => ({
+      id: d.id, nome: d.nome, tipo: d.tipo, obrigatorio: d.obrigatorio, status: d.status,
+      arquivo_url: d.arquivo_url || undefined, arquivo_nome: d.arquivo_nome || undefined,
+      urlPreview: d.arquivo_url || undefined,
+      dataEnvio: d.data_envio ? new Date(d.data_envio) : undefined, observacao: d.observacao || undefined,
+    })),
+    status: a.status,
+    historicoAprovacao: (a.workflow || []).map(w => ({
+      id: w.id, etapa: w.etapa, status: w.status, responsavel: w.responsavel_nome || "Pendente",
+      dataAcao: w.data_acao ? new Date(w.data_acao) : undefined, observacao: w.observacao || undefined,
+    })),
+    dataCriacao: new Date(a.created_at), dataAtualizacao: new Date(a.updated_at), criadoPor: a.criado_por || "",
+  }));
+
+  const selectedAdmissaoFormatted = selectedId ? admissoesFormatted.find(a => a.id === selectedId) : null;
+
+  return (
+    <div className="space-y-6">
+      {viewMode === "list" && (
+        <>
+          <AdmissaoStats admissoes={admissoesFormatted as any} />
+          <AdmissaoList admissoes={admissoesFormatted as any} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onNew={handleNew} />
+        </>
+      )}
+
+      {(viewMode === "new" || viewMode === "edit") && (
+        <div>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-primary/10"><UserPlus className="h-6 w-6 text-primary" /></div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{viewMode === "new" ? "Nova Admissão" : "Editar Admissão"}</h1>
+              <p className="text-muted-foreground">{viewMode === "new" ? "Preencha os dados do novo colaborador" : "Atualize os dados do colaborador"}</p>
+            </div>
+          </div>
+          <AdmissaoForm
+            onSubmit={handleSubmitForm}
+            onCancel={handleBack}
+            initialData={selectedAdmissaoFormatted ? {
+              dadosPessoais: selectedAdmissaoFormatted.dadosPessoais,
+              dadosContato: selectedAdmissaoFormatted.dadosContato,
+              dadosProfissionais: selectedAdmissaoFormatted.dadosProfissionais,
+              dadosBancarios: selectedAdmissaoFormatted.dadosBancarios,
+            } : undefined}
+          />
+        </div>
+      )}
+
+      {viewMode === "detail" && selectedAdmissaoFormatted && (
+        <AdmissaoDetail
+          admissao={selectedAdmissaoFormatted as any}
+          onBack={handleBack} onEdit={() => setViewMode("edit")}
+          onDelete={() => handleDelete(selectedAdmissaoFormatted.id)}
+          onDocumentUpload={handleDocumentUpload} onDocumentRemove={handleDocumentRemove}
+          onDocumentApprove={handleDocumentApprove} onDocumentReject={handleDocumentReject}
+          onAprovarEtapa={handleAprovarEtapa} onRejeitarEtapa={handleRejeitarEtapa}
+          isAdmin={isAdmin}
+        />
+      )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>Tem certeza que deseja excluir esta admissão? Esta ação não pode ser desfeita.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isPending}>
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+// ========== Desligados Tab Component ==========
+function DesligadosTab() {
+  const { tenantId } = useAuth();
+  const navigate = useNavigate();
+
+  const { data: desligados = [], isLoading } = useQuery({
+    queryKey: ["colaboradores-desligados", tenantId],
+    queryFn: async (): Promise<ColaboradorExtendido[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("admissoes")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
+        .eq("tenant_id", tenantId)
+        .eq("status", "desligado")
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+
+  if (desligados.length === 0) {
+    return (
+      <div className="text-center py-12 bg-card rounded-xl border border-border">
+        <p className="text-muted-foreground">Nenhum colaborador desligado.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[300px]">Colaborador</TableHead>
+            <TableHead>Função</TableHead>
+            <TableHead className="hidden md:table-cell">Departamento</TableHead>
+            <TableHead className="hidden lg:table-cell">Contato</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {desligados.map((colab) => (
+            <TableRow key={colab.id}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-muted text-muted-foreground text-sm font-semibold">
+                      {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-foreground">{colab.nome_completo}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{colab.email}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="text-sm">{colab.cargo}</TableCell>
+              <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
+              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{colab.celular || "-"}</TableCell>
+              <TableCell>
+                <Badge className={cn("text-xs", statusStyles.desligado)}>Desligado</Badge>
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
+                  <FolderOpen className="w-4 h-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+// ========== Main Page ==========
+const Colaboradores = () => {
+  return (
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Users className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
+            <p className="text-muted-foreground">Gerencie sua equipe — admissão, ativos e desligados</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <Tabs defaultValue="ativos" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsTrigger value="ativos">Ativos</TabsTrigger>
+          <TabsTrigger value="admissoes">Admissões</TabsTrigger>
+          <TabsTrigger value="desligados">Desligados</TabsTrigger>
+        </TabsList>
+        <TabsContent value="ativos" className="mt-6">
+          <AtivosTab />
+        </TabsContent>
+        <TabsContent value="admissoes" className="mt-6">
+          <AdmissoesTab />
+        </TabsContent>
+        <TabsContent value="desligados" className="mt-6">
+          <DesligadosTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

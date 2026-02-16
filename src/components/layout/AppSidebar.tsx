@@ -80,7 +80,6 @@ const menuSections: MenuSection[] = [
     color: "bg-violet-400",
     items: [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
-      { title: "Admissão", icon: UserPlus, path: "/admissao" },
       { title: "Férias", icon: Calendar, path: "/ferias" },
       { title: "Atestados", icon: Stethoscope, path: "/atestados" },
       { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
