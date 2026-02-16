@@ -2,6 +2,9 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
 import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
+import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
+import { useINR } from "@/hooks/useINR";
+import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
 import { 
   Calendar, 
   Plus, 
@@ -20,6 +23,7 @@ import {
   FileText,
   Send,
   TrendingUp,
+  Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -235,6 +239,37 @@ const Ferias = () => {
   const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
   const { data: periodos } = useFolhaPeriodos();
   const { tenantId, user, profile } = useAuth();
+
+  // ========== INR™ ==========
+  const { ranking: inrRanking, criticos: inrCriticos, altos: inrAltos } = useINR(
+    colaboradores,
+    ferias,
+    [], // humores — populated when real data is available
+    []  // acoes — populated when real data is available
+  );
+
+  const colaboradoresPorSetor = useMemo(() => {
+    const map: Record<string, { total: number; vencidos: number; alerta: number }> = {};
+    colaboradores.forEach((c) => {
+      const dept = c.departamento || "Sem Departamento";
+      if (!map[dept]) map[dept] = { total: 0, vencidos: 0, alerta: 0 };
+      map[dept].total++;
+      const diasUsados = ferias
+        .filter((f) => f.colaborador === c.nome_completo && f.status === "aprovado")
+        .reduce((sum, f) => sum + f.diasSolicitados, 0);
+      const periodo = calcularPeriodoFerias(c.data_admissao || null, diasUsados);
+      if (periodo?.statusVencimento === "vencido") map[dept].vencidos++;
+      else if (periodo?.statusVencimento === "alerta") map[dept].alerta++;
+    });
+    return map;
+  }, [colaboradores, ferias]);
+
+  const handleCriarAcaoPreventiva = (colab: any) => {
+    toast.success(
+      `Ação preventiva criada: "Antecipar férias — ${colab.nome}" no Plano de Ação`,
+      { duration: 5000 }
+    );
+  };
 
   // ========== PROVISÃO FINANCEIRA ==========
   const provisaoTotal = useMemo(() => {
@@ -611,6 +646,15 @@ const Ferias = () => {
             <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
             <TabsTrigger value="calendario">Calendário</TabsTrigger>
             <TabsTrigger value="saldos">Saldos</TabsTrigger>
+            <TabsTrigger value="inteligencia" className="flex items-center gap-1.5">
+              <Brain className="w-3.5 h-3.5" />
+              Inteligência
+              {inrCriticos.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-destructive text-destructive-foreground rounded-full">
+                  {inrCriticos.length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -652,6 +696,16 @@ const Ferias = () => {
 
         <TabsContent value="saldos">
           <FeriasSaldos ferias={ferias} />
+        </TabsContent>
+
+        <TabsContent value="inteligencia">
+          <FeriasInteligencia
+            ranking={inrRanking}
+            criticos={inrCriticos}
+            altos={inrAltos}
+            onCriarAcaoPreventiva={handleCriarAcaoPreventiva}
+            colaboradoresPorSetor={colaboradoresPorSetor}
+          />
         </TabsContent>
       </Tabs>
 
