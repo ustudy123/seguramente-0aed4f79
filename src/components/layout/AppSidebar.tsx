@@ -42,11 +42,13 @@ interface MenuItem {
 interface MenuSection {
   label: string;
   items: MenuItem[];
+  color: string; // tailwind color for the accent dot/border
 }
 
 const menuSections: MenuSection[] = [
   {
     label: "Visão Geral & Estratégia",
+    color: "bg-blue-400",
     items: [
       { title: "Início", icon: Home, path: "/" },
       { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
@@ -54,6 +56,7 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Riscos & Conformidade",
+    color: "bg-amber-400",
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
@@ -63,6 +66,7 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Planos, Avaliações & Desenvolvimento",
+    color: "bg-emerald-400",
     items: [
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
@@ -71,6 +75,7 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Pessoas & Cultura",
+    color: "bg-violet-400",
     items: [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Admissão", icon: UserPlus, path: "/admissao" },
@@ -85,6 +90,7 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Estrutura Organizacional",
+    color: "bg-cyan-400",
     items: [
       { title: "Empresa", icon: Building2, path: "/empresa" },
       {
@@ -102,12 +108,14 @@ const menuSections: MenuSection[] = [
   },
   {
     label: "Documentação & Registros",
+    color: "bg-rose-400",
     items: [
       { title: "Documentos", icon: FileText, path: "/documentos" },
     ],
   },
   {
     label: "Financeiro",
+    color: "bg-teal-400",
     items: [
       { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
     ],
@@ -206,7 +214,10 @@ const CollapsibleSection = ({
 
   if (isCollapsed) {
     return (
-      <div className="mb-1 border-t border-sidebar-border/30">
+      <div className="mb-1">
+        <div className="pt-1 flex items-center px-2 mb-1">
+          <span className={cn("w-full h-[2px] rounded-full", section.color, "opacity-30")} />
+        </div>
         {section.items.map((item) =>
           item.children ? (
             <SidebarSubItem key={item.title} item={item} isCollapsed={isCollapsed} />
@@ -236,11 +247,12 @@ const CollapsibleSection = ({
       <button
         onClick={onToggle}
         className={cn(
-          "w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-colors",
+          "w-full flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors",
           "hover:bg-sidebar-accent/30 group cursor-pointer"
         )}
       >
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors">
+        <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", section.color)} />
+        <p className="flex-1 text-left text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors">
           {section.label}
         </p>
         <ChevronDown
