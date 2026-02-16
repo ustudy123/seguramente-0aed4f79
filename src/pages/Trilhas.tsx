@@ -8,6 +8,7 @@ import { TrilhaForm } from "@/components/trilhas/TrilhaForm";
 import { ModuloForm } from "@/components/trilhas/ModuloForm";
 import { MinhasTrilhas } from "@/components/trilhas/MinhasTrilhas";
 import { TrilhaExecucao } from "@/components/trilhas/TrilhaExecucao";
+import { GamificacaoTab } from "@/components/trilhas/GamificacaoTab";
 import type { Trilha, TrilhaModulo, TrilhaComProgresso } from "@/types/trilha";
 
 export default function Trilhas() {
@@ -63,13 +64,18 @@ export default function Trilhas() {
         <TrilhaExecucao trilha={execucaoTrilha} onBack={() => setExecucaoTrilha(null)} />
       ) : (
         <Tabs defaultValue="minhas" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-xs">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
             <TabsTrigger value="minhas">Minhas Trilhas</TabsTrigger>
+            <TabsTrigger value="gamificacao">Gamificação</TabsTrigger>
             <TabsTrigger value="gestao">Gestão</TabsTrigger>
           </TabsList>
 
           <TabsContent value="minhas" className="mt-6">
             <MinhasTrilhas onOpenTrilha={setExecucaoTrilha} />
+          </TabsContent>
+
+          <TabsContent value="gamificacao" className="mt-6">
+            <GamificacaoTab />
           </TabsContent>
 
           <TabsContent value="gestao" className="mt-6">
