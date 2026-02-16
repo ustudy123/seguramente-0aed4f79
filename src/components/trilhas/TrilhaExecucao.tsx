@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { QuizPlayer } from "./QuizPlayer";
 import {
   ArrowLeft,
   BookOpen,
@@ -242,46 +243,64 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                     </div>
 
                     {/* Content */}
-                    {activeModulo.conteudo_url && (
-                      <div className="space-y-2">
-                        {activeModulo.tipo === "video" ? (
-                          <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                            <iframe
-                              src={activeModulo.conteudo_url.replace("watch?v=", "embed/")}
-                              className="w-full h-full"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
+                    {activeModulo.tipo === "quiz" ? (
+                      <QuizPlayer
+                        moduloId={activeModulo.id}
+                        pontuacaoModulo={activeModulo.pontuacao || 0}
+                        onComplete={async (nota, pontosObtidos) => {
+                          await concluirModulo({
+                            trilhaId: trilha.id,
+                            moduloId: activeModulo.id,
+                            nota,
+                            pontosObtidos,
+                          });
+                          setActiveModuloId(null);
+                        }}
+                      />
+                    ) : (
+                      <>
+                        {activeModulo.conteudo_url && (
+                          <div className="space-y-2">
+                            {activeModulo.tipo === "video" ? (
+                              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                                <iframe
+                                  src={activeModulo.conteudo_url.replace("watch?v=", "embed/")}
+                                  className="w-full h-full"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </div>
+                            ) : activeModulo.tipo === "pdf" ? (
+                              <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                                <iframe src={activeModulo.conteudo_url} className="w-full h-full" />
+                              </div>
+                            ) : (
+                              <Button variant="outline" asChild>
+                                <a href={activeModulo.conteudo_url} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Acessar conteúdo
+                                </a>
+                              </Button>
+                            )}
                           </div>
-                        ) : activeModulo.tipo === "pdf" ? (
-                          <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden">
-                            <iframe src={activeModulo.conteudo_url} className="w-full h-full" />
-                          </div>
-                        ) : (
-                          <Button variant="outline" asChild>
-                            <a href={activeModulo.conteudo_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="w-4 h-4 mr-2" />
-                              Acessar conteúdo
-                            </a>
-                          </Button>
                         )}
-                      </div>
+
+                        {activeModulo.conteudo_texto && (
+                          <div className="prose prose-sm max-w-none text-foreground bg-muted/30 rounded-lg p-4 border border-border">
+                            <div className="whitespace-pre-wrap">{activeModulo.conteudo_texto}</div>
+                          </div>
+                        )}
+
+                        {activeModulo.descricao && !activeModulo.conteudo_texto && (
+                          <div className="bg-muted/30 rounded-lg p-4 border border-border">
+                            <p className="text-sm text-foreground">{activeModulo.descricao}</p>
+                          </div>
+                        )}
+                      </>
                     )}
 
-                    {activeModulo.conteudo_texto && (
-                      <div className="prose prose-sm max-w-none text-foreground bg-muted/30 rounded-lg p-4 border border-border">
-                        <div className="whitespace-pre-wrap">{activeModulo.conteudo_texto}</div>
-                      </div>
-                    )}
-
-                    {activeModulo.descricao && !activeModulo.conteudo_texto && (
-                      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-                        <p className="text-sm text-foreground">{activeModulo.descricao}</p>
-                      </div>
-                    )}
-
-                    {/* Evidence submission */}
-                    {activeStatus !== "concluido" && (
+                    {/* Evidence submission (non-quiz) */}
+                    {activeModulo.tipo !== "quiz" && activeStatus !== "concluido" && (
                       <div className="space-y-3 pt-2 border-t border-border">
                         {activeModulo.evidencia_obrigatoria && (
                           <div>

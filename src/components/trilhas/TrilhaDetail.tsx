@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { QuizManager } from "./QuizManager";
+import { AtribuicaoTrilhaModal } from "./AtribuicaoTrilhaModal";
 import {
   ArrowLeft,
   Plus,
@@ -21,6 +23,7 @@ import {
   MoreHorizontal,
   GripVertical,
   Loader2,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +75,7 @@ interface TrilhaDetailProps {
 export function TrilhaDetail({ trilha, onBack, onEdit, onAddModulo, onEditModulo }: TrilhaDetailProps) {
   const { modulos, isLoading, excluirModulo } = useTrilhaModulos(trilha.id);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showAtribuicao, setShowAtribuicao] = useState(false);
 
   const tempoTotal = modulos.reduce((acc, m) => acc + (m.tempo_estimado_min || 0), 0);
   const pontosTotal = modulos.reduce((acc, m) => acc + (m.pontuacao || 0), 0);
@@ -106,9 +110,14 @@ export function TrilhaDetail({ trilha, onBack, onEdit, onAddModulo, onEditModulo
             {trilha.conexao_pdi && <Badge variant="outline" className="text-xs">Conectada ao PDI</Badge>}
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => onEdit(trilha)}>
-          <Pencil className="w-4 h-4 mr-2" /> Editar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowAtribuicao(true)}>
+            <Users className="w-4 h-4 mr-2" /> Atribuir
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => onEdit(trilha)}>
+            <Pencil className="w-4 h-4 mr-2" /> Editar
+          </Button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -215,6 +224,14 @@ export function TrilhaDetail({ trilha, onBack, onEdit, onAddModulo, onEditModulo
         </div>
       )}
 
+      {/* Quiz manager for quiz modules */}
+      {modulos.filter((m) => m.tipo === "quiz").map((m) => (
+        <div key={m.id} className="border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground mb-2">Quiz: {m.titulo}</p>
+          <QuizManager moduloId={m.id} />
+        </div>
+      ))}
+
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
@@ -233,6 +250,13 @@ export function TrilhaDetail({ trilha, onBack, onEdit, onAddModulo, onEditModulo
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Atribuição modal */}
+      <AtribuicaoTrilhaModal
+        open={showAtribuicao}
+        onOpenChange={setShowAtribuicao}
+        trilhaId={trilha.id}
+      />
     </div>
   );
 }
