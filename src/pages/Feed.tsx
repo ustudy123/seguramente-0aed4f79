@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, RefreshCw, CalendarHeart, Sparkles, Loader2 } from "lucide-react";
+import { MessageSquare, RefreshCw, CalendarHeart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +63,6 @@ function EmptyState() {
 // Widget de avisos de Cultura & Celebrações
 function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => void }) {
   const { tenantId } = useAuth();
-  const [gerando, setGerando] = useState<string | null>(null);
 
   const { data: acoesPendentes = [] } = useQuery({
     queryKey: ["cultura-acoes-mural", tenantId],
@@ -82,39 +81,13 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     enabled: !!tenantId,
   });
 
-  const handleClick = async (acao: any) => {
-    if (gerando) return;
-    setGerando(acao.id);
-    try {
-      const tipo = acao.tipo === "aniversario" ? "aniversario" : "tempo_casa";
-      const nome = acao.colaborador_nome || "Colaborador";
-      const anos = acao.titulo?.match(/(\d+)\s*ano/)?.[1] || "1";
-
-      const { data, error } = await supabase.functions.invoke("ai-felicitacao", {
-        body: { nome, tipo, anos: parseInt(anos) },
-      });
-
-      if (error) throw error;
-      if (data?.mensagem) {
-        onFelicitar(data.mensagem);
-      }
-    } catch (err) {
-      console.error("Erro ao gerar felicitação:", err);
-      // Fallback: prefill com texto simples
-      const nome = acao.colaborador_nome || "Colaborador";
-      onFelicitar(`🎉 Parabéns, ${nome}! ${acao.titulo}`);
-    } finally {
-      setGerando(null);
-    }
-  };
-
   if (acoesPendentes.length === 0) return null;
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <CalendarHeart className="h-4 w-4 text-violet-500" />
+          <CalendarHeart className="h-4 w-4 text-primary" />
           Lembretes de Cultura
         </CardTitle>
       </CardHeader>
@@ -122,34 +95,40 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
         {acoesPendentes.map((acao: any) => (
           <div
             key={acao.id}
-            className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors group"
-            onClick={() => handleClick(acao)}
-            title="Clique para gerar mensagem com IA e publicar"
+            className="flex flex-col gap-1.5 p-2 rounded-lg bg-muted/50"
           >
-            {gerando === acao.id ? (
-              <Loader2 className="h-3.5 w-3.5 mt-0.5 text-violet-500 shrink-0 animate-spin" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5 mt-0.5 text-violet-500 shrink-0 group-hover:scale-110 transition-transform" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{acao.titulo}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Badge variant="outline" className="text-[9px] h-4">
-                  {TIPO_ACAO_LABELS[acao.tipo] || acao.tipo}
-                </Badge>
-                <Badge className={`text-[9px] h-4 ${STATUS_ACAO_COLORS[acao.status]}`}>
-                  {STATUS_ACAO_LABELS[acao.status]}
-                </Badge>
+            <div className="flex items-start gap-2">
+              <Sparkles className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{acao.titulo}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Badge variant="outline" className="text-[9px] h-4">
+                    {TIPO_ACAO_LABELS[acao.tipo] || acao.tipo}
+                  </Badge>
+                  <Badge className={`text-[9px] h-4 ${STATUS_ACAO_COLORS[acao.status]}`}>
+                    {STATUS_ACAO_LABELS[acao.status]}
+                  </Badge>
+                </div>
+                {acao.colaborador_nome && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {acao.colaborador_nome} · {format(parseISO(acao.data_referencia), "dd/MM", { locale: ptBR })}
+                  </p>
+                )}
               </div>
-              {acao.colaborador_nome && (
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {acao.colaborador_nome} · {format(parseISO(acao.data_referencia), "dd/MM", { locale: ptBR })}
-                </p>
-              )}
-              <p className="text-[9px] text-violet-500 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
-                ✨ Clique para gerar mensagem com IA
-              </p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[10px] text-primary self-end"
+              onClick={() => {
+                onFelicitar("");
+                // Focus the textarea by scrolling to top
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              <MessageSquare className="h-3 w-3 mr-1" />
+              Deixar uma mensagem
+            </Button>
           </div>
         ))}
       </CardContent>
