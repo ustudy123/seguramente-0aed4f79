@@ -46,6 +46,7 @@ import CulturaCelebracoes from "./pages/CulturaCelebracoes";
 import NotFound from "./pages/NotFound";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
+import FeriasAssinatura from "./pages/FeriasAssinatura";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -77,6 +78,7 @@ const App = () => (
             {/* Rota Pública - Questionário Psicossocial */}
             <Route path="/questionario/:token" element={<QuestionarioPsicossocial />} />
             <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
+            <Route path="/ferias-assinatura/:token" element={<FeriasAssinatura />} />
 
           {/* Super Admin Routes */}
           <Route
