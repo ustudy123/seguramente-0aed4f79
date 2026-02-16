@@ -11,6 +11,7 @@ export interface Colaborador {
   email: string;
   celular: string | null;
   filial: string | null;
+  data_admissao: string | null;
 }
 
 export function useColaboradores() {
@@ -24,7 +25,7 @@ export function useColaboradores() {
       // Buscar admissões com status 'concluido' - são os colaboradores ativos
       const { data, error } = await supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido")
         .order("nome_completo");

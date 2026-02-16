@@ -5,14 +5,17 @@ import {
   AlertTriangle,
   CheckCircle,
   Search,
+  Clock,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
 
 interface FeriasItem {
   id: number;
@@ -43,6 +46,7 @@ interface ColaboradorSaldo {
   periodoAquisitivo: string;
   vencimento: string;
   statusVencimento: "ok" | "alerta" | "vencido";
+  diasParaVencimento: number;
 }
 
 export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
@@ -53,7 +57,6 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
     const map = new Map<string, ColaboradorSaldo>();
 
     colaboradores.forEach((c) => {
-      // Sum used/pending days from férias
       const colabFerias = ferias.filter((f) => f.colaborador === c.nome_completo);
       const diasUsados = colabFerias
         .filter((f) => f.status === "aprovado")
@@ -62,6 +65,9 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
         .filter((f) => f.status === "pendente")
         .reduce((sum, f) => sum + f.diasSolicitados, 0);
 
+      // Calcular período aquisitivo real
+      const periodo = calcularPeriodoFerias(c.data_admissao, diasUsados);
+
       map.set(c.nome_completo, {
         nome: c.nome_completo,
         departamento: c.departamento || "Não informado",
@@ -69,9 +75,10 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
         diasUsados,
         diasPendentes,
         saldoDisponivel: 30 - diasUsados,
-        periodoAquisitivo: "—",
-        vencimento: "—",
-        statusVencimento: "ok",
+        periodoAquisitivo: periodo?.periodoAquisitivoLabel || "Sem admissão",
+        vencimento: periodo?.vencimentoLabel || "—",
+        statusVencimento: periodo?.statusVencimento || "ok",
+        diasParaVencimento: periodo?.diasParaVencimento ?? 999,
       });
     });
 
@@ -88,12 +95,12 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
           periodoAquisitivo: "N/A",
           vencimento: "N/A",
           statusVencimento: "ok",
+          diasParaVencimento: 999,
         });
       }
     });
 
     return Array.from(map.values()).sort((a, b) => {
-      // Vencidos first, then alerta, then ok
       const order = { vencido: 0, alerta: 1, ok: 2 };
       return order[a.statusVencimento] - order[b.statusVencimento] || a.nome.localeCompare(b.nome);
     });
@@ -112,6 +119,12 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
     vencidos: saldos.filter((s) => s.statusVencimento === "vencido").length,
     alertas: saldos.filter((s) => s.statusVencimento === "alerta").length,
   }), [saldos]);
+
+  const vencimentoTooltip = (s: ColaboradorSaldo) => {
+    if (s.statusVencimento === "vencido") return "Férias vencidas! Conceder imediatamente.";
+    if (s.statusVencimento === "alerta") return `Faltam ${s.diasParaVencimento} dias para vencer`;
+    return "Dentro do prazo";
+  };
 
   return (
     <motion.div
@@ -132,11 +145,11 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
         </div>
         <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-warning/10">
-            <AlertTriangle className="w-5 h-5 text-warning" />
+            <Clock className="w-5 h-5 text-warning" />
           </div>
           <div>
             <p className="text-xl font-bold text-foreground">{summary.alertas}</p>
-            <p className="text-xs text-muted-foreground">Próximo ao vencimento</p>
+            <p className="text-xs text-muted-foreground">Vencem em até 90 dias</p>
           </div>
         </div>
         <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-3">
@@ -185,7 +198,7 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
                   </td>
                 </tr>
               ) : (
-                filtered.map((s, idx) => {
+                filtered.map((s) => {
                   const pct = (s.diasUsados / s.saldoTotal) * 100;
                   return (
                     <tr
@@ -225,20 +238,27 @@ export function FeriasSaldos({ ferias }: FeriasSaldosProps) {
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{s.periodoAquisitivo}</td>
                       <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[11px]",
-                            s.statusVencimento === "vencido" && "bg-destructive/10 text-destructive border-destructive/20",
-                            s.statusVencimento === "alerta" && "bg-warning/10 text-warning border-warning/20",
-                            s.statusVencimento === "ok" && "bg-success/10 text-success border-success/20"
-                          )}
-                        >
-                          {s.statusVencimento === "ok" && <CheckCircle className="w-3 h-3 mr-1" />}
-                          {s.statusVencimento === "alerta" && <AlertTriangle className="w-3 h-3 mr-1" />}
-                          {s.statusVencimento === "vencido" && <AlertTriangle className="w-3 h-3 mr-1" />}
-                          {s.vencimento}
-                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[11px] cursor-help",
+                                s.statusVencimento === "vencido" && "bg-destructive/10 text-destructive border-destructive/20",
+                                s.statusVencimento === "alerta" && "bg-warning/10 text-warning border-warning/20",
+                                s.statusVencimento === "ok" && "bg-success/10 text-success border-success/20"
+                              )}
+                            >
+                              {s.statusVencimento === "ok" && <CheckCircle className="w-3 h-3 mr-1" />}
+                              {s.statusVencimento === "alerta" && <AlertTriangle className="w-3 h-3 mr-1" />}
+                              {s.statusVencimento === "vencido" && <AlertTriangle className="w-3 h-3 mr-1" />}
+                              {s.vencimento}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="text-xs">
+                            {vencimentoTooltip(s)}
+                          </TooltipContent>
+                        </Tooltip>
                       </td>
                     </tr>
                   );
