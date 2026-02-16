@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { format, addDays, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Cake, Award, CalendarHeart, Sparkles, Loader2, Bell } from "lucide-react";
+import { Cake, Award, CalendarHeart, Sparkles, Loader2, Bell, Briefcase } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import type { CulturaAcao } from "@/types/cultura";
+import { buscarDiaProfissao } from "@/lib/diasProfissao";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_COLORS, STATUS_ACAO_LABELS } from "@/types/cultura";
 
 interface CelebracaoItem {
   nome: string;
-  tipo: "aniversario" | "tempo_casa" | "acao";
+  tipo: "aniversario" | "tempo_casa" | "dia_profissao" | "acao";
   data: Date;
   diasRestantes: number;
   avatar?: string;
@@ -136,6 +137,28 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
             });
           }
         }
+        // Check dia da profissão
+        if (pessoa.cargo) {
+          const diaProfissao = buscarDiaProfissao(pessoa.cargo);
+          if (diaProfissao) {
+            const dataProfissao = new Date(today.getFullYear(), diaProfissao.mes - 1, diaProfissao.dia);
+            if (dataProfissao < today) dataProfissao.setFullYear(today.getFullYear() + 1);
+            const dias = differenceInDays(dataProfissao, today);
+            if (dias >= 0 && dias <= 30) {
+              // Avoid duplicates for same profession date
+              const key = `profissao-${diaProfissao.mes}-${diaProfissao.dia}`;
+              if (!items.find(i => i.tipo === "dia_profissao" && i.data.getTime() === dataProfissao.getTime() && i.cargo === pessoa.cargo)) {
+                items.push({
+                  nome: diaProfissao.nome,
+                  tipo: "dia_profissao",
+                  data: dataProfissao,
+                  diasRestantes: dias,
+                  cargo: pessoa.cargo || undefined,
+                });
+              }
+            }
+          }
+        }
       });
 
       return items.sort((a, b) => a.diasRestantes - b.diasRestantes);
@@ -188,12 +211,14 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
   const getIcon = (tipo: string) => {
     if (tipo === "aniversario") return <Cake className="h-3.5 w-3.5" />;
     if (tipo === "tempo_casa") return <Award className="h-3.5 w-3.5" />;
+    if (tipo === "dia_profissao") return <Briefcase className="h-3.5 w-3.5" />;
     return <CalendarHeart className="h-3.5 w-3.5" />;
   };
 
   const getBadgeLabel = (item: CelebracaoItem) => {
     if (item.tipo === "aniversario") return "Aniversário";
     if (item.tipo === "tempo_casa") return `${item.anos} ano${(item.anos || 0) > 1 ? "s" : ""} de empresa`;
+    if (item.tipo === "dia_profissao") return "Dia da Profissão";
     return item.acao ? TIPO_ACAO_LABELS[item.acao.tipo] || "Ação" : "Ação";
   };
 
@@ -241,6 +266,8 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
                     ? "bg-pink-500/10 text-pink-600"
                     : item.tipo === "tempo_casa"
                     ? "bg-blue-500/10 text-blue-600"
+                    : item.tipo === "dia_profissao"
+                    ? "bg-amber-500/10 text-amber-600"
                     : "bg-violet-500/10 text-violet-600"
                 }>
                   {getInitials(item.nome)}

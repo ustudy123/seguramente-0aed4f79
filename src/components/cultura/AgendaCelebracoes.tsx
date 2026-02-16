@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, addMonths, startOfYear, endOfYear, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarHeart, Plus, Trash2, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import type { CulturaAcao } from "@/types/cultura";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_LABELS, STATUS_ACAO_COLORS } from "@/types/cultura";
@@ -27,6 +28,8 @@ export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStat
   const [showForm, setShowForm] = useState(false);
   const [filtroTipo, setFiltroTipo] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [filtroColaborador, setFiltroColaborador] = useState("");
+  const [filtroPeriodo, setFiltroPeriodo] = useState("todos");
 
   const [form, setForm] = useState({
     tipo: "aniversario",
@@ -36,11 +39,25 @@ export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStat
     data_referencia: "",
     data_execucao: "",
     responsavel_nome: "",
+    criar_antecipada: false,
+    dias_antecedencia: "7",
   });
 
   const filtered = acoes.filter(a => {
     if (filtroTipo !== "todos" && a.tipo !== filtroTipo) return false;
     if (filtroStatus !== "todos" && a.status !== filtroStatus) return false;
+    if (filtroColaborador && a.colaborador_nome && !a.colaborador_nome.toLowerCase().includes(filtroColaborador.toLowerCase())) return false;
+    if (filtroPeriodo !== "todos") {
+      const dataRef = parseISO(a.data_referencia);
+      const hoje = new Date();
+      if (filtroPeriodo === "mes") {
+        if (!isWithinInterval(dataRef, { start: startOfMonth(hoje), end: endOfMonth(hoje) })) return false;
+      } else if (filtroPeriodo === "trimestre") {
+        if (!isWithinInterval(dataRef, { start: startOfMonth(hoje), end: endOfMonth(addMonths(hoje, 2)) })) return false;
+      } else if (filtroPeriodo === "ano") {
+        if (!isWithinInterval(dataRef, { start: startOfYear(hoje), end: endOfYear(hoje) })) return false;
+      }
+    }
     return true;
   });
 
@@ -56,7 +73,7 @@ export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStat
       responsavel_nome: form.responsavel_nome || null,
     });
     setShowForm(false);
-    setForm({ tipo: "aniversario", titulo: "", descricao: "", colaborador_nome: "", data_referencia: "", data_execucao: "", responsavel_nome: "" });
+    setForm({ tipo: "aniversario", titulo: "", descricao: "", colaborador_nome: "", data_referencia: "", data_execucao: "", responsavel_nome: "", criar_antecipada: false, dias_antecedencia: "7" });
   };
 
   return (
@@ -82,6 +99,21 @@ export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStat
               ))}
             </SelectContent>
           </Select>
+          <Select value={filtroPeriodo} onValueChange={setFiltroPeriodo}>
+            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todo período</SelectItem>
+              <SelectItem value="mes">Este mês</SelectItem>
+              <SelectItem value="trimestre">Trimestre</SelectItem>
+              <SelectItem value="ano">Este ano</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            placeholder="Buscar colaborador..."
+            value={filtroColaborador}
+            onChange={e => setFiltroColaborador(e.target.value)}
+            className="w-[180px] h-8 text-xs"
+          />
         </div>
         <Button size="sm" onClick={() => setShowForm(true)} className="gap-1">
           <Plus className="w-4 h-4" /> Nova Ação
@@ -187,6 +219,28 @@ export const AgendaCelebracoes = ({ acoes, isLoading, onCreateAcao, onUpdateStat
                 <Label>Data de Execução</Label>
                 <Input type="date" value={form.data_execucao} onChange={e => setForm(f => ({ ...f, data_execucao: e.target.value }))} />
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.criar_antecipada}
+                  onCheckedChange={v => setForm(f => ({ ...f, criar_antecipada: v }))}
+                />
+                <Label className="text-sm">Criar ação com antecedência</Label>
+              </div>
+              {form.criar_antecipada && (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={90}
+                    className="w-16 h-8 text-xs"
+                    value={form.dias_antecedencia}
+                    onChange={e => setForm(f => ({ ...f, dias_antecedencia: e.target.value }))}
+                  />
+                  <span className="text-xs text-muted-foreground">dias antes</span>
+                </div>
+              )}
             </div>
             <div>
               <Label>Responsável</Label>
