@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PostForm } from "@/components/feed/PostForm";
 import { PostCard } from "@/components/feed/PostCard";
-import { AniversariantesWidget } from "@/components/feed/AniversariantesWidget";
-import { TempoEmpresaWidget } from "@/components/feed/TempoEmpresaWidget";
 import { useFeed } from "@/hooks/useFeed";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -331,8 +329,6 @@ export default function Feed() {
 
         <div className="space-y-4">
           <AvisosCulturaWidget onFelicitar={handleFelicitacao} />
-          <AniversariantesWidget onFelicitar={handleFelicitacao} />
-          <TempoEmpresaWidget onFelicitar={handleFelicitacao} />
         </div>
       </div>
     </div>
