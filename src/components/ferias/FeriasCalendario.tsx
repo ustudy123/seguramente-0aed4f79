@@ -1,11 +1,15 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
   Plane,
   Clock,
   CheckCircle,
+  Plus,
+  X,
+  Calendar,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +30,7 @@ interface FeriasItem {
 
 interface FeriasCalendarioProps {
   ferias: FeriasItem[];
+  onNewSolicitacao?: (date: string) => void;
 }
 
 const MESES = [
@@ -41,10 +46,11 @@ const statusColors: Record<string, { bg: string; border: string; text: string }>
   recusado: { bg: "bg-destructive/10", border: "border-destructive/30", text: "text-destructive" },
 };
 
-export function FeriasCalendario({ ferias }: FeriasCalendarioProps) {
+export function FeriasCalendario({ ferias, onNewSolicitacao }: FeriasCalendarioProps) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   const prevMonth = () => {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
@@ -144,16 +150,18 @@ export function FeriasCalendario({ ferias }: FeriasCalendarioProps) {
               const entries = dayMap[day] || [];
               const weekend = (firstDayOfWeek + i) % 7 === 0 || (firstDayOfWeek + i) % 7 === 6;
               return (
-                <div
+                <button
                   key={day}
+                  onClick={() => setSelectedDay(selectedDay === day ? null : day)}
                   className={cn(
-                    "h-20 rounded-lg border p-1 text-xs transition-colors",
+                    "h-20 rounded-lg border p-1 text-xs transition-all text-left cursor-pointer hover:border-primary/50 hover:shadow-sm",
                     isToday(day)
                       ? "border-primary bg-primary/5"
                       : weekend
                         ? "border-border/50 bg-muted/30"
                         : "border-border/50",
-                    entries.length > 0 && "bg-accent/30"
+                    entries.length > 0 && "bg-accent/30",
+                    selectedDay === day && "ring-2 ring-primary border-primary"
                   )}
                 >
                   <span
@@ -181,12 +189,94 @@ export function FeriasCalendario({ ferias }: FeriasCalendarioProps) {
                       <span className="text-[10px] text-muted-foreground">+{entries.length - 2}</span>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* Selected day detail panel */}
+      <AnimatePresence>
+        {selectedDay !== null && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-card rounded-xl border border-border shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  {selectedDay} de {MESES[currentMonth]} de {currentYear}
+                </h4>
+                <div className="flex items-center gap-2">
+                  {onNewSolicitacao && (
+                    <Button
+                      size="sm"
+                      className="gradient-primary"
+                      onClick={() => {
+                        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+                        onNewSolicitacao(dateStr);
+                      }}
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      Nova Solicitação
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedDay(null)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {(() => {
+                const entries = dayMap[selectedDay] || [];
+                if (entries.length === 0) {
+                  return (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      Nenhuma férias nesta data.
+                    </p>
+                  );
+                }
+                return (
+                  <div className="space-y-3">
+                    {entries.map((e) => {
+                      const colors = statusColors[e.status];
+                      const startDate = new Date(e.dataInicio).toLocaleDateString("pt-BR");
+                      const endDate = new Date(e.dataFim).toLocaleDateString("pt-BR");
+                      return (
+                        <div
+                          key={e.id}
+                          className={cn("flex items-center gap-4 p-3 rounded-lg border", colors.bg, colors.border)}
+                        >
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                              {e.colaborador.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground">{e.colaborador}</p>
+                            <p className="text-xs text-muted-foreground">{e.departamento}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {startDate} → {endDate} · {e.diasSolicitados} dias
+                            </p>
+                          </div>
+                          <Badge className={cn("text-[11px]", colors.bg, colors.text, colors.border)} variant="outline">
+                            {e.status === "aprovado" ? <CheckCircle className="w-3 h-3 mr-1" /> : <Clock className="w-3 h-3 mr-1" />}
+                            {e.status}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Timeline view */}
       {timelineData.length > 0 && (

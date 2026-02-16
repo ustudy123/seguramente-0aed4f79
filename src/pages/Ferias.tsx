@@ -378,7 +378,13 @@ const Ferias = () => {
         </TabsContent>
 
         <TabsContent value="calendario">
-          <FeriasCalendario ferias={ferias} />
+          <FeriasCalendario
+            ferias={ferias}
+            onNewSolicitacao={(date) => {
+              setNewSolicitacao((prev) => ({ ...prev, dataInicio: date }));
+              setIsModalOpen(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="saldos">
