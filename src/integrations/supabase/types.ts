@@ -5255,6 +5255,38 @@ export type Database = {
           },
         ]
       }
+      lembretes_dispensados: {
+        Row: {
+          chave: string
+          dispensado_em: string
+          id: string
+          tenant_id: string
+          usuario_id: string
+        }
+        Insert: {
+          chave: string
+          dispensado_em?: string
+          id?: string
+          tenant_id: string
+          usuario_id: string
+        }
+        Update: {
+          chave?: string
+          dispensado_em?: string
+          id?: string
+          tenant_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lembretes_dispensados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_afiliados_comissoes: {
         Row: {
           created_at: string

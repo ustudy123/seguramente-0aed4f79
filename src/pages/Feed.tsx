@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, RefreshCw, CalendarHeart, Sparkles, Cake, Award } from "lucide-react";
+import { MessageSquare, RefreshCw, CalendarHeart, Sparkles, Cake, Award, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { PostCard } from "@/components/feed/PostCard";
 import { AniversariantesWidget } from "@/components/feed/AniversariantesWidget";
 import { TempoEmpresaWidget } from "@/components/feed/TempoEmpresaWidget";
 import { useFeed } from "@/hooks/useFeed";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_COLORS, STATUS_ACAO_LABELS } from "@/types/cultura";
@@ -27,6 +27,7 @@ interface LembreteMural {
   diasFaltam: number;
   source: "auto" | "acao";
   status?: string;
+  chaveDispensa: string;
 }
 
 function FeedSkeleton() {
@@ -74,8 +75,35 @@ function EmptyState() {
 
 // Widget unificado — puxa automaticamente de admissões + ações manuais
 function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => void }) {
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
+  const userId = user?.id;
+  const queryClient = useQueryClient();
 
+  // Dispensados pelo usuário (chave com ano)
+  const { data: dispensados = [] } = useQuery({
+    queryKey: ["lembretes-dispensados", tenantId, userId],
+    queryFn: async () => {
+      if (!tenantId || !userId) return [];
+      const { data, error } = await (supabase as any)
+        .from("lembretes_dispensados")
+        .select("chave")
+        .eq("tenant_id", tenantId)
+        .eq("usuario_id", userId);
+      if (error) throw error;
+      return (data || []).map((d: any) => d.chave);
+    },
+    enabled: !!tenantId && !!userId,
+  });
+
+  const dispensar = async (chave: string) => {
+    if (!tenantId || !userId) return;
+    await (supabase as any).from("lembretes_dispensados").insert({
+      tenant_id: tenantId,
+      usuario_id: userId,
+      chave,
+    });
+    queryClient.invalidateQueries({ queryKey: ["lembretes-dispensados"] });
+  };
   const { data: acoesPendentes = [] } = useQuery({
     queryKey: ["cultura-acoes-mural", tenantId],
     queryFn: async () => {
@@ -110,15 +138,18 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
 
   const lembretes = useMemo(() => {
     const hoje = new Date();
+    const ano = hoje.getFullYear();
     const items: LembreteMural[] = [];
+    const dispensadoSet = new Set(dispensados);
 
     for (const adm of admissoes) {
       if (adm.data_nascimento) {
         const nasc = parseISO(adm.data_nascimento);
-        let proxAniv = setYear(nasc, hoje.getFullYear());
+        let proxAniv = setYear(nasc, ano);
         if (proxAniv < hoje) proxAniv = addYears(proxAniv, 1);
         const dias = differenceInDays(proxAniv, hoje);
-        if (dias <= 30) {
+        const chave = `aniv-${adm.id}-${proxAniv.getFullYear()}`;
+        if (dias <= 30 && !dispensadoSet.has(chave)) {
           items.push({
             id: `aniv-${adm.id}`,
             titulo: `🎂 Aniversário de ${adm.nome_completo}`,
@@ -128,16 +159,18 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
             dataStr: format(proxAniv, "dd/MM"),
             diasFaltam: dias,
             source: "auto",
+            chaveDispensa: chave,
           });
         }
       }
       if (adm.data_admissao) {
         const admDate = parseISO(adm.data_admissao);
-        let proxAniv = setYear(admDate, hoje.getFullYear());
+        let proxAniv = setYear(admDate, ano);
         if (proxAniv < hoje) proxAniv = addYears(proxAniv, 1);
         const dias = differenceInDays(proxAniv, hoje);
         const anos = proxAniv.getFullYear() - admDate.getFullYear();
-        if (dias <= 30 && anos >= 1) {
+        const chave = `tempo-${adm.id}-${proxAniv.getFullYear()}`;
+        if (dias <= 30 && anos >= 1 && !dispensadoSet.has(chave)) {
           items.push({
             id: `tempo-${adm.id}`,
             titulo: `🏆 ${anos} ano${anos > 1 ? "s" : ""} de empresa — ${adm.nome_completo}`,
@@ -147,6 +180,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
             dataStr: format(proxAniv, "dd/MM"),
             diasFaltam: dias,
             source: "auto",
+            chaveDispensa: chave,
           });
         }
       }
@@ -157,6 +191,8 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     for (const acao of acoesPendentes) {
       const key = `${acao.colaborador_nome}-${acao.tipo}`;
       if (autoKeys.has(key)) continue;
+      const chave = `acao-${acao.id}`;
+      if (dispensadoSet.has(chave)) continue;
       items.push({
         id: `acao-${acao.id}`,
         titulo: acao.titulo,
@@ -167,12 +203,13 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
         diasFaltam: acao.data_referencia ? differenceInDays(parseISO(acao.data_referencia), hoje) : 99,
         source: "acao",
         status: acao.status,
+        chaveDispensa: chave,
       });
     }
 
     items.sort((a, b) => a.diasFaltam - b.diasFaltam);
     return items.slice(0, 8);
-  }, [admissoes, acoesPendentes]);
+  }, [admissoes, acoesPendentes, dispensados]);
 
   if (lembretes.length === 0) return null;
 
@@ -218,6 +255,13 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
                   {item.nome} · {item.dataStr}
                 </p>
               </div>
+              <button
+                className="shrink-0 p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Dispensar lembrete"
+                onClick={() => dispensar(item.chaveDispensa)}
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
             <Button
               variant="ghost"
