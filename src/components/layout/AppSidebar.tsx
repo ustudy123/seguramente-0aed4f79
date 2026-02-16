@@ -29,6 +29,7 @@ import {
   HardHat,
   ShieldAlert,
   Sparkles,
+  Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -87,6 +88,7 @@ const menuSections: MenuSection[] = [
       { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
       { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
       { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
+      { title: "Feed Social", icon: Newspaper, path: "/feed" },
       { title: "Ponto", icon: Clock, path: "/ponto" },
     ],
   },
