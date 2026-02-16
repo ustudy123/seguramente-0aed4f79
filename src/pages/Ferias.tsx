@@ -808,10 +808,12 @@ const Ferias = () => {
                             key={c.id}
                             value={c.nome_completo}
                             onSelect={() => {
+                              const admissao = c as any;
                               setNewSolicitacao(prev => ({
                                 ...prev,
                                 colaborador: c.nome_completo,
                                 departamento: c.departamento || "",
+                                salarioBase: admissao.salario || 0,
                               }));
                               setComboOpen(false);
                             }}
@@ -863,6 +865,20 @@ const Ferias = () => {
               </div>
             </div>
 
+            {/* Salário Base */}
+            <div className="space-y-2">
+              <Label htmlFor="salarioBase">Salário Base (R$)</Label>
+              <Input
+                id="salarioBase"
+                type="number"
+                min={0}
+                step={100}
+                placeholder="Preenchido ao selecionar colaborador"
+                value={newSolicitacao.salarioBase || ""}
+                onChange={(e) => setNewSolicitacao(prev => ({ ...prev, salarioBase: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+
             {/* Abono Pecuniário Section */}
             <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
               <div className="flex items-center justify-between">
@@ -911,15 +927,15 @@ const Ferias = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="salarioBase" className="text-xs">Salário Base (R$)</Label>
+                      <Label htmlFor="salarioBaseAbono" className="text-xs">Salário Base (R$)</Label>
                       <Input
-                        id="salarioBase"
+                        id="salarioBaseAbono"
                         type="number"
                         min={0}
                         step={100}
-                        placeholder="0,00"
                         value={newSolicitacao.salarioBase || ""}
-                        onChange={(e) => setNewSolicitacao(prev => ({ ...prev, salarioBase: parseFloat(e.target.value) || 0 }))}
+                        readOnly
+                        className="bg-muted/50"
                       />
                     </div>
                   </div>
