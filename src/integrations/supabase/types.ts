@@ -1432,6 +1432,334 @@ export type Database = {
           },
         ]
       }
+      cultura_acoes: {
+        Row: {
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string
+          cultura_data_id: string | null
+          data_execucao: string | null
+          data_referencia: string
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          responsavel: string | null
+          responsavel_nome: string | null
+          status: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          cultura_data_id?: string | null
+          data_execucao?: string | null
+          data_referencia: string
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel?: string | null
+          responsavel_nome?: string | null
+          status?: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          cultura_data_id?: string | null
+          data_execucao?: string | null
+          data_referencia?: string
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel?: string | null
+          responsavel_nome?: string | null
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultura_acoes_cultura_data_id_fkey"
+            columns: ["cultura_data_id"]
+            isOneToOne: false
+            referencedRelation: "cultura_datas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cultura_acoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cultura_config: {
+        Row: {
+          aniversario_ativo: boolean
+          created_at: string
+          dia_profissao_ativo: boolean
+          dias_antecedencia_acao: number
+          folga_permitida: boolean
+          id: string
+          limite_valor_presente: number | null
+          presente_padrao: boolean
+          responsavel_padrao: string | null
+          tempo_casa_ativo: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aniversario_ativo?: boolean
+          created_at?: string
+          dia_profissao_ativo?: boolean
+          dias_antecedencia_acao?: number
+          folga_permitida?: boolean
+          id?: string
+          limite_valor_presente?: number | null
+          presente_padrao?: boolean
+          responsavel_padrao?: string | null
+          tempo_casa_ativo?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aniversario_ativo?: boolean
+          created_at?: string
+          dia_profissao_ativo?: boolean
+          dias_antecedencia_acao?: number
+          folga_permitida?: boolean
+          id?: string
+          limite_valor_presente?: number | null
+          presente_padrao?: boolean
+          responsavel_padrao?: string | null
+          tempo_casa_ativo?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultura_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cultura_datas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_especifica: string | null
+          descricao: string | null
+          dia: number | null
+          filtro_setor: string | null
+          filtro_unidade: string | null
+          id: string
+          mes: number | null
+          recorrencia: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_especifica?: string | null
+          descricao?: string | null
+          dia?: number | null
+          filtro_setor?: string | null
+          filtro_unidade?: string | null
+          id?: string
+          mes?: number | null
+          recorrencia?: string
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_especifica?: string | null
+          descricao?: string | null
+          dia?: number | null
+          filtro_setor?: string | null
+          filtro_unidade?: string | null
+          id?: string
+          mes?: number | null
+          recorrencia?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultura_datas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cultura_marcos: {
+        Row: {
+          anos: number
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          tenant_id: string
+          tipo_celebracao: string
+          updated_at: string
+        }
+        Insert: {
+          anos: number
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id: string
+          tipo_celebracao?: string
+          updated_at?: string
+        }
+        Update: {
+          anos?: number
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tenant_id?: string
+          tipo_celebracao?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultura_marcos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cultura_preferencias: {
+        Row: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          id: string
+          observacoes: string | null
+          preferencia_aniversario: string | null
+          tenant_id: string
+          tipo_reconhecimento: string | null
+          updated_at: string
+        }
+        Insert: {
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          preferencia_aniversario?: string | null
+          tenant_id: string
+          tipo_reconhecimento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          preferencia_aniversario?: string | null
+          tenant_id?: string
+          tipo_reconhecimento?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultura_preferencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cultura_rituais: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          dia_mes: number | null
+          dia_semana: number | null
+          frequencia: string
+          id: string
+          nome: string
+          proxima_execucao: string | null
+          responsavel: string | null
+          responsavel_nome: string | null
+          tenant_id: string
+          ultima_execucao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          dia_mes?: number | null
+          dia_semana?: number | null
+          frequencia?: string
+          id?: string
+          nome: string
+          proxima_execucao?: string | null
+          responsavel?: string | null
+          responsavel_nome?: string | null
+          tenant_id: string
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          dia_mes?: number | null
+          dia_semana?: number | null
+          frequencia?: string
+          id?: string
+          nome?: string
+          proxima_execucao?: string | null
+          responsavel?: string | null
+          responsavel_nome?: string | null
+          tenant_id?: string
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultura_rituais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departamentos: {
         Row: {
           ativo: boolean
