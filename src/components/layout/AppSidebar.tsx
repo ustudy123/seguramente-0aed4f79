@@ -113,7 +113,7 @@ const menuSections: MenuSection[] = [
         children: [
           { title: "Departamentos", path: "/cadastros/departamentos" },
           { title: "Funções", path: "/cadastros/cargos" },
-          { title: "Filiais", path: "/cadastros/filiais" },
+          { title: "Estabelecimentos", path: "/cadastros/filiais" },
         ],
       },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },

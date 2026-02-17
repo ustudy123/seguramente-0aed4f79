@@ -152,14 +152,14 @@ export default function Filiais() {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Filiais</h1>
+          <h1 className="text-2xl font-bold text-foreground">Estabelecimentos</h1>
           <p className="text-muted-foreground">
-            Gerencie as filiais da sua empresa
+            Gerencie os estabelecimentos da sua empresa
           </p>
         </div>
         <Button onClick={handleOpenCreate} className="gap-2">
           <Plus className="w-4 h-4" />
-          Nova Filial
+          Novo Estabelecimento
         </Button>
       </motion.div>
 
@@ -172,7 +172,7 @@ export default function Filiais() {
       >
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar filiais..."
+          placeholder="Buscar estabelecimentos..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 max-w-sm"
@@ -211,8 +211,8 @@ export default function Filiais() {
                     <MapPin className="w-8 h-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
                       {searchTerm
-                        ? "Nenhuma filial encontrada"
-                        : "Nenhuma filial cadastrada"}
+                        ? "Nenhum estabelecimento encontrado"
+                        : "Nenhum estabelecimento cadastrado"}
                     </p>
                   </div>
                 </TableCell>
@@ -267,12 +267,12 @@ export default function Filiais() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedFilial ? "Editar Filial" : "Nova Filial"}
+              {selectedFilial ? "Editar Estabelecimento" : "Novo Estabelecimento"}
             </DialogTitle>
             <DialogDescription>
               {selectedFilial
-                ? "Edite as informações da filial"
-                : "Preencha os dados da nova filial"}
+                ? "Edite as informações do estabelecimento"
+                : "Preencha os dados do novo estabelecimento"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -394,9 +394,9 @@ export default function Filiais() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Filial</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Estabelecimento</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a filial "{selectedFilial?.nome}"?
+              Tem certeza que deseja excluir o estabelecimento "{selectedFilial?.nome}"?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
