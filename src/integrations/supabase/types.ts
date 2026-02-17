@@ -1147,6 +1147,132 @@ export type Database = {
           },
         ]
       }
+      bem_estar_config: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          eixo: string
+          frequencia_pergunta: string | null
+          id: string
+          pergunta_ativa: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          eixo: string
+          frequencia_pergunta?: string | null
+          id?: string
+          pergunta_ativa?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          eixo?: string
+          frequencia_pergunta?: string | null
+          id?: string
+          pergunta_ativa?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bem_estar_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bem_estar_gratidao: {
+        Row: {
+          anonimo: boolean | null
+          conteudo: string | null
+          created_at: string
+          id: string
+          tenant_id: string
+          tipo: string | null
+          user_id: string
+        }
+        Insert: {
+          anonimo?: boolean | null
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          tenant_id: string
+          tipo?: string | null
+          user_id: string
+        }
+        Update: {
+          anonimo?: boolean | null
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          tipo?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bem_estar_gratidao_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bem_estar_respostas: {
+        Row: {
+          anonimo: boolean | null
+          created_at: string
+          eixo: string
+          id: string
+          opcao_selecionada: string | null
+          tenant_id: string
+          tipo: string
+          user_id: string
+          valor_numerico: number | null
+          valor_texto: string | null
+        }
+        Insert: {
+          anonimo?: boolean | null
+          created_at?: string
+          eixo: string
+          id?: string
+          opcao_selecionada?: string | null
+          tenant_id: string
+          tipo: string
+          user_id: string
+          valor_numerico?: number | null
+          valor_texto?: string | null
+        }
+        Update: {
+          anonimo?: boolean | null
+          created_at?: string
+          eixo?: string
+          id?: string
+          opcao_selecionada?: string | null
+          tenant_id?: string
+          tipo?: string
+          user_id?: string
+          valor_numerico?: number | null
+          valor_texto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bem_estar_respostas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beneficios_colaboradores: {
         Row: {
           beneficio_tipo_id: string
