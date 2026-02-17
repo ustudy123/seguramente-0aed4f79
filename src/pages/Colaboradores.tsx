@@ -627,8 +627,13 @@ function AdmissoesTab() {
     // Need at least one field to save
     if (Object.keys(formData).length === 0) return;
 
-    if (viewMode === "edit" && selectedId) {
-      await atualizarAdmissao({ id: selectedId, dados: formData });
+    try {
+      if (viewMode === "edit" && selectedId) {
+        await atualizarAdmissao({ id: selectedId, dados: formData });
+      }
+    } catch (err: any) {
+      console.error('[AutoSave] Erro ao salvar:', err?.message || err, 'Dados:', JSON.stringify(formData));
+      throw err;
     }
   };
 
