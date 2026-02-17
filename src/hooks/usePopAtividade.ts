@@ -49,10 +49,76 @@ export interface PopVersao {
   created_at: string;
 }
 
-export function usePopAtividade(cargoId?: string) {
+export function usePopAtividade(cargoId?: string, cargoNome?: string) {
   const { tenantId, user, profile } = useAuth();
   const userName = profile?.nome_completo || "Sistema";
   const qc = useQueryClient();
+
+  // Garantir pasta de Processos > [Função] no módulo de Documentos
+  const garantirPastaProcessosFuncao = async (): Promise<string | null> => {
+    if (!tenantId || !user || !cargoNome) return null;
+
+    // 1. Buscar pasta raiz "Documentos de Processos"
+    const { data: roots } = await supabase
+      .from("documento_pastas")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("tipo", "root")
+      .eq("nome", "Documentos de Processos")
+      .limit(1);
+
+    let processosRootId = roots?.[0]?.id;
+
+    if (!processosRootId) {
+      // Criar a pasta raiz se não existir
+      const { data: newRoot, error } = await supabase
+        .from("documento_pastas")
+        .insert({
+          nome: "Documentos de Processos",
+          tipo: "root",
+          ordem: 1,
+          icone: "BookOpen",
+          pasta_pai_id: null,
+          tenant_id: tenantId,
+          criado_por: user.id,
+          criado_por_nome: userName,
+        })
+        .select("id")
+        .single();
+      if (error) { console.error("Erro ao criar pasta Processos:", error); return null; }
+      processosRootId = newRoot.id;
+    }
+
+    // 2. Buscar ou criar subpasta da função
+    const { data: funcaoPastas } = await supabase
+      .from("documento_pastas")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("pasta_pai_id", processosRootId)
+      .eq("nome", cargoNome)
+      .limit(1);
+
+    if (funcaoPastas?.[0]?.id) return funcaoPastas[0].id;
+
+    const { data: newFuncao, error: errF } = await supabase
+      .from("documento_pastas")
+      .insert({
+        nome: cargoNome,
+        tipo: "categoria",
+        ordem: 0,
+        icone: "Briefcase",
+        pasta_pai_id: processosRootId,
+        tenant_id: tenantId,
+        criado_por: user.id,
+        criado_por_nome: userName,
+      })
+      .select("id")
+      .single();
+
+    if (errF) { console.error("Erro ao criar pasta da função:", errF); return null; }
+    qc.invalidateQueries({ queryKey: ["documento-pastas"] });
+    return newFuncao.id;
+  };
 
   const { data: pops = [], isLoading } = useQuery({
     queryKey: ["funcao_pops", cargoId],
@@ -127,6 +193,8 @@ export function usePopAtividade(cargoId?: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["funcao_pops", cargoId] });
+      // Garantir que a pasta da função exista no módulo de Documentos
+      garantirPastaProcessosFuncao().catch(() => {});
       toast.success("POP criado com sucesso!");
     },
     onError: (e: Error) => toast.error(e.message),
