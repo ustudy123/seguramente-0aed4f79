@@ -264,6 +264,7 @@ export function SaldoLocalDashboard() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>EPI</TableHead>
+                      <TableHead>Tamanho</TableHead>
                       <TableHead>CA</TableHead>
                       <TableHead>Local</TableHead>
                       <TableHead>Quantidade</TableHead>
@@ -289,6 +290,9 @@ export function SaldoLocalDashboard() {
                                 <p className="text-xs text-muted-foreground">{row.epi.tipo.categoria}</p>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {(row as any).tamanho || "—"}
                           </TableCell>
                           <TableCell className="text-sm">
                             {row.epi?.ca || "—"}

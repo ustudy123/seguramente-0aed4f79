@@ -8,6 +8,7 @@ interface TransferenciaData {
   local_origem_id: string;
   local_destino_id: string;
   quantidade: number;
+  tamanho?: string;
   observacoes?: string;
 }
 
@@ -20,14 +21,20 @@ export function useTransferenciaEstoque() {
       if (!tenantId) throw new Error("Tenant não identificado");
 
       // 1. Buscar saldo no local de origem
-      const { data: estoqueOrigem, error: origemError } = await supabase
+      let queryOrigem = supabase
         .from("epi_estoque_local")
         .select("id, quantidade")
         .eq("epi_id", dados.epi_id)
         .eq("local_estoque_id", dados.local_origem_id)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
-      if (origemError) throw origemError;
+        .eq("tenant_id", tenantId);
+      
+      if (dados.tamanho) {
+        queryOrigem = queryOrigem.eq("tamanho", dados.tamanho);
+      } else {
+        queryOrigem = queryOrigem.is("tamanho", null);
+      }
+
+      const { data: estoqueOrigem, error: origemError } = await queryOrigem.maybeSingle();
 
       const saldoOrigem = estoqueOrigem?.quantidade || 0;
       if (saldoOrigem < dados.quantidade) {
@@ -41,13 +48,20 @@ export function useTransferenciaEstoque() {
         .eq("id", estoqueOrigem!.id);
 
       // 3. Upsert no local de destino
-      const { data: estoqueDestino } = await supabase
+      let queryDestino = supabase
         .from("epi_estoque_local")
         .select("id, quantidade")
         .eq("epi_id", dados.epi_id)
         .eq("local_estoque_id", dados.local_destino_id)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
+        .eq("tenant_id", tenantId);
+      
+      if (dados.tamanho) {
+        queryDestino = queryDestino.eq("tamanho", dados.tamanho);
+      } else {
+        queryDestino = queryDestino.is("tamanho", null);
+      }
+
+      const { data: estoqueDestino } = await queryDestino.maybeSingle();
 
       if (estoqueDestino) {
         await supabase
@@ -62,6 +76,7 @@ export function useTransferenciaEstoque() {
             epi_id: dados.epi_id,
             local_estoque_id: dados.local_destino_id,
             quantidade: dados.quantidade,
+            tamanho: dados.tamanho || null,
           });
       }
 
@@ -87,6 +102,7 @@ export function useTransferenciaEstoque() {
           tipo: "transferencia",
           subtipo: "transferencia",
           local_estoque_id: dados.local_destino_id,
+          tamanho: dados.tamanho || null,
           quantidade: dados.quantidade,
           quantidade_anterior: qtdGlobal,
           quantidade_atual: qtdGlobal, // estoque global não muda

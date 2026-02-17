@@ -20,6 +20,7 @@ import { useEntradaEstoque } from "@/hooks/useEntradaEstoque";
 import { useTransferenciaEstoque } from "@/hooks/useTransferenciaEstoque";
 import { useSaidaEstoque } from "@/hooks/useSaidaEstoque";
 import { useImportacaoNF } from "@/hooks/useImportacaoNF";
+import { useEpiTamanhos } from "@/hooks/useEpiTamanhos";
 import { EntradaEstoqueForm } from "./EntradaEstoqueForm";
 import { SUBTIPOS_ENTRADA } from "./EntradaEstoqueForm";
 import { TransferenciaEstoqueForm } from "./TransferenciaEstoqueForm";
@@ -47,6 +48,14 @@ export function EntradasEstoqueTab() {
   const { transferir, transferindo } = useTransferenciaEstoque();
   const { registrarSaida, registrandoSaida } = useSaidaEstoque();
   const { importarNF, importando } = useImportacaoNF();
+  const { allTamanhos, getTamanhosForTipo } = useEpiTamanhos();
+
+  // Helper: given an epi.id, find its tipo_id and return tamanhos
+  const getTamanhosForEpi = (epiId: string) => {
+    const epi = epis.find((e) => e.id === epiId);
+    if (!epi?.tipo_id) return [];
+    return getTamanhosForTipo(epi.tipo_id);
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
@@ -218,6 +227,7 @@ export function EntradasEstoqueTab() {
         onSubmit={registrarEntrada}
         epis={epis}
         locais={locais}
+        getTamanhosForEpi={getTamanhosForEpi}
         isLoading={registrando}
       />
 
@@ -227,6 +237,7 @@ export function EntradasEstoqueTab() {
         onSubmit={transferir}
         epis={epis}
         locais={locais}
+        getTamanhosForEpi={getTamanhosForEpi}
         isLoading={transferindo}
       />
 
@@ -236,6 +247,7 @@ export function EntradasEstoqueTab() {
         onSubmit={registrarSaida}
         epis={epis}
         locais={locais}
+        getTamanhosForEpi={getTamanhosForEpi}
         isLoading={registrandoSaida}
       />
 

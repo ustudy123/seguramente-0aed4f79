@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, HelpCircle } from "lucide-react";
+import { Plus, HelpCircle, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import type { EpiTipo, EpiCompleto } from "@/types/epi";
 import { CATEGORIAS_EPI, UNIDADES_MEDIDA, TIPOS_DURABILIDADE } from "@/types/epi";
 import { useEpiLocais } from "@/hooks/useEpiLocais";
@@ -78,6 +80,8 @@ interface EpiFormProps {
     fabricante?: string;
     estoque_minimo?: number | null;
     estoque_inicial?: number | null;
+    controla_tamanho?: boolean;
+    tamanhos?: string[];
   }) => Promise<void>;
   onCreateCategoria?: (nome: string) => Promise<void>;
   tipos: EpiTipo[];
@@ -101,6 +105,9 @@ export function EpiForm({
   const [showNewCategoriaInput, setShowNewCategoriaInput] = useState(false);
   const [newCategoriaName, setNewCategoriaName] = useState("");
   const [isCreatingCategoria, setIsCreatingCategoria] = useState(false);
+  const [controlaTamanho, setControlaTamanho] = useState(false);
+  const [tamanhos, setTamanhos] = useState<string[]>([]);
+  const [novoTamanho, setNovoTamanho] = useState("");
 
   const { locaisAtivos } = useEpiLocais();
 
@@ -167,7 +174,7 @@ export function EpiForm({
     const categoria = selectedCategoria || data.categoria;
     
     try {
-      await onCreateTipo({
+      const result = await onCreateTipo({
         nome: data.nome,
         categoria: categoria,
         unidade_medida: data.unidade_medida,
@@ -177,6 +184,8 @@ export function EpiForm({
         ca_numero: data.ca,
         estoque_minimo: data.quantidade_minima,
         estoque_inicial: data.quantidade_estoque,
+        controla_tamanho: controlaTamanho,
+        tamanhos: controlaTamanho ? tamanhos : [],
       });
       
       form.reset();
@@ -444,6 +453,71 @@ export function EpiForm({
                 <FormMessage />
               </FormItem>
             )} />
+
+            {/* Controle por Tamanho */}
+            <div className="space-y-3 p-4 rounded-lg border bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Controlar por Tamanho</p>
+                  <p className="text-xs text-muted-foreground">Habilite para gerenciar estoque por tamanho (ex: calçados, luvas)</p>
+                </div>
+                <Switch checked={controlaTamanho} onCheckedChange={setControlaTamanho} />
+              </div>
+
+              {controlaTamanho && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ex: 38, 39, P, M, G..."
+                      value={novoTamanho}
+                      onChange={(e) => setNovoTamanho(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (novoTamanho.trim() && !tamanhos.includes(novoTamanho.trim())) {
+                            setTamanhos([...tamanhos, novoTamanho.trim()]);
+                            setNovoTamanho("");
+                          }
+                        }
+                      }}
+                      className="h-8 text-sm"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (novoTamanho.trim() && !tamanhos.includes(novoTamanho.trim())) {
+                          setTamanhos([...tamanhos, novoTamanho.trim()]);
+                          setNovoTamanho("");
+                        }
+                      }}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                  {tamanhos.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {tamanhos.map((t) => (
+                        <Badge key={t} variant="secondary" className="gap-1">
+                          {t}
+                          <button
+                            type="button"
+                            onClick={() => setTamanhos(tamanhos.filter((x) => x !== t))}
+                            className="ml-0.5 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {tamanhos.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Adicione ao menos um tamanho à grade</p>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

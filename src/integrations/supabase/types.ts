@@ -2568,6 +2568,7 @@ export type Database = {
           recebido_por_assinatura: string | null
           signed_at: string | null
           status: Database["public"]["Enums"]["entrega_status"]
+          tamanho: string | null
           tenant_id: string
           updated_at: string
           user_agent: string | null
@@ -2598,6 +2599,7 @@ export type Database = {
           recebido_por_assinatura?: string | null
           signed_at?: string | null
           status?: Database["public"]["Enums"]["entrega_status"]
+          tamanho?: string | null
           tenant_id: string
           updated_at?: string
           user_agent?: string | null
@@ -2628,6 +2630,7 @@ export type Database = {
           recebido_por_assinatura?: string | null
           signed_at?: string | null
           status?: Database["public"]["Enums"]["entrega_status"]
+          tamanho?: string | null
           tenant_id?: string
           updated_at?: string
           user_agent?: string | null
@@ -2657,6 +2660,7 @@ export type Database = {
           local_estoque_id: string
           quantidade: number
           quantidade_minima: number
+          tamanho: string | null
           tenant_id: string
           updated_at: string
         }
@@ -2667,6 +2671,7 @@ export type Database = {
           local_estoque_id: string
           quantidade?: number
           quantidade_minima?: number
+          tamanho?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -2677,6 +2682,7 @@ export type Database = {
           local_estoque_id?: string
           quantidade?: number
           quantidade_minima?: number
+          tamanho?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -2775,6 +2781,7 @@ export type Database = {
           realizado_por: string | null
           realizado_por_nome: string | null
           subtipo: string | null
+          tamanho: string | null
           tenant_id: string
           tipo: string
         }
@@ -2791,6 +2798,7 @@ export type Database = {
           realizado_por?: string | null
           realizado_por_nome?: string | null
           subtipo?: string | null
+          tamanho?: string | null
           tenant_id: string
           tipo: string
         }
@@ -2807,6 +2815,7 @@ export type Database = {
           realizado_por?: string | null
           realizado_por_nome?: string | null
           subtipo?: string | null
+          tamanho?: string | null
           tenant_id?: string
           tipo?: string
         }
@@ -2844,6 +2853,7 @@ export type Database = {
           movimentacao_id: string | null
           nota_fiscal_id: string
           quantidade: number
+          tamanho: string | null
           tenant_id: string
           valor_total: number | null
           valor_unitario: number | null
@@ -2857,6 +2867,7 @@ export type Database = {
           movimentacao_id?: string | null
           nota_fiscal_id: string
           quantidade: number
+          tamanho?: string | null
           tenant_id: string
           valor_total?: number | null
           valor_unitario?: number | null
@@ -2870,6 +2881,7 @@ export type Database = {
           movimentacao_id?: string | null
           nota_fiscal_id?: string
           quantidade?: number
+          tamanho?: string | null
           tenant_id?: string
           valor_total?: number | null
           valor_unitario?: number | null
@@ -2974,11 +2986,54 @@ export type Database = {
           },
         ]
       }
+      epi_tamanhos: {
+        Row: {
+          created_at: string
+          id: string
+          ordem: number
+          tamanho: string
+          tenant_id: string
+          tipo_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ordem?: number
+          tamanho: string
+          tenant_id: string
+          tipo_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ordem?: number
+          tamanho?: string
+          tenant_id?: string
+          tipo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_tamanhos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "epi_tamanhos_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "epi_tipos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_tipos: {
         Row: {
           ca_numero: string | null
           ca_validade: string | null
           categoria: string | null
+          controla_tamanho: boolean
           created_at: string
           descricao: string | null
           estoque_minimo: number | null
@@ -2999,6 +3054,7 @@ export type Database = {
           ca_numero?: string | null
           ca_validade?: string | null
           categoria?: string | null
+          controla_tamanho?: boolean
           created_at?: string
           descricao?: string | null
           estoque_minimo?: number | null
@@ -3019,6 +3075,7 @@ export type Database = {
           ca_numero?: string | null
           ca_validade?: string | null
           categoria?: string | null
+          controla_tamanho?: boolean
           created_at?: string
           descricao?: string | null
           estoque_minimo?: number | null

@@ -8,6 +8,7 @@ interface EntradaEstoqueData {
   local_estoque_id: string;
   quantidade: number;
   subtipo: string;
+  tamanho?: string;
   observacoes?: string;
 }
 
@@ -38,13 +39,20 @@ export function useEntradaEstoque() {
       if (updateError) throw updateError;
 
       // 3. Upsert no estoque por local (epi_estoque_local)
-      const { data: estoqueLocal } = await supabase
+      let queryEstoque = supabase
         .from("epi_estoque_local")
         .select("id, quantidade")
         .eq("epi_id", dados.epi_id)
         .eq("local_estoque_id", dados.local_estoque_id)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
+        .eq("tenant_id", tenantId);
+      
+      if (dados.tamanho) {
+        queryEstoque = queryEstoque.eq("tamanho", dados.tamanho);
+      } else {
+        queryEstoque = queryEstoque.is("tamanho", null);
+      }
+
+      const { data: estoqueLocal } = await queryEstoque.maybeSingle();
 
       if (estoqueLocal) {
         await supabase
@@ -59,6 +67,7 @@ export function useEntradaEstoque() {
             epi_id: dados.epi_id,
             local_estoque_id: dados.local_estoque_id,
             quantidade: dados.quantidade,
+            tamanho: dados.tamanho || null,
           });
       }
 
@@ -82,6 +91,7 @@ export function useEntradaEstoque() {
           tipo: "entrada",
           subtipo: dados.subtipo,
           local_estoque_id: dados.local_estoque_id,
+          tamanho: dados.tamanho || null,
           quantidade: dados.quantidade,
           quantidade_anterior: qtdAnterior,
           quantidade_atual: qtdNova,
