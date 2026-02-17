@@ -97,18 +97,15 @@ export function EixoPanel({
     setRespondido(true);
   };
 
-  const handleOpcaoSubmit = async (opcao: string) => {
-    setOpcaoSelecionada(opcao);
-    await onSalvarResposta({ eixo, tipo: "reflexao", opcao_selecionada: opcao });
+  const handleAutoconhecimentoSubmit = async () => {
+    await onSalvarResposta({ eixo, tipo: "slider", valor_numerico: sliderValue, opcao_selecionada: opcaoSelecionada || undefined });
     setRespondido(true);
   };
 
-  const handleGratidaoSubmit = async () => {
-    if (!textoReflexao.trim()) return;
-    if (onSalvarGratidao) {
+  const handleGratidaoComSliderSubmit = async () => {
+    await onSalvarResposta({ eixo, tipo: "slider", valor_numerico: sliderValue });
+    if (textoReflexao.trim() && onSalvarGratidao) {
       await onSalvarGratidao({ conteudo: textoReflexao });
-    } else {
-      await onSalvarResposta({ eixo, tipo: "reflexao", valor_texto: textoReflexao });
     }
     setTextoReflexao("");
     setRespondido(true);
@@ -176,42 +173,100 @@ export function EixoPanel({
                 </p>
               </motion.div>
             ) : eixo === "autoconhecimento" ? (
-              <motion.div key="auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                <p className="text-sm font-medium">{EIXO_PERGUNTAS[eixo]}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {AUTOCONHECIMENTO_OPCOES.map((op) => (
-                    <Button
-                      key={op}
-                      variant={opcaoSelecionada === op ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleOpcaoSubmit(op)}
-                      disabled={salvando}
-                      className="text-xs"
-                    >
-                      {op}
-                    </Button>
-                  ))}
+              <motion.div key="auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+                {/* Slider for radar measurement */}
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Como você avalia sua consciência emocional hoje?</p>
+                  <div className="px-2">
+                    <Slider
+                      value={[sliderValue]}
+                      onValueChange={([v]) => setSliderValue(v)}
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                    <div className="flex justify-between mt-1">
+                      {SLIDER_LABELS.slice(1).map((l, i) => (
+                        <span
+                          key={i}
+                          className={`text-[10px] ${sliderValue === i + 1 ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                        >
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Multiple choice question */}
+                <div className="space-y-2 pt-2 border-t border-border/30">
+                  <p className="text-sm font-medium">{EIXO_PERGUNTAS[eixo]}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {AUTOCONHECIMENTO_OPCOES.map((op) => (
+                      <Button
+                        key={op}
+                        variant={opcaoSelecionada === op ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setOpcaoSelecionada(op)}
+                        disabled={salvando}
+                        className="text-xs"
+                      >
+                        {op}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button size="sm" onClick={handleAutoconhecimentoSubmit} disabled={salvando} className="w-full">
+                  {salvando ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                  Registrar percepção
+                </Button>
               </motion.div>
             ) : eixo === "gratidao" ? (
-              <motion.div key="grat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                <p className="text-sm font-medium">{EIXO_PERGUNTAS[eixo]}</p>
-                <Textarea
-                  value={textoReflexao}
-                  onChange={(e) => setTextoReflexao(e.target.value)}
-                  placeholder="Pode ser um texto curto, um emoji, ou nada..."
-                  rows={2}
-                  maxLength={280}
-                />
-                <div className="flex justify-between items-center">
+              <motion.div key="grat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+                {/* Slider for radar measurement */}
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Quanto você se sentiu grato no trabalho essa semana?</p>
+                  <div className="px-2">
+                    <Slider
+                      value={[sliderValue]}
+                      onValueChange={([v]) => setSliderValue(v)}
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                    <div className="flex justify-between mt-1">
+                      {SLIDER_LABELS.slice(1).map((l, i) => (
+                        <span
+                          key={i}
+                          className={`text-[10px] ${sliderValue === i + 1 ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                        >
+                          {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text field */}
+                <div className="space-y-2 pt-2 border-t border-border/30">
+                  <p className="text-sm font-medium">{EIXO_PERGUNTAS[eixo]}</p>
+                  <Textarea
+                    value={textoReflexao}
+                    onChange={(e) => setTextoReflexao(e.target.value)}
+                    placeholder="Pode ser um texto curto, um emoji, ou nada..."
+                    rows={2}
+                    maxLength={280}
+                  />
                   <span className="text-xs text-muted-foreground">
                     {textoReflexao.length}/280 — totalmente opcional
                   </span>
-                  <Button size="sm" onClick={handleGratidaoSubmit} disabled={salvando || !textoReflexao.trim()}>
-                    {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
-                    Registrar
-                  </Button>
                 </div>
+
+                <Button size="sm" onClick={handleGratidaoComSliderSubmit} disabled={salvando} className="w-full">
+                  {salvando ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                  Registrar percepção
+                </Button>
               </motion.div>
             ) : (
               <motion.div key="slider" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
