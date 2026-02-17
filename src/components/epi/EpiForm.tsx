@@ -36,9 +36,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { EpiTipo, EpiCompleto } from "@/types/epi";
 import { CATEGORIAS_EPI, UNIDADES_MEDIDA, TIPOS_DURABILIDADE } from "@/types/epi";
+import { useEpiLocais } from "@/hooks/useEpiLocais";
 
 const schema = z.object({
-  tipo_id: z.string().min(1, "Selecione o Nome do EPI"),
+  nome: z.string().min(2, "Nome do EPI deve ter pelo menos 2 caracteres"),
+  categoria: z.string().optional(),
   codigo: z.string().optional(),
   ca: z.string().optional(),
   marca: z.string().optional(),
@@ -49,31 +51,20 @@ const schema = z.object({
   quantidade_estoque: z.coerce.number().min(0, "Quantidade deve ser maior ou igual a 0"),
   quantidade_minima: z.coerce.number().min(1, "Quantidade mínima deve ser pelo menos 1"),
   custo_unitario: z.coerce.number().min(0).optional(),
+  local_estoque_id: z.string().optional(),
   localizacao: z.string().optional(),
+  unidade_medida: z.string().optional(),
+  tipo_durabilidade: z.string().optional(),
+  fabricante: z.string().optional(),
   observacoes: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
-// Schema for inline new tipo creation
-const tipoSchema = z.object({
-  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  descricao: z.string().optional(),
-  unidade_medida: z.string().min(1, "Selecione a unidade"),
-  tipo_durabilidade: z.string().min(1, "Selecione o tipo"),
-  validade_meses: z.coerce.number().min(0).optional().nullable(),
-  ca_numero: z.string().optional(),
-  ca_validade: z.string().optional(),
-  fabricante: z.string().optional(),
-  marca: z.string().optional(),
-  estoque_minimo: z.coerce.number().min(0).optional().nullable(),
-  estoque_inicial: z.coerce.number().min(0).optional().nullable(),
-});
-
 interface EpiFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: FormData) => Promise<void>;
+  onSubmit: (data: any) => Promise<void>;
   onCreateTipo: (data: {
     nome: string;
     descricao?: string;
@@ -106,19 +97,12 @@ export function EpiForm({
   epi,
   isLoading,
 }: EpiFormProps) {
-  const [showTipoForm, setShowTipoForm] = useState(false);
-  const [isCreatingTipo, setIsCreatingTipo] = useState(false);
   const [selectedCategoria, setSelectedCategoria] = useState<string>("");
   const [showNewCategoriaInput, setShowNewCategoriaInput] = useState(false);
   const [newCategoriaName, setNewCategoriaName] = useState("");
   const [isCreatingCategoria, setIsCreatingCategoria] = useState(false);
 
-  // Inline tipo form state
-  const [tipoFormData, setTipoFormData] = useState({
-    nome: "", descricao: "", unidade_medida: "unidade", tipo_durabilidade: "duravel",
-    validade_meses: "", ca_numero: "", ca_validade: "", marca: "", fabricante: "",
-    estoque_minimo: "5", estoque_inicial: "100",
-  });
+  const { locaisAtivos } = useEpiLocais();
 
   const categorias = useMemo(() => {
     const existingCategories = tipos
@@ -128,15 +112,11 @@ export function EpiForm({
     return allCategories.sort();
   }, [tipos, customCategorias]);
 
-  const tiposFiltrados = useMemo(() => {
-    if (!selectedCategoria) return [];
-    return tipos.filter(t => t.is_active !== false && t.categoria === selectedCategoria);
-  }, [tipos, selectedCategoria]);
-
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tipo_id: epi?.tipo_id || "",
+      nome: epi?.tipo?.nome || "",
+      categoria: epi?.tipo?.categoria || "",
       codigo: epi?.codigo || "",
       ca: epi?.ca || "",
       marca: epi?.marca || "",
@@ -147,7 +127,11 @@ export function EpiForm({
       quantidade_estoque: epi?.quantidade_estoque || 0,
       quantidade_minima: epi?.quantidade_minima || 5,
       custo_unitario: epi?.custo_unitario ? Number(epi.custo_unitario) : undefined,
+      local_estoque_id: "",
       localizacao: epi?.localizacao || "",
+      unidade_medida: epi?.tipo?.unidade_medida || "unidade",
+      tipo_durabilidade: epi?.tipo?.tipo_durabilidade || "duravel",
+      fabricante: epi?.tipo?.fabricante || "",
       observacoes: epi?.observacoes || "",
     },
   });
@@ -159,45 +143,26 @@ export function EpiForm({
   }, [epi]);
 
   const handleSubmit = async (data: FormData) => {
-    await onSubmit(data);
-    form.reset();
-    onOpenChange(false);
-  };
-
-  const handleCreateTipo = async () => {
-    if (!tipoFormData.nome.trim()) return;
-    setIsCreatingTipo(true);
+    // First create the tipo, then create the EPI record
+    const categoria = selectedCategoria || data.categoria;
+    
     try {
       await onCreateTipo({
-        nome: tipoFormData.nome,
-        descricao: tipoFormData.descricao || undefined,
-        categoria: selectedCategoria,
-        unidade_medida: tipoFormData.unidade_medida,
-        tipo_durabilidade: tipoFormData.tipo_durabilidade,
-        validade_meses: tipoFormData.validade_meses ? Number(tipoFormData.validade_meses) : null,
-        ca_numero: tipoFormData.ca_numero || undefined,
-        ca_validade: tipoFormData.ca_validade || undefined,
-        marca: tipoFormData.marca || undefined,
-        fabricante: tipoFormData.fabricante || undefined,
-        estoque_minimo: tipoFormData.estoque_minimo ? Number(tipoFormData.estoque_minimo) : null,
-        estoque_inicial: tipoFormData.estoque_inicial ? Number(tipoFormData.estoque_inicial) : null,
+        nome: data.nome,
+        categoria: categoria,
+        unidade_medida: data.unidade_medida,
+        tipo_durabilidade: data.tipo_durabilidade,
+        marca: data.marca,
+        fabricante: data.fabricante,
+        ca_numero: data.ca,
+        estoque_minimo: data.quantidade_minima,
+        estoque_inicial: data.quantidade_estoque,
       });
-      setShowTipoForm(false);
-      setTipoFormData({
-        nome: "", descricao: "", unidade_medida: "unidade", tipo_durabilidade: "duravel",
-        validade_meses: "", ca_numero: "", ca_validade: "", marca: "", fabricante: "",
-        estoque_minimo: "5", estoque_inicial: "100",
-      });
-    } finally {
-      setIsCreatingTipo(false);
-    }
-  };
-
-  const handleTipoChange = (value: string) => {
-    if (value === "__new__") {
-      setShowTipoForm(true);
-    } else {
-      form.setValue("tipo_id", value);
+      
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar EPI:", error);
     }
   };
 
@@ -207,7 +172,7 @@ export function EpiForm({
       return;
     }
     setSelectedCategoria(value);
-    form.setValue("tipo_id", "");
+    form.setValue("categoria", value);
   };
 
   const handleCreateCategoria = async () => {
@@ -216,9 +181,9 @@ export function EpiForm({
     try {
       await onCreateCategoria(newCategoriaName.trim());
       setSelectedCategoria(newCategoriaName.trim());
+      form.setValue("categoria", newCategoriaName.trim());
       setNewCategoriaName("");
       setShowNewCategoriaInput(false);
-      form.setValue("tipo_id", "");
     } finally {
       setIsCreatingCategoria(false);
     }
@@ -243,7 +208,7 @@ export function EpiForm({
                         <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
-                        <p>Categoria é o agrupamento do EPI (ex: Proteção Auditiva). Selecione para filtrar os tipos disponíveis.</p>
+                        <p>Categoria é o agrupamento do EPI (ex: Proteção Auditiva).</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -285,10 +250,10 @@ export function EpiForm({
                 )}
               </FormItem>
 
-              {/* Nome do EPI */}
+              {/* Nome do EPI - campo de texto livre */}
               <FormField
                 control={form.control}
-                name="tipo_id"
+                name="nome"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-1.5">
@@ -299,107 +264,19 @@ export function EpiForm({
                             <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
-                            <p>Nome específico do EPI dentro da categoria selecionada.</p>
+                            <p>Informe o nome do EPI a ser cadastrado.</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </FormLabel>
-                    <Select onValueChange={handleTipoChange} value={field.value} disabled={!selectedCategoria}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={selectedCategoria ? "Selecione o EPI" : "Selecione a categoria primeiro"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tiposFiltrados.map((tipo) => (
-                          <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
-                        ))}
-                        {tiposFiltrados.length === 0 && selectedCategoria && (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum EPI cadastrado nesta categoria</div>
-                        )}
-                        <Separator className="my-1" />
-                        <SelectItem value="__new__" className="text-primary font-medium">
-                          <span className="flex items-center gap-2">
-                            <Plus className="h-4 w-4" />
-                            Cadastrar novo EPI
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input placeholder="Ex: Protetor Auricular 3M" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
-            {/* Inline new tipo form */}
-            {showTipoForm && (
-              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                <h4 className="font-medium text-sm">Novo EPI na categoria "{selectedCategoria}"</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="text-sm font-medium">Nome do EPI *</label>
-                    <Input placeholder="Ex: Protetor Auricular" value={tipoFormData.nome} onChange={(e) => setTipoFormData(p => ({ ...p, nome: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Unidade de Medida *</label>
-                    <Select value={tipoFormData.unidade_medida} onValueChange={(v) => setTipoFormData(p => ({ ...p, unidade_medida: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {UNIDADES_MEDIDA.map((um) => <SelectItem key={um.value} value={um.value}>{um.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Tipo *</label>
-                    <Select value={tipoFormData.tipo_durabilidade} onValueChange={(v) => setTipoFormData(p => ({ ...p, tipo_durabilidade: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {TIPOS_DURABILIDADE.map((td) => <SelectItem key={td.value} value={td.value}>{td.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">C.A.</label>
-                    <Input placeholder="Ex: 12345" value={tipoFormData.ca_numero} onChange={(e) => setTipoFormData(p => ({ ...p, ca_numero: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Validade do C.A.</label>
-                    <Input type="date" value={tipoFormData.ca_validade} onChange={(e) => setTipoFormData(p => ({ ...p, ca_validade: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Marca</label>
-                    <Input placeholder="Ex: 3M" value={tipoFormData.marca} onChange={(e) => setTipoFormData(p => ({ ...p, marca: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Fabricante</label>
-                    <Input placeholder="Ex: 3M do Brasil" value={tipoFormData.fabricante} onChange={(e) => setTipoFormData(p => ({ ...p, fabricante: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Validade (meses)</label>
-                    <Input type="number" placeholder="12" value={tipoFormData.validade_meses} onChange={(e) => setTipoFormData(p => ({ ...p, validade_meses: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Estoque Mínimo</label>
-                    <Input type="number" placeholder="5" value={tipoFormData.estoque_minimo} onChange={(e) => setTipoFormData(p => ({ ...p, estoque_minimo: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Estoque Inicial</label>
-                    <Input type="number" placeholder="100" value={tipoFormData.estoque_inicial} onChange={(e) => setTipoFormData(p => ({ ...p, estoque_inicial: e.target.value }))} />
-                  </div>
-                  <div className="md:col-span-2 space-y-1">
-                    <label className="text-sm font-medium">Descrição</label>
-                    <Textarea placeholder="Descrição do EPI" value={tipoFormData.descricao} onChange={(e) => setTipoFormData(p => ({ ...p, descricao: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setShowTipoForm(false)}>Cancelar</Button>
-                  <Button type="button" size="sm" onClick={handleCreateTipo} disabled={isCreatingTipo || !tipoFormData.nome.trim()}>
-                    {isCreatingTipo ? "Criando..." : "Criar EPI"}
-                  </Button>
-                </div>
-              </div>
-            )}
 
             {/* Remaining fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -431,10 +308,45 @@ export function EpiForm({
                   <FormMessage />
                 </FormItem>
               )} />
+              <FormField control={form.control} name="fabricante" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fabricante</FormLabel>
+                  <FormControl><Input placeholder="Ex: 3M do Brasil" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <FormField control={form.control} name="tamanho" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tamanho</FormLabel>
                   <FormControl><Input placeholder="P, M, G, 38, etc" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="unidade_medida" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unidade de Medida</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || "unidade"}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {UNIDADES_MEDIDA.map((um) => <SelectItem key={um.value} value={um.value}>{um.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="tipo_durabilidade" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Durabilidade</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || "duravel"}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {TIPOS_DURABILIDADE.map((td) => <SelectItem key={td.value} value={td.value}>{td.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -473,9 +385,32 @@ export function EpiForm({
                   <FormMessage />
                 </FormItem>
               )} />
+              <FormField control={form.control} name="local_estoque_id" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Local de Estoque</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o local" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {locaisAtivos.map((local) => (
+                        <SelectItem key={local.id} value={local.id}>
+                          {local.nome}{local.filial?.nome ? ` (${local.filial.nome})` : ""}
+                        </SelectItem>
+                      ))}
+                      {locaisAtivos.length === 0 && (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum local cadastrado</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <FormField control={form.control} name="localizacao" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Localização no Estoque</FormLabel>
+                  <FormLabel>Localização</FormLabel>
                   <FormControl><Input placeholder="Ex: Armário A, Prateleira 3" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>

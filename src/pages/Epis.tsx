@@ -276,6 +276,7 @@ const Epis = () => {
         open={showTipoForm}
         onOpenChange={setShowTipoForm}
         onSubmit={async (data) => { await criarCategoria(data.nome); }}
+        customCategorias={customCategorias}
         isLoading={criandoCategoria}
       />
 
