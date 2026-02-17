@@ -1,8 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Layers, Building2, GitBranch } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { Layers, Building2, GitBranch, Plus } from 'lucide-react';
 import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import type { EmpresaCadastro } from '@/types/empresa';
 
@@ -14,7 +19,21 @@ interface Props {
 }
 
 export function EmpresaHierarquiaFields({ data, onChange, matrizes, currentEmpresaId }: Props) {
-  const { grupos } = useGruposEconomicos();
+  const { grupos, createGrupo } = useGruposEconomicos();
+  const [novoGrupoOpen, setNovoGrupoOpen] = useState(false);
+  const [novoGrupoNome, setNovoGrupoNome] = useState('');
+  const [novoGrupoDescricao, setNovoGrupoDescricao] = useState('');
+
+  const handleCreateGrupo = async () => {
+    if (!novoGrupoNome.trim()) return;
+    const result = await createGrupo.mutateAsync({ nome: novoGrupoNome, descricao: novoGrupoDescricao || undefined });
+    if (result?.id) {
+      onChange({ grupo_economico_id: result.id });
+    }
+    setNovoGrupoNome('');
+    setNovoGrupoDescricao('');
+    setNovoGrupoOpen(false);
+  };
 
   // Auto-fill grupo when selecting a matriz that has one
   useEffect(() => {
@@ -46,7 +65,13 @@ export function EmpresaHierarquiaFields({ data, onChange, matrizes, currentEmpre
           </Label>
           <Select
             value={data.grupo_economico_id || '_none'}
-            onValueChange={v => onChange({ grupo_economico_id: v === '_none' ? null : v })}
+            onValueChange={v => {
+              if (v === '_new') {
+                setNovoGrupoOpen(true);
+                return;
+              }
+              onChange({ grupo_economico_id: v === '_none' ? null : v });
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Nenhum" />
@@ -56,6 +81,13 @@ export function EmpresaHierarquiaFields({ data, onChange, matrizes, currentEmpre
               {grupos.filter(g => g.ativo).map(g => (
                 <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
               ))}
+              <Separator className="my-1" />
+              <SelectItem value="_new">
+                <span className="flex items-center gap-1.5 text-primary font-medium">
+                  <Plus className="w-3.5 h-3.5" />
+                  Incluir novo grupo
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">Opcional. Agrupa empresas do mesmo dono/holding.</p>
@@ -112,6 +144,31 @@ export function EmpresaHierarquiaFields({ data, onChange, matrizes, currentEmpre
           </div>
         )}
       </div>
+
+      {/* Dialog para criar novo grupo econômico */}
+      <Dialog open={novoGrupoOpen} onOpenChange={setNovoGrupoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Grupo Econômico</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome do Grupo *</Label>
+              <Input value={novoGrupoNome} onChange={e => setNovoGrupoNome(e.target.value)} placeholder="Ex: Grupo Silva" />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea value={novoGrupoDescricao} onChange={e => setNovoGrupoDescricao(e.target.value)} placeholder="Descrição opcional..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNovoGrupoOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreateGrupo} disabled={!novoGrupoNome.trim() || createGrupo.isPending}>
+              Criar Grupo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
