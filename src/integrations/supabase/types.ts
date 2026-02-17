@@ -4337,6 +4337,7 @@ export type Database = {
           ativo: boolean
           cep: string | null
           cidade: string | null
+          cno: string | null
           cnpj: string | null
           created_at: string
           email: string | null
@@ -4348,12 +4349,14 @@ export type Database = {
           responsavel_id: string | null
           telefone: string | null
           tenant_id: string
+          tipo: string
           updated_at: string
         }
         Insert: {
           ativo?: boolean
           cep?: string | null
           cidade?: string | null
+          cno?: string | null
           cnpj?: string | null
           created_at?: string
           email?: string | null
@@ -4365,12 +4368,14 @@ export type Database = {
           responsavel_id?: string | null
           telefone?: string | null
           tenant_id: string
+          tipo?: string
           updated_at?: string
         }
         Update: {
           ativo?: boolean
           cep?: string | null
           cidade?: string | null
+          cno?: string | null
           cnpj?: string | null
           created_at?: string
           email?: string | null
@@ -4382,6 +4387,7 @@ export type Database = {
           responsavel_id?: string | null
           telefone?: string | null
           tenant_id?: string
+          tipo?: string
           updated_at?: string
         }
         Relationships: [

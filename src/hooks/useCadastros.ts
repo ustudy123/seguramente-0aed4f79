@@ -45,6 +45,8 @@ export interface Filial {
   email: string | null;
   responsavel_id: string | null;
   empresa_id: string | null;
+  tipo: string;
+  cno: string | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;
@@ -262,10 +264,10 @@ export function useFiliais() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["filiais"] });
-      toast.success("Estabelecimento criado com sucesso!");
+      toast.success("Registro criado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao criar estabelecimento: " + error.message);
+      toast.error("Erro ao criar registro: " + error.message);
     },
   });
 
@@ -283,10 +285,10 @@ export function useFiliais() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["filiais"] });
-      toast.success("Estabelecimento atualizado com sucesso!");
+      toast.success("Registro atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao atualizar estabelecimento: " + error.message);
+      toast.error("Erro ao atualizar registro: " + error.message);
     },
   });
 
@@ -301,10 +303,10 @@ export function useFiliais() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["filiais"] });
-      toast.success("Estabelecimento excluído com sucesso!");
+      toast.success("Registro excluído com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir estabelecimento: " + error.message);
+      toast.error("Erro ao excluir registro: " + error.message);
     },
   });
 

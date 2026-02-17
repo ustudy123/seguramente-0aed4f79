@@ -6,7 +6,7 @@ const pageTitles: Record<string, string> = {
   "/feed": "Feed Social",
   "/cadastros/departamentos": "Departamentos",
   "/cadastros/cargos": "Cargos",
-  "/cadastros/filiais": "Estabelecimentos",
+  "/cadastros/filiais": "Estabelecimento ou Obra",
   "/financeiro/folha": "Folha de Pagamento",
   "/financeiro/beneficios": "Benefícios",
   "/admissao": "Admissão",
