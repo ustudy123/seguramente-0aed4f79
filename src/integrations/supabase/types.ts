@@ -4340,6 +4340,7 @@ export type Database = {
           cnpj: string | null
           created_at: string
           email: string | null
+          empresa_id: string | null
           endereco: string | null
           estado: string | null
           id: string
@@ -4356,6 +4357,7 @@ export type Database = {
           cnpj?: string | null
           created_at?: string
           email?: string | null
+          empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
@@ -4372,6 +4374,7 @@ export type Database = {
           cnpj?: string | null
           created_at?: string
           email?: string | null
+          empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
@@ -4382,6 +4385,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "filiais_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "filiais_tenant_id_fkey"
             columns: ["tenant_id"]
