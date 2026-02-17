@@ -572,6 +572,25 @@ export function useEpis() {
           realizado_por: user?.id,
           realizado_por_nome: profile?.nome_completo,
         });
+      } else if (entrega) {
+        // Register movement for estoque/descarte returns
+        const { data: epiAtual } = await supabase
+          .from("epis")
+          .select("quantidade_estoque")
+          .eq("id", entrega.epi_id)
+          .single();
+
+        await supabase.from("epi_movimentacoes").insert({
+          tenant_id: tenantId,
+          epi_id: entrega.epi_id,
+          tipo: "entrada",
+          quantidade: entrega.quantidade || 1,
+          quantidade_anterior: (epiAtual?.quantidade_estoque || 0) - (entrega.quantidade || 1),
+          quantidade_atual: epiAtual?.quantidade_estoque || 0,
+          motivo: `Devolução para ${destino === "descarte" ? "descarte" : "estoque"}`,
+          realizado_por: user?.id,
+          realizado_por_nome: profile?.nome_completo,
+        });
       }
 
       return data;
