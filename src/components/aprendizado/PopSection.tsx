@@ -14,6 +14,9 @@ interface PopSectionProps {
   nivel?: string;
   ferramentas?: string;
   interfaces?: string;
+  responsavelDireto?: string;
+  consequenciaErro?: string;
+  conteudos?: string;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -23,7 +26,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   desatualizado: { label: "Desatualizado", color: "bg-red-100 text-red-800" },
 };
 
-export function PopSection({ atividade, cargoId, funcaoNome, nivel, ferramentas, interfaces }: PopSectionProps) {
+export function PopSection({ atividade, cargoId, funcaoNome, nivel, ferramentas, interfaces, responsavelDireto, consequenciaErro, conteudos }: PopSectionProps) {
   const { getPopByAtividade, criarPop, criandoPop, atualizarPop, atualizandoPop, excluirPop, gerarPopIA, reescreverTrechoIA, buscarVersoes } = usePopAtividade(cargoId, funcaoNome, atividade.nome);
   const [showGerarModal, setShowGerarModal] = useState(false);
   const [showEditorModal, setShowEditorModal] = useState(false);
@@ -145,6 +148,9 @@ export function PopSection({ atividade, cargoId, funcaoNome, nivel, ferramentas,
         nivel={nivel}
         ferramentas={ferramentas}
         interfaces={interfaces}
+        responsavelDireto={responsavelDireto}
+        consequenciaErro={consequenciaErro}
+        conteudos={conteudos}
         onGenerated={handleGerarIA}
         gerarPopIA={gerarPopIA}
       />
