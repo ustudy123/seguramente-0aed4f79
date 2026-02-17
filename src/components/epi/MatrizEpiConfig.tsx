@@ -141,8 +141,8 @@ export function MatrizEpiConfig({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="epis">
-            <ScrollArea className="h-[400px] pr-4">
+          <TabsContent value="epis" className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full max-h-[50vh] pr-4">
               {Object.entries(categorias).sort(([a], [b]) => a.localeCompare(b)).map(([cat, tipos]) => (
                 <div key={cat} className="mb-4">
                   <h4 className="text-sm font-semibold text-muted-foreground mb-2">{cat}</h4>
@@ -195,8 +195,8 @@ export function MatrizEpiConfig({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="cets">
-            <ScrollArea className="h-[400px] pr-4">
+          <TabsContent value="cets" className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full max-h-[50vh] pr-4">
               <div className="space-y-2">
                 {cets.filter((c) => c.ativo).map((cet) => {
                   const Icone = ICONE_MAP[cet.icone || ""] || Shield;
