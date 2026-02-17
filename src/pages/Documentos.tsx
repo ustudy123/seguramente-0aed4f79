@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
 import { useDocumentos } from "@/hooks/useDocumentos";
@@ -186,11 +187,86 @@ const Documentos = () => {
     setDragContext({ documentoId, documentoNome, pastaOrigemId, pastaOrigemNome });
   }, []);
 
+  const generatePopHtml = (pop: any): string => {
+    const statusLabels: Record<string, string> = {
+      rascunho: "Rascunho", em_revisao: "Em revisão", publicado: "Publicado", desatualizado: "Desatualizado",
+    };
+    const st = statusLabels[pop.status] || pop.status;
+    const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
+
+    return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${pop.codigo} - ${pop.titulo}</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333;font-size:14px}
+h1{color:#1a365d;border-bottom:2px solid #2563eb;padding-bottom:8px}
+h2{color:#1e40af;margin-top:24px;font-size:16px;border-left:4px solid #2563eb;padding-left:8px}
+.header{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:20px;font-size:12px}
+.header span{display:block}.header strong{color:#1e40af}
+.step{background:#f0f9ff;padding:12px;border-radius:6px;margin:8px 0;border-left:3px solid #2563eb}
+.step-num{font-weight:bold;color:#1e40af}.attention{background:#fef3c7;padding:8px;border-radius:4px;margin-top:4px;font-size:12px}
+ul{padding-left:20px}li{margin:4px 0}
+@media print{body{padding:0;max-width:100%}}
+</style></head><body>
+<h1>${pop.codigo} — ${pop.titulo}</h1>
+<div class="header">
+<span><strong>Versão:</strong> ${pop.versao_atual}</span>
+<span><strong>Status:</strong> ${st}</span>
+<span><strong>Criado por:</strong> ${pop.criado_por_nome || "—"}</span>
+<span><strong>Criado em:</strong> ${fmtDate(pop.created_at)}</span>
+${pop.aprovado_por_nome ? `<span><strong>Aprovado por:</strong> ${pop.aprovado_por_nome}</span>` : ""}
+${pop.data_aprovacao ? `<span><strong>Data aprovação:</strong> ${fmtDate(pop.data_aprovacao)}</span>` : ""}
+${pop.gerado_por_ia ? `<span><strong>🤖 Gerado por IA</strong></span>` : ""}
+</div>
+${pop.objetivo ? `<h2>1. Objetivo</h2><p>${pop.objetivo}</p>` : ""}
+${pop.escopo ? `<h2>2. Escopo</h2><p>${pop.escopo}</p>` : ""}
+<h2>3. Responsabilidades</h2>
+<ul>
+<li><strong>Executante:</strong> ${pop.responsabilidades?.executante || "—"}</li>
+<li><strong>Supervisão:</strong> ${pop.responsabilidades?.supervisao || "—"}</li>
+<li><strong>Interfaces:</strong> ${pop.responsabilidades?.interfaces || "—"}</li>
+</ul>
+${pop.definicoes ? `<h2>4. Definições</h2><p>${pop.definicoes}</p>` : ""}
+${pop.pre_requisitos?.length ? `<h2>5. Pré-requisitos</h2><ul>${pop.pre_requisitos.map((p: string) => `<li>${p}</li>`).join("")}</ul>` : ""}
+${pop.materiais_ferramentas?.length ? `<h2>6. Materiais e Ferramentas</h2><ul>${pop.materiais_ferramentas.map((m: string) => `<li>${m}</li>`).join("")}</ul>` : ""}
+${pop.epis_sst ? `<h2>7. EPIs / Requisitos de SST</h2><p>${pop.epis_sst}</p>` : ""}
+${pop.procedimento_passos?.length ? `<h2>8. Procedimento Passo a Passo</h2>${pop.procedimento_passos.map((p: any) => `<div class="step"><span class="step-num">Passo ${p.numero}:</span> ${p.descricao}${p.tempo_estimado ? ` <em>(${p.tempo_estimado})</em>` : ""}${p.ponto_atencao ? `<div class="attention">⚠️ ${p.ponto_atencao}</div>` : ""}</div>`).join("")}` : ""}
+${pop.criterios_qualidade ? `<h2>9. Critérios de Qualidade</h2><p>${pop.criterios_qualidade}</p>` : ""}
+${pop.registros_evidencias ? `<h2>10. Registros e Evidências</h2><p>${pop.registros_evidencias}</p>` : ""}
+${pop.tratamento_nao_conformidades ? `<h2>11. Tratamento de Não Conformidades</h2><p>${pop.tratamento_nao_conformidades}</p>` : ""}
+${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
+</body></html>`;
+  };
+
+  const fetchPopData = async (popId: string) => {
+    const { data, error } = await supabase
+      .from("funcao_pops" as never)
+      .select("*")
+      .eq("id", popId)
+      .single() as { data: any; error: any };
+    if (error || !data) {
+      toast.error("POP não encontrado. Pode ter sido removido.");
+      return null;
+    }
+    return data;
+  };
+
   const handleDownload = async (doc: DocumentoItem) => {
     try {
-      // Documentos do tipo POP não são arquivos em storage — abrir no módulo de Aprendizado
       if (doc.storage_path.startsWith("pop://")) {
-        toast.info("Este é um POP (Procedimento Operacional Padrão). Acesse pelo módulo Aprendizado & Papéis para visualizar e editar.");
+        const pop = await fetchPopData(doc.storage_path.replace("pop://", ""));
+        if (!pop) return;
+        const html = generatePopHtml(pop);
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${pop.codigo} - ${pop.titulo}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success("POP exportado com sucesso!");
         return;
       }
 
@@ -199,7 +275,6 @@ const Documentos = () => {
         toast.error("Não foi possível gerar o link do documento. Verifique se o arquivo ainda existe.");
         return;
       }
-      // Usar fetch + blob para evitar bloqueio do browser (ERR_BLOCKED_BY_CLIENT)
       const response = await fetch(url);
       if (!response.ok) {
         toast.error("Erro ao baixar arquivo: " + response.statusText);
@@ -217,6 +292,29 @@ const Documentos = () => {
     } catch (err: any) {
       console.error("Erro ao baixar documento:", err);
       toast.error("Erro ao acessar documento: " + (err.message || "Erro desconhecido"));
+    }
+  };
+
+  const handleViewDoc = async (doc: DocumentoItem) => {
+    try {
+      if (doc.storage_path.startsWith("pop://")) {
+        const pop = await fetchPopData(doc.storage_path.replace("pop://", ""));
+        if (!pop) return;
+        const html = generatePopHtml(pop);
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        return;
+      }
+      const url = await getSignedUrl(doc.storage_path);
+      if (!url) {
+        toast.error("Não foi possível gerar o link do documento.");
+        return;
+      }
+      window.open(url, "_blank");
+    } catch (err: any) {
+      toast.error("Erro ao visualizar documento: " + (err.message || "Erro desconhecido"));
     }
   };
 
@@ -417,6 +515,7 @@ const Documentos = () => {
                     <PastaDocumentosList
                       pasta={selectedPasta}
                       onUpload={handleOpenUpload}
+                      onView={handleViewDoc}
                       onDownload={handleDownload}
                       onDelete={handleDeleteDoc}
                       deleting={deleting}

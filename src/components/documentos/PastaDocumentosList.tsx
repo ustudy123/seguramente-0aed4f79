@@ -47,6 +47,7 @@ const statusConfig = {
 interface PastaDocumentosListProps {
   pasta: DocumentoPastaNode | null;
   onUpload: (pastaId: string) => void;
+  onView: (doc: DocumentoItem) => void;
   onDownload: (doc: DocumentoItem) => void;
   onDelete: (doc: DocumentoItem) => void;
   deleting: boolean;
@@ -56,6 +57,7 @@ interface PastaDocumentosListProps {
 export function PastaDocumentosList({
   pasta,
   onUpload,
+  onView,
   onDownload,
   onDelete,
   deleting,
@@ -189,7 +191,7 @@ export function PastaDocumentosList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onDownload(doc)}>
+                        <DropdownMenuItem onClick={() => onView(doc)}>
                           <Eye className="w-4 h-4 mr-2" />
                           Visualizar
                         </DropdownMenuItem>
