@@ -2057,6 +2057,7 @@ export type Database = {
       }
       documentos: {
         Row: {
+          atividade_vinculada: string | null
           colaborador_cpf: string | null
           colaborador_id: string | null
           colaborador_nome: string
@@ -2064,20 +2065,24 @@ export type Database = {
           criado_por: string | null
           criado_por_nome: string | null
           data_validade: string | null
+          funcao_vinculada: string | null
           id: string
           mime_type: string
           nome_arquivo: string
           nome_original: string
           observacoes: string | null
           pasta_id: string | null
+          pop_id: string | null
           status: string
           storage_path: string
           tamanho: number
           tenant_id: string
           tipo: string
           updated_at: string
+          versao: string | null
         }
         Insert: {
+          atividade_vinculada?: string | null
           colaborador_cpf?: string | null
           colaborador_id?: string | null
           colaborador_nome: string
@@ -2085,20 +2090,24 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           data_validade?: string | null
+          funcao_vinculada?: string | null
           id?: string
           mime_type: string
           nome_arquivo: string
           nome_original: string
           observacoes?: string | null
           pasta_id?: string | null
+          pop_id?: string | null
           status?: string
           storage_path: string
           tamanho: number
           tenant_id: string
           tipo: string
           updated_at?: string
+          versao?: string | null
         }
         Update: {
+          atividade_vinculada?: string | null
           colaborador_cpf?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string
@@ -2106,18 +2115,21 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           data_validade?: string | null
+          funcao_vinculada?: string | null
           id?: string
           mime_type?: string
           nome_arquivo?: string
           nome_original?: string
           observacoes?: string | null
           pasta_id?: string | null
+          pop_id?: string | null
           status?: string
           storage_path?: string
           tamanho?: number
           tenant_id?: string
           tipo?: string
           updated_at?: string
+          versao?: string | null
         }
         Relationships: [
           {

@@ -24,7 +24,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function PopSection({ atividade, cargoId, funcaoNome, nivel, ferramentas, interfaces }: PopSectionProps) {
-  const { getPopByAtividade, criarPop, criandoPop, atualizarPop, atualizandoPop, excluirPop, gerarPopIA, reescreverTrechoIA, buscarVersoes } = usePopAtividade(cargoId, funcaoNome);
+  const { getPopByAtividade, criarPop, criandoPop, atualizarPop, atualizandoPop, excluirPop, gerarPopIA, reescreverTrechoIA, buscarVersoes } = usePopAtividade(cargoId, funcaoNome, atividade.nome);
   const [showGerarModal, setShowGerarModal] = useState(false);
   const [showEditorModal, setShowEditorModal] = useState(false);
 
