@@ -10,6 +10,9 @@ import {
   Search,
   X,
   CalendarIcon,
+  Wrench,
+  Trash2,
+  ArchiveRestore,
 } from "lucide-react";
 import {
   Table,
@@ -48,10 +51,12 @@ import { cn } from "@/lib/utils";
 import type { EpiEntrega, EpiCompleto, EntregaStatus } from "@/types/epi";
 import { ENTREGA_STATUS_LABELS, ENTREGA_STATUS_COLORS } from "@/types/epi";
 
+type DestinoType = "manutencao" | "descarte" | "estoque";
+
 interface EpiEntregaListProps {
   entregas: (EpiEntrega & { epi: EpiCompleto })[];
   isLoading?: boolean;
-  onDevolucao?: (entregaId: string, observacoes?: string) => Promise<void>;
+  onDevolucao?: (entregaId: string, observacoes?: string, destino?: DestinoType) => Promise<void>;
 }
 
 export function EpiEntregaList({
@@ -70,6 +75,7 @@ export function EpiEntregaList({
     colaborador: string;
   }>({ open: false, entregaId: "", colaborador: "" });
   const [observacoes, setObservacoes] = useState("");
+  const [destino, setDestino] = useState<DestinoType>("estoque");
   const [processando, setProcessando] = useState(false);
 
   // Obter lista única de EPIs para o filtro
@@ -156,9 +162,10 @@ export function EpiEntregaList({
     if (!onDevolucao) return;
     setProcessando(true);
     try {
-      await onDevolucao(devolucaoModal.entregaId, observacoes);
+      await onDevolucao(devolucaoModal.entregaId, observacoes, destino);
       setDevolucaoModal({ open: false, entregaId: "", colaborador: "" });
       setObservacoes("");
+      setDestino("estoque");
     } finally {
       setProcessando(false);
     }
@@ -426,11 +433,56 @@ export function EpiEntregaList({
           <DialogHeader>
             <DialogTitle>Registrar Devolução</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
               Registrar devolução do EPI de{" "}
               <strong>{devolucaoModal.colaborador}</strong>
             </p>
+            <div className="space-y-2">
+              <Label>Destino do EPI</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant={destino === "estoque" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setDestino("estoque")}
+                >
+                  <ArchiveRestore className="w-4 h-4" />
+                  Estoque
+                </Button>
+                <Button
+                  type="button"
+                  variant={destino === "manutencao" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setDestino("manutencao")}
+                >
+                  <Wrench className="w-4 h-4" />
+                  Manutenção
+                </Button>
+                <Button
+                  type="button"
+                  variant={destino === "descarte" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setDestino("descarte")}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Descarte
+                </Button>
+              </div>
+              {destino === "manutencao" && (
+                <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                  O EPI será enviado ao local "Em Manutenção" e ficará disponível para transferência quando reparado.
+                </p>
+              )}
+              {destino === "descarte" && (
+                <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                  O EPI será descartado e não retornará ao estoque.
+                </p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label>Observações (opcional)</Label>
               <Textarea
