@@ -109,7 +109,6 @@ export function AlertaAcaoModal({ open, onOpenChange, alerta }: AlertaAcaoModalP
           gravidade: gut.g,
           urgencia: gut.u,
           tendencia: gut.t,
-          pontuacao_gut: gut.g * gut.u * gut.t,
           criado_por: user?.id,
           criado_por_nome: userName,
         })
