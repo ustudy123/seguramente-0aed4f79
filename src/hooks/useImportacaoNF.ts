@@ -134,27 +134,49 @@ export function useImportacaoNF() {
 
       // 2. Process each item: stock entry + nf_item record
       for (const item of dados.itens) {
-        // Get current stock
-        const { data: epiAtual } = await supabase
-          .from("epis")
-          .select("quantidade_estoque")
-          .eq("id", item.epi_id)
-          .single();
+        let epiId = item.epi_id;
 
-        const qtdAnterior = epiAtual?.quantidade_estoque || 0;
+        // Check if epi_id is actually a tipo_id (no epis record yet)
+        const { data: epiCheck } = await supabase
+          .from("epis")
+          .select("id, quantidade_estoque")
+          .eq("id", epiId)
+          .maybeSingle();
+
+        let qtdAnterior = 0;
+
+        if (epiCheck) {
+          qtdAnterior = epiCheck.quantidade_estoque || 0;
+        } else {
+          // epi_id is actually a tipo_id — auto-create epis record
+          const { data: novoEpi, error: novoEpiError } = await supabase
+            .from("epis")
+            .insert({
+              tenant_id: tenantId,
+              tipo_id: epiId,
+              quantidade_estoque: 0,
+              status: "disponivel",
+            })
+            .select("id")
+            .single();
+          if (novoEpiError) throw novoEpiError;
+          epiId = novoEpi.id;
+        }
+
         const qtdNova = qtdAnterior + item.quantidade;
 
         // Update global stock
-        await supabase
+        const { error: updErr } = await supabase
           .from("epis")
           .update({ quantidade_estoque: qtdNova })
-          .eq("id", item.epi_id);
+          .eq("id", epiId);
+        if (updErr) throw updErr;
 
         // Upsert local stock
         const { data: estoqueLocal } = await supabase
           .from("epi_estoque_local")
           .select("id, quantidade")
-          .eq("epi_id", item.epi_id)
+          .eq("epi_id", epiId)
           .eq("local_estoque_id", item.local_estoque_id)
           .eq("tenant_id", tenantId)
           .maybeSingle();
@@ -169,7 +191,7 @@ export function useImportacaoNF() {
             .from("epi_estoque_local")
             .insert({
               tenant_id: tenantId,
-              epi_id: item.epi_id,
+              epi_id: epiId,
               local_estoque_id: item.local_estoque_id,
               quantidade: item.quantidade,
             });
@@ -180,7 +202,7 @@ export function useImportacaoNF() {
           .from("epi_movimentacoes")
           .insert({
             tenant_id: tenantId,
-            epi_id: item.epi_id,
+            epi_id: epiId,
             tipo: "entrada",
             subtipo: "compra_nf",
             local_estoque_id: item.local_estoque_id,
@@ -198,7 +220,7 @@ export function useImportacaoNF() {
         await supabase.from("epi_nf_itens").insert({
           tenant_id: tenantId,
           nota_fiscal_id: nf.id,
-          epi_id: item.epi_id,
+          epi_id: epiId,
           local_estoque_id: item.local_estoque_id,
           descricao_nf: item.descricao_nf || null,
           quantidade: item.quantidade,
