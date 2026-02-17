@@ -49,7 +49,7 @@ export interface PopVersao {
   created_at: string;
 }
 
-export function usePopAtividade(cargoId?: string, cargoNome?: string) {
+export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeNome?: string) {
   const { tenantId, user, profile } = useAuth();
   const userName = profile?.nome_completo || "Sistema";
   const qc = useQueryClient();
@@ -118,6 +118,65 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string) {
     if (errF) { console.error("Erro ao criar pasta da função:", errF); return null; }
     qc.invalidateQueries({ queryKey: ["documento-pastas"] });
     return newFuncao.id;
+  };
+
+  // Salvar/atualizar o POP como documento real na tabela documentos
+  const salvarDocumentoPop = async (popData: any) => {
+    const pastaId = await garantirPastaProcessosFuncao();
+    if (!pastaId || !tenantId || !user) return;
+
+    const nomeDocumento = `${popData.codigo} - ${popData.titulo}`;
+
+    // Verificar se já existe documento vinculado a este POP
+    const { data: existente } = await supabase
+      .from("documentos" as never)
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("pop_id", popData.id)
+      .limit(1) as { data: Array<{ id: string }> | null };
+
+    if (existente?.[0]) {
+      // Atualizar documento existente
+      await supabase
+        .from("documentos" as never)
+        .update({
+          nome_original: nomeDocumento,
+          nome_arquivo: nomeDocumento,
+          status: popData.status === "publicado" ? "valido" : "valido",
+          versao: popData.versao_atual,
+          funcao_vinculada: cargoNome || null,
+          atividade_vinculada: atividadeNome || null,
+          observacoes: `POP ${popData.status} | v${popData.versao_atual}${popData.gerado_por_ia ? " | Gerado por IA" : ""}`,
+          pasta_id: pastaId,
+        } as never)
+        .eq("id", existente[0].id);
+    } else {
+      // Criar novo documento vinculado ao POP
+      await supabase
+        .from("documentos" as never)
+        .insert({
+          tenant_id: tenantId,
+          pop_id: popData.id,
+          pasta_id: pastaId,
+          colaborador_nome: userName,
+          nome_arquivo: nomeDocumento,
+          nome_original: nomeDocumento,
+          tipo: "POP",
+          tamanho: 0,
+          mime_type: "application/pop",
+          storage_path: `pop://${popData.id}`,
+          status: "valido",
+          versao: popData.versao_atual || "1.0",
+          funcao_vinculada: cargoNome || null,
+          atividade_vinculada: atividadeNome || null,
+          observacoes: `POP ${popData.status}${popData.gerado_por_ia ? " | Gerado por IA" : ""}`,
+          criado_por: user.id,
+          criado_por_nome: userName,
+        } as never);
+    }
+
+    qc.invalidateQueries({ queryKey: ["documentos"] });
+    qc.invalidateQueries({ queryKey: ["documento-pastas"] });
   };
 
   const { data: pops = [], isLoading } = useQuery({
@@ -191,10 +250,9 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ["funcao_pops", cargoId] });
-      // Garantir que a pasta da função exista no módulo de Documentos
-      garantirPastaProcessosFuncao().catch(() => {});
+      salvarDocumentoPop(data).catch((err) => console.error("Erro ao salvar documento POP:", err));
       toast.success("POP criado com sucesso!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -244,9 +302,16 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string) {
         .update(input.updates as never)
         .eq("id", input.id);
       if (error) throw error;
+
+      // Retornar dados atualizados para o onSuccess
+      const updatedPop = { ...currentPop, ...input.updates, id: input.id };
+      return updatedPop;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ["funcao_pops", cargoId] });
+      if (data) {
+        salvarDocumentoPop(data).catch((err) => console.error("Erro ao atualizar documento POP:", err));
+      }
       toast.success("POP atualizado!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -254,11 +319,20 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string) {
 
   const excluirPopMut = useMutation({
     mutationFn: async (id: string) => {
+      // Remover documento vinculado
+      if (tenantId) {
+        await supabase
+          .from("documentos" as never)
+          .delete()
+          .eq("tenant_id", tenantId)
+          .eq("pop_id", id);
+      }
       const { error } = await supabase.from("funcao_pops" as never).delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["funcao_pops", cargoId] });
+      qc.invalidateQueries({ queryKey: ["documentos"] });
       toast.success("POP removido!");
     },
     onError: (e: Error) => toast.error(e.message),
