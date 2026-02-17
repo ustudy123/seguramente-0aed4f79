@@ -24,6 +24,22 @@ export function useEpis() {
 
   // ==================== QUERIES ====================
 
+  // Buscar categorias customizadas
+  const categoriasQuery = useQuery({
+    queryKey: ["epi-categorias", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data, error } = await supabase
+        .from("epi_categorias")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("nome");
+      if (error) throw error;
+      return data as { id: string; nome: string; tenant_id: string }[];
+    },
+    enabled: !!tenantId,
+  });
+
   // Buscar tipos de EPI (cria tipos padrão se não existirem)
   const tiposQuery = useQuery({
     queryKey: ["epi-tipos", tenantId],
@@ -120,13 +136,34 @@ export function useEpis() {
     enabled: !!tenantId,
   });
 
+  // ==================== MUTATIONS - CATEGORIAS ====================
+
+  const criarCategoriaMutation = useMutation({
+    mutationFn: async (nome: string) => {
+      if (!tenantId) throw new Error("Tenant não identificado");
+      const { data, error } = await supabase
+        .from("epi_categorias")
+        .insert({ nome, tenant_id: tenantId })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["epi-categorias"] });
+      toast.success("Categoria criada com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao criar categoria: " + error.message);
+    },
+  });
+
   // ==================== MUTATIONS - TIPOS ====================
 
   const criarTipoMutation = useMutation({
     mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id"> & { estoque_inicial?: number | null }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
       
-      // Separar estoque_inicial dos dados do tipo
       const { estoque_inicial, ...dadosTipo } = dados;
       
       const { data, error } = await supabase
@@ -136,7 +173,6 @@ export function useEpis() {
         .single();
       if (error) throw error;
       
-      // Se informou estoque inicial, criar automaticamente um EPI no estoque
       const quantidadeInicial = estoque_inicial ?? 100;
       if (quantidadeInicial > 0) {
         const { data: novoEpi, error: epiError } = await supabase
@@ -154,7 +190,6 @@ export function useEpis() {
         if (epiError) {
           console.error("Erro ao criar EPI inicial:", epiError);
         } else {
-          // Registrar movimentação de entrada inicial
           await supabase.from("epi_movimentacoes").insert({
             tenant_id: tenantId,
             epi_id: novoEpi.id,
@@ -175,10 +210,10 @@ export function useEpis() {
       queryClient.invalidateQueries({ queryKey: ["epi-tipos"] });
       queryClient.invalidateQueries({ queryKey: ["epis"] });
       queryClient.invalidateQueries({ queryKey: ["epi-movimentacoes"] });
-      toast.success("Tipo de EPI criado com sucesso!");
+      toast.success("EPI criado com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao criar tipo de EPI: " + error.message);
+      toast.error("Erro ao criar EPI: " + error.message);
     },
   });
 
@@ -448,6 +483,7 @@ export function useEpis() {
     // Queries
     tipos: tiposQuery.data || [],
     tiposLoading: tiposQuery.isLoading,
+    customCategorias: (categoriasQuery.data || []).map(c => c.nome),
     epis: episQuery.data || [],
     episLoading: episQuery.isLoading,
     entregas: entregasQuery.data || [],
@@ -457,6 +493,10 @@ export function useEpis() {
 
     // Estatísticas
     stats,
+
+    // Mutations - Categorias
+    criarCategoria: criarCategoriaMutation.mutateAsync,
+    criandoCategoria: criarCategoriaMutation.isPending,
 
     // Mutations - Tipos
     criarTipo: criarTipoMutation.mutateAsync,

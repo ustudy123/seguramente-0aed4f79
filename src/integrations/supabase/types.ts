@@ -2434,6 +2434,35 @@ export type Database = {
           },
         ]
       }
+      epi_categorias: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "epi_categorias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       epi_cets: {
         Row: {
           cet_id: string
