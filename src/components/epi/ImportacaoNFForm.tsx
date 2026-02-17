@@ -200,6 +200,11 @@ export function ImportacaoNFForm({
     reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
+        if (!content || (!content.includes("<nfeProc") && !content.includes("<NFe") && !content.includes("<infNFe"))) {
+          setXmlError("Este arquivo não parece ser uma NF-e válida. Verifique se é um XML de Nota Fiscal Eletrônica.");
+          toast.error("Arquivo não reconhecido como NF-e");
+          return;
+        }
         const parsed = parseNFeXml(content);
         setXmlParsed(parsed);
 
@@ -224,15 +229,12 @@ export function ImportacaoNFForm({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: undefined,
     noClick: false,
     maxFiles: 1,
-    validator: (file) => {
-      const ext = file.name.toLowerCase();
-      if (!ext.endsWith(".xml")) {
-        return { code: "file-invalid-type", message: "Apenas arquivos .xml são aceitos" };
-      }
-      return null;
+    onDropRejected: (rejections) => {
+      const msg = rejections[0]?.errors?.[0]?.message || "Arquivo inválido";
+      setXmlError(msg);
+      toast.error(msg);
     },
   });
 
