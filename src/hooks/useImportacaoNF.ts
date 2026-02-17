@@ -136,19 +136,32 @@ export function useImportacaoNF() {
       for (const item of dados.itens) {
         let epiId = item.epi_id;
 
-        // Check if epi_id is actually a tipo_id (no epis record yet)
-        const { data: epiCheck } = await supabase
+        // Check if epi_id exists in epis table
+        let epiRecord = await supabase
           .from("epis")
           .select("id, quantidade_estoque")
           .eq("id", epiId)
-          .maybeSingle();
+          .maybeSingle()
+          .then(r => r.data);
+
+        // If not found by id, check if it's a tipo_id and find existing epis record
+        if (!epiRecord) {
+          epiRecord = await supabase
+            .from("epis")
+            .select("id, quantidade_estoque")
+            .eq("tipo_id", epiId)
+            .eq("tenant_id", tenantId)
+            .maybeSingle()
+            .then(r => r.data);
+        }
 
         let qtdAnterior = 0;
 
-        if (epiCheck) {
-          qtdAnterior = epiCheck.quantidade_estoque || 0;
+        if (epiRecord) {
+          epiId = epiRecord.id;
+          qtdAnterior = epiRecord.quantidade_estoque || 0;
         } else {
-          // epi_id is actually a tipo_id — auto-create epis record
+          // No epis record exists — auto-create one
           const { data: novoEpi, error: novoEpiError } = await supabase
             .from("epis")
             .insert({

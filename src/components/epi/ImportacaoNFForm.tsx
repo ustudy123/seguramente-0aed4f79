@@ -36,7 +36,7 @@ interface ImportacaoNFFormProps {
   tipos?: any[];
   locais: any[];
   isLoading: boolean;
-  onCriarTipo?: (dados: { nome: string }) => Promise<any>;
+  onCriarTipo?: (dados: { nome: string; estoque_inicial?: number | null }) => Promise<any>;
   criandoTipo?: boolean;
 }
 
@@ -631,7 +631,7 @@ export function ImportacaoNFForm({
                 onClick={async () => {
                   if (!onCriarTipo || !novoTipoNome.trim()) return;
                   try {
-                    const novoTipo = await onCriarTipo({ nome: novoTipoNome.trim() });
+                    const novoTipo = await onCriarTipo({ nome: novoTipoNome.trim(), estoque_inicial: 0 });
                     if (novoTipo && criarTipoForItemKey) {
                       // The new tipo's id will be resolved in useImportacaoNF
                       updateItem(criarTipoForItemKey, "epi_id", novoTipo.id);
