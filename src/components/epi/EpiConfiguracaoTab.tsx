@@ -295,7 +295,7 @@ export function EpiConfiguracaoTab() {
                     <TableRow>
                       <TableHead>Nome</TableHead>
                       <TableHead>Tipo</TableHead>
-                      <TableHead>Filial</TableHead>
+                      <TableHead>Estabelecimento</TableHead>
                       <TableHead>Responsável</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[50px]" />

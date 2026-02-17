@@ -261,10 +261,10 @@ export function useFiliais() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["filiais"] });
-      toast.success("Filial criada com sucesso!");
+      toast.success("Estabelecimento criado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao criar filial: " + error.message);
+      toast.error("Erro ao criar estabelecimento: " + error.message);
     },
   });
 
@@ -282,10 +282,10 @@ export function useFiliais() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["filiais"] });
-      toast.success("Filial atualizada com sucesso!");
+      toast.success("Estabelecimento atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao atualizar filial: " + error.message);
+      toast.error("Erro ao atualizar estabelecimento: " + error.message);
     },
   });
 
@@ -300,10 +300,10 @@ export function useFiliais() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["filiais"] });
-      toast.success("Filial excluída com sucesso!");
+      toast.success("Estabelecimento excluído com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error("Erro ao excluir filial: " + error.message);
+      toast.error("Erro ao excluir estabelecimento: " + error.message);
     },
   });
 

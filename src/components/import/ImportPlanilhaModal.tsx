@@ -170,7 +170,7 @@ export function ImportPlanilhaModal({
       ["Sexo", "NÃO", "Gênero do colaborador", "Masculino, Feminino, M, F", "Masculino"],
       ["Data Nascimento", "NÃO", "Data de nascimento", "DD/MM/AAAA ou AAAA-MM-DD", "15/03/1990"],
       ["SITUAÇÃO", "NÃO", "Status do colaborador no sistema", "0 = Inativo (desligado), 1 = Ativo", "1"],
-      ["BR/PDH", "NÃO", "Filial/Unidade do colaborador", "Nome da filial cadastrada", "Matriz, Filial SP"],
+      ["BR/PDH", "NÃO", "Estabelecimento/Unidade do colaborador", "Nome do estabelecimento cadastrado", "Matriz, Filial SP"],
       ["Nome função", "SIM", "Função do colaborador", "Nome da função", "Analista de RH"],
       ["Departamento", "NÃO", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
