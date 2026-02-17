@@ -11,6 +11,7 @@ export interface NFItemData {
   quantidade: number;
   valor_unitario?: number;
   valor_total?: number;
+  tamanho?: string;
 }
 
 export interface NFData {
@@ -185,14 +186,21 @@ export function useImportacaoNF() {
           .eq("id", epiId);
         if (updErr) throw updErr;
 
-        // Upsert local stock
-        const { data: estoqueLocal } = await supabase
+        // Upsert local stock (with tamanho support)
+        let queryEstoque = supabase
           .from("epi_estoque_local")
           .select("id, quantidade")
           .eq("epi_id", epiId)
           .eq("local_estoque_id", item.local_estoque_id)
-          .eq("tenant_id", tenantId)
-          .maybeSingle();
+          .eq("tenant_id", tenantId);
+
+        if (item.tamanho) {
+          queryEstoque = queryEstoque.eq("tamanho", item.tamanho);
+        } else {
+          queryEstoque = queryEstoque.is("tamanho", null);
+        }
+
+        const { data: estoqueLocal } = await queryEstoque.maybeSingle();
 
         if (estoqueLocal) {
           await supabase
@@ -207,6 +215,7 @@ export function useImportacaoNF() {
               epi_id: epiId,
               local_estoque_id: item.local_estoque_id,
               quantidade: item.quantidade,
+              tamanho: item.tamanho || null,
             });
         }
 
@@ -219,6 +228,7 @@ export function useImportacaoNF() {
             tipo: "entrada",
             subtipo: "compra_nf",
             local_estoque_id: item.local_estoque_id,
+            tamanho: item.tamanho || null,
             quantidade: item.quantidade,
             quantidade_anterior: qtdAnterior,
             quantidade_atual: qtdNova,
@@ -240,6 +250,7 @@ export function useImportacaoNF() {
           valor_unitario: item.valor_unitario || null,
           valor_total: item.valor_total || null,
           movimentacao_id: mov?.id || null,
+          tamanho: item.tamanho || null,
         });
       }
 

@@ -161,17 +161,28 @@ export function useEpis() {
   // ==================== MUTATIONS - TIPOS ====================
 
   const criarTipoMutation = useMutation({
-    mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id"> & { estoque_inicial?: number | null }) => {
+    mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id"> & { estoque_inicial?: number | null; controla_tamanho?: boolean; tamanhos?: string[] }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
       
-      const { estoque_inicial, ...dadosTipo } = dados;
+      const { estoque_inicial, controla_tamanho, tamanhos, ...dadosTipo } = dados;
       
       const { data, error } = await supabase
         .from("epi_tipos")
-        .insert({ ...dadosTipo, tenant_id: tenantId })
+        .insert({ ...dadosTipo, tenant_id: tenantId, controla_tamanho: controla_tamanho || false })
         .select()
         .single();
       if (error) throw error;
+
+      // Save tamanhos if provided
+      if (controla_tamanho && tamanhos && tamanhos.length > 0) {
+        const rows = tamanhos.map((t, idx) => ({
+          tenant_id: tenantId,
+          tipo_id: data.id,
+          tamanho: t.trim(),
+          ordem: idx,
+        }));
+        await supabase.from("epi_tamanhos").insert(rows);
+      }
       
       const quantidadeInicial = estoque_inicial ?? 100;
       if (quantidadeInicial > 0) {

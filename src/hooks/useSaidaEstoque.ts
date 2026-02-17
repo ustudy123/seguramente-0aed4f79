@@ -8,6 +8,7 @@ interface SaidaEstoqueData {
   local_estoque_id: string;
   quantidade: number;
   subtipo: string;
+  tamanho?: string;
   observacoes?: string;
 }
 
@@ -20,14 +21,20 @@ export function useSaidaEstoque() {
       if (!tenantId) throw new Error("Tenant não identificado");
 
       // 1. Validar saldo no local
-      const { data: estoqueLocal, error: localError } = await supabase
+      let queryLocal = supabase
         .from("epi_estoque_local")
         .select("id, quantidade")
         .eq("epi_id", dados.epi_id)
         .eq("local_estoque_id", dados.local_estoque_id)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
-      if (localError) throw localError;
+        .eq("tenant_id", tenantId);
+      
+      if (dados.tamanho) {
+        queryLocal = queryLocal.eq("tamanho", dados.tamanho);
+      } else {
+        queryLocal = queryLocal.is("tamanho", null);
+      }
+
+      const { data: estoqueLocal, error: localError } = await queryLocal.maybeSingle();
 
       const saldoLocal = estoqueLocal?.quantidade || 0;
       if (saldoLocal < dados.quantidade) {
@@ -80,6 +87,7 @@ export function useSaidaEstoque() {
           tipo: "saida",
           subtipo: dados.subtipo,
           local_estoque_id: dados.local_estoque_id,
+          tamanho: dados.tamanho || null,
           quantidade: dados.quantidade,
           quantidade_anterior: qtdAnterior,
           quantidade_atual: qtdNova,

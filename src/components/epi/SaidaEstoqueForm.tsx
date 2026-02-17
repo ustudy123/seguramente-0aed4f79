@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import type { EpiCompleto } from "@/types/epi";
 import type { EpiLocalEstoque } from "@/hooks/useEpiLocais";
+import type { EpiTamanho } from "@/hooks/useEpiTamanhos";
 
 export const SUBTIPOS_SAIDA = [
   { value: "descarte", label: "Descarte" },
@@ -44,6 +45,7 @@ const schema = z.object({
   local_estoque_id: z.string().min(1, "Selecione o local de estoque"),
   quantidade: z.coerce.number().min(1, "Quantidade deve ser pelo menos 1"),
   subtipo: z.string().min(1, "Selecione o motivo da saída"),
+  tamanho: z.string().optional(),
   observacoes: z.string().optional(),
 });
 
@@ -55,6 +57,7 @@ interface SaidaEstoqueFormProps {
   onSubmit: (data: SaidaEstoqueFormData) => Promise<void>;
   epis: EpiCompleto[];
   locais: EpiLocalEstoque[];
+  getTamanhosForEpi?: (epiId: string) => EpiTamanho[];
   isLoading?: boolean;
 }
 
@@ -64,6 +67,7 @@ export function SaidaEstoqueForm({
   onSubmit,
   epis,
   locais,
+  getTamanhosForEpi,
   isLoading,
 }: SaidaEstoqueFormProps) {
   const locaisAtivos = locais.filter((l) => l.ativo);
@@ -75,6 +79,7 @@ export function SaidaEstoqueForm({
       local_estoque_id: "",
       quantidade: 1,
       subtipo: "descarte",
+      tamanho: "",
       observacoes: "",
     },
   });
@@ -86,6 +91,10 @@ export function SaidaEstoqueForm({
   };
 
   const selectedEpi = epis.find((e) => e.id === form.watch("epi_id"));
+  const selectedEpiTamanhos = selectedEpi && getTamanhosForEpi
+    ? getTamanhosForEpi(selectedEpi.id)
+    : [];
+  const temTamanhos = selectedEpiTamanhos.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -153,7 +162,7 @@ export function SaidaEstoqueForm({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid ${temTamanhos ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
               <FormField
                 control={form.control}
                 name="quantidade"
@@ -192,6 +201,33 @@ export function SaidaEstoqueForm({
                   </FormItem>
                 )}
               />
+
+              {temTamanhos && (
+                <FormField
+                  control={form.control}
+                  name="tamanho"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tamanho *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Tamanho" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {selectedEpiTamanhos.map((t) => (
+                            <SelectItem key={t.id} value={t.tamanho}>
+                              {t.tamanho}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {selectedEpi && (

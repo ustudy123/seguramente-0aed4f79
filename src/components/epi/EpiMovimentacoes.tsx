@@ -268,11 +268,12 @@ export function EpiMovimentacoes({
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <Table>
-            <TableHeader>
+             <TableHeader>
               <TableRow>
                 <TableHead>Data/Hora</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>EPI</TableHead>
+                <TableHead>Tamanho</TableHead>
                 <TableHead className="text-center">Quantidade</TableHead>
                 <TableHead className="text-center">Anterior</TableHead>
                 <TableHead className="text-center">Atual</TableHead>
@@ -299,6 +300,9 @@ export function EpiMovimentacoes({
                       </div>
                     </TableCell>
                     <TableCell>{mov.epi.tipo.nome}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {(mov as any).tamanho || "—"}
+                    </TableCell>
                     <TableCell className="text-center font-medium">
                       {mov.tipo === "entrada" ? "+" : "-"}
                       {mov.quantidade}

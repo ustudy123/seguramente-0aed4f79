@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import type { EpiCompleto } from "@/types/epi";
 import type { EpiLocalEstoque } from "@/hooks/useEpiLocais";
+import type { EpiTamanho } from "@/hooks/useEpiTamanhos";
 
 const schema = z
   .object({
@@ -36,6 +37,7 @@ const schema = z
     local_origem_id: z.string().min(1, "Selecione o local de origem"),
     local_destino_id: z.string().min(1, "Selecione o local de destino"),
     quantidade: z.coerce.number().min(1, "Quantidade deve ser pelo menos 1"),
+    tamanho: z.string().optional(),
     observacoes: z.string().optional(),
   })
   .refine((d) => d.local_origem_id !== d.local_destino_id, {
@@ -51,6 +53,7 @@ interface TransferenciaEstoqueFormProps {
   onSubmit: (data: TransferenciaFormData) => Promise<void>;
   epis: EpiCompleto[];
   locais: EpiLocalEstoque[];
+  getTamanhosForEpi?: (epiId: string) => EpiTamanho[];
   isLoading?: boolean;
 }
 
@@ -60,6 +63,7 @@ export function TransferenciaEstoqueForm({
   onSubmit,
   epis,
   locais,
+  getTamanhosForEpi,
   isLoading,
 }: TransferenciaEstoqueFormProps) {
   const locaisAtivos = locais.filter((l) => l.ativo);
@@ -71,6 +75,7 @@ export function TransferenciaEstoqueForm({
       local_origem_id: "",
       local_destino_id: "",
       quantidade: 1,
+      tamanho: "",
       observacoes: "",
     },
   });
@@ -82,6 +87,10 @@ export function TransferenciaEstoqueForm({
   };
 
   const selectedEpi = epis.find((e) => e.id === form.watch("epi_id"));
+  const selectedEpiTamanhos = selectedEpi && getTamanhosForEpi
+    ? getTamanhosForEpi(selectedEpi.id)
+    : [];
+  const temTamanhos = selectedEpiTamanhos.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -171,19 +180,48 @@ export function TransferenciaEstoqueForm({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="quantidade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantidade *</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <div className={`grid ${temTamanhos ? "grid-cols-2" : ""} gap-4`}>
+              <FormField
+                control={form.control}
+                name="quantidade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantidade *</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={1} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {temTamanhos && (
+                <FormField
+                  control={form.control}
+                  name="tamanho"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tamanho *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Tamanho" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {selectedEpiTamanhos.map((t) => (
+                            <SelectItem key={t.id} value={t.tamanho}>
+                              {t.tamanho}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
+            </div>
 
             {selectedEpi && (
               <div className="p-3 rounded-lg border bg-muted/30 text-sm">
