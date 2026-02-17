@@ -44,6 +44,7 @@ export interface Filial {
   telefone: string | null;
   email: string | null;
   responsavel_id: string | null;
+  empresa_id: string | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;

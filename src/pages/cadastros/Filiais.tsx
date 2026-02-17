@@ -1,82 +1,89 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, MapPin, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Search, Building2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PhoneInput, cleanPhone } from "@/components/ui/phone-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
 import { useFiliais, Filial } from "@/hooks/useCadastros";
+import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
+import type { EmpresaCadastro } from "@/types/empresa";
 
 const ESTADOS = [
-  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
-  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
-  "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA",
+  "MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN",
+  "RS","RO","RR","SC","SP","SE","TO"
 ];
 
 export default function Filiais() {
   const { filiais, isLoading, createFilial, updateFilial, deleteFilial } = useFiliais();
+  const { empresas, isLoadingList: isLoadingEmpresas } = useEmpresaCadastro();
+
+  // State: company search & selection
+  const [cnpjSearch, setCnpjSearch] = useState("");
+  const [selectedEmpresa, setSelectedEmpresa] = useState<EmpresaCadastro | null>(null);
+
+  // State: establishment form
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedFilial, setSelectedFilial] = useState<Filial | null>(null);
   const [formData, setFormData] = useState({
-    nome: "",
-    cnpj: "",
-    endereco: "",
-    cidade: "",
-    estado: "",
-    cep: "",
-    telefone: "",
-    email: "",
-    ativo: true,
+    nome: "", endereco: "", cidade: "", estado: "", cep: "",
+    telefone: "", email: "", ativo: true,
   });
 
-  const filteredFiliais = filiais.filter((filial) =>
-    filial.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    filial.cidade?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter companies by CNPJ or name
+  const filteredEmpresas = useMemo(() => {
+    if (!cnpjSearch.trim()) return empresas.filter(e => e.ativo);
+    const term = cnpjSearch.toLowerCase().replace(/\D/g, "");
+    return empresas.filter(e => e.ativo && (
+      (e.cnpj?.replace(/\D/g, "").includes(term)) ||
+      (e.razao_social?.toLowerCase().includes(cnpjSearch.toLowerCase())) ||
+      (e.nome_fantasia?.toLowerCase().includes(cnpjSearch.toLowerCase()))
+    ));
+  }, [empresas, cnpjSearch]);
+
+  // Filter establishments by selected company
+  const estabelecimentos = useMemo(() => {
+    if (!selectedEmpresa) return [];
+    return filiais.filter(f => f.empresa_id === selectedEmpresa.id);
+  }, [filiais, selectedEmpresa]);
+
+  const filteredEstabelecimentos = useMemo(() => {
+    if (!searchTerm) return estabelecimentos;
+    const s = searchTerm.toLowerCase();
+    return estabelecimentos.filter(f =>
+      f.nome.toLowerCase().includes(s) || f.cidade?.toLowerCase().includes(s)
+    );
+  }, [estabelecimentos, searchTerm]);
+
+  const handleSelectEmpresa = (empresa: EmpresaCadastro) => {
+    setSelectedEmpresa(empresa);
+    setSearchTerm("");
+  };
+
+  const handleBack = () => {
+    setSelectedEmpresa(null);
+    setSearchTerm("");
+  };
 
   const handleOpenCreate = () => {
     setSelectedFilial(null);
-    setFormData({
-      nome: "",
-      cnpj: "",
-      endereco: "",
-      cidade: "",
-      estado: "",
-      cep: "",
-      telefone: "",
-      email: "",
-      ativo: true,
-    });
+    setFormData({ nome: "", endereco: "", cidade: "", estado: "", cep: "", telefone: "", email: "", ativo: true });
     setIsFormOpen(true);
   };
 
@@ -84,7 +91,6 @@ export default function Filiais() {
     setSelectedFilial(filial);
     setFormData({
       nome: filial.nome,
-      cnpj: filial.cnpj || "",
       endereco: filial.endereco || "",
       cidade: filial.cidade || "",
       estado: filial.estado || "",
@@ -103,10 +109,11 @@ export default function Filiais() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedEmpresa) return;
 
     const payload = {
       ...formData,
-      cnpj: formData.cnpj || null,
+      cnpj: selectedEmpresa.cnpj || null,
       endereco: formData.endereco || null,
       cidade: formData.cidade || null,
       estado: formData.estado || null,
@@ -114,17 +121,14 @@ export default function Filiais() {
       telefone: formData.telefone || null,
       email: formData.email || null,
       responsavel_id: null,
+      empresa_id: selectedEmpresa.id,
     };
 
     if (selectedFilial) {
-      await updateFilial.mutateAsync({
-        id: selectedFilial.id,
-        ...payload,
-      });
+      await updateFilial.mutateAsync({ id: selectedFilial.id, ...payload });
     } else {
       await createFilial.mutateAsync(payload);
     }
-
     setIsFormOpen(false);
   };
 
@@ -137,60 +141,123 @@ export default function Filiais() {
 
   const formatCnpj = (cnpj: string) => {
     const cleaned = cnpj.replace(/\D/g, "");
-    return cleaned.replace(
-      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-      "$1.$2.$3/$4-$5"
-    );
+    return cleaned.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
   };
 
+  // ── STEP 1: Company selection ──
+  if (!selectedEmpresa) {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-2xl font-bold text-foreground">Estabelecimentos</h1>
+          <p className="text-muted-foreground">Selecione a empresa para gerenciar seus estabelecimentos</p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por CNPJ, razão social ou nome fantasia..."
+            value={cnpjSearch}
+            onChange={(e) => setCnpjSearch(e.target.value)}
+            className="pl-10 max-w-lg"
+          />
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="grid gap-3">
+          {isLoadingEmpresas ? (
+            <p className="text-muted-foreground text-center py-8">Carregando empresas...</p>
+          ) : filteredEmpresas.length === 0 ? (
+            <div className="text-center py-12">
+              <Building2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">
+                {cnpjSearch ? "Nenhuma empresa encontrada com este CNPJ" : "Nenhuma empresa cadastrada"}
+              </p>
+            </div>
+          ) : (
+            filteredEmpresas.map(empresa => {
+              const qtdEstabelecimentos = filiais.filter(f => f.empresa_id === empresa.id).length;
+              return (
+                <Card
+                  key={empresa.id}
+                  className="cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => handleSelectEmpresa(empresa)}
+                >
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {empresa.razao_social || empresa.nome_fantasia || "Sem nome"}
+                        </p>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          {empresa.cnpj && <span>CNPJ: {formatCnpj(empresa.cnpj)}</span>}
+                          {empresa.cidade && empresa.estado && (
+                            <span>{empresa.cidade} - {empresa.estado}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">{qtdEstabelecimentos} estabelecimento{qtdEstabelecimentos !== 1 ? "s" : ""}</Badge>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── STEP 2: Establishment management for selected company ──
   return (
     <div className="space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Estabelecimentos</h1>
-          <p className="text-muted-foreground">
-            Gerencie os estabelecimentos da sua empresa
-          </p>
-        </div>
-        <Button onClick={handleOpenCreate} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Estabelecimento
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <Button variant="ghost" size="sm" onClick={handleBack} className="gap-1 text-muted-foreground -ml-2">
+          <ChevronRight className="w-4 h-4 rotate-180" />
+          Voltar para seleção de empresa
         </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Estabelecimentos
+            </h1>
+            <p className="text-muted-foreground">
+              {selectedEmpresa.razao_social || selectedEmpresa.nome_fantasia}
+              {selectedEmpresa.cnpj && ` · CNPJ: ${formatCnpj(selectedEmpresa.cnpj)}`}
+            </p>
+          </div>
+          <Button onClick={handleOpenCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Novo Estabelecimento
+          </Button>
+        </div>
       </motion.div>
 
       {/* Search */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="relative"
-      >
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar estabelecimentos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 max-w-sm"
-        />
-      </motion.div>
+      {estabelecimentos.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar estabelecimentos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 max-w-sm"
+          />
+        </motion.div>
+      )}
 
       {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="rounded-lg border bg-card"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>CNPJ</TableHead>
               <TableHead>Localização</TableHead>
               <TableHead>Contato</TableHead>
               <TableHead>Status</TableHead>
@@ -200,57 +267,40 @@ export default function Filiais() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  Carregando...
-                </TableCell>
+                <TableCell colSpan={5} className="text-center py-8">Carregando...</TableCell>
               </TableRow>
-            ) : filteredFiliais.length === 0 ? (
+            ) : filteredEstabelecimentos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={5} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <MapPin className="w-8 h-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      {searchTerm
-                        ? "Nenhum estabelecimento encontrado"
-                        : "Nenhum estabelecimento cadastrado"}
+                      {searchTerm ? "Nenhum estabelecimento encontrado" : "Nenhum estabelecimento cadastrado para esta empresa"}
                     </p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
-              filteredFiliais.map((filial) => (
+              filteredEstabelecimentos.map((filial) => (
                 <TableRow key={filial.id}>
                   <TableCell className="font-medium">{filial.nome}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {filial.cnpj ? formatCnpj(filial.cnpj) : "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {filial.cidade && filial.estado
-                      ? `${filial.cidade} - ${filial.estado}`
-                      : "-"}
+                    {filial.cidade && filial.estado ? `${filial.cidade} - ${filial.estado}` : "-"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {filial.telefone || filial.email || "-"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={filial.ativo ? "default" : "secondary"}>
-                      {filial.ativo ? "Ativa" : "Inativa"}
+                      {filial.ativo ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenEdit(filial)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(filial)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenDelete(filial)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(filial)}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
@@ -266,36 +316,23 @@ export default function Filiais() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {selectedFilial ? "Editar Estabelecimento" : "Novo Estabelecimento"}
-            </DialogTitle>
+            <DialogTitle>{selectedFilial ? "Editar Estabelecimento" : "Novo Estabelecimento"}</DialogTitle>
             <DialogDescription>
-              {selectedFilial
-                ? "Edite as informações do estabelecimento"
-                : "Preencha os dados do novo estabelecimento"}
+              {selectedFilial ? "Edite as informações do estabelecimento" : "Preencha os dados do novo estabelecimento"}
+              {" · "}
+              {selectedEmpresa.razao_social || selectedEmpresa.nome_fantasia}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  placeholder="Ex: Matriz São Paulo"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cnpj">CNPJ</Label>
-                <Input
-                  id="cnpj"
-                  value={formData.cnpj}
-                  onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                  placeholder="00.000.000/0000-00"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome do Estabelecimento *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Ex: Unidade Centro, Galpão Industrial"
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -326,12 +363,8 @@ export default function Filiais() {
                   onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <option value="">Selecione</option>
-                  {ESTADOS.map((uf) => (
-                    <option key={uf} value={uf}>
-                      {uf}
-                    </option>
-                  ))}
+                  <option value="">UF</option>
+                  {ESTADOS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -361,13 +394,13 @@ export default function Filiais() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="filial@empresa.com"
+                  placeholder="unidade@empresa.com"
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="ativo">Ativa</Label>
+              <Label htmlFor="ativo">Ativo</Label>
               <Switch
                 id="ativo"
                 checked={formData.ativo}
@@ -376,13 +409,8 @@ export default function Filiais() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={createFilial.isPending || updateFilial.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={createFilial.isPending || updateFilial.isPending}>
                 {selectedFilial ? "Salvar" : "Criar"}
               </Button>
             </DialogFooter>
@@ -396,16 +424,12 @@ export default function Filiais() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Estabelecimento</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o estabelecimento "{selectedFilial?.nome}"?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o estabelecimento "{selectedFilial?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
