@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Download, Upload } from 'lucide-react';
+import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft } from 'lucide-react';
 import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 import { EmpresaDadosBasicos } from '@/components/empresa/EmpresaDadosBasicos';
 import { EmpresaEnquadramentoLegal } from '@/components/empresa/EmpresaEnquadramentoLegal';
@@ -11,18 +11,36 @@ import { EmpresaIndicadores } from '@/components/empresa/EmpresaIndicadores';
 import { EmpresaJornadaCondicoes } from '@/components/empresa/EmpresaJornadaCondicoes';
 import { EmpresaObrigacoesTab } from '@/components/empresa/EmpresaObrigacoesTab';
 import { EmpresaImportExport } from '@/components/empresa/EmpresaImportExport';
+import { EmpresaList } from '@/components/empresa/EmpresaList';
 import type { EmpresaCadastro } from '@/types/empresa';
+import { toast } from 'sonner';
+
+type ViewMode = 'list' | 'edit' | 'new';
 
 export default function Empresa() {
-  const { cadastro, isLoading, upsertCadastro } = useEmpresaCadastro();
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
+
+  const {
+    empresas,
+    isLoadingList,
+    cadastro,
+    isLoading,
+    upsertCadastro,
+    toggleAtivoEmpresa,
+  } = useEmpresaCadastro(viewMode === 'edit' ? selectedEmpresaId : undefined);
+
   const [formData, setFormData] = useState<Partial<EmpresaCadastro>>({});
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (cadastro) {
+    if (viewMode === 'edit' && cadastro) {
       setFormData(cadastro);
     }
-  }, [cadastro]);
+    if (viewMode === 'new') {
+      setFormData({});
+    }
+  }, [cadastro, viewMode]);
 
   const handleChange = (updates: Partial<EmpresaCadastro>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -32,9 +50,64 @@ export default function Empresa() {
   const handleSave = async () => {
     await upsertCadastro.mutateAsync(formData);
     setHasChanges(false);
+    setViewMode('list');
+    setSelectedEmpresaId(null);
   };
 
-  if (isLoading) {
+  const handleEdit = (id: string) => {
+    setSelectedEmpresaId(id);
+    setViewMode('edit');
+    setHasChanges(false);
+  };
+
+  const handleNew = () => {
+    setSelectedEmpresaId(null);
+    setFormData({});
+    setViewMode('new');
+    setHasChanges(false);
+  };
+
+  const handleToggleAtivo = (id: string, ativo: boolean) => {
+    toggleAtivoEmpresa.mutate({ id, ativo }, {
+      onSuccess: () => toast.success(ativo ? 'Empresa ativada' : 'Empresa inativada'),
+      onError: (err: Error) => toast.error('Erro: ' + err.message),
+    });
+  };
+
+  const handleBack = () => {
+    setViewMode('list');
+    setSelectedEmpresaId(null);
+    setHasChanges(false);
+  };
+
+  // LIST VIEW
+  if (viewMode === 'list') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Building2 className="w-7 h-7 text-primary" />
+            Empresas
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gerencie o cadastro de todas as empresas do grupo
+          </p>
+        </div>
+        <EmpresaList
+          empresas={empresas}
+          isLoading={isLoadingList}
+          onEdit={handleEdit}
+          onNew={handleNew}
+          onToggleAtivo={handleToggleAtivo}
+        />
+      </div>
+    );
+  }
+
+  // EDIT/NEW VIEW
+  const isFormLoading = viewMode === 'edit' && isLoading;
+
+  if (isFormLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -46,14 +119,21 @@ export default function Empresa() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Building2 className="w-7 h-7 text-primary" />
-            Cadastro da Empresa
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Radar de obrigações • Gerador de ações • Mapa de conformidade
-          </p>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Building2 className="w-7 h-7 text-primary" />
+              {viewMode === 'new' ? 'Nova Empresa' : 'Editar Empresa'}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {viewMode === 'new'
+                ? 'Preencha os dados para cadastrar uma nova empresa'
+                : formData.razao_social || 'Cadastro da Empresa'}
+            </p>
+          </div>
         </div>
         <Button
           onClick={handleSave}
@@ -64,7 +144,7 @@ export default function Empresa() {
           ) : (
             <Save className="w-4 h-4 mr-2" />
           )}
-          Salvar Cadastro
+          Salvar
         </Button>
       </div>
 
@@ -160,7 +240,7 @@ export default function Empresa() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EmpresaObrigacoesTab cadastro={cadastro} />
+              <EmpresaObrigacoesTab cadastro={viewMode === 'edit' ? cadastro : null} />
             </CardContent>
           </TabsContent>
 
