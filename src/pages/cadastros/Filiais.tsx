@@ -44,7 +44,7 @@ export default function Filiais() {
   const [selectedFilial, setSelectedFilial] = useState<Filial | null>(null);
   const [formData, setFormData] = useState({
     nome: "", endereco: "", cidade: "", estado: "", cep: "",
-    telefone: "", email: "", ativo: true,
+    telefone: "", email: "", ativo: true, tipo: "estabelecimento" as string, cno: "",
   });
 
   // Filter companies by CNPJ or name
@@ -84,7 +84,7 @@ export default function Filiais() {
 
   const handleOpenCreate = () => {
     setSelectedFilial(null);
-    setFormData({ nome: "", endereco: "", cidade: "", estado: "", cep: "", telefone: "", email: "", ativo: true });
+    setFormData({ nome: "", endereco: "", cidade: "", estado: "", cep: "", telefone: "", email: "", ativo: true, tipo: "estabelecimento", cno: "" });
     setIsFormOpen(true);
   };
 
@@ -99,6 +99,8 @@ export default function Filiais() {
       telefone: filial.telefone || "",
       email: filial.email || "",
       ativo: filial.ativo,
+      tipo: filial.tipo || "estabelecimento",
+      cno: filial.cno || "",
     });
     setIsFormOpen(true);
   };
@@ -121,6 +123,7 @@ export default function Filiais() {
       cep: formData.cep || null,
       telefone: formData.telefone || null,
       email: formData.email || null,
+      cno: formData.tipo === "obra" ? (formData.cno || null) : null,
       responsavel_id: null,
       empresa_id: selectedEmpresa.id,
     };
@@ -150,8 +153,8 @@ export default function Filiais() {
     return (
       <div className="space-y-6">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold text-foreground">Estabelecimentos</h1>
-          <p className="text-muted-foreground">Selecione a empresa para gerenciar seus estabelecimentos</p>
+          <h1 className="text-2xl font-bold text-foreground">Estabelecimento ou Obra</h1>
+          <p className="text-muted-foreground">Selecione a empresa para gerenciar seus estabelecimentos ou obras</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
@@ -201,7 +204,7 @@ export default function Filiais() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Badge variant="secondary">{qtdEstabelecimentos} estabelecimento{qtdEstabelecimentos !== 1 ? "s" : ""}</Badge>
+                      <Badge variant="secondary">{qtdEstabelecimentos} registro{qtdEstabelecimentos !== 1 ? "s" : ""}</Badge>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </CardContent>
@@ -226,7 +229,7 @@ export default function Filiais() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Estabelecimentos
+              Estabelecimento ou Obra
             </h1>
             <p className="text-muted-foreground">
               {selectedEmpresa.razao_social || selectedEmpresa.nome_fantasia}
@@ -235,7 +238,7 @@ export default function Filiais() {
           </div>
           <Button onClick={handleOpenCreate} className="gap-2">
             <Plus className="w-4 h-4" />
-            Novo Estabelecimento
+            Novo Registro
           </Button>
         </div>
       </motion.div>
@@ -245,7 +248,7 @@ export default function Filiais() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar estabelecimentos..."
+            placeholder="Buscar estabelecimentos ou obras..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 max-w-sm"
@@ -259,6 +262,7 @@ export default function Filiais() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Tipo</TableHead>
               <TableHead>Localização</TableHead>
               <TableHead>Contato</TableHead>
               <TableHead>Status</TableHead>
@@ -268,15 +272,15 @@ export default function Filiais() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">Carregando...</TableCell>
+                <TableCell colSpan={6} className="text-center py-8">Carregando...</TableCell>
               </TableRow>
             ) : filteredEstabelecimentos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <MapPin className="w-8 h-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      {searchTerm ? "Nenhum estabelecimento encontrado" : "Nenhum estabelecimento cadastrado para esta empresa"}
+                      {searchTerm ? "Nenhum registro encontrado" : "Nenhum registro cadastrado para esta empresa"}
                     </p>
                   </div>
                 </TableCell>
@@ -285,6 +289,11 @@ export default function Filiais() {
               filteredEstabelecimentos.map((filial) => (
                 <TableRow key={filial.id}>
                   <TableCell className="font-medium">{filial.nome}</TableCell>
+                  <TableCell>
+                    <Badge variant={filial.tipo === "obra" ? "outline" : "secondary"}>
+                      {filial.tipo === "obra" ? "Obra" : "Estabelecimento"}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {filial.cidade && filial.estado ? `${filial.cidade} - ${filial.estado}` : "-"}
                   </TableCell>
@@ -317,16 +326,42 @@ export default function Filiais() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedFilial ? "Editar Estabelecimento" : "Novo Estabelecimento"}</DialogTitle>
+            <DialogTitle>{selectedFilial ? "Editar Registro" : "Novo Registro"}</DialogTitle>
             <DialogDescription>
-              {selectedFilial ? "Edite as informações do estabelecimento" : "Preencha os dados do novo estabelecimento"}
+              {selectedFilial ? "Edite as informações" : "Preencha os dados do novo estabelecimento ou obra"}
               {" · "}
               {selectedEmpresa.razao_social || selectedEmpresa.nome_fantasia}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tipo">Tipo *</Label>
+                <select
+                  id="tipo"
+                  value={formData.tipo}
+                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value, cno: e.target.value === "estabelecimento" ? "" : formData.cno })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="estabelecimento">Estabelecimento</option>
+                  <option value="obra">Obra</option>
+                </select>
+              </div>
+              {formData.tipo === "obra" && (
+                <div className="space-y-2">
+                  <Label htmlFor="cno">CNO</Label>
+                  <Input
+                    id="cno"
+                    value={formData.cno}
+                    onChange={(e) => setFormData({ ...formData, cno: e.target.value })}
+                    placeholder="Cadastro Nacional de Obras"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome do Estabelecimento *</Label>
+              <Label htmlFor="nome">Nome *</Label>
               <Input
                 id="nome"
                 value={formData.nome}
@@ -440,9 +475,9 @@ export default function Filiais() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Estabelecimento</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Registro</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o estabelecimento "{selectedFilial?.nome}"? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir "{selectedFilial?.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
