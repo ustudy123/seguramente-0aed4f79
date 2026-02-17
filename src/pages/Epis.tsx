@@ -25,6 +25,7 @@ const Epis = () => {
   const {
     tipos,
     tiposLoading,
+    customCategorias,
     epis,
     episLoading,
     entregas,
@@ -32,6 +33,8 @@ const Epis = () => {
     movimentacoes,
     movimentacoesLoading,
     stats,
+    criarCategoria,
+    criandoCategoria,
     criarTipo,
     criandoTipo,
     criarEpi,
@@ -89,21 +92,21 @@ const Epis = () => {
         </div>
         <div className="flex gap-2">
           {perm.podeCriarTipo && (
-            <Button variant="outline" onClick={() => setShowTipoForm(true)}>
-              <Settings className="w-4 h-4 mr-2" />
-              Novo Tipo
-            </Button>
-          )}
-          {perm.podeRegistrarEntrega && (
-            <Button variant="outline" onClick={() => setShowEntregaForm(true)}>
-              <Users className="w-4 h-4 mr-2" />
-              Registrar Entrega
+            <Button variant="outline" size="sm" onClick={() => setShowTipoForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Categoria
             </Button>
           )}
           {perm.podeCriarEpi && (
-            <Button onClick={() => setShowEpiForm(true)}>
+            <Button variant="outline" onClick={() => setShowEpiForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Novo EPI
+            </Button>
+          )}
+          {perm.podeRegistrarEntrega && (
+            <Button onClick={() => setShowEntregaForm(true)}>
+              <Users className="w-4 h-4 mr-2" />
+              Registrar Entrega
             </Button>
           )}
         </div>
@@ -272,8 +275,8 @@ const Epis = () => {
       <EpiTipoForm
         open={showTipoForm}
         onOpenChange={setShowTipoForm}
-        onSubmit={async (data) => { await criarTipo(data); }}
-        isLoading={criandoTipo}
+        onSubmit={async (data) => { await criarCategoria(data.nome); }}
+        isLoading={criandoCategoria}
       />
 
       <EpiForm
@@ -284,7 +287,9 @@ const Epis = () => {
         }}
         onSubmit={editingEpi ? handleUpdateEpi : handleCreateEpi}
         onCreateTipo={async (data) => { await criarTipo(data); }}
+        onCreateCategoria={async (nome) => { await criarCategoria(nome); }}
         tipos={tipos}
+        customCategorias={customCategorias}
         epi={editingEpi}
         isLoading={criandoEpi || atualizandoEpi}
       />
