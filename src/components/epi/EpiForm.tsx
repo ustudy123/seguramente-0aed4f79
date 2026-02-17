@@ -137,10 +137,30 @@ export function EpiForm({
   });
 
   useEffect(() => {
-    if (epi?.tipo?.categoria) {
-      setSelectedCategoria(epi.tipo.categoria);
+    if (open) {
+      form.reset({
+        nome: epi?.tipo?.nome || "",
+        categoria: epi?.tipo?.categoria || "",
+        codigo: epi?.codigo || "",
+        ca: epi?.ca || "",
+        marca: epi?.marca || "",
+        modelo: epi?.modelo || "",
+        tamanho: epi?.tamanho || "",
+        data_fabricacao: epi?.data_fabricacao || "",
+        data_validade: epi?.data_validade || "",
+        quantidade_estoque: epi?.quantidade_estoque || 0,
+        quantidade_minima: epi?.quantidade_minima || 5,
+        custo_unitario: epi?.custo_unitario ? Number(epi.custo_unitario) : undefined,
+        local_estoque_id: "",
+        localizacao: epi?.localizacao || "",
+        unidade_medida: epi?.tipo?.unidade_medida || "unidade",
+        tipo_durabilidade: epi?.tipo?.tipo_durabilidade || "duravel",
+        fabricante: epi?.tipo?.fabricante || "",
+        observacoes: epi?.observacoes || "",
+      });
+      setSelectedCategoria(epi?.tipo?.categoria || "");
     }
-  }, [epi]);
+  }, [epi, open]);
 
   const handleSubmit = async (data: FormData) => {
     // First create the tipo, then create the EPI record
