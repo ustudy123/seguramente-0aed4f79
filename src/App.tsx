@@ -44,6 +44,7 @@ import Terceiros from "./pages/Terceiros";
 import IncidentesAcidentes from "./pages/IncidentesAcidentes";
 import CulturaCelebracoes from "./pages/CulturaCelebracoes";
 import NotFound from "./pages/NotFound";
+import BemEstar from "./pages/BemEstar";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
 import FeriasAssinatura from "./pages/FeriasAssinatura";
@@ -122,7 +123,7 @@ const App = () => (
               <Route path="/estrategia" element={<Estrategia />} />
               <Route path="/ouvidoria" element={<Ouvidoria />} />
               <Route path="/ergonomia" element={<Ergonomia />} />
-              <Route path="/felicidade" element={<PlaceholderPage />} />
+              <Route path="/felicidade" element={<BemEstar />} />
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/terceiros" element={<Terceiros />} />

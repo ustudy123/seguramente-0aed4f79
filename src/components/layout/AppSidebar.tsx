@@ -91,7 +91,7 @@ const menuSections: MenuSection[] = [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Férias", icon: Calendar, path: "/ferias" },
       { title: "Atestados", icon: Stethoscope, path: "/atestados" },
-      { title: "Gestão da Felicidade", icon: Heart, path: "/felicidade" },
+      { title: "Meu Bem-Estar", icon: Heart, path: "/felicidade" },
       { title: "Feedback & Ocorrências", icon: MessageCircle, path: "/feedback-ocorrencias" },
       { title: "Ouvidoria", icon: MessageSquareHeart, path: "/ouvidoria" },
       { title: "Aprendizado & Papéis", icon: BookOpen, path: "/aprendizado-papeis" },
