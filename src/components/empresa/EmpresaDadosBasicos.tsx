@@ -4,9 +4,11 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CepInput } from '@/components/ui/cep-input';
+import { CpfInput } from '@/components/ui/cpf-input';
 import { Loader2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCnpj, cleanCnpj, validateCnpj, buscarCnpj } from '@/lib/brasilapi';
+import { formatCei, cleanCei, formatCaepf, cleanCaepf } from '@/lib/cei';
 import type { EnderecoData } from '@/lib/viacep';
 import { EmpresaHierarquiaFields } from './EmpresaHierarquiaFields';
 import type { EmpresaCadastro } from '@/types/empresa';
@@ -25,6 +27,7 @@ interface Props {
 
 export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpresaId }: Props) {
   const [cnpjLoading, setCnpjLoading] = useState(false);
+  const tipoPessoa = data.tipo_pessoa || 'pj';
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleaned = cleanCnpj(e.target.value);
@@ -82,6 +85,20 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
     toast.success('Endereço preenchido automaticamente!');
   }, [onChange]);
 
+  const handleCeiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = cleanCei(e.target.value);
+    if (cleaned.length <= 12) {
+      onChange({ cei: formatCei(cleaned) });
+    }
+  };
+
+  const handleCaepfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = cleanCaepf(e.target.value);
+    if (cleaned.length <= 15) {
+      onChange({ caepf: formatCaepf(cleaned) });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Hierarquia e Grupo Econômico */}
@@ -92,58 +109,123 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
         currentEmpresaId={currentEmpresaId}
       />
 
+      {/* Tipo de Pessoa */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>CNPJ</Label>
-          <div className="flex gap-2">
-            <Input
-              placeholder="00.000.000/0000-00"
-              value={data.cnpj || ''}
-              onChange={handleCnpjChange}
-              maxLength={18}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleBuscarCnpj}
-              disabled={cnpjLoading || !validateCnpj(data.cnpj || '')}
-              title="Buscar dados na Receita Federal"
-            >
-              {cnpjLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Clique na lupa para preencher automaticamente
-          </p>
+          <Label>Tipo de Empregador *</Label>
+          <Select
+            value={tipoPessoa}
+            onValueChange={(v) => onChange({
+              tipo_pessoa: v as 'pf' | 'pj',
+              // Limpar campos ao trocar tipo
+              ...(v === 'pf' ? { cnpj: null } : { cpf: null, cei: null, caepf: null }),
+            })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pj">Pessoa Jurídica (CNPJ)</SelectItem>
+              <SelectItem value="pf">Pessoa Física (CPF)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="space-y-2">
-          <Label>Inscrição Estadual</Label>
-          <Input
-            placeholder="Inscrição Estadual"
-            value={data.inscricao_estadual || ''}
-            onChange={(e) => onChange({ inscricao_estadual: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Inscrição Municipal</Label>
-          <Input
-            placeholder="Inscrição Municipal"
-            value={data.inscricao_municipal || ''}
-            onChange={(e) => onChange({ inscricao_municipal: e.target.value })}
-          />
-        </div>
+
+        {tipoPessoa === 'pj' ? (
+          <>
+            <div className="space-y-2">
+              <Label>CNPJ</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="00.000.000/0000-00"
+                  value={data.cnpj || ''}
+                  onChange={handleCnpjChange}
+                  maxLength={18}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleBuscarCnpj}
+                  disabled={cnpjLoading || !validateCnpj(data.cnpj || '')}
+                  title="Buscar dados na Receita Federal"
+                >
+                  {cnpjLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Clique na lupa para preencher automaticamente
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Inscrição Estadual</Label>
+              <Input
+                placeholder="Inscrição Estadual"
+                value={data.inscricao_estadual || ''}
+                onChange={(e) => onChange({ inscricao_estadual: e.target.value })}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label>CPF *</Label>
+              <CpfInput
+                value={data.cpf || ''}
+                onChange={(value) => onChange({ cpf: value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>CEI</Label>
+              <Input
+                placeholder="XX.XXX.XXXXX/XX"
+                value={data.cei || ''}
+                onChange={handleCeiChange}
+                maxLength={15}
+                inputMode="numeric"
+              />
+            </div>
+          </>
+        )}
       </div>
+
+      {tipoPessoa === 'pf' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>CAEPF</Label>
+            <Input
+              placeholder="XXX.XXX.XXX/XXXX-XX"
+              value={data.caepf || ''}
+              onChange={handleCaepfChange}
+              maxLength={20}
+              inputMode="numeric"
+            />
+          </div>
+        </div>
+      )}
+
+      {tipoPessoa === 'pj' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Inscrição Municipal</Label>
+            <Input
+              placeholder="Inscrição Municipal"
+              value={data.inscricao_municipal || ''}
+              onChange={(e) => onChange({ inscricao_municipal: e.target.value })}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Razão Social</Label>
+          <Label>{tipoPessoa === 'pf' ? 'Nome Completo' : 'Razão Social'}</Label>
           <Input
-            placeholder="Razão Social completa"
+            placeholder={tipoPessoa === 'pf' ? 'Nome completo' : 'Razão Social completa'}
             value={data.razao_social || ''}
             onChange={(e) => onChange({ razao_social: e.target.value })}
           />

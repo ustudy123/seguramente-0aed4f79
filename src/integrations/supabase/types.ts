@@ -2145,6 +2145,8 @@ export type Database = {
           ativo: boolean
           atualizado_por: string | null
           bairro: string | null
+          caepf: string | null
+          cei: string | null
           cep: string | null
           cidade: string | null
           cipa_data_mandato_fim: string | null
@@ -2158,6 +2160,7 @@ export type Database = {
           cnpj: string | null
           complemento: string | null
           condicoes_especiais_detalhes: Json | null
+          cpf: string | null
           created_at: string
           email: string | null
           endereco: string | null
@@ -2193,6 +2196,7 @@ export type Database = {
           tac_possui: boolean | null
           telefone: string | null
           tenant_id: string
+          tipo_pessoa: string
           tipo_unidade: string
           total_colaboradores: number | null
           trabalho_altura: boolean | null
@@ -2208,6 +2212,8 @@ export type Database = {
           ativo?: boolean
           atualizado_por?: string | null
           bairro?: string | null
+          caepf?: string | null
+          cei?: string | null
           cep?: string | null
           cidade?: string | null
           cipa_data_mandato_fim?: string | null
@@ -2221,6 +2227,7 @@ export type Database = {
           cnpj?: string | null
           complemento?: string | null
           condicoes_especiais_detalhes?: Json | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
@@ -2256,6 +2263,7 @@ export type Database = {
           tac_possui?: boolean | null
           telefone?: string | null
           tenant_id: string
+          tipo_pessoa?: string
           tipo_unidade?: string
           total_colaboradores?: number | null
           trabalho_altura?: boolean | null
@@ -2271,6 +2279,8 @@ export type Database = {
           ativo?: boolean
           atualizado_por?: string | null
           bairro?: string | null
+          caepf?: string | null
+          cei?: string | null
           cep?: string | null
           cidade?: string | null
           cipa_data_mandato_fim?: string | null
@@ -2284,6 +2294,7 @@ export type Database = {
           cnpj?: string | null
           complemento?: string | null
           condicoes_especiais_detalhes?: Json | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
@@ -2319,6 +2330,7 @@ export type Database = {
           tac_possui?: boolean | null
           telefone?: string | null
           tenant_id?: string
+          tipo_pessoa?: string
           tipo_unidade?: string
           total_colaboradores?: number | null
           trabalho_altura?: boolean | null

@@ -60,10 +60,11 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       }
       if (search) {
         const q = search.toLowerCase();
+        const doc = e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj;
         return (
           e.razao_social?.toLowerCase().includes(q) ||
           e.nome_fantasia?.toLowerCase().includes(q) ||
-          e.cnpj?.toLowerCase().includes(q) ||
+          doc?.toLowerCase().includes(q) ||
           e.cidade?.toLowerCase().includes(q)
         );
       }
@@ -108,7 +109,8 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
     const rows = filtered.map(e => ({
       'Razão Social': e.razao_social || '',
       'Nome Fantasia': e.nome_fantasia || '',
-      'CNPJ': e.cnpj || '',
+      'Tipo Pessoa': e.tipo_pessoa === 'pf' ? 'PF' : 'PJ',
+      'CNPJ/CPF': (e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj) || '',
       'CNAE': e.cnae_principal || '',
       'Grau de Risco': e.grau_risco ?? '',
       'Cidade': e.cidade || '',
@@ -198,7 +200,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar razão social, CNPJ..."
+              placeholder="Buscar razão social, CNPJ/CPF..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
@@ -288,7 +290,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                 <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
               </TableHead>
               <TableHead>Razão Social</TableHead>
-              <TableHead>CNPJ</TableHead>
+              <TableHead>CNPJ/CPF</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>CNAE</TableHead>
@@ -334,7 +336,9 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                       })()}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm font-mono">{emp.cnpj || '—'}</TableCell>
+                  <TableCell className="text-sm font-mono">
+                    {emp.tipo_pessoa === 'pf' ? emp.cpf || '—' : emp.cnpj || '—'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={emp.tipo_unidade === 'matriz' ? 'default' : 'outline'} className="text-xs">
                       {emp.tipo_unidade === 'matriz' ? 'Matriz' : 'Filial'}
