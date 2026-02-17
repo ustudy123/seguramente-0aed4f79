@@ -118,7 +118,7 @@ export function MatrizEpiConfig({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh]">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
@@ -129,7 +129,7 @@ export function MatrizEpiConfig({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="epis" className="mt-2">
+        <Tabs defaultValue="epis" className="mt-2 flex-1 min-h-0 flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="epis" className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" />
