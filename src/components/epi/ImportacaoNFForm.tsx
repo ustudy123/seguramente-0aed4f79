@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { FileText, Upload, Plus, Trash2, Package, Building2, Calendar, Hash } from "lucide-react";
+import { FileText, Upload, Plus, Trash2, Package, Building2, Calendar, Hash, Loader2, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { NFData, NFItemData, NFXmlParsed, parseNFeXml } from "@/hooks/useImportacaoNF";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ImportacaoNFFormProps {
   open: boolean;
@@ -39,6 +41,10 @@ interface ImportacaoNFFormProps {
 interface ItemForm extends NFItemData {
   _key: string;
   _descricaoOriginal?: string;
+  _aiMatched?: boolean;
+  _aiCreated?: boolean;
+  _aiNomeLimpo?: string;
+  _aiConfianca?: string;
 }
 
 export function ImportacaoNFForm({
@@ -53,6 +59,8 @@ export function ImportacaoNFForm({
   const [tab, setTab] = useState<string>("xml");
   const [xmlParsed, setXmlParsed] = useState<NFXmlParsed | null>(null);
   const [xmlError, setXmlError] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiStatus, setAiStatus] = useState<string>("");
 
   // Header fields
   const [numeroNf, setNumeroNf] = useState("");
@@ -84,15 +92,112 @@ export function ImportacaoNFForm({
     setItens([]);
     setLocalPadrao("");
     setTab("xml");
+    setAiLoading(false);
+    setAiStatus("");
+  };
+
+  const matchItensWithAI = async (parsed: NFXmlParsed) => {
+    setAiLoading(true);
+    setAiStatus("Analisando itens com IA...");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-nf-match", {
+        body: {
+          itens_xml: parsed.itens.map((item) => ({
+            descricao: item.descricao,
+            quantidade: item.quantidade,
+            valor_unitario: item.valor_unitario,
+            valor_total: item.valor_total,
+          })),
+        },
+      });
+
+      if (error) throw new Error(error.message || "Erro na análise IA");
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      const matches = data?.matches || [];
+      let matchedCount = 0;
+      let createdCount = 0;
+
+      const mappedItens: ItemForm[] = parsed.itens.map((item, idx) => {
+        const match = matches.find((m: any) => m.index === idx);
+
+        if (match?.epi_id) {
+          if (match.created) createdCount++;
+          else matchedCount++;
+
+          return {
+            _key: `xml-${idx}`,
+            _descricaoOriginal: item.descricao,
+            _aiMatched: !match.created,
+            _aiCreated: match.created,
+            _aiNomeLimpo: match.nome_limpo,
+            _aiConfianca: match.confianca,
+            epi_id: match.epi_id,
+            local_estoque_id: localPadrao,
+            descricao_nf: item.descricao,
+            quantidade: Math.round(item.quantidade),
+            valor_unitario: item.valor_unitario,
+            valor_total: item.valor_total,
+          };
+        }
+
+        return {
+          _key: `xml-${idx}`,
+          _descricaoOriginal: item.descricao,
+          epi_id: "",
+          local_estoque_id: localPadrao,
+          descricao_nf: item.descricao,
+          quantidade: Math.round(item.quantidade),
+          valor_unitario: item.valor_unitario,
+          valor_total: item.valor_total,
+        };
+      });
+
+      setItens(mappedItens);
+
+      const msgs: string[] = [];
+      if (matchedCount > 0) msgs.push(`${matchedCount} vinculado(s)`);
+      if (createdCount > 0) msgs.push(`${createdCount} cadastrado(s) automaticamente`);
+      const unmatchedCount = parsed.itens.length - matchedCount - createdCount;
+      if (unmatchedCount > 0) msgs.push(`${unmatchedCount} pendente(s) de vinculação`);
+
+      setAiStatus(`✅ ${msgs.join(", ")}`);
+      toast.success(`IA identificou ${parsed.itens.length} itens: ${msgs.join(", ")}`);
+    } catch (err: any) {
+      console.error("AI match error:", err);
+      setAiStatus("");
+      toast.error("Erro na análise IA: " + (err.message || "Erro desconhecido"));
+
+      // Fallback: load items without AI matching
+      setItens(
+        parsed.itens.map((item, idx) => ({
+          _key: `xml-${idx}`,
+          _descricaoOriginal: item.descricao,
+          epi_id: "",
+          local_estoque_id: localPadrao,
+          descricao_nf: item.descricao,
+          quantidade: Math.round(item.quantidade),
+          valor_unitario: item.valor_unitario,
+          valor_total: item.valor_total,
+        }))
+      );
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
     setXmlError("");
+    setAiStatus("");
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const parsed = parseNFeXml(content);
@@ -107,19 +212,8 @@ export function ImportacaoNFForm({
         setDataEmissao(parsed.data_emissao);
         setValorTotal(String(parsed.valor_total || ""));
 
-        // Fill items (user needs to map epi_id)
-        setItens(
-          parsed.itens.map((item, idx) => ({
-            _key: `xml-${idx}`,
-            _descricaoOriginal: item.descricao,
-            epi_id: "",
-            local_estoque_id: localPadrao,
-            descricao_nf: item.descricao,
-            quantidade: Math.round(item.quantidade),
-            valor_unitario: item.valor_unitario,
-            valor_total: item.valor_total,
-          }))
-        );
+        // Use AI to match items
+        await matchItensWithAI(parsed);
       } catch (err: any) {
         setXmlError(err.message || "Erro ao processar XML");
         setXmlParsed(null);
@@ -189,12 +283,15 @@ export function ImportacaoNFForm({
       valor_total: valorTotal ? parseFloat(valorTotal) : undefined,
       observacoes: observacoes || undefined,
       origem: tab === "xml" && xmlParsed ? "xml" : "manual",
-      itens: itens.map(({ _key, _descricaoOriginal, ...rest }) => rest),
+      itens: itens.map(({ _key, _descricaoOriginal, _aiMatched, _aiCreated, _aiNomeLimpo, _aiConfianca, ...rest }) => rest),
     };
     await onSubmit(data);
     resetForm();
     onOpenChange(false);
   };
+
+  // Merge current tipos with any newly created (refresh will happen but we need current list)
+  const allTipos = tipos;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
@@ -205,7 +302,7 @@ export function ImportacaoNFForm({
             Importação de Nota Fiscal
           </DialogTitle>
           <DialogDescription>
-            Importe itens de EPI via XML da NF-e ou cadastre manualmente
+            Importe itens de EPI via XML da NF-e ou cadastre manualmente. A IA identifica e cadastra os produtos automaticamente.
           </DialogDescription>
         </DialogHeader>
 
@@ -229,20 +326,38 @@ export function ImportacaoNFForm({
               }`}
             >
               <input {...getInputProps()} />
-              <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm font-medium">
-                {isDragActive ? "Solte o arquivo aqui..." : "Arraste o XML da NF-e ou clique para selecionar"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">Apenas arquivos .xml</p>
+              {aiLoading ? (
+                <>
+                  <Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
+                  <p className="text-sm font-medium text-primary">Analisando itens com IA...</p>
+                  <p className="text-xs text-muted-foreground mt-1">Identificando produtos e vinculando ao catálogo</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-sm font-medium">
+                    {isDragActive ? "Solte o arquivo aqui..." : "Arraste o XML da NF-e ou clique para selecionar"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Apenas arquivos .xml — A IA identifica os itens automaticamente</p>
+                </>
+              )}
             </div>
 
             {xmlError && (
-              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 {xmlError}
               </div>
             )}
 
-            {xmlParsed && (
+            {aiStatus && !aiLoading && (
+              <div className="p-3 rounded-lg bg-primary/10 text-primary text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 shrink-0" />
+                {aiStatus}
+              </div>
+            )}
+
+            {xmlParsed && !aiLoading && (
               <Card>
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center gap-2">
@@ -323,22 +438,41 @@ export function ImportacaoNFForm({
             </div>
           </div>
 
-          {itens.length === 0 && (
+          {itens.length === 0 && !aiLoading && (
             <div className="text-center py-8 text-muted-foreground text-sm">
               <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
               {tab === "xml" ? "Faça upload do XML para extrair os itens" : "Adicione itens manualmente"}
             </div>
           )}
 
+          {aiLoading && (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-primary" />
+              <p>Identificando produtos com IA...</p>
+            </div>
+          )}
+
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
             {itens.map((item, idx) => (
-              <Card key={item._key} className="relative">
+              <Card key={item._key} className={`relative ${item._aiCreated ? "border-amber-300 dark:border-amber-700" : item._aiMatched ? "border-green-300 dark:border-green-700" : ""}`}>
                 <CardContent className="pt-3 pb-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                       Item {idx + 1}
                       {item._descricaoOriginal && (
-                        <span className="ml-2 text-foreground">{item._descricaoOriginal}</span>
+                        <span className="text-foreground">{item._descricaoOriginal}</span>
+                      )}
+                      {item._aiMatched && (
+                        <Badge variant="outline" className="text-[10px] h-5 border-green-400 text-green-700 dark:text-green-400">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Vinculado pela IA
+                        </Badge>
+                      )}
+                      {item._aiCreated && (
+                        <Badge variant="outline" className="text-[10px] h-5 border-amber-400 text-amber-700 dark:text-amber-400">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Cadastrado pela IA
+                        </Badge>
                       )}
                     </span>
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeItem(item._key)}>
@@ -354,9 +488,8 @@ export function ImportacaoNFForm({
                           <SelectValue placeholder="Selecione o EPI" />
                         </SelectTrigger>
                         <SelectContent>
-                          {tipos.length > 0 ? (
-                            tipos.filter((t: any) => t.is_active !== false).map((tipo: any) => {
-                              // Find the corresponding epi record for this tipo
+                          {allTipos.length > 0 ? (
+                            allTipos.filter((t: any) => t.is_active !== false).map((tipo: any) => {
                               const epiRecord = epis.find((e: any) => e.tipo_id === tipo.id);
                               const value = epiRecord?.id || tipo.id;
                               return (
@@ -372,7 +505,7 @@ export function ImportacaoNFForm({
                               </SelectItem>
                             ))
                           )}
-                          {tipos.length === 0 && epis.length === 0 && (
+                          {allTipos.length === 0 && epis.length === 0 && (
                             <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum EPI cadastrado</div>
                           )}
                         </SelectContent>
@@ -446,7 +579,7 @@ export function ImportacaoNFForm({
           <Button variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit || isLoading}>
+          <Button onClick={handleSubmit} disabled={!canSubmit || isLoading || aiLoading}>
             {isLoading ? "Importando..." : `Importar ${itens.length} item(ns)`}
           </Button>
         </DialogFooter>

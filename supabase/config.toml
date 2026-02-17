@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.ferias-assinatura]
 verify_jwt = false
+
+[functions.ai-nf-match]
+verify_jwt = false
