@@ -7,7 +7,11 @@ export interface EmpresaCadastro {
   // Dados Básicos
   razao_social: string | null;
   nome_fantasia: string | null;
+  tipo_pessoa: 'pf' | 'pj';
   cnpj: string | null;
+  cpf: string | null;
+  cei: string | null;
+  caepf: string | null;
   inscricao_estadual: string | null;
   inscricao_municipal: string | null;
   endereco: string | null;
