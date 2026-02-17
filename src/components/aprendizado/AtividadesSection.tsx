@@ -10,10 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
+import { PopSection } from "./PopSection";
 import type { FuncaoAtividade } from "@/types/aprendizado";
 
 interface AtividadesSectionProps {
   cargoId: string;
+  funcaoNome?: string;
+  nivel?: string;
 }
 
 const FREQ_LABELS: Record<string, string> = { diaria: "Diária", semanal: "Semanal", mensal: "Mensal", eventual: "Eventual" };
@@ -22,7 +25,7 @@ const CLASS_LABELS: Record<string, string> = { rotineira: "Rotineira", critica: 
 const TIPO_CONTEUDO_LABELS: Record<string, string> = { manual: "Manual", pop: "POP", instrucao: "Instrução", video: "Vídeo", apresentacao: "Apresentação", documento: "Documento", link: "Link" };
 const TIPO_FERRAMENTA_LABELS: Record<string, string> = { sistema: "Sistema", software: "Software", planilha: "Planilha", equipamento: "Equipamento" };
 
-export function AtividadesSection({ cargoId }: AtividadesSectionProps) {
+export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSectionProps) {
   const {
     atividades, criarAtividade, excluirAtividade, criandoAtividade,
     responsabilidades, salvarResponsabilidade,
@@ -290,6 +293,16 @@ export function AtividadesSection({ cargoId }: AtividadesSectionProps) {
                       </div>
                     ))}
                   </div>
+
+                  {/* POP da Atividade */}
+                  <PopSection
+                    atividade={at}
+                    cargoId={cargoId}
+                    funcaoNome={funcaoNome}
+                    nivel={nivel}
+                    ferramentas={atFerramentas.map(f => f.nome).join(", ") || undefined}
+                    interfaces={atResp?.interfaces || undefined}
+                  />
                 </CardContent>
               </CollapsibleContent>
             </Card>
