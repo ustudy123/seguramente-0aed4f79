@@ -36,6 +36,8 @@ interface ImportacaoNFFormProps {
   tipos?: any[];
   locais: any[];
   isLoading: boolean;
+  onCriarTipo?: (dados: { nome: string }) => Promise<any>;
+  criandoTipo?: boolean;
 }
 
 interface ItemForm extends NFItemData {
@@ -55,12 +57,17 @@ export function ImportacaoNFForm({
   tipos = [],
   locais,
   isLoading,
+  onCriarTipo,
+  criandoTipo,
 }: ImportacaoNFFormProps) {
   const [tab, setTab] = useState<string>("xml");
   const [xmlParsed, setXmlParsed] = useState<NFXmlParsed | null>(null);
   const [xmlError, setXmlError] = useState<string>("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStatus, setAiStatus] = useState<string>("");
+  const [showCriarTipo, setShowCriarTipo] = useState(false);
+  const [novoTipoNome, setNovoTipoNome] = useState("");
+  const [criarTipoForItemKey, setCriarTipoForItemKey] = useState<string>("");
 
   // Header fields
   const [numeroNf, setNumeroNf] = useState("");
@@ -485,11 +492,29 @@ export function ImportacaoNFForm({
                   <div className="grid grid-cols-4 gap-2">
                     <div className="col-span-2">
                       <Label className="text-xs">EPI *</Label>
-                      <Select value={item.epi_id} onValueChange={(v) => updateItem(item._key, "epi_id", v)}>
+                      <Select
+                        value={item.epi_id}
+                        onValueChange={(v) => {
+                          if (v === "__novo__") {
+                            setCriarTipoForItemKey(item._key);
+                            setNovoTipoNome(item._descricaoOriginal || "");
+                            setShowCriarTipo(true);
+                            return;
+                          }
+                          updateItem(item._key, "epi_id", v);
+                        }}
+                      >
                         <SelectTrigger className="h-8 text-xs">
                           <SelectValue placeholder="Selecione o EPI" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="__novo__" className="text-primary font-medium">
+                            <span className="flex items-center gap-1">
+                              <Plus className="w-3.5 h-3.5" />
+                              Incluir EPI
+                            </span>
+                          </SelectItem>
+                          <Separator className="my-1" />
                           {allTipos.length > 0 ? (
                             allTipos.filter((t: any) => t.is_active !== false).map((tipo: any) => {
                               const epiRecord = epis.find((e: any) => e.tipo_id === tipo.id);
@@ -576,6 +601,55 @@ export function ImportacaoNFForm({
             ))}
           </div>
         </div>
+
+        {/* Inline EPI creation dialog */}
+        <Dialog open={showCriarTipo} onOpenChange={setShowCriarTipo}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Plus className="w-5 h-5 text-primary" />
+                Cadastrar novo EPI
+              </DialogTitle>
+              <DialogDescription>
+                Cadastre rapidamente um novo tipo de EPI para vincular ao item da nota.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Nome do EPI *</Label>
+                <Input
+                  value={novoTipoNome}
+                  onChange={(e) => setNovoTipoNome(e.target.value)}
+                  placeholder="Ex: Protetor Auricular, Luva Nitrílica..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCriarTipo(false)}>Cancelar</Button>
+              <Button
+                disabled={!novoTipoNome.trim() || criandoTipo}
+                onClick={async () => {
+                  if (!onCriarTipo || !novoTipoNome.trim()) return;
+                  try {
+                    const novoTipo = await onCriarTipo({ nome: novoTipoNome.trim() });
+                    if (novoTipo && criarTipoForItemKey) {
+                      // The new tipo's id will be resolved in useImportacaoNF
+                      updateItem(criarTipoForItemKey, "epi_id", novoTipo.id);
+                    }
+                    setShowCriarTipo(false);
+                    setNovoTipoNome("");
+                    setCriarTipoForItemKey("");
+                    toast.success("EPI cadastrado com sucesso!");
+                  } catch (err: any) {
+                    toast.error("Erro ao cadastrar EPI: " + (err.message || "Erro"));
+                  }
+                }}
+              >
+                {criandoTipo ? "Cadastrando..." : "Cadastrar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>
