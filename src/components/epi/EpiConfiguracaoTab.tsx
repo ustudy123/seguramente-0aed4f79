@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
   Settings,
@@ -80,6 +84,45 @@ const emptyForm: LocalFormData = {
   responsavel_nome: "",
   observacoes: "",
 };
+
+function ResponsavelCombobox({ colaboradores, value, onChange }: {
+  colaboradores: { id: string; nome_completo: string; cargo: string }[];
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+          {value || "Buscar responsável..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Pesquisar colaborador..." />
+          <CommandList>
+            <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="__none__" onSelect={() => { onChange(""); setOpen(false); }}>
+                <Check className={cn("mr-2 h-4 w-4", !value ? "opacity-100" : "opacity-0")} />
+                Nenhum
+              </CommandItem>
+              {colaboradores.map((c) => (
+                <CommandItem key={c.id} value={c.nome_completo} onSelect={() => { onChange(c.nome_completo); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", value === c.nome_completo ? "opacity-100" : "opacity-0")} />
+                  {c.nome_completo} {c.cargo ? `– ${c.cargo}` : ""}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function EpiConfiguracaoTab() {
   const { usarControleEstoque, toggleControleEstoque, toggling, configLoading } = useEpiConfig();
@@ -448,24 +491,11 @@ export function EpiConfiguracaoTab() {
 
             <div className="space-y-2">
               <Label>Responsável pelo Local</Label>
-              <Select
-                value={formData.responsavel_nome || "__none__"}
-                onValueChange={(val) =>
-                  setFormData({ ...formData, responsavel_nome: val === "__none__" ? "" : val })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar responsável" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Nenhum</SelectItem>
-                  {colaboradores.map((c) => (
-                    <SelectItem key={c.id} value={c.nome_completo}>
-                      {c.nome_completo} {c.cargo ? `– ${c.cargo}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ResponsavelCombobox
+                colaboradores={colaboradores}
+                value={formData.responsavel_nome}
+                onChange={(val) => setFormData({ ...formData, responsavel_nome: val })}
+              />
             </div>
 
             <div className="space-y-2">
