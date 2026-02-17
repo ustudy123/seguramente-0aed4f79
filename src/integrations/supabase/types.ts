@@ -5232,6 +5232,173 @@ export type Database = {
           },
         ]
       }
+      funcao_pop_versoes: {
+        Row: {
+          alterado_por: string | null
+          alterado_por_nome: string | null
+          conteudo_snapshot: Json
+          created_at: string
+          html_snapshot: string | null
+          id: string
+          motivo_alteracao: string | null
+          pop_id: string
+          resumo_mudancas: string | null
+          status: string
+          tenant_id: string
+          titulo: string
+          versao: string
+        }
+        Insert: {
+          alterado_por?: string | null
+          alterado_por_nome?: string | null
+          conteudo_snapshot: Json
+          created_at?: string
+          html_snapshot?: string | null
+          id?: string
+          motivo_alteracao?: string | null
+          pop_id: string
+          resumo_mudancas?: string | null
+          status: string
+          tenant_id: string
+          titulo: string
+          versao: string
+        }
+        Update: {
+          alterado_por?: string | null
+          alterado_por_nome?: string | null
+          conteudo_snapshot?: Json
+          created_at?: string
+          html_snapshot?: string | null
+          id?: string
+          motivo_alteracao?: string | null
+          pop_id?: string
+          resumo_mudancas?: string | null
+          status?: string
+          tenant_id?: string
+          titulo?: string
+          versao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_pop_versoes_pop_id_fkey"
+            columns: ["pop_id"]
+            isOneToOne: false
+            referencedRelation: "funcao_pops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcao_pop_versoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcao_pops: {
+        Row: {
+          aprovado_por: string | null
+          aprovado_por_nome: string | null
+          atividade_id: string
+          cargo_id: string
+          codigo: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          criterios_qualidade: string | null
+          data_aprovacao: string | null
+          definicoes: string | null
+          epis_sst: string | null
+          escopo: string | null
+          gerado_por_ia: boolean
+          html_completo: string | null
+          id: string
+          materiais_ferramentas: Json | null
+          objetivo: string | null
+          pre_requisitos: Json | null
+          procedimento_passos: Json | null
+          referencias: string | null
+          registros_evidencias: string | null
+          responsabilidades: Json | null
+          status: string
+          tenant_id: string
+          titulo: string
+          tratamento_nao_conformidades: string | null
+          updated_at: string
+          versao_atual: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          atividade_id: string
+          cargo_id: string
+          codigo: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          criterios_qualidade?: string | null
+          data_aprovacao?: string | null
+          definicoes?: string | null
+          epis_sst?: string | null
+          escopo?: string | null
+          gerado_por_ia?: boolean
+          html_completo?: string | null
+          id?: string
+          materiais_ferramentas?: Json | null
+          objetivo?: string | null
+          pre_requisitos?: Json | null
+          procedimento_passos?: Json | null
+          referencias?: string | null
+          registros_evidencias?: string | null
+          responsabilidades?: Json | null
+          status?: string
+          tenant_id: string
+          titulo: string
+          tratamento_nao_conformidades?: string | null
+          updated_at?: string
+          versao_atual?: string
+        }
+        Update: {
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          atividade_id?: string
+          cargo_id?: string
+          codigo?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          criterios_qualidade?: string | null
+          data_aprovacao?: string | null
+          definicoes?: string | null
+          epis_sst?: string | null
+          escopo?: string | null
+          gerado_por_ia?: boolean
+          html_completo?: string | null
+          id?: string
+          materiais_ferramentas?: Json | null
+          objetivo?: string | null
+          pre_requisitos?: Json | null
+          procedimento_passos?: Json | null
+          referencias?: string | null
+          registros_evidencias?: string | null
+          responsabilidades?: Json | null
+          status?: string
+          tenant_id?: string
+          titulo?: string
+          tratamento_nao_conformidades?: string | null
+          updated_at?: string
+          versao_atual?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_pops_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcao_responsabilidades: {
         Row: {
           atividade_id: string

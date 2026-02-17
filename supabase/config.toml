@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.ai-nf-match]
 verify_jwt = false
+
+[functions.ai-pop-generator]
+verify_jwt = false

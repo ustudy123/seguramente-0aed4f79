@@ -53,7 +53,7 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
         </TabsList>
 
         <TabsContent value="atividades" className="mt-4">
-          <AtividadesSection cargoId={cargo.id} />
+          <AtividadesSection cargoId={cargo.id} funcaoNome={cargo.nome} nivel={cargo.nivel || undefined} />
         </TabsContent>
         <TabsContent value="competencias" className="mt-4">
           <CompetenciasSection cargoId={cargo.id} />
