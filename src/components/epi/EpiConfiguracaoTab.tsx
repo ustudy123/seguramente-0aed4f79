@@ -467,7 +467,7 @@ export function EpiConfiguracaoTab() {
               </div>
 
               <div className="space-y-2">
-                <Label>Unidade / Filial</Label>
+                <Label>Estabelecimento / Obra</Label>
                 <Select
                   value={formData.filial_id || "__none__"}
                   onValueChange={(val) =>
