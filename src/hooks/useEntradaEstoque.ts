@@ -46,11 +46,7 @@ export function useEntradaEstoque() {
         .eq("local_estoque_id", dados.local_estoque_id)
         .eq("tenant_id", tenantId);
       
-      if (dados.tamanho) {
-        queryEstoque = queryEstoque.eq("tamanho", dados.tamanho);
-      } else {
-        queryEstoque = queryEstoque.is("tamanho", null);
-      }
+      queryEstoque = queryEstoque.eq("tamanho", dados.tamanho || "");
 
       const { data: estoqueLocal } = await queryEstoque.maybeSingle();
 
@@ -67,7 +63,7 @@ export function useEntradaEstoque() {
             epi_id: dados.epi_id,
             local_estoque_id: dados.local_estoque_id,
             quantidade: dados.quantidade,
-            tamanho: dados.tamanho || null,
+            tamanho: dados.tamanho || "",
           });
       }
 
@@ -91,7 +87,7 @@ export function useEntradaEstoque() {
           tipo: "entrada",
           subtipo: dados.subtipo,
           local_estoque_id: dados.local_estoque_id,
-          tamanho: dados.tamanho || null,
+          tamanho: dados.tamanho || "",
           quantidade: dados.quantidade,
           quantidade_anterior: qtdAnterior,
           quantidade_atual: qtdNova,

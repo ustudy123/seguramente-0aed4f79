@@ -194,11 +194,7 @@ export function useImportacaoNF() {
           .eq("local_estoque_id", item.local_estoque_id)
           .eq("tenant_id", tenantId);
 
-        if (item.tamanho) {
-          queryEstoque = queryEstoque.eq("tamanho", item.tamanho);
-        } else {
-          queryEstoque = queryEstoque.is("tamanho", null);
-        }
+        queryEstoque = queryEstoque.eq("tamanho", item.tamanho || "");
 
         const { data: estoqueLocal } = await queryEstoque.maybeSingle();
 
@@ -215,7 +211,7 @@ export function useImportacaoNF() {
               epi_id: epiId,
               local_estoque_id: item.local_estoque_id,
               quantidade: item.quantidade,
-              tamanho: item.tamanho || null,
+              tamanho: item.tamanho || "",
             });
         }
 
@@ -228,7 +224,7 @@ export function useImportacaoNF() {
             tipo: "entrada",
             subtipo: "compra_nf",
             local_estoque_id: item.local_estoque_id,
-            tamanho: item.tamanho || null,
+            tamanho: item.tamanho || "",
             quantidade: item.quantidade,
             quantidade_anterior: qtdAnterior,
             quantidade_atual: qtdNova,
@@ -250,7 +246,7 @@ export function useImportacaoNF() {
           valor_unitario: item.valor_unitario || null,
           valor_total: item.valor_total || null,
           movimentacao_id: mov?.id || null,
-          tamanho: item.tamanho || null,
+          tamanho: item.tamanho || "",
         });
       }
 

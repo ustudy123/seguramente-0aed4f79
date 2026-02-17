@@ -2660,7 +2660,7 @@ export type Database = {
           local_estoque_id: string
           quantidade: number
           quantidade_minima: number
-          tamanho: string | null
+          tamanho: string
           tenant_id: string
           updated_at: string
         }
@@ -2671,7 +2671,7 @@ export type Database = {
           local_estoque_id: string
           quantidade?: number
           quantidade_minima?: number
-          tamanho?: string | null
+          tamanho?: string
           tenant_id: string
           updated_at?: string
         }
@@ -2682,7 +2682,7 @@ export type Database = {
           local_estoque_id?: string
           quantidade?: number
           quantidade_minima?: number
-          tamanho?: string | null
+          tamanho?: string
           tenant_id?: string
           updated_at?: string
         }
