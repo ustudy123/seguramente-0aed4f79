@@ -263,7 +263,7 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
                         <span><strong>Risco se falhar:</strong> {atResp.consequencia_erro || "—"}</span>
                       </div>
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={() => setRespForm({ atividadeId: at.id, responsavel: "", interfaces: "", consequencia: "" })}>
+                      <Button variant="ghost" size="sm" onClick={() => setRespForm({ atividadeId: at.id, responsavel: funcaoNome || "", interfaces: "", consequencia: "" })}>
                         <Plus className="w-3 h-3 mr-1" /> Definir
                       </Button>
                     )}
