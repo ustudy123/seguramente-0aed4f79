@@ -188,6 +188,12 @@ const Documentos = () => {
 
   const handleDownload = async (doc: DocumentoItem) => {
     try {
+      // Documentos do tipo POP não são arquivos em storage — abrir no módulo de Aprendizado
+      if (doc.storage_path.startsWith("pop://")) {
+        toast.info("Este é um POP (Procedimento Operacional Padrão). Acesse pelo módulo Aprendizado & Papéis para visualizar e editar.");
+        return;
+      }
+
       const url = await getSignedUrl(doc.storage_path);
       if (!url) {
         toast.error("Não foi possível gerar o link do documento. Verifique se o arquivo ainda existe.");
