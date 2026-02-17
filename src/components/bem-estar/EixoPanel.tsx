@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Loader2, Heart, BookOpen, Users, Zap, Brain, Sparkles, Sun } from "lucide-react";
+import { X, Loader2, Heart, BookOpen, Users, Zap, Brain, Sparkles, Sun, ExternalLink, MessageCircle, TrendingUp, Clock, AlertTriangle, Award, Target, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { EIXOS_CONFIG, type BemEstarEixo, type BemEstarResposta } from "@/hooks/useBemEstar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface EixoPanelProps {
   eixo: BemEstarEixo;
@@ -68,6 +71,12 @@ const SUGESTOES: Partial<Record<BemEstarEixo, string[]>> = {
   relacoes: ["Reconhecer alguém essa semana", "Iniciar conversa saudável"],
 };
 
+const HUMOR_EMOJI_MAP: Record<string, string> = {
+  feliz: "😊", motivado: "🔥", calmo: "😌", grato: "🙏",
+  neutro: "😐", cansado: "😩", ansioso: "😰", triste: "😢",
+  frustrado: "😤", estressado: "🤯", exausto: "💤",
+};
+
 export function EixoPanel({
   eixo,
   respostas,
@@ -80,6 +89,7 @@ export function EixoPanel({
 }: EixoPanelProps) {
   const config = EIXOS_CONFIG[eixo];
   const Icon = EIXO_ICONS[eixo];
+  const { user, profile } = useAuth();
   const respostasEixo = respostas.filter((r) => r.eixo === eixo);
   const ultimasRespostas = respostasEixo.filter((r) => r.valor_numerico != null).slice(0, 5);
   const media =
@@ -91,6 +101,41 @@ export function EixoPanel({
   const [textoReflexao, setTextoReflexao] = useState("");
   const [opcaoSelecionada, setOpcaoSelecionada] = useState<string | null>(null);
   const [respondido, setRespondido] = useState(false);
+
+  // Contextual data states
+  const [humorHistory, setHumorHistory] = useState<any[]>([]);
+  const [feedbackCount, setFeedbackCount] = useState<number>(0);
+  const [showFuncaoConexao, setShowFuncaoConexao] = useState(false);
+
+  // Fetch contextual data per axis
+  useEffect(() => {
+    if (!user?.id) return;
+
+    if (eixo === "autoconhecimento") {
+      // Fetch mood history
+      supabase
+        .from("humor_diario" as never)
+        .select("humor, emoji, data, created_at" as never)
+        .eq("user_id" as never, user.id as never)
+        .order("data" as never, { ascending: false })
+        .limit(14)
+        .then(({ data }: any) => {
+          if (data) setHumorHistory(data.reverse());
+        });
+    }
+
+    if (eixo === "autonomia") {
+      // Fetch positive feedback count
+      supabase
+        .from("feedbacks" as never)
+        .select("id" as never, { count: "exact", head: true })
+        .eq("destinatario_id" as never, user.id as never)
+        .eq("categoria" as never, "reconhecimento" as never)
+        .then(({ count }: any) => {
+          setFeedbackCount(count || 0);
+        });
+    }
+  }, [eixo, user?.id]);
 
   const handleSliderSubmit = async () => {
     await onSalvarResposta({ eixo, tipo: "slider", valor_numerico: sliderValue });
@@ -109,6 +154,168 @@ export function EixoPanel({
     }
     setTextoReflexao("");
     setRespondido(true);
+  };
+
+  // Render contextual content per axis (above interaction)
+  const renderContextualContent = () => {
+    switch (eixo) {
+      case "autoconhecimento":
+        return humorHistory.length > 0 ? (
+          <div className="mb-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              Seu humor nos últimos dias
+            </p>
+            <div className="flex items-center gap-1 overflow-x-auto pb-1">
+              {humorHistory.map((h: any, i: number) => (
+                <div key={i} className="flex flex-col items-center min-w-[36px]">
+                  <span className="text-lg" title={h.humor}>
+                    {HUMOR_EMOJI_MAP[h.humor] || h.emoji || "😐"}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground mt-0.5">
+                    {new Date(h.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Separator className="mt-3" />
+          </div>
+        ) : null;
+
+      case "sentido":
+        return (
+          <div className="mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-xs gap-2"
+              onClick={() => setShowFuncaoConexao(!showFuncaoConexao)}
+            >
+              <Target className="w-3.5 h-3.5" />
+              Quer ver como sua função se conecta com a empresa?
+              <ExternalLink className="w-3 h-3 ml-auto" />
+            </Button>
+            <AnimatePresence>
+              {showFuncaoConexao && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border/50 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">Sua função</Badge>
+                      <span className="text-sm font-medium">{profile?.cargo || "—"}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Objetivo da função</p>
+                      <p className="text-sm">Garantir a execução e melhoria contínua dos processos da sua área.</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Impacto no time e clientes</p>
+                      <p className="text-sm">Seu trabalho contribui diretamente para a qualidade e eficiência percebida por colegas e clientes.</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <Separator className="mt-3" />
+          </div>
+        );
+
+      case "relacoes":
+        return (
+          <div className="mb-4">
+            <div className="p-3 bg-muted/20 rounded-lg border border-border/30">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-2">
+                <MessageCircle className="w-3.5 h-3.5" />
+                Micro-ação sugerida (opcional)
+              </p>
+              <p className="text-sm mb-2">Que tal reconhecer alguém essa semana?</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => window.location.href = "/feedback-ocorrencias"}>
+                  <Award className="w-3.5 h-3.5" />
+                  Enviar feedback positivo
+                </Button>
+              </div>
+            </div>
+            <Separator className="mt-3" />
+          </div>
+        );
+
+      case "autonomia":
+        return (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg border border-border/30">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-warning" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Feedbacks positivos recebidos</p>
+                  <p className="text-lg font-semibold">{feedbackCount}</p>
+                </div>
+              </div>
+            </div>
+            <Separator />
+          </div>
+        );
+
+      case "autorrealizacao":
+        return (
+          <div className="mb-4">
+            <div className="p-3 bg-muted/20 rounded-lg border border-border/30 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5" />
+                Desenvolvimento
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => window.location.href = "/aprendizado"}>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Ver trilhas disponíveis
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => window.location.href = "/aprendizado"}>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Competências da função
+                </Button>
+              </div>
+            </div>
+            <Separator className="mt-3" />
+          </div>
+        );
+
+      case "atencao_plena":
+        return (
+          <div className="mb-4">
+            <div className="p-3 bg-muted/20 rounded-lg border border-border/30 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Indicadores de ritmo (auto-observação)
+              </p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Jornadas longas recorrentes?</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Brain className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Poucas pausas durante o dia?</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Registros de trabalho fora do horário?</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground italic">
+                Reflita sobre esses pontos ao responder abaixo.
+              </p>
+            </div>
+            <Separator className="mt-3" />
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -157,6 +364,9 @@ export function EixoPanel({
               "{EIXO_TEXTOS_EDUCATIVOS[eixo]}"
             </p>
           </div>
+
+          {/* Contextual content per axis */}
+          {renderContextualContent()}
 
           {/* Interaction area */}
           <AnimatePresence mode="wait">
@@ -248,19 +458,33 @@ export function EixoPanel({
                   </div>
                 </div>
 
-                {/* Text field */}
+                {/* Text + emoji field */}
                 <div className="space-y-2 pt-2 border-t border-border/30">
                   <p className="text-sm font-medium">{EIXO_PERGUNTAS[eixo]}</p>
                   <Textarea
                     value={textoReflexao}
                     onChange={(e) => setTextoReflexao(e.target.value)}
-                    placeholder="Pode ser um texto curto, um emoji, ou nada..."
+                    placeholder="Pode ser um texto curto, um emoji 😊, ou nada..."
                     rows={2}
                     maxLength={280}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {textoReflexao.length}/280 — totalmente opcional
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {textoReflexao.length}/280 — totalmente opcional
+                    </span>
+                    <div className="flex gap-1">
+                      {["😊", "🙏", "🎉", "💪", "🌟"].map((emoji) => (
+                        <button
+                          key={emoji}
+                          className="text-lg hover:scale-125 transition-transform"
+                          onClick={() => setTextoReflexao((prev) => prev + emoji)}
+                          type="button"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <Button size="sm" onClick={handleGratidaoComSliderSubmit} disabled={salvando} className="w-full">
@@ -298,7 +522,10 @@ export function EixoPanel({
                 {/* Suggestions for low scores */}
                 {sliderValue <= 2 && SUGESTOES[eixo] && (
                   <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
-                    <p className="text-xs text-muted-foreground mb-2">Sugestões (opcionais):</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      <Lightbulb className="w-3.5 h-3.5 inline mr-1" />
+                      Sugestões (opcionais):
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {SUGESTOES[eixo]!.map((s) => (
                         <Badge key={s} variant="secondary" className="text-xs cursor-pointer hover:bg-secondary/80">
