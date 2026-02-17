@@ -2142,6 +2142,7 @@ export type Database = {
           aprendiz_quantidade_atual: number | null
           aprendiz_quantidade_maxima: number | null
           aprendiz_quantidade_minima: number | null
+          ativo: boolean
           atualizado_por: string | null
           bairro: string | null
           cep: string | null
@@ -2201,6 +2202,7 @@ export type Database = {
           aprendiz_quantidade_atual?: number | null
           aprendiz_quantidade_maxima?: number | null
           aprendiz_quantidade_minima?: number | null
+          ativo?: boolean
           atualizado_por?: string | null
           bairro?: string | null
           cep?: string | null
@@ -2260,6 +2262,7 @@ export type Database = {
           aprendiz_quantidade_atual?: number | null
           aprendiz_quantidade_maxima?: number | null
           aprendiz_quantidade_minima?: number | null
+          ativo?: boolean
           atualizado_por?: string | null
           bairro?: string | null
           cep?: string | null
@@ -2318,7 +2321,7 @@ export type Database = {
           {
             foreignKeyName: "empresa_cadastro_tenant_id_fkey"
             columns: ["tenant_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },

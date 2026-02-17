@@ -6,35 +6,50 @@ import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
 import type { Json } from '@/integrations/supabase/types';
 
-export function useEmpresaCadastro() {
+export function useEmpresaCadastro(empresaId?: string | null) {
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: cadastro, isLoading, error } = useQuery({
-    queryKey: ['empresa_cadastro', tenantId],
+  // Lista todas as empresas do tenant
+  const { data: empresas = [], isLoading: isLoadingList } = useQuery({
+    queryKey: ['empresa_cadastro_list', tenantId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('empresa_cadastro')
         .select('*')
         .eq('tenant_id', tenantId!)
+        .order('razao_social');
+
+      if (error) throw error;
+      return (data || []) as unknown as (EmpresaCadastro & { ativo: boolean })[];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Carrega uma empresa específica para edição
+  const { data: cadastro, isLoading, error } = useQuery({
+    queryKey: ['empresa_cadastro', empresaId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('empresa_cadastro')
+        .select('*')
+        .eq('id', empresaId!)
         .maybeSingle();
 
       if (error) throw error;
       return data as unknown as EmpresaCadastro | null;
     },
-    enabled: !!tenantId,
+    enabled: !!empresaId,
   });
 
   const upsertCadastro = useMutation({
     mutationFn: async (updates: Partial<EmpresaCadastro>) => {
-      // Convert to DB-compatible format (JSONB fields as Json)
       const { id, created_at, updated_at, ...rest } = updates;
       const payload: Record<string, unknown> = {
         ...rest,
         tenant_id: tenantId!,
         atualizado_por: user?.email || null,
-        // Cast complex arrays to Json
         cnaes_secundarios: rest.cnaes_secundarios as unknown as Json,
         sesmt_profissionais: rest.sesmt_profissionais as unknown as Json,
         cipa_membros: rest.cipa_membros as unknown as Json,
@@ -44,7 +59,16 @@ export function useEmpresaCadastro() {
         condicoes_especiais_detalhes: rest.condicoes_especiais_detalhes as unknown as Json,
       };
 
-      if (cadastro?.id) {
+      if (empresaId) {
+        const { data, error } = await supabase
+          .from('empresa_cadastro')
+          .update(payload as any)
+          .eq('id', empresaId)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } else if (cadastro?.id) {
         const { data, error } = await supabase
           .from('empresa_cadastro')
           .update(payload as any)
@@ -65,10 +89,24 @@ export function useEmpresaCadastro() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro'] });
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
       toast.success('Cadastro da empresa salvo com sucesso!');
     },
     onError: (error: Error) => {
       toast.error('Erro ao salvar cadastro: ' + error.message);
+    },
+  });
+
+  const toggleAtivoEmpresa = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { error } = await supabase
+        .from('empresa_cadastro')
+        .update({ ativo } as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
     },
   });
 
@@ -181,10 +219,13 @@ export function useEmpresaCadastro() {
   });
 
   return {
+    empresas,
+    isLoadingList,
     cadastro,
     isLoading,
     error,
     upsertCadastro,
+    toggleAtivoEmpresa,
     obrigacoes,
     obrigacoesLoading,
     createObrigacao,
