@@ -149,7 +149,7 @@ export function EpiList({
                     {epi.marca || "-"}
                     {epi.modelo && <span className="text-muted-foreground"> / {epi.modelo}</span>}
                   </TableCell>
-                  <TableCell>{epi.tamanho || "-"}</TableCell>
+                  <TableCell>{epi.tipo.controla_tamanho ? "Grade" : (epi.tamanho || "-")}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
                       {isEstoqueBaixo(epi) && (

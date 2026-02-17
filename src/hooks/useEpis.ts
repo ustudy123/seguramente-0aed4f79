@@ -209,9 +209,9 @@ export function useEpis() {
                 tenant_id: tenantId,
                 epi_id: novoEpi.id,
                 local_estoque_id: g.local_estoque_id,
-                tamanho: g.tamanho,
+                tamanho: g.tamanho || "",
                 quantidade: g.quantidade,
-              }, { onConflict: "epi_id,local_estoque_id,tenant_id,tamanho" });
+              }, { onConflict: "epi_estoque_local_epi_local_tamanho_unique" });
             }
           }
           await supabase.from("epi_movimentacoes").insert({

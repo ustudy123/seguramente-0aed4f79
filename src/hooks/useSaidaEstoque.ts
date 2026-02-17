@@ -28,11 +28,7 @@ export function useSaidaEstoque() {
         .eq("local_estoque_id", dados.local_estoque_id)
         .eq("tenant_id", tenantId);
       
-      if (dados.tamanho) {
-        queryLocal = queryLocal.eq("tamanho", dados.tamanho);
-      } else {
-        queryLocal = queryLocal.is("tamanho", null);
-      }
+      queryLocal = queryLocal.eq("tamanho", dados.tamanho || "");
 
       const { data: estoqueLocal, error: localError } = await queryLocal.maybeSingle();
 
@@ -87,7 +83,7 @@ export function useSaidaEstoque() {
           tipo: "saida",
           subtipo: dados.subtipo,
           local_estoque_id: dados.local_estoque_id,
-          tamanho: dados.tamanho || null,
+          tamanho: dados.tamanho || "",
           quantidade: dados.quantidade,
           quantidade_anterior: qtdAnterior,
           quantidade_atual: qtdNova,

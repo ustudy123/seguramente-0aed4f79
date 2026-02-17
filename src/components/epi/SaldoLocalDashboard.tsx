@@ -44,6 +44,7 @@ interface EstoqueLocalRow {
   local_estoque_id: string;
   quantidade: number;
   quantidade_minima: number;
+  tamanho: string;
   epi: {
     id: string;
     ca: string | null;
@@ -52,6 +53,7 @@ interface EstoqueLocalRow {
       nome: string;
       categoria: string | null;
       unidade_medida: string | null;
+      controla_tamanho: boolean | null;
     } | null;
   } | null;
 }
@@ -68,7 +70,7 @@ export function SaldoLocalDashboard() {
       if (!tenantId) return [];
       const { data, error } = await supabase
         .from("epi_estoque_local")
-        .select("*, epi:epis(id, ca, quantidade_estoque, tipo:epi_tipos(nome, categoria, unidade_medida))")
+        .select("*, epi:epis(id, ca, quantidade_estoque, tipo:epi_tipos(nome, categoria, unidade_medida, controla_tamanho))")
         .eq("tenant_id", tenantId)
         .order("quantidade", { ascending: false });
       if (error) throw error;
@@ -292,7 +294,7 @@ export function SaldoLocalDashboard() {
                             </div>
                           </TableCell>
                           <TableCell className="text-sm">
-                            {(row as any).tamanho || "—"}
+                            {row.tamanho || "—"}
                           </TableCell>
                           <TableCell className="text-sm">
                             {row.epi?.ca || "—"}

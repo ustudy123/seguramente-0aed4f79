@@ -28,11 +28,7 @@ export function useTransferenciaEstoque() {
         .eq("local_estoque_id", dados.local_origem_id)
         .eq("tenant_id", tenantId);
       
-      if (dados.tamanho) {
-        queryOrigem = queryOrigem.eq("tamanho", dados.tamanho);
-      } else {
-        queryOrigem = queryOrigem.is("tamanho", null);
-      }
+      queryOrigem = queryOrigem.eq("tamanho", dados.tamanho || "");
 
       const { data: estoqueOrigem, error: origemError } = await queryOrigem.maybeSingle();
 
@@ -55,11 +51,7 @@ export function useTransferenciaEstoque() {
         .eq("local_estoque_id", dados.local_destino_id)
         .eq("tenant_id", tenantId);
       
-      if (dados.tamanho) {
-        queryDestino = queryDestino.eq("tamanho", dados.tamanho);
-      } else {
-        queryDestino = queryDestino.is("tamanho", null);
-      }
+      queryDestino = queryDestino.eq("tamanho", dados.tamanho || "");
 
       const { data: estoqueDestino } = await queryDestino.maybeSingle();
 
@@ -76,7 +68,7 @@ export function useTransferenciaEstoque() {
             epi_id: dados.epi_id,
             local_estoque_id: dados.local_destino_id,
             quantidade: dados.quantidade,
-            tamanho: dados.tamanho || null,
+            tamanho: dados.tamanho || "",
           });
       }
 
@@ -102,7 +94,7 @@ export function useTransferenciaEstoque() {
           tipo: "transferencia",
           subtipo: "transferencia",
           local_estoque_id: dados.local_destino_id,
-          tamanho: dados.tamanho || null,
+          tamanho: dados.tamanho || "",
           quantidade: dados.quantidade,
           quantidade_anterior: qtdGlobal,
           quantidade_atual: qtdGlobal, // estoque global não muda
