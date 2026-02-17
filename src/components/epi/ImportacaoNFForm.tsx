@@ -130,8 +130,16 @@ export function ImportacaoNFForm({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "text/xml": [".xml"], "application/xml": [".xml"] },
+    accept: undefined,
+    noClick: false,
     maxFiles: 1,
+    validator: (file) => {
+      const ext = file.name.toLowerCase();
+      if (!ext.endsWith(".xml")) {
+        return { code: "file-invalid-type", message: "Apenas arquivos .xml são aceitos" };
+      }
+      return null;
+    },
   });
 
   const addManualItem = () => {
@@ -253,38 +261,38 @@ export function ImportacaoNFForm({
             )}
           </TabsContent>
 
-          <TabsContent value="manual" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+          <TabsContent value="manual" className="space-y-5 mt-4">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+              <div className="space-y-1.5">
                 <Label className="flex items-center gap-1"><Hash className="w-3.5 h-3.5" /> Nº da NF *</Label>
                 <Input value={numeroNf} onChange={(e) => setNumeroNf(e.target.value)} placeholder="000123" />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label>Série</Label>
                 <Input value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="1" />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" /> Fornecedor</Label>
                 <Input value={fornecedorNome} onChange={(e) => setFornecedorNome(e.target.value)} placeholder="Nome do fornecedor" />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label>CNPJ Fornecedor</Label>
                 <Input value={fornecedorCnpj} onChange={(e) => setFornecedorCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Data Emissão</Label>
                 <Input type="date" value={dataEmissao} onChange={(e) => setDataEmissao(e.target.value)} />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label>Valor Total (R$)</Label>
                 <Input type="number" step="0.01" value={valorTotal} onChange={(e) => setValorTotal(e.target.value)} placeholder="0,00" />
               </div>
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label>Chave de Acesso</Label>
               <Input value={chaveAcesso} onChange={(e) => setChaveAcesso(e.target.value)} placeholder="44 dígitos (opcional)" />
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label>Observações</Label>
               <Textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} />
             </div>
