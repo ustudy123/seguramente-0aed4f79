@@ -21,6 +21,7 @@ serve(async (req) => {
       objetivo_pop, pre_requisitos, epi_necessario,
       materiais, sistemas, erros_comuns,
       criterios_qualidade, responsaveis,
+      responsavel_direto, consequencia_erro, conteudos_relacionados,
       action, trecho, instrucao,
     } = body;
 
@@ -70,9 +71,14 @@ ATIVIDADE:
 - Complexidade: ${complexidade || "Não informada"}
 - Classificação: ${classificacao || "Não informada"}
 
+MATRIZ DE RESPONSABILIDADE:
+- Responsável direto (executante): ${responsavel_direto || "Não informado"}
+- Interfaces/Áreas envolvidas: ${interfaces || "Nenhuma"}
+- Consequência/risco se falhar: ${consequencia_erro || "Não informado"}
+
 INFORMAÇÕES COMPLEMENTARES:
 - Ferramentas vinculadas: ${ferramentas || "Nenhuma"}
-- Interfaces/Dependências: ${interfaces || "Nenhuma"}
+- Conteúdos/documentação relacionada: ${conteudos_relacionados || "Nenhum"}
 - Riscos relacionados: ${riscos || "Nenhum identificado"}
 - Objetivo do POP: ${objetivo_pop || "Padronizar a execução da atividade"}
 - Pré-requisitos: ${pre_requisitos || "Não informados"}

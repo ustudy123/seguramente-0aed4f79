@@ -358,8 +358,11 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
                     cargoId={cargoId}
                     funcaoNome={funcaoNome}
                     nivel={nivel}
-                    ferramentas={atFerramentas.map(f => f.nome).join(", ") || undefined}
+                    ferramentas={atFerramentas.map(f => `${f.nome} (${TIPO_FERRAMENTA_LABELS[f.tipo]})`).join(", ") || undefined}
                     interfaces={atResp?.interfaces || undefined}
+                    responsavelDireto={atResp?.responsavel_direto || undefined}
+                    consequenciaErro={atResp?.consequencia_erro || undefined}
+                    conteudos={atConteudos.map(c => `${c.titulo} (${TIPO_CONTEUDO_LABELS[c.tipo]})`).join(", ") || undefined}
                   />
                 </CardContent>
               </CollapsibleContent>

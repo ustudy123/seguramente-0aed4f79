@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,9 @@ interface PopGerarModalProps {
   nivel?: string;
   ferramentas?: string;
   interfaces?: string;
+  responsavelDireto?: string;
+  consequenciaErro?: string;
+  conteudos?: string;
   onGenerated: (popContent: Record<string, unknown>) => void;
   gerarPopIA: (params: Record<string, string | undefined>) => Promise<Record<string, unknown>>;
 }
@@ -28,6 +31,7 @@ export function PopGerarModal({
   open, onClose, atividadeNome, atividadeDescricao,
   frequencia, complexidade, classificacao,
   funcaoNome, nivel, ferramentas, interfaces,
+  responsavelDireto, consequenciaErro, conteudos,
   onGenerated, gerarPopIA,
 }: PopGerarModalProps) {
   const [loading, setLoading] = useState(false);
@@ -39,6 +43,15 @@ export function PopGerarModal({
   const [errosComuns, setErrosComuns] = useState("");
   const [criterios, setCriterios] = useState("");
   const [responsaveis, setResponsaveis] = useState("");
+
+  // Pre-fill fields from activity data when modal opens
+  useEffect(() => {
+    if (open) {
+      if (responsavelDireto) setResponsaveis(prev => prev || responsavelDireto);
+      if (ferramentas) setSistemas(prev => prev || ferramentas);
+      if (consequenciaErro) setErrosComuns(prev => prev || consequenciaErro);
+    }
+  }, [open, responsavelDireto, ferramentas, consequenciaErro]);
 
   const handleGerar = async () => {
     setLoading(true);
@@ -53,6 +66,9 @@ export function PopGerarModal({
         classificacao,
         ferramentas,
         interfaces,
+        responsavel_direto: responsavelDireto,
+        consequencia_erro: consequenciaErro,
+        conteudos_relacionados: conteudos,
         objetivo_pop: objetivo || undefined,
         pre_requisitos: preRequisitos || undefined,
         epi_necessario: epiNecessario ? "Sim" : "Não",
