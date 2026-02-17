@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, Pencil, Trash2, MapPin, Search, Building2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFiliais, Filial } from "@/hooks/useCadastros";
 import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
+import { buscarEnderecoPorCep, formatCep, cleanCep, validateCep } from "@/lib/viacep";
 import type { EmpresaCadastro } from "@/types/empresa";
 
 const ESTADOS = [
@@ -347,6 +348,32 @@ export default function Filiais() {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
+                <Label htmlFor="cep">CEP</Label>
+                <Input
+                  id="cep"
+                  value={formData.cep}
+                  onChange={(e) => {
+                    const formatted = formatCep(e.target.value);
+                    setFormData({ ...formData, cep: formatted });
+                    const cleaned = cleanCep(formatted);
+                    if (cleaned.length === 8) {
+                      buscarEnderecoPorCep(cleaned).then(endereco => {
+                        if (endereco) {
+                          setFormData(prev => ({
+                            ...prev,
+                            cidade: endereco.cidade,
+                            estado: endereco.estado,
+                            endereco: endereco.logradouro ? (prev.endereco || endereco.logradouro) : prev.endereco,
+                          }));
+                        }
+                      });
+                    }
+                  }}
+                  placeholder="00000-000"
+                  maxLength={9}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="cidade">Cidade</Label>
                 <Input
                   id="cidade"
@@ -366,15 +393,6 @@ export default function Filiais() {
                   <option value="">UF</option>
                   {ESTADOS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
                 </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cep">CEP</Label>
-                <Input
-                  id="cep"
-                  value={formData.cep}
-                  onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                  placeholder="00000-000"
-                />
               </div>
             </div>
 
