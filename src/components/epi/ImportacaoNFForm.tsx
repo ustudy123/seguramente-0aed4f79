@@ -31,6 +31,7 @@ interface ImportacaoNFFormProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: NFData) => Promise<any>;
   epis: any[];
+  tipos?: any[];
   locais: any[];
   isLoading: boolean;
 }
@@ -45,6 +46,7 @@ export function ImportacaoNFForm({
   onOpenChange,
   onSubmit,
   epis,
+  tipos = [],
   locais,
   isLoading,
 }: ImportacaoNFFormProps) {
@@ -344,11 +346,27 @@ export function ImportacaoNFForm({
                           <SelectValue placeholder="Selecione o EPI" />
                         </SelectTrigger>
                         <SelectContent>
-                          {epis.map((epi: any) => (
-                            <SelectItem key={epi.id} value={epi.id}>
-                              {epi.tipo?.nome || "EPI"} - {epi.codigo || epi.id.substring(0, 8)}
-                            </SelectItem>
-                          ))}
+                          {tipos.length > 0 ? (
+                            tipos.filter((t: any) => t.is_active !== false).map((tipo: any) => {
+                              // Find the corresponding epi record for this tipo
+                              const epiRecord = epis.find((e: any) => e.tipo_id === tipo.id);
+                              const value = epiRecord?.id || tipo.id;
+                              return (
+                                <SelectItem key={tipo.id} value={value}>
+                                  {tipo.nome}{tipo.categoria ? ` (${tipo.categoria})` : ""}{tipo.ca_numero ? ` - CA: ${tipo.ca_numero}` : ""}
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            epis.map((epi: any) => (
+                              <SelectItem key={epi.id} value={epi.id}>
+                                {epi.tipo?.nome || "EPI"} - {epi.codigo || epi.id.substring(0, 8)}
+                              </SelectItem>
+                            ))
+                          )}
+                          {tipos.length === 0 && epis.length === 0 && (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum EPI cadastrado</div>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

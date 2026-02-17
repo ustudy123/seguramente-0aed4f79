@@ -41,7 +41,7 @@ const SUBTIPO_LABELS: Record<string, string> = {
 };
 
 export function EntradasEstoqueTab() {
-  const { epis, episLoading, movimentacoes, movimentacoesLoading } = useEpis();
+  const { epis, episLoading, tipos, movimentacoes, movimentacoesLoading } = useEpis();
   const { locais, locaisAtivos } = useEpiLocais();
   const { registrarEntrada, registrando } = useEntradaEstoque();
   const { transferir, transferindo } = useTransferenciaEstoque();
@@ -244,6 +244,7 @@ export function EntradasEstoqueTab() {
         onOpenChange={setShowNFForm}
         onSubmit={importarNF}
         epis={epis}
+        tipos={tipos}
         locais={locais}
         isLoading={importando}
       />
