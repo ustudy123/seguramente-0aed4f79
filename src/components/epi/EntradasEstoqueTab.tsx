@@ -41,7 +41,7 @@ const SUBTIPO_LABELS: Record<string, string> = {
 };
 
 export function EntradasEstoqueTab() {
-  const { epis, episLoading, tipos, movimentacoes, movimentacoesLoading } = useEpis();
+  const { epis, episLoading, tipos, movimentacoes, movimentacoesLoading, criarTipo, criandoTipo } = useEpis();
   const { locais, locaisAtivos } = useEpiLocais();
   const { registrarEntrada, registrando } = useEntradaEstoque();
   const { transferir, transferindo } = useTransferenciaEstoque();
@@ -247,6 +247,8 @@ export function EntradasEstoqueTab() {
         tipos={tipos}
         locais={locais}
         isLoading={importando}
+        onCriarTipo={criarTipo}
+        criandoTipo={criandoTipo}
       />
     </div>
   );
