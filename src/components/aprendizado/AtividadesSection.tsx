@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle, Pencil, Check, X, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +27,7 @@ const TIPO_FERRAMENTA_LABELS: Record<string, string> = { sistema: "Sistema", sof
 
 export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSectionProps) {
   const {
-    atividades, criarAtividade, excluirAtividade, criandoAtividade,
+    atividades, criarAtividade, atualizarAtividade, atualizandoAtividade, excluirAtividade, criandoAtividade,
     responsabilidades, salvarResponsabilidade,
     conteudos, criarConteudo, excluirConteudo,
     ferramentas, criarFerramenta, excluirFerramenta,
@@ -46,6 +46,19 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
   const [conteudoForm, setConteudoForm] = useState<{ atividadeId: string; tipo: string; titulo: string; url: string } | null>(null);
   const [ferramentaForm, setFerramentaForm] = useState<{ atividadeId: string; nome: string; tipo: string; url_manual: string } | null>(null);
   const [respForm, setRespForm] = useState<{ atividadeId: string; responsavel: string; interfaces: string; consequencia: string } | null>(null);
+  const [editingDescId, setEditingDescId] = useState<string | null>(null);
+  const [editingDescValue, setEditingDescValue] = useState("");
+  const [popDesatualizadoId, setPopDesatualizadoId] = useState<string | null>(null);
+
+  const handleSaveDesc = useCallback(async (atividadeId: string) => {
+    const original = atividades.find(a => a.id === atividadeId);
+    if (original && original.descricao !== editingDescValue) {
+      await atualizarAtividade({ id: atividadeId, descricao: editingDescValue });
+      // Show desatualizado notice if POP exists
+      setPopDesatualizadoId(atividadeId);
+    }
+    setEditingDescId(null);
+  }, [atividades, editingDescValue, atualizarAtividade]);
 
   const handleCreate = async () => {
     if (!nome.trim()) return;
@@ -150,7 +163,52 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="p-4 pt-0 space-y-4 border-t">
-                  {at.descricao && <p className="text-sm text-muted-foreground">{at.descricao}</p>}
+                  {/* Descrição editável */}
+                  <div className="space-y-1">
+                    {editingDescId === at.id ? (
+                      <div className="flex gap-2 items-start">
+                        <Textarea
+                          value={editingDescValue}
+                          onChange={(e) => setEditingDescValue(e.target.value)}
+                          rows={2}
+                          className="text-sm flex-1"
+                        />
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveDesc(at.id)} disabled={atualizandoAtividade}>
+                          <Check className="w-4 h-4 text-green-600" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingDescId(null)}>
+                          <X className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <p
+                        className="text-sm text-muted-foreground cursor-pointer hover:bg-muted/30 rounded px-2 py-1 -mx-2 group flex items-center gap-1"
+                        onClick={() => { setEditingDescId(at.id); setEditingDescValue(at.descricao || ""); }}
+                      >
+                        {at.descricao || <span className="italic">Sem descrição — clique para adicionar</span>}
+                        <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+                      </p>
+                    )}
+
+                    {/* Alerta POP desatualizado */}
+                    {popDesatualizadoId === at.id && (
+                      <div className="flex items-center gap-2 bg-warning/10 border border-warning/30 rounded-lg px-3 py-2 text-sm">
+                        <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                        <span className="flex-1 text-foreground">A descrição foi alterada. O POP vinculado foi marcado como <strong>Desatualizado</strong>.</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 text-xs"
+                          onClick={() => { setPopDesatualizadoId(null); setExpandedId(at.id); }}
+                        >
+                          <Sparkles className="w-3 h-3" /> Atualizar POP com IA
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => setPopDesatualizadoId(null)}>
+                          Manter como está
+                        </Button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Responsabilidades */}
                   <div className="space-y-2">

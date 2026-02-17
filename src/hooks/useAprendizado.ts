@@ -55,6 +55,40 @@ export function useAprendizado(cargoId?: string) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const atualizarAtividadeMut = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<FuncaoAtividade> & { id: string }) => {
+      const { error } = await supabase
+        .from("funcao_atividades" as never)
+        .update(updates as never)
+        .eq("id", id);
+      if (error) throw error;
+
+      // Se a descrição mudou, marcar POP vinculado como "desatualizado"
+      if (updates.descricao !== undefined) {
+        const { data: pops } = await supabase
+          .from("funcao_pops" as never)
+          .select("id, status")
+          .eq("atividade_id", id)
+          .neq("status", "desatualizado") as { data: Array<{ id: string; status: string }> | null };
+
+        if (pops && pops.length > 0) {
+          for (const pop of pops) {
+            await supabase
+              .from("funcao_pops" as never)
+              .update({ status: "desatualizado" } as never)
+              .eq("id", pop.id);
+          }
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["funcao_atividades", cargoId] });
+      qc.invalidateQueries({ queryKey: ["funcao_pops", cargoId] });
+      toast.success("Atividade atualizada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const excluirAtividadeMut = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("funcao_atividades" as never).delete().eq("id", id);
@@ -462,6 +496,8 @@ export function useAprendizado(cargoId?: string) {
     atividades,
     loadingAtividades,
     criarAtividade: criarAtividadeMut.mutateAsync,
+    atualizarAtividade: atualizarAtividadeMut.mutateAsync,
+    atualizandoAtividade: atualizarAtividadeMut.isPending,
     excluirAtividade: excluirAtividadeMut.mutateAsync,
     criandoAtividade: criarAtividadeMut.isPending,
 

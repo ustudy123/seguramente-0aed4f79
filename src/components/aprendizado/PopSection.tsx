@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Sparkles, Plus, Pencil, Trash2 } from "lucide-react";
+import { FileText, Sparkles, Plus, Pencil, Trash2, AlertTriangle, RefreshCw } from "lucide-react";
 import { usePopAtividade } from "@/hooks/usePopAtividade";
 import { PopGerarModal } from "./PopGerarModal";
 import { PopEditorModal } from "./PopEditorModal";
@@ -31,12 +31,36 @@ export function PopSection({ atividade, cargoId, funcaoNome, nivel, ferramentas,
   const pop = getPopByAtividade(atividade.id);
 
   const handleGerarIA = async (popContent: Record<string, unknown>) => {
-    await criarPop({
-      atividade_id: atividade.id,
-      titulo: `POP – ${atividade.nome}`,
-      gerado_por_ia: true,
-      popContent,
-    });
+    if (pop) {
+      // Atualizar POP existente (caso desatualizado)
+      await atualizarPop({
+        id: pop.id,
+        updates: {
+          status: "rascunho",
+          gerado_por_ia: true,
+          objetivo: (popContent as any).objetivo || null,
+          escopo: (popContent as any).escopo || null,
+          responsabilidades: (popContent as any).responsabilidades || {},
+          definicoes: (popContent as any).definicoes || null,
+          pre_requisitos: (popContent as any).pre_requisitos || [],
+          materiais_ferramentas: (popContent as any).materiais_ferramentas || [],
+          epis_sst: (popContent as any).epis_sst || null,
+          procedimento_passos: (popContent as any).procedimento_passos || [],
+          criterios_qualidade: (popContent as any).criterios_qualidade || null,
+          registros_evidencias: (popContent as any).registros_evidencias || null,
+          tratamento_nao_conformidades: (popContent as any).tratamento_nao_conformidades || null,
+          referencias: (popContent as any).referencias || null,
+        } as any,
+        motivo: "Atualização automática via IA após alteração da atividade",
+      });
+    } else {
+      await criarPop({
+        atividade_id: atividade.id,
+        titulo: `POP – ${atividade.nome}`,
+        gerado_por_ia: true,
+        popContent,
+      });
+    }
   };
 
   const handleCriarManual = async () => {
@@ -62,21 +86,40 @@ export function PopSection({ atividade, cargoId, funcaoNome, nivel, ferramentas,
       </div>
 
       {pop ? (
-        <div className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
-          <div className="flex items-center gap-2">
-            <Badge className={`text-xs ${st?.color}`}>{st?.label}</Badge>
-            <span className="text-sm font-medium">{pop.codigo}</span>
-            <span className="text-xs text-muted-foreground">v{pop.versao_atual}</span>
-            {pop.gerado_por_ia && <Badge variant="outline" className="text-xs gap-1"><Sparkles className="w-3 h-3" /> IA</Badge>}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2">
+              <Badge className={`text-xs ${st?.color}`}>{st?.label}</Badge>
+              <span className="text-sm font-medium">{pop.codigo}</span>
+              <span className="text-xs text-muted-foreground">v{pop.versao_atual}</span>
+              {pop.gerado_por_ia && <Badge variant="outline" className="text-xs gap-1"><Sparkles className="w-3 h-3" /> IA</Badge>}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="gap-1" onClick={() => setShowEditorModal(true)}>
+                <Pencil className="w-3 h-3" /> Editar
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => excluirPop(pop.id)}>
+                <Trash2 className="w-3 h-3 text-destructive" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="gap-1" onClick={() => setShowEditorModal(true)}>
-              <Pencil className="w-3 h-3" /> Editar
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => excluirPop(pop.id)}>
-              <Trash2 className="w-3 h-3 text-destructive" />
-            </Button>
-          </div>
+
+          {pop.status === "desatualizado" && (
+            <div className="flex items-center gap-2 bg-destructive/5 border border-destructive/20 rounded-lg px-3 py-2 text-sm">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+              <span className="flex-1 text-foreground">
+                Este POP está <strong>desatualizado</strong> porque a descrição da atividade foi alterada.
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-xs"
+                onClick={() => setShowGerarModal(true)}
+              >
+                <RefreshCw className="w-3 h-3" /> Atualizar com IA
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex items-center gap-2">
