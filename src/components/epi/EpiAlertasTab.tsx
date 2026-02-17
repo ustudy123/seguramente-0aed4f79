@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { format, differenceInDays, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,8 +11,11 @@ import {
   CheckCircle2,
   XCircle,
   AlertOctagon,
+  Plus,
 } from "lucide-react";
+import { AlertaAcaoModal } from "./AlertaAcaoModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -200,6 +203,7 @@ function gerarDadosFicticios(): Alerta[] {
 }
 
 export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
+  const [alertaParaAcao, setAlertaParaAcao] = useState<Alerta | null>(null);
   const hoje = new Date();
 
   const alertas = useMemo(() => {
@@ -562,6 +566,7 @@ export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
                           <TableHead>Item</TableHead>
                           <TableHead>Colaborador</TableHead>
                           <TableHead className="w-[120px]">Data Ref.</TableHead>
+                          <TableHead className="w-[80px]">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -610,6 +615,17 @@ export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
                                     )
                                   : "—"}
                               </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  title="Criar ação no Plano de Ação"
+                                  onClick={() => setAlertaParaAcao(alerta)}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </TableCell>
                             </motion.tr>
                           );
                         })}
@@ -622,6 +638,14 @@ export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
           </Tabs>
         </CardContent>
       </Card>
+
+      {alertaParaAcao && (
+        <AlertaAcaoModal
+          open={!!alertaParaAcao}
+          onOpenChange={(open) => !open && setAlertaParaAcao(null)}
+          alerta={alertaParaAcao}
+        />
+      )}
     </div>
   );
 }

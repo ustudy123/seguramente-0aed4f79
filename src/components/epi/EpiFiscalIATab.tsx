@@ -3,11 +3,14 @@ import { motion } from "framer-motion";
 import { Loader2, Play, RefreshCw, ShieldCheck, Eye, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useEpiFiscalIA } from "@/hooks/useEpiFiscalIA";
+import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
+import { AuditoriaAcoesSection } from "./AuditoriaAcoesSection";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 const RELATORIO_DEMO = `## 📋 Relatório de Auditoria Inteligente — EPIs
 
@@ -55,11 +58,14 @@ const RELATORIO_DEMO = `## 📋 Relatório de Auditoria Inteligente — EPIs
 
 export function EpiFiscalIATab() {
   const { analise, isLoading, error, executarAnalise } = useEpiFiscalIA();
+  const { empresas } = useEmpresaCadastro();
   const [showDemo, setShowDemo] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const displayContent = analise || (showDemo ? RELATORIO_DEMO : "");
   const isDemo = !analise && showDemo;
+
+  const empresa = empresas?.[0];
 
   const handleExportPDF = async () => {
     if (!contentRef.current) return;
@@ -72,26 +78,69 @@ export function EpiFiscalIATab() {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
+        windowWidth: contentRef.current.scrollWidth,
+        windowHeight: contentRef.current.scrollHeight,
       });
 
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 20;
+      const margin = 10;
+      const usableWidth = pageWidth - margin * 2;
+
+      // Company header
+      const nomeEmpresa = empresa?.razao_social || empresa?.nome_fantasia || "Empresa";
+      const cnpj = empresa?.cnpj || "";
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(nomeEmpresa, margin, 15);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      if (cnpj) pdf.text(`CNPJ: ${cnpj}`, margin, 21);
+      pdf.text(`Relatório gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}`, margin, cnpj ? 26 : 21);
+      pdf.setDrawColor(200);
+      pdf.line(margin, cnpj ? 29 : 24, pageWidth - margin, cnpj ? 29 : 24);
+
+      const headerHeight = cnpj ? 33 : 28;
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = usableWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
-      let position = 10;
+      let yPosition = headerHeight;
+      const contentHeight = pageHeight - margin - headerHeight;
 
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight - 20;
+      // First page
+      if (imgHeight <= contentHeight) {
+        pdf.addImage(imgData, "PNG", margin, yPosition, imgWidth, imgHeight);
+      } else {
+        // Multi-page: slice the image
+        let sourceY = 0;
+        const ratio = canvas.width / imgWidth;
+        let firstPage = true;
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight - 20;
+        while (sourceY < canvas.height) {
+          const availableHeight = firstPage ? contentHeight : pageHeight - margin * 2;
+          const sliceHeight = availableHeight * ratio;
+          const actualSlice = Math.min(sliceHeight, canvas.height - sourceY);
+
+          // Create a canvas slice
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = actualSlice;
+          const ctx = sliceCanvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(canvas, 0, sourceY, canvas.width, actualSlice, 0, 0, canvas.width, actualSlice);
+            const sliceData = sliceCanvas.toDataURL("image/png");
+            const sliceImgHeight = (actualSlice * imgWidth) / canvas.width;
+
+            if (!firstPage) pdf.addPage();
+            pdf.addImage(sliceData, "PNG", margin, firstPage ? yPosition : margin, imgWidth, sliceImgHeight);
+          }
+
+          sourceY += actualSlice;
+          firstPage = false;
+        }
       }
 
       pdf.save(`auditoria-inteligente-epi-${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -165,14 +214,30 @@ export function EpiFiscalIATab() {
               )}
             </CardHeader>
             <CardContent>
-              <ScrollArea className="max-h-[600px]">
-                <div ref={contentRef} className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown>{displayContent || "Aguardando resposta da IA..."}</ReactMarkdown>
-                </div>
-              </ScrollArea>
+              <div
+                ref={contentRef}
+                className="prose prose-sm dark:prose-invert max-w-none
+                  prose-headings:text-foreground prose-h2:text-lg prose-h2:border-b prose-h2:pb-2 prose-h2:mb-4
+                  prose-h3:text-base prose-h3:mt-6 prose-h4:text-sm
+                  prose-table:text-sm prose-th:bg-muted/50 prose-th:px-3 prose-th:py-2
+                  prose-td:px-3 prose-td:py-2 prose-td:border-b
+                  prose-li:my-0.5 prose-p:my-2
+                  prose-strong:text-foreground
+                  [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:border
+                  [&_hr]:my-6 [&_hr]:border-border"
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {displayContent || "Aguardando resposta da IA..."}
+                </ReactMarkdown>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
+      )}
+
+      {/* Ações sugeridas pela IA */}
+      {displayContent && !isLoading && (
+        <AuditoriaAcoesSection analise={displayContent} />
       )}
 
       {!displayContent && !isLoading && !error && (
