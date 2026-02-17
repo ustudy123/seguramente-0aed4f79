@@ -571,59 +571,64 @@ function AdmissoesTab() {
   const handleAutoSave = async (dados: {
     dadosPessoais: any; dadosContato: any; dadosProfissionais: any; dadosBancarios: any; exameAdmissional?: any;
   }) => {
-    const formData: Partial<AdmissaoFormData> = {
-      nome_completo: dados.dadosPessoais.nomeCompleto || undefined,
-      cpf: dados.dadosPessoais.cpf || undefined,
-      rg: dados.dadosPessoais.rg || undefined,
-      data_nascimento: dados.dadosPessoais.dataNascimento || undefined,
-      estado_civil: dados.dadosPessoais.estadoCivil || undefined,
-      genero: dados.dadosPessoais.genero || undefined,
-      nacionalidade: dados.dadosPessoais.nacionalidade || undefined,
-      naturalidade: dados.dadosPessoais.naturalidade || undefined,
-      nome_mae: dados.dadosPessoais.nomeMae || undefined,
-      nome_pai: dados.dadosPessoais.nomePai || undefined,
-      email: dados.dadosContato.email || undefined,
-      telefone: dados.dadosContato.telefone || undefined,
-      celular: dados.dadosContato.celular || undefined,
-      endereco: dados.dadosContato.endereco || undefined,
-      numero: dados.dadosContato.numero || undefined,
-      complemento: dados.dadosContato.complemento || undefined,
-      bairro: dados.dadosContato.bairro || undefined,
-      cidade: dados.dadosContato.cidade || undefined,
-      estado: dados.dadosContato.estado || undefined,
-      cep: dados.dadosContato.cep || undefined,
-      cargo: dados.dadosProfissionais.cargo || undefined,
-      departamento: dados.dadosProfissionais.departamento || undefined,
-      filial: dados.dadosProfissionais.filial || undefined,
-      data_admissao: dados.dadosProfissionais.dataAdmissao || undefined,
-      tipo_contrato: dados.dadosProfissionais.tipoContrato || undefined,
-      jornada_trabalho: dados.dadosProfissionais.jornadaTrabalho || undefined,
+    // Build form data, only including non-empty values
+    const raw: Record<string, any> = {
+      nome_completo: dados.dadosPessoais.nomeCompleto,
+      cpf: dados.dadosPessoais.cpf,
+      rg: dados.dadosPessoais.rg,
+      data_nascimento: dados.dadosPessoais.dataNascimento,
+      estado_civil: dados.dadosPessoais.estadoCivil,
+      genero: dados.dadosPessoais.genero,
+      nacionalidade: dados.dadosPessoais.nacionalidade,
+      naturalidade: dados.dadosPessoais.naturalidade,
+      nome_mae: dados.dadosPessoais.nomeMae,
+      nome_pai: dados.dadosPessoais.nomePai,
+      email: dados.dadosContato.email,
+      telefone: dados.dadosContato.telefone,
+      celular: dados.dadosContato.celular,
+      endereco: dados.dadosContato.endereco,
+      numero: dados.dadosContato.numero,
+      complemento: dados.dadosContato.complemento,
+      bairro: dados.dadosContato.bairro,
+      cidade: dados.dadosContato.cidade,
+      estado: dados.dadosContato.estado,
+      cep: dados.dadosContato.cep,
+      cargo: dados.dadosProfissionais.cargo,
+      departamento: dados.dadosProfissionais.departamento,
+      filial: dados.dadosProfissionais.filial,
+      data_admissao: dados.dadosProfissionais.dataAdmissao,
+      tipo_contrato: dados.dadosProfissionais.tipoContrato,
+      jornada_trabalho: dados.dadosProfissionais.jornadaTrabalho,
       salario: dados.dadosProfissionais.salario ? parseFloat(dados.dadosProfissionais.salario.replace(/[^\d,]/g, "").replace(",", ".")) : undefined,
-      gestor_imediato: dados.dadosProfissionais.gestorImediato || undefined,
-      centro_custo: dados.dadosProfissionais.centroCusto || undefined,
-      banco: dados.dadosBancarios.banco || undefined,
-      agencia: dados.dadosBancarios.agencia || undefined,
-      conta: dados.dadosBancarios.conta || undefined,
-      tipo_conta: dados.dadosBancarios.tipoConta || undefined,
-      chave_pix: dados.dadosBancarios.chavePix || undefined,
-      exame_admissional_data: dados.exameAdmissional?.dataExame || undefined,
-      exame_admissional_validade: dados.exameAdmissional?.dataValidade || undefined,
-      exame_admissional_resultado: dados.exameAdmissional?.resultado || undefined,
-      exame_admissional_clinica: dados.exameAdmissional?.clinica || undefined,
-      exame_admissional_medico: dados.exameAdmissional?.medico || undefined,
-      exame_admissional_crm: dados.exameAdmissional?.crm || undefined,
-      exame_admissional_observacoes: dados.exameAdmissional?.observacoes || undefined,
+      gestor_imediato: dados.dadosProfissionais.gestorImediato,
+      centro_custo: dados.dadosProfissionais.centroCusto,
+      banco: dados.dadosBancarios.banco,
+      agencia: dados.dadosBancarios.agencia,
+      conta: dados.dadosBancarios.conta,
+      tipo_conta: dados.dadosBancarios.tipoConta,
+      chave_pix: dados.dadosBancarios.chavePix,
+      exame_admissional_data: dados.exameAdmissional?.dataExame,
+      exame_admissional_validade: dados.exameAdmissional?.dataValidade,
+      exame_admissional_resultado: dados.exameAdmissional?.resultado,
+      exame_admissional_clinica: dados.exameAdmissional?.clinica,
+      exame_admissional_medico: dados.exameAdmissional?.medico,
+      exame_admissional_crm: dados.exameAdmissional?.crm,
+      exame_admissional_observacoes: dados.exameAdmissional?.observacoes,
     };
+
+    // Filter out empty/undefined values so we don't overwrite existing data with nulls
+    const formData: Partial<AdmissaoFormData> = {};
+    for (const [key, value] of Object.entries(raw)) {
+      if (value !== undefined && value !== null && value !== '') {
+        (formData as any)[key] = value;
+      }
+    }
+
+    // Need at least one field to save
+    if (Object.keys(formData).length === 0) return;
 
     if (viewMode === "edit" && selectedId) {
       await atualizarAdmissao({ id: selectedId, dados: formData });
-    } else if (viewMode === "new") {
-      // For new, we need at least nome_completo, cpf, email and cargo to create
-      if (formData.nome_completo && formData.cpf && formData.email && formData.cargo) {
-        const novaAdmissao = await criarAdmissao(formData as AdmissaoFormData);
-        setSelectedId(novaAdmissao.id);
-        setViewMode("edit");
-      }
     }
   };
 
