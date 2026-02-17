@@ -488,13 +488,32 @@ export function useDocumentoPastas() {
         });
       });
 
-      // 2. Criar pasta raiz "Documentos de Colaboradores"
+      // 2. Criar pasta raiz "Documentos de Processos"
+      const processosRootId = crypto.randomUUID();
+      pastasToCreate.push({
+        id: processosRootId,
+        nome: "Documentos de Processos",
+        tipo: "root",
+        ordem: 1,
+        icone: "BookOpen",
+        pasta_pai_id: null,
+        filial_id: null,
+        colaborador_id: null,
+        colaborador_cpf: null,
+        colaborador_nome: null,
+        ano: null,
+        tenant_id: tenantId,
+        criado_por: user.id,
+        criado_por_nome: profile?.nome_completo || null,
+      });
+
+      // 3. Criar pasta raiz "Documentos de Colaboradores"
       const rhRootId = crypto.randomUUID();
       pastasToCreate.push({
         id: rhRootId,
         nome: "Documentos de Colaboradores",
         tipo: "root",
-        ordem: 1,
+        ordem: 2,
         icone: "Users",
         pasta_pai_id: null,
         filial_id: null,
@@ -507,7 +526,7 @@ export function useDocumentoPastas() {
         criado_por_nome: profile?.nome_completo || null,
       });
 
-      // 3. Criar pastas por unidade/filial
+      // 4. Criar pastas por unidade/filial
       const filiaisList = filiais.length > 0 ? filiais : [{ id: null, nome: "Matriz" }];
       
       filiaisList.forEach((filial: { id: string | null; nome: string }, idx: number) => {
