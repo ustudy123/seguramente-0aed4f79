@@ -109,7 +109,6 @@ export function AuditoriaAcoesSection({ analise }: AuditoriaAcoesSectionProps) {
             gravidade: g,
             urgencia: u,
             tendencia: t,
-            pontuacao_gut: g * u * t,
             criado_por: user?.id,
             criado_por_nome: userName,
           })
