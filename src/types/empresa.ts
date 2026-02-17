@@ -75,7 +75,13 @@ export interface EmpresaCadastro {
   aposentadoria_especial: boolean;
   condicoes_especiais_detalhes: Record<string, string>;
   
+  // Hierarquia e Grupo
+  grupo_economico_id: string | null;
+  tipo_unidade: 'matriz' | 'filial';
+  matriz_id: string | null;
+
   total_colaboradores: number;
+  ativo: boolean;
   atualizado_por: string | null;
   created_at: string;
   updated_at: string;

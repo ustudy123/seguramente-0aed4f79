@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft } from 'lucide-react';
+import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers } from 'lucide-react';
 import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 import { EmpresaDadosBasicos } from '@/components/empresa/EmpresaDadosBasicos';
 import { EmpresaEnquadramentoLegal } from '@/components/empresa/EmpresaEnquadramentoLegal';
@@ -12,6 +12,8 @@ import { EmpresaJornadaCondicoes } from '@/components/empresa/EmpresaJornadaCond
 import { EmpresaObrigacoesTab } from '@/components/empresa/EmpresaObrigacoesTab';
 import { EmpresaImportExport } from '@/components/empresa/EmpresaImportExport';
 import { EmpresaList } from '@/components/empresa/EmpresaList';
+import { GruposEconomicosManager } from '@/components/empresa/GruposEconomicosManager';
+import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import type { EmpresaCadastro } from '@/types/empresa';
 import { toast } from 'sonner';
 
@@ -29,6 +31,18 @@ export default function Empresa() {
     upsertCadastro,
     toggleAtivoEmpresa,
   } = useEmpresaCadastro(viewMode === 'edit' ? selectedEmpresaId : undefined);
+
+  const { grupos } = useGruposEconomicos();
+
+  // Matrizes for filial selector
+  const matrizes = empresas
+    .filter(e => e.ativo && (e as any).tipo_unidade !== 'filial')
+    .map(e => ({
+      id: e.id,
+      razao_social: e.razao_social,
+      cnpj: e.cnpj,
+      grupo_economico_id: (e as any).grupo_economico_id,
+    }));
 
   const [formData, setFormData] = useState<Partial<EmpresaCadastro>>({});
   const [hasChanges, setHasChanges] = useState(false);
@@ -99,6 +113,7 @@ export default function Empresa() {
           onEdit={handleEdit}
           onNew={handleNew}
           onToggleAtivo={handleToggleAtivo}
+          grupos={grupos}
         />
       </div>
     );
@@ -188,7 +203,12 @@ export default function Empresa() {
               <CardDescription>Informações de identificação e localização</CardDescription>
             </CardHeader>
             <CardContent>
-              <EmpresaDadosBasicos data={formData} onChange={handleChange} />
+              <EmpresaDadosBasicos
+                data={formData}
+                onChange={handleChange}
+                matrizes={matrizes}
+                currentEmpresaId={viewMode === 'edit' ? selectedEmpresaId : undefined}
+              />
             </CardContent>
           </TabsContent>
 

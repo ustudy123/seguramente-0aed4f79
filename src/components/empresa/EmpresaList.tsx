@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle } from 'lucide-react';
+import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import type { EmpresaCadastro } from '@/types/empresa';
+import type { GrupoEconomico } from '@/hooks/useGruposEconomicos';
 
 interface EmpresaListProps {
   empresas: (EmpresaCadastro & { ativo: boolean })[];
@@ -17,13 +18,15 @@ interface EmpresaListProps {
   onEdit: (id: string) => void;
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
+  grupos?: GrupoEconomico[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [] }: EmpresaListProps) {
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
   const [filtroGrauRisco, setFiltroGrauRisco] = useState<string>('todos');
+  const [filtroGrupo, setFiltroGrupo] = useState<string>('todos');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Stats
@@ -48,6 +51,13 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo 
       if (filtroStatus === 'inativas' && e.ativo) return false;
       if (filtroUF !== 'todos' && e.estado !== filtroUF) return false;
       if (filtroGrauRisco !== 'todos' && String(e.grau_risco) !== filtroGrauRisco) return false;
+      if (filtroGrupo !== 'todos') {
+        if (filtroGrupo === '_sem_grupo') {
+          if (e.grupo_economico_id) return false;
+        } else {
+          if (e.grupo_economico_id !== filtroGrupo) return false;
+        }
+      }
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -59,7 +69,17 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo 
       }
       return true;
     });
-  }, [empresas, search, filtroStatus, filtroUF, filtroGrauRisco]);
+  }, [empresas, search, filtroStatus, filtroUF, filtroGrauRisco, filtroGrupo]);
+
+  // Helper: get filiais for a matriz
+  const getFiliais = (matrizId: string) =>
+    empresas.filter(e => e.matriz_id === matrizId);
+
+  // Helper: get grupo name
+  const getGrupoNome = (grupoId: string | null) => {
+    if (!grupoId) return null;
+    return grupos.find(g => g.id === grupoId)?.nome || null;
+  };
 
   // Selection
   const allSelected = filtered.length > 0 && filtered.every(e => selectedIds.has(e.id));
@@ -217,6 +237,20 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo 
               <SelectItem value="4">GR 4</SelectItem>
             </SelectContent>
           </Select>
+          {grupos.length > 0 && (
+            <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Grupo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Grupos</SelectItem>
+                <SelectItem value="_sem_grupo">Sem grupo</SelectItem>
+                {grupos.filter(g => g.ativo).map(g => (
+                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
@@ -255,6 +289,8 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo 
               </TableHead>
               <TableHead>Razão Social</TableHead>
               <TableHead>CNPJ</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Grupo</TableHead>
               <TableHead>CNAE</TableHead>
               <TableHead className="text-center">GR</TableHead>
               <TableHead>Status</TableHead>
@@ -264,7 +300,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo 
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                   {empresas.length === 0 ? 'Nenhuma empresa cadastrada' : 'Nenhuma empresa encontrada com os filtros atuais'}
                 </TableCell>
               </TableRow>
@@ -286,9 +322,43 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo 
                       {emp.cidade && emp.estado && (
                         <p className="text-xs text-muted-foreground">{emp.cidade}/{emp.estado}</p>
                       )}
+                      {/* Show filiais count for matrizes */}
+                      {emp.tipo_unidade === 'matriz' && (() => {
+                        const filiais = getFiliais(emp.id);
+                        return filiais.length > 0 ? (
+                          <p className="text-xs text-primary mt-0.5">
+                            <GitBranch className="w-3 h-3 inline mr-0.5" />
+                            {filiais.length} filial(is)
+                          </p>
+                        ) : null;
+                      })()}
                     </div>
                   </TableCell>
                   <TableCell className="text-sm font-mono">{emp.cnpj || '—'}</TableCell>
+                  <TableCell>
+                    <Badge variant={emp.tipo_unidade === 'matriz' ? 'default' : 'outline'} className="text-xs">
+                      {emp.tipo_unidade === 'matriz' ? 'Matriz' : 'Filial'}
+                    </Badge>
+                    {emp.tipo_unidade === 'filial' && emp.matriz_id && (() => {
+                      const matriz = empresas.find(e => e.id === emp.matriz_id);
+                      return matriz ? (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[120px]">
+                          → {matriz.razao_social || matriz.cnpj}
+                        </p>
+                      ) : null;
+                    })()}
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const nome = getGrupoNome(emp.grupo_economico_id);
+                      return nome ? (
+                        <Badge variant="outline" className="text-xs">
+                          <Layers className="w-3 h-3 mr-1" />
+                          {nome}
+                        </Badge>
+                      ) : <span className="text-xs text-muted-foreground">—</span>;
+                    })()}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="text-sm">{emp.cnae_principal || '—'}</p>
