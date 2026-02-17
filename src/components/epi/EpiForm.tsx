@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, HelpCircle, X } from "lucide-react";
+import { Plus, HelpCircle, X, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import type { EpiTipo, EpiCompleto } from "@/types/epi";
 import { CATEGORIAS_EPI, UNIDADES_MEDIDA, TIPOS_DURABILIDADE } from "@/types/epi";
 import { useEpiLocais } from "@/hooks/useEpiLocais";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome do EPI deve ter pelo menos 2 caracteres"),
@@ -82,6 +83,7 @@ interface EpiFormProps {
     estoque_inicial?: number | null;
     controla_tamanho?: boolean;
     tamanhos?: string[];
+    grade_tamanhos?: Array<{ tamanho: string; local_estoque_id: string; quantidade: number }>;
   }) => Promise<void>;
   onCreateCategoria?: (nome: string) => Promise<void>;
   tipos: EpiTipo[];
@@ -106,7 +108,7 @@ export function EpiForm({
   const [newCategoriaName, setNewCategoriaName] = useState("");
   const [isCreatingCategoria, setIsCreatingCategoria] = useState(false);
   const [controlaTamanho, setControlaTamanho] = useState(false);
-  const [tamanhos, setTamanhos] = useState<string[]>([]);
+  const [gradeTamanhos, setGradeTamanhos] = useState<Array<{ tamanho: string; local_estoque_id: string; quantidade: number }>>([]);
   const [novoTamanho, setNovoTamanho] = useState("");
 
   const { locaisAtivos } = useEpiLocais();
@@ -185,7 +187,8 @@ export function EpiForm({
         estoque_minimo: data.quantidade_minima,
         estoque_inicial: data.quantidade_estoque,
         controla_tamanho: controlaTamanho,
-        tamanhos: controlaTamanho ? tamanhos : [],
+        tamanhos: controlaTamanho ? gradeTamanhos.map(g => g.tamanho) : [],
+        grade_tamanhos: controlaTamanho ? gradeTamanhos : [],
       });
       
       form.reset();
@@ -344,13 +347,7 @@ export function EpiForm({
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="tamanho" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tamanho</FormLabel>
-                  <FormControl><Input placeholder="P, M, G, 38, etc" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              {/* Campo Tamanho removido - controlado pela grade de tamanhos */}
               <FormField control={form.control} name="unidade_medida" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Unidade de Medida</FormLabel>
@@ -465,8 +462,8 @@ export function EpiForm({
               </div>
 
               {controlaTamanho && (
-                <div className="space-y-2 pt-2">
-                  <div className="flex gap-2">
+                <div className="space-y-3 pt-2">
+                  <div className="flex gap-2 items-end">
                     <Input
                       placeholder="Ex: 38, 39, P, M, G..."
                       value={novoTamanho}
@@ -474,8 +471,8 @@ export function EpiForm({
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
-                          if (novoTamanho.trim() && !tamanhos.includes(novoTamanho.trim())) {
-                            setTamanhos([...tamanhos, novoTamanho.trim()]);
+                          if (novoTamanho.trim() && !gradeTamanhos.some(g => g.tamanho === novoTamanho.trim())) {
+                            setGradeTamanhos([...gradeTamanhos, { tamanho: novoTamanho.trim(), local_estoque_id: "", quantidade: 0 }]);
                             setNovoTamanho("");
                           }
                         }
@@ -487,32 +484,86 @@ export function EpiForm({
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (novoTamanho.trim() && !tamanhos.includes(novoTamanho.trim())) {
-                          setTamanhos([...tamanhos, novoTamanho.trim()]);
+                        if (novoTamanho.trim() && !gradeTamanhos.some(g => g.tamanho === novoTamanho.trim())) {
+                          setGradeTamanhos([...gradeTamanhos, { tamanho: novoTamanho.trim(), local_estoque_id: "", quantidade: 0 }]);
                           setNovoTamanho("");
                         }
                       }}
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
                     </Button>
                   </div>
-                  {tamanhos.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {tamanhos.map((t) => (
-                        <Badge key={t} variant="secondary" className="gap-1">
-                          {t}
-                          <button
-                            type="button"
-                            onClick={() => setTamanhos(tamanhos.filter((x) => x !== t))}
-                            className="ml-0.5 hover:text-destructive"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
+
+                  {gradeTamanhos.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Tamanho</TableHead>
+                            <TableHead className="text-xs">Local de Estoque</TableHead>
+                            <TableHead className="text-xs w-24">Quantidade</TableHead>
+                            <TableHead className="text-xs w-10"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {gradeTamanhos.map((item, idx) => (
+                            <TableRow key={item.tamanho}>
+                              <TableCell className="py-1.5">
+                                <Badge variant="secondary">{item.tamanho}</Badge>
+                              </TableCell>
+                              <TableCell className="py-1.5">
+                                <Select
+                                  value={item.local_estoque_id}
+                                  onValueChange={(val) => {
+                                    const updated = [...gradeTamanhos];
+                                    updated[idx] = { ...updated[idx], local_estoque_id: val };
+                                    setGradeTamanhos(updated);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {locaisAtivos.map((local) => (
+                                      <SelectItem key={local.id} value={local.id}>
+                                        {local.nome}{local.filial?.nome ? ` (${local.filial.nome})` : ""}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="py-1.5">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  className="h-7 text-xs w-20"
+                                  value={item.quantidade}
+                                  onChange={(e) => {
+                                    const updated = [...gradeTamanhos];
+                                    updated[idx] = { ...updated[idx], quantidade: parseInt(e.target.value) || 0 };
+                                    setGradeTamanhos(updated);
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell className="py-1.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => setGradeTamanhos(gradeTamanhos.filter((_, i) => i !== idx))}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
-                  {tamanhos.length === 0 && (
+
+                  {gradeTamanhos.length === 0 && (
                     <p className="text-xs text-muted-foreground">Adicione ao menos um tamanho à grade</p>
                   )}
                 </div>

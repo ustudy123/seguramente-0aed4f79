@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import { FileText, Upload, Plus, Trash2, Package, Building2, Calendar, Hash, Loader2, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import {
@@ -27,7 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { NFData, NFItemData, NFXmlParsed, parseNFeXml } from "@/hooks/useImportacaoNF";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
+import { useEpiTamanhos } from "@/hooks/useEpiTamanhos";
 interface ImportacaoNFFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,6 +47,7 @@ interface ItemForm extends NFItemData {
   _aiCreated?: boolean;
   _aiNomeLimpo?: string;
   _aiConfianca?: string;
+  tamanho?: string;
 }
 
 export function ImportacaoNFForm({
@@ -60,6 +61,7 @@ export function ImportacaoNFForm({
   onCriarTipo,
   criandoTipo,
 }: ImportacaoNFFormProps) {
+  const { getTamanhosForTipo } = useEpiTamanhos();
   const [tab, setTab] = useState<string>("xml");
   const [xmlParsed, setXmlParsed] = useState<NFXmlParsed | null>(null);
   const [xmlError, setXmlError] = useState<string>("");
@@ -565,6 +567,36 @@ export function ImportacaoNFForm({
                       </Select>
                     </div>
                   </div>
+
+                  {/* Tamanho selector */}
+                  {(() => {
+                    const epiRecord = epis.find((e: any) => e.id === item.epi_id);
+                    const tipoId = epiRecord?.tipo_id || (allTipos.find((t: any) => t.id === item.epi_id)?.id);
+                    const tamanhosForItem = tipoId ? getTamanhosForTipo(tipoId) : [];
+                    if (tamanhosForItem.length === 0) return null;
+                    return (
+                      <div className="grid grid-cols-4 gap-2">
+                        <div className="col-span-1">
+                          <Label className="text-xs">Tamanho *</Label>
+                          <Select
+                            value={item.tamanho || ""}
+                            onValueChange={(v) => updateItem(item._key, "tamanho", v)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Tamanho" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tamanhosForItem.map((t) => (
+                                <SelectItem key={t.id} value={t.tamanho}>
+                                  {t.tamanho}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div className="grid grid-cols-3 gap-2">
                     <div>

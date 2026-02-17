@@ -52,6 +52,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { EpiTipo } from "@/types/epi";
 import { cn } from "@/lib/utils";
+import { useEpiTamanhos } from "@/hooks/useEpiTamanhos";
 
 interface EpiEntregaWizardProps {
   open: boolean;
@@ -72,6 +73,7 @@ interface FormData {
   epiTipo: EpiTipo | null;
   localEstoqueId: string;
   quantidade: number;
+  tamanho: string;
   dataEntrega: string;
   dataValidade: string;
   observacoes: string;
@@ -88,6 +90,7 @@ export function EpiEntregaWizard({
   const { upload: uploadDocumento } = useDocumentos();
   const { locaisAtivos } = useEpiLocais();
   const { usarControleEstoque } = useEpiConfig();
+  const { getTamanhosForTipo } = useEpiTamanhos();
   const reciboRef = useRef<HTMLDivElement>(null);
   const [colaboradorPopoverOpen, setColaboradorPopoverOpen] = useState(false);
   const [colaboradorSearch, setColaboradorSearch] = useState("");
@@ -116,6 +119,7 @@ export function EpiEntregaWizard({
     epiTipo: null,
     localEstoqueId: "",
     quantidade: 1,
+    tamanho: "",
     dataEntrega: format(new Date(), "yyyy-MM-dd"),
     dataValidade: "",
     observacoes: "",
@@ -152,6 +156,7 @@ export function EpiEntregaWizard({
       epiTipo: null,
       localEstoqueId: "",
       quantidade: 1,
+      tamanho: "",
       dataEntrega: format(new Date(), "yyyy-MM-dd"),
       dataValidade: "",
       observacoes: "",
@@ -263,6 +268,7 @@ export function EpiEntregaWizard({
           data_entrega: formData.dataEntrega,
           data_validade: formData.dataValidade || null,
           status: status === "recusado" ? "extraviado" : "ativa",
+          tamanho: formData.tamanho || null,
           foto_entrega_url: fotoUrl,
           assinatura_url: assinaturaUrl,
           signed_at: status === "entregue" ? signedAt : null,
@@ -283,14 +289,21 @@ export function EpiEntregaWizard({
 
       // RF-EPI-EST-08: Se controle de estoque ativo e local selecionado, baixar estoque do local
       if (usarControleEstoque && formData.localEstoqueId && status === "entregue") {
-        // Buscar saldo atual no local
-        const { data: estoqueLocal } = await supabase
+        // Buscar saldo atual no local (considerando tamanho)
+        let queryEstoque = supabase
           .from("epi_estoque_local")
           .select("id, quantidade")
           .eq("epi_id", epiId)
           .eq("local_estoque_id", formData.localEstoqueId)
-          .eq("tenant_id", tenantId)
-          .maybeSingle();
+          .eq("tenant_id", tenantId);
+
+        if (formData.tamanho) {
+          queryEstoque = queryEstoque.eq("tamanho", formData.tamanho);
+        } else {
+          queryEstoque = queryEstoque.is("tamanho", null);
+        }
+
+        const { data: estoqueLocal } = await queryEstoque.maybeSingle();
 
         if (estoqueLocal) {
           const novaQtd = Math.max(0, estoqueLocal.quantidade - formData.quantidade);
@@ -317,6 +330,7 @@ export function EpiEntregaWizard({
           quantidade_anterior: (epiAtual?.quantidade_estoque || 0) + formData.quantidade,
           quantidade_atual: epiAtual?.quantidade_estoque || 0,
           motivo: `Entrega para ${formData.colaboradorNome}`,
+          tamanho: formData.tamanho || null,
           realizado_por: user?.id,
           realizado_por_nome: profile?.nome_completo,
         });
@@ -458,12 +472,16 @@ export function EpiEntregaWizard({
     }
   }, [step, entregaResult, pdfArquivado, arquivarPDFDocumentos]);
 
+  const selectedTamanhos = formData.epiTipoId ? getTamanhosForTipo(formData.epiTipoId) : [];
+  const requiresTamanho = selectedTamanhos.length > 0;
+
   const canProceedFromForm = 
     formData.colaboradorId && 
     formData.epiTipoId && 
     formData.quantidade > 0 && 
     formData.dataEntrega &&
-    (!usarControleEstoque || formData.localEstoqueId);
+    (!usarControleEstoque || formData.localEstoqueId) &&
+    (!requiresTamanho || formData.tamanho);
 
   return (
     <>
@@ -645,6 +663,30 @@ export function EpiEntregaWizard({
                             Nenhum local cadastrado. Vá em Config para criar.
                           </div>
                         )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Seleção de Tamanho (se EPI controla tamanho) */}
+                {formData.epiTipoId && getTamanhosForTipo(formData.epiTipoId).length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Tamanho *</Label>
+                    <Select
+                      value={formData.tamanho}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, tamanho: val }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tamanho" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getTamanhosForTipo(formData.epiTipoId).map((t) => (
+                          <SelectItem key={t.id} value={t.tamanho}>
+                            {t.tamanho}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

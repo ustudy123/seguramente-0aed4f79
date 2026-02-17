@@ -161,10 +161,10 @@ export function useEpis() {
   // ==================== MUTATIONS - TIPOS ====================
 
   const criarTipoMutation = useMutation({
-    mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id"> & { estoque_inicial?: number | null; controla_tamanho?: boolean; tamanhos?: string[] }) => {
+    mutationFn: async (dados: Omit<EpiTipoInsert, "tenant_id"> & { estoque_inicial?: number | null; controla_tamanho?: boolean; tamanhos?: string[]; grade_tamanhos?: Array<{ tamanho: string; local_estoque_id: string; quantidade: number }> }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
       
-      const { estoque_inicial, controla_tamanho, tamanhos, ...dadosTipo } = dados;
+      const { estoque_inicial, controla_tamanho, tamanhos, grade_tamanhos, ...dadosTipo } = dados;
       
       const { data, error } = await supabase
         .from("epi_tipos")
@@ -184,34 +184,78 @@ export function useEpis() {
         await supabase.from("epi_tamanhos").insert(rows);
       }
       
-      const quantidadeInicial = estoque_inicial ?? 100;
-      if (quantidadeInicial > 0) {
+      // If grade_tamanhos provided, create stock per tamanho/local
+      if (controla_tamanho && grade_tamanhos && grade_tamanhos.length > 0) {
+        const totalQtd = grade_tamanhos.reduce((sum, g) => sum + g.quantidade, 0);
         const { data: novoEpi, error: epiError } = await supabase
           .from("epis")
           .insert({
             tenant_id: tenantId,
             tipo_id: data.id,
-            quantidade_estoque: quantidadeInicial,
+            quantidade_estoque: totalQtd,
             quantidade_minima: dados.estoque_minimo ?? 5,
             status: "disponivel",
           })
           .select()
           .single();
-        
+
         if (epiError) {
           console.error("Erro ao criar EPI inicial:", epiError);
         } else {
+          // Create stock per tamanho/local
+          for (const g of grade_tamanhos) {
+            if (g.quantidade > 0 && g.local_estoque_id) {
+              await supabase.from("epi_estoque_local").upsert({
+                tenant_id: tenantId,
+                epi_id: novoEpi.id,
+                local_estoque_id: g.local_estoque_id,
+                tamanho: g.tamanho,
+                quantidade: g.quantidade,
+              }, { onConflict: "epi_id,local_estoque_id,tenant_id,tamanho" });
+            }
+          }
           await supabase.from("epi_movimentacoes").insert({
             tenant_id: tenantId,
             epi_id: novoEpi.id,
             tipo: "entrada",
-            quantidade: quantidadeInicial,
+            quantidade: totalQtd,
             quantidade_anterior: 0,
-            quantidade_atual: quantidadeInicial,
-            motivo: "Cadastro inicial do tipo de EPI",
+            quantidade_atual: totalQtd,
+            motivo: "Cadastro inicial do tipo de EPI (por grade de tamanho)",
             realizado_por: user?.id,
             realizado_por_nome: profile?.nome_completo,
           });
+        }
+      } else {
+        const quantidadeInicial = estoque_inicial ?? 100;
+        if (quantidadeInicial > 0) {
+          const { data: novoEpi, error: epiError } = await supabase
+            .from("epis")
+            .insert({
+              tenant_id: tenantId,
+              tipo_id: data.id,
+              quantidade_estoque: quantidadeInicial,
+              quantidade_minima: dados.estoque_minimo ?? 5,
+              status: "disponivel",
+            })
+            .select()
+            .single();
+          
+          if (epiError) {
+            console.error("Erro ao criar EPI inicial:", epiError);
+          } else {
+            await supabase.from("epi_movimentacoes").insert({
+              tenant_id: tenantId,
+              epi_id: novoEpi.id,
+              tipo: "entrada",
+              quantidade: quantidadeInicial,
+              quantidade_anterior: 0,
+              quantidade_atual: quantidadeInicial,
+              motivo: "Cadastro inicial do tipo de EPI",
+              realizado_por: user?.id,
+              realizado_por_nome: profile?.nome_completo,
+            });
+          }
         }
       }
       
