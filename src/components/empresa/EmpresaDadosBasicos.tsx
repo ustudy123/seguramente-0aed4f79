@@ -8,6 +8,7 @@ import { Loader2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCnpj, cleanCnpj, validateCnpj, buscarCnpj } from '@/lib/brasilapi';
 import type { EnderecoData } from '@/lib/viacep';
+import { EmpresaHierarquiaFields } from './EmpresaHierarquiaFields';
 import type { EmpresaCadastro } from '@/types/empresa';
 
 const ESTADOS = [
@@ -18,9 +19,11 @@ const ESTADOS = [
 interface Props {
   data: Partial<EmpresaCadastro>;
   onChange: (updates: Partial<EmpresaCadastro>) => void;
+  matrizes?: { id: string; razao_social: string | null; cnpj: string | null; grupo_economico_id?: string | null }[];
+  currentEmpresaId?: string | null;
 }
 
-export function EmpresaDadosBasicos({ data, onChange }: Props) {
+export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpresaId }: Props) {
   const [cnpjLoading, setCnpjLoading] = useState(false);
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +84,14 @@ export function EmpresaDadosBasicos({ data, onChange }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Hierarquia e Grupo Econômico */}
+      <EmpresaHierarquiaFields
+        data={data}
+        onChange={onChange}
+        matrizes={matrizes}
+        currentEmpresaId={currentEmpresaId}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>CNPJ</Label>

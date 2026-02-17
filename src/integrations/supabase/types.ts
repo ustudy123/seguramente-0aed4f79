@@ -2169,11 +2169,13 @@ export type Database = {
           grau_risco: number | null
           grau_risco_ajustado: number | null
           grau_risco_justificativa: string | null
+          grupo_economico_id: string | null
           id: string
           insalubridade: boolean | null
           inscricao_estadual: string | null
           inscricao_municipal: string | null
           jornada_padrao: string | null
+          matriz_id: string | null
           nome_fantasia: string | null
           numero: string | null
           pcd_obrigatoria: boolean | null
@@ -2191,6 +2193,7 @@ export type Database = {
           tac_possui: boolean | null
           telefone: string | null
           tenant_id: string
+          tipo_unidade: string
           total_colaboradores: number | null
           trabalho_altura: boolean | null
           turnos: Json | null
@@ -2229,11 +2232,13 @@ export type Database = {
           grau_risco?: number | null
           grau_risco_ajustado?: number | null
           grau_risco_justificativa?: string | null
+          grupo_economico_id?: string | null
           id?: string
           insalubridade?: boolean | null
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           jornada_padrao?: string | null
+          matriz_id?: string | null
           nome_fantasia?: string | null
           numero?: string | null
           pcd_obrigatoria?: boolean | null
@@ -2251,6 +2256,7 @@ export type Database = {
           tac_possui?: boolean | null
           telefone?: string | null
           tenant_id: string
+          tipo_unidade?: string
           total_colaboradores?: number | null
           trabalho_altura?: boolean | null
           turnos?: Json | null
@@ -2289,11 +2295,13 @@ export type Database = {
           grau_risco?: number | null
           grau_risco_ajustado?: number | null
           grau_risco_justificativa?: string | null
+          grupo_economico_id?: string | null
           id?: string
           insalubridade?: boolean | null
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           jornada_padrao?: string | null
+          matriz_id?: string | null
           nome_fantasia?: string | null
           numero?: string | null
           pcd_obrigatoria?: boolean | null
@@ -2311,6 +2319,7 @@ export type Database = {
           tac_possui?: boolean | null
           telefone?: string | null
           tenant_id?: string
+          tipo_unidade?: string
           total_colaboradores?: number | null
           trabalho_altura?: boolean | null
           turnos?: Json | null
@@ -2318,6 +2327,20 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "empresa_cadastro_grupo_economico_id_fkey"
+            columns: ["grupo_economico_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_economicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_cadastro_matriz_id_fkey"
+            columns: ["matriz_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "empresa_cadastro_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -5221,6 +5244,47 @@ export type Database = {
             columns: ["vinculacao_id"]
             isOneToOne: false
             referencedRelation: "funcao_epi_vinculacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grupos_economicos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          logo_url: string | null
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          logo_url?: string | null
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grupos_economicos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
