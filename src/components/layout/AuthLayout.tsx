@@ -31,38 +31,40 @@ export function AuthLayout() {
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1 text-center lg:text-left space-y-6 hidden lg:block"
+          className="flex-1 text-center lg:text-left hidden lg:block"
         >
-          <Logo size="lg" showText={false} />
-          
-          <div className="space-y-3">
-            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
-              Gestão de Pessoas
-              <br />
-              <span className="text-[hsl(24,90%,60%)]">Simples e Segura</span>
-            </h1>
-            <p className="text-white/70 text-lg max-w-md">
-              Tudo o que sua empresa precisa para gerenciar colaboradores em uma única plataforma inteligente.
+          <div className="bg-[hsl(262,40%,10%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
+            <Logo size="lg" showText={false} />
+            
+            <div className="space-y-3">
+              <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight drop-shadow-lg">
+                Gestão de Pessoas
+                <br />
+                <span className="text-[hsl(24,90%,60%)]">Simples e Segura</span>
+              </h1>
+              <p className="text-white/90 text-lg max-w-md drop-shadow">
+                Tudo o que sua empresa precisa para gerenciar colaboradores em uma única plataforma inteligente.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 max-w-md">
+              {["Admissão Digital", "Controle de Ponto", "Gestão de EPIs", "Férias e Afastamentos"].map((item, i) => (
+                <motion.span
+                  key={item}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="px-3 py-1.5 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full text-white text-sm font-medium"
+                >
+                  {item}
+                </motion.span>
+              ))}
+            </div>
+
+            <p className="text-white/60 text-xs pt-4">
+              © 2024 Seguramente. Todos os direitos reservados.
             </p>
           </div>
-
-          <div className="flex flex-wrap gap-3 max-w-md">
-            {["Admissão Digital", "Controle de Ponto", "Gestão de EPIs", "Férias e Afastamentos"].map((item, i) => (
-              <motion.span
-                key={item}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                className="px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white/80 text-sm"
-              >
-                {item}
-              </motion.span>
-            ))}
-          </div>
-
-          <p className="text-white/40 text-xs pt-4">
-            © 2024 Seguramente. Todos os direitos reservados.
-          </p>
         </motion.div>
 
         {/* Right - Form card */}
