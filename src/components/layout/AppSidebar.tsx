@@ -366,12 +366,12 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="h-screen gradient-sidebar border-r border-sidebar-border flex flex-col fixed left-0 top-0 z-40"
     >
-      <div className="p-4 flex items-center gap-3 border-b border-sidebar-border bg-white rounded-br-xl">
+      <div className="p-4 flex items-center justify-center border-b border-sidebar-border bg-white rounded-br-xl">
         {isCollapsed ? (
           <Logo size="md" showText={false} />
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Logo size="md" showText={true} textClassName="text-foreground" />
+            <Logo size="md" showText={false} />
           </motion.div>
         )}
       </div>
