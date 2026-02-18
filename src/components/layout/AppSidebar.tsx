@@ -269,7 +269,7 @@ const CollapsibleSection = ({
         )}>
 
         <section.sectionIcon className={cn("w-4 h-4 flex-shrink-0 transition-colors", section.color)} strokeWidth={2} />
-        <p className={cn("flex-1 text-left text-[11px] font-bold uppercase tracking-wider transition-colors text-card",
+        <p className={cn("flex-1 text-left text-[11px] font-bold uppercase tracking-wider transition-colors text-success-foreground",
 
         hasActiveChild ? "text-sidebar-foreground/70" : "text-sidebar-foreground/45 group-hover:text-sidebar-foreground/65"
         )}>
