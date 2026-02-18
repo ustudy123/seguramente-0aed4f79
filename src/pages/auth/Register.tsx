@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, Building2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -113,14 +114,11 @@ export default function Register() {
   return (
     <div className="space-y-6">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-          <Building2 className="w-6 h-6 text-primary-foreground" />
-        </div>
-        <span className="text-2xl font-bold">RH360</span>
+      <div className="lg:hidden flex items-center justify-center mb-6">
+        <Logo size="lg" showText={false} />
       </div>
 
-      <div className="text-center lg:text-left">
+      <div className="text-center">
         <h1 className="text-2xl font-bold">Cadastre sua empresa</h1>
         <p className="text-muted-foreground mt-1">
           {step === 1
