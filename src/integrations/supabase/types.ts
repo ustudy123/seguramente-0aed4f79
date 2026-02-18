@@ -9904,6 +9904,85 @@ export type Database = {
           },
         ]
       }
+      trilha_terceiro_progresso: {
+        Row: {
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          evidencia_texto: string | null
+          evidencia_url: string | null
+          id: string
+          modulo_id: string
+          nota: number | null
+          pontos_obtidos: number | null
+          status: string
+          tenant_id: string
+          terceiro_cpf: string
+          terceiro_empresa: string | null
+          terceiro_nome: string
+          trilha_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          evidencia_texto?: string | null
+          evidencia_url?: string | null
+          id?: string
+          modulo_id: string
+          nota?: number | null
+          pontos_obtidos?: number | null
+          status?: string
+          tenant_id: string
+          terceiro_cpf: string
+          terceiro_empresa?: string | null
+          terceiro_nome: string
+          trilha_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          evidencia_texto?: string | null
+          evidencia_url?: string | null
+          id?: string
+          modulo_id?: string
+          nota?: number | null
+          pontos_obtidos?: number | null
+          status?: string
+          tenant_id?: string
+          terceiro_cpf?: string
+          terceiro_empresa?: string | null
+          terceiro_nome?: string
+          trilha_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_terceiro_progresso_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "trilha_modulos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_terceiro_progresso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trilha_terceiro_progresso_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trilhas: {
         Row: {
           conexao_indicadores: string[] | null
@@ -9919,9 +9998,11 @@ export type Database = {
           pontuacao_minima: number | null
           prazo_dias: number | null
           prioridade: Database["public"]["Enums"]["trilha_prioridade"]
+          publico_terceiros: boolean
           status: Database["public"]["Enums"]["trilha_status"]
           tenant_id: string
           tipo: Database["public"]["Enums"]["trilha_tipo"]
+          token_publico: string | null
           total_modulos: number | null
           updated_at: string
           visibilidade: Database["public"]["Enums"]["trilha_visibilidade"]
@@ -9940,9 +10021,11 @@ export type Database = {
           pontuacao_minima?: number | null
           prazo_dias?: number | null
           prioridade?: Database["public"]["Enums"]["trilha_prioridade"]
+          publico_terceiros?: boolean
           status?: Database["public"]["Enums"]["trilha_status"]
           tenant_id: string
           tipo?: Database["public"]["Enums"]["trilha_tipo"]
+          token_publico?: string | null
           total_modulos?: number | null
           updated_at?: string
           visibilidade?: Database["public"]["Enums"]["trilha_visibilidade"]
@@ -9961,9 +10044,11 @@ export type Database = {
           pontuacao_minima?: number | null
           prazo_dias?: number | null
           prioridade?: Database["public"]["Enums"]["trilha_prioridade"]
+          publico_terceiros?: boolean
           status?: Database["public"]["Enums"]["trilha_status"]
           tenant_id?: string
           tipo?: Database["public"]["Enums"]["trilha_tipo"]
+          token_publico?: string | null
           total_modulos?: number | null
           updated_at?: string
           visibilidade?: Database["public"]["Enums"]["trilha_visibilidade"]
