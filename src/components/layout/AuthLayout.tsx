@@ -35,7 +35,7 @@ export function AuthLayout() {
           className="flex-1 text-center lg:text-left hidden lg:block"
         >
           <div className="bg-[hsl(262,40%,10%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
-            <img src={brandingLogo} alt="Seguramente" className="h-24 w-auto object-contain" />
+            
             
             <div className="space-y-3">
               <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight drop-shadow-lg">
