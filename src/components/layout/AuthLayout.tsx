@@ -81,7 +81,7 @@ export function AuthLayout() {
       </div>
       
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-gradient-to-br from-background via-background to-muted/20 min-h-screen">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-white min-h-screen">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
