@@ -7,6 +7,7 @@ import { OnboardingTemplateList } from "@/components/onboarding/OnboardingTempla
 import { OnboardingTemplateForm } from "@/components/onboarding/OnboardingTemplateForm";
 import { OnboardingTemplateDetail } from "@/components/onboarding/OnboardingTemplateDetail";
 import { OnboardingProcessosList } from "@/components/onboarding/OnboardingProcessosList";
+import { OnboardingIndicadores } from "@/components/onboarding/OnboardingIndicadores";
 import type { OnboardingTemplate } from "@/types/onboarding";
 
 export default function Onboarding() {
@@ -47,13 +48,18 @@ export default function Onboarding() {
       </div>
 
       <Tabs defaultValue="processos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="processos">Processos Ativos</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsTrigger value="processos">Processos</TabsTrigger>
+          <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
 
         <TabsContent value="processos" className="mt-6">
           <OnboardingProcessosList />
+        </TabsContent>
+
+        <TabsContent value="indicadores" className="mt-6">
+          <OnboardingIndicadores />
         </TabsContent>
 
         <TabsContent value="templates" className="mt-6">

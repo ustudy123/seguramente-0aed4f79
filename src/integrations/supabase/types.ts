@@ -7149,6 +7149,60 @@ export type Database = {
           },
         ]
       }
+      onboarding_percepcao_cultural: {
+        Row: {
+          categoria: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          id: string
+          pergunta_chave: string
+          pergunta_texto: string
+          processo_id: string | null
+          resposta: string
+          tenant_id: string
+        }
+        Insert: {
+          categoria?: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          id?: string
+          pergunta_chave: string
+          pergunta_texto: string
+          processo_id?: string | null
+          resposta: string
+          tenant_id: string
+        }
+        Update: {
+          categoria?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          id?: string
+          pergunta_chave?: string
+          pergunta_texto?: string
+          processo_id?: string | null
+          resposta?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_percepcao_cultural_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_percepcao_cultural_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_processos: {
         Row: {
           admissao_id: string

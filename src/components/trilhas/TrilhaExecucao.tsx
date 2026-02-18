@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { QuizPlayer } from "./QuizPlayer";
 import { EvidenciaUpload } from "./EvidenciaUpload";
 import { CulturaValoresModule } from "./CulturaValoresModule";
+import { PercepcaoCulturalQuiz } from "./PercepcaoCulturalQuiz";
 import {
   ArrowLeft,
   BookOpen,
@@ -276,8 +277,11 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                       />
                     ) : (
                       <>
-                        {/* Auto-render cultura data for cultura_valores modules in onboarding */}
-                        {isCulturaModule(activeModulo) && (
+                        {/* Auto-render cultura perception quiz for cultura modules in onboarding */}
+                        {isCulturaModule(activeModulo) && isOnboarding && (
+                          <PercepcaoCulturalQuiz trilhaId={trilha.id} />
+                        )}
+                        {isCulturaModule(activeModulo) && !isOnboarding && (
                           <CulturaValoresModule />
                         )}
 
