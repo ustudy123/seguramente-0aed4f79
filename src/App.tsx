@@ -49,6 +49,7 @@ import BemEstar from "./pages/BemEstar";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
 import FeriasAssinatura from "./pages/FeriasAssinatura";
+import TrilhaTerceiroPublica from "./pages/TrilhaTerceiroPublica";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/questionario/:token" element={<QuestionarioPsicossocial />} />
             <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
             <Route path="/ferias-assinatura/:token" element={<FeriasAssinatura />} />
+            <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
 
           {/* Super Admin Routes */}
           <Route

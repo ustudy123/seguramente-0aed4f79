@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { QuizManager } from "./QuizManager";
 import { AtribuicaoTrilhaModal } from "./AtribuicaoTrilhaModal";
+import { LinkTerceiroButton } from "./LinkTerceiroButton";
 import {
   ArrowLeft,
   Plus,
@@ -111,6 +112,7 @@ export function TrilhaDetail({ trilha, onBack, onEdit, onAddModulo, onEditModulo
           </div>
         </div>
         <div className="flex gap-2">
+          <LinkTerceiroButton trilhaId={trilha.id} />
           <Button variant="outline" size="sm" onClick={() => setShowAtribuicao(true)}>
             <Users className="w-4 h-4 mr-2" /> Atribuir
           </Button>
