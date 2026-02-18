@@ -6923,6 +6923,438 @@ export type Database = {
           },
         ]
       }
+      onboarding_checklist_items: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          etapa_id: string
+          id: string
+          obrigatorio: boolean | null
+          ordem: number
+          tenant_id: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          etapa_id: string
+          id?: string
+          obrigatorio?: boolean | null
+          ordem?: number
+          tenant_id: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          etapa_id?: string
+          id?: string
+          obrigatorio?: boolean | null
+          ordem?: number
+          tenant_id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_checklist_items_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklist_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_checklist_progresso: {
+        Row: {
+          checklist_item_id: string
+          concluido: boolean | null
+          created_at: string
+          data_conclusao: string | null
+          id: string
+          observacao: string | null
+          processo_id: string
+          tenant_id: string
+        }
+        Insert: {
+          checklist_item_id: string
+          concluido?: boolean | null
+          created_at?: string
+          data_conclusao?: string | null
+          id?: string
+          observacao?: string | null
+          processo_id: string
+          tenant_id: string
+        }
+        Update: {
+          checklist_item_id?: string
+          concluido?: boolean | null
+          created_at?: string
+          data_conclusao?: string | null
+          id?: string
+          observacao?: string | null
+          processo_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_checklist_progresso_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklist_progresso_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_checklist_progresso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_etapas: {
+        Row: {
+          ativo: boolean | null
+          conteudo_texto: string | null
+          conteudo_url: string | null
+          created_at: string
+          descricao: string | null
+          formato: string | null
+          id: string
+          obrigatoria: boolean | null
+          ordem: number
+          pontuacao: number | null
+          template_id: string
+          tempo_estimado_min: number | null
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["onboarding_etapa_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          conteudo_texto?: string | null
+          conteudo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          formato?: string | null
+          id?: string
+          obrigatoria?: boolean | null
+          ordem?: number
+          pontuacao?: number | null
+          template_id: string
+          tempo_estimado_min?: number | null
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["onboarding_etapa_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          conteudo_texto?: string | null
+          conteudo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          formato?: string | null
+          id?: string
+          obrigatoria?: boolean | null
+          ordem?: number
+          pontuacao?: number | null
+          template_id?: string
+          tempo_estimado_min?: number | null
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["onboarding_etapa_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_etapas_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_etapas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_mensagens: {
+        Row: {
+          autor_cargo: string | null
+          autor_nome: string
+          created_at: string
+          etapa_id: string
+          id: string
+          mensagem: string
+          ordem: number
+          tenant_id: string
+          tipo: string | null
+        }
+        Insert: {
+          autor_cargo?: string | null
+          autor_nome: string
+          created_at?: string
+          etapa_id: string
+          id?: string
+          mensagem: string
+          ordem?: number
+          tenant_id: string
+          tipo?: string | null
+        }
+        Update: {
+          autor_cargo?: string | null
+          autor_nome?: string
+          created_at?: string
+          etapa_id?: string
+          id?: string
+          mensagem?: string
+          ordem?: number
+          tenant_id?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_mensagens_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_mensagens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_processos: {
+        Row: {
+          admissao_id: string
+          certificado_emitido: boolean | null
+          colaborador_cpf: string
+          colaborador_nome: string
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          id: string
+          pdi_alimentado: boolean | null
+          pontos_obtidos: number | null
+          progresso: number | null
+          status: string
+          template_id: string | null
+          tenant_id: string
+          trilha_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admissao_id: string
+          certificado_emitido?: boolean | null
+          colaborador_cpf: string
+          colaborador_nome: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          pdi_alimentado?: boolean | null
+          pontos_obtidos?: number | null
+          progresso?: number | null
+          status?: string
+          template_id?: string | null
+          tenant_id: string
+          trilha_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admissao_id?: string
+          certificado_emitido?: boolean | null
+          colaborador_cpf?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          pdi_alimentado?: boolean | null
+          pontos_obtidos?: number | null
+          progresso?: number | null
+          status?: string
+          template_id?: string | null
+          tenant_id?: string
+          trilha_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_processos_admissao_id_fkey"
+            columns: ["admissao_id"]
+            isOneToOne: false
+            referencedRelation: "admissoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_processos_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_processos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_processos_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_respostas: {
+        Row: {
+          created_at: string
+          etapa_id: string
+          id: string
+          pergunta: string
+          processo_id: string
+          resposta: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          etapa_id: string
+          id?: string
+          pergunta: string
+          processo_id: string
+          resposta?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          etapa_id?: string
+          id?: string
+          pergunta?: string
+          processo_id?: string
+          resposta?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_respostas_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_respostas_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_respostas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_templates: {
+        Row: {
+          ativo: boolean
+          conexao_pdi: boolean | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          departamentos: string[] | null
+          descricao: string | null
+          emitir_certificado: boolean | null
+          funcoes: string[] | null
+          id: string
+          nome: string
+          pontuacao_total: number | null
+          prazo_dias: number | null
+          tenant_id: string
+          tipos_vinculo: string[] | null
+          unidades: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          conexao_pdi?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          departamentos?: string[] | null
+          descricao?: string | null
+          emitir_certificado?: boolean | null
+          funcoes?: string[] | null
+          id?: string
+          nome: string
+          pontuacao_total?: number | null
+          prazo_dias?: number | null
+          tenant_id: string
+          tipos_vinculo?: string[] | null
+          unidades?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          conexao_pdi?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          departamentos?: string[] | null
+          descricao?: string | null
+          emitir_certificado?: boolean | null
+          funcoes?: string[] | null
+          id?: string
+          nome?: string
+          pontuacao_total?: number | null
+          prazo_dias?: number | null
+          tenant_id?: string
+          tipos_vinculo?: string[] | null
+          unidades?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ouvidoria: {
         Row: {
           anexos: Json | null
@@ -10264,6 +10696,14 @@ export type Database = {
       oceano_quadrante: "eliminar" | "reduzir" | "elevar" | "criar"
       ocorrencia_tipo: "positiva" | "neutra" | "negativa"
       okr_tipo: "percentual" | "quantidade" | "binario" | "monetario"
+      onboarding_etapa_tipo:
+        | "apresentacao_institucional"
+        | "cultura_valores"
+        | "mural_boas_vindas"
+        | "checklist_integracao"
+        | "conteudo_livre"
+        | "quiz"
+        | "reflexao"
       pdi_acao_status:
         | "nao_iniciada"
         | "em_andamento"
@@ -10347,6 +10787,7 @@ export type Database = {
         | "cultura"
         | "ergonomia_saude"
         | "processos"
+        | "onboarding"
       trilha_visibilidade: "publica" | "restrita"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
@@ -10606,6 +11047,15 @@ export const Constants = {
       oceano_quadrante: ["eliminar", "reduzir", "elevar", "criar"],
       ocorrencia_tipo: ["positiva", "neutra", "negativa"],
       okr_tipo: ["percentual", "quantidade", "binario", "monetario"],
+      onboarding_etapa_tipo: [
+        "apresentacao_institucional",
+        "cultura_valores",
+        "mural_boas_vindas",
+        "checklist_integracao",
+        "conteudo_livre",
+        "quiz",
+        "reflexao",
+      ],
       pdi_acao_status: [
         "nao_iniciada",
         "em_andamento",
@@ -10697,6 +11147,7 @@ export const Constants = {
         "cultura",
         "ergonomia_saude",
         "processos",
+        "onboarding",
       ],
       trilha_visibilidade: ["publica", "restrita"],
       workflow_status: ["pendente", "aprovado", "rejeitado"],

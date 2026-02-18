@@ -50,6 +50,7 @@ import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
 import FeriasAssinatura from "./pages/FeriasAssinatura";
 import TrilhaTerceiroPublica from "./pages/TrilhaTerceiroPublica";
+import Onboarding from "./pages/Onboarding";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -132,6 +133,7 @@ const App = () => (
               <Route path="/terceiros" element={<Terceiros />} />
               <Route path="/incidentes-acidentes" element={<IncidentesAcidentes />} />
               <Route path="/cultura-celebracoes" element={<CulturaCelebracoes />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/configuracoes" element={<PlaceholderPage />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />

@@ -89,6 +89,7 @@ const menuSections: MenuSection[] = [
   sectionIcon: Users,
   items: [
   { title: "Colaboradores", icon: Users, path: "/colaboradores" },
+  { title: "Onboarding", icon: UserPlus, path: "/onboarding" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
   { title: "Atestados", icon: Stethoscope, path: "/atestados" },
   { title: "Meu Bem-Estar", icon: Heart, path: "/felicidade" },
