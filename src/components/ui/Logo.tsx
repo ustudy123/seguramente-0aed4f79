@@ -1,5 +1,4 @@
-// @ts-ignore
-import logoImage from "@/assets/logo-seguramente.png?v=3";
+import logoImage from "@/assets/logo-seguramente.png";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -8,32 +7,20 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  sm: "w-16",
-  md: "w-24",
-  lg: "w-32",
-  xl: "w-40"
+  sm: "h-8",
+  md: "h-12",
+  lg: "h-16",
+  xl: "h-20"
 };
 
-const textSizeClasses = {
-  sm: "text-lg",
-  md: "text-xl",
-  lg: "text-2xl",
-  xl: "text-3xl"
-};
-
-export function Logo({ size = "md", showText = true, textClassName }: LogoProps) {
+export function Logo({ size = "md", showText = true }: LogoProps) {
   return (
-    <div className="flex items-center gap-3">
-      
-
-
-
-
-      {showText
-
-
-
-      }
-    </div>);
-
+    <div className="flex items-center justify-center">
+      <img
+        src={logoImage}
+        alt="Seguramente"
+        className={`${sizeClasses[size]} w-auto object-contain`}
+      />
+    </div>
+  );
 }
