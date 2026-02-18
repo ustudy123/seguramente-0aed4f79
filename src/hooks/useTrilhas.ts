@@ -101,6 +101,10 @@ export function useTrilhaModulos(trilhaId?: string) {
         .eq("trilha_id", trilhaId)
         .order("ordem") as { data: TrilhaModulo[] | null; error: Error | null };
       if (error) throw error;
+      if (!data?.length) {
+        const { DEMO_MODULOS } = await import("@/data/trilhas-demo");
+        return DEMO_MODULOS[trilhaId] || [];
+      }
       return data || [];
     },
     enabled: !!tenantId && !!trilhaId,
