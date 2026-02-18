@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Route } from "lucide-react";
+import { Route, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrilhaList } from "@/components/trilhas/TrilhaList";
 import { TrilhaDetail } from "@/components/trilhas/TrilhaDetail";
@@ -61,7 +62,13 @@ export default function Trilhas() {
             </p>
           </div>
         </div>
-        <TrilhaNotificacoesBell />
+        <div className="flex items-center gap-3">
+          <TrilhaNotificacoesBell />
+          <Button onClick={handleNewTrilha} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nova Trilha
+          </Button>
+        </div>
       </div>
 
       {/* Execução mode */}
