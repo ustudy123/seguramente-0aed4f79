@@ -24,10 +24,10 @@ const textSizeClasses = {
 export function Logo({ size = "md", showText = true, textClassName }: LogoProps) {
   return (
     <div className="flex items-center gap-3">
-      <img
-        src={logoImage}
-        alt="Seguramente"
-        className={sizeClasses[size]} />
+      
+
+
+
 
       {showText
 
