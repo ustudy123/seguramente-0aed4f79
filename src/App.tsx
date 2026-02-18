@@ -136,8 +136,7 @@ const App = () => (
             </Route>
           </Routes>
           
-          {/* Chat IA Widget - disponível em todas as páginas protegidas */}
-          <ChatIAWidget />
+          {/* Chat IA Widget removido */}
           
           {/* WhatsApp flutuante */}
           <WhatsAppButton />
