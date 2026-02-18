@@ -1,91 +1,76 @@
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, FileCheck, HardHat, Calendar, Clock } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import authBg from "@/assets/auth-bg.jpg";
 
 export function AuthLayout() {
-  const features = [
-    { icon: Users, text: "Gestão de Colaboradores" },
-    { icon: Clock, text: "Controle de Ponto" },
-    { icon: Calendar, text: "Férias e Afastamentos" },
-    { icon: HardHat, text: "EPIs e Segurança" },
-    { icon: FileCheck, text: "Documentos e Admissão" },
-  ];
-
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-[55%] bg-gradient-to-br from-[hsl(262,32%,22%)] via-[hsl(262,30%,18%)] to-[hsl(262,35%,12%)] p-12 flex-col justify-between relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-[hsl(24,90%,54%)] rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[hsl(280,40%,68%)] rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[hsl(262,52%,50%)] rounded-full blur-3xl opacity-50" />
-        </div>
+    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6">
+      {/* Background image with purple overlay */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src={authBg}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,20%/0.85)] via-[hsl(262,35%,25%/0.8)] to-[hsl(280,30%,18%/0.9)]" />
+      </div>
+
+      {/* Decorative wave shapes */}
+      <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
+        <div className="absolute -bottom-10 left-0 right-0 h-40 bg-[hsl(262,40%,22%/0.4)] rounded-[100%_100%_0_0] blur-sm" />
+        <div className="absolute top-0 -left-20 w-96 h-96 bg-[hsl(24,90%,54%/0.08)] rounded-full blur-3xl" />
+        <div className="absolute bottom-0 -right-20 w-80 h-80 bg-[hsl(262,50%,50%/0.1)] rounded-full blur-3xl" />
+      </div>
+
+      {/* Content container */}
+      <div className="relative z-10 w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
         
-        {/* Decorative element instead of logo */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative z-10"
-        >
-          <div className="w-16 h-1 bg-gradient-to-r from-[hsl(262,52%,50%)] via-[hsl(24,90%,54%)] to-[hsl(280,40%,68%)] rounded-full" />
-        </motion.div>
-        
-        {/* Main content */}
+        {/* Left - Branding text */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="relative z-10 space-y-8"
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex-1 text-center lg:text-left space-y-6 hidden lg:block"
         >
-          <div>
-            <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
+          <Logo size="lg" showText={false} />
+          
+          <div className="space-y-3">
+            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
               Gestão de Pessoas
               <br />
-              <span className="text-white/90">Simples e Segura</span>
+              <span className="text-[hsl(24,90%,60%)]">Simples e Segura</span>
             </h1>
-            <p className="text-white/80 text-xl max-w-md">
+            <p className="text-white/70 text-lg max-w-md">
               Tudo o que sua empresa precisa para gerenciar colaboradores em uma única plataforma inteligente.
             </p>
           </div>
-          
-          {/* Features grid */}
-          <div className="grid grid-cols-2 gap-4 max-w-md">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.text}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20"
+
+          <div className="flex flex-wrap gap-3 max-w-md">
+            {["Admissão Digital", "Controle de Ponto", "Gestão de EPIs", "Férias e Afastamentos"].map((item, i) => (
+              <motion.span
+                key={item}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.1 }}
+                className="px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white/80 text-sm"
               >
-                <feature.icon className="w-5 h-5 text-[hsl(24,90%,60%)]" />
-                <span className="text-white/90 text-sm font-medium">{feature.text}</span>
-              </motion.div>
+                {item}
+              </motion.span>
             ))}
           </div>
-        </motion.div>
-        
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="relative z-10"
-        >
-          <p className="text-white/50 text-sm">
+
+          <p className="text-white/40 text-xs pt-4">
             © 2024 Seguramente. Todos os direitos reservados.
           </p>
         </motion.div>
-      </div>
-      
-      {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-white min-h-screen">
+
+        {/* Right - Form card */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full max-w-md px-2 sm:px-0"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10"
         >
           <Outlet />
         </motion.div>

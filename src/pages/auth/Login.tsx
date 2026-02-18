@@ -56,16 +56,16 @@ export default function Login() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Logo - always visible */}
-      <div className="flex items-center justify-center lg:justify-start mb-2 sm:mb-4">
-        <Logo size="lg" showText={true} />
+    <div className="space-y-6">
+      {/* Logo - mobile only (desktop shows on left panel) */}
+      <div className="flex items-center justify-center lg:hidden mb-2">
+        <Logo size="lg" showText={false} />
       </div>
 
-      <div className="text-center lg:text-left space-y-1 sm:space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Bem-vindo de volta!</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Entre com suas credenciais para acessar o sistema
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Login</h1>
+        <p className="text-sm text-muted-foreground">
+          Entre com suas credenciais para acessar
         </p>
       </div>
 
