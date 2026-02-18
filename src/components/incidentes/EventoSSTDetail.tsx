@@ -84,9 +84,11 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
       setAnexos(data);
     } catch {
       // ignore
+    } finally {
+      setLoadingAnexos(false);
     }
-    setLoadingAnexos(false);
-  }, [evento.id, getAnexos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evento.id]);
 
   // Load linked actions
   const loadAcoes = useCallback(async () => {
@@ -116,12 +118,14 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
     } finally {
       setLoadingAcoes(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [evento.id]);
 
   useEffect(() => {
     loadAnexos();
     loadAcoes();
-  }, [loadAnexos, loadAcoes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evento.id]);
 
   const onDrop = useCallback(
     async (files: File[]) => {
