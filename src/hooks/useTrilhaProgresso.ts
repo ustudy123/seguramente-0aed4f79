@@ -51,7 +51,10 @@ export function useTrilhaProgresso() {
     useQuery({
       queryKey: ["trilha_progresso", trilhaId, colaboradorId],
       queryFn: async (): Promise<TrilhaProgresso[]> => {
-        if (!tenantId || !trilhaId || !colaboradorId) return [];
+        if (!trilhaId) return [];
+        // Demo trilhas don't have real progress
+        if (trilhaId.startsWith("demo-")) return [];
+        if (!tenantId || !colaboradorId) return [];
         const { data, error } = await supabase
           .from("trilha_progresso" as never)
           .select("*")
@@ -61,11 +64,15 @@ export function useTrilhaProgresso() {
         if (error) throw error;
         return data || [];
       },
-      enabled: !!tenantId && !!trilhaId && !!colaboradorId,
+      enabled: !!trilhaId,
     });
 
   const iniciarModuloMut = useMutation({
     mutationFn: async ({ trilhaId, moduloId }: { trilhaId: string; moduloId: string }) => {
+      if (trilhaId.startsWith("demo-") || moduloId.startsWith("dm")) {
+        toast.info("Modo demonstração — progresso não é salvo.");
+        return null;
+      }
       if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
       const { data, error } = await supabase
         .from("trilha_progresso" as never)
@@ -109,6 +116,10 @@ export function useTrilhaProgresso() {
       nota?: number;
       pontosObtidos?: number;
     }) => {
+      if (trilhaId.startsWith("demo-") || moduloId.startsWith("dm")) {
+        toast.info("Modo demonstração — progresso não é salvo.");
+        return null;
+      }
       if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
 
       let evidenciaUrl: string | null = null;

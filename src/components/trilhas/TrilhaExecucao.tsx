@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useTrilhaModulos } from "@/hooks/useTrilhas";
 import { useTrilhaProgresso } from "@/hooks/useTrilhaProgresso";
+import { DemoBanner } from "./DemoBanner";
 import type { TrilhaComProgresso, TrilhaModulo, TrilhaModuloTipo, TrilhaProgressoStatus } from "@/types/trilha";
 import { MODULO_TIPO_LABELS } from "@/types/trilha";
 
@@ -56,6 +57,7 @@ interface TrilhaExecucaoProps {
 }
 
 export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
+  const isDemo = trilha.id.startsWith("demo-");
   const { modulos, isLoading: loadingModulos } = useTrilhaModulos(trilha.id);
   const { useModuloProgresso, iniciarModulo, concluirModulo, concluindo } = useTrilhaProgresso();
   const { data: progresso = [] } = useModuloProgresso(trilha.id);
@@ -114,7 +116,7 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {isDemo && <DemoBanner />}
       <div className="flex items-start gap-4">
         <Button variant="ghost" size="icon" onClick={onBack} className="mt-1">
           <ArrowLeft className="w-5 h-5" />
