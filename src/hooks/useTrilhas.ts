@@ -93,7 +93,13 @@ export function useTrilhaModulos(trilhaId?: string) {
   const { data: modulos = [], isLoading } = useQuery({
     queryKey: ["trilha_modulos", trilhaId],
     queryFn: async (): Promise<TrilhaModulo[]> => {
-      if (!tenantId || !trilhaId) return [];
+      if (!trilhaId) return [];
+      // Demo trilhas: return demo modules directly
+      if (trilhaId.startsWith("demo-")) {
+        const { DEMO_MODULOS } = await import("@/data/trilhas-demo");
+        return DEMO_MODULOS[trilhaId] || [];
+      }
+      if (!tenantId) return [];
       const { data, error } = await supabase
         .from("trilha_modulos" as never)
         .select("*")
@@ -107,7 +113,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       }
       return data || [];
     },
-    enabled: !!tenantId && !!trilhaId,
+    enabled: !!trilhaId,
   });
 
   const criarModuloMut = useMutation({
