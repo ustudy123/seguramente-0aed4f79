@@ -51,6 +51,7 @@ import PdiAssinatura from "./pages/PdiAssinatura";
 import FeriasAssinatura from "./pages/FeriasAssinatura";
 import TrilhaTerceiroPublica from "./pages/TrilhaTerceiroPublica";
 import Onboarding from "./pages/Onboarding";
+import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -110,6 +111,7 @@ const App = () => (
               <Route path="/cadastros/cargos" element={<Cargos />} />
               <Route path="/cadastros/filiais" element={<Filiais />} />
               <Route path="/financeiro" element={<Financeiro />} />
+              <Route path="/financeiro/beneficios" element={<FinanceiroBeneficios />} />
               <Route path="/empresa" element={<Empresa />} />
               <Route path="/ponto" element={<Ponto />} />
               <Route path="/admissao" element={<Navigate to="/colaboradores" replace />} />

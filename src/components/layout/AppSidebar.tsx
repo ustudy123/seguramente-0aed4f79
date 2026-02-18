@@ -134,8 +134,9 @@ const menuSections: MenuSection[] = [
   color: "text-teal-400",
   sectionIcon: DollarSign,
   items: [
-  { title: "Financeiro", icon: DollarSign, path: "/financeiro" }]
-
+    { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
+    { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
+  ]
 }];
 
 

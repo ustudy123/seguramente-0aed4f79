@@ -92,25 +92,30 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
   const loadAcoes = useCallback(async () => {
     setLoadingAcoes(true);
     try {
-      const { data: links } = await supabase
+      const { data: links, error: linksError } = await supabase
         .from("evento_sst_acoes")
         .select("acao_id")
         .eq("evento_id", evento.id);
       
+      if (linksError) throw linksError;
+
       if (links && links.length > 0) {
         const acoesIds = links.map((l: any) => l.acao_id);
-        const { data: acoesData } = await supabase
+        const { data: acoesData, error: acoesError } = await supabase
           .from("plano_acoes")
           .select("id, titulo, status, prazo, responsavel_nome")
           .in("id", acoesIds);
+        if (acoesError) throw acoesError;
         setAcoes((acoesData as AcaoVinculada[]) || []);
       } else {
         setAcoes([]);
       }
-    } catch {
+    } catch (err) {
+      console.error("Erro ao carregar ações vinculadas:", err);
       setAcoes([]);
+    } finally {
+      setLoadingAcoes(false);
     }
-    setLoadingAcoes(false);
   }, [evento.id]);
 
   useEffect(() => {

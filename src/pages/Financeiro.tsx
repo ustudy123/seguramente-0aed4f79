@@ -712,8 +712,8 @@ const DashboardTab = () => {
 // ==========================================
 // MAIN PAGE
 // ==========================================
-const Financeiro = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   return (
     <div className="space-y-6">
