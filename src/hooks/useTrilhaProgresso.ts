@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import type { TrilhaProgresso, TrilhaComProgresso, Trilha, TrilhaModulo } from "@/types/trilha";
+import { DEMO_MINHAS_TRILHAS } from "@/data/trilhas-demo";
 
 export function useTrilhaProgresso() {
   const { tenantId, user, profile } = useAuth();
@@ -24,7 +25,7 @@ export function useTrilhaProgresso() {
         .eq("status", "ativa")
         .order("created_at", { ascending: false }) as { data: Trilha[] | null; error: Error | null };
       if (tErr) throw tErr;
-      if (!trilhas?.length) return [];
+      if (!trilhas?.length) return DEMO_MINHAS_TRILHAS;
 
       // Fetch user's progress across all trilhas
       const { data: progresso, error: pErr } = await supabase
