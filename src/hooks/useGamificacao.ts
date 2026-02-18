@@ -206,6 +206,10 @@ export function useGamificacao() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const isDemo =
+    (minhasMedalhas.length > 0 && minhasMedalhas[0].id.startsWith("dmc")) ||
+    (ranking.length > 0 && ranking[0].colaborador_id === "r1");
+
   return {
     minhasMedalhas,
     meusCertificados,
@@ -215,6 +219,7 @@ export function useGamificacao() {
     loadingCertificados,
     loadingRanking,
     loadingConfig,
+    isDemo,
     criarMedalha: criarMedalhaMut.mutateAsync,
     excluirMedalha: excluirMedalhaMut.mutateAsync,
     criandoMedalha: criarMedalhaMut.isPending,
