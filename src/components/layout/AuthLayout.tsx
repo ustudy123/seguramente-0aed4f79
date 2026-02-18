@@ -14,7 +14,7 @@ export function AuthLayout() {
           alt=""
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,15%/0.92)] via-[hsl(262,35%,18%/0.9)] to-[hsl(280,30%,12%/0.95)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,10%/0.96)] via-[hsl(262,35%,12%/0.95)] to-[hsl(280,30%,8%/0.97)]" />
       </div>
 
       {/* Decorative wave shapes */}
