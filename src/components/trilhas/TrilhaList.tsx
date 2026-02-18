@@ -55,6 +55,7 @@ const tipoStyles: Record<TrilhaTipo, string> = {
   cultura: "bg-rose-500/10 text-rose-600",
   ergonomia_saude: "bg-emerald-500/10 text-emerald-600",
   processos: "bg-cyan-500/10 text-cyan-600",
+  onboarding: "bg-indigo-500/10 text-indigo-600",
 };
 
 const prioridadeStyles: Record<TrilhaPrioridade, string> = {

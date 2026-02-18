@@ -1,4 +1,4 @@
-export type TrilhaTipo = "tecnica" | "comportamental" | "lideranca" | "cultura" | "ergonomia_saude" | "processos";
+export type TrilhaTipo = "tecnica" | "comportamental" | "lideranca" | "cultura" | "ergonomia_saude" | "processos" | "onboarding";
 export type TrilhaPrioridade = "obrigatoria" | "recomendada" | "opcional";
 export type TrilhaVisibilidade = "publica" | "restrita";
 export type TrilhaStatus = "rascunho" | "ativa" | "arquivada";
@@ -93,6 +93,7 @@ export const TRILHA_TIPO_LABELS: Record<TrilhaTipo, string> = {
   cultura: "Cultura",
   ergonomia_saude: "Ergonomia & Saúde",
   processos: "Processos",
+  onboarding: "Onboarding",
 };
 
 export const TRILHA_PRIORIDADE_LABELS: Record<TrilhaPrioridade, string> = {
