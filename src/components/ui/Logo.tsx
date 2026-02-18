@@ -1,4 +1,5 @@
-import logoImage from "@/assets/logo-seguramente.png";
+// @ts-ignore
+import logoImage from "@/assets/logo-seguramente.png?v=4";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
