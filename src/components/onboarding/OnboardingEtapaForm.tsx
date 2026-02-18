@@ -127,14 +127,24 @@ export function OnboardingEtapaForm({ open, onOpenChange, templateId, etapa, nex
             </div>
           </div>
 
+          {form.tipo === "cultura_valores" && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-sm text-primary">
+              <strong>💡 Integração automática:</strong> Este módulo puxa automaticamente Missão, Visão, Valores, 
+              Princípios e Comportamentos cadastrados em <em>Estratégia & Governança → Cultura</em>. 
+              O texto abaixo será exibido como complemento.
+            </div>
+          )}
+
           {(form.tipo === "apresentacao_institucional" || form.tipo === "conteudo_livre" || form.tipo === "cultura_valores" || form.tipo === "reflexao") && (
             <div>
-              <Label>Conteúdo (texto/markdown)</Label>
+              <Label>{form.tipo === "cultura_valores" ? "Conteúdo complementar (opcional)" : "Conteúdo (texto/markdown)"}</Label>
               <Textarea
                 value={form.conteudo_texto}
                 onChange={(e) => set("conteudo_texto", e.target.value)}
                 rows={4}
-                placeholder="Conteúdo que será apresentado ao colaborador..."
+                placeholder={form.tipo === "cultura_valores" 
+                  ? "Texto adicional que será exibido junto aos dados de cultura da empresa..."
+                  : "Conteúdo que será apresentado ao colaborador..."}
               />
             </div>
           )}

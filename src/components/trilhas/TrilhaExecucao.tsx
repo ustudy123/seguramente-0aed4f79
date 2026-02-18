@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QuizPlayer } from "./QuizPlayer";
 import { EvidenciaUpload } from "./EvidenciaUpload";
+import { CulturaValoresModule } from "./CulturaValoresModule";
 import {
   ArrowLeft,
   BookOpen,
@@ -51,12 +52,21 @@ const moduloIcons: Record<TrilhaModuloTipo, React.ElementType> = {
   microdesafio: Zap,
 };
 
+const CULTURA_KEYWORDS = ["cultura", "valores", "missão", "visão", "propósito", "missao", "visao"];
+
+function isCulturaModule(modulo: TrilhaModulo): boolean {
+  const title = (modulo.titulo || "").toLowerCase();
+  return (modulo.tipo === "conteudo_interno" || modulo.tipo === "reflexao") &&
+    CULTURA_KEYWORDS.some(k => title.includes(k));
+}
+
 interface TrilhaExecucaoProps {
   trilha: TrilhaComProgresso;
   onBack: () => void;
 }
 
 export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
+  const isOnboarding = trilha.tipo === "onboarding";
   const isDemo = trilha.id.startsWith("demo-");
   const { modulos, isLoading: loadingModulos } = useTrilhaModulos(trilha.id);
   const { useModuloProgresso, iniciarModulo, concluirModulo, concluindo } = useTrilhaProgresso();
@@ -266,6 +276,11 @@ export function TrilhaExecucao({ trilha, onBack }: TrilhaExecucaoProps) {
                       />
                     ) : (
                       <>
+                        {/* Auto-render cultura data for cultura_valores modules in onboarding */}
+                        {isCulturaModule(activeModulo) && (
+                          <CulturaValoresModule />
+                        )}
+
                         {activeModulo.conteudo_url && (
                           <div className="space-y-2">
                             {activeModulo.tipo === "video" ? (
