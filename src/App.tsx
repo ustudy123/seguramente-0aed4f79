@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { ChatIAWidget } from "@/components/chat/ChatIAWidget";
+import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -137,6 +138,9 @@ const App = () => (
           
           {/* Chat IA Widget - disponível em todas as páginas protegidas */}
           <ChatIAWidget />
+          
+          {/* WhatsApp flutuante */}
+          <WhatsAppButton />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
