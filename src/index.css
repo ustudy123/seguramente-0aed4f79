@@ -45,7 +45,7 @@
 
     --radius: 0.625rem;
 
-    --sidebar-background: 262 35% 18%;
+    --sidebar-background: 262 28% 28%;
     --sidebar-foreground: 270 10% 92%;
     --sidebar-primary: 24 90% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -63,7 +63,7 @@
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(262 52% 50%) 0%, hsl(280 40% 60%) 100%);
     --gradient-brand: linear-gradient(135deg, hsl(262 52% 50%) 0%, hsl(24 90% 54%) 100%);
-    --gradient-sidebar: linear-gradient(180deg, hsl(262 35% 18%) 0%, hsl(262 40% 12%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(262 28% 28%) 0%, hsl(262 32% 20%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(270 10% 97%) 100%);
 
     /* Shadows */
