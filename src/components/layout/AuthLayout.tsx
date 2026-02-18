@@ -9,12 +9,8 @@ export function AuthLayout() {
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6">
       {/* Background image with purple overlay */}
       <div className="absolute inset-0 z-0">
-        <img
-          src={authBg}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,10%/0.96)] via-[hsl(262,35%,12%/0.95)] to-[hsl(280,30%,8%/0.97)]" />
+        <img src={authBg} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,15%/0.92)] via-[hsl(262,35%,18%/0.9)] to-[hsl(280,30%,12%/0.95)]" />
       </div>
 
       {/* Decorative wave shapes */}
@@ -26,7 +22,6 @@ export function AuthLayout() {
 
       {/* Content container */}
       <div className="relative z-10 w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
-        
         {/* Left - Branding text */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -35,8 +30,6 @@ export function AuthLayout() {
           className="flex-1 text-center lg:text-left hidden lg:block"
         >
           <div className="bg-[hsl(262,40%,10%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
-            
-            
             <div className="space-y-3">
               <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight drop-shadow-lg">
                 Gestão de Pessoas
@@ -48,28 +41,21 @@ export function AuthLayout() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2 max-w-md">
-              {[
-                "Admissão Digital", "Controle de Ponto", "Gestão de EPIs",
-                "Férias e Afastamentos", "Avaliação de Desempenho", "Trilhas de Aprendizado",
-                "Saúde Ocupacional", "Gestão de Benefícios", "Cultura & Celebrações",
-                "Ocorrências e Incidentes", "Plano de Ação 5W2H", "Análise SWOT",
-              ].map((item, i) => (
+            <div className="flex flex-wrap gap-3 max-w-md">
+              {["Admissão Digital", "Controle de Ponto", "Gestão de EPIs", "Férias e Afastamentos"].map((item, i) => (
                 <motion.span
                   key={item}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.06 }}
-                  className="px-3 py-1.5 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full text-white text-xs font-medium"
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="px-3 py-1.5 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full text-white text-sm font-medium"
                 >
                   {item}
                 </motion.span>
               ))}
             </div>
 
-            <p className="text-white/60 text-xs pt-4">
-              © 2024 Seguramente. Todos os direitos reservados.
-            </p>
+            <p className="text-white/60 text-xs pt-4">© 2026 Seguramente. Todos os direitos reservados.</p>
           </div>
         </motion.div>
 
