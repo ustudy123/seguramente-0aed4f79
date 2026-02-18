@@ -90,11 +90,16 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
   };
 
   const handleSubmit = async () => {
-    // Clean empty strings to null for enum fields to avoid DB errors
+    // Clean empty strings to null for enum and date fields to avoid DB errors
     const cleaned = { ...form, tipo };
     const enumFields = ["gravidade_lesao", "afastamento", "atendimento", "turno", "categoria_principal", "origem_predominante", "cat_tipo"];
-    for (const key of enumFields) {
+    const dateFields = ["data_evento", "hora_evento", "cat_data_emissao"];
+    for (const key of [...enumFields, ...dateFields]) {
       if (cleaned[key] === "") cleaned[key] = null;
+    }
+    // Also clean any other empty string that should be null
+    for (const key of Object.keys(cleaned)) {
+      if (cleaned[key] === "" && key !== "tipo") cleaned[key] = null;
     }
     await onSubmit(cleaned);
     onOpenChange(false);
