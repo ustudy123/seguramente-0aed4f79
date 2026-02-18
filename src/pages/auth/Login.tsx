@@ -57,8 +57,7 @@ export default function Login() {
 
   return (
     <div className="space-y-6">
-      {/* Logo - mobile only (desktop shows on left panel) */}
-      <div className="flex items-center justify-center lg:hidden mb-2">
+      <div className="flex items-center justify-center mb-2">
         <Logo size="lg" showText={false} />
       </div>
 
