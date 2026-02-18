@@ -41,8 +41,8 @@ export function AuthLayout() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3 max-w-md">
-              {["Admissão Digital", "Controle de Ponto", "Gestão de EPIs", "Férias e Afastamentos"].map((item, i) => (
+            <div className="flex flex-wrap gap-2 max-w-md">
+              {["Admissão Digital", "Controle de Ponto", "Gestão de EPIs", "Férias e Afastamentos", "Saúde Ocupacional", "Avaliação de Desempenho", "Gestão de Benefícios", "Cultura & Celebrações", "Ouvidoria", "Análise SWOT", "Gestão de Terceiros", "Treinamentos"].map((item, i) => (
                 <motion.span
                   key={item}
                   initial={{ opacity: 0, y: 10 }}
