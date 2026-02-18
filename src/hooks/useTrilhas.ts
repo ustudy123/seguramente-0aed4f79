@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import type { Trilha, TrilhaModulo, TrilhaQuizPergunta } from "@/types/trilha";
+import { DEMO_TRILHAS } from "@/data/trilhas-demo";
 
 export function useTrilhas() {
   const { tenantId, user, profile } = useAuth();
@@ -18,6 +19,8 @@ export function useTrilhas() {
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false }) as { data: Trilha[] | null; error: Error | null };
       if (error) throw error;
+      // Return demo data when no real data exists
+      if (!data?.length) return DEMO_TRILHAS;
       return data || [];
     },
     enabled: !!tenantId,

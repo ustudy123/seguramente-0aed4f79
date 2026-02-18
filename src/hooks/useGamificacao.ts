@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { DEMO_MINHAS_MEDALHAS, DEMO_CERTIFICADOS, DEMO_RANKING, DEMO_MEDALHAS_CONFIG } from "@/data/trilhas-demo";
 
 export interface Medalha {
   id: string;
@@ -69,10 +70,11 @@ export function useGamificacao() {
         .eq("colaborador_id", colaboradorId)
         .order("data_conquista", { ascending: false }) as { data: any[] | null; error: Error | null };
       if (error) throw error;
-      return (data || []).map((d) => ({
+      const result = (data || []).map((d) => ({
         ...d,
         medalha: Array.isArray(d.medalha) ? d.medalha[0] : d.medalha,
       })) as MedalhaConquistada[];
+      return result.length > 0 ? result : DEMO_MINHAS_MEDALHAS;
     },
     enabled: !!tenantId && !!colaboradorId,
   });
@@ -89,10 +91,11 @@ export function useGamificacao() {
         .eq("colaborador_id", colaboradorId)
         .order("data_conclusao", { ascending: false }) as { data: any[] | null; error: Error | null };
       if (error) throw error;
-      return (data || []).map((d) => {
+      const result = (data || []).map((d) => {
         const trilhaData = Array.isArray(d.trilha) ? d.trilha[0] : d.trilha;
         return { ...d, trilha_nome: trilhaData?.nome || "Trilha" };
       }) as Certificado[];
+      return result.length > 0 ? result : DEMO_CERTIFICADOS;
     },
     enabled: !!tenantId && !!colaboradorId,
   });
@@ -110,7 +113,7 @@ export function useGamificacao() {
         .eq("tenant_id", tenantId)
         .eq("status", "concluido") as { data: any[] | null; error: Error | null };
       if (error) throw error;
-      if (!progressos?.length) return [];
+      if (!progressos?.length) return DEMO_RANKING;
 
       // Get medal counts
       const { data: medalhas } = await supabase
@@ -167,7 +170,8 @@ export function useGamificacao() {
         .eq("tenant_id", tenantId)
         .order("created_at") as { data: Medalha[] | null; error: Error | null };
       if (error) throw error;
-      return data || [];
+      const result = data || [];
+      return result.length > 0 ? result as Medalha[] : DEMO_MEDALHAS_CONFIG;
     },
     enabled: !!tenantId,
   });
