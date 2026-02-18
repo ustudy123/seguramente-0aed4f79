@@ -15,12 +15,12 @@ export function AuthLayout() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-[55%] bg-gradient-to-br from-[hsl(215,50%,23%)] via-[hsl(215,50%,20%)] to-[hsl(215,55%,15%)] p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[55%] bg-gradient-to-br from-[hsl(262,32%,22%)] via-[hsl(262,30%,18%)] to-[hsl(262,35%,12%)] p-12 flex-col justify-between relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-[hsl(145,55%,50%)] rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[hsl(280,55%,60%)] rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[hsl(145,55%,50%)] rounded-full blur-3xl opacity-50" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-[hsl(24,90%,54%)] rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[hsl(280,40%,68%)] rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[hsl(262,52%,50%)] rounded-full blur-3xl opacity-50" />
         </div>
         
         {/* Decorative element instead of logo */}
@@ -29,7 +29,7 @@ export function AuthLayout() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10"
         >
-          <div className="w-16 h-1 bg-gradient-to-r from-[hsl(145,55%,50%)] via-[hsl(280,55%,60%)] to-[hsl(145,55%,50%)] rounded-full" />
+          <div className="w-16 h-1 bg-gradient-to-r from-[hsl(262,52%,50%)] via-[hsl(24,90%,54%)] to-[hsl(280,40%,68%)] rounded-full" />
         </motion.div>
         
         {/* Main content */}
@@ -60,7 +60,7 @@ export function AuthLayout() {
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20"
               >
-                <feature.icon className="w-5 h-5 text-[hsl(145,55%,60%)]" />
+                <feature.icon className="w-5 h-5 text-[hsl(24,90%,60%)]" />
                 <span className="text-white/90 text-sm font-medium">{feature.text}</span>
               </motion.div>
             ))}
