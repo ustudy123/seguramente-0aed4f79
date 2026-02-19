@@ -10956,6 +10956,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_abrir_competencia_mensal: { Args: never; Returns: undefined }
       bloquear_profissionais_expirados: { Args: never; Returns: undefined }
       buscar_profissionais_proximos: {
         Args: { p_lat: number; p_lon: number; p_raio_km?: number }
