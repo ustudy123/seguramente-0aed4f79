@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, Users, Shield, Building2 } from "lucide-react";
+import { Settings, Users, Shield, Building2, ClipboardList } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EquipeTab } from "@/components/configuracoes/EquipeTab";
+import { AuditoriaTab } from "@/components/configuracoes/AuditoriaTab";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Configuracoes() {
@@ -22,6 +23,12 @@ export default function Configuracoes() {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Equipe</span>
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="auditoria" className="flex items-center gap-1.5">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Auditoria</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="equipe" className="mt-6">
@@ -36,6 +43,14 @@ export default function Configuracoes() {
             )}
           </motion.div>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="auditoria" className="mt-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <AuditoriaTab />
+            </motion.div>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

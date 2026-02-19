@@ -161,6 +161,22 @@ serve(async (req) => {
       .insert({ user_id: userId, role: newRole });
 
     if (roleError) return json({ error: roleError.message }, 500);
+
+    // Audit log
+    await admin.from("audit_logs").insert({
+      tenant_id: tenantId,
+      user_id: callerId,
+      user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
+      user_email: userData.user.email,
+      action: "user.role_updated",
+      module: "equipe",
+      description: `Alterou perfil de acesso para "${newRole}"`,
+      target_type: "user",
+      target_id: userId,
+      target_name: (await admin.from("profiles").select("nome_completo").eq("user_id", userId).single()).data?.nome_completo || userId,
+      metadata: { old_roles: targetRoles?.map(r => r.role), new_role: newRole },
+    });
+
     return json({ ok: true });
   }
 
@@ -192,10 +208,28 @@ serve(async (req) => {
       return json({ error: "Não é possível remover o owner da empresa" }, 403);
     }
 
+    // Get target name before deleting
+    const { data: targetProfileData } = await admin.from("profiles").select("nome_completo").eq("user_id", userId).single();
+    const targetName = targetProfileData?.nome_completo || userId;
+
     // Delete profile (removes from tenant)
     await admin.from("profiles").delete().eq("user_id", userId).eq("tenant_id", tenantId);
     // Delete roles
     await admin.from("user_roles").delete().eq("user_id", userId);
+
+    // Audit log
+    await admin.from("audit_logs").insert({
+      tenant_id: tenantId,
+      user_id: callerId,
+      user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
+      user_email: userData.user.email,
+      action: "user.removed",
+      module: "equipe",
+      description: `Removeu "${targetName}" do sistema`,
+      target_type: "user",
+      target_id: userId,
+      target_name: targetName,
+    });
 
     return json({ ok: true });
   }
@@ -223,6 +257,21 @@ serve(async (req) => {
     });
 
     if (inviteError) return json({ error: inviteError.message }, 500);
+
+    // Audit log
+    await admin.from("audit_logs").insert({
+      tenant_id: tenantId,
+      user_id: callerId,
+      user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
+      user_email: userData.user.email,
+      action: "user.invite_resent",
+      module: "equipe",
+      description: `Reenviou convite para "${email}"`,
+      target_type: "user",
+      target_id: userId,
+      target_name: email,
+    });
+
     return json({ ok: true });
   }
 
