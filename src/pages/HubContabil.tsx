@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Receipt, ShieldCheck, History, LayoutDashboard } from "lucide-react";
+import { BarChart3, FileText, Receipt, ShieldCheck, History, LayoutDashboard, ArrowLeftRight } from "lucide-react";
 import { HubDashboard } from "@/components/hub-contabil/HubDashboard";
 import { HubCompetencias } from "@/components/hub-contabil/HubCompetencias";
 import { HubDocumentos } from "@/components/hub-contabil/HubDocumentos";
 import { HubGuias } from "@/components/hub-contabil/HubGuias";
 import { HubCertidoes } from "@/components/hub-contabil/HubCertidoes";
 import { HubHistorico } from "@/components/hub-contabil/HubHistorico";
+import { HubConferenciaCruzada } from "@/components/hub-contabil/HubConferenciaCruzada";
 import { useHubContabil } from "@/hooks/useHubContabil";
 
 const HubContabil = () => {
@@ -21,7 +22,7 @@ const HubContabil = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+        <TabsList className="grid grid-cols-7 w-full max-w-5xl">
           <TabsTrigger value="dashboard" className="gap-1.5 text-xs">
             <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
           </TabsTrigger>
@@ -33,6 +34,9 @@ const HubContabil = () => {
           </TabsTrigger>
           <TabsTrigger value="guias" className="gap-1.5 text-xs">
             <Receipt className="w-3.5 h-3.5" /> Guias
+          </TabsTrigger>
+          <TabsTrigger value="conferencia" className="gap-1.5 text-xs">
+            <ArrowLeftRight className="w-3.5 h-3.5" /> Conferência
           </TabsTrigger>
           <TabsTrigger value="certidoes" className="gap-1.5 text-xs">
             <ShieldCheck className="w-3.5 h-3.5" /> Certidões
@@ -46,6 +50,7 @@ const HubContabil = () => {
         <TabsContent value="competencias"><HubCompetencias hub={hub} /></TabsContent>
         <TabsContent value="documentos"><HubDocumentos hub={hub} /></TabsContent>
         <TabsContent value="guias"><HubGuias hub={hub} /></TabsContent>
+        <TabsContent value="conferencia"><HubConferenciaCruzada hub={hub} /></TabsContent>
         <TabsContent value="certidoes"><HubCertidoes hub={hub} /></TabsContent>
         <TabsContent value="historico"><HubHistorico hub={hub} /></TabsContent>
       </Tabs>

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, ArrowDown, ArrowUp, Upload, Download, Loader2 } from "lucide-react";
+import { Plus, ArrowDown, ArrowUp, Upload, Download, Loader2, Link2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,12 +21,23 @@ const tipoLabels: Record<string, string> = {
   recibo_ferias: "Recibo Férias", declaracao_acessoria: "Declaração Acessória", outro: "Outro",
 };
 
+// Mapeamento de vinculação automática
+const vinculacaoMap: Record<string, string> = {
+  holerite: "Dossiê do Colaborador",
+  grrf: "Rescisão Específica",
+  recibo_ferias: "Período Aquisitivo",
+  calculo_rescisorio: "Rescisão Específica",
+  darf: "Competência",
+  fgts: "Competência",
+  relatorio_folha: "Competência",
+};
+
 export function HubDocumentos({ hub }: Props) {
   const { documentos, criarDocumento, loading } = hub;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [form, setForm] = useState({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", observacoes: "" });
+  const [form, setForm] = useState({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", colaborador_cpf: "", observacoes: "" });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) setFile(acceptedFiles[0]);
@@ -39,8 +50,15 @@ export function HubDocumentos({ hub }: Props) {
     accept: { "application/pdf": [".pdf"], "image/*": [".png", ".jpg", ".jpeg"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"], "text/csv": [".csv"] },
   });
 
+  const vinculacao = form.tipo ? vinculacaoMap[form.tipo] : null;
+  const requerColaborador = ["holerite", "grrf", "recibo_ferias", "calculo_rescisorio"].includes(form.tipo);
+
   const handleSubmit = async () => {
     if (!form.tipo || !form.competencia) return;
+    if (requerColaborador && !form.colaborador_nome) {
+      toast.error("Este tipo de documento requer o nome do colaborador.");
+      return;
+    }
     setUploading(true);
     try {
       let arquivo_url = null;
@@ -57,7 +75,7 @@ export function HubDocumentos({ hub }: Props) {
       }
 
       await criarDocumento({ ...form, arquivo_url, arquivo_nome, arquivo_tamanho });
-      setForm({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", observacoes: "" });
+      setForm({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", colaborador_cpf: "", observacoes: "" });
       setFile(null);
       setDialogOpen(false);
     } finally {
@@ -101,6 +119,15 @@ export function HubDocumentos({ hub }: Props) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Vinculação automática */}
+              {vinculacao && (
+                <div className="flex items-center gap-2 p-2 rounded bg-muted/50 border text-xs text-muted-foreground">
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>Vinculação automática: <strong>{vinculacao}</strong></span>
+                </div>
+              )}
+
               <div>
                 <Label>Competência *</Label>
                 <Input type="month" value={form.competencia} onChange={(e) => setForm({ ...form, competencia: e.target.value })} />
@@ -116,9 +143,15 @@ export function HubDocumentos({ hub }: Props) {
                 </Select>
               </div>
               <div>
-                <Label>Colaborador (opcional)</Label>
+                <Label>Colaborador {requerColaborador ? "*" : "(opcional)"}</Label>
                 <Input value={form.colaborador_nome} onChange={(e) => setForm({ ...form, colaborador_nome: e.target.value })} placeholder="Nome do colaborador" />
               </div>
+              {requerColaborador && (
+                <div>
+                  <Label>CPF do Colaborador</Label>
+                  <Input value={form.colaborador_cpf} onChange={(e) => setForm({ ...form, colaborador_cpf: e.target.value })} placeholder="000.000.000-00" />
+                </div>
+              )}
               <div>
                 <Label>Arquivo</Label>
                 <div
@@ -141,7 +174,7 @@ export function HubDocumentos({ hub }: Props) {
                 <Label>Descrição</Label>
                 <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes do documento" />
               </div>
-              <Button onClick={handleSubmit} className="w-full" disabled={!form.tipo || !form.competencia || uploading}>
+              <Button onClick={handleSubmit} className="w-full" disabled={!form.tipo || !form.competencia || uploading || (requerColaborador && !form.colaborador_nome)}>
                 {uploading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Enviando...</> : "Registrar"}
               </Button>
             </div>
@@ -163,6 +196,11 @@ export function HubDocumentos({ hub }: Props) {
                       <span className="text-sm font-medium">{tipoLabels[doc.tipo] || doc.tipo}</span>
                       <Badge variant="outline" className="text-xs">{doc.competencia}</Badge>
                       {doc.versao > 1 && <Badge variant="secondary" className="text-xs">v{doc.versao}</Badge>}
+                      {vinculacaoMap[doc.tipo] && (
+                        <Badge variant="outline" className="text-xs gap-1">
+                          <Link2 className="w-2.5 h-2.5" /> {vinculacaoMap[doc.tipo]}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {doc.direcao === "enviado" ? "Enviado" : "Recebido"} por {doc.enviado_por || "—"} • {format(parseISO(doc.created_at), "dd/MM/yyyy HH:mm")}
