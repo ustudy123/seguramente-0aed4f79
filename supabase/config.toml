@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.invite-tenant-user]
 verify_jwt = false
+
+[functions.manage-tenant-users]
+verify_jwt = false
