@@ -164,6 +164,23 @@ serve(async (req) => {
     return json({ error: roleError.message }, 500);
   }
 
+  // Audit log
+  await admin.from("audit_logs").insert({
+    tenant_id: tenantId,
+    user_id: callerId,
+    user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
+    user_email: userData.user.email,
+    action: method === "invite" ? "user.invited" : "user.created",
+    module: "equipe",
+    description: method === "invite"
+      ? `Convidou "${nomeCompleto}" (${email}) com perfil "${role}"`
+      : `Criou usuário "${nomeCompleto}" (${email}) com perfil "${role}"`,
+    target_type: "user",
+    target_id: newUserId,
+    target_name: nomeCompleto,
+    metadata: { email, role, method },
+  });
+
   return json({
     ok: true,
     userId: newUserId,
