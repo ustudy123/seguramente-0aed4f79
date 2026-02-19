@@ -5780,6 +5780,387 @@ export type Database = {
           },
         ]
       }
+      hub_certidoes: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          created_at: string
+          data_emissao: string
+          data_validade: string
+          id: string
+          numero: string | null
+          observacoes: string | null
+          orgao_emissor: string
+          status: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          data_emissao: string
+          data_validade: string
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          orgao_emissor: string
+          status?: string
+          tenant_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          data_emissao?: string
+          data_validade?: string
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          orgao_emissor?: string
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_certidoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_competencias: {
+        Row: {
+          aprovado_por: string | null
+          checklist: Json | null
+          competencia: string
+          created_at: string
+          data_aprovacao: string | null
+          data_envio: string | null
+          data_finalizacao: string | null
+          enviado_por: string | null
+          id: string
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          checklist?: Json | null
+          competencia: string
+          created_at?: string
+          data_aprovacao?: string | null
+          data_envio?: string | null
+          data_finalizacao?: string | null
+          enviado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aprovado_por?: string | null
+          checklist?: Json | null
+          competencia?: string
+          created_at?: string
+          data_aprovacao?: string | null
+          data_envio?: string | null
+          data_finalizacao?: string | null
+          enviado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_competencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_documentos: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          colaborador_cpf: string | null
+          colaborador_nome: string | null
+          competencia: string
+          competencia_id: string | null
+          created_at: string
+          descricao: string | null
+          direcao: string
+          enviado_por: string | null
+          id: string
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+          versao: number
+          versao_anterior_id: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          competencia: string
+          competencia_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          direcao?: string
+          enviado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          tipo: string
+          updated_at?: string
+          versao?: number
+          versao_anterior_id?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          competencia?: string
+          competencia_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          direcao?: string
+          enviado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+          versao?: number
+          versao_anterior_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_documentos_competencia_id_fkey"
+            columns: ["competencia_id"]
+            isOneToOne: false
+            referencedRelation: "hub_competencias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_documentos_versao_anterior_id_fkey"
+            columns: ["versao_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "hub_documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_guias: {
+        Row: {
+          competencia: string
+          competencia_id: string | null
+          comprovante_nome: string | null
+          comprovante_url: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          competencia: string
+          competencia_id?: string | null
+          comprovante_nome?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          tipo: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          competencia?: string
+          competencia_id?: string | null
+          comprovante_nome?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_guias_competencia_id_fkey"
+            columns: ["competencia_id"]
+            isOneToOne: false
+            referencedRelation: "hub_competencias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_guias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_historico: {
+        Row: {
+          acao: string
+          competencia: string | null
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          descricao: string | null
+          documento_id: string | null
+          id: string
+          ip_acesso: string | null
+          perfil: string | null
+          tenant_id: string
+          tipo_documento: string | null
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          competencia?: string | null
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          documento_id?: string | null
+          id?: string
+          ip_acesso?: string | null
+          perfil?: string | null
+          tenant_id: string
+          tipo_documento?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          competencia?: string | null
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          documento_id?: string | null
+          id?: string
+          ip_acesso?: string | null
+          perfil?: string | null
+          tenant_id?: string
+          tipo_documento?: string | null
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_notificacao_config: {
+        Row: {
+          alertas_cnd: boolean | null
+          alertas_competencia: boolean | null
+          alertas_envio: boolean | null
+          alertas_guias: boolean | null
+          alertas_recebimento: boolean | null
+          created_at: string
+          id: string
+          modo: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          alertas_cnd?: boolean | null
+          alertas_competencia?: boolean | null
+          alertas_envio?: boolean | null
+          alertas_guias?: boolean | null
+          alertas_recebimento?: boolean | null
+          created_at?: string
+          id?: string
+          modo?: string
+          tenant_id: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          alertas_cnd?: boolean | null
+          alertas_competencia?: boolean | null
+          alertas_envio?: boolean | null
+          alertas_guias?: boolean | null
+          alertas_recebimento?: boolean | null
+          created_at?: string
+          id?: string
+          modo?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_notificacao_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       humor_diario: {
         Row: {
           created_at: string

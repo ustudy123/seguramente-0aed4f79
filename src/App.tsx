@@ -52,6 +52,7 @@ import FeriasAssinatura from "./pages/FeriasAssinatura";
 import TrilhaTerceiroPublica from "./pages/TrilhaTerceiroPublica";
 import Onboarding from "./pages/Onboarding";
 import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
+import HubContabil from "./pages/HubContabil";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -136,6 +137,7 @@ const App = () => (
               <Route path="/incidentes-acidentes" element={<IncidentesAcidentes />} />
               <Route path="/cultura-celebracoes" element={<CulturaCelebracoes />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/hub-contabil" element={<HubContabil />} />
               <Route path="/configuracoes" element={<PlaceholderPage />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />
