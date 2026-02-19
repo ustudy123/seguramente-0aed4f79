@@ -136,6 +136,7 @@ const menuSections: MenuSection[] = [
   items: [
     { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
     { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
+    { title: "Hub Contábil", icon: FileText, path: "/hub-contabil" },
   ]
 }];
 
