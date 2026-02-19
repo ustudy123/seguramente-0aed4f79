@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { History, Filter, Download } from "lucide-react";
+import { History, Download, FileSpreadsheet } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 
 interface Props { hub: any; }
 
@@ -38,12 +41,72 @@ export function HubHistorico({ hub }: Props) {
     return true;
   });
 
+  const exportData = filtered.map((h: any) => ({
+    Data: format(parseISO(h.created_at), "dd/MM/yyyy HH:mm"),
+    Usuário: h.usuario_nome || "Sistema",
+    Perfil: perfilLabels[h.perfil] || h.perfil || "",
+    Competência: h.competencia || "",
+    "Tipo Documento": h.tipo_documento || "",
+    Ação: acaoLabels[h.acao] || h.acao,
+    Descrição: h.descricao || "",
+  }));
+
+  const handleExportExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Histórico");
+    XLSX.writeFile(wb, `historico-hub-contabil-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    toast.success("Excel exportado!");
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(14);
+    doc.text("Histórico de Movimentações — Hub Contábil", 14, 15);
+    doc.setFontSize(8);
+    doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 22);
+
+    let y = 30;
+    const headers = ["Data", "Usuário", "Perfil", "Competência", "Ação", "Descrição"];
+    const colWidths = [35, 40, 25, 25, 25, 120];
+
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    headers.forEach((h, i) => {
+      const x = 14 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+      doc.text(h, x, y);
+    });
+    y += 5;
+    doc.setFont("helvetica", "normal");
+
+    exportData.forEach((row) => {
+      if (y > 190) { doc.addPage(); y = 15; }
+      const vals = [row.Data, row.Usuário, row.Perfil, row.Competência, row.Ação, row.Descrição];
+      vals.forEach((v, i) => {
+        const x = 14 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+        doc.text(String(v || "").substring(0, 50), x, y);
+      });
+      y += 4;
+    });
+
+    doc.save(`historico-hub-contabil-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("PDF exportado!");
+  };
+
   if (loading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Carregando...</div>;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold flex items-center gap-2"><History className="w-5 h-5" /> Histórico de Movimentações</h2>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handleExportExcel} disabled={filtered.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 mr-1" /> Excel
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={filtered.length === 0}>
+            <Download className="w-4 h-4 mr-1" /> PDF
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-3 items-end flex-wrap">

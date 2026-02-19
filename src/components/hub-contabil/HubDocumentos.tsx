@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Upload, ArrowDown, ArrowUp } from "lucide-react";
+import { Plus, ArrowDown, ArrowUp, Upload, Download, Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useDropzone } from "react-dropzone";
 
 interface Props { hub: any; }
 
@@ -21,13 +24,59 @@ const tipoLabels: Record<string, string> = {
 export function HubDocumentos({ hub }: Props) {
   const { documentos, criarDocumento, loading } = hub;
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [form, setForm] = useState({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", observacoes: "" });
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) setFile(acceptedFiles[0]);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    maxFiles: 1,
+    maxSize: 10 * 1024 * 1024,
+    accept: { "application/pdf": [".pdf"], "image/*": [".png", ".jpg", ".jpeg"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"], "text/csv": [".csv"] },
+  });
 
   const handleSubmit = async () => {
     if (!form.tipo || !form.competencia) return;
-    await criarDocumento(form);
-    setForm({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", observacoes: "" });
-    setDialogOpen(false);
+    setUploading(true);
+    try {
+      let arquivo_url = null;
+      let arquivo_nome = null;
+      let arquivo_tamanho = null;
+
+      if (file) {
+        const path = `documentos/${form.competencia}/${Date.now()}_${file.name}`;
+        const { error: upErr } = await supabase.storage.from("hub-contabil").upload(path, file);
+        if (upErr) { toast.error("Erro no upload: " + upErr.message); return; }
+        arquivo_url = path;
+        arquivo_nome = file.name;
+        arquivo_tamanho = file.size;
+      }
+
+      await criarDocumento({ ...form, arquivo_url, arquivo_nome, arquivo_tamanho });
+      setForm({ tipo: "", competencia: "", direcao: "enviado", descricao: "", colaborador_nome: "", observacoes: "" });
+      setFile(null);
+      setDialogOpen(false);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDownload = async (doc: any) => {
+    if (!doc.arquivo_url) return;
+    const { data, error } = await supabase.storage.from("hub-contabil").createSignedUrl(doc.arquivo_url, 60);
+    if (error || !data?.signedUrl) { toast.error("Erro ao gerar link"); return; }
+    const res = await fetch(data.signedUrl);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.arquivo_nome || "documento";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Carregando...</div>;
@@ -71,10 +120,30 @@ export function HubDocumentos({ hub }: Props) {
                 <Input value={form.colaborador_nome} onChange={(e) => setForm({ ...form, colaborador_nome: e.target.value })} placeholder="Nome do colaborador" />
               </div>
               <div>
+                <Label>Arquivo</Label>
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                >
+                  <input {...getInputProps()} />
+                  {file ? (
+                    <p className="text-sm text-foreground">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>
+                  ) : (
+                    <div className="space-y-1">
+                      <Upload className="w-6 h-6 mx-auto text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Arraste ou clique para enviar</p>
+                      <p className="text-xs text-muted-foreground">PDF, imagens, Excel (máx 10MB)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
                 <Label>Descrição</Label>
                 <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Detalhes do documento" />
               </div>
-              <Button onClick={handleSubmit} className="w-full" disabled={!form.tipo || !form.competencia}>Registrar</Button>
+              <Button onClick={handleSubmit} className="w-full" disabled={!form.tipo || !form.competencia || uploading}>
+                {uploading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Enviando...</> : "Registrar"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -98,12 +167,20 @@ export function HubDocumentos({ hub }: Props) {
                     <p className="text-xs text-muted-foreground">
                       {doc.direcao === "enviado" ? "Enviado" : "Recebido"} por {doc.enviado_por || "—"} • {format(parseISO(doc.created_at), "dd/MM/yyyy HH:mm")}
                       {doc.colaborador_nome && ` • ${doc.colaborador_nome}`}
+                      {doc.arquivo_nome && ` • 📎 ${doc.arquivo_nome}`}
                     </p>
                   </div>
                 </div>
-                <Badge className={doc.status === "ativo" ? "bg-green-100 text-green-800" : doc.status === "substituido" ? "bg-gray-100 text-gray-600" : "bg-red-100 text-red-800"}>
-                  {doc.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {doc.arquivo_url && (
+                    <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)} title="Baixar arquivo">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Badge className={doc.status === "ativo" ? "bg-green-100 text-green-800" : doc.status === "substituido" ? "bg-gray-100 text-gray-600" : "bg-red-100 text-red-800"}>
+                    {doc.status}
+                  </Badge>
+                </div>
               </CardContent>
             </Card>
           ))}

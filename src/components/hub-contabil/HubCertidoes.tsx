@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,8 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, ShieldCheck, AlertTriangle, XCircle, CheckCircle2 } from "lucide-react";
+import { Plus, ShieldCheck, Download, Upload, Loader2 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useDropzone } from "react-dropzone";
 
 interface Props { hub: any; }
 
@@ -26,13 +29,47 @@ const statusConfig: Record<string, { color: string; label: string }> = {
 export function HubCertidoes({ hub }: Props) {
   const { certidoes, criarCertidao, loading } = hub;
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ tipo: "", orgao_emissor: "", numero: "", data_emissao: "", data_validade: "" });
+
+  const onDrop = useCallback((files: File[]) => { if (files.length) setFile(files[0]); }, []);
+  const { getRootProps, getInputProps } = useDropzone({ onDrop, maxFiles: 1, maxSize: 10 * 1024 * 1024 });
 
   const handleSubmit = async () => {
     if (!form.tipo || !form.orgao_emissor || !form.data_emissao || !form.data_validade) return;
-    await criarCertidao(form);
-    setForm({ tipo: "", orgao_emissor: "", numero: "", data_emissao: "", data_validade: "" });
-    setDialogOpen(false);
+    setUploading(true);
+    try {
+      let arquivo_url = null;
+      let arquivo_nome = null;
+      if (file) {
+        const path = `certidoes/${form.tipo}/${Date.now()}_${file.name}`;
+        const { error } = await supabase.storage.from("hub-contabil").upload(path, file);
+        if (error) { toast.error("Erro no upload: " + error.message); return; }
+        arquivo_url = path;
+        arquivo_nome = file.name;
+      }
+      await criarCertidao({ ...form, arquivo_url, arquivo_nome });
+      setForm({ tipo: "", orgao_emissor: "", numero: "", data_emissao: "", data_validade: "" });
+      setFile(null);
+      setDialogOpen(false);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDownload = async (cert: any) => {
+    if (!cert.arquivo_url) return;
+    const { data, error } = await supabase.storage.from("hub-contabil").createSignedUrl(cert.arquivo_url, 60);
+    if (error || !data?.signedUrl) { toast.error("Erro ao gerar link"); return; }
+    const res = await fetch(data.signedUrl);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = cert.arquivo_nome || "certidao";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Carregando...</div>;
@@ -75,7 +112,20 @@ export function HubCertidoes({ hub }: Props) {
                   <Input type="date" value={form.data_validade} onChange={(e) => setForm({ ...form, data_validade: e.target.value })} />
                 </div>
               </div>
-              <Button onClick={handleSubmit} className="w-full" disabled={!form.tipo || !form.orgao_emissor || !form.data_emissao || !form.data_validade}>Registrar</Button>
+              <div>
+                <Label>Documento (PDF)</Label>
+                <div {...getRootProps()} className="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-primary/50">
+                  <input {...getInputProps()} />
+                  {file ? (
+                    <p className="text-sm">{file.name}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground"><Upload className="w-4 h-4 inline mr-1" /> Anexar certidão</p>
+                  )}
+                </div>
+              </div>
+              <Button onClick={handleSubmit} className="w-full" disabled={!form.tipo || !form.orgao_emissor || !form.data_emissao || !form.data_validade || uploading}>
+                {uploading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Enviando...</> : "Registrar"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -101,9 +151,15 @@ export function HubCertidoes({ hub }: Props) {
                       <p className="text-xs text-muted-foreground">
                         {cert.orgao_emissor} {cert.numero && `• Nº ${cert.numero}`} • Válida até {format(parseISO(cert.data_validade), "dd/MM/yyyy")}
                         {dias > 0 && dias <= 30 && <span className="text-amber-600 ml-1">({dias}d restantes)</span>}
+                        {cert.arquivo_nome && ` • 📎 ${cert.arquivo_nome}`}
                       </p>
                     </div>
                   </div>
+                  {cert.arquivo_url && (
+                    <Button size="sm" variant="ghost" onClick={() => handleDownload(cert)} title="Baixar certidão">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
