@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Send, CheckCircle2, RotateCcw } from "lucide-react";
+import { Plus, Send, CheckCircle2, RotateCcw, FileText, Receipt, Users } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface Props { hub: any; }
 
@@ -50,9 +50,44 @@ const nextStatusMap: Record<string, string[]> = {
 };
 
 export function HubCompetencias({ hub }: Props) {
-  const { competencias, criarCompetencia, atualizarCompetencia, loading } = hub;
+  const { competencias, documentos, guias, criarCompetencia, atualizarCompetencia, loading } = hub;
+  const { profile } = useAuthContext();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedComp, setSelectedComp] = useState<any>(null);
+  const [consolidacao, setConsolidacao] = useState<Record<string, any>>({});
+
+  const tenantId = profile?.tenant_id;
+
+  // Buscar dados consolidados para cada competência
+  useEffect(() => {
+    if (!tenantId || competencias.length === 0) return;
+    const fetchConsolidacao = async () => {
+      const result: Record<string, any> = {};
+      for (const comp of competencias) {
+        const mes = comp.competencia; // "YYYY-MM"
+        const [year, month] = mes.split("-").map(Number);
+        const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+        const endDate = new Date(year, month, 0).toISOString().split("T")[0]; // last day
+
+        const [pontoRes, admRes] = await Promise.all([
+          supabase.from("ponto_diario").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("data", startDate).lte("data", endDate),
+          supabase.from("admissoes").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("data_admissao", startDate).lte("data_admissao", endDate),
+        ]);
+
+        const docsComp = documentos.filter((d: any) => d.competencia === mes);
+        const guiasComp = guias.filter((g: any) => g.competencia === mes);
+
+        result[mes] = {
+          ponto: pontoRes.count || 0,
+          admissoes: admRes.count || 0,
+          documentos: docsComp.length,
+          guias: guiasComp.length,
+        };
+      }
+      setConsolidacao(result);
+    };
+    fetchConsolidacao();
+  }, [tenantId, competencias, documentos, guias]);
 
   const now = new Date();
   const months: string[] = [];
@@ -108,45 +143,58 @@ export function HubCompetencias({ hub }: Props) {
         <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">Nenhuma competência registrada. Clique em "Nova Competência" para começar.</CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {competencias.map((comp: any) => (
-            <Card key={comp.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedComp(selectedComp?.id === comp.id ? null : comp)}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold">{comp.competencia}</span>
-                    <Badge className={statusColors[comp.status]}>{statusLabels[comp.status]}</Badge>
+          {competencias.map((comp: any) => {
+            const cons = consolidacao[comp.competencia];
+            return (
+              <Card key={comp.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedComp(selectedComp?.id === comp.id ? null : comp)}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold">{comp.competencia}</span>
+                      <Badge className={statusColors[comp.status]}>{statusLabels[comp.status]}</Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      {nextStatusMap[comp.status]?.map((ns: string) => {
+                        const blocked = ns === "enviado" && !allChecked(comp);
+                        return (
+                          <Button key={ns} size="sm" variant="outline" disabled={blocked}
+                            onClick={(e) => { e.stopPropagation(); handleStatusChange(comp, ns); }}
+                            title={blocked ? "Complete o checklist antes de enviar" : ""}>
+                            {ns === "enviado" && <Send className="w-3.5 h-3.5 mr-1" />}
+                            {ns === "aprovado" && <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
+                            {ns === "reaberto" && <RotateCcw className="w-3.5 h-3.5 mr-1" />}
+                            {statusLabels[ns] || ns}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    {nextStatusMap[comp.status]?.map((ns: string) => {
-                      const blocked = ns === "enviado" && !allChecked(comp);
-                      return (
-                        <Button key={ns} size="sm" variant="outline" disabled={blocked}
-                          onClick={(e) => { e.stopPropagation(); handleStatusChange(comp, ns); }}
-                          title={blocked ? "Complete o checklist antes de enviar" : ""}>
-                          {ns === "enviado" && <Send className="w-3.5 h-3.5 mr-1" />}
-                          {ns === "aprovado" && <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
-                          {ns === "reaberto" && <RotateCcw className="w-3.5 h-3.5 mr-1" />}
-                          {statusLabels[ns] || ns}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
 
-                {selectedComp?.id === comp.id && comp.status === "em_preparacao" && (
-                  <div className="mt-4 pt-4 border-t space-y-2">
-                    <p className="text-sm font-medium">Checklist de Envio</p>
-                    {checklistItems.map((item) => (
-                      <div key={item.key} className="flex items-center gap-2">
-                        <Checkbox checked={!!comp.checklist?.[item.key]} onCheckedChange={() => handleChecklistToggle(comp, item.key)} onClick={(e) => e.stopPropagation()} />
-                        <Label className="text-sm">{item.label}</Label>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {/* Consolidação de dados */}
+                  {cons && (
+                    <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {cons.ponto} reg. ponto</span>
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {cons.admissoes} admissões</span>
+                      <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {cons.documentos} docs</span>
+                      <span className="flex items-center gap-1"><Receipt className="w-3 h-3" /> {cons.guias} guias</span>
+                    </div>
+                  )}
+
+                  {selectedComp?.id === comp.id && comp.status === "em_preparacao" && (
+                    <div className="mt-4 pt-4 border-t space-y-2">
+                      <p className="text-sm font-medium">Checklist de Envio</p>
+                      {checklistItems.map((item) => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          <Checkbox checked={!!comp.checklist?.[item.key]} onCheckedChange={() => handleChecklistToggle(comp, item.key)} onClick={(e) => e.stopPropagation()} />
+                          <Label className="text-sm">{item.label}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
