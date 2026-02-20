@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 
 // Dados fictícios para demonstração
 interface EventoFicticio {
@@ -166,6 +167,7 @@ function gerarPDFBlob(item: FolhaItem, competencia: string, eventos: EventoFicti
 export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDetailProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const { tenantId, user, profile } = useAuth();
+  const { enviarParaHub } = useEnviarParaHub();
   const queryClient = useQueryClient();
   const [archiving, setArchiving] = useState(false);
   const [archived, setArchived] = useState(false);
@@ -205,7 +207,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
     return gerarPDFBlob(item, competencia, eventos, proventos, descontos, totalProventos, totalDescontos, totalLiquido, fmtMoeda, formatCompetencia, dadosFicticios);
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     const blob = generatePdfBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -213,6 +215,13 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
     a.download = `holerite_${item.colaborador_nome.replace(/\s+/g, "_")}_${competencia}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
+
+    await enviarParaHub({
+      tipo: "holerite",
+      competencia,
+      descricao: `Holerite gerado`,
+      colaborador_nome: item.colaborador_nome,
+    });
   };
 
   const findOrCreateColaboradorPasta = async (): Promise<string | null> => {

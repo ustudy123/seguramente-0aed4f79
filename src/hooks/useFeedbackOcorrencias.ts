@@ -101,9 +101,36 @@ export function useFeedbackOcorrencias() {
       if (error) throw error;
       return data as Ocorrencia;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
       toast.success("Ocorrência registrada com sucesso!");
+
+      // Registrar advertência no Hub Contábil automaticamente
+      if (data && (data as any).is_advertencia && tenantId) {
+        const competencia = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+        await supabase.from("hub_documentos").insert({
+          tenant_id: tenantId,
+          competencia,
+          tipo: "outro",
+          descricao: `Advertência formal — ${(data as any).colaborador_nome || ""}`,
+          colaborador_nome: (data as any).colaborador_nome || null,
+          direcao: "enviado",
+          enviado_por: profile?.nome_completo || user?.email,
+          status: "ativo",
+          versao: 1,
+        } as any).then(() => {
+          supabase.from("hub_historico").insert({
+            tenant_id: tenantId,
+            competencia,
+            acao: "enviado",
+            tipo_documento: "advertencia",
+            usuario_id: user?.id,
+            usuario_nome: profile?.nome_completo || user?.email,
+            perfil: "rh",
+            descricao: `Advertência enviada automaticamente — ${(data as any).colaborador_nome || ""}`,
+          } as any);
+        });
+      }
     },
     onError: (error: Error) => toast.error("Erro ao registrar ocorrência: " + error.message),
   });
