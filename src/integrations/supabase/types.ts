@@ -5839,6 +5839,107 @@ export type Database = {
           },
         ]
       }
+      hub_calendario_envios: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          descricao: string | null
+          dia_limite: number
+          id: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          created_at?: string
+          descricao?: string | null
+          dia_limite: number
+          id?: string
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          dia_limite?: number
+          id?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_calendario_envios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_calendario_status: {
+        Row: {
+          calendario_id: string
+          competencia: string
+          concluido_em: string | null
+          concluido_por: string | null
+          created_at: string
+          id: string
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          calendario_id: string
+          competencia: string
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          calendario_id?: string
+          competencia?: string
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_calendario_status_calendario_id_fkey"
+            columns: ["calendario_id"]
+            isOneToOne: false
+            referencedRelation: "hub_calendario_envios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_calendario_status_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_certidoes: {
         Row: {
           arquivo_nome: string | null

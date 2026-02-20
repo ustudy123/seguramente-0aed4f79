@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Receipt, ShieldCheck, History, LayoutDashboard, ArrowLeftRight } from "lucide-react";
+import { BarChart3, FileText, Receipt, ShieldCheck, History, LayoutDashboard, ArrowLeftRight, CalendarClock } from "lucide-react";
 import { HubDashboard } from "@/components/hub-contabil/HubDashboard";
 import { HubCompetencias } from "@/components/hub-contabil/HubCompetencias";
 import { HubDocumentos } from "@/components/hub-contabil/HubDocumentos";
@@ -8,6 +8,7 @@ import { HubGuias } from "@/components/hub-contabil/HubGuias";
 import { HubCertidoes } from "@/components/hub-contabil/HubCertidoes";
 import { HubHistorico } from "@/components/hub-contabil/HubHistorico";
 import { HubConferenciaCruzada } from "@/components/hub-contabil/HubConferenciaCruzada";
+import { HubCalendario } from "@/components/hub-contabil/HubCalendario";
 import { useHubContabil } from "@/hooks/useHubContabil";
 
 const HubContabil = () => {
@@ -22,12 +23,15 @@ const HubContabil = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-7 w-full max-w-5xl">
+        <TabsList className="grid grid-cols-8 w-full max-w-6xl">
           <TabsTrigger value="dashboard" className="gap-1.5 text-xs">
             <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
           </TabsTrigger>
           <TabsTrigger value="competencias" className="gap-1.5 text-xs">
             <BarChart3 className="w-3.5 h-3.5" /> Competências
+          </TabsTrigger>
+          <TabsTrigger value="calendario" className="gap-1.5 text-xs">
+            <CalendarClock className="w-3.5 h-3.5" /> Calendário
           </TabsTrigger>
           <TabsTrigger value="documentos" className="gap-1.5 text-xs">
             <FileText className="w-3.5 h-3.5" /> Documentos
@@ -48,6 +52,7 @@ const HubContabil = () => {
 
         <TabsContent value="dashboard"><HubDashboard hub={hub} /></TabsContent>
         <TabsContent value="competencias"><HubCompetencias hub={hub} /></TabsContent>
+        <TabsContent value="calendario"><HubCalendario /></TabsContent>
         <TabsContent value="documentos"><HubDocumentos hub={hub} /></TabsContent>
         <TabsContent value="guias"><HubGuias hub={hub} /></TabsContent>
         <TabsContent value="conferencia"><HubConferenciaCruzada hub={hub} /></TabsContent>
