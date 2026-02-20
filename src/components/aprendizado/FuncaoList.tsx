@@ -1,12 +1,15 @@
-import { Search, Briefcase, ClipboardList, Brain, Shield } from "lucide-react";
+import { useState } from "react";
+import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ManualFuncaoModal } from "./ManualFuncaoModal";
+import { toast } from "sonner";
 
 interface Cargo {
   id: string;
@@ -25,6 +28,11 @@ interface FuncaoListProps {
 export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
   const [search, setSearch] = useState("");
   const { tenantId } = useAuth();
+  const [manualHtml, setManualHtml] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualTitulo, setManualTitulo] = useState("");
+  const [generatingId, setGeneratingId] = useState<string | null>(null); // track which cargo is generating
 
   // Count activities and competencies per cargo
   const { data: atividadeCounts = {} } = useQuery({
@@ -93,6 +101,41 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     estrategico: "bg-purple-100 text-purple-800",
   };
 
+  const gerarManual = async (cargoIds: string[] | null, titulo: string) => {
+    try {
+      setManualHtml("");
+      setManualLoading(true);
+      setManualOpen(true);
+      setManualTitulo(titulo);
+
+      const { data, error } = await supabase.functions.invoke("ai-manual-funcao", {
+        body: { cargo_ids: cargoIds },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setManualHtml(data.html || "");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar manual");
+      setManualOpen(false);
+    } finally {
+      setManualLoading(false);
+      setGeneratingId(null);
+    }
+  };
+
+  const handleGerarPorFuncao = (e: React.MouseEvent, cargo: Cargo) => {
+    e.stopPropagation();
+    setGeneratingId(cargo.id);
+    gerarManual([cargo.id], `Manual: ${cargo.nome}`);
+  };
+
+  const handleGerarGlobal = () => {
+    setGeneratingId("global");
+    gerarManual(null, "Manual Global de Funções");
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -103,14 +146,30 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar funções..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar funções..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleGerarGlobal}
+          disabled={!!generatingId || cargos.length === 0}
+          className="whitespace-nowrap gap-1.5"
+        >
+          {generatingId === "global" ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <BookOpen className="w-4 h-4" />
+          )}
+          Gerar Manual Global
+        </Button>
       </div>
 
       {filtered.length === 0 ? (
@@ -157,12 +216,34 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                     <Shield className="w-3.5 h-3.5" />
                     {epiCounts[cargo.id] || 0}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Gerar Manual desta Função"
+                    disabled={!!generatingId}
+                    onClick={(e) => handleGerarPorFuncao(e, cargo)}
+                  >
+                    {generatingId === cargo.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <ManualFuncaoModal
+        open={manualOpen}
+        onClose={() => setManualOpen(false)}
+        html={manualHtml}
+        loading={manualLoading}
+        titulo={manualTitulo}
+      />
     </div>
   );
 }
