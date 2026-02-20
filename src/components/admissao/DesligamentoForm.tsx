@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 
 const MOTIVOS_DESLIGAMENTO: Record<string, string> = {
   sem_justa_causa: "Dispensa sem justa causa",
@@ -57,6 +58,7 @@ interface Props {
 export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: Props) => {
   const { tenantId, user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const { enviarParaHub } = useEnviarParaHub();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [asoFile, setAsoFile] = useState<File | null>(null);
@@ -211,6 +213,16 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
         chave_conectividade: form.chave_conectividade || null,
         observacoes_desligamento: form.observacoes_desligamento || null,
       });
+
+      // Registrar rescisão no Hub Contábil
+      const competencia = form.data_desligamento.slice(0, 7);
+      await enviarParaHub({
+        tipo: "calculo_rescisorio",
+        competencia,
+        descricao: `Rescisão — ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento}`,
+        colaborador_nome: admissao.nome_completo,
+      });
+
       onOpenChange(false);
     } finally {
       setSubmitting(false);

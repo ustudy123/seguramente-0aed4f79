@@ -60,6 +60,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { validarFracionamentoCLT } from "@/lib/feriasPeriodo";
 import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF } from "@/lib/feriasDocumentos";
 import { supabase } from "@/integrations/supabase/client";
+import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 
 interface FeriasItem {
   id: number;
@@ -270,6 +271,7 @@ const Ferias = () => {
   const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
   const { data: periodos } = useFolhaPeriodos();
   const { tenantId, user, profile } = useAuth();
+  const { enviarParaHub } = useEnviarParaHub();
 
   // ========== INR™ ==========
   const { ranking: inrRanking, criticos: inrCriticos, altos: inrAltos } = useINR(
@@ -417,7 +419,13 @@ const Ferias = () => {
       };
       const avisoPdf = gerarAvisoFeriasPDF(docData);
       avisoPdf.save(`Aviso_Ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`);
-      toast.success("Aviso de Férias gerado e baixado!");
+      await enviarParaHub({
+        tipo: "recibo_ferias",
+        competencia: item.dataInicio.slice(0, 7),
+        descricao: `Aviso de Férias — ${item.diasSolicitados} dias (${item.dataInicio} a ${item.dataFim})`,
+        colaborador_nome: item.colaborador,
+      });
+      toast.success("Aviso de Férias gerado e registrado no Hub Contábil!");
     } catch (err) {
       console.error("Erro ao gerar aviso:", err);
       toast.error("Erro ao gerar aviso de férias");
@@ -437,7 +445,13 @@ const Ferias = () => {
       };
       const reciboPdf = gerarReciboFeriasPDF(docData);
       reciboPdf.save(`Recibo_Ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`);
-      toast.success("Recibo de Férias gerado e baixado!");
+      await enviarParaHub({
+        tipo: "recibo_ferias",
+        competencia: item.dataInicio.slice(0, 7),
+        descricao: `Recibo de Férias — ${item.diasSolicitados} dias`,
+        colaborador_nome: item.colaborador,
+      });
+      toast.success("Recibo de Férias gerado e registrado no Hub Contábil!");
     } catch (err) {
       console.error("Erro ao gerar recibo:", err);
       toast.error("Erro ao gerar recibo de férias");
