@@ -217,10 +217,9 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                     {epiCounts[cargo.id] || 0}
                   </span>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title="Gerar Manual desta Função"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
                     disabled={!!generatingId}
                     onClick={(e) => handleGerarPorFuncao(e, cargo)}
                   >
@@ -229,6 +228,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                     ) : (
                       <FileText className="w-4 h-4" />
                     )}
+                    Gerar Manual
                   </Button>
                 </div>
               </CardContent>
