@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Mic, MicOff, Upload, Loader2, Check, X, FileAudio, Square } from "lucide-react";
+import { Mic, MicOff, Upload, Loader2, Check, X, FileAudio, Square, AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +148,22 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
 
           {step === "gravar" && (
             <div className="flex flex-col items-center gap-6 py-6">
+              {/* Aviso de qualidade */}
+              <div className="bg-warning/10 border border-warning/40 rounded-lg p-4 w-full">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                  <div className="space-y-1.5">
+                    <p className="font-semibold text-sm text-foreground">Dicas para uma boa transcrição:</p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Use um <strong>microfone de boa qualidade</strong> para captar o áudio com nitidez</li>
+                      <li>Grave em um <strong>ambiente silencioso</strong>, sem ruídos de fundo</li>
+                      <li>Fale de forma <strong>clara e pausada</strong> para a IA entender corretamente</li>
+                      <li>Certifique-se de <strong>permitir o uso do microfone</strong> no navegador quando solicitado</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
               {!recorder.isRecording && !recorder.audioUrl && (
                 <div className="flex flex-col items-center gap-4">
                   <p className="text-sm text-muted-foreground text-center max-w-md">
