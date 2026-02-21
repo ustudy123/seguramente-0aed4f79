@@ -57,17 +57,8 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
     }
   };
 
-  const handlePararEProcessar = async () => {
+  const handlePararGravacao = () => {
     recorder.stopRecording();
-    // Wait a bit for the blob to be ready
-    setTimeout(async () => {
-      const base64 = await recorder.getBase64();
-      if (base64) {
-        await processarAudio(base64);
-      } else {
-        toast.error("Não foi possível capturar o áudio");
-      }
-    }, 500);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,8 +180,8 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
                   </div>
                   <div className="text-2xl font-mono font-bold text-foreground">{recorder.formattedDuration}</div>
                   <p className="text-sm text-muted-foreground">Gravando... (máx. 1 hora)</p>
-                  <Button variant="destructive" size="lg" className="gap-2" onClick={handlePararEProcessar}>
-                    <Square className="w-4 h-4" /> Parar e Processar
+                  <Button variant="destructive" size="lg" className="gap-2" onClick={handlePararGravacao}>
+                    <Square className="w-4 h-4" /> Parar Gravação
                   </Button>
                 </div>
               )}
