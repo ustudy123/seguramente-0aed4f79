@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
 import { PopSection } from "./PopSection";
+import { AudioAtividadesImport } from "./AudioAtividadesImport";
 import type { FuncaoAtividade } from "@/types/aprendizado";
 
 interface AtividadesSectionProps {
@@ -73,9 +74,25 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">Atividades ({atividades.length})</h3>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 mr-1" /> Atividade
-        </Button>
+        <div className="flex gap-2">
+          <AudioAtividadesImport
+            funcaoNome={funcaoNome}
+            onImportar={async (atividades) => {
+              for (const at of atividades) {
+                await criarAtividade({
+                  nome: at.nome,
+                  descricao: at.descricao,
+                  frequencia: at.frequencia as any,
+                  complexidade: at.complexidade as any,
+                  classificacao: at.classificacao as any,
+                });
+              }
+            }}
+          />
+          <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            <Plus className="w-4 h-4 mr-1" /> Atividade
+          </Button>
+        </div>
       </div>
 
       {showForm && (
