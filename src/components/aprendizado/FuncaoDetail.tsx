@@ -47,9 +47,6 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <TabsTrigger value="epis" className="gap-1">
             <Shield className="w-4 h-4" /> EPIs & Treinamento
           </TabsTrigger>
-          <TabsTrigger value="evidencias" className="gap-1">
-            <FileText className="w-4 h-4" /> Evidências
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="atividades" className="mt-4">
@@ -60,9 +57,6 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
         </TabsContent>
         <TabsContent value="epis" className="mt-4">
           <EpisSection cargoId={cargo.id} />
-        </TabsContent>
-        <TabsContent value="evidencias" className="mt-4">
-          <EvidenciasSection cargoId={cargo.id} />
         </TabsContent>
       </Tabs>
     </div>
