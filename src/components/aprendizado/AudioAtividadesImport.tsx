@@ -35,7 +35,7 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
   const [importando, setImportando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const recorder = useAudioRecorder({ maxDuration: 300 }); // 5 min
+  const recorder = useAudioRecorder({ maxDuration: 3600 }); // 1 hora
 
   const processarAudio = async (audioBase64: string) => {
     setStep("processando");
@@ -172,7 +172,7 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
                     </div>
                   </div>
                   <div className="text-2xl font-mono font-bold text-foreground">{recorder.formattedDuration}</div>
-                  <p className="text-sm text-muted-foreground">Gravando... (máx. 5 min)</p>
+                  <p className="text-sm text-muted-foreground">Gravando... (máx. 1 hora)</p>
                   <Button variant="destructive" size="lg" className="gap-2" onClick={handlePararEProcessar}>
                     <Square className="w-4 h-4" /> Parar e Processar
                   </Button>
