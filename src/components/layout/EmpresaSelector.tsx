@@ -61,7 +61,7 @@ export const EmpresaSelector = () => {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="hidden md:flex items-center gap-2 max-w-[280px] justify-between border-border/50 hover:bg-muted/50"
+          className="hidden md:flex items-center gap-2 max-w-[280px] justify-between border-border/50 hover:bg-muted/50 text-foreground"
         >
           <Building2 className="w-4 h-4 shrink-0 text-primary" />
           <span className="truncate text-sm font-medium">
