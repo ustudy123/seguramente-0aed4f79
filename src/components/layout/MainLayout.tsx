@@ -5,6 +5,7 @@ import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
 import { HumorDiarioPopup } from "@/components/humor/HumorDiarioPopup";
 import { useHumorDiario } from "@/hooks/useHumorDiario";
+import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 
 export const MainLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -19,29 +20,31 @@ export const MainLayout = () => {
   }, [isLoading, precisaRegistrarHumor]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppSidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
-      
-      <motion.div
-        initial={false}
-        animate={{ marginLeft: isSidebarCollapsed ? 72 : 260 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="min-h-screen flex flex-col"
-      >
-        <Header />
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-      </motion.div>
+    <EmpresaAtivaProvider>
+      <div className="min-h-screen bg-background">
+        <AppSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+        
+        <motion.div
+          initial={false}
+          animate={{ marginLeft: isSidebarCollapsed ? 72 : 260 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="min-h-screen flex flex-col"
+        >
+          <Header />
+          <main className="flex-1 p-6">
+            <Outlet />
+          </main>
+        </motion.div>
 
-      {/* Popup obrigatório de humor do dia */}
-      <HumorDiarioPopup 
-        open={showHumorPopup} 
-        onClose={() => setShowHumorPopup(false)} 
-      />
-    </div>
+        {/* Popup obrigatório de humor do dia */}
+        <HumorDiarioPopup 
+          open={showHumorPopup} 
+          onClose={() => setShowHumorPopup(false)} 
+        />
+      </div>
+    </EmpresaAtivaProvider>
   );
 };
