@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Building2, Check, ChevronsUpDown, Search } from "lucide-react";
+import { Building2, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTenant } from "@/hooks/useTenant";
 import {
   Popover,
   PopoverContent,
@@ -29,6 +30,7 @@ const formatCnpj = (cnpj: string | null) => {
 export const EmpresaSelector = () => {
   const [open, setOpen] = useState(false);
   const { empresaAtiva, setEmpresaAtiva, empresas, isLoading } = useEmpresaAtiva();
+  const { tenant } = useTenant();
 
   if (isLoading) {
     return (
@@ -39,8 +41,17 @@ export const EmpresaSelector = () => {
     );
   }
 
+  // Fallback: show tenant name when no companies registered
   if (empresas.length === 0) {
-    return null;
+    return (
+      <div className="hidden md:flex items-center gap-2 text-sm">
+        <Building2 className="w-4 h-4 text-primary" />
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Empresa</p>
+          <p className="text-sm font-medium">{tenant?.nome || "—"}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
