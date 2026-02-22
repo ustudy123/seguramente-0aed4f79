@@ -5,8 +5,8 @@ import { useTenant } from "@/hooks/useTenant";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  PopoverTrigger } from
+"@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -14,8 +14,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
+  CommandSeparator } from
+"@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
@@ -37,8 +37,8 @@ export const EmpresaSelector = () => {
       <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
         <Building2 className="w-4 h-4" />
         <span>Carregando...</span>
-      </div>
-    );
+      </div>);
+
   }
 
   // Fallback: show tenant name when no companies registered
@@ -50,8 +50,8 @@ export const EmpresaSelector = () => {
           <p className="text-xs text-muted-foreground">Empresa</p>
           <p className="text-sm font-medium">{tenant?.nome || "—"}</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -61,10 +61,10 @@ export const EmpresaSelector = () => {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="hidden md:flex items-center gap-2 max-w-[280px] justify-between border-border/50 hover:bg-muted/50 text-foreground"
-        >
+          className="hidden md:flex items-center gap-2 max-w-[280px] justify-between border-border/50 hover:bg-muted/50 text-foreground">
+
           <Building2 className="w-4 h-4 shrink-0 text-primary" />
-          <span className="truncate text-sm font-medium">
+          <span className="truncate text-sm font-medium text-secondary-foreground">
             {empresaAtiva?.razao_social || empresaAtiva?.nome_fantasia || "Todas as empresas"}
           </span>
           <ChevronsUpDown className="w-3.5 h-3.5 shrink-0 opacity-50" />
@@ -81,60 +81,60 @@ export const EmpresaSelector = () => {
                   setEmpresaAtiva(null);
                   setOpen(false);
                 }}
-                className="flex items-center gap-2"
-              >
+                className="flex items-center gap-2">
+
                 <Check
                   className={cn(
                     "w-4 h-4 shrink-0",
                     !empresaAtiva ? "opacity-100" : "opacity-0"
-                  )}
-                />
+                  )} />
+
                 <Building2 className="w-4 h-4 text-muted-foreground" />
                 <span className="font-medium">Todas as empresas</span>
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Empresas">
-              {empresas.map((empresa) => (
-                <CommandItem
-                  key={empresa.id}
-                  value={`${empresa.razao_social} ${empresa.nome_fantasia} ${empresa.cnpj}`}
-                  onSelect={() => {
-                    setEmpresaAtiva(empresa);
-                    setOpen(false);
-                  }}
-                  className="flex items-center gap-2"
-                >
+              {empresas.map((empresa) =>
+              <CommandItem
+                key={empresa.id}
+                value={`${empresa.razao_social} ${empresa.nome_fantasia} ${empresa.cnpj}`}
+                onSelect={() => {
+                  setEmpresaAtiva(empresa);
+                  setOpen(false);
+                }}
+                className="flex items-center gap-2">
+
                   <Check
-                    className={cn(
-                      "w-4 h-4 shrink-0",
-                      empresaAtiva?.id === empresa.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    empresaAtiva?.id === empresa.id ? "opacity-100" : "opacity-0"
+                  )} />
+
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium truncate">
                         {empresa.razao_social || empresa.nome_fantasia || "Sem nome"}
                       </span>
                       <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 shrink-0"
-                      >
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0 shrink-0">
+
                         {empresa.tipo_unidade === "matriz" ? "Matriz" : "Filial"}
                       </Badge>
                     </div>
-                    {empresa.cnpj && (
-                      <span className="text-xs text-muted-foreground">
+                    {empresa.cnpj &&
+                  <span className="text-xs text-muted-foreground">
                         {formatCnpj(empresa.cnpj)}
                       </span>
-                    )}
+                  }
                   </div>
                 </CommandItem>
-              ))}
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
-    </Popover>
-  );
+    </Popover>);
+
 };
