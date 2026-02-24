@@ -1,14 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Search, Printer, ChevronRight } from "lucide-react";
+import { ArrowLeft, BookOpen, Search, Printer, ChevronRight, Pencil, Save, X, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { supabase } from "@/integrations/supabase/client";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const MANUAL_URL = "/MANUAL_SEGURAMENTE.md";
 
-// Table of contents sections extracted from H2 headings
 function extractToc(md: string) {
   const lines = md.split("\n");
   const toc: { title: string; id: string }[] = [];
@@ -26,18 +30,119 @@ function extractToc(md: string) {
 export default function ManualSistema() {
   const navigate = useNavigate();
   const [content, setContent] = useState("");
+  const [editContent, setEditContent] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const contentRef = useRef<HTMLDivElement>(null);
 
+  // Load manual: first try Supabase, fallback to static file
   useEffect(() => {
-    fetch(MANUAL_URL)
-      .then((r) => r.text())
-      .then((text) => {
+    async function loadManual() {
+      const { data } = await supabase
+        .from("system_manual")
+        .select("content")
+        .limit(1)
+        .maybeSingle();
+
+      if (data?.content) {
+        setContent(data.content);
+        setLoading(false);
+      } else {
+        // Fallback to static file and seed Supabase
+        const res = await fetch(MANUAL_URL);
+        const text = await res.text();
         setContent(text);
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        // Seed the DB
+        await supabase.from("system_manual").insert({ content: text });
+      }
+    }
+    loadManual();
+  }, []);
+
+  const startEditing = () => {
+    setEditContent(content);
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+    setEditContent("");
+  };
+
+  const saveManual = async () => {
+    setSaving(true);
+    try {
+      // Check if row exists
+      const { data: existing } = await supabase
+        .from("system_manual")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("system_manual")
+          .update({ content: editContent, updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("system_manual").insert({ content: editContent });
+      }
+
+      setContent(editContent);
+      setEditing(false);
+      toast.success("Manual salvo com sucesso!");
+    } catch {
+      toast.error("Erro ao salvar o manual.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const exportPDF = useCallback(async () => {
+    if (!contentRef.current) return;
+    setExporting(true);
+    toast.info("Gerando PDF, aguarde...");
+
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 900,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 10;
+
+      pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20;
+
+      while (heightLeft > 0) {
+        position = position - pdfHeight + 20;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - 20;
+      }
+
+      pdf.save("Manual_Seguramente.pdf");
+      toast.success("PDF baixado com sucesso!");
+    } catch {
+      toast.error("Erro ao gerar PDF.");
+    } finally {
+      setExporting(false);
+    }
   }, []);
 
   const toc = extractToc(content);
@@ -67,45 +172,73 @@ export default function ManualSistema() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative w-56 hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar no manual..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9 text-sm"
-              />
-            </div>
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimir
-            </Button>
+          <div className="flex items-center gap-2">
+            {!editing && (
+              <div className="relative w-56 hidden md:block">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar no manual..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                />
+              </div>
+            )}
+
+            {editing ? (
+              <>
+                <Button variant="outline" size="sm" onClick={cancelEditing} disabled={saving}>
+                  <X className="w-4 h-4 mr-1.5" />
+                  Cancelar
+                </Button>
+                <Button size="sm" onClick={saveManual} disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+                  Salvar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={startEditing}>
+                  <Pencil className="w-4 h-4 mr-1.5" />
+                  Editar
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportPDF} disabled={exporting}>
+                  {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
+                  Baixar PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => window.print()}>
+                  <Printer className="w-4 h-4 mr-1.5" />
+                  Imprimir
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       <div className="max-w-[1400px] mx-auto flex">
         {/* Sidebar TOC */}
-        <aside className="hidden lg:block w-72 shrink-0 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto border-r border-border py-6 px-4 print:hidden">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">Índice</p>
-          <nav className="space-y-0.5">
-            {toc.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                  activeSection === item.id
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${activeSection === item.id ? "rotate-90" : ""}`} />
-                <span className="truncate">{item.title}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
+        {!editing && (
+          <aside className="hidden lg:block w-72 shrink-0 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto border-r border-border py-6 px-4 print:hidden">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">Índice</p>
+            <nav className="space-y-0.5">
+              {toc.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                    activeSection === item.id
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${activeSection === item.id ? "rotate-90" : ""}`} />
+                  <span className="truncate">{item.title}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+        )}
 
         {/* Content */}
         <main className="flex-1 min-w-0 px-6 md:px-10 py-8 print:px-0">
@@ -113,8 +246,18 @@ export default function ManualSistema() {
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
+          ) : editing ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">Edite o conteúdo Markdown abaixo:</p>
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[70vh] font-mono text-sm leading-relaxed"
+                placeholder="Conteúdo do manual em Markdown..."
+              />
+            </div>
           ) : (
-            <article className="manual-content">
+            <article className="manual-content" ref={contentRef}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
