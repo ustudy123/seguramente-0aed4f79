@@ -145,6 +145,8 @@ function AtivosTab() {
       cargo: colab.cargo,
       departamento: colab.departamento,
       filial: colab.filial,
+      centro_custo: (colab as any).centro_custo || null,
+      gestor_imediato: (colab as any).gestor_imediato || null,
       data_admissao: colab.data_admissao,
     });
     setShowForm(true);

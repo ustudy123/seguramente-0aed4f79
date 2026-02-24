@@ -30,6 +30,7 @@ import {
 import { CpfInput } from "@/components/ui/cpf-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useDepartamentos, useCargos, useFiliais } from "@/hooks/useCadastros";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -57,7 +58,9 @@ const formSchema = z.object({
   tipo_contrato: z.string().min(1, "Selecione o tipo de vínculo"),
   cargo: z.string().min(1, "Selecione um cargo"),
   departamento: z.string().optional(),
-  filial: z.string().optional(),
+  estabelecimento: z.string().optional(),
+  centro_custo: z.string().optional(),
+  gestor_imediato: z.string().optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
 });
 
@@ -73,6 +76,8 @@ export interface ColaboradorEditData {
   cargo: string;
   departamento: string | null;
   filial: string | null;
+  centro_custo: string | null;
+  gestor_imediato: string | null;
   data_admissao: string | null;
 }
 
@@ -90,20 +95,20 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
   const { departamentos } = useDepartamentos();
   const { cargos } = useCargos();
   const { filiais } = useFiliais();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   const isEditMode = !!colaborador;
 
-  // Radix Select não permite SelectItem com value="".
-  // Como esses cadastros podem vir com nome vazio (ex.: importação/registro incompleto),
-  // filtramos antes de renderizar.
   const cargosOptions = cargos.filter(
     (c) => typeof c?.nome === "string" && c.nome.trim().length > 0,
   );
   const departamentosOptions = departamentos.filter(
     (d) => typeof d?.nome === "string" && d.nome.trim().length > 0,
   );
-  const filiaisOptions = filiais.filter(
-    (f) => typeof f?.nome === "string" && f.nome.trim().length > 0,
+  // Filtrar estabelecimentos/obras pela empresa ativa
+  const estabelecimentosOptions = filiais.filter(
+    (f) => typeof f?.nome === "string" && f.nome.trim().length > 0 &&
+      (!empresaAtivaId || f.empresa_id === empresaAtivaId),
   );
 
   const form = useForm<FormData>({
@@ -116,7 +121,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       tipo_contrato: "clt",
       cargo: "",
       departamento: "",
-      filial: "",
+      estabelecimento: "",
+      centro_custo: "",
+      gestor_imediato: "",
       data_admissao: new Date().toISOString().split("T")[0],
     },
   });
@@ -132,7 +139,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         tipo_contrato: colaborador.tipo_contrato || "clt",
         cargo: colaborador.cargo || "",
         departamento: colaborador.departamento || "",
-        filial: colaborador.filial || "",
+        estabelecimento: colaborador.filial || "",
+        centro_custo: colaborador.centro_custo || "",
+        gestor_imediato: colaborador.gestor_imediato || "",
         data_admissao: colaborador.data_admissao || "",
       });
     } else if (open && !colaborador) {
@@ -144,7 +153,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         tipo_contrato: "clt",
         cargo: "",
         departamento: "",
-        filial: "",
+        estabelecimento: "",
+        centro_custo: "",
+        gestor_imediato: "",
         data_admissao: new Date().toISOString().split("T")[0],
       });
     }
@@ -171,7 +182,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             tipo_contrato: data.tipo_contrato,
             cargo: data.cargo,
             departamento: data.departamento || null,
-            filial: data.filial || null,
+            filial: data.estabelecimento || null,
+            centro_custo: data.centro_custo || null,
+            gestor_imediato: data.gestor_imediato || null,
             data_admissao: data.data_admissao,
           })
           .eq("id", colaborador.id)
@@ -198,8 +211,11 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           tipo_contrato: data.tipo_contrato,
           cargo: data.cargo,
           departamento: data.departamento || null,
-          filial: data.filial || null,
+          filial: data.estabelecimento || null,
+          centro_custo: data.centro_custo || null,
+          gestor_imediato: data.gestor_imediato || null,
           data_admissao: data.data_admissao,
+          empresa_id: empresaAtivaId || null,
           status: "concluido",
           criado_por: user?.id,
         });
@@ -389,10 +405,10 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
               <FormField
                 control={form.control}
-                name="filial"
+                name="estabelecimento"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Filial</FormLabel>
+                    <FormLabel>Estabelecimento / Obra</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -400,13 +416,43 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {filiaisOptions.map((filial) => (
-                          <SelectItem key={filial.id} value={filial.nome.trim()}>
-                            {filial.nome}
+                        {estabelecimentosOptions.map((est) => (
+                          <SelectItem key={est.id} value={est.nome.trim()}>
+                            {est.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="centro_custo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Centro de Custo</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: CC-001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gestor_imediato"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gestor Imediato</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome do gestor" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
