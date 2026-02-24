@@ -32,6 +32,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { Building2 } from "lucide-react";
 
 interface ImportPlanilhaModalProps {
   open: boolean;
@@ -51,6 +53,7 @@ export function ImportPlanilhaModal({
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
   const { lerArquivo, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
+  const { empresaAtiva } = useEmpresaAtiva();
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -253,32 +256,50 @@ export function ImportPlanilhaModal({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-4"
               >
-                <div
-                  {...getRootProps()}
-                  className={`
-                    border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-                    transition-colors duration-200
-                    ${isDragActive 
-                      ? "border-primary bg-primary/5" 
-                      : "border-muted-foreground/25 hover:border-primary/50"
-                    }
-                  `}
-                >
-                  <input {...getInputProps()} />
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="p-4 rounded-full bg-primary/10">
-                      <Upload className="w-8 h-8 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {isDragActive ? "Solte o arquivo aqui" : "Arraste uma planilha ou clique para selecionar"}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
-                      </p>
+                {!empresaAtiva ? (
+                  <div className="border-2 border-dashed border-orange-400/40 rounded-lg p-8 text-center bg-orange-50 dark:bg-orange-950/20">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-4 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                        <Building2 className="w-8 h-8 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-orange-700 dark:text-orange-400">
+                          Selecione uma empresa antes de importar
+                        </p>
+                        <p className="text-sm text-orange-600/80 dark:text-orange-400/70 mt-1">
+                          Use o seletor de empresa no cabeçalho para escolher a empresa onde os colaboradores serão cadastrados.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div
+                    {...getRootProps()}
+                    className={`
+                      border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+                      transition-colors duration-200
+                      ${isDragActive 
+                        ? "border-primary bg-primary/5" 
+                        : "border-muted-foreground/25 hover:border-primary/50"
+                      }
+                    `}
+                  >
+                    <input {...getInputProps()} />
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-4 rounded-full bg-primary/10">
+                        <Upload className="w-8 h-8 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {isDragActive ? "Solte o arquivo aqui" : "Arraste uma planilha ou clique para selecionar"}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {erro && (
                   <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-lg">
