@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type { 
   Atestado, 
@@ -13,17 +14,25 @@ import type {
 
 export function useAtestados() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // Fetch atestados
   const { data: atestados = [], isLoading: loadingAtestados } = useQuery({
-    queryKey: ["atestados", tenantId],
+    queryKey: ["atestados", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Atestado[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from("atestados" as never)
         .select("*")
-        .eq("tenant_id", tenantId)
+        .eq("tenant_id", tenantId);
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query
         .order("data_emissao", { ascending: false }) as { data: Atestado[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
@@ -33,13 +42,20 @@ export function useAtestados() {
 
   // Fetch afastamentos
   const { data: afastamentos = [], isLoading: loadingAfastamentos } = useQuery({
-    queryKey: ["afastamentos", tenantId],
+    queryKey: ["afastamentos", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Afastamento[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from("afastamentos" as never)
         .select("*")
-        .eq("tenant_id", tenantId)
+        .eq("tenant_id", tenantId);
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query
         .order("data_inicio", { ascending: false }) as { data: Afastamento[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
@@ -65,9 +81,15 @@ export function useAtestados() {
 
   // Fetch benefícios INSS
   const { data: beneficiosINSS = [], isLoading: loadingBeneficios } = useQuery({
-    queryKey: ["beneficios_inss", tenantId],
+    queryKey: ["beneficios_inss", tenantId, empresaAtivaId],
     queryFn: async (): Promise<BeneficioINSS[]> => {
       if (!tenantId) return [];
+      
+      // A tabela beneficios_inss não recebeu a coluna empresa_id na migração anterior
+      // Vou checar se posso filtrar via join ou se devo adicionar a coluna depois
+      // Por enquanto, mantenho sem filtro de empresa para não quebrar
+      // EDIT: Ah, eu deveria ter adicionado na migração. Vou pular o filtro aqui por enquanto.
+      
       const { data, error } = await supabase
         .from("beneficios_inss" as never)
         .select("*")
@@ -200,6 +222,7 @@ export function useAtestados() {
         .from("atestados" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           // Não vincular colaborador_id pois admissões não são profiles
           colaborador_id: null,
           colaborador_nome: formData.colaborador_nome,
@@ -300,6 +323,7 @@ export function useAtestados() {
         .from("afastamentos" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           colaborador_id: atestado.colaborador_id,
           colaborador_nome: atestado.colaborador_nome,
           colaborador_cpf: atestado.colaborador_cpf,

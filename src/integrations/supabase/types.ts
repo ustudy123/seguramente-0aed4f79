@@ -230,6 +230,7 @@ export type Database = {
           desligado_por_nome: string | null
           dias_aviso_previo: number | null
           email: string
+          empresa_id: string | null
           endereco: string | null
           estado: string | null
           estado_civil: string | null
@@ -297,6 +298,7 @@ export type Database = {
           desligado_por_nome?: string | null
           dias_aviso_previo?: number | null
           email: string
+          empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
           estado_civil?: string | null
@@ -364,6 +366,7 @@ export type Database = {
           desligado_por_nome?: string | null
           dias_aviso_previo?: number | null
           email?: string
+          empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
           estado_civil?: string | null
@@ -403,6 +406,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "admissoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "admissoes_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -492,6 +502,7 @@ export type Database = {
           data_fim: string | null
           data_inicio: string
           dias_totais: number | null
+          empresa_id: string | null
           evento_saude_id: string | null
           id: string
           motivo_principal: Database["public"]["Enums"]["grupo_clinico"] | null
@@ -514,6 +525,7 @@ export type Database = {
           data_fim?: string | null
           data_inicio: string
           dias_totais?: number | null
+          empresa_id?: string | null
           evento_saude_id?: string | null
           id?: string
           motivo_principal?: Database["public"]["Enums"]["grupo_clinico"] | null
@@ -536,6 +548,7 @@ export type Database = {
           data_fim?: string | null
           data_inicio?: string
           dias_totais?: number | null
+          empresa_id?: string | null
           evento_saude_id?: string | null
           id?: string
           motivo_principal?: Database["public"]["Enums"]["grupo_clinico"] | null
@@ -566,6 +579,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "afastamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "afastamentos_evento_saude_fkey"
@@ -670,6 +690,7 @@ export type Database = {
           data_fim_afastamento: string | null
           data_inicio_afastamento: string | null
           dias_afastamento: number | null
+          empresa_id: string | null
           evento_saude_id: string | null
           grupo_clinico: Database["public"]["Enums"]["grupo_clinico"] | null
           horas_afastamento: number | null
@@ -718,6 +739,7 @@ export type Database = {
           data_fim_afastamento?: string | null
           data_inicio_afastamento?: string | null
           dias_afastamento?: number | null
+          empresa_id?: string | null
           evento_saude_id?: string | null
           grupo_clinico?: Database["public"]["Enums"]["grupo_clinico"] | null
           horas_afastamento?: number | null
@@ -766,6 +788,7 @@ export type Database = {
           data_fim_afastamento?: string | null
           data_inicio_afastamento?: string | null
           dias_afastamento?: number | null
+          empresa_id?: string | null
           evento_saude_id?: string | null
           grupo_clinico?: Database["public"]["Enums"]["grupo_clinico"] | null
           horas_afastamento?: number | null
@@ -807,6 +830,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "atestados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "atestados_evento_saude_fkey"
@@ -959,6 +989,7 @@ export type Database = {
           data_inicio: string
           departamentos_ids: string[] | null
           descricao: string | null
+          empresa_id: string | null
           id: string
           nome: string
           notificacoes_enviadas: boolean | null
@@ -976,6 +1007,7 @@ export type Database = {
           data_inicio: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           nome: string
           notificacoes_enviadas?: boolean | null
@@ -993,6 +1025,7 @@ export type Database = {
           data_inicio?: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           nome?: string
           notificacoes_enviadas?: boolean | null
@@ -1002,6 +1035,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "avaliacao_ciclos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "avaliacao_ciclos_template_id_fkey"
             columns: ["template_id"]
@@ -1341,6 +1381,7 @@ export type Database = {
           created_at: string
           data_fim: string | null
           data_inicio: string
+          empresa_id: string | null
           id: string
           motivo_cancelamento: string | null
           observacoes: string | null
@@ -1358,6 +1399,7 @@ export type Database = {
           created_at?: string
           data_fim?: string | null
           data_inicio?: string
+          empresa_id?: string | null
           id?: string
           motivo_cancelamento?: string | null
           observacoes?: string | null
@@ -1375,6 +1417,7 @@ export type Database = {
           created_at?: string
           data_fim?: string | null
           data_inicio?: string
+          empresa_id?: string | null
           id?: string
           motivo_cancelamento?: string | null
           observacoes?: string | null
@@ -1390,6 +1433,13 @@ export type Database = {
             columns: ["beneficio_tipo_id"]
             isOneToOne: false
             referencedRelation: "beneficios_tipos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beneficios_colaboradores_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
             referencedColumns: ["id"]
           },
           {
@@ -2751,6 +2801,7 @@ export type Database = {
           data_entrega: string
           data_validade: string | null
           employee_id: string | null
+          empresa_id: string | null
           entregue_por: string | null
           entregue_por_nome: string | null
           epi_id: string
@@ -2782,6 +2833,7 @@ export type Database = {
           data_entrega?: string
           data_validade?: string | null
           employee_id?: string | null
+          empresa_id?: string | null
           entregue_por?: string | null
           entregue_por_nome?: string | null
           epi_id: string
@@ -2813,6 +2865,7 @@ export type Database = {
           data_entrega?: string
           data_validade?: string | null
           employee_id?: string | null
+          empresa_id?: string | null
           entregue_por?: string | null
           entregue_por_nome?: string | null
           epi_id?: string
@@ -2833,6 +2886,13 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "epi_entregas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "epi_entregas_epi_id_fkey"
             columns: ["epi_id"]
@@ -3307,6 +3367,7 @@ export type Database = {
           custo_unitario: number | null
           data_fabricacao: string | null
           data_validade: string | null
+          empresa_id: string | null
           id: string
           local_estoque_id: string | null
           localizacao: string | null
@@ -3328,6 +3389,7 @@ export type Database = {
           custo_unitario?: number | null
           data_fabricacao?: string | null
           data_validade?: string | null
+          empresa_id?: string | null
           id?: string
           local_estoque_id?: string | null
           localizacao?: string | null
@@ -3349,6 +3411,7 @@ export type Database = {
           custo_unitario?: number | null
           data_fabricacao?: string | null
           data_validade?: string | null
+          empresa_id?: string | null
           id?: string
           local_estoque_id?: string | null
           localizacao?: string | null
@@ -3364,6 +3427,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "epis_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "epis_local_estoque_id_fkey"
             columns: ["local_estoque_id"]
@@ -9554,6 +9624,7 @@ export type Database = {
           colaborador_nome: string
           created_at: string
           data: string
+          empresa_id: string | null
           entrada: string | null
           horas_extras: unknown
           horas_faltantes: unknown
@@ -9573,6 +9644,7 @@ export type Database = {
           colaborador_nome: string
           created_at?: string
           data: string
+          empresa_id?: string | null
           entrada?: string | null
           horas_extras?: unknown
           horas_faltantes?: unknown
@@ -9592,6 +9664,7 @@ export type Database = {
           colaborador_nome?: string
           created_at?: string
           data?: string
+          empresa_id?: string | null
           entrada?: string | null
           horas_extras?: unknown
           horas_faltantes?: unknown
@@ -9606,6 +9679,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_diario_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ponto_diario_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -9624,6 +9704,7 @@ export type Database = {
           created_by: string | null
           data_marcacao: string
           dispositivo: string | null
+          empresa_id: string | null
           hash_marcacao: string
           hora_marcacao: string
           id: string
@@ -9643,6 +9724,7 @@ export type Database = {
           created_by?: string | null
           data_marcacao?: string
           dispositivo?: string | null
+          empresa_id?: string | null
           hash_marcacao: string
           hora_marcacao?: string
           id?: string
@@ -9662,6 +9744,7 @@ export type Database = {
           created_by?: string | null
           data_marcacao?: string
           dispositivo?: string | null
+          empresa_id?: string | null
           hash_marcacao?: string
           hora_marcacao?: string
           id?: string
@@ -9674,6 +9757,13 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_marcacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ponto_marcacoes_tenant_id_fkey"
             columns: ["tenant_id"]

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 
@@ -105,6 +106,7 @@ export const STATUS_FOLHA: Record<string, { label: string; color: string }> = {
 
 export function useFinanceiro() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // ========== BENEFÍCIOS TIPOS ==========
@@ -163,14 +165,21 @@ export function useFinanceiro() {
   // ========== BENEFÍCIOS COLABORADORES ==========
   const useBeneficiosColaboradores = () =>
     useQuery({
-      queryKey: ["beneficios-colaboradores", tenantId],
-      queryFn: async (): Promise<BeneficioColaborador[]> => {
-        if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("beneficios_colaboradores" as never)
-          .select("*, beneficios_tipos(*)")
-          .eq("tenant_id", tenantId)
-          .order("colaborador_nome") as { data: any[] | null; error: Error | null };
+    queryKey: ["beneficios-colaboradores", tenantId, empresaAtivaId],
+    queryFn: async (): Promise<BeneficioColaborador[]> => {
+      if (!tenantId) return [];
+      
+      let query = supabase
+        .from("beneficios_colaboradores" as never)
+        .select("*, beneficios_tipos(*)")
+        .eq("tenant_id", tenantId);
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query
+        .order("colaborador_nome") as { data: any[] | null; error: Error | null };
         if (error) throw error;
         return (data || []).map((d: any) => ({
           ...d,
@@ -185,7 +194,7 @@ export function useFinanceiro() {
       if (!tenantId) throw new Error("Tenant não encontrado");
       const { data, error } = await supabase
         .from("beneficios_colaboradores" as never)
-        .insert({ ...dados, tenant_id: tenantId } as never)
+        .insert({ ...dados, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as never)
         .select()
         .single();
       if (error) throw error;

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -103,21 +104,28 @@ export const STATUS_PONTO_CONFIG: Record<string, { label: string; color: string 
 
 export function usePonto() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // Buscar ponto diário por data
   const usePontoDiario = (data: Date) => {
     const dataStr = format(data, "yyyy-MM-dd");
     return useQuery({
-      queryKey: ["ponto-diario", tenantId, dataStr],
+      queryKey: ["ponto-diario", tenantId, dataStr, empresaAtivaId],
       queryFn: async (): Promise<PontoDiario[]> => {
         if (!tenantId) return [];
         
-        const { data: pontos, error } = await supabase
+        let query = supabase
           .from("ponto_diario" as never)
           .select("*")
           .eq("tenant_id", tenantId)
-          .eq("data", dataStr)
+          .eq("data", dataStr);
+
+        if (empresaAtivaId) {
+          query = query.eq("empresa_id", empresaAtivaId);
+        }
+
+        const { data: pontos, error } = await query
           .order("colaborador_nome") as { data: PontoDiario[] | null; error: Error | null };
         
         if (error) throw error;
@@ -131,15 +139,21 @@ export function usePonto() {
   const useMarcacoesHoje = () => {
     const hoje = format(new Date(), "yyyy-MM-dd");
     return useQuery({
-      queryKey: ["ponto-marcacoes-hoje", tenantId, hoje],
+      queryKey: ["ponto-marcacoes-hoje", tenantId, hoje, empresaAtivaId],
       queryFn: async (): Promise<PontoMarcacao[]> => {
         if (!tenantId) return [];
         
-        const { data, error } = await supabase
+        let query = supabase
           .from("ponto_marcacoes" as never)
           .select("*")
           .eq("tenant_id", tenantId)
-          .eq("data_marcacao", hoje)
+          .eq("data_marcacao", hoje);
+
+        if (empresaAtivaId) {
+          query = query.eq("empresa_id", empresaAtivaId);
+        }
+
+        const { data, error } = await query
           .order("hora_marcacao") as { data: PontoMarcacao[] | null; error: Error | null };
         
         if (error) throw error;
@@ -219,6 +233,7 @@ export function usePonto() {
         .from("ponto_marcacoes" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           colaborador_id: colaboradorId,
           colaborador_nome: colaboradorNome,
           colaborador_cpf: colaboradorCpf,
