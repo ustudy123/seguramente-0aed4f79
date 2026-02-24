@@ -10169,6 +10169,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_manual: {
+        Row: {
+          content: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           ativo: boolean
