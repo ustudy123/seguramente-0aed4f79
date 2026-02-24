@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "./useTenant";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 export interface PilarData {
   organizacao: {
@@ -39,9 +40,10 @@ export interface PilarData {
 
 export const useDashboardData = () => {
   const { tenant } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   return useQuery({
-    queryKey: ["dashboard-pilares", tenant?.id],
+    queryKey: ["dashboard-pilares", tenant?.id, empresaAtivaId],
     queryFn: async (): Promise<PilarData> => {
       if (!tenant?.id) throw new Error("Tenant não encontrado");
 
@@ -64,11 +66,11 @@ export const useDashboardData = () => {
         // Pilar 1 - Organização
         supabase.from("cargos").select("id", { count: "exact" }).eq("tenant_id", tenant.id).eq("ativo", true),
         supabase.from("departamentos").select("id", { count: "exact" }).eq("tenant_id", tenant.id).eq("ativo", true),
-        supabase.from("admissoes").select("id", { count: "exact" }).eq("tenant_id", tenant.id).neq("status", "concluido").neq("status", "reprovado"),
+        supabase.from("admissoes").select("id", { count: "exact" }).eq("tenant_id", tenant.id).neq("status", "concluido").neq("status", "reprovado").match(empresaAtivaId ? { empresa_id: empresaAtivaId } : {}),
         
         // Pilar 2 - Condições
         supabase.from("ergonomia_itens_nr17").select("id, status").eq("tenant_id", tenant.id),
-        supabase.from("epis").select("id, quantidade_estoque, quantidade_minima, status").eq("tenant_id", tenant.id),
+        supabase.from("epis").select("id, quantidade_estoque, quantidade_minima, status").eq("tenant_id", tenant.id).match(empresaAtivaId ? { empresa_id: empresaAtivaId } : {}),
         supabase.from("ergonomia_riscos").select("id").eq("tenant_id", tenant.id).eq("ativo", true),
         
         // Pilar 3 - Experiência

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type {
   AvaliacaoTemplate,
@@ -23,6 +24,7 @@ import type { Json } from "@/integrations/supabase/types";
 
 export function useAvaliacoes() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // =============================================
@@ -137,18 +139,23 @@ export function useAvaliacoes() {
   // =============================================
 
   const { data: ciclos = [], isLoading: isLoadingCiclos } = useQuery({
-    queryKey: ["avaliacao-ciclos", tenantId],
+    queryKey: ["avaliacao-ciclos", tenantId, empresaAtivaId],
     queryFn: async (): Promise<AvaliacaoCiclo[]> => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("avaliacao_ciclos")
         .select(`
           *,
           template:avaliacao_templates(id, nome, tipo)
         `)
-        .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
+        .eq("tenant_id", tenantId);
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
       
       if (error) throw error;
       
@@ -177,6 +184,7 @@ export function useAvaliacoes() {
           config_360: (data.config_360 || { auto: true, gestor: true, pares: 0, subordinados: false }) as unknown as Json,
           departamentos_ids: data.departamentos_ids,
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo,
         });
