@@ -61,6 +61,7 @@ import Filiais from "./pages/cadastros/Filiais";
 
 // Admin Pages
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
+import ManualSistema from "./pages/admin/ManualSistema";
 import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 
 const queryClient = new QueryClient();
@@ -89,10 +90,18 @@ const App = () => (
 
           {/* Super Admin Routes */}
           <Route
-            path="/admin/*"
+            path="/admin"
             element={
               <SuperAdminRoute>
                 <SuperAdminDashboard />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/manual"
+            element={
+              <SuperAdminRoute>
+                <ManualSistema />
               </SuperAdminRoute>
             }
           />

@@ -6,16 +6,17 @@
    Plus, 
    Search, 
    MoreVertical,
-   Shield,
-   TrendingUp,
-   CheckCircle,
-   XCircle,
-   UserPlus,
-   Eye,
-   Edit,
-   Power,
-  ArrowLeft,
- } from 'lucide-react';
+    Shield,
+    TrendingUp,
+    CheckCircle,
+    XCircle,
+    UserPlus,
+    Eye,
+    Edit,
+    Power,
+    ArrowLeft,
+    BookOpen,
+  } from 'lucide-react';
  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
@@ -113,10 +114,16 @@
                Gerencie todas as empresas cadastradas no sistema
              </p>
            </div>
-           <Button onClick={() => setShowTenantForm(true)}>
-             <Plus className="w-4 h-4 mr-2" />
-             Nova Empresa
-           </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate('/admin/manual')}>
+                <BookOpen className="w-4 h-4 mr-2" />
+                Manual do Sistema
+              </Button>
+              <Button onClick={() => setShowTenantForm(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Empresa
+              </Button>
+            </div>
          </div>
  
          {/* Stats */}
