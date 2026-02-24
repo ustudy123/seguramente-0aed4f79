@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, X } from "lucide-react";
 import { ATIVIDADES_RISCO } from "@/types/terceiros";
 import type { TerceiroTrabalhador } from "@/types/terceiros";
+import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 
 interface Props {
   open: boolean;
@@ -54,6 +55,7 @@ export function TrabalhadorForm({ open, onOpenChange, onSubmit, terceiroId, isPe
           <DialogTitle>Novo Trabalhador</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <EmpresaAtivaBanner />
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Label>Nome *</Label>
