@@ -1,19 +1,34 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Search, Printer } from "lucide-react";
+import { ArrowLeft, BookOpen, Search, Printer, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const MANUAL_URL = "/MANUAL_SEGURAMENTE.md";
+
+// Table of contents sections extracted from H2 headings
+function extractToc(md: string) {
+  const lines = md.split("\n");
+  const toc: { title: string; id: string }[] = [];
+  for (const line of lines) {
+    const match = line.match(/^## (.+)/);
+    if (match) {
+      const title = match[1].replace(/[🏛️🔐🏢👥💰🏖️📋🩺🔒🦺🧠📊📝📚🎓🎯📋🏗️🎉💚📢🏗️🚨📁🧾🌐⏰📰⚙️💬🤖📐🔒🏗️🎤]/g, "").trim();
+      const id = title.toLowerCase().replace(/[^a-záàâãéèêíïóôõöúçñ0-9]+/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      toc.push({ title, id });
+    }
+  }
+  return toc;
+}
 
 export default function ManualSistema() {
   const navigate = useNavigate();
   const [content, setContent] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     fetch(MANUAL_URL)
@@ -25,52 +40,44 @@ export default function ManualSistema() {
       .catch(() => setLoading(false));
   }, []);
 
-  const filteredContent = search.trim()
-    ? content
-        .split("\n")
-        .filter((_, i, arr) => {
-          const context = arr
-            .slice(Math.max(0, i - 2), i + 3)
-            .join(" ")
-            .toLowerCase();
-          return context.includes(search.toLowerCase());
-        })
-        .join("\n")
-    : content;
+  const toc = extractToc(content);
+
+  const scrollToSection = (id: string) => {
+    setActiveSection(id);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background print:bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-card border-b border-border px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border px-6 py-3 print:hidden">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/admin")}
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <BookOpen className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">
-              Manual do Sistema
-            </h1>
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <BookOpen className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-foreground leading-tight">Manual do Sistema</h1>
+                <p className="text-xs text-muted-foreground">Seguramente — Documentação Completa</p>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative w-64 hidden md:block">
+            <div className="relative w-56 hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar no manual..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-9 text-sm"
               />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-            >
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer className="w-4 h-4 mr-2" />
               Imprimir
             </Button>
@@ -78,19 +85,123 @@ export default function ManualSistema() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        ) : (
-          <article className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-a:text-primary prose-code:text-primary prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-table:text-sm prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-td:border-border prose-th:border-border prose-blockquote:border-primary prose-blockquote:text-muted-foreground">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {filteredContent}
-            </ReactMarkdown>
-          </article>
-        )}
+      <div className="max-w-[1400px] mx-auto flex">
+        {/* Sidebar TOC */}
+        <aside className="hidden lg:block w-72 shrink-0 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto border-r border-border py-6 px-4 print:hidden">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">Índice</p>
+          <nav className="space-y-0.5">
+            {toc.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                  activeSection === item.id
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${activeSection === item.id ? "rotate-90" : ""}`} />
+                <span className="truncate">{item.title}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Content */}
+        <main className="flex-1 min-w-0 px-6 md:px-10 py-8 print:px-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : (
+            <article className="manual-content">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => (
+                    <div className="mb-8 pb-6 border-b-2 border-primary/20">
+                      <h1 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">{children}</h1>
+                    </div>
+                  ),
+                  h2: ({ children }) => {
+                    const text = String(children).replace(/[🏛️🔐🏢👥💰🏖️📋🩺🔒🦺🧠📊📝📚🎓🎯📋🏗️🎉💚📢🏗️🚨📁🧾🌐⏰📰⚙️💬🤖📐🔒🏗️🎤]/g, "").trim();
+                    const id = text.toLowerCase().replace(/[^a-záàâãéèêíïóôõöúçñ0-9]+/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+                    return (
+                      <h2 id={id} className="text-xl md:text-2xl font-bold text-foreground mt-12 mb-4 pt-6 border-t border-border scroll-mt-20 flex items-center gap-3">
+                        <span className="w-1 h-7 rounded-full bg-primary inline-block shrink-0" />
+                        {children}
+                      </h2>
+                    );
+                  },
+                  h3: ({ children }) => (
+                    <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">{children}</h3>
+                  ),
+                  h4: ({ children }) => (
+                    <h4 className="text-base font-semibold text-foreground mt-4 mb-2">{children}</h4>
+                  ),
+                  p: ({ children }) => (
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-3">{children}</p>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold text-foreground">{children}</strong>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="space-y-1.5 mb-4 ml-1">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="space-y-1.5 mb-4 ml-1 list-decimal list-inside">{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="text-sm text-muted-foreground flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-2 shrink-0" />
+                      <span className="flex-1">{children}</span>
+                    </li>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-primary bg-primary/5 rounded-r-lg px-5 py-4 my-4 text-sm text-foreground italic">
+                      {children}
+                    </blockquote>
+                  ),
+                  table: ({ children }) => (
+                    <div className="overflow-x-auto my-4 rounded-lg border border-border">
+                      <table className="w-full text-sm">{children}</table>
+                    </div>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-muted/70">{children}</thead>
+                  ),
+                  th: ({ children }) => (
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-foreground uppercase tracking-wider border-b border-border">
+                      {children}
+                    </th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="px-4 py-2.5 text-sm text-muted-foreground border-b border-border/50">
+                      {children}
+                    </td>
+                  ),
+                  hr: () => <hr className="my-8 border-border" />,
+                  code: ({ children, className }) => {
+                    if (className) {
+                      return (
+                        <pre className="bg-muted rounded-lg p-4 overflow-x-auto my-4 text-xs">
+                          <code className="text-foreground">{children}</code>
+                        </pre>
+                      );
+                    }
+                    return (
+                      <code className="bg-muted text-primary text-xs font-mono px-1.5 py-0.5 rounded">
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            </article>
+          )}
+        </main>
       </div>
     </div>
   );
