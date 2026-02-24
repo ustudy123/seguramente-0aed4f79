@@ -184,7 +184,7 @@ Automatiza a conformidade CLT na gestão de férias.
 - Restrições e observações ocupacionais
 
 ### 🤖 Inteligência Artificial:
-- **Extração automática de dados via Gemini 2.0 Flash**
+- **Extração automática de dados via GPT-4o**
 - Upload de foto/scan do atestado → campos preenchidos automaticamente
 - Reconhece: nome, CRM, CID, datas, dias de afastamento
 
@@ -251,7 +251,7 @@ Automatiza a conformidade CLT na gestão de férias.
 
 ### 🤖 Inteligência Artificial:
 - **Importação de NF XML** com IA (`ai-nf-match`): vínculo automático com catálogo
-- **Auditoria Inteligente** (Gemini 2.0 Flash):
+- **Auditoria Inteligente** (GPT-4o):
   - Auditoria automatizada de entregas e estoque
   - Identificação de riscos de conformidade (NR-6/NR-9)
   - Relatórios PDF com cabeçalho corporativo
@@ -648,7 +648,7 @@ Widget flutuante disponível em todas as telas.
 
 ## 🤖 MAPA COMPLETO DE INTELIGÊNCIA ARTIFICIAL
 
-O Seguramente utiliza uma **arquitetura multi-modelo** com 26 Edge Functions de IA:
+O Seguramente utiliza a **API da OpenAI** com 26 Edge Functions de IA:
 
 | Função | Modelo | Descrição |
 |--------|--------|-----------|
@@ -660,17 +660,17 @@ O Seguramente utiliza uma **arquitetura multi-modelo** com 26 Edge Functions de 
 | `ai-oceano-azul` | GPT-4o | Estratégia Oceano Azul |
 | `ai-feedback` | GPT-4o-mini | Redação profissional de feedbacks |
 | `ai-plano-acao` | GPT-4o | Assistente do Plano de Ação |
-| `ai-pdi-smart` | Gemini | Geração de metas SMART |
-| `ai-pdi-documento` | Gemini | Documento PDF do PDI |
-| `ai-pop-generator` | Gemini | POPs inteligentes |
-| `ai-manual-funcao` | Gemini | Manuais profissionais de função |
-| `ai-cultura-sugestao` | Gemini | Sugestões de cultura organizacional |
-| `ai-cultura-manual` | Gemini | Manual de Cultura em PDF |
-| `ai-epi-fiscal` | Gemini 2.0 Flash | Auditoria inteligente de EPIs |
+| `ai-pdi-smart` | GPT-4o | Geração de metas SMART |
+| `ai-pdi-documento` | GPT-4o | Documento PDF do PDI |
+| `ai-pop-generator` | GPT-4o | POPs inteligentes |
+| `ai-manual-funcao` | GPT-4o | Manuais profissionais de função |
+| `ai-cultura-sugestao` | GPT-4o | Sugestões de cultura organizacional |
+| `ai-cultura-manual` | GPT-4o | Manual de Cultura em PDF |
+| `ai-epi-fiscal` | GPT-4o | Auditoria inteligente de EPIs |
 | `ai-nf-match` | Edge Function | Vínculo de NF XML com catálogo |
-| `ai-felicitacao` | IA | Mensagens de celebração |
-| `extract-atestado` | Gemini 2.0 Flash | Extração de dados de atestados |
-| `analyze-ergonomia` | IA | Análise ergonômica via vídeo |
+| `ai-felicitacao` | GPT-4o-mini | Mensagens de celebração |
+| `extract-atestado` | GPT-4o | Extração de dados de atestados |
+| `analyze-ergonomia` | GPT-4o | Análise ergonômica via vídeo |
 
 ---
 
@@ -717,7 +717,7 @@ O Seguramente utiliza uma **arquitetura multi-modelo** com 26 Edge Functions de 
 | Ícones | Lucide React |
 | Estado | React Query (TanStack) |
 | Backend | Supabase (Auth, DB, Storage, Edge Functions) |
-| IA | OpenAI (GPT-4o, GPT-4o-mini, Whisper) + Google Gemini |
+| IA | OpenAI (GPT-4o, GPT-4o-mini, Whisper) |
 | PDFs | jsPDF + html2canvas |
 | Planilhas | xlsx |
 | Gráficos | Recharts |
