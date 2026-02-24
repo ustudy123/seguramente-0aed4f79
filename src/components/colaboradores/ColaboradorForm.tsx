@@ -35,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateCpf, cleanCpf } from "@/lib/cpf";
+import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
@@ -239,6 +240,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               : "Preencha os dados para cadastrar um novo colaborador."}
           </DialogDescription>
         </DialogHeader>
+
+        <EmpresaAtivaBanner />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
