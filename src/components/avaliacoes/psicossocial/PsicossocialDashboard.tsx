@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { CampanhaList } from "./CampanhaList";
 import { CampanhaForm } from "./CampanhaForm";
+import { ChecklistDeteccaoObservavel } from "./ChecklistDeteccaoObservavel";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -227,6 +228,9 @@ export function PsicossocialDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Checklist de Detecção Observável */}
+      <ChecklistDeteccaoObservavel />
 
       {/* Lista de Campanhas */}
       <CampanhaList campanhas={campanhas} onNovaCampanha={() => setShowForm(true)} />

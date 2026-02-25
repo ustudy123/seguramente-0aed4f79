@@ -500,6 +500,154 @@ export const BLOCOS_PSICOSSOCIAL: BlocoPsicossocial[] = [
       },
     ],
   },
+  // ========================================
+  // NOVOS BLOCOS NR-01 (Fatores Faltantes)
+  // ========================================
+  {
+    id: 'bloco_11',
+    numero: 11,
+    titulo: 'Assédio e Violência no Trabalho',
+    descricao: 'Avaliação de exposição a assédio moral, sexual e discriminação (R01)',
+    objetivo: 'Identificar situações de assédio e violência organizacional',
+    perguntas: [
+      {
+        id: 'p11_1',
+        texto: 'Já presenciei ou fui alvo de humilhações, gritos ou tratamento desrespeitoso no trabalho.',
+        blocoId: 'bloco_11',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p11_2',
+        texto: 'Já fui excluído(a) de reuniões, decisões ou atividades sem justificativa.',
+        blocoId: 'bloco_11',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p11_3',
+        texto: 'Sinto que existe intimidação ou ameaças no ambiente de trabalho.',
+        blocoId: 'bloco_11',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p11_4',
+        texto: 'Já fui alvo de piadas, comentários ou comportamentos de natureza sexual indesejados.',
+        blocoId: 'bloco_11',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p11_5',
+        texto: 'Sinto que existe discriminação (gênero, raça, idade, orientação) no meu ambiente de trabalho.',
+        blocoId: 'bloco_11',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+    ],
+  },
+  {
+    id: 'bloco_12',
+    numero: 12,
+    titulo: 'Gestão de Mudanças Organizacionais',
+    descricao: 'Avaliação de como mudanças são conduzidas e comunicadas (R02)',
+    objetivo: 'Identificar impacto de mudanças mal geridas na saúde mental',
+    perguntas: [
+      {
+        id: 'p12_1',
+        texto: 'As mudanças na empresa (reestruturações, novas regras, sistemas) são comunicadas com antecedência.',
+        blocoId: 'bloco_12',
+        mapeamento: ['NR-01', 'ISO 45003'],
+        invertida: true,
+      },
+      {
+        id: 'p12_2',
+        texto: 'Recebo apoio adequado durante períodos de mudança organizacional.',
+        blocoId: 'bloco_12',
+        mapeamento: ['NR-01', 'ISO 45003'],
+        invertida: true,
+      },
+      {
+        id: 'p12_3',
+        texto: 'Mudanças no trabalho geram insegurança sobre meu futuro na empresa.',
+        blocoId: 'bloco_12',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p12_4',
+        texto: 'Sou consultado(a) antes de mudanças que afetam diretamente minha função.',
+        blocoId: 'bloco_12',
+        mapeamento: ['ISO 45003'],
+        invertida: true,
+      },
+    ],
+  },
+  {
+    id: 'bloco_13',
+    numero: 13,
+    titulo: 'Eventos Violentos ou Traumáticos',
+    descricao: 'Avaliação de exposição a eventos potencialmente traumáticos (R08)',
+    objetivo: 'Identificar exposição a violência externa e eventos traumáticos no trabalho',
+    perguntas: [
+      {
+        id: 'p13_1',
+        texto: 'Já vivenciei ou presenciei situação de violência física no ambiente de trabalho.',
+        blocoId: 'bloco_13',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p13_2',
+        texto: 'Já fui exposto(a) a situações de roubo, assalto ou ameaça externa no trabalho.',
+        blocoId: 'bloco_13',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p13_3',
+        texto: 'Já presenciei acidente grave ou fatalidade no ambiente de trabalho.',
+        blocoId: 'bloco_13',
+        mapeamento: ['NR-01'],
+      },
+      {
+        id: 'p13_4',
+        texto: 'Sinto que a empresa oferece suporte adequado após eventos traumáticos.',
+        blocoId: 'bloco_13',
+        mapeamento: ['NR-01', 'ISO 45003'],
+        invertida: true,
+      },
+    ],
+  },
+  {
+    id: 'bloco_14',
+    numero: 14,
+    titulo: 'Comunicação Organizacional',
+    descricao: 'Avaliação da qualidade e fluxo de comunicação interna (R12)',
+    objetivo: 'Identificar falhas de comunicação que impactam a saúde psicossocial',
+    perguntas: [
+      {
+        id: 'p14_1',
+        texto: 'Recebo informações claras e suficientes para realizar meu trabalho.',
+        blocoId: 'bloco_14',
+        mapeamento: ['NR-01', 'NR-17', 'ISO 45003'],
+        invertida: true,
+      },
+      {
+        id: 'p14_2',
+        texto: 'Existe um canal eficiente para expressar opiniões e preocupações.',
+        blocoId: 'bloco_14',
+        mapeamento: ['NR-01', 'ISO 45003'],
+        invertida: true,
+      },
+      {
+        id: 'p14_3',
+        texto: 'A comunicação entre setores é falha e gera retrabalho ou conflitos.',
+        blocoId: 'bloco_14',
+        mapeamento: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'p14_4',
+        texto: 'Decisões importantes são comunicadas de forma transparente pela liderança.',
+        blocoId: 'bloco_14',
+        mapeamento: ['NR-01', 'ISO 45003'],
+        invertida: true,
+      },
+    ],
+  },
 ];
 
 // Blocos dinâmicos (CET - Condições Especiais de Trabalho)
