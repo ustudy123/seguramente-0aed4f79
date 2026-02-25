@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.ai-audio-atividades]
 verify_jwt = false
+
+[functions.ai-nf-ocr]
+verify_jwt = false
