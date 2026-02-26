@@ -53,6 +53,7 @@ import Onboarding from "./pages/Onboarding";
 import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
 import HubContabil from "./pages/HubContabil";
 import Configuracoes from "./pages/Configuracoes";
+import LandingPage from "./pages/LandingPage";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
             <Route path="/ferias-assinatura/:token" element={<FeriasAssinatura />} />
             <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
+            <Route path="/lp" element={<LandingPage />} />
 
           {/* Super Admin Routes */}
           <Route

@@ -114,16 +114,28 @@
                Gerencie todas as empresas cadastradas no sistema
              </p>
            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate('/admin/manual')}>
-                <BookOpen className="w-4 h-4 mr-2" />
-                Manual do Sistema
-              </Button>
-              <Button onClick={() => setShowTenantForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Empresa
-              </Button>
-            </div>
+             <div className="flex items-center gap-2">
+               <Button variant="outline" onClick={() => {
+                 const url = `${window.location.origin}/lp`;
+                 navigator.clipboard.writeText(url);
+                 toast.success('Link da landing page copiado!');
+               }}>
+                 <TrendingUp className="w-4 h-4 mr-2" />
+                 Copiar Link LP
+               </Button>
+               <Button variant="outline" onClick={() => window.open('/lp', '_blank')}>
+                 <Eye className="w-4 h-4 mr-2" />
+                 Ver Landing Page
+               </Button>
+               <Button variant="outline" onClick={() => navigate('/admin/manual')}>
+                 <BookOpen className="w-4 h-4 mr-2" />
+                 Manual do Sistema
+               </Button>
+               <Button onClick={() => setShowTenantForm(true)}>
+                 <Plus className="w-4 h-4 mr-2" />
+                 Nova Empresa
+               </Button>
+             </div>
          </div>
  
          {/* Stats */}

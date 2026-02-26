@@ -6483,6 +6483,72 @@ export type Database = {
           },
         ]
       }
+      landing_leads: {
+        Row: {
+          convertido: boolean | null
+          created_at: string | null
+          diagnostico_resultado: Json | null
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          pontuacao_diagnostico: number | null
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          convertido?: boolean | null
+          created_at?: string | null
+          diagnostico_resultado?: Json | null
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          pontuacao_diagnostico?: number | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          convertido?: boolean | null
+          created_at?: string | null
+          diagnostico_resultado?: Json | null
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          pontuacao_diagnostico?: number | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      landing_vagas: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          id: string
+          total_vagas: number
+          updated_at: string | null
+          vagas_preenchidas: number
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          total_vagas?: number
+          updated_at?: string | null
+          vagas_preenchidas?: number
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          total_vagas?: number
+          updated_at?: string | null
+          vagas_preenchidas?: number
+        }
+        Relationships: []
+      }
       lembretes_dispensados: {
         Row: {
           chave: string
