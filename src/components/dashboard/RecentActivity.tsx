@@ -5,7 +5,8 @@ import {
   FileCheck, 
   Clock, 
   Star,
-  AlertCircle 
+  AlertCircle,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +81,10 @@ export const RecentActivity = () => {
       </div>
       
       <div className="space-y-4">
+        <div className="flex items-center gap-2 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning">
+          <Info className="w-3.5 h-3.5 shrink-0" />
+          <span><strong>Demonstração</strong> — Dados ilustrativos. Suas atividades reais aparecerão aqui conforme você utilizar o sistema.</span>
+        </div>
         {activities.map((activity, index) => (
           <motion.div
             key={activity.id}
