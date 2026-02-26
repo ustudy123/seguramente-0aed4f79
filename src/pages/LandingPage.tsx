@@ -83,13 +83,13 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0c0a14] text-white overflow-x-hidden">
       {/* Floating urgency bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-900 via-red-700 to-red-900 py-2.5 px-4 text-center text-sm font-bold shadow-lg shadow-red-900/50">
+      <div className="fixed top-0 left-0 right-0 z-50 py-2.5 px-4 text-center text-sm font-bold shadow-lg" style={{ background: 'linear-gradient(90deg, hsl(262 52% 30%), hsl(262 52% 45%), hsl(262 52% 30%))' }}>
         <Clock className="inline w-4 h-4 mr-1" />
         ⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.
         {vagasRestantes > 0 && (
-          <span className="ml-2 bg-yellow-500/90 text-black px-3 py-0.5 rounded-full text-xs font-black">
+          <span className="ml-2 px-3 py-0.5 rounded-full text-xs font-black" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
             🔥 Apenas {vagasRestantes} vagas restantes
           </span>
         )}
@@ -97,22 +97,22 @@ export default function LandingPage() {
 
       {/* ═══════════ HERO ═══════════ */}
       <section className="relative pt-28 pb-10 px-4 min-h-screen flex items-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d1117] to-[#0a0a0f]" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, hsl(262 30% 8%) 0%, hsl(262 25% 10%) 50%, hsl(262 30% 8%) 100%)' }} />
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-red-500 rounded-full blur-[128px]" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500 rounded-full blur-[128px]" />
+          <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(262 52% 50%)' }} />
+          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(24 90% 54%)' }} />
         </div>
         
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Badge className="mb-6 bg-red-500/20 text-red-400 border-red-500/30 text-sm px-4 py-1.5">
+            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(24 90% 65%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
               <AlertTriangle className="w-4 h-4 mr-2" />
               ALERTA: Sua empresa pode estar em risco AGORA
             </Badge>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6">
               Sua empresa está pronta para a{" "}
-              <span className="bg-gradient-to-r from-red-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 68%), hsl(24 90% 54%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 maior fiscalização trabalhista
               </span>{" "}
               dos últimos 20 anos?
@@ -120,7 +120,7 @@ export default function LandingPage() {
 
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
               A NR-01 foi atualizada. Agora <strong className="text-white">riscos psicossociais são obrigatórios</strong> no GRO/PGR.
-              Empresas que não se adequarem enfrentam <strong className="text-red-400">multas, interdições e processos trabalhistas</strong>.
+              Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(24 90% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
             </p>
 
             <p className="text-base text-gray-500 max-w-2xl mx-auto mb-10">
@@ -131,7 +131,8 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 onClick={() => setShowDiagnostico(true)}
-                className="bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-red-500/25 group"
+                className="text-white text-lg px-8 py-6 rounded-xl shadow-2xl group"
+                style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
               >
                 <Brain className="w-5 h-5 mr-2 group-hover:animate-pulse" />
                 Faça o Diagnóstico GRÁTIS da Sua Empresa
@@ -148,20 +149,20 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-500" /> Sem cartão de crédito</span>
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-500" /> Resultado imediato</span>
-              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-500" /> 100% confidencial</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Sem cartão de crédito</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Resultado imediato</span>
+              <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> 100% confidencial</span>
             </div>
           </motion.div>
 
-          {/* MOCKUP PLACEHOLDER */}
+          {/* MOCKUP */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
             className="mt-16 max-w-5xl mx-auto"
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(262 52% 50% / 0.15)' }}>
               <img 
                 src="/images/mockup-dashboard.png" 
                 alt="Dashboard SeguraMente - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
@@ -179,11 +180,11 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ PAIN SECTION ═══════════ */}
-      <section className="py-20 px-4 bg-gradient-to-b from-[#0a0a0f] to-[#111118]">
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 30% 8%) 0%, hsl(262 25% 10%) 100%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-5xl font-black text-center mb-4">
-              O que acontece com quem <span className="text-red-500">ignora</span> a NR-01?
+              O que acontece com quem <span style={{ color: 'hsl(24 90% 54%)' }}>ignora</span> a NR-01?
             </h2>
             <p className="text-gray-400 text-center max-w-2xl mx-auto mb-16">
               A fiscalização não avisa. Ela chega. E quando chega, o prejuízo é irreversível.
@@ -192,15 +193,15 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "text-red-500", bg: "bg-red-500/10" },
-              { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "text-orange-500", bg: "bg-orange-500/10" },
-              { icon: TrendingDown, title: "Processos Trabalhistas", desc: "Burnout, assédio e danos morais. Um único processo pode ultrapassar R$ 200.000 em indenizações.", color: "text-yellow-500", bg: "bg-yellow-500/10" },
-              { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "text-purple-500", bg: "bg-purple-500/10" },
+              { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "hsl(24 90% 54%)", bg: "hsl(24 90% 54% / 0.1)" },
+              { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "hsl(262 52% 60%)", bg: "hsl(262 52% 50% / 0.1)" },
+              { icon: TrendingDown, title: "Processos Trabalhistas", desc: "Burnout, assédio e danos morais. Um único processo pode ultrapassar R$ 200.000 em indenizações.", color: "hsl(38 90% 55%)", bg: "hsl(38 90% 50% / 0.1)" },
+              { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(280 40% 68%)", bg: "hsl(280 40% 68% / 0.1)" },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
-                <div className="bg-[#16161d] border border-gray-800 rounded-2xl p-6 h-full hover:border-red-500/30 transition-colors">
-                  <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center mb-4`}>
-                    <item.icon className={`w-6 h-6 ${item.color}`} />
+                <div className="rounded-2xl p-6 h-full transition-colors" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: item.bg }}>
+                    <item.icon className="w-6 h-6" style={{ color: item.color }} />
                   </div>
                   <h3 className="text-lg font-bold mb-2">{item.title}</h3>
                   <p className="text-gray-400 text-sm">{item.desc}</p>
@@ -212,15 +213,15 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ IA SECTION ═══════════ */}
-      <section className="py-20 px-4 bg-[#111118] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[200px]" />
+      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(262 25% 10%)' }}>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(262 52% 50% / 0.05)' }} />
         <div className="max-w-6xl mx-auto relative">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4 bg-purple-500/20 text-purple-400 border-purple-500/30">
+            <Badge className="mb-4" style={{ background: 'hsl(262 52% 50% / 0.15)', color: 'hsl(280 40% 72%)', borderColor: 'hsl(262 52% 50% / 0.3)' }}>
               <Sparkles className="w-4 h-4 mr-1" /> INTELIGÊNCIA ARTIFICIAL
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              IA que <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">trabalha por você</span> 24 horas por dia
+              IA que <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 72%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trabalha por você</span> 24 horas por dia
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Enquanto seus concorrentes usam planilhas, o SeguraMente usa <strong className="text-white">GPT-4o e visão computacional</strong> para automatizar 
@@ -238,8 +239,8 @@ export default function LandingPage() {
               { icon: Bot, title: "Matching Inteligente NFs", desc: "IA cruza automaticamente XML de notas fiscais com guias de pagamento, identificando divergências e pendências." },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
-                <div className="bg-gradient-to-b from-[#1a1a28] to-[#16161d] border border-purple-500/10 rounded-2xl p-6 h-full hover:border-purple-500/30 transition-all">
-                  <item.icon className="w-8 h-8 text-purple-400 mb-3" />
+                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(262 25% 14%) 0%, hsl(262 25% 11%) 100%)', border: '1px solid hsl(262 52% 50% / 0.1)' }}>
+                  <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(280 40% 72%)' }} />
                   <h3 className="text-base font-bold mb-2">{item.title}</h3>
                   <p className="text-gray-400 text-sm">{item.desc}</p>
                 </div>
@@ -250,14 +251,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ PSYCHOSOCIAL DEEP DIVE ═══════════ */}
-      <section className="py-20 px-4 bg-gradient-to-b from-[#111118] to-[#0d0d14]">
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 25% 10%) 0%, hsl(262 28% 8%) 100%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4 bg-red-500/20 text-red-400 border-red-500/30">
+            <Badge className="mb-4" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(24 90% 60%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
               <AlertTriangle className="w-4 h-4 mr-1" /> NR-01 — OBRIGATÓRIO
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Gestão Psicossocial <span className="text-red-400">Completa</span> e Automatizada
+              Gestão Psicossocial <span style={{ color: 'hsl(24 90% 54%)' }}>Completa</span> e Automatizada
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               O SeguraMente é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores psicossociais exigidos pela NR-01 atualizada, 
@@ -266,9 +267,9 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <motion.div {...fadeUp} className="bg-[#16161d] border border-gray-800 rounded-2xl p-8">
+            <motion.div {...fadeUp} className="rounded-2xl p-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-blue-400" />
+                <FileText className="w-6 h-6" style={{ color: 'hsl(262 52% 65%)' }} />
                 Questionário NR-01 Completo
               </h3>
               <div className="space-y-3 text-sm text-gray-400">
@@ -283,16 +284,16 @@ export default function LandingPage() {
                   "Ciclos regulares e extraordinários por gatilhos",
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: 'hsl(152 50% 50%)' }} />
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
             </motion.div>
 
-            <motion.div {...fadeUp} transition={{ delay: 0.15 }} className="bg-[#16161d] border border-gray-800 rounded-2xl p-8">
+            <motion.div {...fadeUp} transition={{ delay: 0.15 }} className="rounded-2xl p-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6 text-cyan-400" />
+                <BarChart3 className="w-6 h-6" style={{ color: 'hsl(280 40% 68%)' }} />
                 Indicadores Automáticos
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -304,8 +305,8 @@ export default function LandingPage() {
                   { code: "ICOP-S", name: "Índice de Cooperação Social" },
                   { code: "INOT-S", name: "Índice de Notificações de Risco" },
                 ].map((ind, i) => (
-                  <div key={i} className="bg-[#0d0d14] rounded-xl p-3 border border-gray-800">
-                    <p className="text-xs font-mono text-cyan-400 font-bold">{ind.code}</p>
+                  <div key={i} className="rounded-xl p-3" style={{ background: 'hsl(262 28% 8%)', border: '1px solid hsl(262 20% 18%)' }}>
+                    <p className="text-xs font-mono font-bold" style={{ color: 'hsl(280 40% 72%)' }}>{ind.code}</p>
                     <p className="text-xs text-gray-500 mt-1">{ind.name}</p>
                   </div>
                 ))}
@@ -319,14 +320,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ ALL MODULES ═══════════ */}
-      <section className="py-20 px-4 bg-[#0d0d14]">
+      <section className="py-20 px-4" style={{ background: 'hsl(262 28% 8%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4 bg-green-500/20 text-green-400 border-green-500/30">
+            <Badge className="mb-4" style={{ background: 'hsl(152 50% 42% / 0.15)', color: 'hsl(152 50% 55%)', borderColor: 'hsl(152 50% 42% / 0.3)' }}>
               <Shield className="w-4 h-4 mr-1" /> PLATAFORMA COMPLETA
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">+30 módulos</span> integrados em uma única plataforma
+              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 68%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>+30 módulos</span> integrados em uma única plataforma
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Tudo que sua empresa precisa para SST, RH e compliance — sem precisar de 10 softwares diferentes.
@@ -365,13 +366,13 @@ export default function LandingPage() {
               { icon: Users, name: "Multi-Tenant / Multi-Empresa" },
             ].map((mod, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.03 }}>
-                <div className="bg-[#16161d] border border-gray-800 rounded-xl p-4 h-full hover:border-blue-500/30 transition-colors group relative">
+                <div className="rounded-xl p-4 h-full transition-colors group relative" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
                   {mod.tag && (
-                    <span className="absolute top-2 right-2 bg-purple-500/20 text-purple-400 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                    <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'hsl(24 90% 54% / 0.2)', color: 'hsl(24 90% 60%)' }}>
                       {mod.tag}
                     </span>
                   )}
-                  <mod.icon className="w-6 h-6 text-blue-400 mb-2 group-hover:text-cyan-400 transition-colors" />
+                  <mod.icon className="w-6 h-6 mb-2 transition-colors" style={{ color: 'hsl(262 52% 65%)' }} />
                   <p className="text-sm font-medium text-gray-300">{mod.name}</p>
                 </div>
               </motion.div>
@@ -387,11 +388,11 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ HOW IT WORKS ═══════════ */}
-      <section className="py-20 px-4 bg-gradient-to-b from-[#0d0d14] to-[#111118]">
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 28% 8%) 0%, hsl(262 25% 10%) 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Comece em <span className="text-cyan-400">3 passos simples</span>
+              Comece em <span style={{ color: 'hsl(280 40% 72%)' }}>3 passos simples</span>
             </h2>
           </motion.div>
           <div className="space-y-8">
@@ -401,8 +402,8 @@ export default function LandingPage() {
               { step: "03", title: "Deixe a IA Trabalhar por Você", desc: "O sistema monitora continuamente atestados, ponto, denúncias e turnover. Você recebe alertas antes dos problemas virarem multas." },
             ].map((s, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-6 items-start">
-                <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/20 flex items-center justify-center">
-                  <span className="text-2xl font-black text-blue-400">{s.step}</span>
+                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(262 52% 50% / 0.15), hsl(280 40% 68% / 0.15))', border: '1px solid hsl(262 52% 50% / 0.2)' }}>
+                  <span className="text-2xl font-black" style={{ color: 'hsl(262 52% 65%)' }}>{s.step}</span>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-1">{s.title}</h3>
@@ -415,10 +416,10 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ SOCIAL PROOF ═══════════ */}
-      <section className="py-20 px-4 bg-[#111118]">
+      <section className="py-20 px-4" style={{ background: 'hsl(262 25% 10%)' }}>
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-black mb-16">
-            Números que <span className="text-cyan-400">falam por si</span>
+            Números que <span style={{ color: 'hsl(280 40% 72%)' }}>falam por si</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -428,7 +429,7 @@ export default function LandingPage() {
               { num: "74%", label: "redução de riscos com gestão psicossocial" },
             ].map((stat, i) => (
               <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <p className="text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{stat.num}</p>
+                <p className="text-3xl md:text-4xl font-black" style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(24 90% 54%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stat.num}</p>
                 <p className="text-sm text-gray-500 mt-2">{stat.label}</p>
               </motion.div>
             ))}
@@ -437,11 +438,11 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ DIFFERENTIATORS ═══════════ */}
-      <section className="py-20 px-4 bg-gradient-to-b from-[#111118] to-[#0d0d14]">
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 25% 10%) 0%, hsl(262 28% 8%) 100%)' }}>
         <div className="max-w-5xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Por que o SeguraMente é <span className="text-yellow-400">diferente</span>?
+              Por que o SeguraMente é <span style={{ color: 'hsl(24 90% 54%)' }}>diferente</span>?
             </h2>
           </motion.div>
 
@@ -451,17 +452,17 @@ export default function LandingPage() {
               { title: "SeguraMente", items: ["Plataforma inteligente com IA real (GPT-4o)", "Detecção automática de riscos", "SST + RH + Psicossocial integrados", "100% compliance NR-01 atualizada", "Indicadores em tempo real", "Design moderno e intuitivo"], bad: false },
             ].map((col, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }}>
-                <div className={`rounded-2xl p-8 h-full border ${col.bad ? "bg-[#1a1418] border-red-500/20" : "bg-[#141a1e] border-green-500/20"}`}>
-                  <h3 className={`text-xl font-bold mb-6 ${col.bad ? "text-red-400" : "text-green-400"}`}>{col.title}</h3>
+                <div className="rounded-2xl p-8 h-full" style={{ background: col.bad ? 'hsl(0 20% 10%)' : 'hsl(262 25% 11%)', border: `1px solid ${col.bad ? 'hsl(0 40% 25% / 0.3)' : 'hsl(152 50% 42% / 0.2)'}` }}>
+                  <h3 className="text-xl font-bold mb-6" style={{ color: col.bad ? 'hsl(0 60% 60%)' : 'hsl(152 50% 55%)' }}>{col.title}</h3>
                   <div className="space-y-3">
                     {col.items.map((item, j) => (
                       <div key={j} className="flex items-center gap-2 text-sm text-gray-400">
                         {col.bad ? (
-                          <span className="w-4 h-4 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
-                            <span className="text-red-400 text-xs">✕</span>
+                          <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: 'hsl(0 40% 25% / 0.3)' }}>
+                            <span style={{ color: 'hsl(0 60% 60%)' }} className="text-xs">✕</span>
                           </span>
                         ) : (
-                          <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                          <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'hsl(152 50% 50%)' }} />
                         )}
                         {item}
                       </div>
@@ -475,15 +476,15 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ DIAGNOSTIC CTA SECTION ═══════════ */}
-      <section className="py-20 px-4 bg-[#0d0d14] relative overflow-hidden">
+      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(262 28% 8%)' }}>
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500 rounded-full blur-[250px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[250px]" style={{ background: 'hsl(24 90% 54%)' }} />
         </div>
         <div className="relative max-w-3xl mx-auto text-center">
           <motion.div {...fadeUp}>
-            <Brain className="w-16 h-16 text-orange-400 mx-auto mb-6" />
+            <Brain className="w-16 h-16 mx-auto mb-6" style={{ color: 'hsl(24 90% 54%)' }} />
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Descubra o risco da sua empresa em <span className="text-orange-400">2 minutos</span>
+              Descubra o risco da sua empresa em <span style={{ color: 'hsl(24 90% 54%)' }}>2 minutos</span>
             </h2>
             <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
               Nosso diagnóstico gratuito analisa 7 fatores críticos da NR-01 e mostra se sua empresa está em risco de multa, interdição ou processo trabalhista.
@@ -492,7 +493,8 @@ export default function LandingPage() {
             <Button
               size="lg"
               onClick={() => setShowDiagnostico(true)}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg px-10 py-7 rounded-xl shadow-2xl shadow-orange-500/25 group"
+              className="text-white text-lg px-10 py-7 rounded-xl shadow-2xl group"
+              style={{ background: 'linear-gradient(135deg, hsl(24 90% 54%), hsl(262 52% 50%))', boxShadow: '0 8px 32px hsl(24 90% 54% / 0.3)' }}
             >
               <Brain className="w-5 h-5 mr-2" />
               FAZER DIAGNÓSTICO GRÁTIS AGORA
@@ -503,20 +505,20 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ CTA / VAGAS ═══════════ */}
-      <section id="vagas" className="py-20 px-4 bg-gradient-to-b from-[#0d0d14] to-[#0a0a0f] relative">
+      <section id="vagas" className="py-20 px-4 relative" style={{ background: 'linear-gradient(180deg, hsl(262 28% 8%) 0%, hsl(262 30% 6%) 100%)' }}>
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-red-500 rounded-full blur-[200px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[200px]" style={{ background: 'hsl(262 52% 50%)' }} />
         </div>
         <div className="relative max-w-2xl mx-auto">
           <motion.div {...fadeUp}>
             <div className="text-center mb-10">
-              <Badge className="mb-4 bg-red-500/20 text-red-400 border-red-500/30 animate-pulse text-sm">
+              <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(24 90% 60%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
                 <Zap className="w-4 h-4 mr-1" />
                 LANÇAMENTO EXCLUSIVO — VAGAS LIMITADAS
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
-                Apenas <span className="text-red-500">{vagasRestantes}</span> vagas para acesso{" "}
-                <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">COMPLETO</span>
+                Apenas <span style={{ color: 'hsl(24 90% 54%)' }}>{vagasRestantes}</span> vagas para acesso{" "}
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(24 90% 54%), hsl(262 52% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>COMPLETO</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
                 Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> com acesso total a TODOS os módulos — 
@@ -525,14 +527,15 @@ export default function LandingPage() {
             </div>
 
             {/* Vagas visual */}
-            <div className="bg-[#16161d] border border-gray-800 rounded-2xl p-6 mb-8">
+            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-bold text-gray-400">Vagas preenchidas</span>
-                <span className="text-sm font-bold text-red-400">{10 - vagasRestantes}/10</span>
+                <span className="text-sm font-bold" style={{ color: 'hsl(24 90% 54%)' }}>{10 - vagasRestantes}/10</span>
               </div>
-              <div className="w-full bg-gray-800 rounded-full h-4 overflow-hidden">
+              <div className="w-full rounded-full h-4 overflow-hidden" style={{ background: 'hsl(262 20% 18%)' }}>
                 <motion.div
-                  className="h-full bg-gradient-to-r from-red-600 to-orange-500 rounded-full"
+                  className="h-full rounded-full"
+                  style={{ background: 'linear-gradient(90deg, hsl(262 52% 50%), hsl(24 90% 54%))' }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${((10 - vagasRestantes) / 10) * 100}%` }}
                   viewport={{ once: true }}
@@ -545,9 +548,9 @@ export default function LandingPage() {
             </div>
 
             {/* What's included */}
-            <div className="bg-[#16161d] border border-gray-800 rounded-2xl p-6 mb-8">
+            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-400" />
+                <Award className="w-5 h-5" style={{ color: 'hsl(24 90% 54%)' }} />
                 O que você recebe nas 10 primeiras vagas:
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -562,7 +565,7 @@ export default function LandingPage() {
                   "Atualizações vitalícias nesta fase",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                    <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'hsl(152 50% 50%)' }} />
                     {item}
                   </div>
                 ))}
@@ -570,8 +573,8 @@ export default function LandingPage() {
             </div>
 
             {/* After plans warning */}
-            <div className="bg-[#1a1418] border border-yellow-500/20 rounded-2xl p-5 mb-8">
-              <p className="text-yellow-400 font-bold text-sm mb-2">⚠️ O que acontece depois das 10 vagas?</p>
+            <div className="rounded-2xl p-5 mb-8" style={{ background: 'hsl(38 20% 10%)', border: '1px solid hsl(38 50% 40% / 0.2)' }}>
+              <p className="font-bold text-sm mb-2" style={{ color: 'hsl(38 90% 55%)' }}>⚠️ O que acontece depois das 10 vagas?</p>
               <div className="text-xs text-gray-500 space-y-1">
                 <p>• <strong className="text-gray-400">Plano Essencial:</strong> Apenas módulos básicos (Ponto, Admissão, EPIs)</p>
                 <p>• <strong className="text-gray-400">Plano Profissional:</strong> Módulos intermediários (+ Avaliações, PDI, Psicossocial básico)</p>
@@ -585,7 +588,8 @@ export default function LandingPage() {
                   <Button
                     size="lg"
                     onClick={() => setShowFormulario(true)}
-                    className="w-full bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white text-lg py-7 rounded-xl shadow-2xl shadow-red-500/25"
+                    className="w-full text-white text-lg py-7 rounded-xl shadow-2xl"
+                    style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
                     disabled={vagasRestantes <= 0}
                   >
                     {vagasRestantes > 0 ? (
@@ -602,7 +606,7 @@ export default function LandingPage() {
 
               {showFormulario && !leadEnviado && (
                 <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="bg-[#16161d] border border-gray-800 rounded-2xl p-8">
+                  <div className="rounded-2xl p-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
                     <h3 className="text-xl font-bold mb-1 text-center">Garanta sua vaga agora</h3>
                     <p className="text-gray-500 text-sm text-center mb-6">Preencha seus dados para reservar seu acesso completo</p>
                     <div className="space-y-4">
@@ -611,7 +615,8 @@ export default function LandingPage() {
                         value={nome}
                         onChange={e => setNome(e.target.value)}
                         maxLength={100}
-                        className="bg-[#0d0d14] border-gray-700 h-12 text-white placeholder:text-gray-600"
+                        className="h-12 text-white placeholder:text-gray-600"
+                        style={{ background: 'hsl(262 28% 8%)', borderColor: 'hsl(262 20% 20%)' }}
                       />
                       <Input
                         type="email"
@@ -619,13 +624,15 @@ export default function LandingPage() {
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         maxLength={255}
-                        className="bg-[#0d0d14] border-gray-700 h-12 text-white placeholder:text-gray-600"
+                        className="h-12 text-white placeholder:text-gray-600"
+                        style={{ background: 'hsl(262 28% 8%)', borderColor: 'hsl(262 20% 20%)' }}
                       />
                       <Button
                         size="lg"
                         onClick={handleSubmitLead}
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white text-lg py-6 rounded-xl"
+                        className="w-full text-white text-lg py-6 rounded-xl"
+                        style={{ background: 'linear-gradient(135deg, hsl(152 50% 42%), hsl(152 50% 35%))' }}
                       >
                         {loading ? "Enviando..." : "RESERVAR MINHA VAGA →"}
                       </Button>
@@ -639,14 +646,14 @@ export default function LandingPage() {
 
               {leadEnviado && (
                 <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-                  <div className="bg-gradient-to-b from-[#1a2a1a] to-[#16161d] border border-green-500/30 rounded-2xl p-8">
-                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <div className="rounded-2xl p-8" style={{ background: 'linear-gradient(180deg, hsl(152 20% 12%) 0%, hsl(262 25% 11%) 100%)', border: '1px solid hsl(152 50% 42% / 0.3)' }}>
+                    <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: 'hsl(152 50% 50%)' }} />
                     <h3 className="text-2xl font-black mb-2">Parabéns! Sua vaga está quase garantida 🎉</h3>
                     <p className="text-gray-400 mb-2">
-                      Restam apenas <strong className="text-red-400">{vagasRestantes} vagas</strong> para acesso completo.
+                      Restam apenas <strong style={{ color: 'hsl(24 90% 54%)' }}>{vagasRestantes} vagas</strong> para acesso completo.
                     </p>
-                    <div className="bg-[#0d0d14] border border-yellow-500/30 rounded-xl p-4 my-6">
-                      <p className="text-yellow-400 font-bold text-sm mb-1">⚡ ATENÇÃO: Apenas 10 vagas com acesso TOTAL</p>
+                    <div className="rounded-xl p-4 my-6" style={{ background: 'hsl(262 28% 8%)', border: '1px solid hsl(24 90% 54% / 0.3)' }}>
+                      <p className="font-bold text-sm mb-1" style={{ color: 'hsl(24 90% 54%)' }}>⚡ ATENÇÃO: Apenas 10 vagas com acesso TOTAL</p>
                       <p className="text-gray-500 text-xs">
                         Após as 10 vagas, novos usuários terão acesso apenas a módulos limitados conforme o plano contratado. 
                         Crie sua conta agora para garantir o acesso completo.
@@ -655,7 +662,8 @@ export default function LandingPage() {
                     <Button
                       size="lg"
                       onClick={() => navigate("/register")}
-                      className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white text-lg px-10 py-6 rounded-xl shadow-2xl"
+                      className="text-white text-lg px-10 py-6 rounded-xl shadow-2xl"
+                      style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(280 40% 60%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
                     >
                       CRIAR MINHA CONTA AGORA — É GRÁTIS
                       <ArrowRight className="w-5 h-5 ml-2" />
@@ -670,13 +678,13 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ FINAL URGENCY ═══════════ */}
-      <section className="py-16 px-4 bg-[#0a0a0f] border-t border-gray-900">
+      <section className="py-16 px-4" style={{ background: 'hsl(262 30% 6%)', borderTop: '1px solid hsl(262 20% 14%)' }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-black mb-4">
             A pergunta não é <em>"Quanto custa adequar?"</em>
           </h2>
           <p className="text-xl text-gray-400 mb-8">
-            A pergunta é: <strong className="text-red-400">"Quanto vai custar NÃO adequar?"</strong>
+            A pergunta é: <strong style={{ color: 'hsl(24 90% 54%)' }}>"Quanto vai custar NÃO adequar?"</strong>
           </p>
           <p className="text-gray-500 text-sm mb-8">
             Uma única multa do MTE paga 5 anos de SeguraMente. Um único processo por burnout paga 10 anos. 
@@ -685,7 +693,8 @@ export default function LandingPage() {
           <Button
             size="lg"
             onClick={() => scrollToSection("vagas")}
-            className="bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white px-10 py-6 text-lg rounded-xl"
+            className="text-white px-10 py-6 text-lg rounded-xl"
+            style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))' }}
           >
             PROTEGER MINHA EMPRESA AGORA →
           </Button>
@@ -693,9 +702,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 border-t border-gray-900 text-center text-gray-600 text-sm">
+      <footer className="py-8 px-4 text-center text-sm" style={{ borderTop: '1px solid hsl(262 20% 14%)', color: 'hsl(262 10% 40%)' }}>
         <p>© {new Date().getFullYear()} SeguraMente — Plataforma de Gestão Inteligente de SST e RH</p>
-        <p className="mt-1 text-xs text-gray-700">Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
+        <p className="mt-1 text-xs" style={{ color: 'hsl(262 10% 30%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 
       {/* Diagnóstico Modal */}
