@@ -161,36 +161,13 @@ export default function LandingPage() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="mt-16 max-w-5xl mx-auto"
           >
-            <div className="relative rounded-2xl overflow-hidden border border-gray-700/50 bg-gradient-to-b from-[#16161d] to-[#0d0d14] shadow-2xl shadow-blue-500/10">
-              {/* Browser chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#1a1a24] border-b border-gray-800">
-                <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                <div className="flex-1 mx-4 bg-[#0d0d14] rounded-lg px-4 py-1.5 text-xs text-gray-500 text-center">
-                  app.seguramente.com.br
-                </div>
-              </div>
-              {/* Mockup content area */}
-              <div className="aspect-[16/9] flex items-center justify-center p-8 relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5" />
-                <div className="relative text-center space-y-4">
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <LayoutDashboard className="w-12 h-12 text-blue-400" />
-                    <Cpu className="w-10 h-10 text-cyan-400" />
-                    <Brain className="w-10 h-10 text-purple-400" />
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-black text-gray-300">Dashboard SeguraMente</h3>
-                  <p className="text-gray-500 text-sm max-w-md mx-auto">
-                    Visualize indicadores psicossociais, compliance NR-01, gestão de RH e SST — tudo em um painel inteligente com IA
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-2 mt-4">
-                    {["Psicossocial", "SST", "RH", "Ponto", "EPIs", "Avaliações", "IA"].map(m => (
-                      <span key={m} className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-xs text-blue-400">{m}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10">
+              <img 
+                src="/images/mockup-dashboard.png" 
+                alt="Dashboard SeguraMente - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
+                className="w-full h-auto rounded-2xl"
+                loading="lazy"
+              />
             </div>
             <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do SeguraMente</p>
           </motion.div>
