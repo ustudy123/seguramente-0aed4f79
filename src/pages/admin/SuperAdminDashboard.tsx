@@ -44,7 +44,8 @@
  } from '@/components/ui/dialog';
  import { useSuperAdmin, TenantWithStats } from '@/hooks/useSuperAdmin';
  import { TenantForm } from '@/components/admin/TenantForm';
- import { TenantOwnerForm } from '@/components/admin/TenantOwnerForm';
+import { TenantOwnerForm } from '@/components/admin/TenantOwnerForm';
+import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
  import { format } from 'date-fns';
  import { ptBR } from 'date-fns/locale';
  import { toast } from 'sonner';
@@ -288,8 +289,11 @@
                </Table>
              )}
            </CardContent>
-         </Card>
-       </div>
+          </Card>
+
+          {/* Leads da Landing Page */}
+          <LandingLeadsTable />
+        </div>
  
        {/* Modal - Novo Tenant */}
        <Dialog open={showTenantForm} onOpenChange={setShowTenantForm}>
