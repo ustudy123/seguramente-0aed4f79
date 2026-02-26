@@ -194,8 +194,11 @@ import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
              </CardContent>
            </Card>
          </div>
- 
-         {/* Tenants List */}
+
+          {/* Leads da Landing Page */}
+          <LandingLeadsTable />
+
+          {/* Tenants List */}
          <Card>
            <CardHeader className="flex flex-row items-center justify-between">
              <CardTitle>Empresas Cadastradas</CardTitle>
@@ -290,9 +293,6 @@ import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
              )}
            </CardContent>
           </Card>
-
-          {/* Leads da Landing Page */}
-          <LandingLeadsTable />
         </div>
  
        {/* Modal - Novo Tenant */}
