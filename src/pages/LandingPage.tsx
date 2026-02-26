@@ -141,7 +141,7 @@ export default function LandingPage() {
                 size="lg"
                 variant="outline"
                 onClick={() => scrollToSection("vagas")}
-                className="border-gray-600 text-gray-300 hover:bg-white/5 text-lg px-8 py-6 rounded-xl"
+                className="border-white/30 bg-white text-gray-900 hover:bg-white/90 text-lg px-8 py-6 rounded-xl font-semibold"
               >
                 Quero Garantir Minha Vaga →
               </Button>
