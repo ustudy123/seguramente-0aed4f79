@@ -54,6 +54,7 @@ import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
 import HubContabil from "./pages/HubContabil";
 import Configuracoes from "./pages/Configuracoes";
 import LandingPage from "./pages/LandingPage";
+import AnaliseJornada from "./pages/AnaliseJornada";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -149,6 +150,7 @@ const App = () => (
               <Route path="/cultura-celebracoes" element={<CulturaCelebracoes />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/hub-contabil" element={<HubContabil />} />
+              <Route path="/analise-jornada" element={<AnaliseJornada />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />
