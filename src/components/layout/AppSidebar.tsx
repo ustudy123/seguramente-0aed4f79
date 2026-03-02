@@ -33,7 +33,8 @@ import {
   Newspaper,
   Route,
   Search,
-  X } from
+  X,
+  BarChart3 } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -99,7 +100,8 @@ const menuSections: MenuSection[] = [
   { title: "Trilhas", icon: Route, path: "/trilhas" },
   { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
   { title: "Mural Interno", icon: Newspaper, path: "/feed" },
-  { title: "Ponto", icon: Clock, path: "/ponto" }]
+  { title: "Ponto", icon: Clock, path: "/ponto" },
+  { title: "Análise de Jornada", icon: BarChart3, path: "/analise-jornada" }]
 
 },
 {

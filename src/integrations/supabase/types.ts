@@ -6483,6 +6483,362 @@ export type Database = {
           },
         ]
       }
+      jornada_alertas: {
+        Row: {
+          acao_sugerida: string | null
+          analise_id: string | null
+          colaborador_cpf: string | null
+          colaborador_nome: string | null
+          created_at: string
+          data_referencia: string | null
+          departamento: string | null
+          descricao: string | null
+          id: string
+          lido: boolean | null
+          resolvido: boolean | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          setor: string | null
+          severidade: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          acao_sugerida?: string | null
+          analise_id?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          data_referencia?: string | null
+          departamento?: string | null
+          descricao?: string | null
+          id?: string
+          lido?: boolean | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          setor?: string | null
+          severidade?: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          acao_sugerida?: string | null
+          analise_id?: string | null
+          colaborador_cpf?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          data_referencia?: string | null
+          departamento?: string | null
+          descricao?: string | null
+          id?: string
+          lido?: boolean | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          setor?: string | null
+          severidade?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jornada_alertas_analise_id_fkey"
+            columns: ["analise_id"]
+            isOneToOne: false
+            referencedRelation: "jornada_analises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jornada_alertas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jornada_analises: {
+        Row: {
+          cargo: string | null
+          colaborador_cpf: string
+          colaborador_nome: string
+          created_at: string
+          departamento: string | null
+          detalhes_conformidade: Json | null
+          dias_trabalhados: number | null
+          id: string
+          media_diaria_horas: number | null
+          media_semanal_horas: number | null
+          nivel_risco: string
+          periodo_fim: string
+          periodo_inicio: string
+          score_risco: number | null
+          setor: string | null
+          status_conformidade: string
+          tenant_id: string
+          total_ajustes_manuais: number | null
+          total_atrasos: number | null
+          total_horas_extras: number | null
+          total_horas_trabalhadas: number | null
+          unidade: string | null
+          updated_at: string
+          violacoes_horas_extras: number | null
+          violacoes_interjornada: number | null
+          violacoes_intervalo: number | null
+          violacoes_jornada_diaria: number | null
+        }
+        Insert: {
+          cargo?: string | null
+          colaborador_cpf: string
+          colaborador_nome: string
+          created_at?: string
+          departamento?: string | null
+          detalhes_conformidade?: Json | null
+          dias_trabalhados?: number | null
+          id?: string
+          media_diaria_horas?: number | null
+          media_semanal_horas?: number | null
+          nivel_risco?: string
+          periodo_fim: string
+          periodo_inicio: string
+          score_risco?: number | null
+          setor?: string | null
+          status_conformidade?: string
+          tenant_id: string
+          total_ajustes_manuais?: number | null
+          total_atrasos?: number | null
+          total_horas_extras?: number | null
+          total_horas_trabalhadas?: number | null
+          unidade?: string | null
+          updated_at?: string
+          violacoes_horas_extras?: number | null
+          violacoes_interjornada?: number | null
+          violacoes_intervalo?: number | null
+          violacoes_jornada_diaria?: number | null
+        }
+        Update: {
+          cargo?: string | null
+          colaborador_cpf?: string
+          colaborador_nome?: string
+          created_at?: string
+          departamento?: string | null
+          detalhes_conformidade?: Json | null
+          dias_trabalhados?: number | null
+          id?: string
+          media_diaria_horas?: number | null
+          media_semanal_horas?: number | null
+          nivel_risco?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          score_risco?: number | null
+          setor?: string | null
+          status_conformidade?: string
+          tenant_id?: string
+          total_ajustes_manuais?: number | null
+          total_atrasos?: number | null
+          total_horas_extras?: number | null
+          total_horas_trabalhadas?: number | null
+          unidade?: string | null
+          updated_at?: string
+          violacoes_horas_extras?: number | null
+          violacoes_interjornada?: number | null
+          violacoes_intervalo?: number | null
+          violacoes_jornada_diaria?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jornada_analises_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jornada_documentos: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          created_at: string
+          enviado_por: string | null
+          enviado_por_id: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          tenant_id: string
+          tipo: string
+          vinculo_tipo: string | null
+          vinculo_valor: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          enviado_por?: string | null
+          enviado_por_id?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          tenant_id: string
+          tipo?: string
+          vinculo_tipo?: string | null
+          vinculo_valor?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          enviado_por?: string | null
+          enviado_por_id?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          tenant_id?: string
+          tipo?: string
+          vinculo_tipo?: string | null
+          vinculo_valor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jornada_documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jornada_importacoes: {
+        Row: {
+          created_at: string
+          erros: Json | null
+          id: string
+          importado_por: string | null
+          importado_por_id: string | null
+          mapeamento_colunas: Json | null
+          nome_arquivo: string
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          registros_erros: number | null
+          registros_importados: number | null
+          status: string
+          tenant_id: string
+          tipo_arquivo: string
+          total_registros: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          erros?: Json | null
+          id?: string
+          importado_por?: string | null
+          importado_por_id?: string | null
+          mapeamento_colunas?: Json | null
+          nome_arquivo: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          registros_erros?: number | null
+          registros_importados?: number | null
+          status?: string
+          tenant_id: string
+          tipo_arquivo?: string
+          total_registros?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          erros?: Json | null
+          id?: string
+          importado_por?: string | null
+          importado_por_id?: string | null
+          mapeamento_colunas?: Json | null
+          nome_arquivo?: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          registros_erros?: number | null
+          registros_importados?: number | null
+          status?: string
+          tenant_id?: string
+          tipo_arquivo?: string
+          total_registros?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jornada_importacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jornada_parametros: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descanso_interjornada_min: number
+          descanso_semanal_min: number
+          horas_extras_diaria_max: number
+          id: string
+          intervalo_intrajornada_min: number
+          jornada_diaria_max: number
+          jornada_semanal_max: number
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descanso_interjornada_min?: number
+          descanso_semanal_min?: number
+          horas_extras_diaria_max?: number
+          id?: string
+          intervalo_intrajornada_min?: number
+          jornada_diaria_max?: number
+          jornada_semanal_max?: number
+          nome?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descanso_interjornada_min?: number
+          descanso_semanal_min?: number
+          horas_extras_diaria_max?: number
+          id?: string
+          intervalo_intrajornada_min?: number
+          jornada_diaria_max?: number
+          jornada_semanal_max?: number
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jornada_parametros_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_leads: {
         Row: {
           convertido: boolean | null
