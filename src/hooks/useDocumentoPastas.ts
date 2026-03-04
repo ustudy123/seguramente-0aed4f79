@@ -683,20 +683,47 @@ export function useDocumentoPastas() {
         pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, planosAudId));
       });
 
-      // ─── INSERT ───────────────────────────────────────────────────────────
+      // ─── INSERT — apenas pastas faltantes ────────────────────────────────
+      // Buscar todas as pastas raiz existentes para este tenant
+      const { data: existentes } = await supabase
+        .from("documento_pastas")
+        .select("nome, pasta_pai_id")
+        .eq("tenant_id", tenantId);
+
+      const existingSet = new Set(
+        (existentes || []).map((p: { nome: string; pasta_pai_id: string | null }) =>
+          `${p.nome}||${p.pasta_pai_id ?? "null"}`
+        )
+      );
+
+      // Filtrar apenas pastas que ainda não existem (por nome + pai)
+      // Para pastas com IDs gerados localmente como pai, verificar se o pai também será criado
+      const novas = pastasToCreate.filter((p) => {
+        const key = `${p.nome}||${p.pasta_pai_id ?? "null"}`;
+        return !existingSet.has(key);
+      });
+
+      if (novas.length === 0) {
+        return 0;
+      }
+
       // Insert em lotes de 100 para evitar limite do Supabase
       const chunkSize = 100;
-      for (let i = 0; i < pastasToCreate.length; i += chunkSize) {
-        const chunk = pastasToCreate.slice(i, i + chunkSize);
+      for (let i = 0; i < novas.length; i += chunkSize) {
+        const chunk = novas.slice(i, i + chunkSize);
         const { error } = await supabase.from("documento_pastas").insert(chunk);
         if (error) throw error;
       }
 
-      return pastasToCreate.length;
+      return novas.length;
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ["documento-pastas"] });
-      toast.success(`Estrutura criada com ${count} pastas!`);
+      if (count === 0) {
+        toast.success("Estrutura já está completa! Nenhuma pasta nova foi necessária.");
+      } else {
+        toast.success(`${count} pasta(s) nova(s) adicionada(s) à estrutura existente.`);
+      }
     },
     onError: (error: Error) => {
       toast.error("Erro ao criar estrutura: " + error.message);
