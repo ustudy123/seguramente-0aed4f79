@@ -1,0 +1,171 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { toast } from "sonner";
+
+export interface BancoHoras {
+  id: string;
+  tenant_id: string;
+  colaborador_id: string;
+  colaborador_nome: string;
+  colaborador_cpf: string | null;
+  tipo: string;
+  competencia: string;
+  saldo_anterior_minutos: number;
+  creditos_minutos: number;
+  debitos_minutos: number;
+  compensados_minutos: number;
+  saldo_atual_minutos: number;
+  convertido_extras: boolean;
+  prazo_compensacao: string | null;
+  observacoes: string | null;
+  created_at: string;
+}
+
+export interface BancoHorasMovimentacao {
+  id: string;
+  tenant_id: string;
+  banco_horas_id: string;
+  colaborador_cpf: string;
+  data_referencia: string;
+  tipo: string;
+  minutos: number;
+  descricao: string | null;
+  created_at: string;
+}
+
+export function usePontoBancoHoras() {
+  const { tenantId, user } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const queryClient = useQueryClient();
+
+  const useBancoHorasPorCompetencia = (competencia: string) => {
+    return useQuery({
+      queryKey: ["ponto-banco-horas", tenantId, competencia, empresaAtivaId],
+      queryFn: async (): Promise<BancoHoras[]> => {
+        if (!tenantId) return [];
+        let query = supabase
+          .from("ponto_banco_horas" as never)
+          .select("*")
+          .eq("tenant_id", tenantId)
+          .eq("competencia", competencia);
+        if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+        const { data, error } = await query.order("colaborador_nome") as { data: BancoHoras[] | null; error: Error | null };
+        if (error) throw error;
+        return data || [];
+      },
+      enabled: !!tenantId,
+    });
+  };
+
+  const useMovimentacoes = (bancoHorasId: string | null) => {
+    return useQuery({
+      queryKey: ["ponto-bh-movimentacoes", bancoHorasId],
+      queryFn: async (): Promise<BancoHorasMovimentacao[]> => {
+        if (!bancoHorasId) return [];
+        const { data, error } = await supabase
+          .from("ponto_banco_horas_movimentacoes" as never)
+          .select("*")
+          .eq("banco_horas_id", bancoHorasId)
+          .order("data_referencia", { ascending: false }) as { data: BancoHorasMovimentacao[] | null; error: Error | null };
+        if (error) throw error;
+        return data || [];
+      },
+      enabled: !!bancoHorasId,
+    });
+  };
+
+  const adicionarMovimentacaoMutation = useMutation({
+    mutationFn: async ({
+      bancoHorasId,
+      colaboradorCpf,
+      dataReferencia,
+      tipo,
+      minutos,
+      descricao,
+    }: {
+      bancoHorasId: string;
+      colaboradorCpf: string;
+      dataReferencia: string;
+      tipo: string;
+      minutos: number;
+      descricao?: string;
+    }) => {
+      if (!tenantId) throw new Error("Não autenticado");
+
+      // Insert movimentação
+      const { error: movError } = await supabase
+        .from("ponto_banco_horas_movimentacoes" as never)
+        .insert({
+          tenant_id: tenantId,
+          banco_horas_id: bancoHorasId,
+          colaborador_cpf: colaboradorCpf,
+          data_referencia: dataReferencia,
+          tipo,
+          minutos,
+          descricao,
+          created_by: user?.id,
+        } as never);
+      if (movError) throw movError;
+
+      // Update saldo
+      const campo = tipo === "credito" ? "creditos_minutos" : tipo === "debito" ? "debitos_minutos" : "compensados_minutos";
+      const { data: bh } = await supabase
+        .from("ponto_banco_horas" as never)
+        .select("saldo_anterior_minutos, creditos_minutos, debitos_minutos, compensados_minutos")
+        .eq("id", bancoHorasId)
+        .single() as { data: any };
+
+      if (bh) {
+        const newCreditos = (bh.creditos_minutos || 0) + (tipo === "credito" ? minutos : 0);
+        const newDebitos = (bh.debitos_minutos || 0) + (tipo === "debito" ? minutos : 0);
+        const newCompensados = (bh.compensados_minutos || 0) + (tipo === "compensacao" ? minutos : 0);
+        const saldoAtual = (bh.saldo_anterior_minutos || 0) + newCreditos - newDebitos - newCompensados;
+
+        await supabase
+          .from("ponto_banco_horas" as never)
+          .update({
+            creditos_minutos: newCreditos,
+            debitos_minutos: newDebitos,
+            compensados_minutos: newCompensados,
+            saldo_atual_minutos: saldoAtual,
+          } as never)
+          .eq("id", bancoHorasId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
+      toast.success("Movimentação registrada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const criarBancoHorasMutation = useMutation({
+    mutationFn: async (dados: Partial<BancoHoras>) => {
+      if (!tenantId) throw new Error("Não autenticado");
+      const { data, error } = await supabase
+        .from("ponto_banco_horas" as never)
+        .insert({ ...dados, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as never)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
+      toast.success("Banco de horas criado!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return {
+    useBancoHorasPorCompetencia,
+    useMovimentacoes,
+    adicionarMovimentacao: adicionarMovimentacaoMutation.mutateAsync,
+    adicionandoMovimentacao: adicionarMovimentacaoMutation.isPending,
+    criarBancoHoras: criarBancoHorasMutation.mutateAsync,
+    criandoBancoHoras: criarBancoHorasMutation.isPending,
+  };
+}

@@ -1,0 +1,292 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { usePontoEscalas, ESCALA_TIPOS, type PontoEscala } from "@/hooks/usePontoEscalas";
+import { useColaboradores } from "@/hooks/useColaboradores";
+import { Plus, Calendar, Clock, Users, Settings } from "lucide-react";
+import { toast } from "sonner";
+
+export function PontoEscalasTab() {
+  const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atribuirEscala } = usePontoEscalas();
+  const { colaboradores } = useColaboradores();
+  const [showCriar, setShowCriar] = useState(false);
+  const [showAtribuir, setShowAtribuir] = useState(false);
+  const [escalaForm, setEscalaForm] = useState({
+    nome: "",
+    tipo: "5x2",
+    jornada_diaria_minutos: 480,
+    jornada_semanal_minutos: 2640,
+    intervalo_intrajornada_minutos: 60,
+    tolerancia_minutos: 5,
+    tolerancia_diaria_minutos: 10,
+    hora_entrada_padrao: "08:00",
+    hora_saida_padrao: "17:00",
+    sabado_util: false,
+    domingo_util: false,
+    percentual_hora_extra_50: 50,
+    percentual_hora_extra_100: 100,
+    percentual_adicional_noturno: 20,
+    usa_hora_ficta_noturna: true,
+  });
+  const [atribuicaoForm, setAtribuicaoForm] = useState({
+    escala_id: "",
+    colaborador_id: "",
+    data_inicio: new Date().toISOString().split("T")[0],
+  });
+
+  const formatMinutos = (min: number) => {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${h}h${m > 0 ? ` ${m}min` : ""}`;
+  };
+
+  const handleCriar = async () => {
+    if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }
+    await criarEscala(escalaForm as any);
+    setShowCriar(false);
+    setEscalaForm({ ...escalaForm, nome: "" });
+  };
+
+  const handleAtribuir = async () => {
+    const colab = colaboradores.find(c => c.id === atribuicaoForm.colaborador_id);
+    if (!colab || !atribuicaoForm.escala_id) { toast.error("Selecione escala e colaborador"); return; }
+    await atribuirEscala({
+      escala_id: atribuicaoForm.escala_id,
+      colaborador_id: colab.id,
+      colaborador_nome: colab.nome_completo,
+      colaborador_cpf: colab.cpf,
+      data_inicio: atribuicaoForm.data_inicio,
+    });
+    setShowAtribuir(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" /> Escalas & Turnos
+          </h3>
+          <p className="text-sm text-muted-foreground">Gerencie escalas de trabalho e atribua a colaboradores</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowAtribuir(true)}>
+            <Users className="w-4 h-4 mr-2" /> Atribuir Escala
+          </Button>
+          <Button onClick={() => setShowCriar(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Nova Escala
+          </Button>
+        </div>
+      </div>
+
+      {/* Escalas Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Jornada Diária</TableHead>
+                <TableHead>Jornada Semanal</TableHead>
+                <TableHead>Intervalo</TableHead>
+                <TableHead>Tolerância</TableHead>
+                <TableHead>Horário</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loadingEscalas ? (
+                <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
+              ) : escalas.length === 0 ? (
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma escala cadastrada.</TableCell></TableRow>
+              ) : escalas.map(e => (
+                <TableRow key={e.id}>
+                  <TableCell className="font-medium">{e.nome}</TableCell>
+                  <TableCell><Badge variant="outline">{ESCALA_TIPOS.find(t => t.value === e.tipo)?.label || e.tipo}</Badge></TableCell>
+                  <TableCell>{formatMinutos(e.jornada_diaria_minutos)}</TableCell>
+                  <TableCell>{formatMinutos(e.jornada_semanal_minutos)}</TableCell>
+                  <TableCell>{formatMinutos(e.intervalo_intrajornada_minutos)}</TableCell>
+                  <TableCell>{e.tolerancia_minutos}min / {e.tolerancia_diaria_minutos}min</TableCell>
+                  <TableCell className="font-mono text-sm">{e.hora_entrada_padrao?.substring(0,5)} - {e.hora_saida_padrao?.substring(0,5)}</TableCell>
+                  <TableCell><Badge className={e.ativa ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>{e.ativa ? "Ativa" : "Inativa"}</Badge></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Atribuições */}
+      {atribuicoes.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Atribuições Ativas</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Colaborador</TableHead>
+                  <TableHead>Escala</TableHead>
+                  <TableHead>Início</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {atribuicoes.map(a => (
+                  <TableRow key={a.id}>
+                    <TableCell>{a.colaborador_nome}</TableCell>
+                    <TableCell>{escalas.find(e => e.id === a.escala_id)?.nome || "-"}</TableCell>
+                    <TableCell>{a.data_inicio}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialog Criar Escala */}
+      <Dialog open={showCriar} onOpenChange={setShowCriar}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Nova Escala de Trabalho</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nome da Escala</Label>
+                <Input value={escalaForm.nome} onChange={e => setEscalaForm({ ...escalaForm, nome: e.target.value })} placeholder="Ex: Administrativo" />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={escalaForm.tipo} onValueChange={v => {
+                  const presets: Record<string, any> = {
+                    "5x2": { jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640, sabado_util: false },
+                    "6x1": { jornada_diaria_minutos: 440, jornada_semanal_minutos: 2640, sabado_util: true },
+                    "12x36": { jornada_diaria_minutos: 720, jornada_semanal_minutos: 2160 },
+                  };
+                  setEscalaForm({ ...escalaForm, tipo: v, ...(presets[v] || {}) });
+                }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ESCALA_TIPOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Jornada Diária (min)</Label>
+                <Input type="number" value={escalaForm.jornada_diaria_minutos} onChange={e => setEscalaForm({ ...escalaForm, jornada_diaria_minutos: +e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Jornada Semanal (min)</Label>
+                <Input type="number" value={escalaForm.jornada_semanal_minutos} onChange={e => setEscalaForm({ ...escalaForm, jornada_semanal_minutos: +e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Intervalo Intrajornada (min)</Label>
+                <Input type="number" value={escalaForm.intervalo_intrajornada_minutos} onChange={e => setEscalaForm({ ...escalaForm, intervalo_intrajornada_minutos: +e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Hora Entrada</Label>
+                <Input type="time" value={escalaForm.hora_entrada_padrao} onChange={e => setEscalaForm({ ...escalaForm, hora_entrada_padrao: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Hora Saída</Label>
+                <Input type="time" value={escalaForm.hora_saida_padrao} onChange={e => setEscalaForm({ ...escalaForm, hora_saida_padrao: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tolerância por marcação (min)</Label>
+                <Input type="number" value={escalaForm.tolerancia_minutos} onChange={e => setEscalaForm({ ...escalaForm, tolerancia_minutos: +e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Tolerância diária (min)</Label>
+                <Input type="number" value={escalaForm.tolerancia_diaria_minutos} onChange={e => setEscalaForm({ ...escalaForm, tolerancia_diaria_minutos: +e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>% HE 50%</Label>
+                <Input type="number" value={escalaForm.percentual_hora_extra_50} onChange={e => setEscalaForm({ ...escalaForm, percentual_hora_extra_50: +e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>% HE 100%</Label>
+                <Input type="number" value={escalaForm.percentual_hora_extra_100} onChange={e => setEscalaForm({ ...escalaForm, percentual_hora_extra_100: +e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>% Adic. Noturno</Label>
+                <Input type="number" value={escalaForm.percentual_adicional_noturno} onChange={e => setEscalaForm({ ...escalaForm, percentual_adicional_noturno: +e.target.value })} />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Switch checked={escalaForm.sabado_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, sabado_util: v })} />
+                <Label>Sábado útil</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={escalaForm.domingo_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, domingo_util: v })} />
+                <Label>Domingo útil</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
+                <Label>Hora ficta noturna (52m30s)</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCriar(false)}>Cancelar</Button>
+            <Button onClick={handleCriar} disabled={criandoEscala}>{criandoEscala ? "Criando..." : "Criar Escala"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Atribuir */}
+      <Dialog open={showAtribuir} onOpenChange={setShowAtribuir}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Atribuir Escala a Colaborador</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Escala</Label>
+              <Select value={atribuicaoForm.escala_id} onValueChange={v => setAtribuicaoForm({ ...atribuicaoForm, escala_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione a escala" /></SelectTrigger>
+                <SelectContent>
+                  {escalas.filter(e => e.ativa).map(e => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Colaborador</Label>
+              <Select value={atribuicaoForm.colaborador_id} onValueChange={v => setAtribuicaoForm({ ...atribuicaoForm, colaborador_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o colaborador" /></SelectTrigger>
+                <SelectContent>
+                  {colaboradores.map(c => <SelectItem key={c.id} value={c.id}>{c.nome_completo}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Data Início</Label>
+              <Input type="date" value={atribuicaoForm.data_inicio} onChange={e => setAtribuicaoForm({ ...atribuicaoForm, data_inicio: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAtribuir(false)}>Cancelar</Button>
+            <Button onClick={handleAtribuir}>Atribuir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

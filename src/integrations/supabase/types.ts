@@ -9980,6 +9980,75 @@ export type Database = {
           },
         ]
       }
+      ponto_alertas: {
+        Row: {
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string | null
+          data_referencia: string | null
+          descricao: string | null
+          empresa_id: string | null
+          id: string
+          resolvido: boolean | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          severidade: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data_referencia?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          severidade?: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string | null
+          data_referencia?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          severidade?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_alertas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_alertas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_audit_log: {
         Row: {
           acao: string
@@ -10029,6 +10098,141 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ponto_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_banco_horas: {
+        Row: {
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          compensados_minutos: number | null
+          competencia: string
+          convertido_extras: boolean | null
+          created_at: string | null
+          creditos_minutos: number | null
+          data_conversao: string | null
+          debitos_minutos: number | null
+          empresa_id: string | null
+          id: string
+          observacoes: string | null
+          prazo_compensacao: string | null
+          saldo_anterior_minutos: number | null
+          saldo_atual_minutos: number | null
+          tenant_id: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          compensados_minutos?: number | null
+          competencia: string
+          convertido_extras?: boolean | null
+          created_at?: string | null
+          creditos_minutos?: number | null
+          data_conversao?: string | null
+          debitos_minutos?: number | null
+          empresa_id?: string | null
+          id?: string
+          observacoes?: string | null
+          prazo_compensacao?: string | null
+          saldo_anterior_minutos?: number | null
+          saldo_atual_minutos?: number | null
+          tenant_id: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Update: {
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          compensados_minutos?: number | null
+          competencia?: string
+          convertido_extras?: boolean | null
+          created_at?: string | null
+          creditos_minutos?: number | null
+          data_conversao?: string | null
+          debitos_minutos?: number | null
+          empresa_id?: string | null
+          id?: string
+          observacoes?: string | null
+          prazo_compensacao?: string | null
+          saldo_anterior_minutos?: number | null
+          saldo_atual_minutos?: number | null
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_banco_horas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_banco_horas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_banco_horas_movimentacoes: {
+        Row: {
+          banco_horas_id: string
+          colaborador_cpf: string
+          created_at: string | null
+          created_by: string | null
+          data_referencia: string
+          descricao: string | null
+          id: string
+          minutos: number
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          banco_horas_id: string
+          colaborador_cpf: string
+          created_at?: string | null
+          created_by?: string | null
+          data_referencia: string
+          descricao?: string | null
+          id?: string
+          minutos: number
+          tenant_id: string
+          tipo: string
+        }
+        Update: {
+          banco_horas_id?: string
+          colaborador_cpf?: string
+          created_at?: string | null
+          created_by?: string | null
+          data_referencia?: string
+          descricao?: string | null
+          id?: string
+          minutos?: number
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_banco_horas_movimentacoes_banco_horas_id_fkey"
+            columns: ["banco_horas_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_banco_horas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_banco_horas_movimentacoes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -10094,6 +10298,8 @@ export type Database = {
       }
       ponto_diario: {
         Row: {
+          adicional_noturno_minutos: number | null
+          atraso_minutos: number | null
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -10101,19 +10307,26 @@ export type Database = {
           data: string
           empresa_id: string | null
           entrada: string | null
+          escala_id: string | null
           horas_extras: string | null
+          horas_extras_100_minutos: number | null
+          horas_extras_50_minutos: number | null
           horas_faltantes: string | null
           horas_trabalhadas: string | null
           id: string
+          intervalo_intrajornada_minutos: number | null
           observacao: string | null
           retorno_almoco: string | null
           saida: string | null
           saida_almoco: string | null
           status: string
           tenant_id: string
+          tolerancia_aplicada: boolean | null
           updated_at: string
         }
         Insert: {
+          adicional_noturno_minutos?: number | null
+          atraso_minutos?: number | null
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
@@ -10121,19 +10334,26 @@ export type Database = {
           data: string
           empresa_id?: string | null
           entrada?: string | null
+          escala_id?: string | null
           horas_extras?: string | null
+          horas_extras_100_minutos?: number | null
+          horas_extras_50_minutos?: number | null
           horas_faltantes?: string | null
           horas_trabalhadas?: string | null
           id?: string
+          intervalo_intrajornada_minutos?: number | null
           observacao?: string | null
           retorno_almoco?: string | null
           saida?: string | null
           saida_almoco?: string | null
           status?: string
           tenant_id: string
+          tolerancia_aplicada?: boolean | null
           updated_at?: string
         }
         Update: {
+          adicional_noturno_minutos?: number | null
+          atraso_minutos?: number | null
           colaborador_cpf?: string
           colaborador_id?: string
           colaborador_nome?: string
@@ -10141,16 +10361,21 @@ export type Database = {
           data?: string
           empresa_id?: string | null
           entrada?: string | null
+          escala_id?: string | null
           horas_extras?: string | null
+          horas_extras_100_minutos?: number | null
+          horas_extras_50_minutos?: number | null
           horas_faltantes?: string | null
           horas_trabalhadas?: string | null
           id?: string
+          intervalo_intrajornada_minutos?: number | null
           observacao?: string | null
           retorno_almoco?: string | null
           saida?: string | null
           saida_almoco?: string | null
           status?: string
           tenant_id?: string
+          tolerancia_aplicada?: boolean | null
           updated_at?: string
         }
         Relationships: [
@@ -10162,7 +10387,339 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ponto_diario_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_escalas"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ponto_diario_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_escala_atribuicoes: {
+        Row: {
+          ativa: boolean | null
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string
+          escala_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          ativa?: boolean | null
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          escala_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          ativa?: boolean | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          escala_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_escala_atribuicoes_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_escalas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_escala_atribuicoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_escalas: {
+        Row: {
+          adicional_noturno_fim: string | null
+          adicional_noturno_inicio: string | null
+          ativa: boolean | null
+          created_at: string | null
+          domingo_util: boolean | null
+          empresa_id: string | null
+          hora_entrada_padrao: string | null
+          hora_saida_padrao: string | null
+          id: string
+          intervalo_intrajornada_minutos: number
+          jornada_diaria_minutos: number
+          jornada_semanal_minutos: number
+          nome: string
+          percentual_adicional_noturno: number | null
+          percentual_hora_extra_100: number | null
+          percentual_hora_extra_50: number | null
+          sabado_util: boolean | null
+          tenant_id: string
+          tipo: string
+          tolerancia_diaria_minutos: number
+          tolerancia_minutos: number
+          updated_at: string | null
+          usa_hora_ficta_noturna: boolean | null
+        }
+        Insert: {
+          adicional_noturno_fim?: string | null
+          adicional_noturno_inicio?: string | null
+          ativa?: boolean | null
+          created_at?: string | null
+          domingo_util?: boolean | null
+          empresa_id?: string | null
+          hora_entrada_padrao?: string | null
+          hora_saida_padrao?: string | null
+          id?: string
+          intervalo_intrajornada_minutos?: number
+          jornada_diaria_minutos?: number
+          jornada_semanal_minutos?: number
+          nome: string
+          percentual_adicional_noturno?: number | null
+          percentual_hora_extra_100?: number | null
+          percentual_hora_extra_50?: number | null
+          sabado_util?: boolean | null
+          tenant_id: string
+          tipo?: string
+          tolerancia_diaria_minutos?: number
+          tolerancia_minutos?: number
+          updated_at?: string | null
+          usa_hora_ficta_noturna?: boolean | null
+        }
+        Update: {
+          adicional_noturno_fim?: string | null
+          adicional_noturno_inicio?: string | null
+          ativa?: boolean | null
+          created_at?: string | null
+          domingo_util?: boolean | null
+          empresa_id?: string | null
+          hora_entrada_padrao?: string | null
+          hora_saida_padrao?: string | null
+          id?: string
+          intervalo_intrajornada_minutos?: number
+          jornada_diaria_minutos?: number
+          jornada_semanal_minutos?: number
+          nome?: string
+          percentual_adicional_noturno?: number | null
+          percentual_hora_extra_100?: number | null
+          percentual_hora_extra_50?: number | null
+          sabado_util?: boolean | null
+          tenant_id?: string
+          tipo?: string
+          tolerancia_diaria_minutos?: number
+          tolerancia_minutos?: number
+          updated_at?: string | null
+          usa_hora_ficta_noturna?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_escalas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_escalas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_espelhos: {
+        Row: {
+          arquivo_url: string | null
+          assinatura_hash: string | null
+          banco_horas_saldo_minutos: number | null
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          competencia: string
+          confirmado_por: string | null
+          created_at: string | null
+          data_confirmacao: string | null
+          empresa_id: string | null
+          fechamento_id: string | null
+          id: string
+          ressalva_texto: string | null
+          status: string
+          tenant_id: string
+          total_adicional_noturno_minutos: number | null
+          total_atrasos_minutos: number | null
+          total_dsr: number | null
+          total_faltas: number | null
+          total_horas_extras_100_minutos: number | null
+          total_horas_extras_50_minutos: number | null
+          total_horas_normais_minutos: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          arquivo_url?: string | null
+          assinatura_hash?: string | null
+          banco_horas_saldo_minutos?: number | null
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          competencia: string
+          confirmado_por?: string | null
+          created_at?: string | null
+          data_confirmacao?: string | null
+          empresa_id?: string | null
+          fechamento_id?: string | null
+          id?: string
+          ressalva_texto?: string | null
+          status?: string
+          tenant_id: string
+          total_adicional_noturno_minutos?: number | null
+          total_atrasos_minutos?: number | null
+          total_dsr?: number | null
+          total_faltas?: number | null
+          total_horas_extras_100_minutos?: number | null
+          total_horas_extras_50_minutos?: number | null
+          total_horas_normais_minutos?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          arquivo_url?: string | null
+          assinatura_hash?: string | null
+          banco_horas_saldo_minutos?: number | null
+          colaborador_cpf?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          competencia?: string
+          confirmado_por?: string | null
+          created_at?: string | null
+          data_confirmacao?: string | null
+          empresa_id?: string | null
+          fechamento_id?: string | null
+          id?: string
+          ressalva_texto?: string | null
+          status?: string
+          tenant_id?: string
+          total_adicional_noturno_minutos?: number | null
+          total_atrasos_minutos?: number | null
+          total_dsr?: number | null
+          total_faltas?: number | null
+          total_horas_extras_100_minutos?: number | null
+          total_horas_extras_50_minutos?: number | null
+          total_horas_normais_minutos?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_espelhos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_espelhos_fechamento_id_fkey"
+            columns: ["fechamento_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_fechamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_espelhos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_fechamentos: {
+        Row: {
+          competencia: string
+          created_at: string | null
+          data_fechamento: string | null
+          empresa_id: string | null
+          fechado_por: string | null
+          fechado_por_nome: string | null
+          id: string
+          observacoes: string | null
+          status: string
+          tenant_id: string
+          total_adicional_noturno_minutos: number | null
+          total_atrasos: number | null
+          total_colaboradores: number | null
+          total_faltas: number | null
+          total_horas_extras_minutos: number | null
+          total_horas_normais_minutos: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          competencia: string
+          created_at?: string | null
+          data_fechamento?: string | null
+          empresa_id?: string | null
+          fechado_por?: string | null
+          fechado_por_nome?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id: string
+          total_adicional_noturno_minutos?: number | null
+          total_atrasos?: number | null
+          total_colaboradores?: number | null
+          total_faltas?: number | null
+          total_horas_extras_minutos?: number | null
+          total_horas_normais_minutos?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          competencia?: string
+          created_at?: string | null
+          data_fechamento?: string | null
+          empresa_id?: string | null
+          fechado_por?: string | null
+          fechado_por_nome?: string | null
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tenant_id?: string
+          total_adicional_noturno_minutos?: number | null
+          total_atrasos?: number | null
+          total_colaboradores?: number | null
+          total_faltas?: number | null
+          total_horas_extras_minutos?: number | null
+          total_horas_normais_minutos?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_fechamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_fechamentos_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -10175,6 +10732,7 @@ export type Database = {
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
+          comprovante_gerado: boolean | null
           created_at: string
           created_by: string | null
           data_marcacao: string
@@ -10195,6 +10753,7 @@ export type Database = {
           colaborador_cpf: string
           colaborador_id: string
           colaborador_nome: string
+          comprovante_gerado?: boolean | null
           created_at?: string
           created_by?: string | null
           data_marcacao?: string
@@ -10215,6 +10774,7 @@ export type Database = {
           colaborador_cpf?: string
           colaborador_id?: string
           colaborador_nome?: string
+          comprovante_gerado?: boolean | null
           created_at?: string
           created_by?: string | null
           data_marcacao?: string
