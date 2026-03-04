@@ -4569,6 +4569,8 @@ export type Database = {
           enviado_email: boolean | null
           ia_utilizada: boolean | null
           id: string
+          pdi_id: string | null
+          pdi_titulo: string | null
           registrado_por: string
           registrado_por_nome: string
           tenant_id: string
@@ -4587,6 +4589,8 @@ export type Database = {
           enviado_email?: boolean | null
           ia_utilizada?: boolean | null
           id?: string
+          pdi_id?: string | null
+          pdi_titulo?: string | null
           registrado_por: string
           registrado_por_nome: string
           tenant_id: string
@@ -4605,12 +4609,21 @@ export type Database = {
           enviado_email?: boolean | null
           ia_utilizada?: boolean | null
           id?: string
+          pdi_id?: string | null
+          pdi_titulo?: string | null
           registrado_por?: string
           registrado_por_nome?: string
           tenant_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feedbacks_pdi_id_fkey"
+            columns: ["pdi_id"]
+            isOneToOne: false
+            referencedRelation: "pdis"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feedbacks_tenant_id_fkey"
             columns: ["tenant_id"]

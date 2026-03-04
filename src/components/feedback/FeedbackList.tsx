@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Sparkles } from "lucide-react";
+import { Sparkles, FileCheck } from "lucide-react";
 import { useState } from "react";
 import type { Feedback } from "@/types/feedback";
 import { CATEGORIA_LABELS, CATEGORIA_COLORS, CATEGORIA_ICONS } from "@/types/feedback";
@@ -64,6 +64,12 @@ export function FeedbackList({ feedbacks, isLoading }: FeedbackListProps) {
                 </div>
               </div>
               <p className="text-sm">{fb.descricao_ia || fb.descricao}</p>
+              {fb.pdi_id && fb.pdi_titulo && (
+                <div className="flex items-center gap-1.5 text-xs text-primary">
+                  <FileCheck className="w-3.5 h-3.5" />
+                  <span>Vinculado ao PDI: {fb.pdi_titulo}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Por: {fb.registrado_por_nome}</span>
                 <span>{format(new Date(fb.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>

@@ -17,6 +17,8 @@ export interface Feedback {
   registrado_por: string;
   registrado_por_nome: string;
   enviado_email: boolean;
+  pdi_id: string | null;
+  pdi_titulo: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -197,14 +197,43 @@ export function usePdi() {
   });
 
   const createFeedback = useMutation({
-    mutationFn: async (d: PdiFeedbackInsert) => {
+    mutationFn: async (d: PdiFeedbackInsert & { colaborador_id?: string; colaborador_nome?: string; pdi_titulo?: string }) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
       const { error } = await supabase.from("pdi_feedbacks").insert({
-        ...d, tenant_id: tenantId, autor_id: user?.id, autor_nome: profile?.nome_completo,
+        pdi_id: d.pdi_id, meta_id: d.meta_id, tipo: d.tipo,
+        ponto_forte: d.ponto_forte, ponto_melhorar: d.ponto_melhorar,
+        recomendacao: d.recomendacao, comentario: d.comentario,
+        tenant_id: tenantId, autor_id: user?.id, autor_nome: profile?.nome_completo,
       } as any);
       if (error) throw error;
+
+      // Also insert into the main feedbacks table for cross-module visibility
+      if (d.colaborador_id && d.colaborador_nome) {
+        const descricao = [
+          d.ponto_forte && `Ponto forte: ${d.ponto_forte}`,
+          d.ponto_melhorar && `A melhorar: ${d.ponto_melhorar}`,
+          d.recomendacao && `Recomendação: ${d.recomendacao}`,
+          d.comentario && `Comentário: ${d.comentario}`,
+        ].filter(Boolean).join(" | ");
+
+        await supabase.from("feedbacks" as never).insert({
+          tenant_id: tenantId,
+          colaborador_id: d.colaborador_id,
+          colaborador_nome: d.colaborador_nome,
+          categoria: "desenvolvimento",
+          descricao: descricao || "Feedback via PDI",
+          registrado_por: user?.id,
+          registrado_por_nome: profile?.nome_completo || "Usuário",
+          pdi_id: d.pdi_id,
+          pdi_titulo: d.pdi_titulo || null,
+        } as never);
+      }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["pdi-feedbacks"] }); toast.success("Feedback registrado!"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pdi-feedbacks"] });
+      qc.invalidateQueries({ queryKey: ["feedbacks"] });
+      toast.success("Feedback registrado!");
+    },
     onError: (e) => toast.error(`Erro: ${e.message}`),
   });
 

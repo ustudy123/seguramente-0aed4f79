@@ -10,10 +10,13 @@ interface PdiFeedbackFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pdiId: string;
-  onCreate: (data: PdiFeedbackInsert) => Promise<any>;
+  pdiTitulo?: string;
+  colaboradorId?: string;
+  colaboradorNome?: string;
+  onCreate: (data: PdiFeedbackInsert & { colaborador_id?: string; colaborador_nome?: string; pdi_titulo?: string }) => Promise<any>;
 }
 
-export const PdiFeedbackForm = ({ open, onOpenChange, pdiId, onCreate }: PdiFeedbackFormProps) => {
+export const PdiFeedbackForm = ({ open, onOpenChange, pdiId, pdiTitulo, colaboradorId, colaboradorNome, onCreate }: PdiFeedbackFormProps) => {
   const [form, setForm] = useState({
     tipo: "lider",
     ponto_forte: "",
@@ -30,6 +33,9 @@ export const PdiFeedbackForm = ({ open, onOpenChange, pdiId, onCreate }: PdiFeed
       ponto_melhorar: form.ponto_melhorar || undefined,
       recomendacao: form.recomendacao || undefined,
       comentario: form.comentario || undefined,
+      colaborador_id: colaboradorId,
+      colaborador_nome: colaboradorNome,
+      pdi_titulo: pdiTitulo,
     });
     onOpenChange(false);
     setForm({ tipo: "lider", ponto_forte: "", ponto_melhorar: "", recomendacao: "", comentario: "" });
@@ -40,7 +46,7 @@ export const PdiFeedbackForm = ({ open, onOpenChange, pdiId, onCreate }: PdiFeed
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Novo Feedback</DialogTitle>
-          <DialogDescription>Registre um feedback estruturado</DialogDescription>
+          <DialogDescription>Registre um feedback estruturado. Ele também será visível no módulo Feedback & Ocorrências.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>

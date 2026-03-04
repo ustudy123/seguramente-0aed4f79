@@ -167,7 +167,7 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
               ))}
             </div>
           )}
-          <PdiFeedbackForm open={showFeedbackForm} onOpenChange={setShowFeedbackForm} pdiId={pdi.id} onCreate={createFeedback} />
+          <PdiFeedbackForm open={showFeedbackForm} onOpenChange={setShowFeedbackForm} pdiId={pdi.id} pdiTitulo={pdi.titulo} colaboradorId={pdi.colaborador_id} colaboradorNome={pdi.colaborador_nome} onCreate={createFeedback} />
         </TabsContent>
       </Tabs>
 
