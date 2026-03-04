@@ -12,11 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-interface PDCAAlerta {
+export interface PDCAAlerta {
   tipo: string;
   titulo: string;
   descricao: string;
-  severidade: "destructive" | "warning" | "info";
 }
 
 interface W5H2 {
@@ -35,6 +34,7 @@ interface Sugestao {
   tipo: string;
   prioridade: string;
   w5h2?: W5H2;
+  salvo?: boolean;
 }
 
 interface Props {
@@ -56,7 +56,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
   const [saving, setSaving] = useState<number | null>(null);
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
   const [sugestaoExpandida, setSugestaoExpandida] = useState<number | null>(null);
-  const [editando, setEditando] = useState<Partial<Sugestao & { prazo: string; responsavel: string }>>({});
+  const [editando, setEditando] = useState<Record<string, string>>({});
   const [gerado, setGerado] = useState(false);
 
   const gerarSugestoes = async () => {
@@ -79,8 +79,9 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
       } else {
         toast.error("IA não retornou sugestões. Tente novamente.");
       }
-    } catch (e: any) {
-      if (e?.message?.includes("429")) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("429")) {
         toast.error("Limite de IA atingido. Tente em instantes.");
       } else {
         toast.error("Erro ao gerar sugestões de IA.");
@@ -97,8 +98,14 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
     }
     setSugestaoExpandida(idx);
     const s = sugestoes[idx];
+    setEditando({
+      titulo: s.titulo,
+      descricao: s.descricao,
+      prioridade: s.prioridade,
+      prazo: "",
+      responsavel: "",
+    });
     if (!s.w5h2) {
-      // gerar 5W2H para essa sugestão específica
       try {
         const { data } = await supabase.functions.invoke("ai-plano-acao", {
           body: {
@@ -108,19 +115,16 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
           },
         });
         if (data?.w5h2) {
-          const updated = [...sugestoes];
-          updated[idx] = { ...updated[idx], w5h2: data.w5h2 };
-          setSugestoes(updated);
+          setSugestoes((prev) => {
+            const updated = [...prev];
+            updated[idx] = { ...updated[idx], w5h2: data.w5h2 };
+            return updated;
+          });
         }
-      } catch {}
+      } catch (_) {
+        // silently ignore 5W2H generation failure
+      }
     }
-    setEditando({
-      titulo: s.titulo,
-      descricao: s.descricao,
-      prioridade: s.prioridade,
-      prazo: "",
-      responsavel: "",
-    });
   };
 
   const criarAcao = async (idx: number) => {
@@ -130,31 +134,33 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
     try {
       const prioridadeDB = PRIORIDADE_MAP[editando.prioridade || s.prioridade] || "medio";
       const titulo = editando.titulo || s.titulo;
+      const descricao = editando.descricao || s.descricao;
       const w5h2 = s.w5h2;
 
-      const { error } = await supabase.from("plano_acoes").insert({
+      const payload = {
         tenant_id: tenantId,
         codigo: "",
-      } as any);
         titulo,
-        descricao: editando.descricao || s.descricao,
+        descricao,
         tipo: s.tipo === "corretiva" ? "corretiva" : s.tipo === "preventiva" ? "preventiva" : "melhoria",
         origem_modulo: "documentos",
-        status: "pendente" as any,
-        prioridade: prioridadeDB as any,
+        status: "pendente",
+        prioridade: prioridadeDB,
         prazo: editando.prazo || null,
         responsavel_nome: editando.responsavel || null,
         criado_por: user?.id || null,
         criado_por_nome: user?.email || null,
-        // 5W2H fields
         o_que: w5h2?.what || titulo,
-        por_que: w5h2?.why || s.descricao,
+        por_que: w5h2?.why || descricao,
         onde: w5h2?.where || null,
         quando: editando.prazo || w5h2?.when || null,
         quem: editando.responsavel || w5h2?.who || null,
         como: w5h2?.how || null,
         quanto: w5h2?.howMuch || null,
-      });
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await supabase.from("plano_acoes").insert(payload as any);
 
       if (error) throw error;
 
@@ -162,13 +168,15 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
         description: `"${titulo}" adicionada com sucesso.`,
       });
 
-      // mark as saved
-      const updated = [...sugestoes];
-      updated[idx] = { ...updated[idx], tipo: "__salvo__" };
-      setSugestoes(updated);
+      setSugestoes((prev) => {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], salvo: true };
+        return updated;
+      });
       setSugestaoExpandida(null);
-    } catch (e: any) {
-      toast.error("Erro ao criar ação: " + (e?.message || "Erro desconhecido"));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      toast.error("Erro ao criar ação: " + msg);
     } finally {
       setSaving(null);
     }
@@ -190,7 +198,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            Sugestões de Ação para Alerta PDCA
+            Sugestões de Ação — Alerta PDCA
           </DialogTitle>
         </DialogHeader>
 
@@ -210,9 +218,9 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
             </p>
             <Button onClick={gerarSugestoes} disabled={loading}>
               {loading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Gerando sugestões...</>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando sugestões...</>
               ) : (
-                <><Sparkles className="w-4 h-4 mr-2" /> Gerar Sugestões com IA</>
+                <><Sparkles className="w-4 h-4 mr-2" />Gerar Sugestões com IA</>
               )}
             </Button>
           </div>
@@ -224,39 +232,41 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
               {sugestoes.length} sugestões geradas — clique para expandir e criar
             </p>
             {sugestoes.map((s, idx) => {
-              const salvo = s.tipo === "__salvo__";
               const expandido = sugestaoExpandida === idx;
               return (
                 <div key={idx} className="border border-border rounded-lg overflow-hidden">
                   <button
-                    className="w-full p-3 text-left flex items-start justify-between gap-3 hover:bg-muted/40 transition-colors"
-                    onClick={() => !salvo && expandirSugestao(idx)}
-                    disabled={salvo}
+                    className="w-full p-3 text-left flex items-start justify-between gap-3 hover:bg-muted/40 transition-colors disabled:opacity-60"
+                    onClick={() => !s.salvo && expandirSugestao(idx)}
+                    disabled={!!s.salvo}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-foreground truncate">{s.titulo}</span>
-                        <Badge variant={salvo ? "secondary" : s.prioridade === "urgente" || s.prioridade === "alta" ? "destructive" : "outline"} className="text-xs shrink-0">
-                          {salvo ? "✓ Criada" : s.prioridade}
+                        <Badge
+                          variant={s.salvo ? "secondary" : (s.prioridade === "urgente" || s.prioridade === "alta") ? "destructive" : "outline"}
+                          className="text-xs shrink-0"
+                        >
+                          {s.salvo ? "✓ Criada" : s.prioridade}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{s.descricao}</p>
                     </div>
-                    {salvo ? (
+                    {s.salvo ? (
                       <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
                     ) : (
                       <Plus className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                     )}
                   </button>
 
-                  {expandido && !salvo && (
+                  {expandido && !s.salvo && (
                     <div className="p-4 border-t border-border bg-muted/20 space-y-4">
                       <div className="grid grid-cols-1 gap-3">
                         <div>
                           <Label className="text-xs">Título da Ação</Label>
                           <Input
                             value={editando.titulo ?? s.titulo}
-                            onChange={(e) => setEditando(p => ({ ...p, titulo: e.target.value }))}
+                            onChange={(e) => setEditando((p) => ({ ...p, titulo: e.target.value }))}
                             className="mt-1 h-8 text-sm"
                           />
                         </div>
@@ -264,7 +274,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                           <Label className="text-xs">Descrição</Label>
                           <Textarea
                             value={editando.descricao ?? s.descricao}
-                            onChange={(e) => setEditando(p => ({ ...p, descricao: e.target.value }))}
+                            onChange={(e) => setEditando((p) => ({ ...p, descricao: e.target.value }))}
                             className="mt-1 text-sm min-h-[60px]"
                           />
                         </div>
@@ -273,7 +283,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                             <Label className="text-xs">Prioridade</Label>
                             <Select
                               value={editando.prioridade ?? s.prioridade}
-                              onValueChange={(v) => setEditando(p => ({ ...p, prioridade: v }))}
+                              onValueChange={(v) => setEditando((p) => ({ ...p, prioridade: v }))}
                             >
                               <SelectTrigger className="mt-1 h-8 text-sm">
                                 <SelectValue />
@@ -291,7 +301,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                             <Input
                               type="date"
                               value={editando.prazo ?? ""}
-                              onChange={(e) => setEditando(p => ({ ...p, prazo: e.target.value }))}
+                              onChange={(e) => setEditando((p) => ({ ...p, prazo: e.target.value }))}
                               className="mt-1 h-8 text-sm"
                             />
                           </div>
@@ -301,7 +311,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                           <Input
                             placeholder="Nome do responsável"
                             value={editando.responsavel ?? ""}
-                            onChange={(e) => setEditando(p => ({ ...p, responsavel: e.target.value }))}
+                            onChange={(e) => setEditando((p) => ({ ...p, responsavel: e.target.value }))}
                             className="mt-1 h-8 text-sm"
                           />
                         </div>
@@ -311,9 +321,11 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                         <>
                           <Separator />
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">5W2H gerado pela IA</p>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                              5W2H gerado pela IA
+                            </p>
                             <div className="grid grid-cols-1 gap-1.5 text-xs">
-                              {[
+                              {([
                                 ["O quê", s.w5h2.what],
                                 ["Por quê", s.w5h2.why],
                                 ["Onde", s.w5h2.where],
@@ -321,12 +333,14 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                                 ["Quem", s.w5h2.who],
                                 ["Como", s.w5h2.how],
                                 ["Quanto", s.w5h2.howMuch],
-                              ].map(([label, val]) => val && (
-                                <div key={label} className="flex gap-2">
-                                  <span className="text-muted-foreground w-14 shrink-0 font-medium">{label}:</span>
-                                  <span className="text-foreground">{val}</span>
-                                </div>
-                              ))}
+                              ] as [string, string][]).map(([label, val]) =>
+                                val ? (
+                                  <div key={label} className="flex gap-2">
+                                    <span className="text-muted-foreground w-14 shrink-0 font-medium">{label}:</span>
+                                    <span className="text-foreground">{val}</span>
+                                  </div>
+                                ) : null
+                              )}
                             </div>
                           </div>
                         </>
@@ -338,9 +352,9 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                         </Button>
                         <Button size="sm" onClick={() => criarAcao(idx)} disabled={saving === idx}>
                           {saving === idx ? (
-                            <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Criando...</>
+                            <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Criando...</>
                           ) : (
-                            <><Plus className="w-3.5 h-3.5 mr-1.5" /> Criar no Plano de Ação</>
+                            <><Plus className="w-3.5 h-3.5 mr-1.5" />Criar no Plano de Ação</>
                           )}
                         </Button>
                       </div>
@@ -351,7 +365,11 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
             })}
 
             <Button variant="outline" size="sm" className="w-full" onClick={gerarSugestoes} disabled={loading}>
-              {loading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
+              {loading ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              )}
               Gerar novas sugestões
             </Button>
           </div>
