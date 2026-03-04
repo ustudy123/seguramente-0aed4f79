@@ -134,6 +134,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
 
       const { error } = await supabase.from("plano_acoes").insert({
         tenant_id: tenantId,
+        codigo: "",
         titulo,
         descricao: editando.descricao || s.descricao,
         tipo: s.tipo === "corretiva" ? "corretiva" : s.tipo === "preventiva" ? "preventiva" : "melhoria",
