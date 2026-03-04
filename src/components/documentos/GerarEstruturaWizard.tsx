@@ -264,9 +264,11 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
         </div>
 
         {jaTemEstrutura && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-sm">
-            <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-            <span className="text-warning-foreground">Uma estrutura já existe. Gerar novamente adicionará as novas pastas sem remover as existentes.</span>
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30 text-sm">
+            <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <span className="text-foreground">
+              <strong>Estrutura existente detectada.</strong> Serão criadas apenas as pastas que ainda não existem — nenhum dado será removido ou substituído.
+            </span>
           </div>
         )}
 
