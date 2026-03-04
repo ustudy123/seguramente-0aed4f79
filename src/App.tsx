@@ -102,6 +102,14 @@ const App = () => (
             }
           />
           <Route
+            path="/admin/validador"
+            element={
+              <SuperAdminRoute>
+                <ProgramaValidador />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
             path="/admin/manual"
             element={
               <SuperAdminRoute>
