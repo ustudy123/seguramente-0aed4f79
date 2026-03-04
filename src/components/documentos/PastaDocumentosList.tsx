@@ -65,10 +65,13 @@ export function PastaDocumentosList({
   onView,
   onDownload,
   onDelete,
+  onNovaVersao,
   deleting,
   onDragStart,
+  documentosCompletos = [],
 }: PastaDocumentosListProps) {
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
+  const [versoesDoc, setVersoesDoc] = useState<Documento | null>(null);
 
   if (!pasta) {
     return (
