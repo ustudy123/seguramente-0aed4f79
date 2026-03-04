@@ -79,27 +79,53 @@ export function PDCADashboard() {
   ];
 
   // Radar PDCA por dimensão
+  // Princípio: maturidade = qualidade da RESPOSTA, não ausência de registros.
+  // CAT e incidentes são ESPERADOS em operações — o que mede maturidade é se
+  // foram investigados, se geraram ações e se as ações foram concluídas.
+
+  // Dimensão 1 — Gestão de Riscos: % de eventos que têm plano de ação vinculado
+  const eventosComAcao = eventos.filter(e =>
+    acoes.some((a: any) => a.origem_modulo === "sst")
+  ).length;
+  const totalEventos = eventos.length;
+  const scoreRiscos = totalEventos === 0
+    ? 80 // sem eventos = operação estável, score neutro-positivo
+    : Math.round(Math.min(100, (eventosComAcao / totalEventos) * 100));
+
+  // Dimensão 2 — Ações (ciclo PDCA): % de ações concluídas sobre total
+  const scoreAcoes = acoes.length
+    ? Math.round((acoes.filter((a: any) => a.status === "concluida").length / acoes.length) * 100)
+    : 0;
+
+  // Dimensão 3 — Documentos: penaliza apenas docs vencidos (não conformidade real)
+  const scoreDocumentos = Math.min(100, Math.max(0,
+    100 - documentosVencidos.filter(d => d.status === "vencido").length * 5
+  ));
+
+  // Dimensão 4 — Investigação: % de acidentes/incidentes com status diferente de "em_aberto"
+  // Ter registros é POSITIVO; o que penaliza é deixar sem investigar
+  const acidentes = eventos.filter((e: any) => e.tipo === "acidente" || e.tipo === "incidente");
+  const acidentesInvestigados = acidentes.filter((e: any) => e.status !== "em_aberto").length;
+  const scoreInvestigacao = acidentes.length === 0
+    ? 80 // sem acidentes: neutro-positivo (não penaliza por não ter registros)
+    : Math.round(Math.min(100, (acidentesInvestigados / acidentes.length) * 100));
+
+  // Dimensão 5 — Auditorias/Conformidade: baseado em ações de origem ergonomia/auditoria
+  const acoesAuditoria = acoes.filter((a: any) =>
+    ["ergonomia", "ouvidoria"].includes(a.origem_modulo)
+  );
+  const scoreAuditorias = acoesAuditoria.length === 0
+    ? 40
+    : Math.round(
+        (acoesAuditoria.filter((a: any) => a.status === "concluida").length / acoesAuditoria.length) * 100
+      );
+
   const radarData = [
-    {
-      dimensao: "Riscos",
-      score: Math.min(100, Math.max(0, 100 - eventos.filter(e => e.status === "em_aberto").length * 10)),
-    },
-    {
-      dimensao: "Ações",
-      score: acoes.length ? Math.round((acoes.filter(a => a.status === "concluida").length / acoes.length) * 100) : 0,
-    },
-    {
-      dimensao: "Documentos",
-      score: Math.min(100, Math.max(0, 100 - documentosVencidos.filter(d => d.status === "vencido").length * 5)),
-    },
-    {
-      dimensao: "Incidentes",
-      score: Math.min(100, Math.max(0, 100 - eventos.filter(e => e.tipo === "acidente").length * 15)),
-    },
-    {
-      dimensao: "Auditorias",
-      score: acoes.filter(a => a.origem_modulo === "ergonomia").length > 0 ? 70 : 40,
-    },
+    { dimensao: "Gestão de Riscos", score: scoreRiscos },
+    { dimensao: "Ações PDCA", score: scoreAcoes },
+    { dimensao: "Documentos", score: scoreDocumentos },
+    { dimensao: "Investigação", score: scoreInvestigacao },
+    { dimensao: "Auditorias", score: scoreAuditorias },
   ];
 
   // Ações por origem
