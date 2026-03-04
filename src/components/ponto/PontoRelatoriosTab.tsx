@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoFechamento } from "@/hooks/usePontoFechamento";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { FileDown, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -40,7 +41,7 @@ export function PontoRelatoriosTab() {
     setGerando(true);
     try {
       if (tipoRelatorio === "afd") {
-        gerarAFD();
+        await gerarAFD();
         return;
       }
 
@@ -56,31 +57,72 @@ export function PontoRelatoriosTab() {
     }
   };
 
-  const gerarAFD = () => {
+  const gerarAFD = async () => {
     // AFD - Arquivo Fonte de Dados (formato texto conforme Portaria 671)
-    let conteudo = "";
-    conteudo += `1${format(new Date(), "ddMMyyyy")}000001SEGURAMENTE\n`;
-    // Header type 1
+    // Puxa marcações REAIS da tabela ponto_marcacoes
+    const startDate2 = `${competencia}-01`;
+    const endMonth2 = parseInt(competencia.split("-")[1]);
+    const endYear2 = parseInt(competencia.split("-")[0]);
+    const lastDay2 = new Date(endYear2, endMonth2, 0).getDate();
+    const endDate2 = `${competencia}-${String(lastDay2).padStart(2, "0")}`;
 
-    espelhos.forEach((e, i) => {
-      // Type 3 records (marcações)
-      const seq = String(i + 1).padStart(10, "0");
-      const cpf = (e.colaborador_cpf || "").replace(/\D/g, "").padStart(11, "0");
-      const nome = (e.colaborador_nome || "").padEnd(52).substring(0, 52);
-      conteudo += `3${seq}1${cpf}${nome}${competencia.replace("-", "")}\n`;
+    const { data: marcacoes, error } = await supabase
+      .from("ponto_marcacoes" as never)
+      .select("*")
+      .gte("data_marcacao", startDate2)
+      .lte("data_marcacao", endDate2)
+      .order("data_marcacao")
+      .order("hora_marcacao") as { data: any[] | null; error: any };
+
+    if (error) {
+      toast.error("Erro ao buscar marcações: " + error.message);
+      return;
+    }
+
+    const registros = marcacoes || [];
+    let conteudo = "";
+
+    // Registro tipo 1 - Cabeçalho
+    const dataGeracao = format(new Date(), "ddMMyyyy");
+    const horaGeracao = format(new Date(), "HHmmss");
+    const cnpj = "00000000000000"; // placeholder
+    const razaoSocial = "SEGURAMENTE".padEnd(150);
+    conteudo += `1${cnpj}${razaoSocial}${dataGeracao}${horaGeracao}\n`;
+
+    // Registro tipo 2 - Identificação do REP-P
+    conteudo += `2SEGURAMENTE REP-P v1.0\n`;
+
+    // Registro tipo 3 - Marcações de ponto (uma por linha)
+    let seq = 0;
+    registros.forEach((m: any) => {
+      seq++;
+      const nsr = String(seq).padStart(10, "0");
+      const tipoReg = "3";
+      const dataMarcacao = (m.data_marcacao || "").replace(/-/g, "");
+      const horaMarcacao = (m.hora_marcacao || "").replace(/:/g, "").substring(0, 4);
+      const cpf = (m.colaborador_cpf || "").replace(/\D/g, "").padStart(11, "0");
+      
+      // Formato: 3 + NSR(10) + Tipo(1) + Data(8) + Hora(4) + CPF(11)
+      conteudo += `${tipoReg}${nsr}1${dataMarcacao}${horaMarcacao}${cpf}\n`;
     });
 
-    // Trailer
-    conteudo += `9${String(espelhos.length + 2).padStart(10, "0")}\n`;
+    // Registro tipo 9 - Trailer
+    const totalRegistros = String(seq + 2).padStart(10, "0");
+    conteudo += `9${totalRegistros}\n`;
 
-    const blob = new Blob([conteudo], { type: "text/plain" });
+    if (seq === 0) {
+      toast.warning("Nenhuma marcação encontrada para esta competência.");
+      return;
+    }
+
+    const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `AFD_${competencia}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("AFD gerado com sucesso!");
+    toast.success(`AFD gerado com ${seq} marcações!`);
   };
 
   const gerarPDF = () => {
