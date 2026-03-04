@@ -2290,6 +2290,57 @@ export type Database = {
           },
         ]
       }
+      documento_versoes: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_validade: string | null
+          documento_id: string
+          id: string
+          mime_type: string
+          motivo_revisao: string | null
+          nome_original: string
+          observacoes: string | null
+          storage_path: string
+          tamanho: number
+          tenant_id: string
+          versao: number
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_validade?: string | null
+          documento_id: string
+          id?: string
+          mime_type?: string
+          motivo_revisao?: string | null
+          nome_original: string
+          observacoes?: string | null
+          storage_path: string
+          tamanho?: number
+          tenant_id: string
+          versao?: number
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_validade?: string | null
+          documento_id?: string
+          id?: string
+          mime_type?: string
+          motivo_revisao?: string | null
+          nome_original?: string
+          observacoes?: string | null
+          storage_path?: string
+          tamanho?: number
+          tenant_id?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       documentos: {
         Row: {
           atividade_vinculada: string | null
@@ -2313,8 +2364,10 @@ export type Database = {
           tamanho: number
           tenant_id: string
           tipo: string
+          total_versoes: number
           updated_at: string
           versao: string | null
+          versao_atual: number
         }
         Insert: {
           atividade_vinculada?: string | null
@@ -2338,8 +2391,10 @@ export type Database = {
           tamanho: number
           tenant_id: string
           tipo: string
+          total_versoes?: number
           updated_at?: string
           versao?: string | null
+          versao_atual?: number
         }
         Update: {
           atividade_vinculada?: string | null
@@ -2363,8 +2418,10 @@ export type Database = {
           tamanho?: number
           tenant_id?: string
           tipo?: string
+          total_versoes?: number
           updated_at?: string
           versao?: string | null
+          versao_atual?: number
         }
         Relationships: [
           {
