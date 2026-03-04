@@ -44,6 +44,8 @@ import { CreatePastaModal } from "@/components/documentos/CreatePastaModal";
 import { DocumentoAuditLog } from "@/components/documentos/DocumentoAuditLog";
 import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
 import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos/GerarEstruturaWizard";
+import { MapaConformidade } from "@/components/documentos/MapaConformidade";
+import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
