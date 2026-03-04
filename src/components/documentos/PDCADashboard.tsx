@@ -19,6 +19,7 @@ import { ptBR } from "date-fns/locale";
 export function PDCADashboard() {
   const { tenantId } = useAuth();
   const tid = tenantId;
+  const [alertaModal, setAlertaModal] = useState<PDCAAlerta | null>(null);
 
   // Fetch plano_acoes
   const { data: acoes = [] } = useQuery({
