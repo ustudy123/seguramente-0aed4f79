@@ -12632,7 +12632,12 @@ export type Database = {
     Enums: {
       acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"
       acao_prioridade: "baixa" | "media" | "alta" | "urgente"
-      acao_status: "pendente" | "em_andamento" | "concluida" | "cancelada"
+      acao_status:
+        | "pendente"
+        | "em_andamento"
+        | "concluida"
+        | "cancelada"
+        | "atrasada"
       acidente_afastamento: "sem_afastamento" | "ate_15_dias" | "mais_15_dias"
       acidente_atendimento: "nao_necessario" | "ambulatorial" | "hospitalar"
       acidente_gravidade_lesao: "sem_lesao" | "leve" | "moderada" | "grave"
@@ -12970,7 +12975,13 @@ export const Constants = {
     Enums: {
       acao_gut_prioridade: ["baixo", "medio", "urgente", "imediato"],
       acao_prioridade: ["baixa", "media", "alta", "urgente"],
-      acao_status: ["pendente", "em_andamento", "concluida", "cancelada"],
+      acao_status: [
+        "pendente",
+        "em_andamento",
+        "concluida",
+        "cancelada",
+        "atrasada",
+      ],
       acidente_afastamento: ["sem_afastamento", "ate_15_dias", "mais_15_dias"],
       acidente_atendimento: ["nao_necessario", "ambulatorial", "hospitalar"],
       acidente_gravidade_lesao: ["sem_lesao", "leve", "moderada", "grave"],
