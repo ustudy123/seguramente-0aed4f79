@@ -444,24 +444,24 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <Building2 className="w-16 h-16 text-muted-foreground/50 mb-6" />
               <h3 className="text-xl font-semibold mb-2">Estrutura de Pastas</h3>
               <p className="text-muted-foreground text-center max-w-md mb-6">
-                Crie uma estrutura organizacional para seus documentos com pastas por unidade, 
-                colaborador e período. Ideal para compliance e processos judiciais.
+                Gere automaticamente a estrutura completa de pastas baseada no perfil da sua empresa — 
+                governança, SST, processos, pessoas e muito mais.
               </p>
               <Button
                 size="lg"
-                onClick={handleInitialize}
+                onClick={() => setShowWizard(true)}
                 disabled={initializing}
-                className="gradient-primary shadow-glow"
+                className="gradient-primary shadow-glow gap-2"
               >
                 {initializing ? (
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <FolderPlus className="w-5 h-5 mr-2" />
+                  <Sparkles className="w-5 h-5" />
                 )}
-                Criar Estrutura Padrão
+                Gerar Estrutura Padrão
               </Button>
               <p className="text-xs text-muted-foreground mt-4">
-                Serão criadas pastas: Administrativo, Unidades, Colaboradores e Anos
+                8 categorias: Governança, Processos, Riscos, SST, Pessoas, Incidentes, Auditorias e mais
               </p>
             </motion.div>
           ) : (
