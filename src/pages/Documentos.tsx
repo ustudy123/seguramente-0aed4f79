@@ -589,6 +589,28 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           </motion.div>
         </TabsContent>
 
+        {/* PDCA Tab */}
+        <TabsContent value="pdca" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-xl border border-border p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                  Motor de Melhoria Contínua — PDCA
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Consolidação de riscos, ações, auditorias e melhorias em um único painel
+                </p>
+              </div>
+            </div>
+            <PDCADashboard />
+          </motion.div>
+        </TabsContent>
+
         {/* Audit Tab */}
         <TabsContent value="historico" className="flex-1 mt-4">
           <motion.div
