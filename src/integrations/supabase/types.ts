@@ -10101,9 +10101,9 @@ export type Database = {
           data: string
           empresa_id: string | null
           entrada: string | null
-          horas_extras: unknown
-          horas_faltantes: unknown
-          horas_trabalhadas: unknown
+          horas_extras: string | null
+          horas_faltantes: string | null
+          horas_trabalhadas: string | null
           id: string
           observacao: string | null
           retorno_almoco: string | null
@@ -10121,9 +10121,9 @@ export type Database = {
           data: string
           empresa_id?: string | null
           entrada?: string | null
-          horas_extras?: unknown
-          horas_faltantes?: unknown
-          horas_trabalhadas?: unknown
+          horas_extras?: string | null
+          horas_faltantes?: string | null
+          horas_trabalhadas?: string | null
           id?: string
           observacao?: string | null
           retorno_almoco?: string | null
@@ -10141,9 +10141,9 @@ export type Database = {
           data?: string
           empresa_id?: string | null
           entrada?: string | null
-          horas_extras?: unknown
-          horas_faltantes?: unknown
-          horas_trabalhadas?: unknown
+          horas_extras?: string | null
+          horas_faltantes?: string | null
+          horas_trabalhadas?: string | null
           id?: string
           observacao?: string | null
           retorno_almoco?: string | null
