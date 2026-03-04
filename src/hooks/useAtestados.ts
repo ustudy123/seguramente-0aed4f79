@@ -271,6 +271,9 @@ export function useAtestados() {
         await createOrUpdateAfastamento(data as Atestado);
       }
 
+      // Check INSS referral suggestion (>15 days single or accumulated in 90 days)
+      await checkINSSReferral(data as Atestado, dias_afastamento || 0);
+
       return data;
     },
     onSuccess: () => {
@@ -342,6 +345,64 @@ export function useAtestados() {
           .eq("id", atestado.id);
       }
     }
+  };
+
+  // Check if INSS referral should be suggested
+  const checkINSSReferral = async (atestado: Atestado, diasAtestado: number) => {
+    if (!tenantId || !user) return;
+
+    const needsINSS = diasAtestado > 15;
+
+    if (!needsINSS && atestado.grupo_clinico) {
+      // Check accumulated days for same grupo_clinico within 90 days
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+      const { data: relatedAtestados } = await supabase
+        .from("atestados" as never)
+        .select("dias_afastamento")
+        .eq("tenant_id", tenantId)
+        .eq("colaborador_nome", atestado.colaborador_nome)
+        .eq("grupo_clinico", atestado.grupo_clinico)
+        .gte("data_emissao", ninetyDaysAgo.toISOString().split("T")[0]) as { data: { dias_afastamento: number | null }[] | null };
+
+      const totalDias = (relatedAtestados || []).reduce((sum, a) => sum + (a.dias_afastamento || 0), 0);
+
+      if (totalDias <= 15) return;
+    } else if (!needsINSS) {
+      return;
+    }
+
+    // Check if alert already exists for this colaborador (avoid duplicates)
+    const { data: existingAlert } = await supabase
+      .from("alertas_saude" as never)
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("colaborador_nome", atestado.colaborador_nome)
+      .eq("tipo", "encaminhamento_inss")
+      .eq("resolvido", false)
+      .limit(1) as { data: { id: string }[] | null };
+
+    if (existingAlert && existingAlert.length > 0) return;
+
+    // Create alert suggesting INSS referral
+    await supabase
+      .from("alertas_saude" as never)
+      .insert({
+        tenant_id: tenantId,
+        tipo: "encaminhamento_inss",
+        referencia_tipo: "atestado",
+        referencia_id: atestado.id,
+        colaborador_id: atestado.colaborador_id,
+        colaborador_nome: atestado.colaborador_nome,
+        titulo: "Encaminhamento ao INSS sugerido",
+        descricao: needsINSS
+          ? `${atestado.colaborador_nome} possui atestado com ${diasAtestado} dias de afastamento (>15 dias). Recomenda-se encaminhamento ao INSS.`
+          : `${atestado.colaborador_nome} acumulou mais de 15 dias de afastamento pelo mesmo motivo nos últimos 90 dias. Recomenda-se encaminhamento ao INSS.`,
+        prioridade: "critica",
+      } as never);
+
+    toast.info("⚠️ Atenção: Encaminhamento ao INSS sugerido para " + atestado.colaborador_nome);
   };
 
   // Update atestado
