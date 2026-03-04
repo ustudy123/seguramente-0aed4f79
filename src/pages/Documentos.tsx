@@ -14,6 +14,7 @@ import {
   Sparkles,
   ShieldCheck,
   Radar,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm
 import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos/GerarEstruturaWizard";
 import { MapaConformidade } from "@/components/documentos/MapaConformidade";
 import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
+import { PDCADashboard } from "@/components/documentos/PDCADashboard";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
