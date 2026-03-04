@@ -98,7 +98,7 @@ const FASES: { value: Fase; label: string; color: string }[] = [
 ];
 
 const DOCS_CONFIG: { tipo: TipoDoc; label: string }[] = [
-  { tipo: 'contrato_piloto', label: 'Contrato Piloto' },
+  { tipo: 'contrato_piloto', label: 'Contrato Piloto' }, // keep
   { tipo: 'dpa_lgpd', label: 'DPA / Anexo LGPD' },
   { tipo: 'anexo_operacional', label: 'Anexo Operacional' },
   { tipo: 'faq_seguranca', label: 'FAQ Segurança' },
