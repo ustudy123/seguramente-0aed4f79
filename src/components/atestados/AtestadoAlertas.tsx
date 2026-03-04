@@ -1,22 +1,24 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { 
   AlertTriangle, 
   Clock, 
-  Calendar, 
   Shield,
-  Brain,
   CheckCircle2,
   Bell,
-  FileWarning
+  FileWarning,
+  ClipboardPlus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import type { AlertaSaude, Afastamento, BeneficioINSS } from "@/types/atestado";
-import { GRUPO_CLINICO_LABELS } from "@/types/atestado";
 
 interface AtestadoAlertasProps {
   alertas: AlertaSaude[];
@@ -31,9 +33,83 @@ export function AtestadoAlertas({
   beneficios,
   onResolveAlerta 
 }: AtestadoAlertasProps) {
+  const navigate = useNavigate();
+  const { tenantId, user, profile } = useAuth();
+
+  const handleGerarAcao = async (alerta: { tipo: string; colaborador_nome: string; descricao: string; id: string }) => {
+    if (!tenantId || !user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
+    const isINSS = alerta.tipo === 'encaminhamento_inss' || alerta.tipo === 'aso_retorno';
+    const titulo = alerta.tipo === 'aso_retorno'
+      ? `Agendar ASO de Retorno ao Trabalho — ${alerta.colaborador_nome}`
+      : alerta.tipo === 'encaminhamento_inss'
+      ? `Encaminhamento ao INSS — ${alerta.colaborador_nome}`
+      : `Ação de Saúde — ${alerta.colaborador_nome}`;
+
+    const descricao = alerta.tipo === 'aso_retorno'
+      ? `Agendar exame ASO de retorno ao trabalho para ${alerta.colaborador_nome}. Afastamento ≥30 dias requer exame antes do retorno às atividades (NR-7). ${alerta.descricao}`
+      : `${alerta.descricao}`;
+
+    const prazo = new Date();
+    prazo.setDate(prazo.getDate() + 7);
+
+    try {
+      const { data: acao, error } = await supabase
+        .from("plano_acoes")
+        .insert({
+          tenant_id: tenantId,
+          titulo,
+          descricao,
+          o_que: titulo,
+          por_que: alerta.tipo === 'aso_retorno'
+            ? 'Exigência legal NR-7 — colaborador com afastamento ≥30 dias deve realizar ASO de retorno ao trabalho antes de reassumir atividades.'
+            : 'Afastamento acumulado superior a 15 dias exige encaminhamento ao INSS para avaliação pericial.',
+          onde: 'Medicina do Trabalho / Clínica Ocupacional',
+          quando: prazo.toISOString().split("T")[0],
+          como: alerta.tipo === 'aso_retorno'
+            ? '1. Contactar clínica ocupacional\n2. Agendar ASO de retorno\n3. Encaminhar colaborador\n4. Registrar resultado no sistema'
+            : '1. Orientar colaborador sobre documentação\n2. Preencher requerimento INSS\n3. Agendar perícia médica\n4. Acompanhar resultado',
+          responsavel_id: user.id,
+          responsavel_nome: profile?.nome_completo || 'Não definido',
+          prazo: prazo.toISOString().split("T")[0],
+          prioridade: 'alta',
+          status: 'pendente',
+          origem_modulo: 'atestados',
+          origem_descricao: `Alerta: ${alerta.descricao}`,
+          criado_por: user.id,
+          criado_por_nome: profile?.nome_completo,
+        } as never)
+        .select("id")
+        .single();
+
+      if (error) throw error;
+
+      // If it's a DB alert, mark as resolved with action linked
+      if (alerta.id && !alerta.id.startsWith('aso-') && !alerta.id.startsWith('15dias-') && !alerta.id.startsWith('b91-')) {
+        await supabase
+          .from("alertas_saude" as never)
+          .update({
+            acao_gerada_id: (acao as any)?.id || null,
+          } as never)
+          .eq("id", alerta.id);
+      }
+
+      toast.success("Ação criada com sucesso!", {
+        action: {
+          label: "Ver Ação",
+          onClick: () => navigate("/plano-acao"),
+        },
+      });
+    } catch (err: any) {
+      toast.error("Erro ao criar ação: " + err.message);
+    }
+  };
+
   // Build alerts from data
   const alertasCalculados = [
-    // Afastamentos próximos de 15 dias
     ...afastamentos
       .filter(a => a.alerta_15_dias && a.status === 'ativo' && !a.alerta_30_dias)
       .map(a => ({
@@ -46,9 +122,9 @@ export function AtestadoAlertas({
         icon: Clock,
         color: 'text-amber-600 dark:text-amber-400',
         bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+        canGenerateAction: false,
       })),
     
-    // Afastamentos >= 30 dias sem ASO
     ...afastamentos
       .filter(a => a.aso_retorno_pendente)
       .map(a => ({
@@ -61,9 +137,9 @@ export function AtestadoAlertas({
         icon: AlertTriangle,
         color: 'text-red-600 dark:text-red-400',
         bgColor: 'bg-red-100 dark:bg-red-900/30',
+        canGenerateAction: true,
       })),
     
-    // Benefícios B91 ativos (estabilidade)
     ...beneficios
       .filter(b => b.gera_estabilidade && b.data_fim_estabilidade && new Date(b.data_fim_estabilidade) > new Date())
       .map(b => ({
@@ -76,9 +152,9 @@ export function AtestadoAlertas({
         icon: Shield,
         color: 'text-purple-600 dark:text-purple-400',
         bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+        canGenerateAction: false,
       })),
     
-    // Alertas do banco
     ...alertas.map(a => ({
       id: a.id,
       tipo: a.tipo,
@@ -94,6 +170,7 @@ export function AtestadoAlertas({
         ? 'bg-red-100 dark:bg-red-900/30'
         : 'bg-blue-100 dark:bg-blue-900/30',
       fromDb: true,
+      canGenerateAction: a.tipo === 'encaminhamento_inss' && !a.acao_gerada_id,
     })),
   ];
 
@@ -166,17 +243,30 @@ export function AtestadoAlertas({
                     <p className="text-xs text-muted-foreground mt-1">
                       {alerta.descricao}
                     </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      {alerta.canGenerateAction && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => handleGerarAcao(alerta)}
+                        >
+                          <ClipboardPlus className="h-3 w-3" />
+                          Gerar Ação
+                        </Button>
+                      )}
+                      {'fromDb' in alerta && alerta.fromDb && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => onResolveAlerta(alerta.id)}
+                        >
+                          Resolver
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  {'fromDb' in alerta && alerta.fromDb && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-shrink-0 h-7 text-xs"
-                      onClick={() => onResolveAlerta(alerta.id)}
-                    >
-                      Resolver
-                    </Button>
-                  )}
                 </div>
               </motion.div>
             ))}
