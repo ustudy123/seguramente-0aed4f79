@@ -549,6 +549,14 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
       </Tabs>
 
       {/* Modals */}
+      <GerarEstruturaWizard
+        open={showWizard}
+        onOpenChange={setShowWizard}
+        onGerar={handleInitialize}
+        gerando={initializing}
+        jaTemEstrutura={pastas.length > 0}
+      />
+
       <DocumentoUploadForm
         open={showUploadForm}
         onOpenChange={setShowUploadForm}
