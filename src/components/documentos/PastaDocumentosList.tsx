@@ -13,6 +13,7 @@ import {
   Loader2,
   Upload,
   FolderOpen,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
+import type { Documento } from "@/hooks/useDocumentos";
+import { DocumentoVersoesModal } from "./DocumentoVersoesModal";
 
 const statusConfig = {
   valido: {
@@ -50,8 +53,10 @@ interface PastaDocumentosListProps {
   onView: (doc: DocumentoItem) => void;
   onDownload: (doc: DocumentoItem) => void;
   onDelete: (doc: DocumentoItem) => void;
+  onNovaVersao?: (doc: Documento) => void;
   deleting: boolean;
   onDragStart?: (documentoId: string, documentoNome: string, pastaOrigemId: string, pastaOrigemNome: string) => void;
+  documentosCompletos?: Documento[];
 }
 
 export function PastaDocumentosList({
