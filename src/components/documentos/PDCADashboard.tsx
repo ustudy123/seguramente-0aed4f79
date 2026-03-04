@@ -10,7 +10,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, CheckCircle2, Clock, TrendingUp, ShieldAlert, FileSearch, Wrench, BarChart3 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, TrendingUp, ShieldAlert, FileSearch, Wrench, BarChart3, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { PDCAAlertaAcaoModal, type PDCAAlerta } from "./PDCAAlertaAcaoModal";
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
