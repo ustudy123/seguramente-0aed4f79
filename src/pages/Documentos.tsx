@@ -358,6 +358,10 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           <p className="text-muted-foreground">Gestão hierárquica de arquivos e prontuários</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowWizard(true)} disabled={initializing}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Gerar Estrutura Padrão
+          </Button>
           <Button variant="outline" onClick={() => setShowCreatePasta(true)}>
             <FolderPlus className="w-4 h-4 mr-2" />
             Nova Pasta
