@@ -90,10 +90,10 @@ interface Historico {
 
 const FASES: { value: Fase; label: string; color: string }[] = [
   { value: 'prospeccao', label: 'Prospecção', color: 'bg-muted text-muted-foreground' },
-  { value: 'qualificacao', label: 'Qualificação', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
-  { value: 'kickoff', label: 'Kickoff', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-  { value: 'ativo', label: 'Ativo', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
-  { value: 'suspenso', label: 'Suspenso', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  { value: 'qualificacao', label: 'Qualificação', color: 'bg-accent text-accent-foreground' },
+  { value: 'kickoff', label: 'Kickoff', color: 'bg-secondary text-secondary-foreground' },
+  { value: 'ativo', label: 'Ativo', color: 'bg-primary/15 text-primary' },
+  { value: 'suspenso', label: 'Suspenso', color: 'bg-muted text-muted-foreground border border-border' },
   { value: 'encerrado', label: 'Encerrado', color: 'bg-destructive/10 text-destructive' },
 ];
 
