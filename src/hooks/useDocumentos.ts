@@ -301,6 +301,81 @@ export function useDocumentos() {
     return data.signedUrl;
   };
 
+  // Buscar versões de um documento específico
+  const getVersoes = async (documentoId: string): Promise<DocumentoVersao[]> => {
+    const { data, error } = await supabase
+      .from("documento_versoes" as never)
+      .select("*")
+      .eq("documento_id", documentoId)
+      .eq("tenant_id", tenantId)
+      .order("versao", { ascending: false }) as { data: DocumentoVersao[] | null; error: Error | null };
+
+    if (error) throw error;
+    return data || [];
+  };
+
+  // Restaurar versão anterior como versão atual
+  const restaurarVersaoMutation = useMutation({
+    mutationFn: async ({ documentoId, versao }: { documentoId: string; versao: DocumentoVersao }) => {
+      if (!tenantId || !user) throw new Error("Não autenticado");
+
+      // 1. Buscar documento atual
+      const { data: docAtual } = await supabase
+        .from("documentos" as never)
+        .select("*")
+        .eq("id", documentoId)
+        .single() as { data: Documento | null };
+
+      if (!docAtual) throw new Error("Documento não encontrado");
+
+      // 2. Salvar versão atual no histórico antes de restaurar
+      await supabase.from("documento_versoes" as never).insert({
+        tenant_id: tenantId,
+        documento_id: documentoId,
+        versao: docAtual.versao_atual,
+        nome_original: docAtual.nome_original,
+        storage_path: docAtual.storage_path,
+        tamanho: docAtual.tamanho,
+        mime_type: docAtual.mime_type,
+        data_validade: docAtual.data_validade,
+        observacoes: docAtual.observacoes,
+        criado_por: docAtual.criado_por,
+        criado_por_nome: docAtual.criado_por_nome,
+        motivo_revisao: `Substituída ao restaurar versão ${versao.versao}`,
+      } as never);
+
+      // 3. Promover versão antiga como atual
+      const novaVersaoNum = docAtual.versao_atual + 1;
+      await supabase
+        .from("documentos" as never)
+        .update({
+          nome_arquivo: versao.storage_path,
+          nome_original: versao.nome_original,
+          storage_path: versao.storage_path,
+          tamanho: versao.tamanho,
+          mime_type: versao.mime_type,
+          data_validade: versao.data_validade,
+          observacoes: versao.observacoes,
+          versao_atual: novaVersaoNum,
+          total_versoes: novaVersaoNum,
+          status: calcularStatus(versao.data_validade),
+        } as never)
+        .eq("id", documentoId);
+
+      // 4. Remover versão do histórico (agora é a atual)
+      await supabase
+        .from("documento_versoes" as never)
+        .delete()
+        .eq("id", versao.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documento-versoes"] });
+      toast.success("Versão restaurada com sucesso!");
+    },
+    onError: (err: Error) => toast.error("Erro ao restaurar versão: " + err.message),
+  });
+
   // Stats
   const stats = {
     total: documentos.length,
@@ -308,7 +383,6 @@ export function useDocumentos() {
     vencidos: documentos.filter((d) => d.status === "vencido").length,
   };
 
-  // Tipos únicos
   const tiposUnicos = [...new Set(documentos.map((d) => d.tipo))];
 
   return {
@@ -323,5 +397,8 @@ export function useDocumentos() {
     deleteDocumento: deleteMutation.mutateAsync,
     deleting: deleteMutation.isPending,
     getSignedUrl,
+    getVersoes,
+    restaurarVersao: restaurarVersaoMutation.mutateAsync,
+    restaurando: restaurarVersaoMutation.isPending,
   };
 }
