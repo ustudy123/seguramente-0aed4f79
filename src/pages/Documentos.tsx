@@ -7,12 +7,11 @@ import {
   Search,
   FolderTree,
   History,
-  Settings,
   FolderPlus,
   Loader2,
   AlertCircle,
   Building2,
-  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,6 +43,7 @@ import { PastaDocumentosList } from "@/components/documentos/PastaDocumentosList
 import { CreatePastaModal } from "@/components/documentos/CreatePastaModal";
 import { DocumentoAuditLog } from "@/components/documentos/DocumentoAuditLog";
 import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
+import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos/GerarEstruturaWizard";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
