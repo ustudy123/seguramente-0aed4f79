@@ -613,8 +613,9 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
 
       <DocumentoUploadForm
         open={showUploadForm}
-        onOpenChange={setShowUploadForm}
+        onOpenChange={(v) => { setShowUploadForm(v); if (!v) setNovaVersaoDocId(undefined); }}
         preSelectedColaboradorId={undefined}
+        documentoExistenteId={novaVersaoDocId}
       />
 
       <CreatePastaModal
