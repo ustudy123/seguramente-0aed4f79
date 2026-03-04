@@ -191,6 +191,7 @@ export function JornadaConformidade() {
                     { label: "Descanso interjornada (11h)", key: "violacoes_interjornada" },
                     { label: "Jornada diária excedida", key: "violacoes_jornada_diaria" },
                     { label: "Horas extras excedidas", key: "violacoes_horas_extras" },
+                    { label: "Descanso semanal (DSR)", key: "violacoes_dsr" },
                   ].map(({ label, key }) => {
                     const total = analises.reduce((s, a) => s + Number(a[key] || 0), 0);
                     return (

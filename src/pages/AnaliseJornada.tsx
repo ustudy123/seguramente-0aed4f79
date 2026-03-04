@@ -6,7 +6,9 @@ import { JornadaIndividual } from "@/components/jornada/JornadaIndividual";
 import { JornadaColetiva } from "@/components/jornada/JornadaColetiva";
 import { JornadaConformidade } from "@/components/jornada/JornadaConformidade";
 import { JornadaAlertas } from "@/components/jornada/JornadaAlertas";
-import { BarChart3, Upload, User, Users, Shield, Bell } from "lucide-react";
+import { JornadaDocumentos } from "@/components/jornada/JornadaDocumentos";
+import { JornadaRelatorios } from "@/components/jornada/JornadaRelatorios";
+import { BarChart3, Upload, User, Users, Shield, Bell, FileText, FileDown } from "lucide-react";
 
 export default function AnaliseJornada() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -21,7 +23,7 @@ export default function AnaliseJornada() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 h-auto">
+        <TabsList className="grid w-full grid-cols-8 h-auto">
           <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs py-2">
             <BarChart3 className="h-3.5 w-3.5" /> Dashboard
           </TabsTrigger>
@@ -40,6 +42,12 @@ export default function AnaliseJornada() {
           <TabsTrigger value="alertas" className="flex items-center gap-1.5 text-xs py-2">
             <Bell className="h-3.5 w-3.5" /> Alertas
           </TabsTrigger>
+          <TabsTrigger value="documentos" className="flex items-center gap-1.5 text-xs py-2">
+            <FileText className="h-3.5 w-3.5" /> Documentos
+          </TabsTrigger>
+          <TabsTrigger value="relatorios" className="flex items-center gap-1.5 text-xs py-2">
+            <FileDown className="h-3.5 w-3.5" /> Relatórios
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard"><JornadaDashboard /></TabsContent>
@@ -48,6 +56,8 @@ export default function AnaliseJornada() {
         <TabsContent value="coletiva"><JornadaColetiva /></TabsContent>
         <TabsContent value="conformidade"><JornadaConformidade /></TabsContent>
         <TabsContent value="alertas"><JornadaAlertas /></TabsContent>
+        <TabsContent value="documentos"><JornadaDocumentos /></TabsContent>
+        <TabsContent value="relatorios"><JornadaRelatorios /></TabsContent>
       </Tabs>
     </div>
   );

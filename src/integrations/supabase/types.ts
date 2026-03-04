@@ -6570,6 +6570,7 @@ export type Database = {
           departamento: string | null
           detalhes_conformidade: Json | null
           dias_trabalhados: number | null
+          gestor: string | null
           id: string
           media_diaria_horas: number | null
           media_semanal_horas: number | null
@@ -6586,6 +6587,7 @@ export type Database = {
           total_horas_trabalhadas: number | null
           unidade: string | null
           updated_at: string
+          violacoes_dsr: number | null
           violacoes_horas_extras: number | null
           violacoes_interjornada: number | null
           violacoes_intervalo: number | null
@@ -6599,6 +6601,7 @@ export type Database = {
           departamento?: string | null
           detalhes_conformidade?: Json | null
           dias_trabalhados?: number | null
+          gestor?: string | null
           id?: string
           media_diaria_horas?: number | null
           media_semanal_horas?: number | null
@@ -6615,6 +6618,7 @@ export type Database = {
           total_horas_trabalhadas?: number | null
           unidade?: string | null
           updated_at?: string
+          violacoes_dsr?: number | null
           violacoes_horas_extras?: number | null
           violacoes_interjornada?: number | null
           violacoes_intervalo?: number | null
@@ -6628,6 +6632,7 @@ export type Database = {
           departamento?: string | null
           detalhes_conformidade?: Json | null
           dias_trabalhados?: number | null
+          gestor?: string | null
           id?: string
           media_diaria_horas?: number | null
           media_semanal_horas?: number | null
@@ -6644,6 +6649,7 @@ export type Database = {
           total_horas_trabalhadas?: number | null
           unidade?: string | null
           updated_at?: string
+          violacoes_dsr?: number | null
           violacoes_horas_extras?: number | null
           violacoes_interjornada?: number | null
           violacoes_intervalo?: number | null
@@ -6832,6 +6838,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "jornada_parametros_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jornada_templates_mapeamento: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          criado_por_id: string | null
+          descricao: string | null
+          headers_originais: string[] | null
+          id: string
+          mapeamento: Json
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_id?: string | null
+          descricao?: string | null
+          headers_originais?: string[] | null
+          id?: string
+          mapeamento?: Json
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_id?: string | null
+          descricao?: string | null
+          headers_originais?: string[] | null
+          id?: string
+          mapeamento?: Json
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jornada_templates_mapeamento_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
