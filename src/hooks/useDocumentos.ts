@@ -122,6 +122,8 @@ export function useDocumentos() {
       tipo,
       dataValidade,
       observacoes,
+      documentoExistenteId,
+      motivoRevisao,
     }: {
       file: File;
       colaboradorNome: string;
@@ -130,32 +132,81 @@ export function useDocumentos() {
       tipo: string;
       dataValidade?: string;
       observacoes?: string;
+      documentoExistenteId?: string;   // se preenchido → nova versão
+      motivoRevisao?: string;
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
-      // Gerar nome único com estrutura de pastas por colaborador
       const timestamp = Date.now();
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-      
-      // Nova estrutura: {tenant_id}/colaboradores/{colaborador_id}/{timestamp}_{arquivo}
       const nomeArquivo = colaboradorId
         ? `${tenantId}/colaboradores/${colaboradorId}/${timestamp}_${safeFileName}`
         : `${tenantId}/${timestamp}_${safeFileName}`;
 
-      // Upload para o storage
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(nomeArquivo, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+        .upload(nomeArquivo, file, { cacheControl: "3600", upsert: false });
 
       if (uploadError) throw uploadError;
 
-      // Calcular status
       const status = calcularStatus(dataValidade || null);
 
-      // Salvar metadados no banco
+      // ── NOVA VERSÃO de documento existente ───────────────────────────────
+      if (documentoExistenteId) {
+        // 1. Buscar documento atual para salvar sua versão
+        const { data: docAtual } = await supabase
+          .from("documentos" as never)
+          .select("*")
+          .eq("id", documentoExistenteId)
+          .single() as { data: Documento | null };
+
+        if (docAtual) {
+          const proximaVersao = (docAtual.versao_atual || 1) + 1;
+
+          // 2. Salvar versão anterior no histórico
+          await supabase.from("documento_versoes" as never).insert({
+            tenant_id: tenantId,
+            documento_id: documentoExistenteId,
+            versao: docAtual.versao_atual || 1,
+            nome_original: docAtual.nome_original,
+            storage_path: docAtual.storage_path,
+            tamanho: docAtual.tamanho,
+            mime_type: docAtual.mime_type,
+            data_validade: docAtual.data_validade,
+            observacoes: docAtual.observacoes,
+            criado_por: docAtual.criado_por,
+            criado_por_nome: docAtual.criado_por_nome,
+            motivo_revisao: motivoRevisao || null,
+          } as never);
+
+          // 3. Atualizar documento principal com novo arquivo
+          const { data, error } = await supabase
+            .from("documentos" as never)
+            .update({
+              nome_arquivo: nomeArquivo,
+              nome_original: file.name,
+              tamanho: file.size,
+              mime_type: file.type,
+              storage_path: nomeArquivo,
+              data_validade: dataValidade || null,
+              status,
+              observacoes: observacoes || docAtual.observacoes,
+              versao_atual: proximaVersao,
+              total_versoes: proximaVersao,
+            } as never)
+            .eq("id", documentoExistenteId)
+            .select()
+            .single();
+
+          if (error) {
+            await supabase.storage.from("documentos").remove([nomeArquivo]);
+            throw error;
+          }
+          return data;
+        }
+      }
+
+      // ── NOVO DOCUMENTO ───────────────────────────────────────────────────
       const { data, error } = await supabase
         .from("documentos" as never)
         .insert({
@@ -174,21 +225,27 @@ export function useDocumentos() {
           observacoes: observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
+          versao_atual: 1,
+          total_versoes: 1,
         } as never)
         .select()
         .single();
 
       if (error) {
-        // Tentar remover arquivo do storage em caso de erro
         await supabase.storage.from("documentos").remove([nomeArquivo]);
         throw error;
       }
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["documentos"] });
-      toast.success("Documento enviado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["documento-versoes"] });
+      if (vars.documentoExistenteId) {
+        toast.success("Nova versão salva com sucesso! Versão anterior preservada no histórico.");
+      } else {
+        toast.success("Documento enviado com sucesso!");
+      }
     },
     onError: (error: Error) => {
       toast.error("Erro ao enviar documento: " + error.message);
