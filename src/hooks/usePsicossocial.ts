@@ -377,71 +377,79 @@ export function usePsicossocial() {
   // ==================== FUNÇÕES PÚBLICAS (SEM AUTH) ====================
   // Usam supabasePublic para evitar conflito de RLS com usuário logado
 
-  // Buscar convite por token (público)
+  // Buscar convite por token (público) - via security definer function
   const buscarConvitePorToken = async (token: string): Promise<ConvitePsicossocial & { campanha: CampanhaPsicossocial } | null> => {
     const { data, error } = await supabasePublic
-      .from("questionario_psicossocial_convites")
-      .select(`
-        *,
-        campanha:questionario_psicossocial_campanhas(*)
-      `)
-      .eq("token", token.toUpperCase())
-      .single();
+      .rpc('buscar_convite_por_token', { p_token: token });
 
-    if (error) return null;
-    return data as ConvitePsicossocial & { campanha: CampanhaPsicossocial };
+    if (error || !data || data.length === 0) return null;
+    
+    const row = data[0];
+    // Reconstruct the nested shape expected by consumers
+    const convite = {
+      id: row.id,
+      tenant_id: row.tenant_id,
+      campanha_id: row.campanha_id,
+      colaborador_id: row.colaborador_id,
+      colaborador_nome: row.colaborador_nome,
+      colaborador_cpf: row.colaborador_cpf,
+      colaborador_cargo: row.colaborador_cargo,
+      colaborador_departamento: row.colaborador_departamento,
+      token: row.token,
+      status: row.status,
+      enviado_via: row.enviado_via,
+      enviado_em: row.enviado_em,
+      iniciado_em: row.iniciado_em,
+      concluido_em: row.concluido_em,
+      created_at: row.created_at,
+      campanha: {
+        id: row.campanha_id,
+        nome: row.campanha_nome,
+        descricao: row.campanha_descricao,
+        tipo: row.campanha_tipo,
+        status: row.campanha_status,
+        data_inicio: row.campanha_data_inicio,
+        data_fim: row.campanha_data_fim,
+        anonimo: row.campanha_anonimo,
+        permite_identificacao_voluntaria: row.campanha_permite_identificacao_voluntaria,
+        mensagem_institucional: row.campanha_mensagem_institucional,
+        politica_uso_dados: row.campanha_politica_uso_dados,
+        blocos_dinamicos: row.campanha_blocos_dinamicos,
+      } as CampanhaPsicossocial,
+    } as ConvitePsicossocial & { campanha: CampanhaPsicossocial };
+
+    return convite;
   };
 
-  // Atualizar status do convite (público)
+  // Atualizar status do convite (público) - via security definer function
   const atualizarConvitePublico = async (token: string, status: ConvitePsicossocial['status']) => {
-    const updateData: Record<string, unknown> = { status };
-    
-    if (status === 'iniciado') {
-      updateData.iniciado_em = new Date().toISOString();
-    } else if (status === 'concluido') {
-      updateData.concluido_em = new Date().toISOString();
-    }
-
     const { error } = await supabasePublic
-      .from("questionario_psicossocial_convites")
-      .update(updateData)
-      .eq("token", token.toUpperCase());
+      .rpc('atualizar_convite_por_token', { p_token: token, p_status: status });
 
     if (error) throw error;
   };
 
-  // Salvar resposta (público)
+  // Salvar resposta (público) - via security definer function
   const salvarRespostaPublica = async (
     convite: ConvitePsicossocial & { campanha?: CampanhaPsicossocial },
     respostas: Record<string, number>,
     tempoSegundos: number,
     identificacaoVoluntaria: boolean = false
   ): Promise<void> => {
-    // Calcular indicadores (passando blocos dinâmicos da campanha)
     const blocosDinamicos = convite.campanha?.blocos_dinamicos || [];
     const indicadores = calcularIndicadores(respostas, blocosDinamicos);
 
-    const insertData = {
-      tenant_id: convite.tenant_id,
-      campanha_id: convite.campanha_id,
-      convite_id: convite.id,
-      colaborador_id: convite.colaborador_id,
-      respostas: JSON.parse(JSON.stringify(respostas)),
-      indicadores: JSON.parse(JSON.stringify(indicadores)),
-      identificacao_voluntaria: identificacaoVoluntaria,
-      tempo_resposta_segundos: tempoSegundos,
-      user_agent: navigator.userAgent,
-      concluido_em: new Date().toISOString(),
-    };
-
     const { error } = await supabasePublic
-      .from("questionario_psicossocial_respostas")
-      .insert([insertData]);
+      .rpc('salvar_resposta_psicossocial', {
+        p_token: convite.token,
+        p_respostas: JSON.parse(JSON.stringify(respostas)),
+        p_indicadores: JSON.parse(JSON.stringify(indicadores)),
+        p_identificacao_voluntaria: identificacaoVoluntaria,
+        p_tempo_segundos: tempoSegundos,
+        p_user_agent: navigator.userAgent,
+      });
 
     if (error) throw error;
-
-    // Atualizar status do convite
-    await atualizarConvitePublico(convite.token, 'concluido');
   };
 
   // ==================== STATS GERAIS ====================

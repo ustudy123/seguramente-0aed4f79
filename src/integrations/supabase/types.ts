@@ -12524,8 +12524,43 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atualizar_convite_por_token: {
+        Args: { p_status: string; p_token: string }
+        Returns: undefined
+      }
       auto_abrir_competencia_mensal: { Args: never; Returns: undefined }
       bloquear_profissionais_expirados: { Args: never; Returns: undefined }
+      buscar_convite_por_token: {
+        Args: { p_token: string }
+        Returns: {
+          campanha_anonimo: boolean
+          campanha_blocos_dinamicos: Json
+          campanha_data_fim: string
+          campanha_data_inicio: string
+          campanha_descricao: string
+          campanha_id: string
+          campanha_mensagem_institucional: string
+          campanha_nome: string
+          campanha_permite_identificacao_voluntaria: boolean
+          campanha_politica_uso_dados: string
+          campanha_status: string
+          campanha_tipo: string
+          colaborador_cargo: string
+          colaborador_cpf: string
+          colaborador_departamento: string
+          colaborador_id: string
+          colaborador_nome: string
+          concluido_em: string
+          created_at: string
+          enviado_em: string
+          enviado_via: string
+          id: string
+          iniciado_em: string
+          status: string
+          tenant_id: string
+          token: string
+        }[]
+      }
       buscar_profissionais_proximos: {
         Args: { p_lat: number; p_lon: number; p_raio_km?: number }
         Returns: {
@@ -12580,6 +12615,17 @@ export type Database = {
       }
       recalcular_status_trabalhador: {
         Args: { p_trabalhador_id: string }
+        Returns: undefined
+      }
+      salvar_resposta_psicossocial: {
+        Args: {
+          p_identificacao_voluntaria: boolean
+          p_indicadores: Json
+          p_respostas: Json
+          p_tempo_segundos: number
+          p_token: string
+          p_user_agent: string
+        }
         Returns: undefined
       }
     }
