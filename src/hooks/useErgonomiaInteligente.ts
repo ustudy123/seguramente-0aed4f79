@@ -58,6 +58,12 @@ export interface DadosCognitivos {
     emAndamento: number;
     concluidas: number;
   };
+  jornadaExcessiva: {
+    alertasExcesso: number;
+    alertasIntervalo: number;
+    alertasInterjornada: number;
+    horasExtrasMediaMin: number;
+  };
 }
 
 export function useErgonomiaInteligente() {
@@ -125,6 +131,28 @@ export function useErgonomiaInteligente() {
       const acoesEmAndamento = acoesData?.filter(a => a.status === 'em_andamento').length || 0;
       const acoesConcluidas = acoesData?.filter(a => a.status === 'concluida').length || 0;
 
+      // Buscar alertas de ponto (jornada excessiva) dos últimos 30 dias
+      const { data: alertasPonto } = await supabase
+        .from("ponto_alertas" as never)
+        .select("tipo, severidade")
+        .eq("tenant_id", tenantId)
+        .gte("created_at", trintaDiasAtras) as { data: any[] | null };
+
+      const alertasExcesso = (alertasPonto || []).filter((a: any) => a.tipo === 'excesso_jornada').length;
+      const alertasIntervalo = (alertasPonto || []).filter((a: any) => a.tipo === 'intervalo_suprimido').length;
+      const alertasInterjornada = (alertasPonto || []).filter((a: any) => a.tipo === 'interjornada_insuficiente').length;
+
+      // Buscar média de HE dos últimos 30 dias
+      const { data: pontoDiarioData } = await supabase
+        .from("ponto_diario" as never)
+        .select("horas_extras_50_minutos, horas_extras_100_minutos")
+        .eq("tenant_id", tenantId)
+        .gte("data", trintaDiasAtras) as { data: any[] | null };
+
+      const totalHE = (pontoDiarioData || []).reduce((sum: number, p: any) =>
+        sum + (p.horas_extras_50_minutos || 0) + (p.horas_extras_100_minutos || 0), 0);
+      const mediaHE = pontoDiarioData && pontoDiarioData.length > 0 ? totalHE / pontoDiarioData.length : 0;
+
       return {
         humorUltimos7Dias: {
           positivo: humorPositivo,
@@ -144,6 +172,12 @@ export function useErgonomiaInteligente() {
           emAndamento: acoesEmAndamento,
           concluidas: acoesConcluidas,
         },
+        jornadaExcessiva: {
+          alertasExcesso,
+          alertasIntervalo,
+          alertasInterjornada,
+          horasExtrasMediaMin: Math.round(mediaHE),
+        },
       };
     },
     enabled: !!tenantId,
@@ -158,23 +192,26 @@ export function useErgonomiaInteligente() {
     const totalRiscos = dados.riscosAtivos.fisico + dados.riscosAtivos.cognitivo + dados.riscosAtivos.organizacional;
     const totalAcoes = dados.acoesStatus.pendentes + dados.acoesStatus.emAndamento + dados.acoesStatus.concluidas;
 
-    // BURNOUT: Alta sobrecarga + humor negativo + denúncias
+    // BURNOUT: Alta sobrecarga + humor negativo + denúncias + jornada excessiva
+    const jornadaFator = Math.min(100, dados.jornadaExcessiva.alertasExcesso * 20 + dados.jornadaExcessiva.horasExtrasMediaMin * 2);
+    const intervaloFator = Math.min(100, (dados.jornadaExcessiva.alertasIntervalo + dados.jornadaExcessiva.alertasInterjornada) * 15);
     const fatoresBurnout = {
-      sobrecargaCognitiva: Math.min(100, dados.riscosAtivos.cognitivo * 20),
-      ritmoTrabalho: Math.min(100, dados.riscosAtivos.organizacional * 15),
-      faltaPausas: Math.min(100, dados.acoesStatus.pendentes * 10),
+      sobrecargaCognitiva: Math.min(100, dados.riscosAtivos.cognitivo * 20 + jornadaFator * 0.3),
+      ritmoTrabalho: Math.min(100, dados.riscosAtivos.organizacional * 15 + jornadaFator * 0.5),
+      faltaPausas: Math.min(100, dados.acoesStatus.pendentes * 10 + intervaloFator * 0.6),
       humorNegativo: percNegativo,
       denuncias: Math.min(100, dados.denunciasAbertas * 25),
-      exigenciasEmocionais: Math.min(100, (percNegativo + dados.riscosAtivos.cognitivo * 10) / 2),
+      exigenciasEmocionais: Math.min(100, (percNegativo + dados.riscosAtivos.cognitivo * 10 + jornadaFator * 0.2) / 2),
     };
     const scoreBurnout = Math.round(
       Object.values(fatoresBurnout).reduce((a, b) => a + b, 0) / 6
     );
 
-    // BOREOUT: Subcarga + apatia + falta de desafio
+    // BOREOUT: Subcarga + apatia + falta de desafio (inversamente correlacionado com HE)
+    const baixaAtividade = Math.max(0, 100 - jornadaFator); // Pouca HE pode indicar baixa atividade
     const fatoresBoreout = {
-      baixoDesafio: Math.max(0, 100 - totalRiscos * 10 - totalAcoes * 5),
-      repetitividade: Math.max(0, 50 - dados.riscosAtivos.cognitivo * 10),
+      baixoDesafio: Math.max(0, 100 - totalRiscos * 10 - totalAcoes * 5 + baixaAtividade * 0.2),
+      repetitividade: Math.max(0, 50 - dados.riscosAtivos.cognitivo * 10 + baixaAtividade * 0.1),
       faltaSentido: Math.max(0, percNegativo / 2),
       apatia: Math.max(0, dados.humorUltimos7Dias.neutro / totalHumor * 100),
       desconexao: Math.max(0, 100 - percPositivo),
@@ -230,5 +267,6 @@ function getDefaultDadosCognitivos(): DadosCognitivos {
     denunciasUltimos30Dias: 0,
     riscosAtivos: { fisico: 0, cognitivo: 0, organizacional: 0 },
     acoesStatus: { pendentes: 0, emAndamento: 0, concluidas: 0 },
+    jornadaExcessiva: { alertasExcesso: 0, alertasIntervalo: 0, alertasInterjornada: 0, horasExtrasMediaMin: 0 },
   };
 }

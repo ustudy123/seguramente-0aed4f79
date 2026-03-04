@@ -10240,6 +10240,111 @@ export type Database = {
           },
         ]
       }
+      ponto_cct_config: {
+        Row: {
+          adicional_noturno_percentual: number | null
+          ativo: boolean | null
+          banco_horas_permitido: boolean | null
+          banco_horas_prazo_compensacao_meses: number | null
+          categoria_profissional: string | null
+          created_at: string | null
+          dsr_proporcional: boolean | null
+          empresa_id: string | null
+          he_limite_diario_min: number | null
+          he_percentual_dia_util: number | null
+          he_percentual_domingos: number | null
+          he_percentual_feriados: number | null
+          hora_noturna_fim: string | null
+          hora_noturna_inicio: string | null
+          id: string
+          intervalo_maximo_min: number | null
+          intervalo_minimo_min: number | null
+          jornada_diaria_horas: number | null
+          jornada_semanal_horas: number | null
+          nome: string
+          observacoes: string | null
+          sindicato: string | null
+          tenant_id: string
+          updated_at: string | null
+          usa_hora_ficta: boolean | null
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+        }
+        Insert: {
+          adicional_noturno_percentual?: number | null
+          ativo?: boolean | null
+          banco_horas_permitido?: boolean | null
+          banco_horas_prazo_compensacao_meses?: number | null
+          categoria_profissional?: string | null
+          created_at?: string | null
+          dsr_proporcional?: boolean | null
+          empresa_id?: string | null
+          he_limite_diario_min?: number | null
+          he_percentual_dia_util?: number | null
+          he_percentual_domingos?: number | null
+          he_percentual_feriados?: number | null
+          hora_noturna_fim?: string | null
+          hora_noturna_inicio?: string | null
+          id?: string
+          intervalo_maximo_min?: number | null
+          intervalo_minimo_min?: number | null
+          jornada_diaria_horas?: number | null
+          jornada_semanal_horas?: number | null
+          nome: string
+          observacoes?: string | null
+          sindicato?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          usa_hora_ficta?: boolean | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Update: {
+          adicional_noturno_percentual?: number | null
+          ativo?: boolean | null
+          banco_horas_permitido?: boolean | null
+          banco_horas_prazo_compensacao_meses?: number | null
+          categoria_profissional?: string | null
+          created_at?: string | null
+          dsr_proporcional?: boolean | null
+          empresa_id?: string | null
+          he_limite_diario_min?: number | null
+          he_percentual_dia_util?: number | null
+          he_percentual_domingos?: number | null
+          he_percentual_feriados?: number | null
+          hora_noturna_fim?: string | null
+          hora_noturna_inicio?: string | null
+          id?: string
+          intervalo_maximo_min?: number | null
+          intervalo_minimo_min?: number | null
+          jornada_diaria_horas?: number | null
+          jornada_semanal_horas?: number | null
+          nome?: string
+          observacoes?: string | null
+          sindicato?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          usa_hora_ficta?: boolean | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_cct_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_cct_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_configuracao: {
         Row: {
           bloquear_dispositivo_nao_autorizado: boolean
@@ -10652,6 +10757,72 @@ export type Database = {
           },
         ]
       }
+      ponto_exportacoes_folha: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          competencia: string
+          created_at: string | null
+          dados_exportados: Json | null
+          empresa_id: string | null
+          formato: string | null
+          gerado_por: string | null
+          gerado_por_id: string | null
+          id: string
+          sistema_destino: string | null
+          status: string | null
+          tenant_id: string
+          total_colaboradores: number | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          competencia: string
+          created_at?: string | null
+          dados_exportados?: Json | null
+          empresa_id?: string | null
+          formato?: string | null
+          gerado_por?: string | null
+          gerado_por_id?: string | null
+          id?: string
+          sistema_destino?: string | null
+          status?: string | null
+          tenant_id: string
+          total_colaboradores?: number | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          competencia?: string
+          created_at?: string | null
+          dados_exportados?: Json | null
+          empresa_id?: string | null
+          formato?: string | null
+          gerado_por?: string | null
+          gerado_por_id?: string | null
+          id?: string
+          sistema_destino?: string | null
+          status?: string | null
+          tenant_id?: string
+          total_colaboradores?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_exportacoes_folha_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_exportacoes_folha_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_fechamentos: {
         Row: {
           competencia: string
@@ -10801,6 +10972,84 @@ export type Database = {
           },
           {
             foreignKeyName: "ponto_marcacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_repc_importacoes: {
+        Row: {
+          arquivo_nome: string
+          arquivo_url: string | null
+          created_at: string | null
+          empresa_id: string | null
+          erros: Json | null
+          fabricante: string | null
+          id: string
+          importado_por: string | null
+          importado_por_id: string | null
+          modelo: string | null
+          numero_serie: string | null
+          registros_importados: number | null
+          registros_rejeitados: number | null
+          status: string | null
+          tenant_id: string
+          tipo_equipamento: string | null
+          total_registros: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_url?: string | null
+          created_at?: string | null
+          empresa_id?: string | null
+          erros?: Json | null
+          fabricante?: string | null
+          id?: string
+          importado_por?: string | null
+          importado_por_id?: string | null
+          modelo?: string | null
+          numero_serie?: string | null
+          registros_importados?: number | null
+          registros_rejeitados?: number | null
+          status?: string | null
+          tenant_id: string
+          tipo_equipamento?: string | null
+          total_registros?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_url?: string | null
+          created_at?: string | null
+          empresa_id?: string | null
+          erros?: Json | null
+          fabricante?: string | null
+          id?: string
+          importado_por?: string | null
+          importado_por_id?: string | null
+          modelo?: string | null
+          numero_serie?: string | null
+          registros_importados?: number | null
+          registros_rejeitados?: number | null
+          status?: string | null
+          tenant_id?: string
+          tipo_equipamento?: string | null
+          total_registros?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_repc_importacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_repc_importacoes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
