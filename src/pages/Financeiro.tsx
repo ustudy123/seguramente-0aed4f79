@@ -17,6 +17,8 @@ import {
   ChevronsUpDown,
   Check,
   Package,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,8 +82,9 @@ const BeneficiosTab = () => {
   const [showTipoModal, setShowTipoModal] = useState(false);
   const [showVinculoModal, setShowVinculoModal] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
+  const [editingTipoId, setEditingTipoId] = useState<string | null>(null);
 
-  const [tipoForm, setTipoForm] = useState({
+  const emptyTipoForm = {
     nome: "",
     categoria: "alimentacao",
     descricao: "",
@@ -89,7 +92,9 @@ const BeneficiosTab = () => {
     tipo_desconto: "fixo",
     valor_desconto_fixo: 0,
     percentual_desconto: 0,
-  });
+  };
+
+  const [tipoForm, setTipoForm] = useState(emptyTipoForm);
 
   const [vinculoForm, setVinculoForm] = useState({
     beneficio_tipo_id: "",
@@ -103,9 +108,32 @@ const BeneficiosTab = () => {
 
   const handleCriarTipo = async () => {
     if (!tipoForm.nome) return toast.error("Informe o nome do benefício");
-    await criarBeneficioTipo(tipoForm);
+    if (editingTipoId) {
+      await atualizarBeneficioTipo({ id: editingTipoId, ...tipoForm });
+    } else {
+      await criarBeneficioTipo(tipoForm);
+    }
     setShowTipoModal(false);
-    setTipoForm({ nome: "", categoria: "alimentacao", descricao: "", valor_padrao: 0, tipo_desconto: "fixo", valor_desconto_fixo: 0, percentual_desconto: 0 });
+    setEditingTipoId(null);
+    setTipoForm(emptyTipoForm);
+  };
+
+  const handleEditarTipo = (tipo: BeneficioTipo) => {
+    setEditingTipoId(tipo.id);
+    setTipoForm({
+      nome: tipo.nome,
+      categoria: tipo.categoria,
+      descricao: tipo.descricao || "",
+      valor_padrao: tipo.valor_padrao ?? 0,
+      tipo_desconto: tipo.tipo_desconto || "fixo",
+      valor_desconto_fixo: tipo.valor_desconto_fixo ?? 0,
+      percentual_desconto: tipo.percentual_desconto ?? 0,
+    });
+    setShowTipoModal(true);
+  };
+
+  const handleToggleAtivo = async (tipo: BeneficioTipo) => {
+    await atualizarBeneficioTipo({ id: tipo.id, ativo: !tipo.ativo });
   };
 
   const handleVincular = async () => {
@@ -193,7 +221,15 @@ const BeneficiosTab = () => {
                             <Badge className={cn("text-xs mt-1", cat.color)}>{cat.label}</Badge>
                           </div>
                         </div>
-                        <Badge variant={tipo.ativo ? "default" : "secondary"}>{tipo.ativo ? "Ativo" : "Inativo"}</Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant={tipo.ativo ? "default" : "secondary"}>{tipo.ativo ? "Ativo" : "Inativo"}</Badge>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditarTipo(tipo)} title="Editar">
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleToggleAtivo(tipo)} title={tipo.ativo ? "Desativar" : "Ativar"}>
+                            {tipo.ativo ? <Trash2 className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5 text-success" />}
+                          </Button>
+                        </div>
                       </div>
                       {tipo.descricao && <p className="text-sm text-muted-foreground mb-3">{tipo.descricao}</p>}
                       <div className="flex items-center justify-between text-sm">
@@ -253,11 +289,11 @@ const BeneficiosTab = () => {
       </div>
 
       {/* Modal Novo Tipo */}
-      <Dialog open={showTipoModal} onOpenChange={setShowTipoModal}>
+      <Dialog open={showTipoModal} onOpenChange={(open) => { setShowTipoModal(open); if (!open) { setEditingTipoId(null); setTipoForm(emptyTipoForm); } }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Novo Tipo de Benefício</DialogTitle>
-            <DialogDescription>Cadastre um novo benefício para a empresa</DialogDescription>
+            <DialogTitle>{editingTipoId ? "Editar Benefício" : "Novo Tipo de Benefício"}</DialogTitle>
+            <DialogDescription>{editingTipoId ? "Altere os dados do benefício" : "Cadastre um novo benefício para a empresa"}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
@@ -297,7 +333,7 @@ const BeneficiosTab = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTipoModal(false)}>Cancelar</Button>
             <Button className="gradient-primary" onClick={handleCriarTipo} disabled={criandoBeneficioTipo}>
-              {criandoBeneficioTipo ? "Criando..." : "Criar Benefício"}
+              {criandoBeneficioTipo ? "Salvando..." : editingTipoId ? "Salvar Alterações" : "Criar Benefício"}
             </Button>
           </DialogFooter>
         </DialogContent>
