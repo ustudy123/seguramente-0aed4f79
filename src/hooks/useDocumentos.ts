@@ -23,6 +23,25 @@ export interface Documento {
   criado_por_nome: string | null;
   created_at: string;
   updated_at: string;
+  versao_atual: number;
+  total_versoes: number;
+}
+
+export interface DocumentoVersao {
+  id: string;
+  tenant_id: string;
+  documento_id: string;
+  versao: number;
+  nome_original: string;
+  storage_path: string;
+  tamanho: number;
+  mime_type: string;
+  data_validade: string | null;
+  observacoes: string | null;
+  criado_por: string | null;
+  criado_por_nome: string | null;
+  motivo_revisao: string | null;
+  created_at: string;
 }
 
 export const TIPOS_DOCUMENTO = [
