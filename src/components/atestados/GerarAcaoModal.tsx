@@ -23,6 +23,13 @@ interface Sugestao {
   prioridade: "baixa" | "media" | "alta" | "critica";
 }
 
+const mapPrioridade = (p: string): "baixo" | "medio" | "urgente" | "imediato" => {
+  if (p === "critica") return "imediato";
+  if (p === "alta") return "urgente";
+  if (p === "media") return "medio";
+  return "baixo";
+};
+
 interface GerarAcaoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -114,7 +121,7 @@ export function GerarAcaoModal({ open, onOpenChange, alerta }: GerarAcaoModalPro
           como: sugestao.como,
           responsavel_id: user.id,
           responsavel_nome: profile?.nome_completo || "Não definido",
-          prioridade: sugestao.prioridade,
+          prioridade: mapPrioridade(sugestao.prioridade),
           status: "pendente",
           origem_modulo: "atestados",
           origem_descricao: `Alerta: ${alerta.descricao}`,
