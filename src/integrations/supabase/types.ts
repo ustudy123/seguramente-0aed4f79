@@ -12291,6 +12291,7 @@ export type Database = {
           total_servicos_executados: number
         }[]
       }
+      converter_banco_horas_vencido: { Args: never; Returns: undefined }
       get_user_tenant_id: { Args: never; Returns: string }
       has_minimum_role: {
         Args: {

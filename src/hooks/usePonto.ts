@@ -258,10 +258,17 @@ export function usePonto() {
       }
       return data as PontoMarcacao;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ponto-marcacoes-hoje"] });
       queryClient.invalidateQueries({ queryKey: ["ponto-diario"] });
-      toast.success(`${TIPO_MARCACAO_LABELS[variables.tipoMarcacao]} registrada com sucesso!`);
+      const horaFormatada = data ? String((data as any).hora_marcacao || "").substring(0, 5) : format(new Date(), "HH:mm");
+      toast.success(
+        `✅ ${TIPO_MARCACAO_LABELS[variables.tipoMarcacao]} registrada às ${horaFormatada}`,
+        {
+          description: `Comprovante: ${variables.colaboradorNome} — ${format(new Date(), "dd/MM/yyyy")}`,
+          duration: 8000,
+        }
+      );
     },
     onError: (error: Error) => {
       toast.error(error.message);
