@@ -192,6 +192,15 @@ export function PastaDocumentosList({
                     <Badge className={cn("text-xs hidden sm:flex", config.style)}>
                       {config.label}
                     </Badge>
+                    {(() => {
+                      const docCompleto = documentosCompletos.find(d => d.id === doc.id);
+                      return docCompleto && (docCompleto.total_versoes > 1) ? (
+                        <Badge variant="outline" className="text-[10px] hidden sm:flex gap-1">
+                          <History className="w-3 h-3" />
+                          v{docCompleto.versao_atual}
+                        </Badge>
+                      ) : null;
+                    })()}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -207,6 +216,17 @@ export function PastaDocumentosList({
                           <Download className="w-4 h-4 mr-2" />
                           Download
                         </DropdownMenuItem>
+                        {(() => {
+                          const docCompleto = documentosCompletos.find(d => d.id === doc.id);
+                          return docCompleto ? (
+                            <>
+                              <DropdownMenuItem onClick={() => setVersoesDoc(docCompleto)}>
+                                <History className="w-4 h-4 mr-2" />
+                                Versões {docCompleto.total_versoes > 1 ? `(${docCompleto.total_versoes})` : ""}
+                              </DropdownMenuItem>
+                            </>
+                          ) : null;
+                        })()}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
@@ -229,6 +249,17 @@ export function PastaDocumentosList({
           </div>
         )}
       </div>
+
+      {/* Modal de versões */}
+      <DocumentoVersoesModal
+        open={!!versoesDoc}
+        onOpenChange={(v) => !v && setVersoesDoc(null)}
+        documento={versoesDoc}
+        onNovaVersao={(doc) => {
+          setVersoesDoc(null);
+          onNovaVersao?.(doc);
+        }}
+      />
     </div>
   );
 }
