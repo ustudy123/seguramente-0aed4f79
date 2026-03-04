@@ -14,6 +14,7 @@ import {
   Sparkles,
   ShieldCheck,
   Radar,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm
 import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos/GerarEstruturaWizard";
 import { MapaConformidade } from "@/components/documentos/MapaConformidade";
 import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
+import { PDCADashboard } from "@/components/documentos/PDCADashboard";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
@@ -443,6 +445,10 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <Radar className="w-4 h-4" />
               Governança
             </TabsTrigger>
+            <TabsTrigger value="pdca" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              PDCA
+            </TabsTrigger>
             <TabsTrigger value="historico" className="gap-2">
               <History className="w-4 h-4" />
               Auditoria
@@ -580,6 +586,28 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
             className="space-y-4"
           >
             <RadarGovernanca tree={tree} />
+          </motion.div>
+        </TabsContent>
+
+        {/* PDCA Tab */}
+        <TabsContent value="pdca" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-xl border border-border p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                  Motor de Melhoria Contínua — PDCA
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Consolidação de riscos, ações, auditorias e melhorias em um único painel
+                </p>
+              </div>
+            </div>
+            <PDCADashboard />
           </motion.div>
         </TabsContent>
 
