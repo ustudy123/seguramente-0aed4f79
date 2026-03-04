@@ -261,7 +261,11 @@ export function PDCADashboard() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={({ name, percent }: { name: string; percent: number }) => `${name.charAt(0).toUpperCase() + name.slice(1)} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent, x, y }: { name: string; percent: number; x: number; y: number }) => (
+                      <text x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontFamily: "inherit" }}>
+                        {`${name.charAt(0).toUpperCase() + name.slice(1)} ${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    )}
                     labelLine={true}
                   >
                     {acoesPorOrigem.map((_, idx) => (
