@@ -12,6 +12,8 @@ import {
   AlertCircle,
   Building2,
   Sparkles,
+  ShieldCheck,
+  Radar,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,8 @@ import { CreatePastaModal } from "@/components/documentos/CreatePastaModal";
 import { DocumentoAuditLog } from "@/components/documentos/DocumentoAuditLog";
 import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
 import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos/GerarEstruturaWizard";
+import { MapaConformidade } from "@/components/documentos/MapaConformidade";
+import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
@@ -430,6 +434,14 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <FolderTree className="w-4 h-4" />
               Estrutura
             </TabsTrigger>
+            <TabsTrigger value="conformidade" className="gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Conformidade
+            </TabsTrigger>
+            <TabsTrigger value="radar" className="gap-2">
+              <Radar className="w-4 h-4" />
+              Governança
+            </TabsTrigger>
             <TabsTrigger value="historico" className="gap-2">
               <History className="w-4 h-4" />
               Auditoria
@@ -531,6 +543,37 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               </ResizablePanelGroup>
             </motion.div>
           )}
+        </TabsContent>
+
+        {/* Conformidade Tab */}
+        <TabsContent value="conformidade" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-xl border border-border p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  Mapa de Conformidade Documental
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Visão consolidada dos documentos esperados vs. existentes por categoria</p>
+              </div>
+            </div>
+            <MapaConformidade tree={tree} pastas={pastas} />
+          </motion.div>
+        </TabsContent>
+
+        {/* Radar Governança Tab */}
+        <TabsContent value="radar" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <RadarGovernanca tree={tree} />
+          </motion.div>
         </TabsContent>
 
         {/* Audit Tab */}
