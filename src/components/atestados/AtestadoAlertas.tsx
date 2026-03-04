@@ -31,79 +31,14 @@ export function AtestadoAlertas({
   beneficios,
   onResolveAlerta 
 }: AtestadoAlertasProps) {
-  const navigate = useNavigate();
-  const { tenantId, user, profile } = useAuth();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [alertaSelecionado, setAlertaSelecionado] = useState<{
+    id: string; tipo: string; titulo: string; descricao: string; colaborador_nome: string;
+  } | null>(null);
 
-  const handleGerarAcao = async (alerta: { tipo: string; colaborador_nome: string; descricao: string; id: string }) => {
-    if (!tenantId || !user) {
-      toast.error("Usuário não autenticado");
-      return;
-    }
-
-    const isINSS = alerta.tipo === 'encaminhamento_inss' || alerta.tipo === 'aso_retorno';
-    const titulo = alerta.tipo === 'aso_retorno'
-      ? `Agendar ASO de Retorno ao Trabalho — ${alerta.colaborador_nome}`
-      : alerta.tipo === 'encaminhamento_inss'
-      ? `Encaminhamento ao INSS — ${alerta.colaborador_nome}`
-      : `Ação de Saúde — ${alerta.colaborador_nome}`;
-
-    const descricao = alerta.tipo === 'aso_retorno'
-      ? `Agendar exame ASO de retorno ao trabalho para ${alerta.colaborador_nome}. Afastamento ≥30 dias requer exame antes do retorno às atividades (NR-7). ${alerta.descricao}`
-      : `${alerta.descricao}`;
-
-    const prazo = new Date();
-    prazo.setDate(prazo.getDate() + 7);
-
-    try {
-      const { data: acao, error } = await supabase
-        .from("plano_acoes")
-        .insert({
-          tenant_id: tenantId,
-          titulo,
-          descricao,
-          o_que: titulo,
-          por_que: alerta.tipo === 'aso_retorno'
-            ? 'Exigência legal NR-7 — colaborador com afastamento ≥30 dias deve realizar ASO de retorno ao trabalho antes de reassumir atividades.'
-            : 'Afastamento acumulado superior a 15 dias exige encaminhamento ao INSS para avaliação pericial.',
-          onde: 'Medicina do Trabalho / Clínica Ocupacional',
-          quando: prazo.toISOString().split("T")[0],
-          como: alerta.tipo === 'aso_retorno'
-            ? '1. Contactar clínica ocupacional\n2. Agendar ASO de retorno\n3. Encaminhar colaborador\n4. Registrar resultado no sistema'
-            : '1. Orientar colaborador sobre documentação\n2. Preencher requerimento INSS\n3. Agendar perícia médica\n4. Acompanhar resultado',
-          responsavel_id: user.id,
-          responsavel_nome: profile?.nome_completo || 'Não definido',
-          prazo: prazo.toISOString().split("T")[0],
-          prioridade: 'alta',
-          status: 'pendente',
-          origem_modulo: 'atestados',
-          origem_descricao: `Alerta: ${alerta.descricao}`,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo,
-        } as never)
-        .select("id")
-        .single();
-
-      if (error) throw error;
-
-      // If it's a DB alert, mark as resolved with action linked
-      if (alerta.id && !alerta.id.startsWith('aso-') && !alerta.id.startsWith('15dias-') && !alerta.id.startsWith('b91-')) {
-        await supabase
-          .from("alertas_saude" as never)
-          .update({
-            acao_gerada_id: (acao as any)?.id || null,
-          } as never)
-          .eq("id", alerta.id);
-      }
-
-      toast.success("Ação criada com sucesso!", {
-        action: {
-          label: "Ver Ação",
-          onClick: () => navigate("/plano-acao"),
-        },
-      });
-    } catch (err: any) {
-      toast.error("Erro ao criar ação: " + err.message);
-    }
+  const handleAbrirModal = (alerta: { id: string; tipo: string; titulo: string; descricao: string; colaborador_nome: string }) => {
+    setAlertaSelecionado(alerta);
+    setModalOpen(true);
   };
 
   // Build alerts from data
@@ -199,78 +134,86 @@ export function AtestadoAlertas({
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Bell className="h-4 w-4" />
-          Alertas de Saúde
-          <Badge variant="destructive" className="ml-auto">
-            {sortedAlertas.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[300px]">
-          <div className="space-y-2 p-4 pt-0">
-            {sortedAlertas.map((alerta, index) => (
-              <motion.div
-                key={alerta.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`p-3 rounded-lg border ${alerta.bgColor}`}
-              >
-                <div className="flex items-start gap-3">
-                  <alerta.icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${alerta.color}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-medium">{alerta.titulo}</p>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-[10px] ${
-                          alerta.prioridade === 'critica' 
-                            ? 'border-red-500 text-red-600' 
-                            : alerta.prioridade === 'alta'
-                            ? 'border-amber-500 text-amber-600'
-                            : 'border-gray-500 text-gray-600'
-                        }`}
-                      >
-                        {alerta.prioridade}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {alerta.descricao}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      {alerta.canGenerateAction && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1"
-                          onClick={() => handleGerarAcao(alerta)}
+    <>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Alertas de Saúde
+            <Badge variant="destructive" className="ml-auto">
+              {sortedAlertas.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <ScrollArea className="h-[300px]">
+            <div className="space-y-2 p-4 pt-0">
+              {sortedAlertas.map((alerta, index) => (
+                <motion.div
+                  key={alerta.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`p-3 rounded-lg border ${alerta.bgColor}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <alerta.icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${alerta.color}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium">{alerta.titulo}</p>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-[10px] ${
+                            alerta.prioridade === 'critica' 
+                              ? 'border-red-500 text-red-600' 
+                              : alerta.prioridade === 'alta'
+                              ? 'border-amber-500 text-amber-600'
+                              : 'border-gray-500 text-gray-600'
+                          }`}
                         >
-                          <ClipboardPlus className="h-3 w-3" />
-                          Gerar Ação
-                        </Button>
-                      )}
-                      {'fromDb' in alerta && alerta.fromDb && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => onResolveAlerta(alerta.id)}
-                        >
-                          Resolver
-                        </Button>
-                      )}
+                          {alerta.prioridade}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {alerta.descricao}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        {alerta.canGenerateAction && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={() => handleAbrirModal(alerta)}
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            Criar ação
+                          </Button>
+                        )}
+                        {'fromDb' in alerta && alerta.fromDb && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => onResolveAlerta(alerta.id)}
+                          >
+                            Resolver
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+                </motion.div>
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <GerarAcaoModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        alerta={alertaSelecionado}
+      />
+    </>
   );
 }
