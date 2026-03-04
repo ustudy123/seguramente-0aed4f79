@@ -110,26 +110,28 @@ export function GerarAcaoModal({ open, onOpenChange, alerta }: GerarAcaoModalPro
       prazo.setDate(prazo.getDate() + 7);
 
       const prioridadeMapeada = mapPrioridade(sugestao.prioridade);
-      
+
+      // Build payload without responsavel_id to avoid UUID issues
+      const payload: Record<string, unknown> = {
+        tenant_id: tenantId,
+        titulo: sugestao.titulo,
+        descricao: sugestao.descricao,
+        porque: sugestao.porque,
+        onde: sugestao.onde,
+        prazo: prazo.toISOString().split("T")[0],
+        como: sugestao.como,
+        responsavel_nome: profile?.nome_completo || user.email || "Não definido",
+        prioridade: prioridadeMapeada,
+        status: "pendente",
+        origem_modulo: "atestados",
+        origem_descricao: `Alerta: ${alerta.descricao}`,
+        criado_por: user.id,
+        criado_por_nome: profile?.nome_completo || user.email,
+      };
+
       const { error } = await supabase
         .from("plano_acoes")
-        .insert({
-          tenant_id: tenantId,
-          titulo: sugestao.titulo,
-          descricao: sugestao.descricao,
-          porque: sugestao.porque,
-          onde: sugestao.onde,
-          prazo: prazo.toISOString().split("T")[0],
-          como: sugestao.como,
-          responsavel_id: user.id,
-          responsavel_nome: profile?.nome_completo || "Não definido",
-          prioridade: prioridadeMapeada,
-          status: "pendente" as const,
-          origem_modulo: "atestados",
-          origem_descricao: `Alerta: ${alerta.descricao}`,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo,
-        } as never);
+        .insert(payload as never);
 
       if (error) throw error;
 
