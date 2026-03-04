@@ -540,10 +540,9 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                       onDragStart={handleDragStart}
                       documentosCompletos={documentos}
                       onNovaVersao={(doc) => {
+                        setNovaVersaoDocId(doc.id);
                         setUploadForPastaId(selectedPasta?.id);
                         setShowUploadForm(true);
-                        // Store doc for versioning — passed via state
-                        (window as Record<string, unknown>).__novaVersaoDoc = doc;
                       }}
                     />
                   </div>
