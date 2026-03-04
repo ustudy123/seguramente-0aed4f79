@@ -445,6 +445,10 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <Radar className="w-4 h-4" />
               Governança
             </TabsTrigger>
+            <TabsTrigger value="pdca" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              PDCA
+            </TabsTrigger>
             <TabsTrigger value="historico" className="gap-2">
               <History className="w-4 h-4" />
               Auditoria
