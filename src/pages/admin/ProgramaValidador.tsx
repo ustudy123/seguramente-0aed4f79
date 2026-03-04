@@ -116,9 +116,9 @@ function FaseBadge({ fase }: { fase: Fase }) {
 }
 
 function DocStatusIcon({ status }: { status: Documento['status'] }) {
-  if (status === 'aceito') return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+  if (status === 'aceito') return <CheckCircle2 className="w-4 h-4 text-primary" />;
   if (status === 'recusado') return <XCircle className="w-4 h-4 text-destructive" />;
-  if (status === 'enviado') return <Clock className="w-4 h-4 text-yellow-500" />;
+  if (status === 'enviado') return <Clock className="w-4 h-4 text-accent-foreground" />;
   return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
 }
 
