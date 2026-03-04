@@ -64,6 +64,7 @@ import Filiais from "./pages/cadastros/Filiais";
 // Admin Pages
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import ManualSistema from "./pages/admin/ManualSistema";
+import ProgramaValidador from "./pages/admin/ProgramaValidador";
 import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 
 const queryClient = new QueryClient();
