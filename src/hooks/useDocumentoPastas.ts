@@ -415,13 +415,18 @@ export function useDocumentoPastas() {
 
   // Inicializar estrutura padrão
   const initializeDefaultStructure = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (params?: {
+      porte?: string;
+      cnae?: string;
+      grauRisco?: number;
+      numTrabalhadores?: number;
+      riscos?: string[];
+      atividadeEconomica?: string;
+    }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
-      // Verificar se já existe estrutura
-      if (pastas.length > 0) {
-        throw new Error("Estrutura já inicializada");
-      }
+      const grauRisco = params?.grauRisco || 1;
+      const riscos = params?.riscos || [];
 
       type PastaInsert = {
         id: string;
@@ -440,53 +445,176 @@ export function useDocumentoPastas() {
         criado_por_nome: string | null;
       };
 
+      const mk = (id: string, nome: string, tipo: string, ordem: number, icone: string | null, pai: string | null): PastaInsert => ({
+        id, nome, tipo, ordem, icone, pasta_pai_id: pai,
+        filial_id: null, colaborador_id: null, colaborador_cpf: null,
+        colaborador_nome: null, ano: null, tenant_id: tenantId,
+        criado_por: user.id, criado_por_nome: profile?.nome_completo || null,
+      });
+
       const pastasToCreate: PastaInsert[] = [];
 
-      // 1. Criar pasta raiz "Documentos Administrativos"
-      const adminRootId = crypto.randomUUID();
-      pastasToCreate.push({
-        id: adminRootId,
-        nome: "Documentos Administrativos",
-        tipo: "root",
-        ordem: 0,
-        icone: "Building2",
-        pasta_pai_id: null,
-        filial_id: null,
-        colaborador_id: null,
-        colaborador_cpf: null,
-        colaborador_nome: null,
-        ano: null,
-        tenant_id: tenantId,
-        criado_por: user.id,
-        criado_por_nome: profile?.nome_completo || null,
-      });
+      // ─── 1. GOVERNANÇA E ADMINISTRAÇÃO ───────────────────────────────────
+      const govId = crypto.randomUUID();
+      pastasToCreate.push(mk(govId, "Governança e Administração", "root", 0, "Scale", null));
 
-      // Subcategorias administrativas
-      const adminCategories = [
-        { nome: "Jurídico", icone: "Scale", ordem: 0 },
-        { nome: "Licenças e Alvarás", icone: "FileCheck", ordem: 1 },
-        { nome: "Registros em Conselhos", icone: "Award", ordem: 2 },
-        { nome: "SST da Empresa", icone: "Shield", ordem: 3 },
+      const govSubs: [string, string][] = [
+        ["Estrutura Organizacional", "Building2"],
+        ["Direcionamento Estratégico", "Target"],
+        ["Licenças e Autorizações", "FileCheck"],
+        ["Certidões", "Award"],
+        ["Registros em Conselhos", "Shield"],
       ];
-
-      adminCategories.forEach((cat) => {
-        pastasToCreate.push({
-          id: crypto.randomUUID(),
-          nome: cat.nome,
-          tipo: "categoria",
-          pasta_pai_id: adminRootId,
-          ordem: cat.ordem,
-          icone: cat.icone,
-          filial_id: null,
-          colaborador_id: null,
-          colaborador_cpf: null,
-          colaborador_nome: null,
-          ano: null,
-          tenant_id: tenantId,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo || null,
-        });
+      const govSubIds: Record<string, string> = {};
+      govSubs.forEach(([nome, icone], i) => {
+        const id = crypto.randomUUID();
+        govSubIds[nome] = id;
+        pastasToCreate.push(mk(id, nome, "categoria", i, icone, govId));
       });
+
+      // Subpastas de Estrutura Organizacional
+      ["Contrato Social", "Estatuto", "Alterações Contratuais", "Acordo de Sócios", "Organograma", "Estrutura de Cargos"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Estrutura Organizacional"]));
+      });
+      // Subpastas de Direcionamento Estratégico
+      ["Missão, Visão e Valores", "Política da Qualidade", "Política de SST", "Política Ambiental", "Código de Conduta"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Direcionamento Estratégico"]));
+      });
+      // Subpastas de Licenças
+      ["Alvará de Funcionamento", "Licença Vigilância Sanitária", "Licença Corpo de Bombeiros", "Licenças Regulatórias"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Licenças e Autorizações"]));
+      });
+      // Subpastas de Certidões
+      ["Certidão Federal", "Certidão Estadual", "Certidão Municipal", "Certidão FGTS", "Certidão INSS", "Certidão Trabalhista"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Certidões"]));
+      });
+      // Subpastas Conselhos
+      ["CREA", "CRM", "COREN", "CRQ", "CRP", "Outros Conselhos"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Registros em Conselhos"]));
+      });
+
+      // ─── 2. PROCESSOS ORGANIZACIONAIS ────────────────────────────────────
+      const procId = crypto.randomUUID();
+      pastasToCreate.push(mk(procId, "Processos Organizacionais", "root", 1, "BookOpen", null));
+
+      const procSubs: [string, string][] = [
+        ["Mapeamento de Processos", "GitBranch"],
+        ["Procedimentos Operacionais", "FileText"],
+        ["Gestão da Qualidade", "CheckSquare"],
+        ["Gestão de Documentos", "FolderSearch"],
+      ];
+      const procSubIds: Record<string, string> = {};
+      procSubs.forEach(([nome, icone], i) => {
+        const id = crypto.randomUUID();
+        procSubIds[nome] = id;
+        pastasToCreate.push(mk(id, nome, "categoria", i, icone, procId));
+      });
+      ["Fluxogramas", "Mapas de Processos", "Cadeia de Valor"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Mapeamento de Processos"]));
+      });
+      ["POPs", "Instruções de Trabalho", "Manuais Técnicos"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Procedimentos Operacionais"]));
+      });
+      ["Procedimentos de Qualidade", "Registros de Controle", "Indicadores de Desempenho"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Gestão da Qualidade"]));
+      });
+      ["Controle de Versões", "Histórico de Revisões", "Aprovações"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Gestão de Documentos"]));
+      });
+
+      // ─── 3. GESTÃO DE RISCOS ─────────────────────────────────────────────
+      const riscosId = crypto.randomUUID();
+      pastasToCreate.push(mk(riscosId, "Gestão de Riscos", "root", 2, "AlertTriangle", null));
+
+      const riscoSubs: [string, string][] = [
+        ["Inventário de Riscos", "List"],
+        ["Matriz de Riscos", "Grid"],
+        ...(grauRisco >= 3 ? [["Análise de Processos Críticos", "Search"] as [string, string]] : []),
+        ...(grauRisco >= 3 ? [["Gestão de Mudanças (MOC)", "RefreshCw"] as [string, string]] : []),
+      ];
+      const riscoSubIds: Record<string, string> = {};
+      riscoSubs.forEach(([nome, icone], i) => {
+        const id = crypto.randomUUID();
+        riscoSubIds[nome] = id;
+        pastasToCreate.push(mk(id, nome, "categoria", i, icone, riscosId));
+      });
+      ["Riscos Operacionais", "Riscos de SST", "Riscos Psicossociais", "Riscos Ambientais", "Riscos de Processo"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, riscoSubIds["Inventário de Riscos"]));
+      });
+      ["Classificação de Risco", "Probabilidade", "Severidade", "Nível de Risco"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, riscoSubIds["Matriz de Riscos"]));
+      });
+
+      // ─── 4. SST ──────────────────────────────────────────────────────────
+      const sstId = crypto.randomUUID();
+      pastasToCreate.push(mk(sstId, "SST", "root", 3, "Shield", null));
+
+      const sstProgramasId = crypto.randomUUID();
+      pastasToCreate.push(mk(sstProgramasId, "Programas Legais", "categoria", 0, "FileCheck", sstId));
+      ["PGR", "PCMSO", "LTCAT", "Inventário de Riscos Ocupacionais"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, sstProgramasId));
+      });
+
+      if (riscos.includes("ergonomico")) {
+        const ergoId = crypto.randomUUID();
+        pastasToCreate.push(mk(ergoId, "Ergonomia", "categoria", 1, "Activity", sstId));
+        ["AEP — Avaliação Ergonômica Preliminar", "AET — Análise Ergonômica do Trabalho"].forEach((n, i) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, ergoId));
+        });
+      }
+
+      if (riscos.includes("psicossocial")) {
+        const psId = crypto.randomUUID();
+        pastasToCreate.push(mk(psId, "Riscos Psicossociais", "categoria", 2, "Brain", sstId));
+        ["Diagnóstico Psicossocial", "Inventário Psicossocial", "Relatórios", "Plano de Ação"].forEach((n, i) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, psId));
+        });
+      }
+
+      // Treinamentos por NR
+      const treiId = crypto.randomUUID();
+      pastasToCreate.push(mk(treiId, "Treinamentos", "categoria", 3, "GraduationCap", sstId));
+      const nrsBasicas = ["NR-01 — Disposições Gerais", "NR-05 — CIPA", "NR-06 — EPIs"];
+      const nrsEspecificas: string[] = [
+        ...(riscos.includes("eletrico") ? ["NR-10 — Segurança em Eletricidade"] : []),
+        ...(riscos.includes("maquinas") ? ["NR-12 — Segurança em Máquinas"] : []),
+        ...((grauRisco >= 3 || riscos.includes("espaco_confinado")) ? ["NR-33 — Espaço Confinado"] : []),
+        ...((grauRisco >= 3 || riscos.includes("altura")) ? ["NR-35 — Trabalho em Altura"] : []),
+      ];
+      [...nrsBasicas, ...nrsEspecificas].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, treiId));
+      });
+
+      // Registros SST
+      const regSSTId = crypto.randomUUID();
+      pastasToCreate.push(mk(regSSTId, "Registros", "categoria", 4, "ClipboardList", sstId));
+      ["CAT — Comunicação de Acidente", "Investigação de Acidentes", "APR — Análise Preliminar de Risco", "Inspeções de Segurança"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, regSSTId));
+      });
+
+      // ─── 5. AMBIENTAL (apenas se risco ambiental selecionado) ────────────
+      if (riscos.includes("ambiental")) {
+        const ambId = crypto.randomUUID();
+        pastasToCreate.push(mk(ambId, "Gestão Ambiental", "root", 4, "Leaf", null));
+
+        const licAmb = crypto.randomUUID();
+        pastasToCreate.push(mk(licAmb, "Licenciamento Ambiental", "categoria", 0, "FileCheck", ambId));
+        ["Licença Prévia", "Licença de Instalação", "Licença de Operação"].forEach((n, i) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, licAmb));
+        });
+
+        const ctrlAmb = crypto.randomUUID();
+        pastasToCreate.push(mk(ctrlAmb, "Controle Ambiental", "categoria", 1, "Activity", ambId));
+        ["Monitoramento de Emissões", "Controle de Efluentes", "Controle de Resíduos"].forEach((n, i) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, ctrlAmb));
+        });
+
+        const planosAmb = crypto.randomUUID();
+        pastasToCreate.push(mk(planosAmb, "Planos Ambientais", "categoria", 2, "Map", ambId));
+        ["PGRS — Plano de Gerenciamento de Resíduos", "Plano de Emergência Ambiental"].forEach((n, i) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, planosAmb));
+        });
+      }
 
       // 2. Criar pasta raiz "Documentos de Processos"
       const processosRootId = crypto.randomUUID();
