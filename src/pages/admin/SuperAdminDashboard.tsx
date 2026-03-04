@@ -128,10 +128,14 @@ import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
                  <Eye className="w-4 h-4 mr-2" />
                  Ver Landing Page
                </Button>
-               <Button variant="outline" onClick={() => navigate('/admin/manual')}>
-                 <BookOpen className="w-4 h-4 mr-2" />
-                 Manual do Sistema
-               </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/validador')}>
+                  <Users className="w-4 h-4 mr-2" />
+                  Programa Validador
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/manual')}>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Manual do Sistema
+                </Button>
                <Button onClick={() => setShowTenantForm(true)}>
                  <Plus className="w-4 h-4 mr-2" />
                  Nova Empresa
