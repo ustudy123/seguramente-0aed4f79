@@ -59,6 +59,7 @@ const Documentos = () => {
   const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadForPastaId, setUploadForPastaId] = useState<string | undefined>(undefined);
+  const [novaVersaoDocId, setNovaVersaoDocId] = useState<string | undefined>(undefined);
   const [showCreatePasta, setShowCreatePasta] = useState(false);
   const [createPastaParentId, setCreatePastaParentId] = useState<string | null>(null);
   const [createPastaParentNome, setCreatePastaParentNome] = useState<string | null>(null);
