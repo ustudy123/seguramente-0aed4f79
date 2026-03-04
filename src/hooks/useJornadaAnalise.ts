@@ -337,6 +337,15 @@ export function useJornadaImportacao() {
       descanso_interjornada_min: 11,
     };
     
+    // Fetch admissoes for department/cargo enrichment
+    const { data: admissoes } = await supabase
+      .from("admissoes")
+      .select("cpf, departamento, cargo")
+      .eq("tenant_id", tenantId);
+    
+    const profileMap = new Map<string, any>();
+    admissoes?.forEach(p => { if (p.cpf) profileMap.set(p.cpf.replace(/\D/g, ""), p); });
+    
     const analises: any[] = [];
     
     for (const [cpf, registros] of porColaborador) {
@@ -348,11 +357,28 @@ export function useJornadaImportacao() {
       let violacoesInterjornada = 0;
       let violacoesJornadaDiaria = 0;
       let violacoesHorasExtras = 0;
+      let violacoesDsr = 0;
       
       let saidaAnterior: string | null = null;
       
+      // DSR: check for 7 consecutive days without rest
+      const datasSet = new Set(registros.map(r => r.data));
+      const sortedDates = [...datasSet].sort();
+      let consecutivos = 0;
+      for (let d = 0; d < sortedDates.length; d++) {
+        if (d === 0) { consecutivos = 1; continue; }
+        const prev = new Date(sortedDates[d - 1]);
+        const curr = new Date(sortedDates[d]);
+        const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+        if (diff === 1) {
+          consecutivos++;
+          if (consecutivos >= 7) violacoesDsr++;
+        } else {
+          consecutivos = 1;
+        }
+      }
+      
       registros.forEach(r => {
-        // Parse interval hours
         const horas = parseIntervalToHours(r.horas_trabalhadas);
         const extras = parseIntervalToHours(r.horas_extras);
         
@@ -362,7 +388,6 @@ export function useJornadaImportacao() {
         if (r.status === "atraso") totalAtrasos++;
         if (r.observacao?.includes("ajuste") || r.observacao?.includes("manual")) totalAjustes++;
         
-        // Check daily violations
         if (horas > Number(params.jornada_diaria_max) + Number(params.horas_extras_diaria_max)) {
           violacoesJornadaDiaria++;
         }
@@ -370,17 +395,15 @@ export function useJornadaImportacao() {
           violacoesHorasExtras++;
         }
         
-        // Check interjornada (11h between shifts)
         if (saidaAnterior && r.entrada) {
           const saidaH = parseTimeToHours(saidaAnterior);
           const entradaH = parseTimeToHours(r.entrada);
-          const descanso = entradaH + 24 - saidaH; // simplified
+          const descanso = entradaH + 24 - saidaH;
           if (descanso < Number(params.descanso_interjornada_min) && descanso > 0) {
             violacoesInterjornada++;
           }
         }
         
-        // Check intrajornada interval
         if (r.saida_almoco && r.retorno_almoco) {
           const saAlm = parseTimeToMinutes(r.saida_almoco);
           const retAlm = parseTimeToMinutes(r.retorno_almoco);
@@ -397,16 +420,19 @@ export function useJornadaImportacao() {
       const semanas = Math.max(1, diasTrabalhados / 5);
       const mediaSemanal = totalHoras / semanas;
       
-      // Risk score
-      const violations = violacoesIntervalo + violacoesInterjornada + violacoesJornadaDiaria + violacoesHorasExtras;
+      const violations = violacoesIntervalo + violacoesInterjornada + violacoesJornadaDiaria + violacoesHorasExtras + violacoesDsr;
       const scoreRisco = Math.min(100, (violations / Math.max(1, diasTrabalhados)) * 100 + (totalExtras / Math.max(1, totalHoras)) * 50);
       const nivelRisco = scoreRisco >= 60 ? "alto" : scoreRisco >= 30 ? "moderado" : "baixo";
       const statusConformidade = violations > diasTrabalhados * 0.3 ? "nao_conforme" : violations > 0 ? "atencao" : "conforme";
+      
+      const profile = profileMap.get(cpf);
       
       const analise = {
         tenant_id: tenantId,
         colaborador_cpf: cpf,
         colaborador_nome: registros[0].colaborador_nome,
+        departamento: profile?.departamento || null,
+        cargo: profile?.cargo || null,
         periodo_inicio: periodoInicio,
         periodo_fim: periodoFim,
         dias_trabalhados: diasTrabalhados,
@@ -420,6 +446,7 @@ export function useJornadaImportacao() {
         violacoes_interjornada: violacoesInterjornada,
         violacoes_jornada_diaria: violacoesJornadaDiaria,
         violacoes_horas_extras: violacoesHorasExtras,
+        violacoes_dsr: violacoesDsr,
         nivel_risco: nivelRisco,
         score_risco: Math.round(scoreRisco * 100) / 100,
         status_conformidade: statusConformidade,

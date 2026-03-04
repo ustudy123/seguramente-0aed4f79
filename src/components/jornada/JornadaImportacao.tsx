@@ -1,13 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDropzone } from "react-dropzone";
 import { useJornadaImportacao, MapeamentoColunas } from "@/hooks/useJornadaAnalise";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, ArrowRight, Loader2, Save, FolderOpen } from "lucide-react";
 
 const CAMPOS_MAPEAMENTO = [
   { key: "colaboradorNome", label: "Nome do Colaborador", obrigatorio: true },
@@ -24,6 +28,7 @@ const CAMPOS_MAPEAMENTO = [
 ];
 
 export function JornadaImportacao() {
+  const { tenantId } = useTenant();
   const { lerArquivo, processarDados, importarParaPontoDiario, isProcessing, progress } = useJornadaImportacao();
   const [etapa, setEtapa] = useState<"upload" | "mapeamento" | "preview" | "resultado">("upload");
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -32,6 +37,45 @@ export function JornadaImportacao() {
   const [mapeamento, setMapeamento] = useState<Record<string, number | undefined>>({});
   const [dadosProcessados, setDadosProcessados] = useState<any[]>([]);
   const [resultado, setResultado] = useState<any>(null);
+  
+  // Template state
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [nomeTemplate, setNomeTemplate] = useState("");
+  const [dialogSalvar, setDialogSalvar] = useState(false);
+
+  // Load templates
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase
+      .from("jornada_templates_mapeamento")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("nome")
+      .then(({ data }) => setTemplates(data || []));
+  }, [tenantId]);
+
+  const salvarTemplate = async () => {
+    if (!tenantId || !nomeTemplate.trim()) { toast.error("Informe um nome"); return; }
+    const { error } = await supabase.from("jornada_templates_mapeamento").insert({
+      tenant_id: tenantId,
+      nome: nomeTemplate.trim(),
+      mapeamento: mapeamento,
+      headers_originais: headers,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Template salvo");
+    setDialogSalvar(false);
+    setNomeTemplate("");
+    const { data } = await supabase.from("jornada_templates_mapeamento").select("*").eq("tenant_id", tenantId).order("nome");
+    setTemplates(data || []);
+  };
+
+  const carregarTemplate = (templateId: string) => {
+    const t = templates.find(t => t.id === templateId);
+    if (!t) return;
+    setMapeamento(t.mapeamento || {});
+    toast.success(`Template "${t.nome}" carregado`);
+  };
 
   const onDrop = useCallback(async (files: File[]) => {
     const file = files[0];
@@ -161,10 +205,43 @@ export function JornadaImportacao() {
       {etapa === "mapeamento" && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              Mapeamento de Colunas — {arquivo?.name}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                Mapeamento de Colunas — {arquivo?.name}
+              </CardTitle>
+              <div className="flex gap-2">
+                {templates.length > 0 && (
+                  <Select onValueChange={carregarTemplate}>
+                    <SelectTrigger className="h-8 text-xs w-44">
+                      <FolderOpen className="h-3 w-3 mr-1" />
+                      <SelectValue placeholder="Carregar template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <Dialog open={dialogSalvar} onOpenChange={setDialogSalvar}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm"><Save className="h-3.5 w-3.5 mr-1" /> Salvar Template</Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-sm">
+                    <DialogHeader><DialogTitle>Salvar Template de Mapeamento</DialogTitle></DialogHeader>
+                    <div className="space-y-3">
+                      <Input
+                        placeholder="Nome do template (ex: Sistema XYZ)"
+                        value={nomeTemplate}
+                        onChange={e => setNomeTemplate(e.target.value)}
+                      />
+                      <Button onClick={salvarTemplate} className="w-full">Salvar</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-xs text-muted-foreground">
