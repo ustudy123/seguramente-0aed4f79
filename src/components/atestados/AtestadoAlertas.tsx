@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { 
   AlertTriangle, 
   Clock, 
@@ -9,15 +9,13 @@ import {
   CheckCircle2,
   Bell,
   FileWarning,
-  ClipboardPlus
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { GerarAcaoModal } from "./GerarAcaoModal";
 import type { AlertaSaude, Afastamento, BeneficioINSS } from "@/types/atestado";
 
 interface AtestadoAlertasProps {
