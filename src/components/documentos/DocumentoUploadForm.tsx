@@ -55,9 +55,10 @@ interface DocumentoUploadFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preSelectedColaboradorId?: string;
+  documentoExistenteId?: string;
 }
 
-export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId }: DocumentoUploadFormProps) {
+export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, documentoExistenteId }: DocumentoUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
