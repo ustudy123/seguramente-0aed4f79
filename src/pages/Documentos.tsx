@@ -545,6 +545,37 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           )}
         </TabsContent>
 
+        {/* Conformidade Tab */}
+        <TabsContent value="conformidade" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-xl border border-border p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  Mapa de Conformidade Documental
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Visão consolidada dos documentos esperados vs. existentes por categoria</p>
+              </div>
+            </div>
+            <MapaConformidade tree={tree} pastas={pastas} />
+          </motion.div>
+        </TabsContent>
+
+        {/* Radar Governança Tab */}
+        <TabsContent value="radar" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <RadarGovernanca tree={tree} />
+          </motion.div>
+        </TabsContent>
+
         {/* Audit Tab */}
         <TabsContent value="historico" className="flex-1 mt-4">
           <motion.div
