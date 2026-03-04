@@ -616,117 +616,82 @@ export function useDocumentoPastas() {
         });
       }
 
-      // 2. Criar pasta raiz "Documentos de Processos"
-      const processosRootId = crypto.randomUUID();
-      pastasToCreate.push({
-        id: processosRootId,
-        nome: "Documentos de Processos",
-        tipo: "root",
-        ordem: 1,
-        icone: "BookOpen",
-        pasta_pai_id: null,
-        filial_id: null,
-        colaborador_id: null,
-        colaborador_cpf: null,
-        colaborador_nome: null,
-        ano: null,
-        tenant_id: tenantId,
-        criado_por: user.id,
-        criado_por_nome: profile?.nome_completo || null,
-      });
+      // ─── 6. GESTÃO DE PESSOAS ────────────────────────────────────────────
+      const pessoasId = crypto.randomUUID();
+      pastasToCreate.push(mk(pessoasId, "Gestão de Pessoas", "root", 5, "Users", null));
 
-      // 3. Criar pasta raiz "Documentos de Colaboradores"
-      const rhRootId = crypto.randomUUID();
-      pastasToCreate.push({
-        id: rhRootId,
-        nome: "Documentos de Colaboradores",
-        tipo: "root",
-        ordem: 2,
-        icone: "Users",
-        pasta_pai_id: null,
-        filial_id: null,
-        colaborador_id: null,
-        colaborador_cpf: null,
-        colaborador_nome: null,
-        ano: null,
-        tenant_id: tenantId,
-        criado_por: user.id,
-        criado_por_nome: profile?.nome_completo || null,
-      });
-
-      // 4. Criar pastas por unidade/filial
+      // Pastas por unidade/filial
       const filiaisList = filiais.length > 0 ? filiais : [{ id: null, nome: "Matriz" }];
-      
       filiaisList.forEach((filial: { id: string | null; nome: string }, idx: number) => {
         const unidadeId = crypto.randomUUID();
         pastasToCreate.push({
-          id: unidadeId,
-          nome: filial.nome,
-          tipo: "unidade",
-          pasta_pai_id: rhRootId,
+          ...mk(unidadeId, filial.nome, "unidade", idx, "Building", pessoasId),
           filial_id: filial.id,
-          ordem: idx,
-          icone: "Building",
-          colaborador_id: null,
-          colaborador_cpf: null,
-          colaborador_nome: null,
-          ano: null,
-          tenant_id: tenantId,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo || null,
         });
 
-        // Criar pastas para cada colaborador da unidade
-        const colabsUnidade = colaboradores.filter((c: Colaborador) => 
+        const colabsUnidade = colaboradores.filter((c: Colaborador) =>
           filial.id ? c.filial === filial.nome : !c.filial
         );
 
         colabsUnidade.forEach((colab: Colaborador, colabIdx: number) => {
           const colabPastaId = crypto.randomUUID();
           pastasToCreate.push({
-            id: colabPastaId,
-            nome: colab.nome_completo,
-            tipo: "colaborador",
-            pasta_pai_id: unidadeId,
+            ...mk(colabPastaId, colab.nome_completo, "colaborador", colabIdx, "User", unidadeId),
             colaborador_id: colab.id,
             colaborador_cpf: colab.cpf,
             colaborador_nome: colab.nome_completo,
-            ordem: colabIdx,
-            icone: "User",
-            filial_id: null,
-            ano: null,
-            tenant_id: tenantId,
-            criado_por: user.id,
-            criado_por_nome: profile?.nome_completo || null,
           });
 
-          // Criar pasta do ano atual
-          const ano = new Date().getFullYear();
-          pastasToCreate.push({
-            id: crypto.randomUUID(),
-            nome: String(ano),
-            tipo: "ano",
-            pasta_pai_id: colabPastaId,
-            ano: ano,
-            ordem: 0,
-            icone: null,
-            filial_id: null,
-            colaborador_id: null,
-            colaborador_cpf: null,
-            colaborador_nome: null,
-            tenant_id: tenantId,
-            criado_por: user.id,
-            criado_por_nome: profile?.nome_completo || null,
+          // Subpastas do colaborador
+          const colabSubs = ["Admissão", "Vida Funcional", "Saúde Ocupacional", "Banco de Horas", "Termos", "Desligamento"];
+          colabSubs.forEach((sub, subIdx) => {
+            pastasToCreate.push(mk(crypto.randomUUID(), sub, "categoria", subIdx, null, colabPastaId));
           });
         });
       });
 
-      // Inserir todas as pastas
-      const { error } = await supabase
-        .from("documento_pastas")
-        .insert(pastasToCreate);
+      // ─── 7. INVESTIGAÇÃO DE INCIDENTES ───────────────────────────────────
+      const incId = crypto.randomUUID();
+      pastasToCreate.push(mk(incId, "Investigação de Incidentes", "root", 6, "SearchX", null));
+      ["Acidentes", "Quase Acidentes", "Falhas Operacionais", "Não Conformidades"].forEach((n, i) => {
+        const subId = crypto.randomUUID();
+        pastasToCreate.push(mk(subId, n, "categoria", i, null, incId));
+        ["Análise de Causa", "Plano de Ação", "Registro de Aprendizado"].forEach((sub, j) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), sub, "custom", j, null, subId));
+        });
+      });
 
-      if (error) throw error;
+      // ─── 8. AUDITORIAS E MELHORIA CONTÍNUA ───────────────────────────────
+      const audId = crypto.randomUUID();
+      pastasToCreate.push(mk(audId, "Auditorias e Melhoria Contínua", "root", 7, "CheckSquare", null));
+
+      const audInternaId = crypto.randomUUID();
+      pastasToCreate.push(mk(audInternaId, "Auditorias Internas", "categoria", 0, null, audId));
+      ["Relatórios", "Checklists", "Evidências"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, audInternaId));
+      });
+
+      const audExternaId = crypto.randomUUID();
+      pastasToCreate.push(mk(audExternaId, "Auditorias Externas", "categoria", 1, null, audId));
+      ["Certificações", "Fiscalizações"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, audExternaId));
+      });
+
+      const planosAudId = crypto.randomUUID();
+      pastasToCreate.push(mk(planosAudId, "Planos de Ação", "categoria", 2, null, audId));
+      ["Ações Corretivas", "Ações Preventivas", "Acompanhamento"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, planosAudId));
+      });
+
+      // ─── INSERT ───────────────────────────────────────────────────────────
+      // Insert em lotes de 100 para evitar limite do Supabase
+      const chunkSize = 100;
+      for (let i = 0; i < pastasToCreate.length; i += chunkSize) {
+        const chunk = pastasToCreate.slice(i, i + chunkSize);
+        const { error } = await supabase.from("documento_pastas").insert(chunk);
+        if (error) throw error;
+      }
+
       return pastasToCreate.length;
     },
     onSuccess: (count) => {
