@@ -13,6 +13,7 @@ import {
   Loader2,
   Upload,
   FolderOpen,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
+import type { Documento } from "@/hooks/useDocumentos";
+import { DocumentoVersoesModal } from "./DocumentoVersoesModal";
 
 const statusConfig = {
   valido: {
@@ -50,8 +53,10 @@ interface PastaDocumentosListProps {
   onView: (doc: DocumentoItem) => void;
   onDownload: (doc: DocumentoItem) => void;
   onDelete: (doc: DocumentoItem) => void;
+  onNovaVersao?: (doc: Documento) => void;
   deleting: boolean;
   onDragStart?: (documentoId: string, documentoNome: string, pastaOrigemId: string, pastaOrigemNome: string) => void;
+  documentosCompletos?: Documento[];
 }
 
 export function PastaDocumentosList({
@@ -60,10 +65,13 @@ export function PastaDocumentosList({
   onView,
   onDownload,
   onDelete,
+  onNovaVersao,
   deleting,
   onDragStart,
+  documentosCompletos = [],
 }: PastaDocumentosListProps) {
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
+  const [versoesDoc, setVersoesDoc] = useState<Documento | null>(null);
 
   if (!pasta) {
     return (
@@ -184,6 +192,15 @@ export function PastaDocumentosList({
                     <Badge className={cn("text-xs hidden sm:flex", config.style)}>
                       {config.label}
                     </Badge>
+                    {(() => {
+                      const docCompleto = documentosCompletos.find(d => d.id === doc.id);
+                      return docCompleto && (docCompleto.total_versoes > 1) ? (
+                        <Badge variant="outline" className="text-[10px] hidden sm:flex gap-1">
+                          <History className="w-3 h-3" />
+                          v{docCompleto.versao_atual}
+                        </Badge>
+                      ) : null;
+                    })()}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -199,6 +216,17 @@ export function PastaDocumentosList({
                           <Download className="w-4 h-4 mr-2" />
                           Download
                         </DropdownMenuItem>
+                        {(() => {
+                          const docCompleto = documentosCompletos.find(d => d.id === doc.id);
+                          return docCompleto ? (
+                            <>
+                              <DropdownMenuItem onClick={() => setVersoesDoc(docCompleto)}>
+                                <History className="w-4 h-4 mr-2" />
+                                Versões {docCompleto.total_versoes > 1 ? `(${docCompleto.total_versoes})` : ""}
+                              </DropdownMenuItem>
+                            </>
+                          ) : null;
+                        })()}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
@@ -221,6 +249,17 @@ export function PastaDocumentosList({
           </div>
         )}
       </div>
+
+      {/* Modal de versões */}
+      <DocumentoVersoesModal
+        open={!!versoesDoc}
+        onOpenChange={(v) => !v && setVersoesDoc(null)}
+        documento={versoesDoc}
+        onNovaVersao={(doc) => {
+          setVersoesDoc(null);
+          onNovaVersao?.(doc);
+        }}
+      />
     </div>
   );
 }

@@ -59,6 +59,7 @@ const Documentos = () => {
   const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadForPastaId, setUploadForPastaId] = useState<string | undefined>(undefined);
+  const [novaVersaoDocId, setNovaVersaoDocId] = useState<string | undefined>(undefined);
   const [showCreatePasta, setShowCreatePasta] = useState(false);
   const [createPastaParentId, setCreatePastaParentId] = useState<string | null>(null);
   const [createPastaParentNome, setCreatePastaParentNome] = useState<string | null>(null);
@@ -537,6 +538,12 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                       onDelete={handleDeleteDoc}
                       deleting={deleting}
                       onDragStart={handleDragStart}
+                      documentosCompletos={documentos}
+                      onNovaVersao={(doc) => {
+                        setNovaVersaoDocId(doc.id);
+                        setUploadForPastaId(selectedPasta?.id);
+                        setShowUploadForm(true);
+                      }}
                     />
                   </div>
                 </ResizablePanel>
@@ -606,8 +613,9 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
 
       <DocumentoUploadForm
         open={showUploadForm}
-        onOpenChange={setShowUploadForm}
+        onOpenChange={(v) => { setShowUploadForm(v); if (!v) setNovaVersaoDocId(undefined); }}
         preSelectedColaboradorId={undefined}
+        documentoExistenteId={novaVersaoDocId}
       />
 
       <CreatePastaModal
