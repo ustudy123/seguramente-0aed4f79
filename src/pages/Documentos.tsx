@@ -434,6 +434,14 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <FolderTree className="w-4 h-4" />
               Estrutura
             </TabsTrigger>
+            <TabsTrigger value="conformidade" className="gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Conformidade
+            </TabsTrigger>
+            <TabsTrigger value="radar" className="gap-2">
+              <Radar className="w-4 h-4" />
+              Governança
+            </TabsTrigger>
             <TabsTrigger value="historico" className="gap-2">
               <History className="w-4 h-4" />
               Auditoria
