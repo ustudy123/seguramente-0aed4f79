@@ -139,6 +139,8 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
         tipo: data.tipo,
         dataValidade: data.dataValidade || undefined,
         observacoes: data.observacoes || undefined,
+        documentoExistenteId: documentoExistenteId,
+        motivoRevisao: documentoExistenteId ? "Nova versão enviada pelo usuário" : undefined,
       });
       
       // Reset form
