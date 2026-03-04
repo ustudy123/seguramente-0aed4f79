@@ -334,9 +334,9 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
     });
   };
 
-  const handleInitialize = async () => {
+  const handleInitialize = async (params: WizardParams) => {
     try {
-      await initializeDefaultStructure();
+      await initializeDefaultStructure(params);
     } catch (error) {
       // Error handled in hook
     }
