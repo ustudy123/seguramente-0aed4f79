@@ -23,6 +23,13 @@ interface Sugestao {
   prioridade: "baixa" | "media" | "alta" | "critica";
 }
 
+const mapPrioridade = (p: string): "baixo" | "medio" | "urgente" | "imediato" => {
+  if (p === "critica") return "imediato";
+  if (p === "alta") return "urgente";
+  if (p === "media") return "medio";
+  return "baixo";
+};
+
 interface GerarAcaoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
