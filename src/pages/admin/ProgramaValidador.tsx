@@ -21,6 +21,7 @@ import {
   Plus, Search, Users, Building2, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronRight, ArrowLeft, FileText,
   MessageSquare, Phone, Mail, Calendar, Shield,
+  LayoutList, Columns, ChevronLeft,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -88,24 +89,24 @@ interface Historico {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const FASES: { value: Fase; label: string; color: string }[] = [
-  { value: 'prospeccao', label: 'Prospecção', color: 'bg-muted text-muted-foreground' },
-  { value: 'qualificacao', label: 'Qualificação', color: 'bg-accent text-accent-foreground' },
-  { value: 'kickoff', label: 'Kickoff', color: 'bg-secondary text-secondary-foreground' },
-  { value: 'ativo', label: 'Ativo', color: 'bg-primary/15 text-primary' },
-  { value: 'suspenso', label: 'Suspenso', color: 'bg-muted text-muted-foreground border border-border' },
-  { value: 'encerrado', label: 'Encerrado', color: 'bg-destructive/10 text-destructive' },
+const FASES: { value: Fase; label: string; color: string; border: string }[] = [
+  { value: 'prospeccao',  label: 'Prospecção',  color: 'bg-muted text-muted-foreground',          border: 'border-t-2 border-muted-foreground/30' },
+  { value: 'qualificacao',label: 'Qualificação', color: 'bg-accent text-accent-foreground',         border: 'border-t-2 border-accent' },
+  { value: 'kickoff',     label: 'Kickoff',      color: 'bg-secondary text-secondary-foreground',   border: 'border-t-2 border-secondary' },
+  { value: 'ativo',       label: 'Ativo',        color: 'bg-primary/15 text-primary',               border: 'border-t-2 border-primary' },
+  { value: 'suspenso',    label: 'Suspenso',     color: 'bg-muted text-muted-foreground border border-border', border: 'border-t-2 border-muted-foreground/50' },
+  { value: 'encerrado',   label: 'Encerrado',    color: 'bg-destructive/10 text-destructive',       border: 'border-t-2 border-destructive/50' },
 ];
 
 const DOCS_CONFIG: { tipo: TipoDoc; label: string }[] = [
-  { tipo: 'contrato_piloto', label: 'Contrato Piloto' }, // keep
-  { tipo: 'dpa_lgpd', label: 'DPA / Anexo LGPD' },
-  { tipo: 'anexo_operacional', label: 'Anexo Operacional' },
-  { tipo: 'faq_seguranca', label: 'FAQ Segurança' },
-  { tipo: 'resumo_beta', label: 'Resumo Beta' },
-  { tipo: 'politica_privacidade', label: 'Política de Privacidade' },
-  { tipo: 'termos_uso', label: 'Termos de Uso' },
-  { tipo: 'ata_kickoff', label: 'Ata de Kickoff' },
+  { tipo: 'contrato_piloto',    label: 'Contrato Piloto' },
+  { tipo: 'dpa_lgpd',           label: 'DPA / Anexo LGPD' },
+  { tipo: 'anexo_operacional',  label: 'Anexo Operacional' },
+  { tipo: 'faq_seguranca',      label: 'FAQ Segurança' },
+  { tipo: 'resumo_beta',        label: 'Resumo Beta' },
+  { tipo: 'politica_privacidade',label: 'Política de Privacidade' },
+  { tipo: 'termos_uso',         label: 'Termos de Uso' },
+  { tipo: 'ata_kickoff',        label: 'Ata de Kickoff' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -116,21 +117,78 @@ function FaseBadge({ fase }: { fase: Fase }) {
 }
 
 function DocStatusIcon({ status }: { status: Documento['status'] }) {
-  if (status === 'aceito') return <CheckCircle2 className="w-4 h-4 text-primary" />;
+  if (status === 'aceito')   return <CheckCircle2 className="w-4 h-4 text-primary" />;
   if (status === 'recusado') return <XCircle className="w-4 h-4 text-destructive" />;
-  if (status === 'enviado') return <Clock className="w-4 h-4 text-accent-foreground" />;
+  if (status === 'enviado')  return <Clock className="w-4 h-4 text-accent-foreground" />;
   return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
+}
+
+// ─── Kanban card ─────────────────────────────────────────────────────────────
+
+function KanbanCard({
+  cliente,
+  onOpen,
+  onMover,
+  faseAtual,
+}: {
+  cliente: Cliente;
+  onOpen: () => void;
+  onMover: (id: string, fase: Fase) => void;
+  faseAtual: Fase;
+}) {
+  const idx = FASES.findIndex(f => f.value === faseAtual);
+  const proxima = FASES[idx + 1]?.value;
+  const anterior = FASES[idx - 1]?.value;
+
+  return (
+    <div className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-all space-y-2">
+      <div className="cursor-pointer" onClick={onOpen}>
+        <p className="font-semibold text-sm leading-tight">{cliente.nome_empresa}</p>
+        {cliente.poc_nome && (
+          <p className="text-xs text-muted-foreground mt-0.5">{cliente.poc_nome}</p>
+        )}
+        {cliente.segmento && (
+          <p className="text-xs text-muted-foreground">{cliente.segmento}</p>
+        )}
+        {cliente.data_inicio_piloto && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Início: {format(new Date(cliente.data_inicio_piloto), 'dd/MM/yyyy')}
+          </p>
+        )}
+      </div>
+      {/* Setas de mover */}
+      <div className="flex gap-1 pt-1 border-t border-border">
+        <button
+          disabled={!anterior}
+          onClick={() => anterior && onMover(cliente.id, anterior)}
+          className="flex-1 flex items-center justify-center h-6 rounded text-xs text-muted-foreground hover:bg-muted disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+          title={anterior ? `Mover para ${FASES.find(f=>f.value===anterior)?.label}` : ''}
+        >
+          <ChevronLeft className="w-3 h-3" />
+        </button>
+        <button
+          disabled={!proxima}
+          onClick={() => proxima && onMover(cliente.id, proxima)}
+          className="flex-1 flex items-center justify-center h-6 rounded text-xs text-muted-foreground hover:bg-muted disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+          title={proxima ? `Mover para ${FASES.find(f=>f.value===proxima)?.label}` : ''}
+        >
+          <ChevronRight className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ProgramaValidador() {
-  const { user, profile } = useAuthContext();
+  const { profile } = useAuthContext();
   const qc = useQueryClient();
   const [busca, setBusca] = useState('');
   const [faseFilter, setFaseFilter] = useState<Fase | 'todas'>('todas');
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
+  const [viewMode, setViewMode] = useState<'lista' | 'kanban'>('kanban');
 
   // ── Queries ──
   const { data: clientes = [], isLoading } = useQuery({
@@ -170,6 +228,28 @@ export default function ProgramaValidador() {
       if (error) throw error;
       return data as Historico[];
     },
+  });
+
+  // ── Mover fase (kanban) ──
+  const moverFaseMutation = useMutation({
+    mutationFn: async ({ id, fase }: { id: string; fase: Fase }) => {
+      const { error } = await supabase
+        .from('programa_validador_clientes')
+        .update({ fase })
+        .eq('id', id);
+      if (error) throw error;
+      const cliente = clientes.find(c => c.id === id);
+      await supabase.from('programa_validador_historico').insert({
+        cliente_id: id,
+        tipo: 'fase_alterada',
+        titulo: `Fase alterada para "${FASES.find(f => f.value === fase)?.label}"`,
+        autor: profile?.nome_completo || 'SuperAdmin',
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['validador'] });
+    },
+    onError: () => toast.error('Erro ao mover cliente'),
   });
 
   // ── Stats por fase ──
@@ -216,17 +296,36 @@ export default function ProgramaValidador() {
               <p className="text-sm text-muted-foreground">Pipeline de clientes na fase beta</p>
             </div>
           </div>
-          <Dialog open={showNovoCliente} onOpenChange={setShowNovoCliente}>
-            <DialogTrigger asChild>
-              <Button><Plus className="w-4 h-4 mr-2" />Novo Cliente</Button>
-            </DialogTrigger>
-            <NovoClienteDialog
-              onSuccess={() => {
-                setShowNovoCliente(false);
-                qc.invalidateQueries({ queryKey: ['validador'] });
-              }}
-            />
-          </Dialog>
+          <div className="flex items-center gap-2">
+            {/* Toggle de view */}
+            <div className="flex items-center border rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode('lista')}
+                className={`px-3 py-1.5 text-sm flex items-center gap-1.5 transition-colors ${viewMode === 'lista' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              >
+                <LayoutList className="w-4 h-4" />
+                Lista
+              </button>
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`px-3 py-1.5 text-sm flex items-center gap-1.5 transition-colors ${viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              >
+                <Columns className="w-4 h-4" />
+                Kanban
+              </button>
+            </div>
+            <Dialog open={showNovoCliente} onOpenChange={setShowNovoCliente}>
+              <DialogTrigger asChild>
+                <Button><Plus className="w-4 h-4 mr-2" />Novo Cliente</Button>
+              </DialogTrigger>
+              <NovoClienteDialog
+                onSuccess={() => {
+                  setShowNovoCliente(false);
+                  qc.invalidateQueries({ queryKey: ['validador'] });
+                }}
+              />
+            </Dialog>
+          </div>
         </div>
 
         {/* KPI cards por fase */}
@@ -245,7 +344,7 @@ export default function ProgramaValidador() {
           ))}
         </div>
 
-        {/* Filtros */}
+        {/* Busca */}
         <div className="flex gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
@@ -258,50 +357,84 @@ export default function ProgramaValidador() {
           </div>
         </div>
 
-        {/* Pipeline Kanban simplificado */}
-        <div className="grid gap-3">
-          {isLoading ? (
-            <p className="text-muted-foreground text-sm">Carregando...</p>
-          ) : clientesFiltrados.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p>Nenhum cliente encontrado</p>
+        {isLoading ? (
+          <p className="text-muted-foreground text-sm">Carregando...</p>
+        ) : viewMode === 'kanban' ? (
+          /* ── KANBAN ── */
+          <div className="overflow-x-auto pb-4">
+            <div className="flex gap-4 min-w-max">
+              {FASES.filter(f => faseFilter === 'todas' || f.value === faseFilter).map(fase => {
+                const cards = clientesFiltrados.filter(c => c.fase === fase.value);
+                return (
+                  <div key={fase.value} className={`w-60 bg-muted/30 rounded-xl ${fase.border} flex flex-col`}>
+                    <div className="px-3 py-2 flex items-center justify-between">
+                      <span className="text-sm font-semibold">{fase.label}</span>
+                      <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">{cards.length}</span>
+                    </div>
+                    <div className="flex-1 p-2 space-y-2 min-h-[120px]">
+                      {cards.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center pt-4 opacity-60">Vazio</p>
+                      ) : (
+                        cards.map(c => (
+                          <KanbanCard
+                            key={c.id}
+                            cliente={c}
+                            faseAtual={c.fase}
+                            onOpen={() => setClienteSelecionado(c)}
+                            onMover={(id, novaFase) => moverFaseMutation.mutate({ id, fase: novaFase })}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ) : (
-            clientesFiltrados.map(c => (
-              <Card
-                key={c.id}
-                className="cursor-pointer hover:shadow-md transition-all"
-                onClick={() => setClienteSelecionado(c)}
-              >
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Building2 className="w-5 h-5 text-primary" />
+          </div>
+        ) : (
+          /* ── LISTA ── */
+          <div className="grid gap-3">
+            {clientesFiltrados.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p>Nenhum cliente encontrado</p>
+              </div>
+            ) : (
+              clientesFiltrados.map(c => (
+                <Card
+                  key={c.id}
+                  className="cursor-pointer hover:shadow-md transition-all"
+                  onClick={() => setClienteSelecionado(c)}
+                >
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{c.nome_empresa}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {c.poc_nome && `Contato: ${c.poc_nome}`}
+                          {c.poc_nome && c.segmento && ' · '}
+                          {c.segmento}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">{c.nome_empresa}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {c.poc_nome && `Contato: ${c.poc_nome}`}
-                        {c.poc_nome && c.segmento && ' · '}
-                        {c.segmento}
-                      </p>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {c.data_inicio_piloto && (
+                        <span className="text-xs text-muted-foreground hidden sm:block">
+                          Início: {format(new Date(c.data_inicio_piloto), 'dd/MM/yyyy')}
+                        </span>
+                      )}
+                      <FaseBadge fase={c.fase} />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {c.data_inicio_piloto && (
-                      <span className="text-xs text-muted-foreground hidden sm:block">
-                        Início: {format(new Date(c.data_inicio_piloto), 'dd/MM/yyyy')}
-                      </span>
-                    )}
-                    <FaseBadge fase={c.fase} />
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </SuperAdminRoute>
   );
