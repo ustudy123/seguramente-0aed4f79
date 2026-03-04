@@ -431,9 +431,9 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
         </ScrollArea>
 
         {/* Footer */}
-        <div className="flex gap-2 pt-3 border-t flex-col">
+        <div className="flex flex-col gap-2 pt-3 border-t">
           {step === 0 && (!params.porte || !params.cnae || !(params.numTrabalhadores && params.numTrabalhadores > 0)) && (
-            <div className="flex gap-3 text-xs text-muted-foreground">
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               {!params.porte && <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3 text-destructive" /> Porte obrigatório</span>}
               {!params.cnae && <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3 text-destructive" /> Atividade econômica obrigatória</span>}
               {!(params.numTrabalhadores && params.numTrabalhadores > 0) && <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3 text-destructive" /> Nº de trabalhadores obrigatório</span>}
@@ -451,11 +451,12 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
                 Próximo <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-            <Button onClick={handleGerar} disabled={gerando} className="gap-2">
-              {gerando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {gerando ? "Gerando..." : "Gerar Estrutura"}
-            </Button>
-          )}
+              <Button onClick={handleGerar} disabled={gerando} className="gap-2">
+                {gerando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                {gerando ? "Gerando..." : "Gerar Estrutura"}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
