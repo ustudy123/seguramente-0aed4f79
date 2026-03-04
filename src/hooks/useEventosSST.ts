@@ -26,6 +26,74 @@ export const useEventosSST = () => {
     enabled: !!tid,
   });
 
+  // Helper: criar pasta de investigação automaticamente para acidentes graves
+  const criarPastaInvestigacao = async (evento: any) => {
+    try {
+      // Buscar pasta raiz "Investigação de Incidentes" ou "Incidentes"
+      const { data: pastasRaiz } = await supabase
+        .from("documento_pastas")
+        .select("id, nome")
+        .eq("tenant_id", tid!)
+        .ilike("nome", "%Investi%");
+
+      let pastaRaizId: string | null = null;
+      if (pastasRaiz && pastasRaiz.length > 0) {
+        pastaRaizId = pastasRaiz[0].id;
+      } else {
+        // Tentar pasta "Incidentes"
+        const { data: pastasInc } = await supabase
+          .from("documento_pastas")
+          .select("id, nome")
+          .eq("tenant_id", tid!)
+          .ilike("nome", "%Incidente%")
+          .limit(1);
+        if (pastasInc && pastasInc.length > 0) pastaRaizId = pastasInc[0].id;
+      }
+
+      if (!pastaRaizId) return; // Sem estrutura de pastas, não cria
+
+      const codigo = evento.codigo || `EVT-${Date.now()}`;
+      const label = evento.tipo === "acidente" ? "Acidente" : "Incidente";
+      const dataStr = new Date(evento.data_evento).toLocaleDateString("pt-BR");
+
+      // Criar pasta principal do evento
+      const { data: novaPasta, error: errPasta } = await supabase
+        .from("documento_pastas")
+        .insert({
+          tenant_id: tid!,
+          nome: `${label} ${codigo} — ${dataStr}`,
+          tipo: "custom",
+          pasta_pai_id: pastaRaizId,
+          ordem: 999,
+          criado_por: user?.id,
+          criado_por_nome: profile?.nome_completo || user?.email,
+        })
+        .select()
+        .single();
+
+      if (errPasta || !novaPasta) return;
+
+      // Criar subpastas padrão
+      const subpastas = ["Relato do Ocorrido", "Análise de Causa Raiz", "Plano de Ação", "Evidências e Fotos", "CAT"];
+      for (let i = 0; i < subpastas.length; i++) {
+        await supabase.from("documento_pastas").insert({
+          tenant_id: tid!,
+          nome: subpastas[i],
+          tipo: "custom",
+          pasta_pai_id: novaPasta.id,
+          ordem: i,
+          criado_por: user?.id,
+          criado_por_nome: profile?.nome_completo || user?.email,
+        });
+      }
+
+      qc.invalidateQueries({ queryKey: ["documento-pastas"] });
+    } catch (err) {
+      // Silencioso — não bloquear o registro do evento
+      console.warn("Não foi possível criar pasta de investigação:", err);
+    }
+  };
+
   const createEvento = useMutation({
     mutationFn: async (evt: Partial<EventoSST>) => {
       const { data, error } = await supabase
@@ -41,9 +109,20 @@ export const useEventosSST = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data: any) => {
       qc.invalidateQueries({ queryKey: ["eventos-sst"] });
       toast.success("Evento registrado com sucesso");
+
+      // Auto-criar pasta de investigação para acidentes ou incidentes graves
+      const isGrave =
+        data.tipo === "acidente" ||
+        (data.gravidade_lesao && data.gravidade_lesao !== "sem_lesao") ||
+        data.obito;
+
+      if (isGrave) {
+        await criarPastaInvestigacao(data);
+        toast.info("📁 Pasta de investigação criada automaticamente em Documentos");
+      }
     },
     onError: (e: any) => toast.error(e.message),
   });
