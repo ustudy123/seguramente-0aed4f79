@@ -250,7 +250,7 @@ export default function ProgramaValidador() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar empresa ou POC..."
+              placeholder="Buscar empresa ou responsável..."
               className="pl-9"
               value={busca}
               onChange={e => setBusca(e.target.value)}
@@ -282,7 +282,7 @@ export default function ProgramaValidador() {
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{c.nome_empresa}</p>
                       <p className="text-sm text-muted-foreground">
-                        {c.poc_nome && `POC: ${c.poc_nome}`}
+                        {c.poc_nome && `Contato: ${c.poc_nome}`}
                         {c.poc_nome && c.segmento && ' · '}
                         {c.segmento}
                       </p>
@@ -559,7 +559,7 @@ function DetalheCliente({
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide">POC / Contato</CardTitle>
+              <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide">Responsável / Contato</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               {cliente.poc_nome && (
@@ -699,19 +699,19 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <Separator className="col-span-2" />
         <div>
-          <Label>POC - Nome</Label>
+          <Label>Responsável - Nome</Label>
           <Input value={form.poc_nome} onChange={e => setForm(p => ({ ...p, poc_nome: e.target.value }))} />
         </div>
         <div>
-          <Label>POC - Cargo</Label>
+          <Label>Responsável - Cargo</Label>
           <Input value={form.poc_cargo} onChange={e => setForm(p => ({ ...p, poc_cargo: e.target.value }))} />
         </div>
         <div>
-          <Label>POC - E-mail</Label>
+          <Label>Responsável - E-mail</Label>
           <Input type="email" value={form.poc_email} onChange={e => setForm(p => ({ ...p, poc_email: e.target.value }))} />
         </div>
         <div>
-          <Label>POC - Telefone</Label>
+          <Label>Responsável - Telefone</Label>
           <Input value={form.poc_telefone} onChange={e => setForm(p => ({ ...p, poc_telefone: e.target.value }))} />
         </div>
         <Separator className="col-span-2" />
