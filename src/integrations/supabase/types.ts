@@ -11171,6 +11171,168 @@ export type Database = {
           },
         ]
       }
+      programa_validador_clientes: {
+        Row: {
+          aceita_beta: boolean | null
+          cnpj: string | null
+          created_at: string
+          data_fim_piloto: string | null
+          data_inicio_piloto: string | null
+          fase: string
+          id: string
+          nome_empresa: string
+          observacoes: string | null
+          poc_cargo: string | null
+          poc_email: string | null
+          poc_nome: string | null
+          poc_telefone: string | null
+          quantidade_colaboradores: number | null
+          responsavel_seguramente: string | null
+          segmento: string | null
+          tamanho_empresa: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aceita_beta?: boolean | null
+          cnpj?: string | null
+          created_at?: string
+          data_fim_piloto?: string | null
+          data_inicio_piloto?: string | null
+          fase?: string
+          id?: string
+          nome_empresa: string
+          observacoes?: string | null
+          poc_cargo?: string | null
+          poc_email?: string | null
+          poc_nome?: string | null
+          poc_telefone?: string | null
+          quantidade_colaboradores?: number | null
+          responsavel_seguramente?: string | null
+          segmento?: string | null
+          tamanho_empresa?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aceita_beta?: boolean | null
+          cnpj?: string | null
+          created_at?: string
+          data_fim_piloto?: string | null
+          data_inicio_piloto?: string | null
+          fase?: string
+          id?: string
+          nome_empresa?: string
+          observacoes?: string | null
+          poc_cargo?: string | null
+          poc_email?: string | null
+          poc_nome?: string | null
+          poc_telefone?: string | null
+          quantidade_colaboradores?: number | null
+          responsavel_seguramente?: string | null
+          segmento?: string | null
+          tamanho_empresa?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programa_validador_clientes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programa_validador_documentos: {
+        Row: {
+          aceito_em: string | null
+          arquivo_url: string | null
+          cliente_id: string
+          created_at: string
+          enviado_em: string | null
+          id: string
+          observacao: string | null
+          status: string
+          tipo: string
+          updated_at: string
+          versao: string | null
+        }
+        Insert: {
+          aceito_em?: string | null
+          arquivo_url?: string | null
+          cliente_id: string
+          created_at?: string
+          enviado_em?: string | null
+          id?: string
+          observacao?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          versao?: string | null
+        }
+        Update: {
+          aceito_em?: string | null
+          arquivo_url?: string | null
+          cliente_id?: string
+          created_at?: string
+          enviado_em?: string | null
+          id?: string
+          observacao?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          versao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programa_validador_documentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "programa_validador_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programa_validador_historico: {
+        Row: {
+          autor: string | null
+          cliente_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          autor?: string | null
+          cliente_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          autor?: string | null
+          cliente_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programa_validador_historico_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "programa_validador_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questionario_psicossocial_campanhas: {
         Row: {
           anonimo: boolean
