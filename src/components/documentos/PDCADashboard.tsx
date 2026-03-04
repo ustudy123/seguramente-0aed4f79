@@ -303,57 +303,87 @@ export function PDCADashboard() {
             {documentosVencidos.filter(d => d.status === "vencido").length > 0 && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                 <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">
                     {documentosVencidos.filter(d => d.status === "vencido").length} documentos vencidos
                   </p>
                   <p className="text-xs text-muted-foreground">Requerem renovação imediata</p>
                 </div>
-                <Badge variant="destructive" className="ml-auto shrink-0">
-                  {documentosVencidos.filter(d => d.status === "vencido").length}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant="destructive">{documentosVencidos.filter(d => d.status === "vencido").length}</Badge>
+                  <button
+                    onClick={() => setAlertaModal({ tipo: "docs_vencidos", titulo: `${documentosVencidos.filter(d => d.status === "vencido").length} documentos vencidos`, descricao: "Documentos vencidos requerem renovação imediata para manter a conformidade legal." })}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                  >
+                    <Sparkles className="w-3 h-3" /> Criar Ação
+                  </button>
+                </div>
               </div>
             )}
             {acoes.filter((a: any) => a.status === "pendente" && a.prazo && new Date(a.prazo) < today).length > 0 && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
                 <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">
                     {acoes.filter((a: any) => a.status === "pendente" && a.prazo && new Date(a.prazo) < today).length} ações atrasadas
                   </p>
                   <p className="text-xs text-muted-foreground">Prazo vencido sem conclusão</p>
                 </div>
+                <button
+                  onClick={() => setAlertaModal({ tipo: "acoes_atrasadas", titulo: `${acoes.filter((a: any) => a.status === "pendente" && a.prazo && new Date(a.prazo) < today).length} ações atrasadas`, descricao: "Existem ações com prazo vencido que ainda não foram concluídas. Risco de não conformidade." })}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0"
+                >
+                  <Sparkles className="w-3 h-3" /> Criar Ação
+                </button>
               </div>
             )}
             {eventos.filter((e: any) => e.status === "em_aberto" && e.tipo === "acidente").length > 0 && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                 <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">
                     {eventos.filter((e: any) => e.status === "em_aberto" && e.tipo === "acidente").length} acidentes sem investigação
                   </p>
                   <p className="text-xs text-muted-foreground">Requerem análise de causa raiz</p>
                 </div>
+                <button
+                  onClick={() => setAlertaModal({ tipo: "acidentes", titulo: `${eventos.filter((e: any) => e.status === "em_aberto" && e.tipo === "acidente").length} acidentes sem investigação`, descricao: "Acidentes em aberto sem análise de causa raiz. Requerem investigação imediata conforme NR-01." })}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0"
+                >
+                  <Sparkles className="w-3 h-3" /> Criar Ação
+                </button>
               </div>
             )}
             {acoes.filter((a: any) => a.status === "concluida").length === 0 && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border">
                 <TrendingUp className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">Sem ações concluídas</p>
                   <p className="text-xs text-muted-foreground">Conclua ações para avançar o ciclo PDCA</p>
                 </div>
+                <button
+                  onClick={() => setAlertaModal({ tipo: "sem_conclusoes", titulo: "Sem ações concluídas no ciclo PDCA", descricao: "Nenhuma ação foi concluída ainda. O ciclo PDCA precisa avançar para a fase de verificação." })}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0"
+                >
+                  <Sparkles className="w-3 h-3" /> Criar Ação
+                </button>
               </div>
             )}
             {documentosVencidos.filter(d => d.status === "vencendo").length > 0 && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
                 <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">
                     {documentosVencidos.filter(d => d.status === "vencendo").length} documentos a vencer
                   </p>
                   <p className="text-xs text-muted-foreground">Atenção nos próximos 30 dias</p>
                 </div>
+                <button
+                  onClick={() => setAlertaModal({ tipo: "docs_vencendo", titulo: `${documentosVencidos.filter(d => d.status === "vencendo").length} documentos a vencer`, descricao: "Documentos próximos do vencimento nos próximos 30 dias. Planejar renovação preventiva." })}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0"
+                >
+                  <Sparkles className="w-3 h-3" /> Criar Ação
+                </button>
               </div>
             )}
             {acoes.length === 0 && eventos.length === 0 && documentosVencidos.length === 0 && (
@@ -366,6 +396,12 @@ export function PDCADashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <PDCAAlertaAcaoModal
+        open={!!alertaModal}
+        onClose={() => setAlertaModal(null)}
+        alerta={alertaModal}
+      />
     </div>
   );
 }
