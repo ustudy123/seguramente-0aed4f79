@@ -262,7 +262,8 @@ export function PDCADashboard() {
                     cy="50%"
                     outerRadius={80}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
+                    labelLine={true}
+                    labelStyle={{ fontSize: 11, fontFamily: "Inter, sans-serif", fill: "hsl(var(--foreground))", textTransform: "capitalize" }}
                   >
                     {acoesPorOrigem.map((_, idx) => (
                       <Cell
