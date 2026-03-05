@@ -102,7 +102,7 @@ export function useErgonomia() {
       
       const { data, error } = await supabase
         .from("ergonomia_itens_nr17")
-        .insert({ ...item, tenant_id: tenantId })
+        .insert({ ...item, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
@@ -154,6 +154,7 @@ export function useErgonomia() {
       const itensComTenant = itensPadrao.map(item => ({
         ...item,
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
       }));
 
       const { data, error } = await supabase
@@ -181,7 +182,7 @@ export function useErgonomia() {
       
       const { data, error } = await supabase
         .from("ergonomia_riscos")
-        .insert({ ...risco, tenant_id: tenantId })
+        .insert({ ...risco, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
@@ -205,7 +206,7 @@ export function useErgonomia() {
       
       const { data, error } = await supabase
         .from("ergonomia_acoes")
-        .insert({ ...acao, tenant_id: tenantId })
+        .insert({ ...acao, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
