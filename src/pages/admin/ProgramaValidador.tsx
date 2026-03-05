@@ -563,11 +563,12 @@ export default function ProgramaValidador() {
 // ─── Detalhe do cliente ───────────────────────────────────────────────────────
 
 function DetalheCliente({
-  cliente, documentos, historico, onBack, onClienteUpdated,
+  cliente, documentos, historico, contratos, onBack, onClienteUpdated,
 }: {
   cliente: Cliente;
   documentos: Documento[];
   historico: Historico[];
+  contratos: Contrato[];
   onBack: () => void;
   onClienteUpdated: (c: Cliente) => void;
 }) {
@@ -575,6 +576,7 @@ function DetalheCliente({
   const { profile } = useAuthContext();
   const [nota, setNota] = useState('');
   const [editandoFase, setEditandoFase] = useState(false);
+  const [showGerarContrato, setShowGerarContrato] = useState(false);
 
   const atualizarFaseMutation = useMutation({
     mutationFn: async (fase: Fase) => {
