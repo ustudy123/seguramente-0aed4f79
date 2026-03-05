@@ -22,6 +22,9 @@ type Payload = {
   inviteMode?: boolean;
   // Plan for new tenant
   plano?: string;
+  // Company pre-registration
+  tipoPessoa?: string;
+  documento?: string;
 };
 
 serve(async (req) => {
@@ -82,6 +85,8 @@ serve(async (req) => {
   const password = (payload.password ?? "").trim();
   const inviteMode = payload.inviteMode === true;
   const plano = (payload.plano ?? "starter").trim();
+  const tipoPessoa = (payload.tipoPessoa ?? "").trim();
+  const documento = (payload.documento ?? "").trim();
 
   // Mode 1: Superadmin creating owner for existing tenant (with password or invite)
   if (existingTenantId && email && nomeCompleto) {
@@ -239,6 +244,53 @@ serve(async (req) => {
 
   if (roleError) {
     return json({ error: roleError.message }, 500);
+  }
+
+  // 4) Create empresa_cadastro (pre-registration) if documento provided
+  if (documento) {
+    const empresaPayload: Record<string, unknown> = {
+      tenant_id: tenant.id,
+      razao_social: tenantNome,
+      nome_fantasia: tenantNome,
+      tipo_pessoa: tipoPessoa === "pf" ? "pf" : "pj",
+      cnpj: tipoPessoa === "pj" ? documento : null,
+      cpf: tipoPessoa === "pf" ? documento : null,
+      tipo_unidade: "matriz",
+      ativo: true,
+      total_colaboradores: 0,
+      cnaes_secundarios: [],
+      sesmt_profissionais: [],
+      cipa_membros: [],
+      fap_historico: [],
+      tac_detalhes: [],
+      turnos: [],
+      condicoes_especiais_detalhes: {},
+      sesmt_obrigatorio: false,
+      cipa_obrigatoria: false,
+      pcd_obrigatoria: false,
+      pcd_quantidade_exigida: 0,
+      pcd_quantidade_atual: 0,
+      aprendiz_quantidade_minima: 0,
+      aprendiz_quantidade_maxima: 0,
+      aprendiz_quantidade_atual: 0,
+      tac_possui: false,
+      possui_terceiro_turno: false,
+      possui_escalas_especiais: false,
+      trabalho_altura: false,
+      espaco_confinado: false,
+      insalubridade: false,
+      periculosidade: false,
+      aposentadoria_especial: false,
+    };
+
+    const { error: empresaError } = await admin
+      .from("empresa_cadastro")
+      .insert(empresaPayload);
+
+    if (empresaError) {
+      console.error("Error creating empresa_cadastro:", empresaError.message);
+      // Non-blocking: tenant and profile already created successfully
+    }
   }
 
   return json({ ok: true, tenantId: tenant.id }, 200);

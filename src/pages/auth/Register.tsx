@@ -17,12 +17,28 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+const formatCpf = (value: string): string => {
+  const n = value.replace(/\D/g, "");
+  if (n.length <= 3) return n;
+  if (n.length <= 6) return `${n.slice(0, 3)}.${n.slice(3)}`;
+  if (n.length <= 9) return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6)}`;
+  return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6, 9)}-${n.slice(9, 11)}`;
+};
+
 const registerSchema = z.object({
   // Step 1 - Company info
-  cnpj: z.string().min(14, "CNPJ inválido").max(18),
+  tipoPessoa: z.enum(["pj", "pf"]),
+  documento: z.string().min(1, "Documento é obrigatório"),
   tenantNome: z.string().min(2, "Nome da empresa deve ter pelo menos 2 caracteres").max(100),
   tenantSlug: z
     .string()
@@ -40,6 +56,13 @@ const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não conferem",
   path: ["confirmPassword"],
+}).refine((data) => {
+  const clean = data.documento.replace(/\D/g, "");
+  if (data.tipoPessoa === "pj") return clean.length === 14;
+  return clean.length === 11;
+}, {
+  message: "Documento inválido",
+  path: ["documento"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -55,7 +78,8 @@ export default function Register() {
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      cnpj: "",
+      tipoPessoa: "pj",
+      documento: "",
       tenantNome: "",
       tenantSlug: "",
       nomeCompleto: "",
@@ -65,6 +89,8 @@ export default function Register() {
     },
     mode: "onChange",
   });
+
+  const tipoPessoa = form.watch("tipoPessoa");
 
   const translateErrorMessage = (message: string): string => {
     const translations: Record<string, string> = {
@@ -76,12 +102,39 @@ export default function Register() {
     return translations[message] || message;
   };
 
+  const handleBuscarCnpj = async () => {
+    const doc = form.getValues("documento");
+    const clean = cleanCnpj(doc);
+    if (clean.length !== 14) {
+      toast.error("Digite um CNPJ válido com 14 dígitos");
+      return;
+    }
+    setBuscandoCnpj(true);
+    try {
+      const resultado = await buscarCnpj(doc);
+      if (resultado) {
+        const nome = resultado.razao_social || resultado.nome_fantasia || "";
+        form.setValue("tenantNome", nome);
+        form.setValue("tenantSlug", generateSlug(nome));
+        toast.success("Dados do CNPJ carregados!");
+      } else {
+        toast.error("CNPJ não encontrado na base de dados");
+      }
+    } catch {
+      toast.error("Erro ao buscar CNPJ");
+    } finally {
+      setBuscandoCnpj(false);
+    }
+  };
+
   const onSubmit = async (data: RegisterFormData) => {
+    const cleanDoc = data.documento.replace(/\D/g, "");
     const { error } = await signUp(data.email, data.password, {
       nomeCompleto: data.nomeCompleto,
       tenantNome: data.tenantNome,
       tenantSlug: data.tenantSlug,
-      cnpj: cleanCnpj(data.cnpj),
+      tipoPessoa: data.tipoPessoa,
+      documento: cleanDoc,
     });
 
     if (error) {
@@ -99,7 +152,7 @@ export default function Register() {
   };
 
   const handleNextStep = async () => {
-    const isValid = await form.trigger(["tenantNome", "tenantSlug"]);
+    const isValid = await form.trigger(["documento", "tenantNome", "tenantSlug"]);
     if (isValid) {
       setStep(2);
     }
@@ -114,6 +167,14 @@ export default function Register() {
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .substring(0, 50);
+  };
+
+  const handleDocumentoChange = (value: string) => {
+    if (tipoPessoa === "pj") {
+      form.setValue("documento", formatCnpj(value), { shouldValidate: true });
+    } else {
+      form.setValue("documento", formatCpf(value), { shouldValidate: true });
+    }
   };
 
   return (
@@ -150,6 +211,76 @@ export default function Register() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {step === 1 && (
             <>
+              <FormField
+                control={form.control}
+                name="tipoPessoa"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Pessoa *</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue("documento", "");
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pj">Pessoa Jurídica (CNPJ)</SelectItem>
+                        <SelectItem value="pf">Pessoa Física (CPF)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="documento"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{tipoPessoa === "pj" ? "CNPJ" : "CPF"} *</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={tipoPessoa === "pj" ? "00.000.000/0000-00" : "000.000.000-00"}
+                          value={field.value}
+                          onChange={(e) => handleDocumentoChange(e.target.value)}
+                          maxLength={tipoPessoa === "pj" ? 18 : 14}
+                        />
+                        {tipoPessoa === "pj" && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={handleBuscarCnpj}
+                            disabled={buscandoCnpj}
+                            title="Buscar dados do CNPJ"
+                          >
+                            {buscandoCnpj ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Search className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </FormControl>
+                    {tipoPessoa === "pj" && (
+                      <FormDescription>
+                        Clique na lupa para preencher automaticamente
+                      </FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="tenantNome"

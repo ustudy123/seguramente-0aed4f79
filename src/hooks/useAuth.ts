@@ -146,6 +146,8 @@ export function useAuth() {
       tenantId?: string;
       tenantNome?: string;
       tenantSlug?: string;
+      tipoPessoa?: string;
+      documento?: string;
     }
   ) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -175,6 +177,8 @@ export function useAuth() {
               tenantNome: userData.tenantNome,
               tenantSlug: userData.tenantSlug,
               nomeCompleto: userData.nomeCompleto,
+              tipoPessoa: userData.tipoPessoa,
+              documento: userData.documento,
             },
           }
         );
