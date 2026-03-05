@@ -34,17 +34,26 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
     enabled: !!tenantId,
   });
 
-  // Restore from localStorage
+  // Restore from localStorage or auto-select single company
   useEffect(() => {
     if (!tenantId || isLoading || initialized) return;
+    if (empresas.length === 0) {
+      setInitialized(true);
+      return;
+    }
     const storageKey = `empresa_ativa_${tenantId}`;
     const savedId = localStorage.getItem(storageKey);
-    if (savedId && empresas.length > 0) {
+    if (savedId) {
       const found = empresas.find((e) => e.id === savedId);
       if (found) {
         setEmpresaAtivaState(found);
+        setInitialized(true);
+        return;
       }
     }
+    // Auto-select first company when nothing saved (or saved ID not found)
+    setEmpresaAtivaState(empresas[0]);
+    localStorage.setItem(storageKey, empresas[0].id);
     setInitialized(true);
   }, [tenantId, empresas, isLoading, initialized]);
 
