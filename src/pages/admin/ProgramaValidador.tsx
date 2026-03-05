@@ -1397,9 +1397,10 @@ function DetalheCliente({
                         <div className="min-w-0">
                           <p className="font-semibold text-sm">{label}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
-                          {doc?.aceito_em && (
+                          {(isContrato ? contratoAtivo?.assinado_em : doc?.aceito_em) && (
                             <p className="text-xs text-primary mt-1">
-                              ✓ Concluído em {format(new Date(doc.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              ✓ Assinado em {format(new Date((isContrato ? contratoAtivo?.assinado_em : doc?.aceito_em)!), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              {isContrato && contratoAtivo?.assinado_por ? ` por ${contratoAtivo.assinado_por}` : ''}
                             </p>
                           )}
                         </div>
