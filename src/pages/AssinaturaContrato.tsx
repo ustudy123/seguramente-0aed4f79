@@ -22,7 +22,7 @@ export default function AssinaturaContrato() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_contratos' as never)
-        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token)')
+        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token, tenant_id)')
         .eq('token', token!)
         .single() as any;
       if (error) throw error;
@@ -74,7 +74,78 @@ export default function AssinaturaContrato() {
         autor: nome || contrato?.programa_validador_clientes?.poc_nome,
       } as never);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Salvar no módulo de Documentos da empresa (tenant do cliente)
+      try {
+        const tenantId = contrato?.programa_validador_clientes?.tenant_id;
+        const nomeEmpresa = contrato?.programa_validador_clientes?.nome_empresa || 'Empresa';
+        if (tenantId) {
+          // Buscar ou criar pasta "Programa Validador"
+          let { data: pasta } = await supabase
+            .from('documento_pastas')
+            .select('id')
+            .eq('tenant_id', tenantId)
+            .eq('nome', 'Programa Validador')
+            .is('pasta_pai_id', null)
+            .maybeSingle();
+
+          if (!pasta) {
+            const { data: novaPasta } = await supabase
+              .from('documento_pastas')
+              .insert({
+                tenant_id: tenantId,
+                nome: 'Programa Validador',
+                tipo: 'admin',
+                icone: 'FileText',
+                cor: '#2563eb',
+              })
+              .select('id')
+              .single();
+            pasta = novaPasta;
+          }
+
+          if (pasta?.id) {
+            const htmlFinal = contrato?.html_assinado || contrato?.html_contrato || '';
+            const nomeArq = `Contrato-Seguramente-${nomeEmpresa.replace(/\s+/g, '-')}-Assinado.html`;
+            const storagePath = `programa-validador/${tenantId}/contratos/${nomeArq}`;
+
+            // Upload HTML ao storage
+            const blob = new Blob([htmlFinal], { type: 'text/html' });
+            await supabase.storage.from('documentos').upload(storagePath, blob, {
+              contentType: 'text/html',
+              upsert: true,
+            });
+
+            // Verificar se já existe na tabela documentos
+            const { data: docExistente } = await supabase
+              .from('documentos')
+              .select('id')
+              .eq('tenant_id', tenantId)
+              .eq('storage_path', storagePath)
+              .maybeSingle();
+
+            if (!docExistente) {
+              await supabase.from('documentos').insert({
+                tenant_id: tenantId,
+                pasta_id: pasta.id,
+                nome_arquivo: nomeArq,
+                nome_original: nomeArq,
+                storage_path: storagePath,
+                mime_type: 'text/html',
+                tamanho: blob.size,
+                tipo: 'contrato',
+                status: 'ativo',
+                colaborador_nome: nomeEmpresa,
+                versao_atual: 1,
+                total_versoes: 1,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao salvar contrato no módulo de documentos:', e);
+      }
+
       const onboardingToken = contrato?.programa_validador_clientes?.onboarding_token;
       if (onboardingToken) {
         toast.success('Contrato assinado com sucesso!');
