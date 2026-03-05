@@ -23,14 +23,16 @@ export function useEstrategia() {
 
   // ─── SWOT ───
   const { data: swots = [], isLoading: loadingSwots } = useQuery({
-    queryKey: ["estrategia_swot", tenantId],
+    queryKey: ["estrategia_swot", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("estrategia_swot" as never)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false }) as { data: EstrategiaSwot[] | null; error: Error | null };
+        .order("created_at", { ascending: false });
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q as { data: EstrategiaSwot[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaSwot[];
     },
@@ -41,7 +43,7 @@ export function useEstrategia() {
     mutationFn: async (input: { titulo: string; descricao?: string; escopo?: string; unidade?: string; periodo?: string; projeto?: string }) => {
       const { data, error } = await supabase
         .from("estrategia_swot" as never)
-        .insert({ ...input, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+        .insert({ ...input, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
         .select()
         .single() as { data: EstrategiaSwot | null; error: Error | null };
       if (error) throw error;
