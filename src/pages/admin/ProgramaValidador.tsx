@@ -128,7 +128,7 @@ const FASES: { value: Fase; label: string; color: string; border: string }[] = [
   { value: 'encerrado',   label: 'Encerrado',    color: 'bg-destructive/10 text-destructive',       border: 'border-t-2 border-destructive/50' },
 ];
 
-const DOCS_CONFIG: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
+const DOCS_CONFIG_TESTER: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
   {
     tipo: 'contrato_programa_validador',
     label: 'Contrato Programa Validador',
@@ -140,6 +140,24 @@ const DOCS_CONFIG: { tipo: TipoDoc; label: string; descricao: string; itens?: st
       'Anexo IV — Anexo Operacional',
       'Anexo V — Regras do Programa Validador',
       'Anexo VI — FAQ de Segurança e Boas Práticas',
+    ],
+  },
+  {
+    tipo: 'ata_kickoff',
+    label: 'Ata de Kickoff',
+    descricao: 'Registro operacional do início do projeto: responsáveis, escopo e cronograma.',
+  },
+];
+
+const DOCS_CONFIG_PAGANTE: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
+  {
+    tipo: 'contrato_programa_validador',
+    label: 'Contrato de Licença de Uso',
+    descricao: 'Contrato de licença SaaS com todos os anexos jurídicos incorporados. Uma única assinatura.',
+    itens: [
+      'Anexo I — Termos de Uso da Plataforma',
+      'Anexo II — Política de Privacidade e LGPD',
+      'Anexo III — SLA e Suporte Técnico',
     ],
   },
   {
