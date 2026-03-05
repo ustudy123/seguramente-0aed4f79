@@ -1935,6 +1935,30 @@ function DetalheCliente({
                   <span>{cliente.poc_telefone}</span>
                 </div>
               )}
+              {(cliente as any).activation_token && (
+                <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-lg space-y-1.5">
+                  <p className="text-xs font-semibold text-primary flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" /> Link de Ativação do Cliente
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
+                      {window.location.origin}/ativar-conta?token={(cliente as any).activation_token}
+                    </code>
+                    <button
+                      className="text-xs text-primary hover:underline whitespace-nowrap"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/ativar-conta?token=${(cliente as any).activation_token}`);
+                        toast.success('Link copiado!');
+                      }}
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                  {(cliente as any).conta_ativada && (
+                    <p className="text-xs text-green-600 font-medium">✓ Conta ativada</p>
+                  )}
+                </div>
+              )}
               {!cliente.poc_nome && !cliente.poc_email && (
                 <p className="text-muted-foreground">Nenhum contato cadastrado</p>
               )}
