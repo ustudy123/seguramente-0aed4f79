@@ -1506,6 +1506,9 @@ function DetalheCliente({
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{cliente.nome_empresa}</h1>
             <FaseBadge fase={cliente.fase} />
+            <Badge variant="outline" className={`text-xs ${cliente.tipo_cliente === 'pagante' ? 'border-primary text-primary' : 'border-accent text-accent-foreground'}`}>
+              {cliente.tipo_cliente === 'pagante' ? '💼 Pagante' : '🧪 Tester'}
+            </Badge>
             {cliente.aceita_beta && (
               <Badge variant="outline" className="text-xs">
                 <Shield className="w-3 h-3 mr-1" />Beta aceito
