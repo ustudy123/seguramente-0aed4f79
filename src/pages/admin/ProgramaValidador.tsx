@@ -594,6 +594,16 @@ function DetalheCliente({
         titulo: `Fase alterada para "${FASES.find(f => f.value === fase)?.label}"`,
         autor: profile?.nome_completo || 'SuperAdmin',
       });
+
+      // Gerar contrato automaticamente ao avançar qualificação → kickoff
+      if (cliente.fase === 'qualificacao' && fase === 'kickoff') {
+        const html = gerarHtmlContrato({ ...cliente, fase });
+        await supabase.from('programa_validador_contratos' as never).insert({
+          cliente_id: cliente.id,
+          html_contrato: html,
+          status: 'pendente',
+        } as never);
+      }
       return data;
     },
     onSuccess: (data) => {
