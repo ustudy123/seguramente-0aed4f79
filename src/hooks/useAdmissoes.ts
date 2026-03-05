@@ -96,6 +96,7 @@ export function useAdmissoes() {
         .from('admissoes')
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           criado_por: user.id,
           status: 'rascunho' as AdmissaoStatus,
           ...dados,
