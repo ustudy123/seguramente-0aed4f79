@@ -61,6 +61,13 @@ interface Cliente {
   endereco: string | null;
   representante: string | null;
   cidade_foro: string | null;
+  tipo_cliente: 'tester' | 'pagante';
+  valor_mensal: number | null;
+  dia_vencimento: number | null;
+  plano: string | null;
+  modulos_contratados: string[] | null;
+  data_contrato: string | null;
+  data_vigencia_fim: string | null;
   created_at: string;
 }
 
