@@ -2007,6 +2007,7 @@ function DetalheCliente({
 // ─── Dialog novo cliente ──────────────────────────────────────────────────────
 
 function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
+  const [cnpjLoading, setCnpjLoading] = useState(false);
   const [form, setForm] = useState({
     nome_empresa: '',
     cnpj: '',
