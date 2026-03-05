@@ -21,9 +21,10 @@ import {
   Plus, Search, Users, Building2, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronRight, ArrowLeft, FileText,
   MessageSquare, Phone, Mail, Calendar, Shield,
-  LayoutList, Columns, ChevronLeft, Send, ExternalLink, Download,
+  LayoutList, Columns, ChevronLeft, Send, ExternalLink, Download, Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { formatCnpj, cleanCnpj, buscarCnpj } from '@/lib/brasilapi';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 
