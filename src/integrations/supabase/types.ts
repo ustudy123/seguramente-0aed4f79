@@ -11348,6 +11348,7 @@ export type Database = {
           created_at: string
           documento_id: string | null
           expira_em: string
+          html_assinado: string | null
           html_documento: string
           id: string
           motivo_recusa: string | null
@@ -11364,6 +11365,7 @@ export type Database = {
           created_at?: string
           documento_id?: string | null
           expira_em?: string
+          html_assinado?: string | null
           html_documento: string
           id?: string
           motivo_recusa?: string | null
@@ -11380,6 +11382,7 @@ export type Database = {
           created_at?: string
           documento_id?: string | null
           expira_em?: string
+          html_assinado?: string | null
           html_documento?: string
           id?: string
           motivo_recusa?: string | null
