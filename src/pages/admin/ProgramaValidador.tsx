@@ -26,6 +26,7 @@ import {
 import { format } from 'date-fns';
 import { formatCnpj, cleanCnpj, buscarCnpj } from '@/lib/brasilapi';
 import { ptBR } from 'date-fns/locale';
+import { AtaKickoffDialog } from '@/components/admin/AtaKickoffDialog';
 import { Link } from 'react-router-dom';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1329,6 +1330,7 @@ function DetalheCliente({
   const [editandoFase, setEditandoFase] = useState(false);
   const [showGerarContrato, setShowGerarContrato] = useState(false);
   const [gerandoDoc, setGerandoDoc] = useState<TipoDoc | null>(null);
+  const [showAtaDialog, setShowAtaDialog] = useState(false);
 
   const { data: docLinks = [] } = useQuery({
     queryKey: ['validador', 'doc-links', cliente.id],
@@ -1407,8 +1409,8 @@ function DetalheCliente({
   });
 
   const gerarDocLinkMutation = useMutation({
-    mutationFn: async (tipo: TipoDoc) => {
-      const html = gerarHtmlDocumento(tipo, cliente);
+    mutationFn: async ({ tipo, htmlOverride }: { tipo: TipoDoc; htmlOverride?: string }) => {
+      const html = htmlOverride ?? gerarHtmlDocumento(tipo, cliente);
       const docExistente = documentos.find(d => d.tipo === tipo);
       const { data, error } = await supabase
         .from('programa_validador_documento_links' as never)
@@ -1749,7 +1751,11 @@ function DetalheCliente({
                               disabled={isGerando}
                               onClick={() => {
                                 setGerandoDoc(tipo);
-                                gerarDocLinkMutation.mutate(tipo);
+                                if (tipo === 'ata_kickoff') {
+                                  setShowAtaDialog(true);
+                                } else {
+                                  gerarDocLinkMutation.mutate({ tipo });
+                                }
                               }}
                             >
                               {isGerando ? (
@@ -1996,7 +2002,57 @@ function DetalheCliente({
 
           <Card>
             <CardContent className="p-3 text-xs text-muted-foreground">
-              Criado em {format(new Date(cliente.created_at), "dd/MM/yyyy", { locale: ptBR })}
+              <p>Criado em {format(new Date(cliente.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <AtaKickoffDialog
+        open={showAtaDialog}
+        onClose={() => { setShowAtaDialog(false); setGerandoDoc(null); }}
+        onEnviar={(html) => {
+          gerarDocLinkMutation.mutate({ tipo: 'ata_kickoff', htmlOverride: html });
+          setShowAtaDialog(false);
+        }}
+        isLoading={gerarDocLinkMutation.isPending}
+        nomeEmpresa={cliente.nome_empresa}
+        pocNome={cliente.poc_nome}
+        responsavelSeguramente={cliente.responsavel_seguramente}
+      />
+    </div>
+  );
+}
+            <CardContent className="p-3 text-xs text-muted-foreground">
+              <p>Criado em {format(new Date(cliente.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      />
+    </div>
+  );
+}
+        </div>
+      </div>
+
+      {/* Ata de Kickoff Dialog */}
+      <AtaKickoffDialog
+        open={showAtaDialog}
+        onClose={() => { setShowAtaDialog(false); setGerandoDoc(null); }}
+        onEnviar={(html) => {
+          gerarDocLinkMutation.mutate({ tipo: 'ata_kickoff', htmlOverride: html });
+          setShowAtaDialog(false);
+        }}
+        isLoading={gerarDocLinkMutation.isPending}
+        nomeEmpresa={cliente.nome_empresa}
+        pocNome={cliente.poc_nome}
+        responsavelSeguramente={cliente.responsavel_seguramente}
+      />
+    </div>
+  );
+}
             </CardContent>
           </Card>
         </div>
