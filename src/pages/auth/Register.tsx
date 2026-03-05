@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search, Info, CheckCircle2, Clock, Phone, Sparkles } from "lucide-react";
 import { formatCnpj, cleanCnpj, buscarCnpj } from "@/lib/brasilapi";
-import { translateError } from "@/lib/translateError";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuthContext } from "@/contexts/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const formatCpf = (value: string): string => {
@@ -37,7 +43,6 @@ const formatCpf = (value: string): string => {
 };
 
 const registerSchema = z.object({
-  // Step 1 - Company info
   tipoPessoa: z.enum(["pj", "pf"]),
   documento: z.string().min(1, "Documento é obrigatório"),
   tenantNome: z.string().min(2, "Nome da empresa deve ter pelo menos 2 caracteres").max(100),
@@ -45,18 +50,9 @@ const registerSchema = z.object({
     .string()
     .min(3, "Identificador deve ter pelo menos 3 caracteres")
     .max(50)
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Apenas letras minúsculas, números e hífen"
-    ),
-  // Step 2 - User info
+    .regex(/^[a-z0-9-]+$/, "Apenas letras minúsculas, números e hífen"),
   nomeCompleto: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
-  password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não conferem",
-  path: ["confirmPassword"],
 }).refine((data) => {
   const clean = data.documento.replace(/\D/g, "");
   if (data.tipoPessoa === "pj") return clean.length === 14;
@@ -69,11 +65,9 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Register() {
-  const navigate = useNavigate();
-  const { signUp, loading } = useAuthContext();
   const [step, setStep] = useState(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
 
   const form = useForm<RegisterFormData>({
@@ -85,15 +79,11 @@ export default function Register() {
       tenantSlug: "",
       nomeCompleto: "",
       email: "",
-      password: "",
-      confirmPassword: "",
     },
     mode: "onChange",
   });
 
   const tipoPessoa = form.watch("tipoPessoa");
-
-  // translateErrorMessage now uses shared utility
 
   const handleBuscarCnpj = async () => {
     const doc = form.getValues("documento");
@@ -121,27 +111,36 @@ export default function Register() {
   };
 
   const onSubmit = async (data: RegisterFormData) => {
-    const cleanDoc = data.documento.replace(/\D/g, "");
-    const { error } = await signUp(data.email, data.password, {
-      nomeCompleto: data.nomeCompleto,
-      tenantNome: data.tenantNome,
-      tenantSlug: data.tenantSlug,
-      tipoPessoa: data.tipoPessoa,
-      documento: cleanDoc,
-    });
-
-    if (error) {
-      const translatedMessage = translateError(error.message || "");
-      toast.error("Erro ao criar conta", {
-        description: translatedMessage || "Tente novamente mais tarde.",
+    setSubmitting(true);
+    try {
+      const cleanDoc = data.documento.replace(/\D/g, "");
+      const { data: result, error } = await supabase.functions.invoke("pre-register", {
+        body: {
+          nomeCompleto: data.nomeCompleto,
+          email: data.email,
+          tipoPessoa: data.tipoPessoa,
+          documento: cleanDoc,
+          tenantNome: data.tenantNome,
+          tenantSlug: data.tenantSlug,
+        },
       });
-      return;
-    }
 
-    toast.success("Conta criada com sucesso!", {
-      description: "Verifique seu e-mail para confirmar o cadastro.",
-    });
-    navigate("/login");
+      if (error) {
+        toast.error("Erro ao enviar cadastro", { description: "Tente novamente mais tarde." });
+        return;
+      }
+
+      if (result?.error) {
+        toast.error("Atenção", { description: result.error });
+        return;
+      }
+
+      setShowSuccessDialog(true);
+    } catch {
+      toast.error("Erro ao enviar cadastro", { description: "Tente novamente mais tarde." });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleNextStep = async () => {
@@ -171,7 +170,7 @@ export default function Register() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-center mb-6">
         <Logo size="lg" showText={false} />
@@ -182,22 +181,23 @@ export default function Register() {
         <p className="text-muted-foreground mt-1">
           {step === 1
             ? "Primeiro, informe os dados da sua empresa"
-            : "Agora, crie sua conta de administrador"}
+            : "Agora, informe seus dados de contato"}
+        </p>
+      </div>
+
+      {/* Info banner */}
+      <div className="bg-accent/50 border border-accent rounded-lg p-3.5 flex items-start gap-3">
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Este cadastro é para <strong>conhecer o Seguramente</strong>. Após o envio, nossa equipe entrará em contato
+          para uma breve apresentação da plataforma, esclarecer suas dúvidas e ativar seu acesso.
         </p>
       </div>
 
       {/* Progress indicator */}
       <div className="flex items-center gap-2">
-        <div
-          className={`flex-1 h-1 rounded-full ${
-            step >= 1 ? "bg-primary" : "bg-muted"
-          }`}
-        />
-        <div
-          className={`flex-1 h-1 rounded-full ${
-            step >= 2 ? "bg-primary" : "bg-muted"
-          }`}
-        />
+        <div className={`flex-1 h-1 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
+        <div className={`flex-1 h-1 rounded-full ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
       </div>
 
       <Form {...form}>
@@ -265,9 +265,7 @@ export default function Register() {
                       </div>
                     </FormControl>
                     {tipoPessoa === "pj" && (
-                      <FormDescription>
-                        Clique na lupa para preencher automaticamente
-                      </FormDescription>
+                      <FormDescription>Clique na lupa para preencher automaticamente</FormDescription>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -309,26 +307,16 @@ export default function Register() {
                         <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
                           rh360.app/
                         </span>
-                        <Input
-                          className="rounded-l-none"
-                          placeholder="minha-empresa"
-                          {...field}
-                        />
+                        <Input className="rounded-l-none" placeholder="minha-empresa" {...field} />
                       </div>
                     </FormControl>
-                    <FormDescription>
-                      Este será o endereço da sua empresa no sistema
-                    </FormDescription>
+                    <FormDescription>Este será o endereço da sua empresa no sistema</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button
-                type="button"
-                className="w-full"
-                onClick={handleNextStep}
-              >
+              <Button type="button" className="w-full" onClick={handleNextStep}>
                 Continuar
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
@@ -370,74 +358,6 @@ export default function Register() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          autoComplete="new-password"
-                          {...field}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirmar Senha *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          autoComplete="new-password"
-                          {...field}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -448,14 +368,14 @@ export default function Register() {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Voltar
                 </Button>
-                <Button type="submit" className="flex-1" disabled={loading}>
-                  {loading ? (
+                <Button type="submit" className="flex-1" disabled={submitting}>
+                  {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Criando...
+                      Enviando...
                     </>
                   ) : (
-                    "Criar Conta"
+                    "Enviar Cadastro"
                   )}
                 </Button>
               </div>
@@ -472,6 +392,57 @@ export default function Register() {
           </Link>
         </p>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogHeader className="text-center items-center">
+            <div className="mx-auto bg-primary/10 rounded-full p-3 mb-2">
+              <CheckCircle2 className="w-8 h-8 text-primary" />
+            </div>
+            <DialogTitle className="text-xl">Pré-cadastro realizado com sucesso!</DialogTitle>
+            <DialogDescription className="text-center">
+              Recebemos os dados da sua empresa e estamos muito felizes com o seu interesse no Seguramente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 p-3 bg-accent/50 rounded-lg">
+              <Phone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Entraremos em contato em breve</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Um responsável da nossa equipe entrará em contato para agendar uma rápida demonstração do sistema e esclarecer todas as suas dúvidas.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-accent/50 rounded-lg">
+              <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Demonstração personalizada</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Vamos apresentar os módulos mais relevantes para a realidade da sua empresa, sem compromisso.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-accent/50 rounded-lg">
+              <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Ativação pelo nosso time</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Após a demonstração, nossa equipe fará a ativação da sua conta e acompanhará a implantação do sistema.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Button className="w-full" asChild>
+            <Link to="/login">Voltar para a tela de login</Link>
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
