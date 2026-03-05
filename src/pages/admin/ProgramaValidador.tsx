@@ -780,6 +780,7 @@ export default function ProgramaValidador() {
   const { data: contratos = [] } = useQuery({
     queryKey: ['validador', 'contratos', clienteSelecionado?.id],
     enabled: !!clienteSelecionado,
+    refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_contratos' as never)
@@ -1033,6 +1034,7 @@ function DetalheCliente({
 
   const { data: docLinks = [] } = useQuery({
     queryKey: ['validador', 'doc-links', cliente.id],
+    refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_documento_links' as never)
