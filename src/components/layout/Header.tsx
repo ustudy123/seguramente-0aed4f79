@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
