@@ -760,19 +760,23 @@ export default function OnboardingCliente() {
                           id: 'contrato',
                           icon: <FileText className="w-5 h-5" />,
                           title: cliente.tipo_cliente === 'pagante' ? 'Contrato de Licença de Uso' : 'Contrato Programa Validador',
-                          desc: 'Assinatura digital do contrato com todos os anexos jurídicos.',
+                          desc: contratoAssinado ? 'Contrato assinado por todas as partes.' : 'Assinatura digital do contrato com todos os anexos jurídicos.',
                           done: contratoAssinado,
-                          action: contratoAtivo ? () => window.open(`${window.location.origin}/contrato-assinatura/${contratoAtivo.token}`, '_blank') : undefined,
+                          action: contratoAtivo && !contratoAssinado ? () => window.open(`${window.location.origin}/contrato-assinatura/${contratoAtivo.token}`, '_blank') : undefined,
                           actionLabel: 'Assinar agora',
+                          downloadHtml: contratoAssinado && contratoAtivo?.html_assinado ? contratoAtivo.html_assinado : null,
+                          downloadNome: 'Contrato-Programa-Validador-Assinado.html',
                         },
                         {
                           id: 'ata',
                           icon: <CheckCheck className="w-5 h-5" />,
                           title: 'Ata de Kickoff',
-                          desc: 'Confirme os termos do início do projeto.',
+                          desc: ataAceita ? 'Ata assinada por todas as partes.' : ataLink ? 'Aguardando sua assinatura.' : 'Será disponibilizada pela equipe Seguramente.',
                           done: ataAceita,
-                          action: ataLink ? () => window.open(`${window.location.origin}/aceite-documento/${ataLink.token}`, '_blank') : undefined,
-                          actionLabel: 'Aceitar documento',
+                          action: ataLink && !ataAceita ? () => window.open(`${window.location.origin}/aceite-documento/${ataLink.token}`, '_blank') : undefined,
+                          actionLabel: 'Assinar agora',
+                          downloadHtml: ataAceita && ataLink ? (ataLink.html_assinado || ataLink.html_documento) : null,
+                          downloadNome: 'Ata-Kickoff-Assinada.html',
                         },
                         {
                           id: 'empresa',
@@ -782,6 +786,8 @@ export default function OnboardingCliente() {
                           done: !!cliente.cnpj,
                           action: () => setStepAtivo('empresa'),
                           actionLabel: 'Configurar',
+                          downloadHtml: null,
+                          downloadNome: '',
                         },
                         {
                           id: 'colaboradores',
@@ -791,6 +797,8 @@ export default function OnboardingCliente() {
                           done: false,
                           action: () => setStepAtivo('colaboradores'),
                           actionLabel: 'Configurar',
+                          downloadHtml: null,
+                          downloadNome: '',
                         },
                         {
                           id: 'diagnostico',
@@ -800,13 +808,15 @@ export default function OnboardingCliente() {
                           done: false,
                           action: () => setStepAtivo('diagnostico'),
                           actionLabel: 'Iniciar',
+                          downloadHtml: null,
+                          downloadNome: '',
                         },
-                      ].map((step, i) => (
+                      ].map((step) => (
                         <div
                           key={step.id}
                           className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
                             step.done
-                              ? 'bg-primary/5 border-primary/20 opacity-70'
+                              ? 'bg-primary/5 border-primary/20'
                               : 'bg-background border-border hover:border-primary/30 hover:bg-muted/20'
                           }`}
                         >
@@ -814,15 +824,22 @@ export default function OnboardingCliente() {
                             {step.done ? <CheckCircle2 className="w-5 h-5" /> : step.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold ${step.done ? 'line-through text-muted-foreground' : ''}`}>{step.title}</p>
+                            <p className={`text-sm font-semibold ${step.done ? 'text-muted-foreground' : ''}`}>{step.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
                           </div>
-                          {!step.done && step.action && (
-                            <Button size="sm" onClick={step.action} className="shrink-0">
-                              {step.actionLabel} <ChevronRight className="w-3 h-3 ml-1" />
-                            </Button>
-                          )}
-                          {step.done && <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />}
+                          <div className="shrink-0 flex flex-col gap-1 items-end">
+                            {!step.done && step.action && (
+                              <Button size="sm" onClick={step.action}>
+                                {step.actionLabel} <ChevronRight className="w-3 h-3 ml-1" />
+                              </Button>
+                            )}
+                            {step.done && step.downloadHtml && (
+                              <Button size="sm" variant="outline" onClick={() => downloadDoc(step.downloadHtml!, step.downloadNome)}>
+                                <Download className="w-3 h-3 mr-1" /> Baixar
+                              </Button>
+                            )}
+                            {step.done && !step.downloadHtml && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                          </div>
                         </div>
                       ))}
                     </motion.div>
