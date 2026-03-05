@@ -57,6 +57,17 @@ Deno.serve(async (req) => {
       ? `${empresaDados.municipio}${empresaDados?.uf ? `/${empresaDados.uf}` : ""}`
       : null;
 
+    // Normalizar porte para valores aceitos pelo check constraint
+    const normalizarPorte = (porte: string | null): string | null => {
+      if (!porte) return null;
+      const p = porte.toLowerCase();
+      if (p.includes("micro")) return "micro";
+      if (p.includes("pequen")) return "pequena";
+      if (p.includes("medi")) return "media";
+      if (p.includes("grand")) return "grande";
+      return null;
+    };
+
     // Insert into programa_validador_clientes com dados completos do pré-cadastro
     const { error } = await supabaseAdmin
       .from("programa_validador_clientes")
@@ -72,7 +83,7 @@ Deno.serve(async (req) => {
         segmento:
           empresaDados?.cnaeDescricao ||
           (tipoPessoa === "pj" ? "Pessoa Jurídica" : "Pessoa Física"),
-        tamanho_empresa: empresaDados?.porte || null,
+        tamanho_empresa: normalizarPorte(empresaDados?.porte),
         endereco: enderecoCompleto,
         cidade_foro: cidadeForo,
         observacoes: [
