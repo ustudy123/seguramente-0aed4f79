@@ -39,17 +39,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert into programa_validador_clientes
+    // Insert into programa_validador_clientes with all available data
     const { error } = await supabaseAdmin
       .from("programa_validador_clientes")
       .insert({
         nome_empresa: tenantNome,
-        cnpj: tipoPessoa === "pj" ? documento : null,
+        cnpj: documento || null,
         poc_nome: nomeCompleto,
         poc_email: email,
         tipo_cliente: "pagante",
         fase: "prospeccao",
-        observacoes: `Cadastro público | Tipo: ${tipoPessoa === "pj" ? "PJ" : "PF"} | Doc: ${documento} | Slug: ${tenantSlug}`,
+        segmento: tipoPessoa === "pj" ? "Pessoa Jurídica" : "Pessoa Física",
+        observacoes: `Cadastro público via /register | Tipo: ${tipoPessoa === "pj" ? "PJ" : "PF"} | Documento: ${documento} | Slug: ${tenantSlug}`,
       });
 
     if (error) {
