@@ -301,7 +301,8 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         .insert({
           ...data,
           tenant_id: tenantId,
-          codigo: "", // Será gerado pelo trigger
+          empresa_id: empresaAtivaId || null,
+          codigo: "",
           criado_por: user?.id,
           criado_por_nome: userName,
         })

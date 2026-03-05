@@ -120,6 +120,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
         .from("permissoes_trabalho" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           terceiro_id: payload.terceiro_id,
           codigo: "PT-TEMP", // trigger will replace
           data_inicio: payload.data_inicio,

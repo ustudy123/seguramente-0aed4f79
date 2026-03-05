@@ -53,7 +53,7 @@ export function usePdi() {
       if (!tenantId) throw new Error("Tenant não encontrado");
       const { data, error } = await supabase
         .from("pdis")
-        .insert({ ...d, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo } as any)
+        .insert({ ...d, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: profile?.nome_completo } as any)
         .select()
         .single();
       if (error) throw error;
