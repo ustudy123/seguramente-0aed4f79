@@ -95,6 +95,7 @@ const App = () => (
             <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
             <Route path="/contrato-assinatura/:token" element={<AssinaturaContrato />} />
             <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
+            <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
             <Route path="/lp" element={<LandingPage />} />
 
           {/* Super Admin Routes */}
