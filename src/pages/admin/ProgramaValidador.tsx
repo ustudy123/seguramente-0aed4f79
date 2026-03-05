@@ -1330,6 +1330,7 @@ function DetalheCliente({
   const [editandoFase, setEditandoFase] = useState(false);
   const [showGerarContrato, setShowGerarContrato] = useState(false);
   const [gerandoDoc, setGerandoDoc] = useState<TipoDoc | null>(null);
+  const [showAtaDialog, setShowAtaDialog] = useState(false);
 
   const { data: docLinks = [] } = useQuery({
     queryKey: ['validador', 'doc-links', cliente.id],
