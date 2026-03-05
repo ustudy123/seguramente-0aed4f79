@@ -37,6 +37,7 @@ interface Contrato {
   token: string;
   status: 'pendente' | 'enviado' | 'assinado' | 'recusado';
   assinado_em: string | null;
+  html_assinado: string | null;
 }
 
 interface DocumentoLink {
