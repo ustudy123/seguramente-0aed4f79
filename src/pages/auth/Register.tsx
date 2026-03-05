@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { formatCnpj, cleanCnpj, buscarCnpj } from "@/lib/brasilapi";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import { toast } from "sonner";
 
 const registerSchema = z.object({
   // Step 1 - Company info
+  cnpj: z.string().min(14, "CNPJ inválido").max(18),
   tenantNome: z.string().min(2, "Nome da empresa deve ter pelo menos 2 caracteres").max(100),
   tenantSlug: z
     .string()
@@ -48,10 +50,12 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      cnpj: "",
       tenantNome: "",
       tenantSlug: "",
       nomeCompleto: "",
@@ -77,6 +81,7 @@ export default function Register() {
       nomeCompleto: data.nomeCompleto,
       tenantNome: data.tenantNome,
       tenantSlug: data.tenantSlug,
+      cnpj: cleanCnpj(data.cnpj),
     });
 
     if (error) {
