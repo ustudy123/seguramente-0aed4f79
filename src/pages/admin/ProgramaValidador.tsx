@@ -2008,17 +2008,6 @@ function DetalheCliente({
         </div>
       </div>
 
-      <AtaKickoffDialog
-        open={showAtaDialog}
-        onClose={() => { setShowAtaDialog(false); setGerandoDoc(null); }}
-        onEnviar={(html) => {
-          gerarDocLinkMutation.mutate({ tipo: 'ata_kickoff', htmlOverride: html });
-          setShowAtaDialog(false);
-        }}
-        isLoading={gerarDocLinkMutation.isPending}
-        nomeEmpresa={cliente.nome_empresa}
-        pocNome={cliente.poc_nome}
-        responsavelSeguramente={cliente.responsavel_seguramente}
       />
     </div>
   );
