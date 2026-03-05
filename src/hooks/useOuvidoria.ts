@@ -38,6 +38,7 @@ export function useOuvidoria() {
   const queryClient = useQueryClient();
   const { tenantId } = useTenant();
   const { user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   // Buscar manifestações (usuários veem apenas as suas, managers veem todas)
   const manifestacoesQuery = useQuery({
