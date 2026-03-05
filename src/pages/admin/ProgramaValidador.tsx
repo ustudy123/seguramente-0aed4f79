@@ -1154,7 +1154,7 @@ function DetalheCliente({
       await supabase.from('programa_validador_historico' as never).insert({
         cliente_id: cliente.id,
         tipo: 'documento_gerado',
-        titulo: `Link de aceite gerado: ${DOCS_CONFIG.find(d => d.tipo === tipo)?.label}`,
+        titulo: `Link de aceite gerado: ${(cliente.tipo_cliente === 'pagante' ? DOCS_CONFIG_PAGANTE : DOCS_CONFIG_TESTER).find(d => d.tipo === tipo)?.label}`,
         autor: profile?.nome_completo || 'SuperAdmin',
       } as never);
       return data;
