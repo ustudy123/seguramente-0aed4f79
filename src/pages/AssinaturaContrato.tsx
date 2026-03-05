@@ -128,24 +128,6 @@ export default function AssinaturaContrato() {
     );
   }
 
-  if (etapa === 'concluido') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-6 text-primary" />
-            <h2 className="text-2xl font-bold mb-3">Contrato assinado!</h2>
-            <p className="text-muted-foreground">
-              Seu contrato de participação no <strong>Programa Validador Seguramente</strong> foi registrado com sucesso.
-            </p>
-            <p className="text-sm text-muted-foreground mt-3">
-              Você receberá as instruções de acesso em breve.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
