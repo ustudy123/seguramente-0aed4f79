@@ -751,6 +751,96 @@ function DetalheCliente({
 
           {/* Checklist de documentos */}
           <Card>
+
+          {/* Contrato de Participação */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Contrato de Participação
+                </span>
+                <Button variant="outline" size="sm" onClick={() => setShowGerarContrato(true)}>
+                  <Plus className="w-3 h-3 mr-1" />
+                  Gerar novo
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {contratos.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">Nenhum contrato gerado</p>
+                  <p className="text-xs mt-1">O contrato é gerado automaticamente ao mover de Qualificação → Kickoff</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {contratos.map(c => (
+                    <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {c.status === 'assinado' ? (
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                          ) : c.status === 'enviado' ? (
+                            <Clock className="w-4 h-4 text-accent-foreground" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                          )}
+                          <span className="text-sm font-medium capitalize">{c.status}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Gerado em {format(new Date(c.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                          {c.assinado_em && ` · Assinado em ${format(new Date(c.assinado_em), 'dd/MM/yyyy', { locale: ptBR })}`}
+                          {c.assinado_por && ` por ${c.assinado_por}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {c.status !== 'assinado' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => copiarLink(c.token)}
+                          >
+                            <Send className="w-3 h-3 mr-1" />
+                            Copiar link
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => abrirContrato(c.token)}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Modal confirmação gerar contrato */}
+              {showGerarContrato && (
+                <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-3">
+                  <p className="text-sm font-medium">Gerar contrato para <strong>{cliente.nome_empresa}</strong>?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Será gerado um link único para assinatura eletrônica.
+                    {!cliente.representante && ' Você pode adicionar o nome do representante no cadastro da empresa para incluir no contrato.'}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowGerarContrato(false)}>Cancelar</Button>
+                    <Button size="sm" disabled={gerarContratoMutation.isPending} onClick={() => gerarContratoMutation.mutate()}>
+                      {gerarContratoMutation.isPending ? 'Gerando...' : 'Confirmar'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Checklist de documentos */}
+          <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center justify-between">
                 <span className="flex items-center gap-2">
