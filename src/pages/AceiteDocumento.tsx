@@ -108,7 +108,83 @@ export default function AceiteDocumento() {
         autor: signatario,
       } as never);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Salvar no módulo de Documentos da empresa (tenant do cliente)
+      try {
+        const tenantId = link?.programa_validador_clientes?.tenant_id;
+        const nomeEmpresa = link?.programa_validador_clientes?.nome_empresa || 'Empresa';
+        if (tenantId) {
+          // Buscar ou criar pasta "Programa Validador"
+          let { data: pasta } = await supabase
+            .from('documento_pastas')
+            .select('id')
+            .eq('tenant_id', tenantId)
+            .eq('nome', 'Programa Validador')
+            .is('pasta_pai_id', null)
+            .maybeSingle();
+
+          if (!pasta) {
+            const { data: novaPasta } = await supabase
+              .from('documento_pastas')
+              .insert({
+                tenant_id: tenantId,
+                nome: 'Programa Validador',
+                tipo: 'admin',
+                icone: 'FileText',
+                cor: '#2563eb',
+              })
+              .select('id')
+              .single();
+            pasta = novaPasta;
+          }
+
+          if (pasta?.id) {
+            // Buscar o html_assinado atualizado
+            const { data: updatedLink } = await supabase
+              .from('programa_validador_documento_links' as never)
+              .select('html_assinado, html_documento')
+              .eq('token', token!)
+              .single() as any;
+
+            const htmlFinal = updatedLink?.html_assinado || link?.html_documento || '';
+            const nomeArq = `Ata-Kickoff-${nomeEmpresa.replace(/\s+/g, '-')}-Assinada.html`;
+            const storagePath = `programa-validador/${tenantId}/atas/${nomeArq}`;
+
+            const blob = new Blob([htmlFinal], { type: 'text/html' });
+            await supabase.storage.from('documentos').upload(storagePath, blob, {
+              contentType: 'text/html',
+              upsert: true,
+            });
+
+            const { data: docExistente } = await supabase
+              .from('documentos')
+              .select('id')
+              .eq('tenant_id', tenantId)
+              .eq('storage_path', storagePath)
+              .maybeSingle();
+
+            if (!docExistente) {
+              await supabase.from('documentos').insert({
+                tenant_id: tenantId,
+                pasta_id: pasta.id,
+                nome_arquivo: nomeArq,
+                nome_original: nomeArq,
+                storage_path: storagePath,
+                mime_type: 'text/html',
+                tamanho: blob.size,
+                tipo: 'ata_kickoff',
+                status: 'ativo',
+                colaborador_nome: nomeEmpresa,
+                versao_atual: 1,
+                total_versoes: 1,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao salvar ata no módulo de documentos:', e);
+      }
+
       const onboardingToken = link?.programa_validador_clientes?.onboarding_token;
       toast.success('Ata assinada com sucesso!');
       if (onboardingToken) {
