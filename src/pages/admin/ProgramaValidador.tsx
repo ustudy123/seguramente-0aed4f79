@@ -688,7 +688,267 @@ ________________________________________________________________________________
 </html>`;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Contrato Pagante (Licença de Uso de Software) ────────────────────────────
+
+function gerarHtmlContratoPagante(cliente: Cliente): string {
+  const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const empresa = cliente.nome_empresa;
+  const cnpj = cliente.cnpj || '___________________';
+  const rep = cliente.representante || cliente.poc_nome || '___________________';
+  const foro = cliente.cidade_foro || 'São Paulo';
+  const endereco = cliente.endereco || '___________________';
+  const valorMensal = cliente.valor_mensal
+    ? cliente.valor_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : '___________________';
+  const diaVenc = cliente.dia_vencimento ? `dia ${cliente.dia_vencimento} de cada mês` : '___________________';
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${ABNT_CSS}</style>
+</head>
+<body>
+
+<h1>CONTRATO DE LICENÇA DE USO DE SOFTWARE</h1>
+<h1>E PRESTAÇÃO DE SERVIÇOS – PLATAFORMA SEGURAMENTE</h1>
+<p style="text-align:center;margin-top:4px;font-size:10pt;color:#666;">Gerado em ${dataGeracao}</p>
+
+<p>Pelo presente instrumento particular, de um lado:</p>
+
+<div class="partes">
+  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº __________, com sede em __________, doravante denominada <strong>SEGURAMENTE</strong>.</p>
+  <p style="margin-top:12px;margin-bottom:0;">E de outro lado:</p>
+  <p style="margin-bottom:0;"><strong>${empresa}</strong>, inscrita no CNPJ nº ${cnpj}, com sede em ${endereco}, neste ato representada por <strong>${rep}</strong>, doravante denominada <strong>CLIENTE</strong>.</p>
+</div>
+
+<p>As partes resolvem celebrar o presente Contrato de Licença de Uso de Software e Prestação de Serviços, que será regido pelas cláusulas e condições abaixo.</p>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 1 — OBJETO</span>
+  <p>O presente contrato tem por objeto a concessão ao CLIENTE de licença de uso não exclusiva e intransferível da plataforma digital Seguramente, disponibilizada no modelo Software as a Service (SaaS). A plataforma Seguramente consiste em sistema digital destinado ao apoio à gestão organizacional das empresas, incluindo funcionalidades relacionadas a:</p>
+  <ol type="I">
+    <li>gestão de saúde e segurança do trabalho;</li>
+    <li>organização de informações empresariais;</li>
+    <li>indicadores organizacionais;</li>
+    <li>gestão de processos internos;</li>
+    <li>avaliações organizacionais e psicossociais;</li>
+    <li>relatórios gerenciais e operacionais.</li>
+  </ol>
+  <p>O acesso à plataforma ocorre por meio da internet, mediante autenticação de usuários autorizados.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 2 — NATUREZA DA LICENÇA</span>
+  <p>A licença concedida ao CLIENTE é não exclusiva, intransferível e limitada ao período de vigência do contrato. O CLIENTE não adquire qualquer direito de propriedade sobre o software, limitando-se ao direito de uso conforme as condições estabelecidas neste contrato.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 3 — CONDIÇÕES DE ACESSO</span>
+  <p>O acesso ao sistema será realizado mediante credenciais de usuário e autenticação digital. O CLIENTE é responsável por controlar os usuários cadastrados, manter a confidencialidade das credenciais e garantir o uso adequado da plataforma. A SEGURAMENTE não se responsabiliza por acessos indevidos decorrentes de negligência do CLIENTE no controle de usuários.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 4 — SERVIÇOS INCLUÍDOS</span>
+  <p>O contrato inclui: disponibilização da plataforma Seguramente, acesso às funcionalidades contratadas, atualizações e melhorias do sistema, manutenção técnica da plataforma e suporte técnico dentro das condições estabelecidas no Anexo III (SLA).</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 5 — DISPONIBILIDADE DO SISTEMA</span>
+  <p>A SEGURAMENTE adotará esforços razoáveis para manter a plataforma disponível. Eventuais indisponibilidades podem ocorrer em razão de manutenções programadas, atualizações do sistema, falhas de infraestrutura ou eventos fora do controle da SEGURAMENTE. Tais situações não configuram descumprimento contratual.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 6 — PLANOS E REMUNERAÇÃO</span>
+  <p>Pela utilização da plataforma, o CLIENTE pagará à SEGURAMENTE o valor de <strong>${valorMensal}</strong>, com vencimento no ${diaVenc}, conforme plano${cliente.plano ? ` <strong>${cliente.plano}</strong>` : ''} contratado. Os valores poderão ser cobrados em periodicidade mensal ou anual, conforme plano contratado.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 7 — INADIMPLÊNCIA</span>
+  <p>Em caso de atraso no pagamento, poderão ser aplicados encargos de multa, juros e correção monetária, e a SEGURAMENTE poderá suspender o acesso à plataforma até a regularização do pagamento. Persistindo a inadimplência por período superior a 30 dias, a SEGURAMENTE poderá rescindir o contrato.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 8 — SUPORTE TÉCNICO</span>
+  <p>A SEGURAMENTE disponibilizará suporte técnico para dúvidas de uso do sistema, orientação operacional e identificação de falhas técnicas. O suporte não inclui consultoria especializada, análise jurídica ou assessoria técnica personalizada. As condições detalhadas de suporte e SLA constam do Anexo III.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 9 — LIMITAÇÃO DE RESPONSABILIDADE</span>
+  <p>A plataforma Seguramente constitui ferramenta de apoio à gestão empresarial. A SEGURAMENTE não se responsabiliza por decisões tomadas pelo CLIENTE com base nos dados do sistema, interpretações equivocadas de relatórios ou informações incorretas inseridas pelos usuários. A responsabilidade pela análise e utilização das informações é exclusivamente do CLIENTE.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 10 — SEGURANÇA DA INFORMAÇÃO</span>
+  <p>A SEGURAMENTE adota medidas técnicas e organizacionais de segurança da informação, incluindo controle de acesso, monitoramento de infraestrutura, segregação de dados entre empresas e práticas de proteção digital. Os dados são armazenados em infraestrutura de computação em nuvem operada por provedores especializados.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 11 — PROTEÇÃO DE DADOS (LGPD)</span>
+  <p>O tratamento de dados pessoais observará as disposições da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Para fins legais, o CLIENTE atua como CONTROLADOR dos dados e a SEGURAMENTE atua como OPERADORA dos dados. A SEGURAMENTE compromete-se a tratar os dados exclusivamente conforme as instruções do CLIENTE.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 12 — CONFIDENCIALIDADE</span>
+  <p>As partes comprometem-se a manter confidenciais todas as informações obtidas em razão deste contrato, incluindo dados empresariais, informações organizacionais, dados de colaboradores e informações técnicas da plataforma. Essa obrigação permanecerá válida mesmo após o encerramento do contrato.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 13 — PROPRIEDADE INTELECTUAL</span>
+  <p>Todos os direitos relacionados à plataforma Seguramente pertencem exclusivamente à SEGURAMENTE, incluindo software, algoritmos, estrutura do sistema, design e metodologias. É proibida qualquer forma de reprodução, modificação, engenharia reversa ou distribuição sem autorização.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 14 — USO INDEVIDO DA PLATAFORMA</span>
+  <p>É proibido utilizar a plataforma para práticas ilegais, violação de direitos de terceiros, uso fraudulento ou inserção de informações falsas. A SEGURAMENTE poderá suspender o acesso em caso de uso indevido.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 15 — ENCERRAMENTO DO CONTRATO</span>
+  <p>O contrato poderá ser encerrado: (I) por qualquer das partes, mediante aviso prévio de 30 dias; (II) por inadimplência; (III) por descumprimento contratual.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 16 — EXPORTAÇÃO DE DADOS</span>
+  <p>Em caso de encerramento do contrato, o CLIENTE poderá solicitar a exportação dos dados armazenados na plataforma, dentro de prazo razoável definido pela SEGURAMENTE.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 17 — ALTERAÇÕES NA PLATAFORMA</span>
+  <p>A SEGURAMENTE poderá realizar melhorias, atualizações ou modificações na plataforma visando evolução tecnológica do sistema.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 18 — DOCUMENTOS INTEGRANTES</span>
+  <p>Fazem parte integrante deste contrato, para todos os fins legais, os seguintes anexos:</p>
+  <ol type="I">
+    <li>Anexo I — Termos de Uso da Plataforma;</li>
+    <li>Anexo II — Política de Privacidade e Proteção de Dados (LGPD);</li>
+    <li>Anexo III — SLA e Suporte Técnico.</li>
+  </ol>
+  <p>A assinatura deste contrato implica concordância integral com todos os anexos.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 19 — FORO</span>
+  <p>Fica eleito o foro da comarca de <strong>${foro}</strong>, com renúncia de qualquer outro, para dirimir eventuais controvérsias.</p>
+</div>
+
+<div style="margin-top:40px;padding:20px;border:1px solid #ccc;background:#fafafa;">
+  <p style="text-align:center;font-weight:bold;text-transform:uppercase;font-size:11pt;">E POR ESTAREM DE ACORDO</p>
+  <p style="text-align:center;">As partes firmam o presente contrato.</p>
+</div>
+
+<div class="assinaturas">
+  <div class="assinatura-bloco">
+    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p>Representante: ______________________</p>
+    <p style="font-size:10pt;color:#666;">${dataGeracao}</p>
+  </div>
+  <div class="assinatura-bloco">
+    <p><strong>${empresa}</strong></p>
+    <p>Representante: ${rep}</p>
+    <p>Assinatura: ______________________</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+  <h3>ANEXO I — TERMOS DE USO DA PLATAFORMA</h3>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. ACEITAÇÃO DOS TERMOS</span>
+  <p>Ao acessar e utilizar a plataforma Seguramente, o CLIENTE declara ter lido, compreendido e concordado com todos os Termos de Uso aqui estabelecidos.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">2. DESCRIÇÃO DA PLATAFORMA</span>
+  <p>A plataforma Seguramente é um sistema SaaS destinado ao apoio à gestão organizacional, oferecendo funcionalidades de gestão de saúde e segurança do trabalho, recursos humanos, indicadores e relatórios gerenciais.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">3. CADASTRO E RESPONSABILIDADES</span>
+  <p>O CLIENTE é responsável por manter suas credenciais em sigilo, comunicar imediatamente qualquer uso não autorizado e garantir que todos os usuários cadastrados cumpram estes Termos.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">4. USOS PERMITIDOS E PROIBIDOS</span>
+  <p>É vedado utilizar a plataforma para fins ilícitos, praticar engenharia reversa do software, comercializar acesso a terceiros, inserir conteúdo falso ou prejudicial, ou violar direitos de terceiros.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">5. ATUALIZAÇÕES</span>
+  <p>A SEGURAMENTE pode atualizar estes Termos periodicamente. O CLIENTE será notificado de alterações relevantes.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+  <h3>ANEXO II — POLÍTICA DE PRIVACIDADE E LGPD</h3>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. COMPROMISSO COM A PRIVACIDADE</span>
+  <p>A SEGURAMENTE está comprometida com a proteção dos dados pessoais dos usuários da plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">2. PAPÉIS NO TRATAMENTO DE DADOS</span>
+  <p>Para os fins desta política: o CLIENTE atua como Controlador dos dados pessoais inseridos na plataforma; a SEGURAMENTE atua como Operadora, processando os dados conforme instruções do CLIENTE.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">3. DADOS COLETADOS E FINALIDADES</span>
+  <p>A plataforma coleta e processa: dados de cadastro e acesso, dados de colaboradores inseridos pelo CLIENTE, registros de utilização do sistema e dados para geração de relatórios e indicadores. Esses dados são utilizados exclusivamente para as finalidades contratadas.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">4. SEGURANÇA E ARMAZENAMENTO</span>
+  <p>Os dados são armazenados em infraestrutura certificada, com criptografia em repouso e em trânsito, controle de acesso por perfil e backups automáticos. Os dados são mantidos pelo período contratual e conforme exigências legais aplicáveis.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">5. DIREITOS DO TITULAR</span>
+  <p>Os titulares dos dados pessoais podem exercer seus direitos de acesso, correção, exclusão e portabilidade por meio do CLIENTE (Controlador), que deverá encaminhar as solicitações à SEGURAMENTE quando aplicável.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">6. COMPARTILHAMENTO DE DADOS</span>
+  <p>A SEGURAMENTE não vende, aluga ou compartilha dados pessoais com terceiros, exceto quando necessário para a prestação dos serviços contratados ou por exigência legal.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+  <h3>ANEXO III — SLA E SUPORTE TÉCNICO</h3>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. DISPONIBILIDADE</span>
+  <p>A SEGURAMENTE compromete-se a manter a plataforma disponível com uptime mínimo de <strong>99% ao mês</strong>, excluindo janelas de manutenção programadas previamente comunicadas.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">2. JANELAS DE MANUTENÇÃO</span>
+  <p>Manutenções programadas serão comunicadas com antecedência mínima de 48 horas e realizadas preferencialmente em horários de menor utilização (0h–6h).</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">3. CANAIS E HORÁRIOS DE SUPORTE</span>
+  <p>O suporte técnico está disponível por e-mail e sistema de chamados, em dias úteis, das 08h às 18h (horário de Brasília).</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">4. CLASSIFICAÇÃO E PRAZOS DE ATENDIMENTO</span>
+  <ul>
+    <li><strong>Crítico</strong> (sistema indisponível): resposta em até 2 horas úteis, resolução em até 4 horas úteis;</li>
+    <li><strong>Alto</strong> (funcionalidade principal comprometida): resposta em até 4 horas úteis, resolução em até 1 dia útil;</li>
+    <li><strong>Médio</strong> (funcionalidade secundária afetada): resposta em até 1 dia útil, resolução em até 3 dias úteis;</li>
+    <li><strong>Baixo</strong> (dúvidas e solicitações): resposta em até 2 dias úteis.</li>
+  </ul>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">5. CRÉDITOS POR INDISPONIBILIDADE</span>
+  <p>Caso a disponibilidade mensal seja inferior ao SLA contratado, o CLIENTE poderá solicitar crédito proporcional, conforme análise da SEGURAMENTE mediante solicitação formal.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">6. EXCLUSÕES DO SLA</span>
+  <p>Não são cobertos por este SLA: indisponibilidades causadas por falhas de conectividade do CLIENTE, ataques DDoS de grande escala, casos fortuitos ou de força maior, uso indevido da plataforma pelo CLIENTE ou terceiros autorizados por ele.</p>
+</div>
+
+</body>
+</html>`;
+}
+
+
 
 function FaseBadge({ fase }: { fase: Fase }) {
   const cfg = FASES.find(f => f.value === fase)!;
