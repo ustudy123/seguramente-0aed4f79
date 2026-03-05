@@ -1370,11 +1370,6 @@ function DetalheCliente({
                 const status = doc?.status || 'pendente';
                 const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
                 const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
-
-                const doc = documentos.find(d => d.tipo === tipo);
-                const status = doc?.status || 'pendente';
-                const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
-                const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
                 const isContrato = tipo === 'contrato_programa_validador';
 
                 return (
