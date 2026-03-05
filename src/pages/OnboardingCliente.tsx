@@ -503,8 +503,8 @@ export default function OnboardingCliente() {
     queryFn: async (): Promise<DocumentoLink[]> => {
       if (!cliente?.id) return [];
       const { data } = await supabase
-        .from('programa_validador_doc_links' as never)
-        .select('id, tipo, token, status, aceito_em')
+        .from('programa_validador_documento_links' as never)
+        .select('id, tipo, token, status, aceito_em, html_assinado, html_documento')
         .eq('cliente_id', cliente.id)
         .order('created_at', { ascending: false }) as { data: DocumentoLink[] | null };
       return data || [];
