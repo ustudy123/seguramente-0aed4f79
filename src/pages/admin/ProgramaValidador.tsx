@@ -1955,7 +1955,7 @@ function DetalheCliente({
                     </button>
                   </div>
                   {(cliente as any).conta_ativada && (
-                    <p className="text-xs text-green-600 font-medium">✓ Conta ativada</p>
+                    <p className="text-xs text-primary font-medium">✓ Conta ativada</p>
                   )}
                 </div>
               )}
