@@ -698,15 +698,24 @@ export default function OnboardingCliente() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {checklistItems.map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    label={item.label}
-                    sublabel={item.sublabel}
-                    done={item.done}
-                    pending={item.pending}
-                    link={item.link}
-                    onClick={!item.done && ['empresa', 'colaboradores', 'diagnostico'].includes(item.id) ? () => setStepAtivo(item.id) : undefined}
-                  />
+                  <div key={item.id}>
+                    <ChecklistItem
+                      label={item.label}
+                      sublabel={item.sublabel}
+                      done={item.done}
+                      pending={item.pending}
+                      link={item.link}
+                      onClick={!item.done && ['empresa', 'colaboradores', 'diagnostico'].includes(item.id) ? () => setStepAtivo(item.id) : undefined}
+                    />
+                    {item.done && item.downloadHtml && (
+                      <button
+                        onClick={() => downloadDoc(item.downloadHtml!, item.downloadNome)}
+                        className="ml-7 mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        <Download className="w-3 h-3" /> Baixar documento assinado
+                      </button>
+                    )}
+                  </div>
                 ))}
               </CardContent>
             </Card>
