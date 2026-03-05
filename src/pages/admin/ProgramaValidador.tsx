@@ -104,6 +104,18 @@ interface Historico {
   created_at: string;
 }
 
+interface DocumentoLink {
+  id: string;
+  cliente_id: string;
+  documento_id: string | null;
+  tipo: TipoDoc;
+  token: string;
+  status: 'pendente' | 'visualizado' | 'aceito' | 'recusado';
+  aceito_em: string | null;
+  aceito_por: string | null;
+  created_at: string;
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const FASES: { value: Fase; label: string; color: string; border: string }[] = [
@@ -125,6 +137,145 @@ const DOCS_CONFIG: { tipo: TipoDoc; label: string }[] = [
   { tipo: 'termos_uso',         label: 'Termos de Uso' },
   { tipo: 'ata_kickoff',        label: 'Ata de Kickoff' },
 ];
+
+// ─── Geradores de HTML dos documentos ────────────────────────────────────────
+
+function gerarHtmlDocumento(tipo: TipoDoc, cliente: Cliente): string {
+  const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const empresa = cliente.nome_empresa;
+  const cnpj = cliente.cnpj || '___________________';
+  const representante = cliente.representante || cliente.poc_nome || '___________________';
+
+  const cabecalho = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;font-size:13px;line-height:1.7;color:#222;max-width:800px;margin:0 auto;padding:40px 30px;}
+    h1{font-size:15px;text-align:center;text-transform:uppercase;font-weight:bold;margin-bottom:4px;}
+    h2{font-size:13px;text-align:center;text-transform:uppercase;margin-top:0;margin-bottom:30px;}
+    .clausula{margin-top:20px;} .clausula-titulo{font-weight:bold;text-transform:uppercase;}
+    .destaque{background:#f9f9f9;border:1px solid #ddd;padding:16px;border-radius:4px;margin:20px 0;}
+  </style></head><body>`;
+  const rodape = `<p style="margin-top:30px;">Data: ${dataGeracao}</p>
+    <div style="display:flex;gap:60px;margin-top:40px;">
+      <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;"><p><strong>${empresa}</strong></p><p>${representante}</p></div>
+      <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;"><p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p></div>
+    </div></body></html>`;
+
+  const conteudos: Record<TipoDoc, string> = {
+    contrato_piloto: ``,  // usa gerarHtmlContrato
+    dpa_lgpd: `<h1>DATA PROCESSING AGREEMENT — ANEXO LGPD</h1>
+      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
+      <div class="destaque"><p><strong>CONTROLADOR:</strong> ${empresa}, CNPJ ${cnpj}, representada por ${representante}.</p>
+      <p><strong>OPERADOR:</strong> SEGURAMENTE TECNOLOGIA LTDA.</p></div>
+      <div class="clausula"><p class="clausula-titulo">1. OBJETO</p>
+      <p>Este Acordo regula o tratamento de dados pessoais realizado pela SEGURAMENTE na qualidade de operadora, conforme instruções do CONTROLADOR, no âmbito da Lei Geral de Proteção de Dados (Lei 13.709/2018 — LGPD).</p></div>
+      <div class="clausula"><p class="clausula-titulo">2. DADOS TRATADOS</p>
+      <p>Dados de colaboradores, como nome, CPF, dados de saúde ocupacional e documentos trabalhistas inseridos pelo CONTROLADOR na plataforma Seguramente.</p></div>
+      <div class="clausula"><p class="clausula-titulo">3. FINALIDADE</p>
+      <p>Gestão de saúde e segurança do trabalho, organização de dados empresariais e processos internos de RH.</p></div>
+      <div class="clausula"><p class="clausula-titulo">4. SEGURANÇA</p>
+      <p>A SEGURAMENTE adota medidas técnicas adequadas de segurança, incluindo criptografia, controle de acesso e backups regulares.</p></div>
+      <div class="clausula"><p class="clausula-titulo">5. SUBOPERADORES</p>
+      <p>A SEGURAMENTE utiliza a infraestrutura Supabase/AWS para armazenamento, com cláusulas contratuais de proteção de dados.</p></div>
+      <div class="clausula"><p class="clausula-titulo">6. DIREITOS DO TITULAR</p>
+      <p>O CONTROLADOR é responsável por atender às solicitações dos titulares de dados. A SEGURAMENTE cooperará conforme necessário.</p></div>`,
+
+    anexo_operacional: `<h1>ANEXO OPERACIONAL</h1>
+      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
+      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p><p><strong>RESPONSÁVEL:</strong> ${representante}</p></div>
+      <div class="clausula"><p class="clausula-titulo">1. ACESSO AO SISTEMA</p>
+      <p>O acesso será concedido mediante credenciais individuais. O número máximo de usuários ativos durante o período beta será definido conjuntamente.</p></div>
+      <div class="clausula"><p class="clausula-titulo">2. SUPORTE TÉCNICO</p>
+      <p>O suporte será prestado por e-mail e WhatsApp em horário comercial (seg–sex, 9h–18h). SLA de resposta: até 24h úteis.</p></div>
+      <div class="clausula"><p class="clausula-titulo">3. FEEDBACKS</p>
+      <p>A EMPRESA VALIDADORA se compromete a participar de reuniões mensais de feedback e responder pesquisas enviadas pela SEGURAMENTE.</p></div>
+      <div class="clausula"><p class="clausula-titulo">4. MÓDULOS DISPONÍVEIS</p>
+      <p>Saúde & SST, Colaboradores, Ponto, Férias, Documentos, Treinamentos e funcionalidades em versão beta, conforme disponibilizadas progressivamente.</p></div>
+      <div class="clausula"><p class="clausula-titulo">5. LIMITAÇÕES DO PERÍODO BETA</p>
+      <p>Durante o programa validador, algumas funcionalidades podem estar em desenvolvimento. A SEGURAMENTE comunicará mudanças relevantes com antecedência mínima de 48h.</p></div>`,
+
+    faq_seguranca: `<h1>FAQ DE SEGURANÇA DA INFORMAÇÃO</h1>
+      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
+      <p style="text-align:center;margin-bottom:30px;">Ciência e aceite — ${empresa}</p>
+      <div class="clausula"><p class="clausula-titulo">1. Como os dados são armazenados?</p>
+      <p>Todos os dados são armazenados em servidores em nuvem com criptografia em repouso e em trânsito (TLS 1.2+). Utilizamos infraestrutura da Supabase/AWS.</p></div>
+      <div class="clausula"><p class="clausula-titulo">2. Quem tem acesso aos dados?</p>
+      <p>Apenas colaboradores da SEGURAMENTE com função técnica específica, mediante autenticação. Nenhum dado é compartilhado com terceiros sem consentimento.</p></div>
+      <div class="clausula"><p class="clausula-titulo">3. Como são gerenciadas as senhas?</p>
+      <p>Senhas são armazenadas com hash criptográfico (bcrypt). Nunca são armazenadas em texto simples. Recomendamos autenticação de dois fatores.</p></div>
+      <div class="clausula"><p class="clausula-titulo">4. O que acontece em caso de incidente?</p>
+      <p>A SEGURAMENTE notificará o cliente em até 72h após identificação de qualquer incidente que possa afetar dados pessoais, conforme exigido pela LGPD.</p></div>
+      <div class="clausula"><p class="clausula-titulo">5. Como são feitos os backups?</p>
+      <p>Backups automáticos diários com retenção de 30 dias. Possibilidade de restauração pontual mediante solicitação.</p></div>
+      <p style="margin-top:30px;"><strong>Ao aceitar este documento, ${representante} declara ter lido e compreendido as práticas de segurança da SEGURAMENTE.</strong></p>`,
+
+    resumo_beta: `<h1>RESUMO DO PROGRAMA BETA VALIDADOR</h1>
+      <h2>SEGURAMENTE PLATAFORMA DE GESTÃO</h2>
+      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa}</p><p><strong>RESPONSÁVEL:</strong> ${representante}</p><p><strong>DATA:</strong> ${dataGeracao}</p></div>
+      <div class="clausula"><p class="clausula-titulo">O QUE É O PROGRAMA VALIDADOR?</p>
+      <p>O Programa Validador é uma iniciativa da SEGURAMENTE para validar a plataforma com empresas parceiras antes do lançamento oficial. As empresas participantes testam funcionalidades reais e fornecem feedback estratégico.</p></div>
+      <div class="clausula"><p class="clausula-titulo">BENEFÍCIOS PARA A EMPRESA VALIDADORA</p>
+      <ul><li>Acesso gratuito por 6 meses</li><li>50% de desconto na assinatura após o beta</li><li>Atendimento prioritário</li><li>Influência direta no roadmap do produto</li></ul></div>
+      <div class="clausula"><p class="clausula-titulo">COMPROMETIMENTOS</p>
+      <ul><li>Utilizar a plataforma ativamente</li><li>Participar de reuniões mensais de feedback</li><li>Responder pesquisas de satisfação</li></ul></div>
+      <div class="clausula"><p class="clausula-titulo">PRÓXIMOS PASSOS</p>
+      <p>Após este aceite, você receberá as credenciais de acesso e será contatado pelo seu responsável na SEGURAMENTE para o kickoff.</p></div>`,
+
+    politica_privacidade: `<h1>POLÍTICA DE PRIVACIDADE</h1>
+      <h2>PLATAFORMA SEGURAMENTE — CIÊNCIA DO CLIENTE</h2>
+      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p></div>
+      <div class="clausula"><p class="clausula-titulo">1. COLETA DE DADOS</p>
+      <p>A SEGURAMENTE coleta dados inseridos pelos usuários da plataforma, como dados de colaboradores, documentos e informações de saúde ocupacional. Também coletamos dados de uso (logs de acesso, ações realizadas).</p></div>
+      <div class="clausula"><p class="clausula-titulo">2. USO DOS DADOS</p>
+      <p>Os dados são utilizados exclusivamente para prestação dos serviços contratados. Não realizamos venda ou compartilhamento de dados com terceiros para fins comerciais.</p></div>
+      <div class="clausula"><p class="clausula-titulo">3. RETENÇÃO</p>
+      <p>Os dados são mantidos pelo período contratual e por até 5 anos após o encerramento, conforme exigências legais trabalhistas brasileiras.</p></div>
+      <div class="clausula"><p class="clausula-titulo">4. DIREITOS</p>
+      <p>Você tem direito de acesso, correção, portabilidade e exclusão dos dados. Solicitações podem ser enviadas para privacidade@seguramente.app.</p></div>
+      <div class="clausula"><p class="clausula-titulo">5. COOKIES</p>
+      <p>Utilizamos cookies essenciais para funcionamento da plataforma e cookies analíticos para melhoria do produto (Google Analytics com anonimização de IP).</p></div>`,
+
+    termos_uso: `<h1>TERMOS DE USO DA PLATAFORMA</h1>
+      <h2>SEGURAMENTE — ACEITE DO CLIENTE</h2>
+      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p><p><strong>RESPONSÁVEL:</strong> ${representante}</p></div>
+      <div class="clausula"><p class="clausula-titulo">1. ACEITAÇÃO</p>
+      <p>Ao utilizar a plataforma SEGURAMENTE, você concorda com estes Termos de Uso. Caso não concorde, não utilize a plataforma.</p></div>
+      <div class="clausula"><p class="clausula-titulo">2. USO PERMITIDO</p>
+      <p>A plataforma deve ser utilizada exclusivamente para fins legítimos de gestão empresarial. É proibido o uso para fins ilícitos, difamação ou violação de direitos de terceiros.</p></div>
+      <div class="clausula"><p class="clausula-titulo">3. RESPONSABILIDADES DO USUÁRIO</p>
+      <p>O usuário é responsável pela veracidade dos dados inseridos e pela segurança das suas credenciais de acesso.</p></div>
+      <div class="clausula"><p class="clausula-titulo">4. PROPRIEDADE INTELECTUAL</p>
+      <p>Todo o conteúdo, código e design da plataforma são propriedade da SEGURAMENTE. É proibida a reprodução sem autorização.</p></div>
+      <div class="clausula"><p class="clausula-titulo">5. DISPONIBILIDADE</p>
+      <p>A SEGURAMENTE se esforça para manter a plataforma disponível 24/7, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência.</p></div>
+      <div class="clausula"><p class="clausula-titulo">6. MODIFICAÇÕES</p>
+      <p>Estes termos podem ser atualizados. Alterações significativas serão comunicadas com 30 dias de antecedência.</p></div>`,
+
+    ata_kickoff: `<h1>ATA DE REUNIÃO DE KICKOFF</h1>
+      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
+      <div class="destaque">
+        <p><strong>DATA:</strong> ${dataGeracao}</p>
+        <p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p>
+        <p><strong>PARTICIPANTE DA EMPRESA:</strong> ${representante}</p>
+        <p><strong>RESPONSÁVEL SEGURAMENTE:</strong> ___________________</p>
+      </div>
+      <div class="clausula"><p class="clausula-titulo">1. OBJETIVO DA REUNIÃO</p>
+      <p>Apresentação da plataforma, alinhamento de expectativas, definição de cronograma e início formal do Programa Validador.</p></div>
+      <div class="clausula"><p class="clausula-titulo">2. MÓDULOS APRESENTADOS</p>
+      <p>☐ Saúde & SST &nbsp; ☐ Colaboradores &nbsp; ☐ Ponto &nbsp; ☐ Férias &nbsp; ☐ Documentos &nbsp; ☐ Treinamentos</p></div>
+      <div class="clausula"><p class="clausula-titulo">3. CRONOGRAMA ACORDADO</p>
+      <p>Início: _______________ &nbsp; Fim previsto: _______________ &nbsp; Reunião de acompanhamento: _______________</p></div>
+      <div class="clausula"><p class="clausula-titulo">4. PRÓXIMOS PASSOS</p>
+      <p>☐ Envio de credenciais &nbsp; ☐ Cadastro inicial de dados &nbsp; ☐ Treinamento da equipe &nbsp; ☐ Acompanhamento semana 2</p></div>
+      <div class="clausula"><p class="clausula-titulo">5. OBSERVAÇÕES</p>
+      <p style="min-height:60px;">___________________________________________________________________________________</p></div>`,
+  };
+
+  // contrato_piloto usa o gerador principal
+  if (tipo === 'contrato_piloto') {
+    return gerarHtmlContrato(cliente);
+  }
+
+  return cabecalho + conteudos[tipo] + rodape;
+}
 
 // ─── Gerador de HTML do contrato ─────────────────────────────────────────────
 
@@ -577,6 +728,20 @@ function DetalheCliente({
   const [nota, setNota] = useState('');
   const [editandoFase, setEditandoFase] = useState(false);
   const [showGerarContrato, setShowGerarContrato] = useState(false);
+  const [gerandoDoc, setGerandoDoc] = useState<TipoDoc | null>(null);
+
+  const { data: docLinks = [] } = useQuery({
+    queryKey: ['validador', 'doc-links', cliente.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('programa_validador_documento_links' as never)
+        .select('*')
+        .eq('cliente_id', cliente.id)
+        .order('created_at', { ascending: false }) as any;
+      if (error) throw error;
+      return (data || []) as DocumentoLink[];
+    },
+  });
 
   const atualizarFaseMutation = useMutation({
     mutationFn: async (fase: Fase) => {
@@ -638,6 +803,45 @@ function DetalheCliente({
       qc.invalidateQueries({ queryKey: ['validador', 'historico', cliente.id] });
     },
     onError: (err: Error) => toast.error('Erro ao gerar contrato: ' + err.message),
+  });
+
+  const gerarDocLinkMutation = useMutation({
+    mutationFn: async (tipo: TipoDoc) => {
+      const html = gerarHtmlDocumento(tipo, cliente);
+      const docExistente = documentos.find(d => d.tipo === tipo);
+      const { data, error } = await supabase
+        .from('programa_validador_documento_links' as never)
+        .insert({
+          cliente_id: cliente.id,
+          documento_id: docExistente?.id || null,
+          tipo,
+          html_documento: html,
+          status: 'pendente',
+        } as never)
+        .select()
+        .single() as any;
+      if (error) throw error;
+      // Atualizar status do doc para 'enviado'
+      await atualizarDocMutation.mutateAsync({ tipo, status: 'enviado' });
+      await supabase.from('programa_validador_historico' as never).insert({
+        cliente_id: cliente.id,
+        tipo: 'documento_gerado',
+        titulo: `Link de aceite gerado: ${DOCS_CONFIG.find(d => d.tipo === tipo)?.label}`,
+        autor: profile?.nome_completo || 'SuperAdmin',
+      } as never);
+      return data;
+    },
+    onSuccess: (data) => {
+      const url = `${window.location.origin}/aceite-documento/${data.token}`;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success('Link de aceite copiado para a área de transferência!');
+      });
+      setGerandoDoc(null);
+      qc.invalidateQueries({ queryKey: ['validador', 'doc-links', cliente.id] });
+      qc.invalidateQueries({ queryKey: ['validador', 'docs', cliente.id] });
+      qc.invalidateQueries({ queryKey: ['validador', 'historico', cliente.id] });
+    },
+    onError: (err: Error) => toast.error('Erro ao gerar link: ' + err.message),
   });
 
   const copiarLink = (token: string) => {
@@ -859,35 +1063,96 @@ function DetalheCliente({
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-1">
               {DOCS_CONFIG.map(({ tipo, label }) => {
                 const doc = documentos.find(d => d.tipo === tipo);
                 const status = doc?.status || 'pendente';
+                const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
+                const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
+
                 return (
-                  <div key={tipo} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-2">
-                      <DocStatusIcon status={status} />
-                      <span className="text-sm">{label}</span>
-                      {doc?.aceito_em && (
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(doc.aceito_em), 'dd/MM/yy', { locale: ptBR })}
-                        </span>
-                      )}
+                  <div key={tipo} className="py-2 border-b border-border last:border-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <DocStatusIcon status={status} />
+                        <span className="text-sm truncate">{label}</span>
+                        {doc?.aceito_em && (
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {format(new Date(doc.aceito_em), 'dd/MM/yy', { locale: ptBR })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* Botão gerar/copiar link */}
+                        {status !== 'aceito' && (
+                          linkAtivo ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => {
+                                const url = `${window.location.origin}/aceite-documento/${linkAtivo.token}`;
+                                navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
+                              }}
+                            >
+                              <Send className="w-3 h-3 mr-1" />
+                              Copiar link
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              disabled={isGerando}
+                              onClick={() => {
+                                setGerandoDoc(tipo);
+                                gerarDocLinkMutation.mutate(tipo);
+                              }}
+                            >
+                              {isGerando ? (
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />Gerando...</span>
+                              ) : (
+                                <><FileText className="w-3 h-3 mr-1" />Gerar</>
+                              )}
+                            </Button>
+                          )
+                        )}
+                        <Select
+                          value={status}
+                          onValueChange={(v) => atualizarDocMutation.mutate({ tipo, status: v as Documento['status'] })}
+                        >
+                          <SelectTrigger className="h-7 w-28 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pendente">Pendente</SelectItem>
+                            <SelectItem value="enviado">Enviado</SelectItem>
+                            <SelectItem value="aceito">Aceito</SelectItem>
+                            <SelectItem value="recusado">Recusado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <Select
-                      value={status}
-                      onValueChange={(v) => atualizarDocMutation.mutate({ tipo, status: v as Documento['status'] })}
-                    >
-                      <SelectTrigger className="h-7 w-28 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pendente">Pendente</SelectItem>
-                        <SelectItem value="enviado">Enviado</SelectItem>
-                        <SelectItem value="aceito">Aceito</SelectItem>
-                        <SelectItem value="recusado">Recusado</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Link ativo exibido abaixo */}
+                    {linkAtivo && status !== 'aceito' && (
+                      <div className="mt-1 ml-6 flex items-center gap-2">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          linkAtivo.status === 'aceito' ? 'bg-primary/10 text-primary' :
+                          linkAtivo.status === 'visualizado' ? 'bg-accent/50 text-accent-foreground' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {linkAtivo.status === 'aceito' ? '✓ Aceito' :
+                           linkAtivo.status === 'visualizado' ? '👁 Visualizado' :
+                           '⏳ Aguardando aceite'}
+                        </span>
+                        <button
+                          className="text-xs text-muted-foreground hover:text-foreground underline"
+                          onClick={() => window.open(`${window.location.origin}/aceite-documento/${linkAtivo.token}`, '_blank')}
+                        >
+                          Ver documento
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
