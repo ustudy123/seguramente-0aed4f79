@@ -780,6 +780,7 @@ export default function ProgramaValidador() {
   const { data: contratos = [] } = useQuery({
     queryKey: ['validador', 'contratos', clienteSelecionado?.id],
     enabled: !!clienteSelecionado,
+    refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_contratos' as never)
@@ -1033,6 +1034,7 @@ function DetalheCliente({
 
   const { data: docLinks = [] } = useQuery({
     queryKey: ['validador', 'doc-links', cliente.id],
+    refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_documento_links' as never)
@@ -1197,7 +1199,9 @@ function DetalheCliente({
     },
   });
 
-  const docAceitos = documentos.filter(d => d.status === 'aceito').length;
+  const contratoAssinado = contratos[0]?.status === 'assinado';
+  const docAceitos = documentos.filter(d => d.status === 'aceito' && d.tipo !== 'contrato_programa_validador').length
+    + (contratoAssinado ? 1 : 0);
   const totalDocs = DOCS_CONFIG.length;
 
   return (
@@ -1366,11 +1370,15 @@ function DetalheCliente({
             </CardHeader>
             <CardContent className="space-y-4">
               {DOCS_CONFIG.map(({ tipo, label, descricao, itens }) => {
+                const isContrato = tipo === 'contrato_programa_validador';
+                const contratoAtivo = isContrato ? contratos[0] : null;
                 const doc = documentos.find(d => d.tipo === tipo);
-                const status = doc?.status || 'pendente';
+                // Para contrato, derivar status diretamente da tabela de contratos
+                const status = isContrato
+                  ? (contratoAtivo?.status === 'assinado' ? 'aceito' : contratoAtivo ? 'enviado' : 'pendente')
+                  : (doc?.status || 'pendente');
                 const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
                 const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
-                const isContrato = tipo === 'contrato_programa_validador';
 
                 return (
                   <div key={tipo} className={`rounded-lg border p-4 space-y-3 ${
@@ -1389,9 +1397,10 @@ function DetalheCliente({
                         <div className="min-w-0">
                           <p className="font-semibold text-sm">{label}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
-                          {doc?.aceito_em && (
+                          {(isContrato ? contratoAtivo?.assinado_em : doc?.aceito_em) && (
                             <p className="text-xs text-primary mt-1">
-                              ✓ Concluído em {format(new Date(doc.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              ✓ Assinado em {format(new Date((isContrato ? contratoAtivo?.assinado_em : doc?.aceito_em)!), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              {isContrato && contratoAtivo?.assinado_por ? ` por ${contratoAtivo.assinado_por}` : ''}
                             </p>
                           )}
                         </div>
