@@ -322,6 +322,22 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
             {/* STEP 0 — Empresa */}
             {step === 0 && (
               <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 py-2">
+                {/* Banner empresa ativa */}
+                {empresaAtiva ? (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+                    <Building2 className="w-4 h-4 text-primary shrink-0" />
+                    <div>
+                      <span className="font-medium">Empresa selecionada: </span>
+                      <span className="text-primary">{empresaAtiva.razao_social || empresaAtiva.nome_fantasia}</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">Os campos abaixo foram pré-preenchidos com os dados do cadastro desta empresa.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
+                    <Building2 className="w-4 h-4 text-amber-600 shrink-0" />
+                    <p className="text-amber-800">Nenhuma empresa selecionada no cabeçalho. Preencha os campos manualmente.</p>
+                  </div>
+                )}
                 {/* Porte */}
                 <div className="space-y-2">
                   <Label className="font-semibold">Porte da empresa *</Label>
