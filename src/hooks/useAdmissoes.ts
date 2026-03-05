@@ -20,11 +20,13 @@ import {
   DEFAULT_WORKFLOW_STEPS,
 } from '@/types/database';
 import { useAuth } from './useAuth';
+import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
 import { toast } from 'sonner';
 
 export function useAdmissoes() {
   const queryClient = useQueryClient();
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   // Fetch all admissões for the tenant
   const {
@@ -94,6 +96,7 @@ export function useAdmissoes() {
         .from('admissoes')
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           criado_por: user.id,
           status: 'rascunho' as AdmissaoStatus,
           ...dados,

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
 import type { EventoSST, EventoSSTAnexo } from "@/types/eventoSST";
@@ -9,6 +10,7 @@ import type { EventoSST, EventoSSTAnexo } from "@/types/eventoSST";
 export const useEventosSST = () => {
   const { user, profile } = useAuth();
   const { tenant } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
   const tid = tenant?.id;
 
@@ -102,6 +104,7 @@ export const useEventosSST = () => {
         .insert({
           ...evt,
           tenant_id: tid!,
+          empresa_id: empresaAtivaId || null,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
         } as any)
