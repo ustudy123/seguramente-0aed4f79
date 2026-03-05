@@ -114,32 +114,38 @@ export default function AceiteDocumento() {
         const tenantId = link?.programa_validador_clientes?.tenant_id;
         const nomeEmpresa = link?.programa_validador_clientes?.nome_empresa || 'Empresa';
         if (tenantId) {
-          // Buscar ou criar pasta "Programa Validador"
-          let { data: pasta } = await supabase
+          // Buscar pasta raiz "Governança e Administração"
+          const { data: govPasta } = await supabase
             .from('documento_pastas')
             .select('id')
             .eq('tenant_id', tenantId)
-            .eq('nome', 'Programa Validador')
+            .eq('nome', 'Governança e Administração')
             .is('pasta_pai_id', null)
             .maybeSingle();
 
-          if (!pasta) {
-            const { data: novaPasta } = await supabase
+          // Buscar "Estrutura Organizacional" dentro de Governança
+          let pastaDestino: { id: string } | null = null;
+          if (govPasta?.id) {
+            const { data: estOrgPasta } = await supabase
               .from('documento_pastas')
-              .insert({
-                tenant_id: tenantId,
-                nome: 'Programa Validador',
-                tipo: 'admin',
-                icone: 'FileText',
-                cor: '#2563eb',
-              })
               .select('id')
-              .single();
-            pasta = novaPasta;
+              .eq('tenant_id', tenantId)
+              .eq('nome', 'Estrutura Organizacional')
+              .eq('pasta_pai_id', govPasta.id)
+              .maybeSingle();
+            pastaDestino = estOrgPasta;
           }
 
-          if (pasta?.id) {
-            // Buscar o html_assinado atualizado
+          if (!pastaDestino && govPasta?.id) pastaDestino = govPasta;
+          if (!pastaDestino) {
+            const { data: fallback } = await supabase
+              .from('documento_pastas')
+              .insert({ tenant_id: tenantId, nome: 'Contratos', tipo: 'categoria', icone: 'FileText' })
+              .select('id').single();
+            pastaDestino = fallback;
+          }
+
+          if (pastaDestino?.id) {
             const { data: updatedLink } = await supabase
               .from('programa_validador_documento_links' as never)
               .select('html_assinado, html_documento')
@@ -151,22 +157,15 @@ export default function AceiteDocumento() {
             const storagePath = `programa-validador/${tenantId}/atas/${nomeArq}`;
 
             const blob = new Blob([htmlFinal], { type: 'text/html' });
-            await supabase.storage.from('documentos').upload(storagePath, blob, {
-              contentType: 'text/html',
-              upsert: true,
-            });
+            await supabase.storage.from('documentos').upload(storagePath, blob, { contentType: 'text/html', upsert: true });
 
             const { data: docExistente } = await supabase
-              .from('documentos')
-              .select('id')
-              .eq('tenant_id', tenantId)
-              .eq('storage_path', storagePath)
-              .maybeSingle();
+              .from('documentos').select('id').eq('tenant_id', tenantId).eq('storage_path', storagePath).maybeSingle();
 
             if (!docExistente) {
               await supabase.from('documentos').insert({
                 tenant_id: tenantId,
-                pasta_id: pasta.id,
+                pasta_id: pastaDestino.id,
                 nome_arquivo: nomeArq,
                 nome_original: nomeArq,
                 storage_path: storagePath,
