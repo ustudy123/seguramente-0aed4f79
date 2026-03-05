@@ -90,29 +90,23 @@ export const useDashboardData = () => {
       const cargos = cargosRes.count || 0;
       const departamentos = departamentosRes.count || 0;
       const admissoes = admissoesRes.count || 0;
-      const scoreOrganizacao = Math.min(100, Math.round((cargos > 0 ? 25 : 0) + (departamentos > 0 ? 25 : 0) + (cargos >= 5 ? 25 : cargos * 5) + (departamentos >= 3 ? 25 : departamentos * 8)));
+      const scoreOrganizacao = 0;
 
       // Calcular métricas Pilar 2
       const itensNr17 = itensNr17Res.data || [];
       const itensAtendidos = itensNr17.filter(i => i.status === "atendido").length;
-      const itensParciais = itensNr17.filter(i => i.status === "parcial").length;
       const itensTotal = itensNr17.length;
       const epis = episRes.data || [];
       const episDisponiveis = epis.filter(e => e.status === "disponivel").length;
       const episBaixoEstoque = epis.filter(e => e.quantidade_estoque <= e.quantidade_minima).length;
       const riscosAtivos = riscosRes.count || 0;
-      const scoreCondicoes = itensTotal > 0
-        ? Math.round(((itensAtendidos + itensParciais * 0.5) / itensTotal) * 100)
-        : 0;
+      const scoreCondicoes = 0;
 
       // Calcular métricas Pilar 3
       const humores = humorRes.data || [];
-      const humorPositivo = humores.filter(h => ["bem", "animado", "motivado"].includes(h.humor)).length;
       const ouvidoriaPendente = ouvidoriaRes.count || 0;
       const feedHoje = feedRes.count || 0;
-      const scoreExperiencia = humores.length > 0
-        ? Math.round((humorPositivo / humores.length) * 100)
-        : 0;
+      const scoreExperiencia = 0;
 
       // Calcular métricas Pilar 4
       const acoes = acoesRes.data || [];
@@ -127,13 +121,7 @@ export const useDashboardData = () => {
       const ptsData = (ptsRes.data as any[]) || [];
       const ptsBloqueadas = ptsData.filter((p: any) => p.status === "bloqueada").length;
       
-      const terceirosBonus = terceirosAtivos > 0
-        ? Math.round((terceirosConformes / terceirosAtivos) * 10) - (ptsBloqueadas * 2)
-        : 0;
-      
-      const scoreGovernanca = acoes.length > 0 
-        ? Math.min(100, Math.round((acoesConcluidas / acoes.length) * 50 + (evidencias > 0 ? 15 : 0) + (acoesEmAndamento > 0 ? 15 : 0) + Math.max(0, terceirosBonus) + (ptsBloqueadas === 0 && terceirosAtivos > 0 ? 10 : 0)))
-        : 0;
+      const scoreGovernanca = 0;
 
       return {
         organizacao: {
@@ -152,7 +140,7 @@ export const useDashboardData = () => {
           score: scoreCondicoes,
         },
         experiencia: {
-          humorPositivo: humorPositivo,
+          humorPositivo: 0,
           humorTotal: humores.length,
           ouvidoriaPendente: ouvidoriaPendente,
           feedPostsHoje: feedHoje,
