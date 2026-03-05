@@ -536,7 +536,11 @@ const Ferias = () => {
   const stats = {
     pendentes: ferias.filter((f) => f.status === "pendente").length,
     aprovados: ferias.filter((f) => f.status === "aprovado").length,
-    emFerias: 3,
+    emFerias: ferias.filter((f) => {
+      if (f.status !== "aprovado") return false;
+      const hoje = new Date();
+      return new Date(f.dataInicio) <= hoje && new Date(f.dataFim) >= hoje;
+    }).length,
     comAbono: ferias.filter((f) => f.abonoPecuniario && f.status !== "recusado").length,
   };
 

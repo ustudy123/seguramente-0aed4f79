@@ -17,7 +17,7 @@ import type {
   EpiStatus,
   EntregaStatus,
 } from "@/types/epi";
-import { TIPOS_EPI_PADRAO } from "@/types/epi";
+
 
 export function useEpis() {
   const { tenantId, user, profile } = useAuth();
@@ -42,39 +42,19 @@ export function useEpis() {
     enabled: !!tenantId,
   });
 
-  // Buscar tipos de EPI (cria tipos padrão se não existirem)
+  // Buscar tipos de EPI
   const tiposQuery = useQuery({
     queryKey: ["epi-tipos", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      
+
       const { data, error } = await supabase
         .from("epi_tipos")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("nome");
       if (error) throw error;
-      
-      // Se não houver tipos, criar os tipos padrão
-      if (data.length === 0) {
-        const tiposPadrao = TIPOS_EPI_PADRAO.map(tipo => ({
-          ...tipo,
-          tenant_id: tenantId,
-        }));
-        
-        const { data: novosTipos, error: insertError } = await supabase
-          .from("epi_tipos")
-          .insert(tiposPadrao)
-          .select();
-        
-        if (insertError) {
-          console.error("Erro ao criar tipos padrão:", insertError);
-          return data as EpiTipo[];
-        }
-        
-        return novosTipos as EpiTipo[];
-      }
-      
+
       return data as EpiTipo[];
     },
     enabled: !!tenantId,
