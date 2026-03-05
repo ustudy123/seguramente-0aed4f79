@@ -2086,7 +2086,15 @@ function DetalheCliente({
               {cliente.poc_telefone && (
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span>{cliente.poc_telefone}</span>
+                  <a
+                    href={`https://wa.me/55${cliente.poc_telefone.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    {cliente.poc_telefone}
+                    <span className="text-xs text-muted-foreground">(WhatsApp)</span>
+                  </a>
                 </div>
               )}
               {(cliente as any).activation_token && (
@@ -2170,10 +2178,21 @@ function DetalheCliente({
           {cliente.observacoes && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide">Observações</CardTitle>
+                <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide">Observações do Cadastro</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{cliente.observacoes}</p>
+                <div className="space-y-1.5">
+                  {cliente.observacoes.split(' | ').map((item, i) => (
+                    <p key={i} className="text-sm text-muted-foreground">
+                      {item.includes(':') ? (
+                        <>
+                          <span className="font-medium text-foreground">{item.split(':')[0]}:</span>
+                          {item.split(':').slice(1).join(':')}
+                        </>
+                      ) : item}
+                    </p>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
