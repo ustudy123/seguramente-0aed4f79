@@ -1751,7 +1751,11 @@ function DetalheCliente({
                               disabled={isGerando}
                               onClick={() => {
                                 setGerandoDoc(tipo);
-                                gerarDocLinkMutation.mutate(tipo);
+                                if (tipo === 'ata_kickoff') {
+                                  setShowAtaDialog(true);
+                                } else {
+                                  gerarDocLinkMutation.mutate({ tipo });
+                                }
                               }}
                             >
                               {isGerando ? (
