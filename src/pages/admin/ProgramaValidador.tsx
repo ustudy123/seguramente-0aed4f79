@@ -728,6 +728,20 @@ function DetalheCliente({
   const [nota, setNota] = useState('');
   const [editandoFase, setEditandoFase] = useState(false);
   const [showGerarContrato, setShowGerarContrato] = useState(false);
+  const [gerandoDoc, setGerandoDoc] = useState<TipoDoc | null>(null);
+
+  const { data: docLinks = [] } = useQuery({
+    queryKey: ['validador', 'doc-links', cliente.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('programa_validador_documento_links' as never)
+        .select('*')
+        .eq('cliente_id', cliente.id)
+        .order('created_at', { ascending: false }) as any;
+      if (error) throw error;
+      return (data || []) as DocumentoLink[];
+    },
+  });
 
   const atualizarFaseMutation = useMutation({
     mutationFn: async (fase: Fase) => {
