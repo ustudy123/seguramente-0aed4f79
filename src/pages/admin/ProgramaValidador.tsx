@@ -1395,7 +1395,7 @@ function DetalheCliente({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {DOCS_CONFIG.map(({ tipo, label, descricao, itens }) => {
+              {docsConfig.map(({ tipo, label, descricao, itens }) => {
                 const isContrato = tipo === 'contrato_programa_validador';
                 const contratoAtivo = isContrato ? contratos[0] : null;
                 const doc = documentos.find(d => d.tipo === tipo);
