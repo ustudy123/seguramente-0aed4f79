@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
-import { DEMO_MINHAS_MEDALHAS, DEMO_CERTIFICADOS, DEMO_RANKING, DEMO_MEDALHAS_CONFIG } from "@/data/trilhas-demo";
 
 export interface Medalha {
   id: string;
@@ -75,7 +74,7 @@ export function useGamificacao() {
         ...d,
         medalha: Array.isArray(d.medalha) ? d.medalha[0] : d.medalha,
       })) as MedalhaConquistada[];
-      return result.length > 0 ? result : DEMO_MINHAS_MEDALHAS;
+      return result;
     },
     enabled: !!tenantId && !!colaboradorId,
   });
@@ -96,7 +95,7 @@ export function useGamificacao() {
         const trilhaData = Array.isArray(d.trilha) ? d.trilha[0] : d.trilha;
         return { ...d, trilha_nome: trilhaData?.nome || "Trilha" };
       }) as Certificado[];
-      return result.length > 0 ? result : DEMO_CERTIFICADOS;
+      return result;
     },
     enabled: !!tenantId && !!colaboradorId,
   });
@@ -114,7 +113,7 @@ export function useGamificacao() {
         .eq("tenant_id", tenantId)
         .eq("status", "concluido") as { data: any[] | null; error: Error | null };
       if (error) throw error;
-      if (!progressos?.length) return DEMO_RANKING;
+      if (!progressos?.length) return [];
 
       // Get medal counts
       const { data: medalhas } = await supabase
@@ -171,8 +170,7 @@ export function useGamificacao() {
         .eq("tenant_id", tenantId)
         .order("created_at") as { data: Medalha[] | null; error: Error | null };
       if (error) throw error;
-      const result = data || [];
-      return result.length > 0 ? result as Medalha[] : DEMO_MEDALHAS_CONFIG;
+      return (data || []) as Medalha[];
     },
     enabled: !!tenantId,
   });
@@ -207,10 +205,6 @@ export function useGamificacao() {
     onError: handleMutationError,
   });
 
-  const isDemo =
-    (minhasMedalhas.length > 0 && minhasMedalhas[0].id.startsWith("dmc")) ||
-    (ranking.length > 0 && ranking[0].colaborador_id === "r1");
-
   return {
     minhasMedalhas,
     meusCertificados,
@@ -220,7 +214,6 @@ export function useGamificacao() {
     loadingCertificados,
     loadingRanking,
     loadingConfig,
-    isDemo,
     criarMedalha: criarMedalhaMut.mutateAsync,
     excluirMedalha: excluirMedalhaMut.mutateAsync,
     criandoMedalha: criarMedalhaMut.isPending,

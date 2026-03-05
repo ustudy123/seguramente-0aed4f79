@@ -18,7 +18,6 @@ import { PlanoAcaoInbox } from "@/components/planoAcao/PlanoAcaoInbox";
 import { PlanoAcaoFormModal } from "@/components/planoAcao/PlanoAcaoFormModal";
 import { PlanoAcaoFilters } from "@/components/planoAcao/PlanoAcaoFilters";
 import { PlanoAcaoIAAssistant } from "@/components/planoAcao/PlanoAcaoIAAssistant";
-import { DemoBanner } from "@/components/ui/DemoBanner";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import type { PlanoAcaoFilters as FilterType } from "@/types/planoAcao";
 
@@ -41,8 +40,6 @@ export default function PlanoAcao() {
     ...filters, 
     busca: searchTerm || undefined 
   });
-
-  const isDemoData = acoes.length > 0 && acoes[0]?.id?.startsWith("mock-");
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -111,11 +108,6 @@ export default function PlanoAcao() {
           </Button>
         </div>
       </motion.div>
-
-      {/* Demo Banner */}
-      {isDemoData && (
-        <DemoBanner message="As ações abaixo são exemplos fictícios para você conhecer o módulo. Ao criar sua primeira ação real, os dados de demonstração desaparecerão automaticamente." />
-      )}
 
       {/* Stats */}
       <PlanoAcaoStats stats={stats} isLoading={isLoadingStats} activeStatFilter={activeStatFilter} onStatClick={handleStatClick} />

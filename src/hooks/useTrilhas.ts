@@ -4,7 +4,6 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
 import type { Trilha, TrilhaModulo, TrilhaQuizPergunta } from "@/types/trilha";
-import { DEMO_TRILHAS } from "@/data/trilhas-demo";
 
 export function useTrilhas() {
   const { tenantId, user, profile } = useAuth();
@@ -20,8 +19,6 @@ export function useTrilhas() {
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false }) as { data: Trilha[] | null; error: Error | null };
       if (error) throw error;
-      // Return demo data when no real data exists
-      if (!data?.length) return DEMO_TRILHAS;
       return data || [];
     },
     enabled: !!tenantId,
@@ -95,11 +92,6 @@ export function useTrilhaModulos(trilhaId?: string) {
     queryKey: ["trilha_modulos", trilhaId],
     queryFn: async (): Promise<TrilhaModulo[]> => {
       if (!trilhaId) return [];
-      // Demo trilhas: return demo modules directly
-      if (trilhaId.startsWith("demo-")) {
-        const { DEMO_MODULOS } = await import("@/data/trilhas-demo");
-        return DEMO_MODULOS[trilhaId] || [];
-      }
       if (!tenantId) return [];
       const { data, error } = await supabase
         .from("trilha_modulos" as never)
@@ -108,10 +100,6 @@ export function useTrilhaModulos(trilhaId?: string) {
         .eq("trilha_id", trilhaId)
         .order("ordem") as { data: TrilhaModulo[] | null; error: Error | null };
       if (error) throw error;
-      if (!data?.length) {
-        const { DEMO_MODULOS } = await import("@/data/trilhas-demo");
-        return DEMO_MODULOS[trilhaId] || [];
-      }
       return data || [];
     },
     enabled: !!trilhaId,

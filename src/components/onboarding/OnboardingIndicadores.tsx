@@ -27,38 +27,13 @@ const PIE_COLORS = [
   "hsl(var(--destructive))",
 ];
 
-const DEMO_PROCESSOS: OnboardingProcesso[] = [
-  { id: "d1", tenant_id: "", admissao_id: "", template_id: null, trilha_id: null, colaborador_nome: "Ana Clara Souza", colaborador_cpf: "", status: "concluido", data_inicio: "2026-01-10", data_conclusao: "2026-01-25", progresso: 100, pontos_obtidos: 450, certificado_emitido: true, pdi_alimentado: true, created_at: "2026-01-10T10:00:00Z", updated_at: "2026-01-25T10:00:00Z" },
-  { id: "d2", tenant_id: "", admissao_id: "", template_id: null, trilha_id: null, colaborador_nome: "Carlos Eduardo Lima", colaborador_cpf: "", status: "em_andamento", data_inicio: "2026-02-01", data_conclusao: null, progresso: 65, pontos_obtidos: 280, certificado_emitido: false, pdi_alimentado: false, created_at: "2026-02-01T10:00:00Z", updated_at: "2026-02-15T10:00:00Z" },
-  { id: "d3", tenant_id: "", admissao_id: "", template_id: null, trilha_id: null, colaborador_nome: "Mariana Ferreira", colaborador_cpf: "", status: "em_andamento", data_inicio: "2026-02-05", data_conclusao: null, progresso: 40, pontos_obtidos: 160, certificado_emitido: false, pdi_alimentado: false, created_at: "2026-02-05T10:00:00Z", updated_at: "2026-02-16T10:00:00Z" },
-  { id: "d4", tenant_id: "", admissao_id: "", template_id: null, trilha_id: null, colaborador_nome: "João Pedro Alves", colaborador_cpf: "", status: "pendente", data_inicio: null, data_conclusao: null, progresso: 0, pontos_obtidos: 0, certificado_emitido: false, pdi_alimentado: false, created_at: "2026-02-14T10:00:00Z", updated_at: "2026-02-14T10:00:00Z" },
-  { id: "d5", tenant_id: "", admissao_id: "", template_id: null, trilha_id: null, colaborador_nome: "Beatriz Santos", colaborador_cpf: "", status: "concluido", data_inicio: "2026-01-15", data_conclusao: "2026-02-02", progresso: 100, pontos_obtidos: 420, certificado_emitido: true, pdi_alimentado: true, created_at: "2026-01-15T10:00:00Z", updated_at: "2026-02-02T10:00:00Z" },
-  { id: "d6", tenant_id: "", admissao_id: "", template_id: null, trilha_id: null, colaborador_nome: "Rafael Mendes", colaborador_cpf: "", status: "pendente", data_inicio: null, data_conclusao: null, progresso: 0, pontos_obtidos: 0, certificado_emitido: false, pdi_alimentado: false, created_at: "2026-02-17T10:00:00Z", updated_at: "2026-02-17T10:00:00Z" },
-];
-
-const DEMO_PERCEPCOES = [
-  { id: "dp1", pergunta_chave: "acolhimento", pergunta_texto: "Como você se sentiu acolhido(a) nos primeiros dias?", resposta: "Muito bem acolhido", categoria: "integracao", colaborador_nome: "Ana Clara" },
-  { id: "dp2", pergunta_chave: "acolhimento", pergunta_texto: "Como você se sentiu acolhido(a) nos primeiros dias?", resposta: "Muito bem acolhido", categoria: "integracao", colaborador_nome: "Beatriz" },
-  { id: "dp3", pergunta_chave: "acolhimento", pergunta_texto: "Como você se sentiu acolhido(a) nos primeiros dias?", resposta: "Bem acolhido", categoria: "integracao", colaborador_nome: "Carlos" },
-  { id: "dp4", pergunta_chave: "valores_percebidos", pergunta_texto: "Os valores da empresa ficaram claros para você?", resposta: "Sim, totalmente", categoria: "cultura", colaborador_nome: "Ana Clara" },
-  { id: "dp5", pergunta_chave: "valores_percebidos", pergunta_texto: "Os valores da empresa ficaram claros para você?", resposta: "Sim, totalmente", categoria: "cultura", colaborador_nome: "Beatriz" },
-  { id: "dp6", pergunta_chave: "valores_percebidos", pergunta_texto: "Os valores da empresa ficaram claros para você?", resposta: "Parcialmente", categoria: "cultura", colaborador_nome: "Carlos" },
-  { id: "dp7", pergunta_chave: "clareza_papel", pergunta_texto: "Você compreendeu bem seu papel e responsabilidades?", resposta: "Sim, com clareza", categoria: "engajamento", colaborador_nome: "Ana Clara" },
-  { id: "dp8", pergunta_chave: "clareza_papel", pergunta_texto: "Você compreendeu bem seu papel e responsabilidades?", resposta: "Sim, com clareza", categoria: "engajamento", colaborador_nome: "Beatriz" },
-  { id: "dp9", pergunta_chave: "sentido_trabalho", pergunta_texto: "Você sente que seu trabalho tem propósito?", resposta: "Muito propósito", categoria: "cultura", colaborador_nome: "Ana Clara" },
-  { id: "dp10", pergunta_chave: "sentido_trabalho", pergunta_texto: "Você sente que seu trabalho tem propósito?", resposta: "Bastante propósito", categoria: "cultura", colaborador_nome: "Beatriz" },
-  { id: "dp11", pergunta_chave: "observacao_livre", pergunta_texto: "", resposta: "A equipe foi muito receptiva, me senti parte do time desde o primeiro dia!", categoria: "geral", colaborador_nome: "Ana Clara Souza" },
-  { id: "dp12", pergunta_chave: "observacao_livre", pergunta_texto: "", resposta: "Adorei o processo de integração, muito organizado e acolhedor.", categoria: "geral", colaborador_nome: "Beatriz Santos" },
-];
-
 export function OnboardingIndicadores() {
   const { tenantId } = useAuth();
-  const { processos: realProcessos, isLoading: loadingProcessos } = useOnboardingProcessos();
+  const { processos, isLoading: loadingProcessos } = useOnboardingProcessos();
   const [filtroCategoria, setFiltroCategoria] = useState("todas");
 
   // Fetch cultural perception data
-  const isDemo = realProcessos.length === 0;
-  const { data: realPercepcoes = [], isLoading: loadingPercepcoes } = useQuery({
+  const { data: percepcoes = [], isLoading: loadingPercepcoes } = useQuery({
     queryKey: ["onboarding_percepcao_cultural", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
@@ -74,11 +49,6 @@ export function OnboardingIndicadores() {
   });
 
   const isLoading = loadingProcessos || loadingPercepcoes;
-
-  const processos = isDemo ? DEMO_PROCESSOS : realProcessos;
-  const percepcoes = isDemo ? DEMO_PERCEPCOES : realPercepcoes;
-
-  // === KPIs ===
   const stats = useMemo(() => {
     const total = processos.length;
     const concluidos = processos.filter(p => p.status === "concluido").length;
@@ -146,12 +116,6 @@ export function OnboardingIndicadores() {
 
   return (
     <div className="space-y-6">
-      {isDemo && (
-        <div className="flex items-center gap-2 bg-warning/10 border border-warning/30 rounded-lg px-4 py-2.5 text-sm text-warning">
-          <Info className="w-4 h-4 shrink-0" />
-          <span>Modo demonstração — dados fictícios para visualização.</span>
-        </div>
-      )}
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[

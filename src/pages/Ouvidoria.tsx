@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { MessageSquareHeart, Plus, List, Settings } from "lucide-react";
-import { DemoBanner } from "@/components/ui/DemoBanner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOuvidoria } from "@/hooks/useOuvidoria";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +16,6 @@ const Ouvidoria = () => {
   const {
     manifestacoes,
     manifestacoesLoading,
-    isDemo,
     criarManifestacao,
     criandoManifestacao,
     responderManifestacao,
@@ -63,11 +61,6 @@ const Ouvidoria = () => {
           </p>
         </div>
       </motion.div>
-
-      {/* Banner Demo */}
-      {isDemo && (
-        <DemoBanner message="Os dados abaixo são fictícios para visualização. Ao criar uma manifestação real, eles serão substituídos automaticamente." />
-      )}
 
       {/* Stats (apenas para managers) */}
       {isManager && <OuvidoriaStats stats={stats} />}

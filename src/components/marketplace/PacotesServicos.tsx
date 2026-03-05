@@ -32,40 +32,12 @@ export function PacotesServicos() {
     },
   });
 
-  const demoPacotes: Pacote[] = [
-    {
-      id: "dp-1", nome: "Pacote SST Completo", descricao: "PGR + PCMSO + LTCAT + Treinamentos NR obrigatórios. Ideal para empresas com até 50 colaboradores.",
-      preco_pacote: 4500, preco_individual_soma: 6800, desconto_percentual: 33.8,
-      duracao_total_minutos: 2400, modalidade: "presencial", publico_alvo: "PMEs até 50 colaboradores",
-      profissional: { nome_completo: "Ricardo Mendes", conselho: "CREA", foto_url: "/avatars/ricardo-mendes.jpg" },
-    },
-    {
-      id: "dp-2", nome: "Programa Saúde Mental", descricao: "Avaliação psicossocial + 4 rodas de conversa + relatório final com plano de ação. Cumpre NR-1 atualizada.",
-      preco_pacote: 3200, preco_individual_soma: 4600, desconto_percentual: 30.4,
-      duracao_total_minutos: 1200, modalidade: "hibrido", publico_alvo: "Empresas com foco em NR-1",
-      profissional: { nome_completo: "Fernanda Costa", conselho: "CRP", foto_url: "/avatars/fernanda-costa.jpg" },
-    },
-    {
-      id: "dp-3", nome: "Ergonomia Express", descricao: "AEP + Laudo Ergonômico + Treinamento de postura para até 3 setores. Entrega em 15 dias.",
-      preco_pacote: 2800, preco_individual_soma: 3900, desconto_percentual: 28.2,
-      duracao_total_minutos: 960, modalidade: "presencial", publico_alvo: "Indústrias e escritórios",
-      profissional: { nome_completo: "Mariana Silva", conselho: "CREFITO", foto_url: "/avatars/mariana-silva.jpg" },
-    },
-  ];
-
-  const pacotes = realPacotes.length > 0 ? realPacotes : demoPacotes;
-  const isDemo = realPacotes.length === 0 && pacotes.length > 0;
+  const pacotes = realPacotes;
 
   if (isLoading) return <div className="text-center py-12 text-muted-foreground text-sm">Carregando pacotes...</div>;
 
   return (
     <div className="space-y-4">
-      {isDemo && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span><strong>Modo Demonstração</strong> — pacotes fictícios para visualização.</span>
-        </div>
-      )}
 
       <div className="flex items-center justify-between">
         <h3 className="font-semibold flex items-center gap-2">

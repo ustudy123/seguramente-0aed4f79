@@ -12,58 +12,13 @@ import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-const RELATORIO_DEMO = `## 📋 Relatório de Auditoria Inteligente — EPIs
-
-**Data da análise:** ${new Date().toLocaleDateString("pt-BR")}
-**Período avaliado:** Últimos 6 meses
-**Total de colaboradores analisados:** 87
-**Total de entregas no período:** 342
-
----
-
-### 1. 🔴 Padrões Suspeitos (Gravidade Máxima)
-
-#### 1.1 Frequência Anormal de Substituições
-- **Carlos Eduardo Souza** (Operador de Produção): **12 substituições** de Luvas de Segurança em 6 meses (média: 3). *Recomendação: investigar condições do posto.*
-- **Ana Paula Ferreira** (Técnica de Manutenção): **7 substituições** de Óculos de Proteção em 4 meses (média: 2). Todos por "Dano".
-
-#### 1.2 Extravios Recorrentes
-- **Total de extravios no período:** 9 ocorrências
-- **Concentração:** 55% no Depto. Logística
-
----
-
-### 2. ⚖️ Riscos de Conformidade (NR-6, NR-9)
-
-#### 2.1 CAs Vencidos em Uso
-| EPI | CA | Vencimento | Entregas Ativas | Risco |
-|---|---|---|---|---|
-| Capacete de Segurança | CA 38.245 | 25/12/2025 | 23 colaboradores | 🔴 Crítico |
-
-#### 2.2 Funções sem EPI Obrigatório
-- **Eletricistas:** Sem Luva Isolante (NR-10)
-- **Soldadores:** Sem Avental de Raspa e Perneira
-
----
-
-### 3. ✅ Resumo Executivo — 3 Ações Prioritárias
-
-| # | Ação | Severidade | Prazo |
-|---|---|---|---|
-| 1 | Renovar CAs vencidos | 🔴 Crítico | Imediato |
-| 2 | Regularizar entregas obrigatórias | 🔴 Crítico | 7 dias |
-| 3 | Investigar padrão de extravios | 🟠 Alto | 15 dias |
-
-*Relatório gerado por Auditoria Inteligente — Seguramente.*`;
 
 export function EpiFiscalIATab() {
   const { analise, isLoading, error, executarAnalise } = useEpiFiscalIA();
   const { empresas } = useEmpresaCadastro();
-  const [showDemo, setShowDemo] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const displayContent = analise || (showDemo ? RELATORIO_DEMO : "");
-  const isDemo = !analise && showDemo;
+  const displayContent = analise || "";
 
   const empresa = empresas?.[0];
 

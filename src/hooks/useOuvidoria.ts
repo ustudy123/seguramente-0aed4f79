@@ -240,63 +240,7 @@ export function useOuvidoria() {
     },
   });
 
-  // Dados fictícios de demonstração
-  const demoManifestacoes: Manifestacao[] = [
-    {
-      id: "demo-1", tenant_id: "", tipo: "sugestao", assunto: "Implementar horário flexível",
-      mensagem: "Sugiro que a empresa avalie a possibilidade de implementar horários flexíveis para os colaboradores, permitindo entrada entre 7h e 10h. Isso pode melhorar a qualidade de vida e reduzir atrasos.",
-      anonimo: false, autor_id: null, autor_nome: "Mariana Silva", autor_email: "mariana@empresa.com",
-      autor_departamento: "Operações", status: "pendente", prioridade: "normal",
-      resposta: null, respondido_por: null, respondido_por_nome: null, respondido_em: null,
-      anexos: null, created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString(),
-    },
-    {
-      id: "demo-2", tenant_id: "", tipo: "reclamacao", assunto: "Ar-condicionado do 3º andar com defeito",
-      mensagem: "Há mais de uma semana o ar-condicionado do 3º andar está com problemas. A temperatura fica acima de 30°C durante a tarde, tornando o trabalho muito desconfortável. Já relatamos ao facilities, mas nada foi feito.",
-      anonimo: false, autor_id: null, autor_nome: "Roberto Lima", autor_email: "roberto@empresa.com",
-      autor_departamento: "TI", status: "em_analise", prioridade: "alta",
-      resposta: null, respondido_por: null, respondido_por_nome: null, respondido_em: null,
-      anexos: null, created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString(),
-    },
-    {
-      id: "demo-3", tenant_id: "", tipo: "denuncia", assunto: "Assédio moral no setor de vendas",
-      mensagem: "Venho relatar situações recorrentes de assédio moral no setor de vendas, onde um gestor constantemente humilha e diminui membros da equipe na frente de outros colaboradores. Peço providências urgentes.",
-      anonimo: true, autor_id: null, autor_nome: null, autor_email: null,
-      autor_departamento: null, status: "em_analise", prioridade: "urgente",
-      resposta: null, respondido_por: null, respondido_por_nome: null, respondido_em: null,
-      anexos: null, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString(),
-    },
-    {
-      id: "demo-4", tenant_id: "", tipo: "elogio", assunto: "Excelente treinamento de segurança",
-      mensagem: "Gostaria de parabenizar a equipe de SST pelo treinamento de segurança realizado na última semana. O conteúdo foi muito relevante, os facilitadores demonstraram domínio e o material estava muito bem preparado.",
-      anonimo: false, autor_id: null, autor_nome: "Fernanda Costa", autor_email: "fernanda@empresa.com",
-      autor_departamento: "Produção", status: "respondido", prioridade: "baixa",
-      resposta: "Obrigado pelo feedback, Fernanda! Ficamos felizes que o treinamento foi bem aproveitado. Continuaremos investindo em capacitação de qualidade para todos.",
-      respondido_por: null, respondido_por_nome: "Carlos Administrador", respondido_em: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      anexos: null, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString(),
-    },
-    {
-      id: "demo-5", tenant_id: "", tipo: "duvida", assunto: "Como solicitar adiantamento salarial?",
-      mensagem: "Gostaria de saber qual o procedimento para solicitar adiantamento salarial. Existe formulário específico? Qual o prazo para aprovação? Há algum limite de valor?",
-      anonimo: false, autor_id: null, autor_nome: "Paulo Nascimento", autor_email: "paulo@empresa.com",
-      autor_departamento: "Logística", status: "respondido", prioridade: "normal",
-      resposta: "Olá Paulo! O adiantamento pode ser solicitado pelo portal do colaborador, na seção 'Financeiro > Adiantamentos'. O limite é de 40% do salário e a aprovação leva até 2 dias úteis.",
-      respondido_por: null, respondido_por_nome: "Ana RH", respondido_em: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      anexos: null, created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString(),
-    },
-    {
-      id: "demo-6", tenant_id: "", tipo: "reclamacao", assunto: "Falta de EPIs adequados no almoxarifado",
-      mensagem: "Os EPIs disponíveis no almoxarifado estão com tamanhos inadequados e alguns estão vencidos. Precisamos urgentemente de reposição de luvas tamanho M e óculos de proteção.",
-      anonimo: false, autor_id: null, autor_nome: "Ricardo Mendes", autor_email: "ricardo@empresa.com",
-      autor_departamento: "Manutenção", status: "pendente", prioridade: "alta",
-      resposta: null, respondido_por: null, respondido_por_nome: null, respondido_em: null,
-      anexos: null, created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString(),
-    },
-  ];
-
-  const realData = manifestacoesQuery.data || [];
-  const isDemo = realData.length === 0;
-  const manifestacoesFinais = isDemo ? demoManifestacoes : realData;
+  const manifestacoesFinais = manifestacoesQuery.data || [];
 
   // Estatísticas
   const stats = {
@@ -310,7 +254,6 @@ export function useOuvidoria() {
   return {
     manifestacoes: manifestacoesFinais,
     manifestacoesLoading: manifestacoesQuery.isLoading,
-    isDemo,
     
     criarManifestacao: criarManifestacaoMutation.mutateAsync,
     criandoManifestacao: criarManifestacaoMutation.isPending,
