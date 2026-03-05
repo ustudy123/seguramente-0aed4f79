@@ -333,9 +333,9 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
-                    <Building2 className="w-4 h-4 text-amber-600 shrink-0" />
-                    <p className="text-amber-800">Nenhuma empresa selecionada no cabeçalho. Preencha os campos manualmente.</p>
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20 text-sm">
+                    <Building2 className="w-4 h-4 text-destructive shrink-0" />
+                    <p className="text-destructive">Nenhuma empresa selecionada no cabeçalho. Preencha os campos manualmente.</p>
                   </div>
                 )}
                 {/* Porte */}
