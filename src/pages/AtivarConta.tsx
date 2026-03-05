@@ -185,18 +185,18 @@ export default function AtivarConta() {
       <div className="min-h-screen relative flex items-center justify-center p-4">
         <div className="absolute inset-0 z-0">
           <img src={authBg} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[hsl(262,40%,10%/0.88)]" />
+          <div className="absolute inset-0 bg-primary/90" />
         </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center space-y-4"
         >
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="h-8 w-8 text-red-500" />
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="h-8 w-8 text-destructive" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Link Inválido</h2>
-          <p className="text-gray-600">{error}</p>
+          <h2 className="text-xl font-bold text-foreground">Link Inválido</h2>
+          <p className="text-muted-foreground">{error}</p>
           <Button variant="outline" onClick={() => navigate("/login")}>
             Ir para Login
           </Button>
