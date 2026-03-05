@@ -1928,8 +1928,38 @@ function DetalheCliente({
               {cliente.responsavel_seguramente && (
                 <p><span className="text-muted-foreground">Resp. Seguramente:</span> {cliente.responsavel_seguramente}</p>
               )}
+              {cliente.endereco && (
+                <p><span className="text-muted-foreground">Endereço:</span> {cliente.endereco}</p>
+              )}
+              {cliente.representante && (
+                <p><span className="text-muted-foreground">Representante:</span> {cliente.representante}</p>
+              )}
             </CardContent>
           </Card>
+
+          {/* Dados Comerciais (apenas pagante) */}
+          {cliente.tipo_cliente === 'pagante' && (
+            <Card className="border-primary/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-primary uppercase tracking-wide">💼 Dados Comerciais</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {cliente.plano && <p><span className="text-muted-foreground">Plano:</span> <strong>{cliente.plano}</strong></p>}
+                {cliente.valor_mensal && (
+                  <p><span className="text-muted-foreground">Mensalidade:</span> <strong>{cliente.valor_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p>
+                )}
+                {cliente.dia_vencimento && (
+                  <p><span className="text-muted-foreground">Vencimento:</span> dia {cliente.dia_vencimento}</p>
+                )}
+                {cliente.data_contrato && (
+                  <p><span className="text-muted-foreground">Contrato:</span> {format(new Date(cliente.data_contrato), 'dd/MM/yyyy')}</p>
+                )}
+                {cliente.data_vigencia_fim && (
+                  <p><span className="text-muted-foreground">Vigência até:</span> {format(new Date(cliente.data_vigencia_fim), 'dd/MM/yyyy')}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {cliente.observacoes && (
             <Card>
