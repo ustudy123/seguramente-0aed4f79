@@ -11174,8 +11174,16 @@ export type Database = {
       programa_validador_clientes: {
         Row: {
           aceita_beta: boolean | null
+          aceite_ip: string | null
+          aceite_termos_em: string | null
+          aceite_user_agent: string | null
+          aceite_versao_termos: string | null
+          activation_token: string | null
+          activation_token_expires_at: string | null
           cidade_foro: string | null
           cnpj: string | null
+          conta_ativada: boolean | null
+          conta_ativada_em: string | null
           created_at: string
           data_contrato: string | null
           data_fim_piloto: string | null
@@ -11203,12 +11211,21 @@ export type Database = {
           tenant_id: string | null
           tipo_cliente: string
           updated_at: string
+          user_id: string | null
           valor_mensal: number | null
         }
         Insert: {
           aceita_beta?: boolean | null
+          aceite_ip?: string | null
+          aceite_termos_em?: string | null
+          aceite_user_agent?: string | null
+          aceite_versao_termos?: string | null
+          activation_token?: string | null
+          activation_token_expires_at?: string | null
           cidade_foro?: string | null
           cnpj?: string | null
+          conta_ativada?: boolean | null
+          conta_ativada_em?: string | null
           created_at?: string
           data_contrato?: string | null
           data_fim_piloto?: string | null
@@ -11236,12 +11253,21 @@ export type Database = {
           tenant_id?: string | null
           tipo_cliente?: string
           updated_at?: string
+          user_id?: string | null
           valor_mensal?: number | null
         }
         Update: {
           aceita_beta?: boolean | null
+          aceite_ip?: string | null
+          aceite_termos_em?: string | null
+          aceite_user_agent?: string | null
+          aceite_versao_termos?: string | null
+          activation_token?: string | null
+          activation_token_expires_at?: string | null
           cidade_foro?: string | null
           cnpj?: string | null
+          conta_ativada?: boolean | null
+          conta_ativada_em?: string | null
           created_at?: string
           data_contrato?: string | null
           data_fim_piloto?: string | null
@@ -11269,6 +11295,7 @@ export type Database = {
           tenant_id?: string | null
           tipo_cliente?: string
           updated_at?: string
+          user_id?: string | null
           valor_mensal?: number | null
         }
         Relationships: [

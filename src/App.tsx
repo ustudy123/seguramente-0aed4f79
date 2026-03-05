@@ -57,6 +57,7 @@ import LandingPage from "./pages/LandingPage";
 import AssinaturaContrato from "./pages/AssinaturaContrato";
 import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
+import AtivarConta from "./pages/AtivarConta";
 import AnaliseJornada from "./pages/AnaliseJornada";
 
 // Cadastros Pages
@@ -96,6 +97,7 @@ const App = () => (
             <Route path="/contrato-assinatura/:token" element={<AssinaturaContrato />} />
             <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
             <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
+            <Route path="/ativar-conta" element={<AtivarConta />} />
             <Route path="/lp" element={<LandingPage />} />
 
           {/* Super Admin Routes */}
