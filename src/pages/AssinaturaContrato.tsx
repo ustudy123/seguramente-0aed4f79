@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 
 export default function AssinaturaContrato() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const sigRef = useRef<SignatureCanvas>(null);
   const [etapa, setEtapa] = useState<'leitura' | 'assinatura' | 'concluido'>('leitura');
   const [nome, setNome] = useState('');
