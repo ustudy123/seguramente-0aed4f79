@@ -1063,35 +1063,96 @@ function DetalheCliente({
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-1">
               {DOCS_CONFIG.map(({ tipo, label }) => {
                 const doc = documentos.find(d => d.tipo === tipo);
                 const status = doc?.status || 'pendente';
+                const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
+                const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
+
                 return (
-                  <div key={tipo} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-2">
-                      <DocStatusIcon status={status} />
-                      <span className="text-sm">{label}</span>
-                      {doc?.aceito_em && (
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(doc.aceito_em), 'dd/MM/yy', { locale: ptBR })}
-                        </span>
-                      )}
+                  <div key={tipo} className="py-2 border-b border-border last:border-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <DocStatusIcon status={status} />
+                        <span className="text-sm truncate">{label}</span>
+                        {doc?.aceito_em && (
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {format(new Date(doc.aceito_em), 'dd/MM/yy', { locale: ptBR })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* Botão gerar/copiar link */}
+                        {status !== 'aceito' && (
+                          linkAtivo ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => {
+                                const url = `${window.location.origin}/aceite-documento/${linkAtivo.token}`;
+                                navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
+                              }}
+                            >
+                              <Send className="w-3 h-3 mr-1" />
+                              Copiar link
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              disabled={isGerando}
+                              onClick={() => {
+                                setGerandoDoc(tipo);
+                                gerarDocLinkMutation.mutate(tipo);
+                              }}
+                            >
+                              {isGerando ? (
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />Gerando...</span>
+                              ) : (
+                                <><FileText className="w-3 h-3 mr-1" />Gerar</>
+                              )}
+                            </Button>
+                          )
+                        )}
+                        <Select
+                          value={status}
+                          onValueChange={(v) => atualizarDocMutation.mutate({ tipo, status: v as Documento['status'] })}
+                        >
+                          <SelectTrigger className="h-7 w-28 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pendente">Pendente</SelectItem>
+                            <SelectItem value="enviado">Enviado</SelectItem>
+                            <SelectItem value="aceito">Aceito</SelectItem>
+                            <SelectItem value="recusado">Recusado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <Select
-                      value={status}
-                      onValueChange={(v) => atualizarDocMutation.mutate({ tipo, status: v as Documento['status'] })}
-                    >
-                      <SelectTrigger className="h-7 w-28 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pendente">Pendente</SelectItem>
-                        <SelectItem value="enviado">Enviado</SelectItem>
-                        <SelectItem value="aceito">Aceito</SelectItem>
-                        <SelectItem value="recusado">Recusado</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Link ativo exibido abaixo */}
+                    {linkAtivo && status !== 'aceito' && (
+                      <div className="mt-1 ml-6 flex items-center gap-2">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          linkAtivo.status === 'aceito' ? 'bg-primary/10 text-primary' :
+                          linkAtivo.status === 'visualizado' ? 'bg-accent/50 text-accent-foreground' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {linkAtivo.status === 'aceito' ? '✓ Aceito' :
+                           linkAtivo.status === 'visualizado' ? '👁 Visualizado' :
+                           '⏳ Aguardando aceite'}
+                        </span>
+                        <button
+                          className="text-xs text-muted-foreground hover:text-foreground underline"
+                          onClick={() => window.open(`${window.location.origin}/aceite-documento/${linkAtivo.token}`, '_blank')}
+                        >
+                          Ver documento
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
