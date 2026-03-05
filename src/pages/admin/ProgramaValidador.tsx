@@ -2056,6 +2056,48 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
 
   const criarMutation = useMutation({
     mutationFn: async () => {
+      // 1. Criar tenant para essa empresa
+      const slugBase = form.nome_empresa
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 50);
+      const slugUnique = `${slugBase}-${Date.now().toString(36)}`;
+
+      const { data: tenant, error: tenantError } = await supabase
+        .from('tenants')
+        .insert({
+          nome: form.nome_empresa,
+          slug: slugUnique,
+          plano: form.tipo_cliente === 'pagante' ? 'pro' : 'free',
+          ativo: true,
+        })
+        .select('id')
+        .single();
+      if (tenantError) throw tenantError;
+
+      const tenantId = tenant.id;
+
+      // 2. Criar empresa_cadastro vinculada ao tenant
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresa_cadastro')
+        .insert({
+          tenant_id: tenantId,
+          razao_social: form.nome_empresa,
+          cnpj: form.cnpj || null,
+          endereco: form.endereco || null,
+          email: form.poc_email || null,
+          telefone: form.poc_telefone || null,
+          total_colaboradores: form.quantidade_colaboradores ? parseInt(form.quantidade_colaboradores) : 0,
+          tipo_pessoa: 'pj',
+          ativo: true,
+        } as any)
+        .select('id')
+        .single();
+      if (empresaError) throw empresaError;
+
+      // 3. Criar registro no programa_validador_clientes com links para tenant e empresa
       const { error } = await supabase.from('programa_validador_clientes').insert({
         nome_empresa: form.nome_empresa,
         cnpj: form.cnpj || null,
@@ -2080,14 +2122,16 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         plano: form.tipo_cliente === 'pagante' ? form.plano || null : null,
         data_contrato: form.tipo_cliente === 'pagante' ? form.data_contrato || null : null,
         data_vigencia_fim: form.tipo_cliente === 'pagante' ? form.data_vigencia_fim || null : null,
+        tenant_id: tenantId,
+        empresa_cadastro_id: empresa.id,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Cliente adicionado!');
+      toast.success('Cliente adicionado! Empresa criada automaticamente no módulo de Estrutura Organizacional.');
       onSuccess();
     },
-    onError: () => toast.error('Erro ao salvar cliente'),
+    onError: (err: any) => toast.error('Erro ao salvar cliente: ' + err.message),
   });
 
   const isPagante = form.tipo_cliente === 'pagante';
