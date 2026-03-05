@@ -776,6 +776,7 @@ function StepDiagnostico({ cliente, onConcluir }: { cliente: Cliente; onConcluir
 
 export default function OnboardingCliente() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const [stepAtivo, setStepAtivo] = useState<string | null>(null);
 
   // Buscar cliente pelo token de onboarding
