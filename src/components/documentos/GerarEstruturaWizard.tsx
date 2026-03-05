@@ -194,6 +194,49 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     atividadeEconomica: "",
   });
   const [cnaeSearch, setCnaeSearch] = useState("");
+  const { empresaAtiva } = useEmpresaAtiva();
+
+  // Pré-preencher com dados da empresa ativa ao abrir o wizard
+  useEffect(() => {
+    if (!open) return;
+
+    const empresa = empresaAtiva;
+    if (!empresa) return;
+
+    // Determinar porte com base em total_colaboradores
+    const n = empresa.total_colaboradores || 0;
+    let porte = "";
+    if (n <= 1) porte = "mei";
+    else if (n <= 9) porte = "micro";
+    else if (n <= 49) porte = "pequena";
+    else if (n <= 99) porte = "media";
+    else porte = "grande";
+
+    // Extrair primeiros 2 dígitos do CNAE
+    const cnaeRaw = empresa.cnae_principal || "";
+    const cnaeDigitos = cnaeRaw.replace(/\D/g, "").slice(0, 2).padStart(2, "0");
+    const grauRiscoEmpresa = empresa.grau_risco || GRAU_RISCO_NR04[cnaeDigitos] || 1;
+
+    // Encontrar a descrição do setor com base no CNAE
+    const divNum = parseInt(cnaeDigitos, 10);
+    const grupoMatch = CNAE_GRUPOS.find(g => {
+      const partes = g.divisao.split("-");
+      const min = parseInt(partes[0]);
+      const max = partes[1] ? parseInt(partes[1]) : min;
+      return divNum >= min && divNum <= max;
+    });
+
+    setParams(prev => ({
+      ...prev,
+      porte: porte || prev.porte || "",
+      cnae: cnaeDigitos || prev.cnae || "",
+      grauRisco: grauRiscoEmpresa,
+      numTrabalhadores: n > 0 ? n : (prev.numTrabalhadores || 0),
+      atividadeEconomica: empresa.cnae_descricao || grupoMatch?.desc || prev.atividadeEconomica || "",
+    }));
+
+    if (cnaeDigitos) setCnaeSearch("");
+  }, [open, empresaAtiva]);
 
   const grauRiscoAuto = calcGrauRisco(params.cnae || "");
   const grauRiscoFinal = params.grauRisco || grauRiscoAuto;
