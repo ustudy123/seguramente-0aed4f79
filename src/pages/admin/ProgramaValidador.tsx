@@ -325,6 +325,20 @@ export default function ProgramaValidador() {
     },
   });
 
+  const { data: contratos = [] } = useQuery({
+    queryKey: ['validador', 'contratos', clienteSelecionado?.id],
+    enabled: !!clienteSelecionado,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('programa_validador_contratos' as never)
+        .select('*')
+        .eq('cliente_id', clienteSelecionado!.id)
+        .order('created_at', { ascending: false }) as any;
+      if (error) throw error;
+      return (data || []) as Contrato[];
+    },
+  });
+
   // ── Mover fase (kanban) ──
   const moverFaseMutation = useMutation({
     mutationFn: async ({ id, fase }: { id: string; fase: Fase }) => {
