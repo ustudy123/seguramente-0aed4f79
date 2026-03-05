@@ -489,7 +489,7 @@ export default function OnboardingCliente() {
       if (!cliente?.id) return [];
       const { data } = await supabase
         .from('programa_validador_contratos' as never)
-        .select('id, token, status, assinado_em')
+        .select('id, token, status, assinado_em, html_assinado')
         .eq('cliente_id', cliente.id)
         .order('created_at', { ascending: false }) as { data: Contrato[] | null };
       return data || [];
