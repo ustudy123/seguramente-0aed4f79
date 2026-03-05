@@ -42,17 +42,20 @@ export function useErgonomia() {
 
   // Buscar riscos
   const { data: riscos = [], isLoading: isLoadingRiscos } = useQuery({
-    queryKey: ["ergonomia-riscos", tenantId],
+    queryKey: ["ergonomia-riscos", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("ergonomia_riscos")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
         .order("created_at", { ascending: false });
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as ErgonomiaRisco[];
     },
@@ -61,16 +64,19 @@ export function useErgonomia() {
 
   // Buscar ações
   const { data: acoes = [], isLoading: isLoadingAcoes } = useQuery({
-    queryKey: ["ergonomia-acoes", tenantId],
+    queryKey: ["ergonomia-acoes", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("ergonomia_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as ErgonomiaAcao[];
     },
