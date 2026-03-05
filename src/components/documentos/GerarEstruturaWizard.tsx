@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import {
   Dialog,
   DialogContent,
@@ -193,6 +194,49 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     atividadeEconomica: "",
   });
   const [cnaeSearch, setCnaeSearch] = useState("");
+  const { empresaAtiva } = useEmpresaAtiva();
+
+  // Pré-preencher com dados da empresa ativa ao abrir o wizard
+  useEffect(() => {
+    if (!open) return;
+
+    const empresa = empresaAtiva;
+    if (!empresa) return;
+
+    // Determinar porte com base em total_colaboradores
+    const n = empresa.total_colaboradores || 0;
+    let porte = "";
+    if (n <= 1) porte = "mei";
+    else if (n <= 9) porte = "micro";
+    else if (n <= 49) porte = "pequena";
+    else if (n <= 99) porte = "media";
+    else porte = "grande";
+
+    // Extrair primeiros 2 dígitos do CNAE
+    const cnaeRaw = empresa.cnae_principal || "";
+    const cnaeDigitos = cnaeRaw.replace(/\D/g, "").slice(0, 2).padStart(2, "0");
+    const grauRiscoEmpresa = empresa.grau_risco || GRAU_RISCO_NR04[cnaeDigitos] || 1;
+
+    // Encontrar a descrição do setor com base no CNAE
+    const divNum = parseInt(cnaeDigitos, 10);
+    const grupoMatch = CNAE_GRUPOS.find(g => {
+      const partes = g.divisao.split("-");
+      const min = parseInt(partes[0]);
+      const max = partes[1] ? parseInt(partes[1]) : min;
+      return divNum >= min && divNum <= max;
+    });
+
+    setParams(prev => ({
+      ...prev,
+      porte: porte || prev.porte || "",
+      cnae: cnaeDigitos || prev.cnae || "",
+      grauRisco: grauRiscoEmpresa,
+      numTrabalhadores: n > 0 ? n : (prev.numTrabalhadores || 0),
+      atividadeEconomica: empresa.cnae_descricao || grupoMatch?.desc || prev.atividadeEconomica || "",
+    }));
+
+    if (cnaeDigitos) setCnaeSearch("");
+  }, [open, empresaAtiva]);
 
   const grauRiscoAuto = calcGrauRisco(params.cnae || "");
   const grauRiscoFinal = params.grauRisco || grauRiscoAuto;
@@ -278,6 +322,22 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
             {/* STEP 0 — Empresa */}
             {step === 0 && (
               <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 py-2">
+                {/* Banner empresa ativa */}
+                {empresaAtiva ? (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+                    <Building2 className="w-4 h-4 text-primary shrink-0" />
+                    <div>
+                      <span className="font-medium">Empresa selecionada: </span>
+                      <span className="text-primary">{empresaAtiva.razao_social || empresaAtiva.nome_fantasia}</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">Os campos abaixo foram pré-preenchidos com os dados do cadastro desta empresa.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20 text-sm">
+                    <Building2 className="w-4 h-4 text-destructive shrink-0" />
+                    <p className="text-destructive">Nenhuma empresa selecionada no cabeçalho. Preencha os campos manualmente.</p>
+                  </div>
+                )}
                 {/* Porte */}
                 <div className="space-y-2">
                   <Label className="font-semibold">Porte da empresa *</Label>
