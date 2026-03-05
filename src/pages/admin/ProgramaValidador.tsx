@@ -1227,7 +1227,8 @@ function DetalheCliente({
   const contratoAssinado = contratos[0]?.status === 'assinado';
   const docAceitos = documentos.filter(d => d.status === 'aceito' && d.tipo !== 'contrato_programa_validador').length
     + (contratoAssinado ? 1 : 0);
-  const totalDocs = DOCS_CONFIG.length;
+  const docsConfig = cliente.tipo_cliente === 'pagante' ? DOCS_CONFIG_PAGANTE : DOCS_CONFIG_TESTER;
+  const totalDocs = docsConfig.length;
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
