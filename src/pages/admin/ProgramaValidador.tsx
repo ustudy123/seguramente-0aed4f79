@@ -142,221 +142,518 @@ const DOCS_CONFIG: { tipo: TipoDoc; label: string; descricao: string; itens?: st
   },
 ];
 
-// ─── Geradores de HTML dos documentos ────────────────────────────────────────
+// ─── CSS base ABNT ────────────────────────────────────────────────────────────
 
-function gerarHtmlDocumento(tipo: TipoDoc, cliente: Cliente): string {
-  const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  const empresa = cliente.nome_empresa;
-  const cnpj = cliente.cnpj || '___________________';
-  const representante = cliente.representante || cliente.poc_nome || '___________________';
-
-  const cabecalho = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>
-    body{font-family:Arial,sans-serif;font-size:13px;line-height:1.7;color:#222;max-width:800px;margin:0 auto;padding:40px 30px;}
-    h1{font-size:15px;text-align:center;text-transform:uppercase;font-weight:bold;margin-bottom:4px;}
-    h2{font-size:13px;text-align:center;text-transform:uppercase;margin-top:0;margin-bottom:30px;}
-    .clausula{margin-top:20px;} .clausula-titulo{font-weight:bold;text-transform:uppercase;}
-    .destaque{background:#f9f9f9;border:1px solid #ddd;padding:16px;border-radius:4px;margin:20px 0;}
-  </style></head><body>`;
-  const rodape = `<p style="margin-top:30px;">Data: ${dataGeracao}</p>
-    <div style="display:flex;gap:60px;margin-top:40px;">
-      <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;"><p><strong>${empresa}</strong></p><p>${representante}</p></div>
-      <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;"><p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p></div>
-    </div></body></html>`;
-
-  const conteudos: Record<TipoDoc, string> = {
-    contrato_piloto: ``,  // usa gerarHtmlContrato
-    dpa_lgpd: `<h1>DATA PROCESSING AGREEMENT — ANEXO LGPD</h1>
-      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
-      <div class="destaque"><p><strong>CONTROLADOR:</strong> ${empresa}, CNPJ ${cnpj}, representada por ${representante}.</p>
-      <p><strong>OPERADOR:</strong> SEGURAMENTE TECNOLOGIA LTDA.</p></div>
-      <div class="clausula"><p class="clausula-titulo">1. OBJETO</p>
-      <p>Este Acordo regula o tratamento de dados pessoais realizado pela SEGURAMENTE na qualidade de operadora, conforme instruções do CONTROLADOR, no âmbito da Lei Geral de Proteção de Dados (Lei 13.709/2018 — LGPD).</p></div>
-      <div class="clausula"><p class="clausula-titulo">2. DADOS TRATADOS</p>
-      <p>Dados de colaboradores, como nome, CPF, dados de saúde ocupacional e documentos trabalhistas inseridos pelo CONTROLADOR na plataforma Seguramente.</p></div>
-      <div class="clausula"><p class="clausula-titulo">3. FINALIDADE</p>
-      <p>Gestão de saúde e segurança do trabalho, organização de dados empresariais e processos internos de RH.</p></div>
-      <div class="clausula"><p class="clausula-titulo">4. SEGURANÇA</p>
-      <p>A SEGURAMENTE adota medidas técnicas adequadas de segurança, incluindo criptografia, controle de acesso e backups regulares.</p></div>
-      <div class="clausula"><p class="clausula-titulo">5. SUBOPERADORES</p>
-      <p>A SEGURAMENTE utiliza a infraestrutura Supabase/AWS para armazenamento, com cláusulas contratuais de proteção de dados.</p></div>
-      <div class="clausula"><p class="clausula-titulo">6. DIREITOS DO TITULAR</p>
-      <p>O CONTROLADOR é responsável por atender às solicitações dos titulares de dados. A SEGURAMENTE cooperará conforme necessário.</p></div>`,
-
-    anexo_operacional: `<h1>ANEXO OPERACIONAL</h1>
-      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
-      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p><p><strong>RESPONSÁVEL:</strong> ${representante}</p></div>
-      <div class="clausula"><p class="clausula-titulo">1. ACESSO AO SISTEMA</p>
-      <p>O acesso será concedido mediante credenciais individuais. O número máximo de usuários ativos durante o período beta será definido conjuntamente.</p></div>
-      <div class="clausula"><p class="clausula-titulo">2. SUPORTE TÉCNICO</p>
-      <p>O suporte será prestado por e-mail e WhatsApp em horário comercial (seg–sex, 9h–18h). SLA de resposta: até 24h úteis.</p></div>
-      <div class="clausula"><p class="clausula-titulo">3. FEEDBACKS</p>
-      <p>A EMPRESA VALIDADORA se compromete a participar de reuniões mensais de feedback e responder pesquisas enviadas pela SEGURAMENTE.</p></div>
-      <div class="clausula"><p class="clausula-titulo">4. MÓDULOS DISPONÍVEIS</p>
-      <p>Saúde & SST, Colaboradores, Ponto, Férias, Documentos, Treinamentos e funcionalidades em versão beta, conforme disponibilizadas progressivamente.</p></div>
-      <div class="clausula"><p class="clausula-titulo">5. LIMITAÇÕES DO PERÍODO BETA</p>
-      <p>Durante o programa validador, algumas funcionalidades podem estar em desenvolvimento. A SEGURAMENTE comunicará mudanças relevantes com antecedência mínima de 48h.</p></div>`,
-
-    faq_seguranca: `<h1>FAQ DE SEGURANÇA DA INFORMAÇÃO</h1>
-      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
-      <p style="text-align:center;margin-bottom:30px;">Ciência e aceite — ${empresa}</p>
-      <div class="clausula"><p class="clausula-titulo">1. Como os dados são armazenados?</p>
-      <p>Todos os dados são armazenados em servidores em nuvem com criptografia em repouso e em trânsito (TLS 1.2+). Utilizamos infraestrutura da Supabase/AWS.</p></div>
-      <div class="clausula"><p class="clausula-titulo">2. Quem tem acesso aos dados?</p>
-      <p>Apenas colaboradores da SEGURAMENTE com função técnica específica, mediante autenticação. Nenhum dado é compartilhado com terceiros sem consentimento.</p></div>
-      <div class="clausula"><p class="clausula-titulo">3. Como são gerenciadas as senhas?</p>
-      <p>Senhas são armazenadas com hash criptográfico (bcrypt). Nunca são armazenadas em texto simples. Recomendamos autenticação de dois fatores.</p></div>
-      <div class="clausula"><p class="clausula-titulo">4. O que acontece em caso de incidente?</p>
-      <p>A SEGURAMENTE notificará o cliente em até 72h após identificação de qualquer incidente que possa afetar dados pessoais, conforme exigido pela LGPD.</p></div>
-      <div class="clausula"><p class="clausula-titulo">5. Como são feitos os backups?</p>
-      <p>Backups automáticos diários com retenção de 30 dias. Possibilidade de restauração pontual mediante solicitação.</p></div>
-      <p style="margin-top:30px;"><strong>Ao aceitar este documento, ${representante} declara ter lido e compreendido as práticas de segurança da SEGURAMENTE.</strong></p>`,
-
-    resumo_beta: `<h1>RESUMO DO PROGRAMA BETA VALIDADOR</h1>
-      <h2>SEGURAMENTE PLATAFORMA DE GESTÃO</h2>
-      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa}</p><p><strong>RESPONSÁVEL:</strong> ${representante}</p><p><strong>DATA:</strong> ${dataGeracao}</p></div>
-      <div class="clausula"><p class="clausula-titulo">O QUE É O PROGRAMA VALIDADOR?</p>
-      <p>O Programa Validador é uma iniciativa da SEGURAMENTE para validar a plataforma com empresas parceiras antes do lançamento oficial. As empresas participantes testam funcionalidades reais e fornecem feedback estratégico.</p></div>
-      <div class="clausula"><p class="clausula-titulo">BENEFÍCIOS PARA A EMPRESA VALIDADORA</p>
-      <ul><li>Acesso gratuito por 6 meses</li><li>50% de desconto na assinatura após o beta</li><li>Atendimento prioritário</li><li>Influência direta no roadmap do produto</li></ul></div>
-      <div class="clausula"><p class="clausula-titulo">COMPROMETIMENTOS</p>
-      <ul><li>Utilizar a plataforma ativamente</li><li>Participar de reuniões mensais de feedback</li><li>Responder pesquisas de satisfação</li></ul></div>
-      <div class="clausula"><p class="clausula-titulo">PRÓXIMOS PASSOS</p>
-      <p>Após este aceite, você receberá as credenciais de acesso e será contatado pelo seu responsável na SEGURAMENTE para o kickoff.</p></div>`,
-
-    politica_privacidade: `<h1>POLÍTICA DE PRIVACIDADE</h1>
-      <h2>PLATAFORMA SEGURAMENTE — CIÊNCIA DO CLIENTE</h2>
-      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p></div>
-      <div class="clausula"><p class="clausula-titulo">1. COLETA DE DADOS</p>
-      <p>A SEGURAMENTE coleta dados inseridos pelos usuários da plataforma, como dados de colaboradores, documentos e informações de saúde ocupacional. Também coletamos dados de uso (logs de acesso, ações realizadas).</p></div>
-      <div class="clausula"><p class="clausula-titulo">2. USO DOS DADOS</p>
-      <p>Os dados são utilizados exclusivamente para prestação dos serviços contratados. Não realizamos venda ou compartilhamento de dados com terceiros para fins comerciais.</p></div>
-      <div class="clausula"><p class="clausula-titulo">3. RETENÇÃO</p>
-      <p>Os dados são mantidos pelo período contratual e por até 5 anos após o encerramento, conforme exigências legais trabalhistas brasileiras.</p></div>
-      <div class="clausula"><p class="clausula-titulo">4. DIREITOS</p>
-      <p>Você tem direito de acesso, correção, portabilidade e exclusão dos dados. Solicitações podem ser enviadas para privacidade@seguramente.app.</p></div>
-      <div class="clausula"><p class="clausula-titulo">5. COOKIES</p>
-      <p>Utilizamos cookies essenciais para funcionamento da plataforma e cookies analíticos para melhoria do produto (Google Analytics com anonimização de IP).</p></div>`,
-
-    termos_uso: `<h1>TERMOS DE USO DA PLATAFORMA</h1>
-      <h2>SEGURAMENTE — ACEITE DO CLIENTE</h2>
-      <div class="destaque"><p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p><p><strong>RESPONSÁVEL:</strong> ${representante}</p></div>
-      <div class="clausula"><p class="clausula-titulo">1. ACEITAÇÃO</p>
-      <p>Ao utilizar a plataforma SEGURAMENTE, você concorda com estes Termos de Uso. Caso não concorde, não utilize a plataforma.</p></div>
-      <div class="clausula"><p class="clausula-titulo">2. USO PERMITIDO</p>
-      <p>A plataforma deve ser utilizada exclusivamente para fins legítimos de gestão empresarial. É proibido o uso para fins ilícitos, difamação ou violação de direitos de terceiros.</p></div>
-      <div class="clausula"><p class="clausula-titulo">3. RESPONSABILIDADES DO USUÁRIO</p>
-      <p>O usuário é responsável pela veracidade dos dados inseridos e pela segurança das suas credenciais de acesso.</p></div>
-      <div class="clausula"><p class="clausula-titulo">4. PROPRIEDADE INTELECTUAL</p>
-      <p>Todo o conteúdo, código e design da plataforma são propriedade da SEGURAMENTE. É proibida a reprodução sem autorização.</p></div>
-      <div class="clausula"><p class="clausula-titulo">5. DISPONIBILIDADE</p>
-      <p>A SEGURAMENTE se esforça para manter a plataforma disponível 24/7, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência.</p></div>
-      <div class="clausula"><p class="clausula-titulo">6. MODIFICAÇÕES</p>
-      <p>Estes termos podem ser atualizados. Alterações significativas serão comunicadas com 30 dias de antecedência.</p></div>`,
-
-    ata_kickoff: `<h1>ATA DE REUNIÃO DE KICKOFF</h1>
-      <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
-      <div class="destaque">
-        <p><strong>DATA:</strong> ${dataGeracao}</p>
-        <p><strong>EMPRESA:</strong> ${empresa} — CNPJ ${cnpj}</p>
-        <p><strong>PARTICIPANTE DA EMPRESA:</strong> ${representante}</p>
-        <p><strong>RESPONSÁVEL SEGURAMENTE:</strong> ___________________</p>
-      </div>
-      <div class="clausula"><p class="clausula-titulo">1. OBJETIVO DA REUNIÃO</p>
-      <p>Apresentação da plataforma, alinhamento de expectativas, definição de cronograma e início formal do Programa Validador.</p></div>
-      <div class="clausula"><p class="clausula-titulo">2. MÓDULOS APRESENTADOS</p>
-      <p>☐ Saúde & SST &nbsp; ☐ Colaboradores &nbsp; ☐ Ponto &nbsp; ☐ Férias &nbsp; ☐ Documentos &nbsp; ☐ Treinamentos</p></div>
-      <div class="clausula"><p class="clausula-titulo">3. CRONOGRAMA ACORDADO</p>
-      <p>Início: _______________ &nbsp; Fim previsto: _______________ &nbsp; Reunião de acompanhamento: _______________</p></div>
-      <div class="clausula"><p class="clausula-titulo">4. PRÓXIMOS PASSOS</p>
-      <p>☐ Envio de credenciais &nbsp; ☐ Cadastro inicial de dados &nbsp; ☐ Treinamento da equipe &nbsp; ☐ Acompanhamento semana 2</p></div>
-      <div class="clausula"><p class="clausula-titulo">5. OBSERVAÇÕES</p>
-      <p style="min-height:60px;">___________________________________________________________________________________</p></div>`,
-  };
-
-  // contrato_piloto usa o gerador principal
-  if (tipo === 'contrato_piloto') {
-    return gerarHtmlContrato(cliente);
+const ABNT_CSS = `
+  @page { margin: 3cm 2.5cm 2cm 3cm; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 40px;
+    text-align: justify;
   }
+  h1 {
+    font-size: 14pt;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+  }
+  h2 {
+    font-size: 12pt;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: normal;
+    margin: 0 0 32px 0;
+  }
+  h3 {
+    font-size: 12pt;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin: 40px 0 8px 0;
+    border-top: 2px solid #000;
+    padding-top: 12px;
+  }
+  .partes {
+    border: 1px solid #555;
+    padding: 16px 20px;
+    margin: 24px 0;
+    background: #fafafa;
+  }
+  .clausula { margin-top: 24px; }
+  .clausula-titulo {
+    font-weight: bold;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin-bottom: 4px; }
+  .page-break { page-break-before: always; border-top: 1px dashed #ccc; margin-top: 40px; padding-top: 24px; }
+  .assinaturas {
+    display: flex;
+    gap: 60px;
+    margin-top: 60px;
+  }
+  .assinatura-bloco {
+    flex: 1;
+    border-top: 1px solid #000;
+    padding-top: 8px;
+    text-align: center;
+  }
+`;
 
-  return cabecalho + conteudos[tipo] + rodape;
-}
-
-// ─── Gerador de HTML do contrato ─────────────────────────────────────────────
+// ─── Gerador do contrato completo com todos os anexos ─────────────────────────
 
 function gerarHtmlContrato(cliente: Cliente): string {
   const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const empresa = cliente.nome_empresa;
+  const cnpj = cliente.cnpj || '___________________';
+  const rep = cliente.representante || cliente.poc_nome || '___________________';
+  const foro = cliente.cidade_foro || 'São Paulo';
+
   return `<!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8"><style>
-  body { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.7; color: #222; max-width: 800px; margin: 0 auto; padding: 40px 30px; }
-  h1 { font-size: 15px; text-align: center; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
-  h2 { font-size: 13px; text-align: center; text-transform: uppercase; margin-top: 0; margin-bottom: 30px; }
-  .clausula { margin-top: 20px; }
-  .clausula-titulo { font-weight: bold; text-transform: uppercase; }
-  .partes { background: #f9f9f9; border: 1px solid #ddd; padding: 16px; border-radius: 4px; margin: 20px 0; }
-</style></head>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${ABNT_CSS}</style>
+</head>
 <body>
+
 <h1>CONTRATO DE PARTICIPAÇÃO NO PROGRAMA VALIDADOR</h1>
-<h2>E USO DA PLATAFORMA SEGURAMENTE</h2>
-<p>Pelo presente instrumento particular, de um lado:</p>
+<h1>E USO DA PLATAFORMA SEGURAMENTE</h1>
+<p style="text-align:center;margin-top:0;font-size:11pt;color:#555;">Instrumento Particular de Adesão ao Programa Validador</p>
+
+<p>Pelo presente instrumento particular, celebrado entre as partes abaixo qualificadas:</p>
+
 <div class="partes">
-  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, doravante denominada <strong>SEGURAMENTE</strong>.</p>
-  <p>E de outro lado:</p>
-  <p><strong>${cliente.nome_empresa}</strong>${cliente.cnpj ? `, inscrita no CNPJ nº ${cliente.cnpj}` : ''}${cliente.endereco ? `, com sede em ${cliente.endereco}` : ''}${cliente.representante ? `, neste ato representada por <strong>${cliente.representante}</strong>` : ''}, doravante denominada <strong>EMPRESA VALIDADORA</strong>.</p>
+  <p><strong>CONTRATANTE (EMPRESA VALIDADORA):</strong><br>
+  <strong>${empresa}</strong>, inscrita no CNPJ nº ${cnpj}${cliente.endereco ? `, com sede em ${cliente.endereco}` : ''}, neste ato representada por <strong>${rep}</strong>, doravante denominada simplesmente <strong>EMPRESA VALIDADORA</strong>.</p>
+  <p style="margin-top:12px;margin-bottom:0;"><strong>CONTRATADA:</strong><br>
+  <strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, doravante denominada simplesmente <strong>SEGURAMENTE</strong>.</p>
 </div>
-<p>As partes resolvem firmar o presente contrato, que se regerá pelas cláusulas abaixo.</p>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 1 — OBJETO</p>
-<p>O presente contrato tem por objeto a participação da EMPRESA VALIDADORA no Programa Validador da Plataforma Seguramente, permitindo o acesso e utilização da plataforma em fase de validação (Beta).</p>
-<p>A plataforma Seguramente é um sistema digital destinado ao apoio à gestão organizacional, incluindo funcionalidades relacionadas à:</p>
-<ul><li>gestão de saúde e segurança do trabalho</li><li>organização de dados empresariais</li><li>indicadores organizacionais</li><li>avaliações organizacionais</li><li>gestão de processos internos.</li></ul></div>
+<p>As partes acima identificadas têm, entre si, justo e contratado o presente instrumento, que se regerá pelas cláusulas e condições a seguir estipuladas.</p>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 2 — NATUREZA DO PROGRAMA</p>
-<p>A EMPRESA VALIDADORA reconhece que:</p>
-<ul><li>o Seguramente encontra-se em fase de desenvolvimento e validação (Beta)</li><li>o sistema poderá sofrer atualizações, ajustes e melhorias</li><li>eventuais falhas ou instabilidades podem ocorrer durante o período de validação.</li></ul></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 1 – OBJETO</span>
+  <p>O presente contrato tem por objeto a participação da EMPRESA VALIDADORA no Programa Validador da Plataforma Seguramente, permitindo o acesso e utilização da plataforma em fase de validação (Beta), nos termos e condições estabelecidos neste instrumento e em seus anexos.</p>
+  <p>A plataforma Seguramente é um sistema digital destinado ao apoio à gestão organizacional, incluindo funcionalidades relacionadas a:</p>
+  <ol type="I">
+    <li>gestão de saúde e segurança do trabalho;</li>
+    <li>organização de dados empresariais;</li>
+    <li>indicadores organizacionais;</li>
+    <li>avaliações organizacionais;</li>
+    <li>gestão de processos internos.</li>
+  </ol>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 3 — PRAZO</p>
-<p>O Programa Validador terá duração de 6 meses, contados a partir da liberação do acesso ao sistema.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 2 – NATUREZA DO PROGRAMA</span>
+  <p>A EMPRESA VALIDADORA declara ter pleno conhecimento e reconhece expressamente que:</p>
+  <ol type="I">
+    <li>o Seguramente encontra-se em fase de desenvolvimento e validação (Beta), sujeito a alterações e aprimoramentos;</li>
+    <li>o sistema poderá sofrer atualizações, ajustes e melhorias ao longo do período contratual;</li>
+    <li>eventuais falhas ou instabilidades técnicas podem ocorrer durante o período de validação, sem que isso configure inadimplemento por parte da SEGURAMENTE.</li>
+  </ol>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 4 — CONDIÇÕES COMERCIAIS</p>
-<p>Durante o período do Programa Validador: o acesso ao sistema será gratuito. Após o período de validação, a EMPRESA VALIDADORA terá direito a 50% de desconto no valor da assinatura da plataforma, conforme plano contratado.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 3 – PRAZO</span>
+  <p>O Programa Validador terá duração de <strong>6 (seis) meses</strong>, contados a partir da data de liberação do acesso ao sistema para a EMPRESA VALIDADORA, podendo ser prorrogado por acordo entre as partes.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 5 — CONTRAPARTIDA DA EMPRESA</p>
-<p>A EMPRESA VALIDADORA compromete-se a: utilizar efetivamente a plataforma; fornecer feedbacks; colaborar com a evolução do sistema.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 4 – CONDIÇÕES COMERCIAIS</span>
+  <p>Durante o período do Programa Validador, o acesso à plataforma será concedido à EMPRESA VALIDADORA de forma <strong>gratuita</strong>.</p>
+  <p>Ao término do programa, a EMPRESA VALIDADORA terá direito a <strong>50% (cinquenta por cento) de desconto</strong> sobre o valor da assinatura mensal da plataforma, conforme plano a ser contratado, pelo período mínimo de 12 (doze) meses.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 6 — LIMITAÇÃO DE RESPONSABILIDADE</p>
-<p>A plataforma Seguramente constitui ferramenta de apoio à gestão e não substitui consultorias técnicas, jurídicas ou contábeis. A SEGURAMENTE não se responsabiliza por decisões tomadas com base nas informações apresentadas pelo sistema.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 5 – CONTRAPARTIDAS DA EMPRESA VALIDADORA</span>
+  <p>Em contrapartida ao acesso gratuito à plataforma, a EMPRESA VALIDADORA se compromete expressamente a:</p>
+  <ol type="I">
+    <li>utilizar efetivamente a plataforma durante o período do programa;</li>
+    <li>fornecer feedbacks estruturados sobre funcionalidades, usabilidade e desempenho;</li>
+    <li>participar de reuniões periódicas de acompanhamento agendadas pela SEGURAMENTE;</li>
+    <li>responder pesquisas de satisfação e avaliação;</li>
+    <li>colaborar com a evolução e melhoria contínua do sistema.</li>
+  </ol>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 7 — SEGURANÇA DA INFORMAÇÃO</p>
-<p>A SEGURAMENTE adota medidas técnicas e organizacionais para proteção das informações armazenadas no sistema. Os dados são armazenados em infraestrutura de computação em nuvem segura.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 6 – LIMITAÇÃO DE RESPONSABILIDADE</span>
+  <p>A plataforma Seguramente constitui ferramenta de apoio à gestão organizacional e não substitui consultorias técnicas, jurídicas, contábeis ou de saúde especializadas.</p>
+  <p>A SEGURAMENTE não se responsabiliza por quaisquer decisões tomadas pela EMPRESA VALIDADORA com base nas informações apresentadas pelo sistema, cabendo ao usuário a devida diligência na análise e interpretação dos dados.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 8 — PROTEÇÃO DE DADOS (LGPD)</p>
-<p>A EMPRESA VALIDADORA atua como controladora dos dados, enquanto a SEGURAMENTE atua como operadora, conforme a Lei Geral de Proteção de Dados. Os dados inseridos no sistema pertencem à EMPRESA VALIDADORA.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 7 – SEGURANÇA DA INFORMAÇÃO</span>
+  <p>A SEGURAMENTE adota medidas técnicas e organizacionais adequadas para proteção das informações armazenadas no sistema, incluindo criptografia de dados em repouso e em trânsito (TLS 1.2+), controle de acesso por autenticação, backups automáticos diários e monitoramento de segurança.</p>
+  <p>Os dados são armazenados em infraestrutura de computação em nuvem segura (Supabase/AWS), localizada em servidores certificados.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 9 — CONFIDENCIALIDADE</p>
-<p>As partes comprometem-se a manter sigilo sobre todas as informações compartilhadas no âmbito deste contrato.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 8 – PROTEÇÃO DE DADOS PESSOAIS (LGPD)</span>
+  <p>As partes reconhecem e declaram que o tratamento de dados pessoais realizado no âmbito deste contrato observará rigorosamente as disposições da <strong>Lei n.º 13.709/2018 (Lei Geral de Proteção de Dados — LGPD)</strong>.</p>
+  <p>A EMPRESA VALIDADORA atua como <strong>controladora</strong> dos dados inseridos na plataforma, sendo responsável pelas decisões sobre o tratamento desses dados, incluindo os de seus colaboradores.</p>
+  <p>A SEGURAMENTE atua como <strong>operadora</strong>, processando os dados exclusivamente conforme as instruções da EMPRESA VALIDADORA e nos limites estabelecidos neste contrato e no Acordo de Tratamento de Dados (DPA), constante do Anexo III.</p>
+  <p>Os dados inseridos no sistema são e permanecerão de propriedade exclusiva da EMPRESA VALIDADORA.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 10 — PROPRIEDADE INTELECTUAL</p>
-<p>A plataforma Seguramente constitui propriedade intelectual da SEGURAMENTE.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 9 – CONFIDENCIALIDADE</span>
+  <p>As partes comprometem-se reciprocamente a manter sigilo absoluto sobre todas as informações, dados, documentos e know-how compartilhados no âmbito deste contrato, durante sua vigência e por 5 (cinco) anos após seu término, salvo nas hipóteses legalmente exigidas de divulgação.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 11 — ENCERRAMENTO</p>
-<p>A EMPRESA VALIDADORA poderá solicitar o encerramento do uso do sistema a qualquer momento.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 10 – PROPRIEDADE INTELECTUAL</span>
+  <p>A plataforma Seguramente, incluindo seu código-fonte, design, interfaces, funcionalidades, marca e demais elementos, constitui propriedade intelectual exclusiva da SEGURAMENTE, protegida pela legislação brasileira de propriedade intelectual.</p>
+  <p>O presente contrato não transfere à EMPRESA VALIDADORA qualquer direito de propriedade sobre a plataforma, sendo-lhe concedida apenas licença de uso não exclusiva e intransferível pelo período contratual.</p>
+</div>
 
-<div class="clausula"><p class="clausula-titulo">CLÁUSULA 12 — FORO</p>
-<p>Fica eleito o foro da comarca de ${cliente.cidade_foro || 'São Paulo'}, para dirimir eventuais controvérsias.</p></div>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 11 – DOCUMENTOS INTEGRANTES</span>
+  <p>Fazem parte integrante deste contrato, para todos os fins legais, os seguintes anexos incorporados ao presente instrumento:</p>
+  <ul>
+    <li><strong>Anexo I</strong> — Termos de Uso da Plataforma Seguramente;</li>
+    <li><strong>Anexo II</strong> — Política de Privacidade e Proteção de Dados;</li>
+    <li><strong>Anexo III</strong> — Acordo de Tratamento de Dados (DPA) — LGPD;</li>
+    <li><strong>Anexo IV</strong> — Anexo Operacional da Plataforma;</li>
+    <li><strong>Anexo V</strong> — Regras do Programa Validador;</li>
+    <li><strong>Anexo VI</strong> — FAQ de Segurança e Boas Práticas.</li>
+  </ul>
+  <p>A assinatura do presente contrato implica concordância integral com todos os anexos acima listados.</p>
+</div>
 
-<p style="margin-top:30px;">Data de geração do contrato: ${dataGeracao}</p>
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 12 – RESCISÃO E ENCERRAMENTO</span>
+  <p>O presente contrato poderá ser rescindido por qualquer das partes, mediante notificação por escrito com antecedência mínima de 15 (quinze) dias, sem ônus para nenhuma das partes.</p>
+  <p>Em caso de rescisão, a EMPRESA VALIDADORA terá o prazo de 30 (trinta) dias para exportar seus dados da plataforma, após o qual poderão ser eliminados pela SEGURAMENTE.</p>
+</div>
 
-<div style="display:flex;gap:60px;margin-top:40px;">
-  <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;">
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 13 – FORO</span>
+  <p>Fica eleito o foro da comarca de <strong>${foro}</strong>, Estado de São Paulo, para dirimir eventuais dúvidas, litígios ou controvérsias decorrentes do presente contrato, com renúncia expressa de qualquer outro, por mais privilegiado que seja.</p>
+</div>
+
+<p style="margin-top:40px;">E, por estarem assim justas e contratadas, as partes assinam o presente instrumento, em via eletrônica, na data de sua assinatura digital.</p>
+<p style="margin-top:8px;">Data de geração do contrato: <strong>${dataGeracao}</strong></p>
+
+<div class="assinaturas">
+  <div class="assinatura-bloco">
     <p><strong>EMPRESA VALIDADORA</strong></p>
-    <p>${cliente.representante || cliente.poc_nome || '___________________'}</p>
+    <p>${rep}</p>
+    <p style="font-size:10pt;color:#555;">${empresa}<br>CNPJ: ${cnpj}</p>
   </div>
-  <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;">
+  <div class="assinatura-bloco">
     <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p>Representante Legal</p>
   </div>
 </div>
-</body></html>`;
+
+<!-- ═══════════════════ ANEXO I ═══════════════════ -->
+<div class="page-break">
+  <h3>ANEXO I — TERMOS DE USO DA PLATAFORMA SEGURAMENTE</h3>
+  <p style="text-align:center;font-size:11pt;color:#555;">Integrante do Contrato de Participação no Programa Validador</p>
+
+  <div class="clausula">
+    <span class="clausula-titulo">1. ACEITAÇÃO DOS TERMOS</span>
+    <p>Ao utilizar a plataforma Seguramente, o usuário e a EMPRESA VALIDADORA declaram ter lido, compreendido e concordado com os presentes Termos de Uso em sua integralidade. O uso da plataforma implica aceitação automática e irretratável destes termos.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">2. USO PERMITIDO</span>
+    <p>A plataforma deve ser utilizada exclusivamente para fins legítimos de gestão empresarial, conforme seu objeto. É expressamente vedado o uso para fins ilícitos, difamatórios, fraudulentos ou que violem direitos de terceiros, a legislação brasileira ou normas regulatórias aplicáveis.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">3. RESPONSABILIDADES DO USUÁRIO</span>
+    <p>O usuário é integralmente responsável pela veracidade, exatidão e integridade das informações inseridas na plataforma, bem como pela guarda e sigilo de suas credenciais de acesso. Qualquer atividade realizada mediante as credenciais do usuário será de sua exclusiva responsabilidade.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">4. PROPRIEDADE INTELECTUAL</span>
+    <p>Todo o conteúdo, código-fonte, design, interfaces, logotipos e funcionalidades da plataforma são protegidos pelas leis de propriedade intelectual e são de titularidade exclusiva da SEGURAMENTE. É proibida qualquer reprodução, cópia ou redistribuição sem autorização prévia e expressa por escrito.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">5. DISPONIBILIDADE DO SERVIÇO</span>
+    <p>A SEGURAMENTE envidará seus melhores esforços para manter a plataforma disponível em regime 24 (vinte e quatro) horas por dia, 7 (sete) dias por semana, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência mínima de 48 horas.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">6. MODIFICAÇÕES DOS TERMOS</span>
+    <p>Os presentes termos poderão ser atualizados a qualquer tempo. Alterações significativas serão comunicadas com antecedência mínima de 30 (trinta) dias. O uso continuado da plataforma após comunicação de alterações implicará aceitação dos novos termos.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ ANEXO II ═══════════════════ -->
+<div class="page-break">
+  <h3>ANEXO II — POLÍTICA DE PRIVACIDADE E PROTEÇÃO DE DADOS</h3>
+  <p style="text-align:center;font-size:11pt;color:#555;">Integrante do Contrato de Participação no Programa Validador</p>
+
+  <div class="clausula">
+    <span class="clausula-titulo">1. COLETA E TIPOS DE DADOS</span>
+    <p>A SEGURAMENTE coleta e processa dados inseridos pelos usuários na plataforma, incluindo: dados de colaboradores (nome, CPF, data de nascimento, cargo, dados trabalhistas), dados de saúde ocupacional, documentos empresariais e dados de uso da plataforma (logs de acesso, ações realizadas, endereço IP).</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">2. FINALIDADE DO TRATAMENTO</span>
+    <p>Os dados são tratados exclusivamente para viabilizar a prestação dos serviços contratados, incluindo gestão de saúde e segurança do trabalho, administração de pessoal e demais funcionalidades da plataforma. Não comercializamos dados pessoais nem os compartilhamos com terceiros para fins publicitários ou comerciais.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">3. PRAZO DE RETENÇÃO</span>
+    <p>Os dados são mantidos pelo período de vigência contratual e por até 5 (cinco) anos após o encerramento do contrato, em atendimento às obrigações legais trabalhistas e tributárias brasileiras. Após esse prazo, serão eliminados de forma segura.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">4. DIREITOS DOS TITULARES</span>
+    <p>Os titulares de dados pessoais têm direito a: acesso aos seus dados, correção de dados inexatos, portabilidade, eliminação, informação sobre compartilhamentos e revogação do consentimento. Solicitações devem ser encaminhadas para <strong>privacidade@seguramente.app.br</strong>.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">5. COOKIES E RASTREAMENTO</span>
+    <p>Utilizamos cookies essenciais para o funcionamento da plataforma e cookies analíticos para melhoria do produto. O uso de ferramentas analíticas é realizado com anonimização de IP, em conformidade com a LGPD.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">6. SEGURANÇA E INCIDENTES</span>
+    <p>Em caso de incidente de segurança que possa afetar dados pessoais, a SEGURAMENTE notificará a EMPRESA VALIDADORA e, quando exigido por lei, a Autoridade Nacional de Proteção de Dados (ANPD), no prazo de 72 (setenta e duas) horas após ciência do evento.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ ANEXO III ═══════════════════ -->
+<div class="page-break">
+  <h3>ANEXO III — ACORDO DE TRATAMENTO DE DADOS (DPA)</h3>
+  <p style="text-align:center;font-size:11pt;color:#555;">Data Processing Agreement — Integrante do Contrato de Participação no Programa Validador</p>
+
+  <div class="partes" style="margin-top:20px;">
+    <p><strong>CONTROLADOR:</strong> ${empresa}, CNPJ ${cnpj}, representada por ${rep}.</p>
+    <p><strong>OPERADOR:</strong> SEGURAMENTE TECNOLOGIA LTDA.</p>
+  </div>
+
+  <div class="clausula">
+    <span class="clausula-titulo">1. OBJETO DO ACORDO</span>
+    <p>O presente Acordo de Tratamento de Dados regula o tratamento de dados pessoais realizado pela SEGURAMENTE na qualidade de operadora, conforme instruções do CONTROLADOR, no âmbito da Lei Geral de Proteção de Dados (Lei n.º 13.709/2018 — LGPD) e do Regulamento Geral de Proteção de Dados da União Europeia (GDPR), quando aplicável.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">2. CATEGORIAS DE DADOS TRATADOS</span>
+    <p>O OPERADOR tratará, em nome do CONTROLADOR, as seguintes categorias de dados pessoais: dados identificadores de colaboradores (nome, CPF, RG, data de nascimento), dados profissionais (cargo, departamento, remuneração), dados de saúde ocupacional (atestados, laudos, ASOs) e dados trabalhistas em geral inseridos no sistema.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">3. FINALIDADES AUTORIZADAS</span>
+    <p>O OPERADOR está autorizado a tratar os dados exclusivamente para: prestação dos serviços de gestão de saúde e segurança do trabalho, administração de pessoal, geração de relatórios e demais funcionalidades contratadas. É vedado qualquer tratamento para finalidades diversas sem autorização escrita prévia do CONTROLADOR.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">4. MEDIDAS DE SEGURANÇA</span>
+    <p>O OPERADOR implementa e mantém as seguintes medidas técnicas e organizacionais: criptografia AES-256 em repouso e TLS 1.2+ em trânsito; autenticação multifator para acessos administrativos; controle de acesso baseado em funções (RBAC); backups automáticos diários com retenção de 30 dias; monitoramento contínuo de segurança; e política de resposta a incidentes documentada.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">5. SUBOPERADORES</span>
+    <p>O OPERADOR utiliza os seguintes suboperadores, comprometendo-se a exigir deles padrões equivalentes de proteção de dados: <strong>Supabase Inc.</strong> (armazenamento e banco de dados, servidores AWS) e <strong>Amazon Web Services Inc.</strong> (infraestrutura de nuvem), ambos com sede nos EUA e certificações SOC 2 Type II.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">6. DIREITOS DOS TITULARES</span>
+    <p>Quando o CONTROLADOR receber solicitação de titular de dados relacionada a dados tratados pelo OPERADOR, este último cooperará prontamente, fornecendo as informações e realizando as operações necessárias para atendimento da solicitação no prazo legal.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">7. VIGÊNCIA E ELIMINAÇÃO</span>
+    <p>Este acordo vigorará enquanto o OPERADOR tratar dados em nome do CONTROLADOR. Ao término do contrato principal, o OPERADOR eliminará ou devolverá todos os dados pessoais, a critério do CONTROLADOR, no prazo de 30 (trinta) dias, salvo obrigação legal de retenção.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ ANEXO IV ═══════════════════ -->
+<div class="page-break">
+  <h3>ANEXO IV — ANEXO OPERACIONAL DA PLATAFORMA</h3>
+  <p style="text-align:center;font-size:11pt;color:#555;">Integrante do Contrato de Participação no Programa Validador</p>
+
+  <div class="clausula">
+    <span class="clausula-titulo">1. ACESSO E CREDENCIAIS</span>
+    <p>O acesso à plataforma será concedido mediante credenciais individuais e intransferíveis, geradas após a conclusão da assinatura deste contrato. O número de usuários simultâneos permitidos durante o período beta será definido conjuntamente pelas partes na reunião de Kickoff.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">2. SUPORTE TÉCNICO</span>
+    <p>O suporte técnico será prestado por meio de e-mail (suporte@seguramente.app.br) e WhatsApp, em horário comercial (segunda a sexta-feira, das 9h às 18h, horário de Brasília). O SLA de primeira resposta é de até 24 horas úteis para chamados de baixa prioridade e 4 horas úteis para chamados críticos.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">3. COMPROMISSOS DE FEEDBACK</span>
+    <p>A EMPRESA VALIDADORA se compromete a participar de reuniões mensais de acompanhamento, com duração aproximada de 60 minutos, agendadas pela SEGURAMENTE, e a responder pesquisas de satisfação enviadas periodicamente, com prazo de resposta de até 5 (cinco) dias úteis.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">4. MÓDULOS DISPONIBILIZADOS</span>
+    <p>Serão disponibilizados progressivamente os seguintes módulos: Saúde &amp; SST, Gestão de Colaboradores, Controle de Ponto, Férias e Afastamentos, Gestão Documental, Treinamentos e Trilhas de Aprendizagem, e demais funcionalidades em versão beta conforme cronograma de releases.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">5. LIMITAÇÕES DO PERÍODO BETA</span>
+    <p>Durante o Programa Validador, algumas funcionalidades podem estar em desenvolvimento ou sujeitas a alterações. A SEGURAMENTE comunicará quaisquer indisponibilidades programadas com antecedência mínima de 48 (quarenta e oito) horas. Alterações estruturais no sistema serão comunicadas com antecedência mínima de 7 (sete) dias.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ ANEXO V ═══════════════════ -->
+<div class="page-break">
+  <h3>ANEXO V — REGRAS DO PROGRAMA VALIDADOR</h3>
+  <p style="text-align:center;font-size:11pt;color:#555;">Integrante do Contrato de Participação no Programa Validador</p>
+
+  <div class="clausula">
+    <span class="clausula-titulo">1. ELEGIBILIDADE</span>
+    <p>Podem participar do Programa Validador empresas de qualquer porte e segmento que tenham interesse genuíno na utilização da plataforma Seguramente e disponibilidade para contribuir com o processo de validação e melhoria do produto.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">2. BENEFÍCIOS GARANTIDOS</span>
+    <p>As empresas participantes têm garantidos os seguintes benefícios: acesso gratuito à plataforma pelo período de 6 meses; desconto de 50% na assinatura após o beta pelo período mínimo de 12 meses; atendimento prioritário da equipe Seguramente; participação direta no roadmap do produto; acesso antecipado a novas funcionalidades.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">3. OBRIGAÇÕES DO VALIDADOR</span>
+    <p>Para manutenção dos benefícios, a EMPRESA VALIDADORA deve: utilizar a plataforma com regularidade mínima mensal; fornecer feedbacks honestos e construtivos; participar das reuniões de acompanhamento agendadas; notificar a SEGURAMENTE sobre eventuais inconsistências ou bugs identificados.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">4. ENCERRAMENTO ANTECIPADO</span>
+    <p>A SEGURAMENTE reserva-se o direito de encerrar a participação de empresa que não cumprir as obrigações previstas neste Anexo, mediante notificação prévia de 15 (quinze) dias, sem prejuízo dos dados já inseridos na plataforma, que permanecerão acessíveis por 30 (trinta) dias adicionais para exportação.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">5. TRANSIÇÃO PARA PLANO COMERCIAL</span>
+    <p>Ao término do período beta, a SEGURAMENTE apresentará à EMPRESA VALIDADORA proposta comercial para continuidade do uso da plataforma, com o desconto previsto neste contrato. A empresa terá 30 (trinta) dias para aceitar ou declinar a proposta.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ ANEXO VI ═══════════════════ -->
+<div class="page-break">
+  <h3>ANEXO VI — FAQ DE SEGURANÇA E BOAS PRÁTICAS</h3>
+  <p style="text-align:center;font-size:11pt;color:#555;">Integrante do Contrato de Participação no Programa Validador</p>
+
+  <div class="clausula">
+    <span class="clausula-titulo">1. COMO OS DADOS SÃO ARMAZENADOS?</span>
+    <p>Todos os dados inseridos na plataforma são armazenados em servidores de nuvem certificados (AWS), com criptografia AES-256 em repouso e protocolo TLS 1.2 ou superior para dados em trânsito. Os servidores operam com disponibilidade mínima garantida de 99,5% ao mês.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">2. QUEM TEM ACESSO AOS DADOS?</span>
+    <p>O acesso aos dados da EMPRESA VALIDADORA é restrito aos usuários por ela cadastrados e a colaboradores da SEGURAMENTE com função técnica específica, mediante autenticação multifator. Nenhum dado é compartilhado, vendido ou cedido a terceiros sem autorização expressa do CONTROLADOR.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">3. COMO SÃO GERENCIADAS AS SENHAS?</span>
+    <p>As senhas de acesso são armazenadas exclusivamente em formato de hash criptográfico (bcrypt), nunca em texto simples. Recomendamos fortemente o uso de senhas com no mínimo 12 caracteres, combinando letras maiúsculas, minúsculas, números e símbolos, bem como a habilitação da autenticação de dois fatores (2FA).</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">4. O QUE ACONTECE EM CASO DE INCIDENTE DE SEGURANÇA?</span>
+    <p>Em caso de identificação de incidente que possa comprometer dados pessoais, a SEGURAMENTE adotará imediatamente medidas de contenção e notificará a EMPRESA VALIDADORA em até 72 (setenta e duas) horas, conforme exigido pelo art. 48 da LGPD, descrevendo a natureza do incidente, as categorias e quantidade de dados afetados e as medidas adotadas.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">5. COMO SÃO REALIZADOS OS BACKUPS?</span>
+    <p>Backups automáticos são realizados diariamente, com retenção mínima de 30 (trinta) dias. A restauração pontual de dados pode ser solicitada mediante abertura de chamado técnico, com prazo de atendimento de até 48 horas úteis.</p>
+  </div>
+  <div class="clausula">
+    <span class="clausula-titulo">6. BOAS PRÁTICAS RECOMENDADAS AO USUÁRIO</span>
+    <p>Para garantir a segurança do ambiente, recomendamos: não compartilhar credenciais de acesso; realizar logout ao encerrar o uso em dispositivos compartilhados; notificar imediatamente a SEGURAMENTE em caso de suspeita de acesso indevido; manter atualizado o e-mail de recuperação de conta; e utilizar dispositivos com software de segurança atualizado.</p>
+  </div>
+
+  <p style="margin-top:40px;"><strong>Ao assinar o Contrato principal, a EMPRESA VALIDADORA declara ter lido, compreendido e concordado integralmente com este FAQ e com todos os demais Anexos do contrato.</strong></p>
+</div>
+
+</body>
+</html>`;
+}
+
+// ─── Gerador de HTML para Ata de Kickoff ─────────────────────────────────────
+
+function gerarHtmlDocumento(tipo: TipoDoc, cliente: Cliente): string {
+  if (tipo === 'contrato_programa_validador') {
+    return gerarHtmlContrato(cliente);
+  }
+
+  const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const empresa = cliente.nome_empresa;
+  const cnpj = cliente.cnpj || '___________________';
+  const rep = cliente.representante || cliente.poc_nome || '___________________';
+
+  // ata_kickoff
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${ABNT_CSS}</style>
+</head>
+<body>
+
+<h1>ATA DE REUNIÃO DE KICKOFF</h1>
+<h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
+
+<div class="partes">
+  <p><strong>DATA DA REUNIÃO:</strong> ${dataGeracao}</p>
+  <p><strong>EMPRESA VALIDADORA:</strong> ${empresa} — CNPJ ${cnpj}</p>
+  <p><strong>REPRESENTANTE DA EMPRESA:</strong> ${rep}</p>
+  <p><strong>RESPONSÁVEL SEGURAMENTE:</strong> ___________________</p>
+  <p><strong>MODALIDADE:</strong> ☐ Presencial &nbsp; ☐ Videoconferência &nbsp; ☐ Híbrida</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. OBJETIVO DA REUNIÃO</span>
+  <p>A presente reunião teve por objetivo formalizar o início do Programa Validador, apresentar a plataforma Seguramente, alinhar expectativas entre as partes, definir cronograma de uso e estabelecer os responsáveis pelo projeto em ambas as organizações.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">2. MÓDULOS APRESENTADOS</span>
+  <p>Durante a reunião, foram apresentados os seguintes módulos da plataforma:</p>
+  <p>
+    ☐ Saúde &amp; Segurança do Trabalho (SST) &nbsp;&nbsp;
+    ☐ Gestão de Colaboradores &nbsp;&nbsp;
+    ☐ Controle de Ponto &nbsp;&nbsp;
+    ☐ Férias e Afastamentos<br>
+    ☐ Gestão Documental &nbsp;&nbsp;
+    ☐ Treinamentos e Trilhas &nbsp;&nbsp;
+    ☐ Avaliações de Desempenho &nbsp;&nbsp;
+    ☐ Relatórios e Indicadores
+  </p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">3. CRONOGRAMA ACORDADO</span>
+  <p><strong>Data de início do acesso:</strong> _______________</p>
+  <p><strong>Término previsto do programa beta:</strong> _______________</p>
+  <p><strong>Próxima reunião de acompanhamento:</strong> _______________</p>
+  <p><strong>Frequência das reuniões de feedback:</strong> ☐ Quinzenal &nbsp; ☐ Mensal</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">4. PRÓXIMOS PASSOS DEFINIDOS</span>
+  <p>
+    ☐ Envio das credenciais de acesso à EMPRESA VALIDADORA<br>
+    ☐ Cadastro inicial de dados da empresa na plataforma<br>
+    ☐ Treinamento inicial da equipe usuária<br>
+    ☐ Primeiro acompanhamento (semana 2)<br>
+    ☐ Configuração dos módulos prioritários<br>
+    ☐ Definição dos indicadores de sucesso do programa
+  </p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">5. MÓDULOS PRIORITÁRIOS PARA IMPLANTAÇÃO INICIAL</span>
+  <p>Com base no perfil da EMPRESA VALIDADORA, foi definida a seguinte ordem de implantação:</p>
+  <p>1.º _______________  &nbsp;&nbsp;&nbsp;  2.º _______________  &nbsp;&nbsp;&nbsp;  3.º _______________</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">6. OBSERVAÇÕES E ENCAMINHAMENTOS</span>
+  <p style="min-height:80px;border-bottom:1px solid #ccc;">_______________________________________________________________________________________
+_______________________________________________________________________________________
+_______________________________________________________________________________________</p>
+</div>
+
+<p style="margin-top:40px;">Os participantes, ao assinarem a presente ata, declaram estar cientes e de acordo com o conteúdo aqui registrado, comprometendo-se a cumprir os encaminhamentos definidos.</p>
+<p>Data: <strong>${dataGeracao}</strong></p>
+
+<div class="assinaturas">
+  <div class="assinatura-bloco">
+    <p><strong>EMPRESA VALIDADORA</strong></p>
+    <p>${rep}</p>
+    <p style="font-size:10pt;color:#555;">${empresa}</p>
+  </div>
+  <div class="assinatura-bloco">
+    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p>Responsável pelo Programa</p>
+  </div>
+</div>
+
+</body>
+</html>`;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
