@@ -805,6 +805,45 @@ function DetalheCliente({
     onError: (err: Error) => toast.error('Erro ao gerar contrato: ' + err.message),
   });
 
+  const gerarDocLinkMutation = useMutation({
+    mutationFn: async (tipo: TipoDoc) => {
+      const html = gerarHtmlDocumento(tipo, cliente);
+      const docExistente = documentos.find(d => d.tipo === tipo);
+      const { data, error } = await supabase
+        .from('programa_validador_documento_links' as never)
+        .insert({
+          cliente_id: cliente.id,
+          documento_id: docExistente?.id || null,
+          tipo,
+          html_documento: html,
+          status: 'pendente',
+        } as never)
+        .select()
+        .single() as any;
+      if (error) throw error;
+      // Atualizar status do doc para 'enviado'
+      await atualizarDocMutation.mutateAsync({ tipo, status: 'enviado' });
+      await supabase.from('programa_validador_historico' as never).insert({
+        cliente_id: cliente.id,
+        tipo: 'documento_gerado',
+        titulo: `Link de aceite gerado: ${DOCS_CONFIG.find(d => d.tipo === tipo)?.label}`,
+        autor: profile?.nome_completo || 'SuperAdmin',
+      } as never);
+      return data;
+    },
+    onSuccess: (data) => {
+      const url = `${window.location.origin}/aceite-documento/${data.token}`;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success('Link de aceite copiado para a área de transferência!');
+      });
+      setGerandoDoc(null);
+      qc.invalidateQueries({ queryKey: ['validador', 'doc-links', cliente.id] });
+      qc.invalidateQueries({ queryKey: ['validador', 'docs', cliente.id] });
+      qc.invalidateQueries({ queryKey: ['validador', 'historico', cliente.id] });
+    },
+    onError: (err: Error) => toast.error('Erro ao gerar link: ' + err.message),
+  });
+
   const copiarLink = (token: string) => {
     const url = `${window.location.origin}/contrato-assinatura/${token}`;
     navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
