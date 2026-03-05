@@ -8,6 +8,7 @@ import type { Feedback, Ocorrencia, AdvertenciaLink, FeedbackCategoria, Ocorrenc
 
 export function useFeedbackOcorrencias() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // ========== FEEDBACKS ==========

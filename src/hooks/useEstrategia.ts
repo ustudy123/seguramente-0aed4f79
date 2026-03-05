@@ -18,6 +18,7 @@ import type {
 
 export function useEstrategia() {
   const { tenantId, user } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   // ─── SWOT ───

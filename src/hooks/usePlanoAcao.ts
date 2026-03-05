@@ -26,6 +26,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   // ===================== QUERIES =====================
 

@@ -13,6 +13,7 @@ import type {
 
 export function useTerceiros() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   // ── Terceiros (empresas) ──
