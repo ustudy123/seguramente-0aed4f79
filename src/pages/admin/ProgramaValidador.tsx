@@ -1371,22 +1371,42 @@ function DetalheCliente({
                 const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
                 const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
 
+                const doc = documentos.find(d => d.tipo === tipo);
+                const status = doc?.status || 'pendente';
+                const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
+                const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
+                const isContrato = tipo === 'contrato_programa_validador';
+
                 return (
-                  <div key={tipo} className="py-2 border-b border-border last:border-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <DocStatusIcon status={status} />
-                        <span className="text-sm truncate">{label}</span>
-                        {doc?.aceito_em && (
-                          <span className="text-xs text-muted-foreground shrink-0">
-                            {format(new Date(doc.aceito_em), 'dd/MM/yy', { locale: ptBR })}
-                          </span>
-                        )}
+                  <div key={tipo} className={`rounded-lg border p-4 space-y-3 ${
+                    status === 'aceito' || status === 'enviado' ? 'border-primary/30 bg-primary/5' : 'border-border'
+                  }`}>
+                    {/* Cabeçalho do documento */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          status === 'aceito' ? 'bg-primary/15' :
+                          status === 'enviado' ? 'bg-accent/20' :
+                          'bg-muted'
+                        }`}>
+                          <DocStatusIcon status={status} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm">{label}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>
+                          {doc?.aceito_em && (
+                            <p className="text-xs text-primary mt-1">
+                              ✓ Concluído em {format(new Date(doc.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {/* Botão gerar/copiar link */}
                         {status !== 'aceito' && (
-                          linkAtivo ? (
+                          isContrato ? (
+                            // Contrato usa a seção própria acima
+                            null
+                          ) : linkAtivo ? (
                             <Button
                               variant="outline"
                               size="sm"
@@ -1411,9 +1431,12 @@ function DetalheCliente({
                               }}
                             >
                               {isGerando ? (
-                                <span className="flex items-center gap-1"><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />Gerando...</span>
+                                <span className="flex items-center gap-1">
+                                  <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                  Gerando...
+                                </span>
                               ) : (
-                                <><FileText className="w-3 h-3 mr-1" />Gerar</>
+                                <><FileText className="w-3 h-3 mr-1" />Gerar link</>
                               )}
                             </Button>
                           )
@@ -1434,10 +1457,27 @@ function DetalheCliente({
                         </Select>
                       </div>
                     </div>
-                    {/* Link ativo exibido abaixo */}
-                    {linkAtivo && status !== 'aceito' && (
-                      <div className="mt-1 ml-6 flex items-center gap-2">
-                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+
+                    {/* Conteúdo incluído (apenas para contrato) */}
+                    {itens && (
+                      <div className="ml-11 space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Conteúdo incluído:</p>
+                        {itens.map(item => (
+                          <div key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                        <p className="text-xs text-muted-foreground mt-2 italic">
+                          Uma única assinatura digital cobre todos os itens acima.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Status do link */}
+                    {linkAtivo && status !== 'aceito' && !isContrato && (
+                      <div className="ml-11 flex items-center gap-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
                           linkAtivo.status === 'aceito' ? 'bg-primary/10 text-primary' :
                           linkAtivo.status === 'visualizado' ? 'bg-accent/50 text-accent-foreground' :
                           'bg-muted text-muted-foreground'
@@ -1452,6 +1492,39 @@ function DetalheCliente({
                         >
                           Ver documento
                         </button>
+                      </div>
+                    )}
+
+                    {/* Contrato: link da seção acima */}
+                    {isContrato && contratos.length > 0 && (
+                      <div className="ml-11">
+                        {contratos.slice(0, 1).map(c => (
+                          <div key={c.id} className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              c.status === 'assinado' ? 'bg-primary/10 text-primary' :
+                              c.status === 'enviado' ? 'bg-accent/50 text-accent-foreground' :
+                              'bg-muted text-muted-foreground'
+                            }`}>
+                              {c.status === 'assinado' ? '✓ Assinado' :
+                               c.status === 'enviado' ? '⏳ Aguardando assinatura' :
+                               '⏳ Pendente'}
+                            </span>
+                            {c.status !== 'assinado' && (
+                              <button
+                                className="text-xs text-muted-foreground hover:text-foreground underline"
+                                onClick={() => copiarLink(c.token)}
+                              >
+                                Copiar link
+                              </button>
+                            )}
+                            <button
+                              className="text-xs text-muted-foreground hover:text-foreground underline"
+                              onClick={() => abrirContrato(c.token)}
+                            >
+                              Ver contrato
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
