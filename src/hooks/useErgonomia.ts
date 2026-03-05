@@ -33,6 +33,7 @@ export function useErgonomia() {
 
       if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
 
+      const { data, error } = await query;
       if (error) throw error;
       return data as ItemNR17[];
     },
