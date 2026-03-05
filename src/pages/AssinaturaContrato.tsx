@@ -75,7 +75,13 @@ export default function AssinaturaContrato() {
       } as never);
     },
     onSuccess: () => {
-      setEtapa('concluido');
+      const onboardingToken = contrato?.programa_validador_clientes?.onboarding_token;
+      if (onboardingToken) {
+        toast.success('Contrato assinado com sucesso!');
+        navigate(`/onboarding-cliente/${onboardingToken}`);
+      } else {
+        setEtapa('concluido');
+      }
     },
     onError: (err: Error) => toast.error(err.message),
   });
