@@ -48,6 +48,7 @@ export interface PermissaoTrabalhador {
 
 export function usePermissaoTrabalho(terceiroId?: string) {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   const permissoes = useQuery({

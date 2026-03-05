@@ -12,6 +12,7 @@ import type {
 
 export function usePdi() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   // ── PDIs ───────────────────────────────
