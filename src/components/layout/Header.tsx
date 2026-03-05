@@ -73,26 +73,15 @@ export const Header = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-destructive">
-                3
-              </Badge>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notificações</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="font-medium">Nova solicitação de férias</span>
-              <span className="text-xs text-muted-foreground">Maria Silva solicitou férias para janeiro</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="font-medium">Avaliação pendente</span>
-              <span className="text-xs text-muted-foreground">5 avaliações aguardando sua revisão</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="font-medium">Documento expirado</span>
-              <span className="text-xs text-muted-foreground">ASO de João Santos venceu</span>
-            </DropdownMenuItem>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Bell className="w-8 h-8 text-muted-foreground/20 mb-2" />
+              <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
 
