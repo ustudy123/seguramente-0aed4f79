@@ -406,6 +406,40 @@ function StepColaboradores({ cliente, onConcluir }: { cliente: Cliente; onConclu
 
 function StepDiagnostico({ cliente, onConcluir }: { cliente: Cliente; onConcluir: () => void }) {
   const maturidade = calcularNivelMaturidade(cliente.quantidade_colaboradores);
+  const [iniciado, setIniciado] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+
+  const handleIniciar = async () => {
+    setSalvando(true);
+    try {
+      await supabase
+        .from('programa_validador_clientes')
+        .update({ diagnostico_iniciado: true } as never)
+        .eq('id', cliente.id);
+      setIniciado(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  if (iniciado) {
+    return (
+      <div className="space-y-4">
+        <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl text-center space-y-3">
+          <CheckCircle2 className="w-12 h-12 mx-auto text-primary" />
+          <p className="font-semibold">Diagnóstico registrado com sucesso!</p>
+          <p className="text-sm text-muted-foreground">
+            O {maturidade.modulo} foi ativado. Nossa equipe entrará em contato para guiar você na execução do diagnóstico dentro da plataforma.
+          </p>
+        </div>
+        <Button onClick={onConcluir} className="w-full" variant="outline">
+          ← Voltar ao assistente
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -448,9 +482,9 @@ function StepDiagnostico({ cliente, onConcluir }: { cliente: Cliente; onConcluir
       </div>
 
       <div className="grid grid-cols-1 gap-2">
-        <Button onClick={onConcluir} className="w-full">
+        <Button onClick={handleIniciar} disabled={salvando} className="w-full">
           <Rocket className="w-4 h-4 mr-2" />
-          Iniciar {maturidade.modulo}
+          {salvando ? 'Registrando...' : `Iniciar ${maturidade.modulo}`}
         </Button>
         <Button variant="outline" onClick={onConcluir} className="w-full text-muted-foreground">
           Fazer isso depois
