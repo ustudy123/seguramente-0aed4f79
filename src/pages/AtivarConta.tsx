@@ -221,9 +221,9 @@ export default function AtivarConta() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", delay: 0.2 }}
-            className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto"
+            className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto"
           >
-            <CheckCircle2 className="h-10 w-10 text-green-600" />
+            <CheckCircle2 className="h-10 w-10 text-primary" />
           </motion.div>
           <div>
             <h2 className="text-2xl font-bold text-foreground">Conta Ativada!</h2>
@@ -452,7 +452,7 @@ export default function AtivarConta() {
                 </button>
               </div>
               {form.confirm_password.length > 0 && form.password !== form.confirm_password && (
-                <p className="text-xs text-red-500">As senhas não coincidem</p>
+                <p className="text-xs text-destructive">As senhas não coincidem</p>
               )}
             </div>
 
