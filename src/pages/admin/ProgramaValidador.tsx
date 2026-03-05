@@ -21,7 +21,7 @@ import {
   Plus, Search, Users, Building2, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronRight, ArrowLeft, FileText,
   MessageSquare, Phone, Mail, Calendar, Shield,
-  LayoutList, Columns, ChevronLeft, Send, ExternalLink, Download, Loader2,
+  LayoutList, Columns, ChevronLeft, Send, ExternalLink, Download, Loader2, Printer,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCnpj, cleanCnpj, buscarCnpj } from '@/lib/brasilapi';
@@ -171,24 +171,45 @@ const DOCS_CONFIG_PAGANTE: { tipo: TipoDoc; label: string; descricao: string; it
 
 // ─── CSS base ABNT ────────────────────────────────────────────────────────────
 
+const LOGO_URL = 'https://seguramente.lovable.app/lovable-uploads/logo-seguramente.png';
+
 const ABNT_CSS = `
-  @page { margin: 3cm 2.5cm 2cm 3cm; }
+  @page { margin: 2.5cm 2.5cm 2cm 2.5cm; }
+  * { box-sizing: border-box; }
   body {
     font-family: 'Times New Roman', Times, serif;
     font-size: 12pt;
     line-height: 1.5;
-    color: #000;
+    color: #1a1a1a;
     max-width: 800px;
     margin: 0 auto;
-    padding: 48px 40px;
+    padding: 0 40px 48px 40px;
     text-align: justify;
   }
+  .contract-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    margin-bottom: 16px;
+    border-bottom: 3px solid #7c3aed;
+  }
+  .contract-header img { height: 56px; }
+  .contract-header-info {
+    text-align: right;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: #666;
+    line-height: 1.4;
+  }
+  .contract-header-info strong { color: #7c3aed; font-size: 10pt; }
   h1 {
     font-size: 14pt;
     text-align: center;
     text-transform: uppercase;
     font-weight: bold;
     margin: 0 0 4px 0;
+    color: #1a1a1a;
   }
   h2 {
     font-size: 12pt;
@@ -203,14 +224,17 @@ const ABNT_CSS = `
     text-transform: uppercase;
     font-weight: bold;
     margin: 40px 0 8px 0;
-    border-top: 2px solid #000;
+    border-top: 2px solid #7c3aed;
     padding-top: 12px;
+    color: #7c3aed;
   }
   .partes {
-    border: 1px solid #555;
+    border: 1px solid #d4d4d8;
+    border-left: 4px solid #7c3aed;
     padding: 16px 20px;
     margin: 24px 0;
-    background: #fafafa;
+    background: #faf5ff;
+    border-radius: 4px;
   }
   .clausula { margin-top: 24px; }
   .clausula-titulo {
@@ -218,10 +242,11 @@ const ABNT_CSS = `
     text-transform: uppercase;
     display: block;
     margin-bottom: 6px;
+    color: #4c1d95;
   }
   ul, ol { margin: 8px 0 8px 24px; }
   li { margin-bottom: 4px; }
-  .page-break { page-break-before: always; border-top: 1px dashed #ccc; margin-top: 40px; padding-top: 24px; }
+  .page-break { page-break-before: always; border-top: none; margin-top: 40px; padding-top: 24px; }
   .assinaturas {
     display: flex;
     gap: 60px;
@@ -229,11 +254,89 @@ const ABNT_CSS = `
   }
   .assinatura-bloco {
     flex: 1;
-    border-top: 1px solid #000;
+    border-top: 2px solid #7c3aed;
     padding-top: 8px;
     text-align: center;
   }
+  .contract-footer {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid #e4e4e7;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    color: #999;
+  }
+  @media print {
+    .no-print { display: none !important; }
+    body { padding: 0; }
+    .contract-header { padding: 12px 0; }
+  }
+  .print-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-bottom: 1px solid #e4e4e7;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .print-bar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #d4d4d8;
+    background: #fff;
+    color: #333;
+    transition: all 0.15s;
+  }
+  .print-bar button:hover { background: #f4f4f5; }
+  .print-bar .btn-primary {
+    background: #7c3aed;
+    color: #fff;
+    border-color: #7c3aed;
+  }
+  .print-bar .btn-primary:hover { background: #6d28d9; }
+  .has-print-bar { padding-top: 72px; }
 `;
+
+const SUDOCLIN_CNPJ = '00.000.000/0001-00'; // Placeholder — será substituído pelo CNPJ real
+
+function gerarHeaderHtml(): string {
+  return `
+  <div class="print-bar no-print">
+    <button onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn-primary" onclick="(function(){var a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(document.documentElement.outerHTML);a.download='contrato.html';a.click();})()">⬇ Baixar</button>
+  </div>
+  <div class="contract-header">
+    <img src="${LOGO_URL}" alt="Seguramente" onerror="this.style.display='none'" />
+    <div class="contract-header-info">
+      <strong>SEGURAMENTE TECNOLOGIA LTDA</strong><br>
+      CNPJ: ${SUDOCLIN_CNPJ}<br>
+      seguramente.app.br
+    </div>
+  </div>`;
+}
+
+function gerarFooterHtml(): string {
+  return `
+  <div class="contract-footer">
+    Documento gerado eletronicamente pela plataforma Seguramente · seguramente.app.br<br>
+    SEGURAMENTE TECNOLOGIA LTDA — CNPJ: ${SUDOCLIN_CNPJ}
+  </div>`;
+}
 
 // ─── Dispatcher: escolhe o template correto conforme tipo_cliente ─────────────
 
@@ -256,9 +359,12 @@ function gerarHtmlContratoTester(cliente: Cliente): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrato — ${empresa}</title>
 <style>${ABNT_CSS}</style>
 </head>
-<body>
+<body class="has-print-bar">
+
+${gerarHeaderHtml()}
 
 <h1>CONTRATO DE PARTICIPAÇÃO NO PROGRAMA VALIDADOR</h1>
 <h1>E USO DA PLATAFORMA SEGURAMENTE</h1>
@@ -581,6 +687,8 @@ function gerarHtmlContratoTester(cliente: Cliente): string {
   <p style="margin-top:40px;"><strong>Ao assinar o Contrato principal, a EMPRESA VALIDADORA declara ter lido, compreendido e concordado integralmente com este FAQ e com todos os demais Anexos do contrato.</strong></p>
 </div>
 
+${gerarFooterHtml()}
+
 </body>
 </html>`;
 }
@@ -603,9 +711,12 @@ function gerarHtmlDocumento(tipo: TipoDoc, cliente: Cliente): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ata de Kickoff — ${empresa}</title>
 <style>${ABNT_CSS}</style>
 </head>
-<body>
+<body class="has-print-bar">
+
+${gerarHeaderHtml()}
 
 <h1>ATA DE REUNIÃO DE KICKOFF</h1>
 <h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
@@ -686,6 +797,8 @@ ________________________________________________________________________________
   </div>
 </div>
 
+${gerarFooterHtml()}
+
 </body>
 </html>`;
 }
@@ -709,9 +822,12 @@ function gerarHtmlContratoPagante(cliente: Cliente): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrato — ${empresa}</title>
 <style>${ABNT_CSS}</style>
 </head>
-<body>
+<body class="has-print-bar">
+
+${gerarHeaderHtml()}
 
 <h1>CONTRATO DE LICENÇA DE USO DE SOFTWARE</h1>
 <h1>E PRESTAÇÃO DE SERVIÇOS – PLATAFORMA SEGURAMENTE</h1>
@@ -720,7 +836,7 @@ function gerarHtmlContratoPagante(cliente: Cliente): string {
 <p>Pelo presente instrumento particular, de um lado:</p>
 
 <div class="partes">
-  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº __________, com sede em __________, doravante denominada <strong>SEGURAMENTE</strong>.</p>
+  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº ${SUDOCLIN_CNPJ}, doravante denominada <strong>SEGURAMENTE</strong>.</p>
   <p style="margin-top:12px;margin-bottom:0;">E de outro lado:</p>
   <p style="margin-bottom:0;"><strong>${empresa}</strong>, inscrita no CNPJ nº ${cnpj}, com sede em ${endereco}, neste ato representada por <strong>${rep}</strong>, doravante denominada <strong>CLIENTE</strong>.</p>
 </div>
@@ -945,6 +1061,8 @@ function gerarHtmlContratoPagante(cliente: Cliente): string {
   <span class="clausula-titulo">6. EXCLUSÕES DO SLA</span>
   <p>Não são cobertos por este SLA: indisponibilidades causadas por falhas de conectividade do CLIENTE, ataques DDoS de grande escala, casos fortuitos ou de força maior, uso indevido da plataforma pelo CLIENTE ou terceiros autorizados por ele.</p>
 </div>
+
+${gerarFooterHtml()}
 
 </body>
 </html>`;
@@ -1646,6 +1764,42 @@ function DetalheCliente({
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs"
+                          title="Baixar contrato"
+                          onClick={() => {
+                            const html = c.html_assinado || c.html_contrato;
+                            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `contrato-${cliente.nome_empresa.replace(/\s+/g, '-').toLowerCase()}.html`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          title="Imprimir contrato"
+                          onClick={() => {
+                            const html = c.html_assinado || c.html_contrato;
+                            const win = window.open('', '_blank');
+                            if (win) {
+                              win.document.write(html);
+                              win.document.close();
+                              setTimeout(() => win.print(), 500);
+                            }
+                          }}
+                        >
+                          <Printer className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          title="Abrir contrato"
                           onClick={() => abrirContrato(c.token)}
                         >
                           <ExternalLink className="w-3 h-3" />
