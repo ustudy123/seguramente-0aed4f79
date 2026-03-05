@@ -294,7 +294,7 @@ export function useEpis() {
       if (!tenantId) throw new Error("Tenant não identificado");
       const { data, error } = await supabase
         .from("epis")
-        .insert({ ...dados, tenant_id: tenantId })
+        .insert({ ...dados, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select(`*, tipo:epi_tipos(*)`)
         .single();
       if (error) throw error;
