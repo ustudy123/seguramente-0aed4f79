@@ -104,6 +104,18 @@ interface Historico {
   created_at: string;
 }
 
+interface DocumentoLink {
+  id: string;
+  cliente_id: string;
+  documento_id: string | null;
+  tipo: TipoDoc;
+  token: string;
+  status: 'pendente' | 'visualizado' | 'aceito' | 'recusado';
+  aceito_em: string | null;
+  aceito_por: string | null;
+  created_at: string;
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const FASES: { value: Fase; label: string; color: string; border: string }[] = [
