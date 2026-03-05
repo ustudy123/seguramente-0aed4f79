@@ -22,7 +22,7 @@ export default function AssinaturaContrato() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_contratos' as never)
-        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email)')
+        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token)')
         .eq('token', token!)
         .single() as any;
       if (error) throw error;
