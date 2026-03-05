@@ -114,6 +114,7 @@ export function useOuvidoria() {
 
       const manifestacao = {
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
         tipo: data.tipo,
         assunto: data.assunto,
         mensagem: data.mensagem,
