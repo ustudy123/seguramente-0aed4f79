@@ -67,11 +67,6 @@ export function AfiliadosDashboard() {
 
   return (
     <div className="space-y-6">
-      {isDemo && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex items-center gap-2">
-          <span>⚠️ <strong>Modo Demonstração</strong> — dados fictícios. Cadastre-se como profissional para ver seu painel real.</span>
-        </div>
-      )}
       {/* Link de afiliado */}
       <div className="p-5 bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl space-y-3">
         <div className="flex items-center gap-2">

@@ -190,11 +190,6 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
             <Bell className="h-4 w-4 text-primary" strokeWidth={1.75} />
             Próximas Celebrações (30 dias)
           </CardTitle>
-          {usarDemo && (
-            <Badge variant="secondary" className="text-[10px]">
-              Demo
-            </Badge>
-          )}
         </div>
       </CardHeader>
       <CardContent>
