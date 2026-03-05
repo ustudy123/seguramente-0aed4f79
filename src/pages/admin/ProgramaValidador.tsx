@@ -38,13 +38,7 @@ type Fase =
   | 'encerrado';
 
 type TipoDoc =
-  | 'contrato_piloto'
-  | 'dpa_lgpd'
-  | 'anexo_operacional'
-  | 'faq_seguranca'
-  | 'resumo_beta'
-  | 'politica_privacidade'
-  | 'termos_uso'
+  | 'contrato_programa_validador'
   | 'ata_kickoff';
 
 interface Cliente {
