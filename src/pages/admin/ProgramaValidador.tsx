@@ -328,21 +328,31 @@ export default function ProgramaValidador() {
   // ── Mover fase (kanban) ──
   const moverFaseMutation = useMutation({
     mutationFn: async ({ id, fase }: { id: string; fase: Fase }) => {
+      const clienteAtual = clientes.find(c => c.id === id);
       const { error } = await supabase
         .from('programa_validador_clientes')
         .update({ fase })
         .eq('id', id);
       if (error) throw error;
-      const cliente = clientes.find(c => c.id === id);
       await supabase.from('programa_validador_historico').insert({
         cliente_id: id,
         tipo: 'fase_alterada',
         titulo: `Fase alterada para "${FASES.find(f => f.value === fase)?.label}"`,
         autor: profile?.nome_completo || 'SuperAdmin',
       });
+      // Gerar contrato ao avançar de qualificação → kickoff
+      if (clienteAtual?.fase === 'qualificacao' && fase === 'kickoff') {
+        const html = gerarHtmlContrato(clienteAtual);
+        await supabase.from('programa_validador_contratos' as never).insert({
+          cliente_id: id,
+          html_contrato: html,
+          status: 'pendente',
+        } as never);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['validador'] });
+      toast.success('Fase atualizada!');
     },
     onError: () => toast.error('Erro ao mover cliente'),
   });
