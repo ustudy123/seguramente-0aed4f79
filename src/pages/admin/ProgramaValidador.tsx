@@ -391,6 +391,7 @@ export default function ProgramaValidador() {
           cliente={clienteSelecionado}
           documentos={documentos}
           historico={historico}
+          contratos={contratos}
           onBack={() => setClienteSelecionado(null)}
           onClienteUpdated={(c) => {
             setClienteSelecionado(c);
