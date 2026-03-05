@@ -16,19 +16,22 @@ import type {
 
 export function useErgonomia() {
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // Buscar itens NR-17
   const { data: itensNR17 = [], isLoading: isLoadingItens, refetch: refetchItens } = useQuery({
-    queryKey: ["ergonomia-itens-nr17", tenantId],
+    queryKey: ["ergonomia-itens-nr17", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("ergonomia_itens_nr17")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("codigo", { ascending: true });
+
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
 
       if (error) throw error;
       return data as ItemNR17[];
