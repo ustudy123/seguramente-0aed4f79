@@ -55,6 +55,7 @@ import HubContabil from "./pages/HubContabil";
 import Configuracoes from "./pages/Configuracoes";
 import LandingPage from "./pages/LandingPage";
 import AssinaturaContrato from "./pages/AssinaturaContrato";
+import AceiteDocumento from "./pages/AceiteDocumento";
 import AnaliseJornada from "./pages/AnaliseJornada";
 
 // Cadastros Pages
