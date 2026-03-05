@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, Circle, Clock, ChevronRight, Building2, Users, LayoutGrid,
   FileText, Upload, ArrowRight, Sparkles, AlertCircle, Loader2, CheckCheck,
-  BarChart3, Briefcase, Shield, Rocket, Star, ChevronDown, ChevronUp
+  BarChart3, Briefcase, Shield, Rocket, Star, ChevronDown, ChevronUp, Download
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -37,6 +37,7 @@ interface Contrato {
   token: string;
   status: 'pendente' | 'enviado' | 'assinado' | 'recusado';
   assinado_em: string | null;
+  html_assinado: string | null;
 }
 
 interface DocumentoLink {
@@ -45,6 +46,8 @@ interface DocumentoLink {
   token: string;
   status: 'pendente' | 'visualizado' | 'aceito' | 'recusado';
   aceito_em: string | null;
+  html_assinado: string | null;
+  html_documento: string | null;
 }
 
 interface OnboardingState {
@@ -486,7 +489,7 @@ export default function OnboardingCliente() {
       if (!cliente?.id) return [];
       const { data } = await supabase
         .from('programa_validador_contratos' as never)
-        .select('id, token, status, assinado_em')
+        .select('id, token, status, assinado_em, html_assinado')
         .eq('cliente_id', cliente.id)
         .order('created_at', { ascending: false }) as { data: Contrato[] | null };
       return data || [];
@@ -501,8 +504,8 @@ export default function OnboardingCliente() {
     queryFn: async (): Promise<DocumentoLink[]> => {
       if (!cliente?.id) return [];
       const { data } = await supabase
-        .from('programa_validador_doc_links' as never)
-        .select('id, tipo, token, status, aceito_em')
+        .from('programa_validador_documento_links' as never)
+        .select('id, tipo, token, status, aceito_em, html_assinado, html_documento')
         .eq('cliente_id', cliente.id)
         .order('created_at', { ascending: false }) as { data: DocumentoLink[] | null };
       return data || [];
@@ -546,6 +549,16 @@ export default function OnboardingCliente() {
 
   const maturidade = calcularNivelMaturidade(cliente.quantidade_colaboradores);
 
+  const downloadDoc = (html: string, nomeArq: string) => {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArq;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Checklist items
   const checklistItems = [
     {
@@ -554,15 +567,19 @@ export default function OnboardingCliente() {
       sublabel: contratoAssinado ? `Assinado em ${contratoAtivo?.assinado_em ? new Date(contratoAtivo.assinado_em).toLocaleDateString('pt-BR') : '-'}` : 'Assinatura digital obrigatória para prosseguir',
       done: contratoAssinado,
       pending: !!contratoAtivo && !contratoAssinado,
-      link: contratoAtivo ? `${window.location.origin}/contrato-assinatura/${contratoAtivo.token}` : undefined,
+      link: contratoAtivo && !contratoAssinado ? `${window.location.origin}/contrato-assinatura/${contratoAtivo.token}` : undefined,
+      downloadHtml: contratoAssinado && contratoAtivo?.html_assinado ? contratoAtivo.html_assinado : null,
+      downloadNome: 'Contrato-Programa-Validador-Assinado.html',
     },
     {
       id: 'ata',
       label: 'Ata de Kickoff',
-      sublabel: ataAceita ? `Aceita em ${ataLink?.aceito_em ? new Date(ataLink.aceito_em).toLocaleDateString('pt-BR') : '-'}` : 'Documento operacional do projeto',
+      sublabel: ataAceita ? `Assinada em ${ataLink?.aceito_em ? new Date(ataLink.aceito_em).toLocaleDateString('pt-BR') : '-'}` : ataLink ? 'Aguardando sua assinatura' : 'Será disponibilizada pela equipe Seguramente',
       done: ataAceita,
       pending: !!ataLink && !ataAceita,
-      link: ataLink ? `${window.location.origin}/aceite-documento/${ataLink.token}` : undefined,
+      link: ataLink && !ataAceita ? `${window.location.origin}/aceite-documento/${ataLink.token}` : undefined,
+      downloadHtml: ataAceita && ataLink ? (ataLink.html_assinado || ataLink.html_documento) : null,
+      downloadNome: 'Ata-Kickoff-Assinada.html',
     },
     {
       id: 'empresa',
@@ -570,6 +587,8 @@ export default function OnboardingCliente() {
       sublabel: 'Dados básicos para configuração do sistema',
       done: !!cliente.cnpj,
       pending: false,
+      downloadHtml: null,
+      downloadNome: '',
     },
     {
       id: 'colaboradores',
@@ -577,6 +596,8 @@ export default function OnboardingCliente() {
       sublabel: 'Colaboradores, departamentos e funções',
       done: false,
       pending: false,
+      downloadHtml: null,
+      downloadNome: '',
     },
     {
       id: 'diagnostico',
@@ -584,6 +605,8 @@ export default function OnboardingCliente() {
       sublabel: maturidade.modulo,
       done: false,
       pending: false,
+      downloadHtml: null,
+      downloadNome: '',
     },
   ];
 
@@ -675,15 +698,24 @@ export default function OnboardingCliente() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {checklistItems.map(item => (
-                  <ChecklistItem
-                    key={item.id}
-                    label={item.label}
-                    sublabel={item.sublabel}
-                    done={item.done}
-                    pending={item.pending}
-                    link={item.link}
-                    onClick={!item.done && ['empresa', 'colaboradores', 'diagnostico'].includes(item.id) ? () => setStepAtivo(item.id) : undefined}
-                  />
+                  <div key={item.id}>
+                    <ChecklistItem
+                      label={item.label}
+                      sublabel={item.sublabel}
+                      done={item.done}
+                      pending={item.pending}
+                      link={item.link}
+                      onClick={!item.done && ['empresa', 'colaboradores', 'diagnostico'].includes(item.id) ? () => setStepAtivo(item.id) : undefined}
+                    />
+                    {item.done && item.downloadHtml && (
+                      <button
+                        onClick={() => downloadDoc(item.downloadHtml!, item.downloadNome)}
+                        className="ml-7 mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        <Download className="w-3 h-3" /> Baixar documento assinado
+                      </button>
+                    )}
+                  </div>
                 ))}
               </CardContent>
             </Card>
@@ -728,19 +760,23 @@ export default function OnboardingCliente() {
                           id: 'contrato',
                           icon: <FileText className="w-5 h-5" />,
                           title: cliente.tipo_cliente === 'pagante' ? 'Contrato de Licença de Uso' : 'Contrato Programa Validador',
-                          desc: 'Assinatura digital do contrato com todos os anexos jurídicos.',
+                          desc: contratoAssinado ? 'Contrato assinado por todas as partes.' : 'Assinatura digital do contrato com todos os anexos jurídicos.',
                           done: contratoAssinado,
-                          action: contratoAtivo ? () => window.open(`${window.location.origin}/contrato-assinatura/${contratoAtivo.token}`, '_blank') : undefined,
+                          action: contratoAtivo && !contratoAssinado ? () => window.open(`${window.location.origin}/contrato-assinatura/${contratoAtivo.token}`, '_blank') : undefined,
                           actionLabel: 'Assinar agora',
+                          downloadHtml: contratoAssinado && contratoAtivo?.html_assinado ? contratoAtivo.html_assinado : null,
+                          downloadNome: 'Contrato-Programa-Validador-Assinado.html',
                         },
                         {
                           id: 'ata',
                           icon: <CheckCheck className="w-5 h-5" />,
                           title: 'Ata de Kickoff',
-                          desc: 'Confirme os termos do início do projeto.',
+                          desc: ataAceita ? 'Ata assinada por todas as partes.' : ataLink ? 'Aguardando sua assinatura.' : 'Será disponibilizada pela equipe Seguramente.',
                           done: ataAceita,
-                          action: ataLink ? () => window.open(`${window.location.origin}/aceite-documento/${ataLink.token}`, '_blank') : undefined,
-                          actionLabel: 'Aceitar documento',
+                          action: ataLink && !ataAceita ? () => window.open(`${window.location.origin}/aceite-documento/${ataLink.token}`, '_blank') : undefined,
+                          actionLabel: 'Assinar agora',
+                          downloadHtml: ataAceita && ataLink ? (ataLink.html_assinado || ataLink.html_documento) : null,
+                          downloadNome: 'Ata-Kickoff-Assinada.html',
                         },
                         {
                           id: 'empresa',
@@ -750,6 +786,8 @@ export default function OnboardingCliente() {
                           done: !!cliente.cnpj,
                           action: () => setStepAtivo('empresa'),
                           actionLabel: 'Configurar',
+                          downloadHtml: null,
+                          downloadNome: '',
                         },
                         {
                           id: 'colaboradores',
@@ -759,6 +797,8 @@ export default function OnboardingCliente() {
                           done: false,
                           action: () => setStepAtivo('colaboradores'),
                           actionLabel: 'Configurar',
+                          downloadHtml: null,
+                          downloadNome: '',
                         },
                         {
                           id: 'diagnostico',
@@ -768,13 +808,15 @@ export default function OnboardingCliente() {
                           done: false,
                           action: () => setStepAtivo('diagnostico'),
                           actionLabel: 'Iniciar',
+                          downloadHtml: null,
+                          downloadNome: '',
                         },
-                      ].map((step, i) => (
+                      ].map((step) => (
                         <div
                           key={step.id}
                           className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
                             step.done
-                              ? 'bg-primary/5 border-primary/20 opacity-70'
+                              ? 'bg-primary/5 border-primary/20'
                               : 'bg-background border-border hover:border-primary/30 hover:bg-muted/20'
                           }`}
                         >
@@ -782,15 +824,22 @@ export default function OnboardingCliente() {
                             {step.done ? <CheckCircle2 className="w-5 h-5" /> : step.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold ${step.done ? 'line-through text-muted-foreground' : ''}`}>{step.title}</p>
+                            <p className={`text-sm font-semibold ${step.done ? 'text-muted-foreground' : ''}`}>{step.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
                           </div>
-                          {!step.done && step.action && (
-                            <Button size="sm" onClick={step.action} className="shrink-0">
-                              {step.actionLabel} <ChevronRight className="w-3 h-3 ml-1" />
-                            </Button>
-                          )}
-                          {step.done && <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />}
+                          <div className="shrink-0 flex flex-col gap-1 items-end">
+                            {!step.done && step.action && (
+                              <Button size="sm" onClick={step.action}>
+                                {step.actionLabel} <ChevronRight className="w-3 h-3 ml-1" />
+                              </Button>
+                            )}
+                            {step.done && step.downloadHtml && (
+                              <Button size="sm" variant="outline" onClick={() => downloadDoc(step.downloadHtml!, step.downloadNome)}>
+                                <Download className="w-3 h-3 mr-1" /> Baixar
+                              </Button>
+                            )}
+                            {step.done && !step.downloadHtml && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                          </div>
                         </div>
                       ))}
                     </motion.div>
