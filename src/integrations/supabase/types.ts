@@ -1620,6 +1620,7 @@ export type Database = {
           created_at: string
           departamento_id: string | null
           descricao: string | null
+          empresa_id: string | null
           exames_obrigatorios: string[] | null
           faixa_salarial_max: number | null
           faixa_salarial_min: number | null
@@ -1635,6 +1636,7 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           exames_obrigatorios?: string[] | null
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
@@ -1650,6 +1652,7 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           exames_obrigatorios?: string[] | null
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
@@ -1666,6 +1669,13 @@ export type Database = {
             columns: ["departamento_id"]
             isOneToOne: false
             referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cargos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
             referencedColumns: ["id"]
           },
           {
@@ -2054,6 +2064,7 @@ export type Database = {
           ativo: boolean
           created_at: string
           descricao: string | null
+          empresa_id: string | null
           id: string
           nome: string
           responsavel_id: string | null
@@ -2064,6 +2075,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           nome: string
           responsavel_id?: string | null
@@ -2074,6 +2086,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           nome?: string
           responsavel_id?: string | null
@@ -2081,6 +2094,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "departamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "departamentos_tenant_id_fkey"
             columns: ["tenant_id"]
