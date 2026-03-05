@@ -749,9 +749,6 @@ function DetalheCliente({
             </CardContent>
           </Card>
 
-          {/* Checklist de documentos */}
-          <Card>
-
           {/* Contrato de Participação */}
           <Card>
             <CardHeader className="pb-3">
