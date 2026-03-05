@@ -36,7 +36,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
     isLoading: isLoadingAcoes,
     refetch: refetchAcoes,
   } = useQuery({
-    queryKey: ["plano-acoes", tenantId, filters],
+    queryKey: ["plano-acoes", tenantId, filters, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
 
@@ -47,7 +47,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         .order("pontuacao_gut", { ascending: false })
         .order("prazo", { ascending: true, nullsFirst: false });
 
-      // Aplicar filtros
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
       if (filters?.status?.length) {
         query = query.in("status", filters.status as any);
       }

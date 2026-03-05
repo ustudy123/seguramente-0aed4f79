@@ -63,14 +63,16 @@ export function useFeedbackOcorrencias() {
 
   // ========== OCORRÊNCIAS ==========
   const { data: ocorrencias = [], isLoading: isLoadingOcorrencias } = useQuery({
-    queryKey: ["ocorrencias", tenantId],
+    queryKey: ["ocorrencias", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Ocorrencia[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("ocorrencias" as never)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false }) as { data: Ocorrencia[] | null; error: Error | null };
+        .order("created_at", { ascending: false });
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q as { data: Ocorrencia[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
     },
@@ -94,6 +96,7 @@ export function useFeedbackOcorrencias() {
         .from("ocorrencias" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           ...input,
           bloqueado: isAdv,
           registrado_por: user.id,

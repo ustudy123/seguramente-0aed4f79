@@ -18,14 +18,16 @@ export function useTerceiros() {
 
   // ── Terceiros (empresas) ──
   const { data: terceiros = [], isLoading } = useQuery({
-    queryKey: ["terceiros", tenantId],
+    queryKey: ["terceiros", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("terceiros" as never)
         .select("*")
         .eq("tenant_id", tenantId)
         .order("razao_social");
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q;
       if (error) throw error;
       return data as unknown as Terceiro[];
     },
@@ -37,7 +39,7 @@ export function useTerceiros() {
       if (!tenantId) throw new Error("Sem tenant");
       const { data, error } = await supabase
         .from("terceiros" as never)
-        .insert({ ...payload, tenant_id: tenantId } as never)
+        .insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as never)
         .select()
         .single();
       if (error) throw error;

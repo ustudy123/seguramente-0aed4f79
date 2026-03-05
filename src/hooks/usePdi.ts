@@ -18,14 +18,16 @@ export function usePdi() {
 
   // ── PDIs ───────────────────────────────
   const { data: pdis = [], isLoading } = useQuery({
-    queryKey: ["pdis", tenantId],
+    queryKey: ["pdis", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Pdi[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("pdis")
         .select(`*, metas:pdi_metas(*, acoes:pdi_acoes(*))`)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data || []).map(p => ({
         ...p,
