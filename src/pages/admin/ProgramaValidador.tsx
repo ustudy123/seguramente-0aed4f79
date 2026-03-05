@@ -1260,7 +1260,7 @@ export default function ProgramaValidador() {
 
   return (
     <SuperAdminRoute>
-      <div className="min-h-screen bg-background p-6 space-y-6">
+      <div className="min-h-screen bg-muted/40 p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
