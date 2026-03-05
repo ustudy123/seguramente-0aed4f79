@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { translateError } from "@/lib/translateError";
 
 const resetPasswordSchema = z
   .object({
@@ -75,7 +76,7 @@ export default function ResetPassword() {
 
     if (error) {
       toast.error("Erro ao redefinir senha", {
-        description: error.message,
+        description: translateError(error.message),
       });
       return;
     }

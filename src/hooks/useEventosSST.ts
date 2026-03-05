@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 import type { EventoSST, EventoSSTAnexo } from "@/types/eventoSST";
 
 export const useEventosSST = () => {
@@ -124,7 +125,7 @@ export const useEventosSST = () => {
         toast.info("📁 Pasta de investigação criada automaticamente em Documentos");
       }
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const updateEvento = useMutation({
@@ -139,7 +140,7 @@ export const useEventosSST = () => {
       qc.invalidateQueries({ queryKey: ["eventos-sst"] });
       toast.success("Evento atualizado");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const deleteEvento = useMutation({
@@ -151,7 +152,7 @@ export const useEventosSST = () => {
       qc.invalidateQueries({ queryKey: ["eventos-sst"] });
       toast.success("Evento removido");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   // Anexos

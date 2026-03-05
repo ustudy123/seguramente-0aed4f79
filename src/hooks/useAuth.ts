@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, UserRole, AppRole } from '@/types/database';
+import { translateError } from '@/lib/translateError';
 
 interface AuthState {
   user: User | null;
@@ -130,9 +131,9 @@ export function useAuth() {
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error.message,
+        error: translateError(error.message),
       }));
-      return { error };
+      return { error: { ...error, message: translateError(error.message) } };
     }
 
     return { error: null };
@@ -208,12 +209,13 @@ export function useAuth() {
       setState(prev => ({ ...prev, loading: false }));
       return { error: null, user: authData.user };
     } catch (error: any) {
+      const translatedMsg = translateError(error.message);
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error.message,
+        error: translatedMsg,
       }));
-      return { error };
+      return { error: { ...error, message: translatedMsg } };
     }
   };
 

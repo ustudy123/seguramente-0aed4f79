@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 import type { TrilhaProgresso, TrilhaComProgresso, Trilha, TrilhaModulo } from "@/types/trilha";
 import { DEMO_MINHAS_TRILHAS } from "@/data/trilhas-demo";
 
@@ -97,7 +98,7 @@ export function useTrilhaProgresso() {
       qc.invalidateQueries({ queryKey: ["trilha_progresso", vars.trilhaId] });
       qc.invalidateQueries({ queryKey: ["minhas_trilhas"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const concluirModuloMut = useMutation({
@@ -164,7 +165,7 @@ export function useTrilhaProgresso() {
       qc.invalidateQueries({ queryKey: ["minhas_trilhas"] });
       toast.success("Módulo concluído! 🎉");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   return {

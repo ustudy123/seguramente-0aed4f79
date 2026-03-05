@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 
 export interface TrilhaAtribuicao {
   id: string;
@@ -61,7 +62,7 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
       qc.invalidateQueries({ queryKey: ["trilha_atribuicoes"] });
       toast.success("Trilha atribuída com sucesso!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const removerMut = useMutation({
@@ -73,7 +74,7 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
       qc.invalidateQueries({ queryKey: ["trilha_atribuicoes"] });
       toast.success("Atribuição removida!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   return {

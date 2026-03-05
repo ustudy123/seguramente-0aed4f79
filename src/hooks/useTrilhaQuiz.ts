@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 import type { TrilhaQuizPergunta } from "@/types/trilha";
 
 export function useTrilhaQuiz(moduloId?: string) {
@@ -45,7 +46,7 @@ export function useTrilhaQuiz(moduloId?: string) {
       qc.invalidateQueries({ queryKey: ["trilha_quiz", moduloId] });
       toast.success("Pergunta adicionada!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const atualizarPerguntaMut = useMutation({
@@ -60,7 +61,7 @@ export function useTrilhaQuiz(moduloId?: string) {
       qc.invalidateQueries({ queryKey: ["trilha_quiz", moduloId] });
       toast.success("Pergunta atualizada!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const excluirPerguntaMut = useMutation({
@@ -72,7 +73,7 @@ export function useTrilhaQuiz(moduloId?: string) {
       qc.invalidateQueries({ queryKey: ["trilha_quiz", moduloId] });
       toast.success("Pergunta removida!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   return {

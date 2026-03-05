@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { translateError } from "@/lib/translateError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,7 +47,7 @@ export default function Login() {
     
     if (error) {
       toast.error("Erro ao fazer login", {
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: translateError(error.message),
       });
       return;
     }
