@@ -21,7 +21,7 @@ import {
   Plus, Search, Users, Building2, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronRight, ArrowLeft, FileText,
   MessageSquare, Phone, Mail, Calendar, Shield,
-  LayoutList, Columns, ChevronLeft,
+  LayoutList, Columns, ChevronLeft, Send, ExternalLink, Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -64,6 +64,23 @@ interface Cliente {
   aceita_beta: boolean;
   observacoes: string | null;
   responsavel_seguramente: string | null;
+  endereco: string | null;
+  representante: string | null;
+  cidade_foro: string | null;
+  created_at: string;
+}
+
+interface Contrato {
+  id: string;
+  cliente_id: string;
+  token: string;
+  status: 'pendente' | 'enviado' | 'assinado' | 'recusado';
+  html_contrato: string;
+  html_assinado: string | null;
+  assinatura_img: string | null;
+  assinado_em: string | null;
+  assinado_por: string | null;
+  expira_em: string;
   created_at: string;
 }
 
@@ -108,6 +125,84 @@ const DOCS_CONFIG: { tipo: TipoDoc; label: string }[] = [
   { tipo: 'termos_uso',         label: 'Termos de Uso' },
   { tipo: 'ata_kickoff',        label: 'Ata de Kickoff' },
 ];
+
+// ─── Gerador de HTML do contrato ─────────────────────────────────────────────
+
+function gerarHtmlContrato(cliente: Cliente): string {
+  const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><style>
+  body { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.7; color: #222; max-width: 800px; margin: 0 auto; padding: 40px 30px; }
+  h1 { font-size: 15px; text-align: center; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+  h2 { font-size: 13px; text-align: center; text-transform: uppercase; margin-top: 0; margin-bottom: 30px; }
+  .clausula { margin-top: 20px; }
+  .clausula-titulo { font-weight: bold; text-transform: uppercase; }
+  .partes { background: #f9f9f9; border: 1px solid #ddd; padding: 16px; border-radius: 4px; margin: 20px 0; }
+</style></head>
+<body>
+<h1>CONTRATO DE PARTICIPAÇÃO NO PROGRAMA VALIDADOR</h1>
+<h2>E USO DA PLATAFORMA SEGURAMENTE</h2>
+<p>Pelo presente instrumento particular, de um lado:</p>
+<div class="partes">
+  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, doravante denominada <strong>SEGURAMENTE</strong>.</p>
+  <p>E de outro lado:</p>
+  <p><strong>${cliente.nome_empresa}</strong>${cliente.cnpj ? `, inscrita no CNPJ nº ${cliente.cnpj}` : ''}${cliente.endereco ? `, com sede em ${cliente.endereco}` : ''}${cliente.representante ? `, neste ato representada por <strong>${cliente.representante}</strong>` : ''}, doravante denominada <strong>EMPRESA VALIDADORA</strong>.</p>
+</div>
+<p>As partes resolvem firmar o presente contrato, que se regerá pelas cláusulas abaixo.</p>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 1 — OBJETO</p>
+<p>O presente contrato tem por objeto a participação da EMPRESA VALIDADORA no Programa Validador da Plataforma Seguramente, permitindo o acesso e utilização da plataforma em fase de validação (Beta).</p>
+<p>A plataforma Seguramente é um sistema digital destinado ao apoio à gestão organizacional, incluindo funcionalidades relacionadas à:</p>
+<ul><li>gestão de saúde e segurança do trabalho</li><li>organização de dados empresariais</li><li>indicadores organizacionais</li><li>avaliações organizacionais</li><li>gestão de processos internos.</li></ul></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 2 — NATUREZA DO PROGRAMA</p>
+<p>A EMPRESA VALIDADORA reconhece que:</p>
+<ul><li>o Seguramente encontra-se em fase de desenvolvimento e validação (Beta)</li><li>o sistema poderá sofrer atualizações, ajustes e melhorias</li><li>eventuais falhas ou instabilidades podem ocorrer durante o período de validação.</li></ul></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 3 — PRAZO</p>
+<p>O Programa Validador terá duração de 6 meses, contados a partir da liberação do acesso ao sistema.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 4 — CONDIÇÕES COMERCIAIS</p>
+<p>Durante o período do Programa Validador: o acesso ao sistema será gratuito. Após o período de validação, a EMPRESA VALIDADORA terá direito a 50% de desconto no valor da assinatura da plataforma, conforme plano contratado.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 5 — CONTRAPARTIDA DA EMPRESA</p>
+<p>A EMPRESA VALIDADORA compromete-se a: utilizar efetivamente a plataforma; fornecer feedbacks; colaborar com a evolução do sistema.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 6 — LIMITAÇÃO DE RESPONSABILIDADE</p>
+<p>A plataforma Seguramente constitui ferramenta de apoio à gestão e não substitui consultorias técnicas, jurídicas ou contábeis. A SEGURAMENTE não se responsabiliza por decisões tomadas com base nas informações apresentadas pelo sistema.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 7 — SEGURANÇA DA INFORMAÇÃO</p>
+<p>A SEGURAMENTE adota medidas técnicas e organizacionais para proteção das informações armazenadas no sistema. Os dados são armazenados em infraestrutura de computação em nuvem segura.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 8 — PROTEÇÃO DE DADOS (LGPD)</p>
+<p>A EMPRESA VALIDADORA atua como controladora dos dados, enquanto a SEGURAMENTE atua como operadora, conforme a Lei Geral de Proteção de Dados. Os dados inseridos no sistema pertencem à EMPRESA VALIDADORA.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 9 — CONFIDENCIALIDADE</p>
+<p>As partes comprometem-se a manter sigilo sobre todas as informações compartilhadas no âmbito deste contrato.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 10 — PROPRIEDADE INTELECTUAL</p>
+<p>A plataforma Seguramente constitui propriedade intelectual da SEGURAMENTE.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 11 — ENCERRAMENTO</p>
+<p>A EMPRESA VALIDADORA poderá solicitar o encerramento do uso do sistema a qualquer momento.</p></div>
+
+<div class="clausula"><p class="clausula-titulo">CLÁUSULA 12 — FORO</p>
+<p>Fica eleito o foro da comarca de ${cliente.cidade_foro || 'São Paulo'}, para dirimir eventuais controvérsias.</p></div>
+
+<p style="margin-top:30px;">Data de geração do contrato: ${dataGeracao}</p>
+
+<div style="display:flex;gap:60px;margin-top:40px;">
+  <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;">
+    <p><strong>EMPRESA VALIDADORA</strong></p>
+    <p>${cliente.representante || cliente.poc_nome || '___________________'}</p>
+  </div>
+  <div style="flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;">
+    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+  </div>
+</div>
+</body></html>`;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -230,24 +325,48 @@ export default function ProgramaValidador() {
     },
   });
 
+  const { data: contratos = [] } = useQuery({
+    queryKey: ['validador', 'contratos', clienteSelecionado?.id],
+    enabled: !!clienteSelecionado,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('programa_validador_contratos' as never)
+        .select('*')
+        .eq('cliente_id', clienteSelecionado!.id)
+        .order('created_at', { ascending: false }) as any;
+      if (error) throw error;
+      return (data || []) as Contrato[];
+    },
+  });
+
   // ── Mover fase (kanban) ──
   const moverFaseMutation = useMutation({
     mutationFn: async ({ id, fase }: { id: string; fase: Fase }) => {
+      const clienteAtual = clientes.find(c => c.id === id);
       const { error } = await supabase
         .from('programa_validador_clientes')
         .update({ fase })
         .eq('id', id);
       if (error) throw error;
-      const cliente = clientes.find(c => c.id === id);
       await supabase.from('programa_validador_historico').insert({
         cliente_id: id,
         tipo: 'fase_alterada',
         titulo: `Fase alterada para "${FASES.find(f => f.value === fase)?.label}"`,
         autor: profile?.nome_completo || 'SuperAdmin',
       });
+      // Gerar contrato ao avançar de qualificação → kickoff
+      if (clienteAtual?.fase === 'qualificacao' && fase === 'kickoff') {
+        const html = gerarHtmlContrato(clienteAtual);
+        await supabase.from('programa_validador_contratos' as never).insert({
+          cliente_id: id,
+          html_contrato: html,
+          status: 'pendente',
+        } as never);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['validador'] });
+      toast.success('Fase atualizada!');
     },
     onError: () => toast.error('Erro ao mover cliente'),
   });
@@ -272,6 +391,7 @@ export default function ProgramaValidador() {
           cliente={clienteSelecionado}
           documentos={documentos}
           historico={historico}
+          contratos={contratos}
           onBack={() => setClienteSelecionado(null)}
           onClienteUpdated={(c) => {
             setClienteSelecionado(c);
@@ -443,11 +563,12 @@ export default function ProgramaValidador() {
 // ─── Detalhe do cliente ───────────────────────────────────────────────────────
 
 function DetalheCliente({
-  cliente, documentos, historico, onBack, onClienteUpdated,
+  cliente, documentos, historico, contratos, onBack, onClienteUpdated,
 }: {
   cliente: Cliente;
   documentos: Documento[];
   historico: Historico[];
+  contratos: Contrato[];
   onBack: () => void;
   onClienteUpdated: (c: Cliente) => void;
 }) {
@@ -455,6 +576,7 @@ function DetalheCliente({
   const { profile } = useAuthContext();
   const [nota, setNota] = useState('');
   const [editandoFase, setEditandoFase] = useState(false);
+  const [showGerarContrato, setShowGerarContrato] = useState(false);
 
   const atualizarFaseMutation = useMutation({
     mutationFn: async (fase: Fase) => {
@@ -472,6 +594,16 @@ function DetalheCliente({
         titulo: `Fase alterada para "${FASES.find(f => f.value === fase)?.label}"`,
         autor: profile?.nome_completo || 'SuperAdmin',
       });
+
+      // Gerar contrato automaticamente ao avançar qualificação → kickoff
+      if (cliente.fase === 'qualificacao' && fase === 'kickoff') {
+        const html = gerarHtmlContrato({ ...cliente, fase });
+        await supabase.from('programa_validador_contratos' as never).insert({
+          cliente_id: cliente.id,
+          html_contrato: html,
+          status: 'pendente',
+        } as never);
+      }
       return data;
     },
     onSuccess: (data) => {
@@ -481,6 +613,41 @@ function DetalheCliente({
       qc.invalidateQueries({ queryKey: ['validador'] });
     },
   });
+
+  const gerarContratoMutation = useMutation({
+    mutationFn: async () => {
+      const html = gerarHtmlContrato(cliente);
+      const { data, error } = await supabase
+        .from('programa_validador_contratos' as never)
+        .insert({ cliente_id: cliente.id, html_contrato: html, status: 'pendente' } as never)
+        .select()
+        .single() as any;
+      if (error) throw error;
+      await supabase.from('programa_validador_historico' as never).insert({
+        cliente_id: cliente.id,
+        tipo: 'contrato_gerado',
+        titulo: 'Contrato gerado para assinatura eletrônica',
+        autor: profile?.nome_completo || 'SuperAdmin',
+      } as never);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Contrato gerado! Copie o link e envie para o cliente.');
+      setShowGerarContrato(false);
+      qc.invalidateQueries({ queryKey: ['validador', 'contratos', cliente.id] });
+      qc.invalidateQueries({ queryKey: ['validador', 'historico', cliente.id] });
+    },
+    onError: (err: Error) => toast.error('Erro ao gerar contrato: ' + err.message),
+  });
+
+  const copiarLink = (token: string) => {
+    const url = `${window.location.origin}/contrato-assinatura/${token}`;
+    navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
+  };
+
+  const abrirContrato = (token: string) => {
+    window.open(`${window.location.origin}/contrato-assinatura/${token}`, '_blank');
+  };
 
   const adicionarNotaMutation = useMutation({
     mutationFn: async () => {
@@ -587,6 +754,93 @@ function DetalheCliente({
                       {cliente.data_fim_piloto && ` → ${format(new Date(cliente.data_fim_piloto), 'dd/MM/yyyy')}`}
                     </span>
                   )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Contrato de Participação */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Contrato de Participação
+                </span>
+                <Button variant="outline" size="sm" onClick={() => setShowGerarContrato(true)}>
+                  <Plus className="w-3 h-3 mr-1" />
+                  Gerar novo
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {contratos.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">Nenhum contrato gerado</p>
+                  <p className="text-xs mt-1">O contrato é gerado automaticamente ao mover de Qualificação → Kickoff</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {contratos.map(c => (
+                    <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {c.status === 'assinado' ? (
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                          ) : c.status === 'enviado' ? (
+                            <Clock className="w-4 h-4 text-accent-foreground" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                          )}
+                          <span className="text-sm font-medium capitalize">{c.status}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Gerado em {format(new Date(c.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                          {c.assinado_em && ` · Assinado em ${format(new Date(c.assinado_em), 'dd/MM/yyyy', { locale: ptBR })}`}
+                          {c.assinado_por && ` por ${c.assinado_por}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {c.status !== 'assinado' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => copiarLink(c.token)}
+                          >
+                            <Send className="w-3 h-3 mr-1" />
+                            Copiar link
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => abrirContrato(c.token)}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Modal confirmação gerar contrato */}
+              {showGerarContrato && (
+                <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-3">
+                  <p className="text-sm font-medium">Gerar contrato para <strong>{cliente.nome_empresa}</strong>?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Será gerado um link único para assinatura eletrônica.
+                    {!cliente.representante && ' Você pode adicionar o nome do representante no cadastro da empresa para incluir no contrato.'}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowGerarContrato(false)}>Cancelar</Button>
+                    <Button size="sm" disabled={gerarContratoMutation.isPending} onClick={() => gerarContratoMutation.mutate()}>
+                      {gerarContratoMutation.isPending ? 'Gerando...' : 'Confirmar'}
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
