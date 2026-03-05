@@ -982,7 +982,12 @@ function KanbanCard({
   return (
     <div className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-all space-y-2">
       <div className="cursor-pointer" onClick={onOpen}>
-        <p className="font-semibold text-sm leading-tight">{cliente.nome_empresa}</p>
+        <div className="flex items-center justify-between gap-1">
+          <p className="font-semibold text-sm leading-tight truncate">{cliente.nome_empresa}</p>
+          <span className={`text-xs shrink-0 ${cliente.tipo_cliente === 'pagante' ? 'text-primary' : 'text-muted-foreground'}`}>
+            {cliente.tipo_cliente === 'pagante' ? '💼' : '🧪'}
+          </span>
+        </div>
         {cliente.poc_nome && (
           <p className="text-xs text-muted-foreground mt-0.5">{cliente.poc_nome}</p>
         )}
