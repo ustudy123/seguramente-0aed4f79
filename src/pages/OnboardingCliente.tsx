@@ -45,6 +45,8 @@ interface DocumentoLink {
   token: string;
   status: 'pendente' | 'visualizado' | 'aceito' | 'recusado';
   aceito_em: string | null;
+  html_assinado: string | null;
+  html_documento: string | null;
 }
 
 interface OnboardingState {
