@@ -99,7 +99,7 @@ export function useIndicatorHistory(indicator: IndicatorType, monthsBack = 6) {
             const mHumor = humores.filter(h => h.data >= mStart && h.data <= mEnd);
             const positivo = mHumor.filter(h => ["bem", "animado", "motivado"].includes(h.humor)).length;
             const pendente = ouvidoria.filter(o => o.created_at >= startOfMonth(m.year, m.month) && o.created_at <= endOfMonth(m.year, m.month) && o.status === "pendente").length;
-            const score = mHumor.length > 0
+            const score = mHumor.length >= 3
               ? Math.round((positivo / mHumor.length) * 80 + (pendente === 0 ? 20 : Math.max(0, 20 - pendente * 5)))
               : 0;
             return { month: m.label, score };

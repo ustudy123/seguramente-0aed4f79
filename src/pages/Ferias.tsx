@@ -77,38 +77,7 @@ interface FeriasItem {
   salarioBase?: number;
 }
 
-const initialFerias: FeriasItem[] = [
-  {
-    id: 1, colaborador: "Ana Carolina Silva", departamento: "Recursos Humanos",
-    dataInicio: "2025-02-15", dataFim: "2025-03-01", diasSolicitados: 15,
-    saldoDias: 30, status: "pendente", dataSolicitacao: "2025-01-10",
-    abonoPecuniario: true, diasAbono: 10, salarioBase: 5500,
-  },
-  {
-    id: 2, colaborador: "Carlos Eduardo Mendes", departamento: "Tecnologia",
-    dataInicio: "2025-01-20", dataFim: "2025-02-04", diasSolicitados: 15,
-    saldoDias: 15, status: "aprovado", dataSolicitacao: "2024-12-15",
-    abonoPecuniario: false, diasAbono: 0, salarioBase: 7200,
-  },
-  {
-    id: 3, colaborador: "Paula Santos Oliveira", departamento: "Projetos",
-    dataInicio: "2025-03-10", dataFim: "2025-03-25", diasSolicitados: 15,
-    saldoDias: 30, status: "pendente", dataSolicitacao: "2025-01-15",
-    abonoPecuniario: false, diasAbono: 0, salarioBase: 4800,
-  },
-  {
-    id: 4, colaborador: "João Pedro Almeida", departamento: "Financeiro",
-    dataInicio: "2025-02-01", dataFim: "2025-02-10", diasSolicitados: 10,
-    saldoDias: 20, status: "recusado", dataSolicitacao: "2025-01-05",
-    abonoPecuniario: false, diasAbono: 0, salarioBase: 6000,
-  },
-  {
-    id: 5, colaborador: "Maria Fernanda Costa", departamento: "Design",
-    dataInicio: "2025-04-01", dataFim: "2025-04-20", diasSolicitados: 20,
-    saldoDias: 30, status: "pendente", dataSolicitacao: "2025-01-16",
-    abonoPecuniario: true, diasAbono: 10, salarioBase: 5000,
-  },
-];
+const initialFerias: FeriasItem[] = [];
 
 const statusConfig = {
   pendente: {
@@ -741,21 +710,27 @@ const Ferias = () => {
         </motion.div>
 
         <TabsContent value="solicitacoes" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredFerias.map((item, index) => (
-              <FeriasCard 
-                key={item.id} 
-                item={item} 
-                index={index}
-                onAprovar={handleAprovar}
-                onRecusar={handleRecusar}
-                onGerarAviso={handleGerarAviso}
-                onGerarRecibo={handleGerarRecibo}
-                onGerarFinanceiro={handleGerarFinanceiro}
-                onLinkAssinatura={handleLinkAssinatura}
-              />
-            ))}
-          </div>
+          {filteredFerias.length === 0 ? (
+            <div className="bg-card rounded-xl border border-border p-10 text-center">
+              <p className="text-sm text-muted-foreground">Nenhuma solicitação de férias cadastrada.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredFerias.map((item, index) => (
+                <FeriasCard 
+                  key={item.id} 
+                  item={item} 
+                  index={index}
+                  onAprovar={handleAprovar}
+                  onRecusar={handleRecusar}
+                  onGerarAviso={handleGerarAviso}
+                  onGerarRecibo={handleGerarRecibo}
+                  onGerarFinanceiro={handleGerarFinanceiro}
+                  onLinkAssinatura={handleLinkAssinatura}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="calendario">

@@ -110,7 +110,7 @@ export const useDashboardData = () => {
       const humorPositivo = humores.filter(h => ["bem", "animado", "motivado"].includes(h.humor)).length;
       const ouvidoriaPendente = ouvidoriaRes.count || 0;
       const feedHoje = feedRes.count || 0;
-      const scoreExperiencia = humores.length > 0 
+      const scoreExperiencia = humores.length >= 3 
         ? Math.round((humorPositivo / humores.length) * 80 + (ouvidoriaPendente === 0 ? 20 : Math.max(0, 20 - ouvidoriaPendente * 5)))
         : 0;
 
