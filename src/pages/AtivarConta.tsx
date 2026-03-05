@@ -246,13 +246,13 @@ export default function AtivarConta() {
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img src={authBg} alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,12%/0.93)] to-[hsl(280,30%,10%/0.96)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-secondary/95" style={{ background: 'linear-gradient(135deg, hsl(262 40% 12% / 0.93), hsl(280 30% 10% / 0.96))' }} />
       </div>
 
       {/* Decorative blobs */}
       <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-20 w-96 h-96 bg-[hsl(24,90%,54%/0.07)] rounded-full blur-3xl" />
-        <div className="absolute bottom-0 -right-20 w-80 h-80 bg-[hsl(262,50%,50%/0.1)] rounded-full blur-3xl" />
+        <div className="absolute top-0 -left-20 w-96 h-96 rounded-full blur-3xl opacity-10" style={{ background: 'hsl(24 90% 54%)' }} />
+        <div className="absolute bottom-0 -right-20 w-80 h-80 rounded-full blur-3xl opacity-10" style={{ background: 'hsl(262 50% 50%)' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
