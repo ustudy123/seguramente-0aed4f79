@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 
 export default function AssinaturaContrato() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const sigRef = useRef<SignatureCanvas>(null);
   const [etapa, setEtapa] = useState<'leitura' | 'assinatura' | 'concluido'>('leitura');
   const [nome, setNome] = useState('');
@@ -21,7 +22,7 @@ export default function AssinaturaContrato() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_contratos' as never)
-        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email)')
+        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token)')
         .eq('token', token!)
         .single() as any;
       if (error) throw error;
@@ -74,7 +75,13 @@ export default function AssinaturaContrato() {
       } as never);
     },
     onSuccess: () => {
-      setEtapa('concluido');
+      const onboardingToken = contrato?.programa_validador_clientes?.onboarding_token;
+      if (onboardingToken) {
+        toast.success('Contrato assinado com sucesso!');
+        navigate(`/onboarding-cliente/${onboardingToken}`);
+      } else {
+        setEtapa('concluido');
+      }
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -121,24 +128,6 @@ export default function AssinaturaContrato() {
     );
   }
 
-  if (etapa === 'concluido') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-6 text-primary" />
-            <h2 className="text-2xl font-bold mb-3">Contrato assinado!</h2>
-            <p className="text-muted-foreground">
-              Seu contrato de participação no <strong>Programa Validador Seguramente</strong> foi registrado com sucesso.
-            </p>
-            <p className="text-sm text-muted-foreground mt-3">
-              Você receberá as instruções de acesso em breve.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
