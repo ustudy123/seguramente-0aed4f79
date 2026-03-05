@@ -402,55 +402,139 @@ function StepColaboradores({ cliente, onConcluir }: { cliente: Cliente; onConclu
   );
 }
 
+// ─── Quiz Diagnóstico ─────────────────────────────────────────────────────────
+
+const QUIZ_PERGUNTAS = [
+  {
+    id: "q1",
+    texto: "Sua empresa já mapeou os riscos psicossociais conforme a NR-01 atualizada?",
+    opcoes: [
+      { label: "Sim, totalmente mapeado", valor: 0 },
+      { label: "Parcialmente", valor: 1 },
+      { label: "Não, ainda não fizemos", valor: 3 },
+      { label: "Não sei o que é isso", valor: 4 },
+    ],
+  },
+  {
+    id: "q2",
+    texto: "Como está o índice de afastamentos por saúde mental (burnout, ansiedade, depressão)?",
+    opcoes: [
+      { label: "Não temos casos", valor: 0 },
+      { label: "Poucos casos isolados", valor: 1 },
+      { label: "Temos casos frequentes", valor: 3 },
+      { label: "Não monitoramos isso", valor: 4 },
+    ],
+  },
+  {
+    id: "q3",
+    texto: "Existe algum canal para denúncia de assédio moral ou sexual na empresa?",
+    opcoes: [
+      { label: "Sim, formal e ativo", valor: 0 },
+      { label: "Existe mas pouco usado", valor: 1 },
+      { label: "Não existe", valor: 3 },
+    ],
+  },
+  {
+    id: "q4",
+    texto: "Qual o turnover (rotatividade) nos últimos 12 meses?",
+    opcoes: [
+      { label: "Abaixo de 10%", valor: 0 },
+      { label: "Entre 10% e 25%", valor: 1 },
+      { label: "Entre 25% e 40%", valor: 3 },
+      { label: "Acima de 40%", valor: 4 },
+    ],
+  },
+  {
+    id: "q5",
+    texto: "A empresa realiza avaliações de clima organizacional periodicamente?",
+    opcoes: [
+      { label: "Sim, pelo menos anualmente", valor: 0 },
+      { label: "Já fizemos uma vez", valor: 1 },
+      { label: "Nunca realizamos", valor: 3 },
+    ],
+  },
+  {
+    id: "q6",
+    texto: "Sua empresa possui PGR (Programa de Gerenciamento de Riscos) com fatores psicossociais?",
+    opcoes: [
+      { label: "Sim, atualizado", valor: 0 },
+      { label: "Temos PGR mas sem psicossocial", valor: 2 },
+      { label: "PGR desatualizado", valor: 3 },
+      { label: "Não temos PGR", valor: 4 },
+    ],
+  },
+  {
+    id: "q7",
+    texto: "Quantos processos trabalhistas a empresa recebeu nos últimos 2 anos?",
+    opcoes: [
+      { label: "Nenhum", valor: 0 },
+      { label: "1 a 3", valor: 1 },
+      { label: "4 a 10", valor: 3 },
+      { label: "Mais de 10", valor: 4 },
+    ],
+  },
+];
+
 // ─── Step: Diagnóstico ────────────────────────────────────────────────────────
 
 function StepDiagnostico({ cliente, onConcluir }: { cliente: Cliente; onConcluir: () => void }) {
   const maturidade = calcularNivelMaturidade(cliente.quantidade_colaboradores);
-  const [iniciado, setIniciado] = useState(false);
+  const [fase, setFase] = useState<'intro' | 'quiz' | 'resultado'>('intro');
+  const [etapa, setEtapa] = useState(0);
+  const [respostas, setRespostas] = useState<Record<string, number>>({});
   const [salvando, setSalvando] = useState(false);
 
-  const handleIniciar = async () => {
+  const perguntaAtual = QUIZ_PERGUNTAS[etapa];
+  const pontuacao = Object.values(respostas).reduce((a, b) => a + b, 0);
+  const maxPontos = QUIZ_PERGUNTAS.length * 4;
+  const percentual = Math.round((pontuacao / maxPontos) * 100);
+  const nivel = percentual >= 60 ? 'critico' : percentual >= 30 ? 'atencao' : 'adequado';
+
+  const handleResposta = (valor: number) => {
+    const novas = { ...respostas, [perguntaAtual.id]: valor };
+    setRespostas(novas);
+    if (etapa < QUIZ_PERGUNTAS.length - 1) {
+      setTimeout(() => setEtapa(etapa + 1), 250);
+    } else {
+      setTimeout(() => setFase('resultado'), 250);
+    }
+  };
+
+  const handleSalvar = async () => {
     setSalvando(true);
     try {
       await supabase
         .from('programa_validador_clientes')
-        .update({ diagnostico_iniciado: true } as never)
+        .update({
+          diagnostico_iniciado: true,
+          diagnostico_resultado: { respostas, pontuacao, percentual, nivel } as never,
+        } as never)
         .eq('id', cliente.id);
-      setIniciado(true);
+      toast.success('Diagnóstico salvo com sucesso!');
+      onConcluir();
     } catch (e) {
       console.error(e);
+      toast.error('Erro ao salvar diagnóstico');
     } finally {
       setSalvando(false);
     }
   };
 
-  if (iniciado) {
+  // ── Intro ──
+  if (fase === 'intro') {
     return (
       <div className="space-y-4">
-        <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl text-center space-y-3">
-          <CheckCircle2 className="w-12 h-12 mx-auto text-primary" />
-          <p className="font-semibold">Diagnóstico registrado com sucesso!</p>
-          <p className="text-sm text-muted-foreground">
-            O {maturidade.modulo} foi ativado. Nossa equipe entrará em contato para guiar você na execução do diagnóstico dentro da plataforma.
+        <div className="p-4 bg-primary/5 border border-primary/15 rounded-xl space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold">Diagnóstico Psicossocial — NR-01</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Responda 7 perguntas rápidas sobre o nível de gestão de riscos psicossociais da sua empresa.
+            O resultado gerará recomendações personalizadas.
           </p>
         </div>
-        <Button onClick={onConcluir} className="w-full" variant="outline">
-          ← Voltar ao assistente
-        </Button>
-      </div>
-    );
-  }
 
-  return (
-    <div className="space-y-4">
-      <div className="p-4 bg-primary/5 border border-primary/15 rounded-xl space-y-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <p className="text-sm font-semibold">Análise do perfil da empresa</p>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Com base nos dados inseridos, o sistema identificou o nível de maturidade da sua organização:
-        </p>
         <div className="flex items-center gap-3 bg-background rounded-lg p-3 border border-border">
           <div className="flex gap-1">
             {[1,2,3].map(n => (
@@ -462,32 +546,145 @@ function StepDiagnostico({ cliente, onConcluir }: { cliente: Cliente; onConcluir
             <p className="text-xs text-muted-foreground">{maturidade.descricao}</p>
           </div>
         </div>
-      </div>
 
-      <div className="p-4 border border-primary/20 rounded-xl bg-background space-y-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Módulo recomendado para você</p>
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <BarChart3 className="w-5 h-5 text-primary" />
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { icon: <BarChart3 className="w-4 h-4" />, label: '7 perguntas' },
+            { icon: <Clock className="w-4 h-4" />, label: '~3 minutos' },
+            { icon: <Shield className="w-4 h-4" />, label: 'Baseado NR-01' },
+          ].map(item => (
+            <div key={item.label} className="p-2 bg-muted/50 rounded-lg flex flex-col items-center gap-1">
+              <span className="text-primary">{item.icon}</span>
+              <span className="text-xs text-muted-foreground">{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-2">
+          <Button onClick={() => setFase('quiz')} className="w-full">
+            <Rocket className="w-4 h-4 mr-2" />
+            Iniciar Diagnóstico
+          </Button>
+          <Button variant="outline" onClick={onConcluir} className="w-full text-muted-foreground">
+            Fazer isso depois
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Quiz ──
+  if (fase === 'quiz') {
+    return (
+      <div className="space-y-4">
+        {/* Progress */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Pergunta {etapa + 1} de {QUIZ_PERGUNTAS.length}</span>
+            <span>{Math.round(((etapa + 1) / QUIZ_PERGUNTAS.length) * 100)}%</span>
           </div>
-          <div>
-            <p className="text-sm font-semibold">{maturidade.modulo}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {maturidade.nivel === 1 && 'Mapeie comunicação, clima, organização e carga de trabalho da sua empresa.'}
-              {maturidade.nivel === 2 && 'Identifique fatores de risco psicossocial alinhados à NR-1.'}
-              {maturidade.nivel === 3 && 'Diagnóstico completo incluindo psicossocial, estrutura organizacional e indicadores de gestão.'}
-            </p>
-          </div>
+          <Progress value={((etapa + 1) / QUIZ_PERGUNTAS.length) * 100} className="h-2" />
+        </div>
+
+        {/* Pergunta */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={etapa}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
+            <p className="text-sm font-semibold leading-snug">{perguntaAtual.texto}</p>
+            <div className="space-y-2">
+              {perguntaAtual.opcoes.map((opcao, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleResposta(opcao.valor)}
+                  className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${
+                    respostas[perguntaAtual.id] === opcao.valor
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border bg-background hover:border-primary/40 hover:bg-primary/5'
+                  }`}
+                >
+                  {opcao.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {etapa > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setEtapa(etapa - 1)} className="text-muted-foreground">
+            ← Voltar
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // ── Resultado ──
+  const nivelConfig = {
+    critico: {
+      icon: <AlertCircle className="w-10 h-10 text-destructive" />,
+      bg: 'bg-destructive/10 border-destructive/20',
+      titulo: '🚨 Risco Crítico Identificado',
+      texto: 'Sua empresa apresenta vulnerabilidades graves relacionadas à gestão de riscos psicossociais. A NR-01 exige ação imediata.',
+      cor: 'text-destructive',
+    },
+    atencao: {
+      icon: <AlertCircle className="w-10 h-10 text-amber-500" />,
+      bg: 'bg-amber-500/10 border-amber-500/20',
+      titulo: '⚠️ Atenção Necessária',
+      texto: 'Existem gaps importantes que podem gerar problemas com a fiscalização. Ainda dá tempo de corrigir.',
+      cor: 'text-amber-600',
+    },
+    adequado: {
+      icon: <CheckCircle2 className="w-10 h-10 text-primary" />,
+      bg: 'bg-primary/10 border-primary/20',
+      titulo: '✅ No Caminho Certo',
+      texto: 'Sua empresa demonstra boa maturidade. A plataforma vai aprofundar ainda mais seus controles.',
+      cor: 'text-primary',
+    },
+  }[nivel];
+
+  return (
+    <div className="space-y-4">
+      <div className={`p-5 rounded-xl border text-center space-y-3 ${nivelConfig.bg}`}>
+        <div className="flex justify-center">{nivelConfig.icon}</div>
+        <p className={`font-bold text-base ${nivelConfig.cor}`}>{nivelConfig.titulo}</p>
+        <p className="text-xs text-muted-foreground">{nivelConfig.texto}</p>
+        <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${nivelConfig.cor} bg-background border`}>
+          Pontuação de risco: {pontuacao}/{maxPontos} ({percentual}%)
         </div>
       </div>
 
+      <div className="space-y-2">
+        {QUIZ_PERGUNTAS.map((p, i) => {
+          const val = respostas[p.id];
+          const opcao = p.opcoes.find(o => o.valor === val);
+          return (
+            <div key={p.id} className="flex items-start gap-2 text-xs">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-muted flex items-center justify-center font-bold text-muted-foreground">{i+1}</span>
+              <div>
+                <p className="text-muted-foreground">{p.texto}</p>
+                <p className={`font-medium mt-0.5 ${val >= 3 ? 'text-destructive' : val >= 1 ? 'text-amber-600' : 'text-primary'}`}>
+                  {opcao?.label}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="grid grid-cols-1 gap-2">
-        <Button onClick={handleIniciar} disabled={salvando} className="w-full">
-          <Rocket className="w-4 h-4 mr-2" />
-          {salvando ? 'Registrando...' : `Iniciar ${maturidade.modulo}`}
+        <Button onClick={handleSalvar} disabled={salvando} className="w-full">
+          {salvando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+          {salvando ? 'Salvando...' : 'Salvar Diagnóstico e Continuar'}
         </Button>
-        <Button variant="outline" onClick={onConcluir} className="w-full text-muted-foreground">
-          Fazer isso depois
+        <Button variant="ghost" size="sm" onClick={() => { setFase('quiz'); setEtapa(0); }} className="text-muted-foreground">
+          Refazer quiz
         </Button>
       </div>
     </div>
