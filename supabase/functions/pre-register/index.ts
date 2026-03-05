@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { nomeCompleto, email, tipoPessoa, documento, tenantNome, tenantSlug } = await req.json();
+    const { nomeCompleto, email, tipoPessoa, documento, tenantNome, tenantSlug, empresaDados } = await req.json();
 
     if (!nomeCompleto || !email || !tenantNome) {
       return new Response(JSON.stringify({ error: "Campos obrigatórios não preenchidos" }), {
@@ -39,7 +39,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert into programa_validador_clientes with all available data
+    const enderecoCompleto = empresaDados
+      ? [
+          empresaDados.logradouro,
+          empresaDados.numero,
+          empresaDados.complemento,
+          empresaDados.bairro,
+          empresaDados.municipio,
+          empresaDados.uf,
+          empresaDados.cep ? `CEP ${empresaDados.cep}` : null,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : null;
+
+    const cidadeForo = empresaDados?.municipio
+      ? `${empresaDados.municipio}${empresaDados?.uf ? `/${empresaDados.uf}` : ""}`
+      : null;
+
+    // Insert into programa_validador_clientes com dados completos do pré-cadastro
     const { error } = await supabaseAdmin
       .from("programa_validador_clientes")
       .insert({
@@ -47,10 +65,32 @@ Deno.serve(async (req) => {
         cnpj: documento || null,
         poc_nome: nomeCompleto,
         poc_email: email,
+        poc_telefone: empresaDados?.telefone || null,
+        representante: nomeCompleto,
         tipo_cliente: "pagante",
         fase: "prospeccao",
-        segmento: tipoPessoa === "pj" ? "Pessoa Jurídica" : "Pessoa Física",
-        observacoes: `Cadastro público via /register | Tipo: ${tipoPessoa === "pj" ? "PJ" : "PF"} | Documento: ${documento} | Slug: ${tenantSlug}`,
+        segmento:
+          empresaDados?.cnaeDescricao ||
+          (tipoPessoa === "pj" ? "Pessoa Jurídica" : "Pessoa Física"),
+        tamanho_empresa: empresaDados?.porte || null,
+        endereco: enderecoCompleto,
+        cidade_foro: cidadeForo,
+        observacoes: [
+          "Cadastro público via /register",
+          `Tipo: ${tipoPessoa === "pj" ? "PJ" : "PF"}`,
+          `Documento: ${documento || "não informado"}`,
+          `Slug: ${tenantSlug || "não informado"}`,
+          empresaDados?.nomeFantasia ? `Nome fantasia: ${empresaDados.nomeFantasia}` : null,
+          empresaDados?.razaoSocial ? `Razão social: ${empresaDados.razaoSocial}` : null,
+          empresaDados?.emailEmpresa ? `E-mail empresa: ${empresaDados.emailEmpresa}` : null,
+          empresaDados?.cnaeFiscal ? `CNAE: ${empresaDados.cnaeFiscal}` : null,
+          empresaDados?.cnaeDescricao ? `Atividade principal: ${empresaDados.cnaeDescricao}` : null,
+          empresaDados?.cnaesSecundarios?.length
+            ? `CNAEs secundários: ${empresaDados.cnaesSecundarios.map((c: { codigo: number; descricao: string }) => `${c.codigo} - ${c.descricao}`).join(" | ")}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" | "),
       });
 
     if (error) {

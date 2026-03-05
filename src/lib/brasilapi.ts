@@ -14,6 +14,8 @@ export interface BrasilApiCnpjResponse {
   cnae_fiscal: number;
   cnae_fiscal_descricao: string;
   cnaes_secundarios: { codigo: number; descricao: string }[];
+  porte?: string;
+  natureza_juridica?: string;
 }
 
 export const cleanCnpj = (cnpj: string): string => cnpj.replace(/\D/g, "");
