@@ -11316,6 +11316,72 @@ export type Database = {
           },
         ]
       }
+      programa_validador_documento_links: {
+        Row: {
+          aceito_em: string | null
+          aceito_por: string | null
+          cliente_id: string
+          created_at: string
+          documento_id: string | null
+          expira_em: string
+          html_documento: string
+          id: string
+          motivo_recusa: string | null
+          recusado_em: string | null
+          status: string
+          tipo: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          aceito_em?: string | null
+          aceito_por?: string | null
+          cliente_id: string
+          created_at?: string
+          documento_id?: string | null
+          expira_em?: string
+          html_documento: string
+          id?: string
+          motivo_recusa?: string | null
+          recusado_em?: string | null
+          status?: string
+          tipo: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          aceito_em?: string | null
+          aceito_por?: string | null
+          cliente_id?: string
+          created_at?: string
+          documento_id?: string | null
+          expira_em?: string
+          html_documento?: string
+          id?: string
+          motivo_recusa?: string | null
+          recusado_em?: string | null
+          status?: string
+          tipo?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programa_validador_documento_links_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "programa_validador_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programa_validador_documento_links_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "programa_validador_documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       programa_validador_documentos: {
         Row: {
           aceito_em: string | null
