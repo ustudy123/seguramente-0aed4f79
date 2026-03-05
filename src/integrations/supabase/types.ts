@@ -3522,6 +3522,7 @@ export type Database = {
           data_conclusao: string | null
           data_inicio: string | null
           descricao: string | null
+          empresa_id: string | null
           evidencia_conclusao: string | null
           id: string
           item_nr17_id: string | null
@@ -3543,6 +3544,7 @@ export type Database = {
           data_conclusao?: string | null
           data_inicio?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           evidencia_conclusao?: string | null
           id?: string
           item_nr17_id?: string | null
@@ -3564,6 +3566,7 @@ export type Database = {
           data_conclusao?: string | null
           data_inicio?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           evidencia_conclusao?: string | null
           id?: string
           item_nr17_id?: string | null
@@ -3579,6 +3582,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ergonomia_acoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ergonomia_acoes_item_nr17_id_fkey"
             columns: ["item_nr17_id"]
@@ -3602,6 +3612,7 @@ export type Database = {
           arquivo_url: string | null
           created_at: string
           descricao: string | null
+          empresa_id: string | null
           enviado_por: string | null
           enviado_por_nome: string | null
           id: string
@@ -3616,6 +3627,7 @@ export type Database = {
           arquivo_url?: string | null
           created_at?: string
           descricao?: string | null
+          empresa_id?: string | null
           enviado_por?: string | null
           enviado_por_nome?: string | null
           id?: string
@@ -3630,6 +3642,7 @@ export type Database = {
           arquivo_url?: string | null
           created_at?: string
           descricao?: string | null
+          empresa_id?: string | null
           enviado_por?: string | null
           enviado_por_nome?: string | null
           id?: string
@@ -3639,6 +3652,13 @@ export type Database = {
           titulo?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ergonomia_evidencias_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ergonomia_evidencias_item_nr17_id_fkey"
             columns: ["item_nr17_id"]
@@ -3655,6 +3675,7 @@ export type Database = {
           created_at: string
           data_avaliacao: string | null
           descricao: string | null
+          empresa_id: string | null
           id: string
           observacoes: string | null
           proxima_reavaliacao: string | null
@@ -3671,6 +3692,7 @@ export type Database = {
           created_at?: string
           data_avaliacao?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           observacoes?: string | null
           proxima_reavaliacao?: string | null
@@ -3687,6 +3709,7 @@ export type Database = {
           created_at?: string
           data_avaliacao?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           observacoes?: string | null
           proxima_reavaliacao?: string | null
@@ -3697,7 +3720,15 @@ export type Database = {
           titulo?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ergonomia_itens_nr17_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ergonomia_maturidade: {
         Row: {
@@ -3754,6 +3785,7 @@ export type Database = {
           departamento: string | null
           descricao: string | null
           eixo: Database["public"]["Enums"]["ergonomia_eixo"]
+          empresa_id: string | null
           fonte: string | null
           id: string
           impactos_potenciais: string[] | null
@@ -3773,6 +3805,7 @@ export type Database = {
           departamento?: string | null
           descricao?: string | null
           eixo: Database["public"]["Enums"]["ergonomia_eixo"]
+          empresa_id?: string | null
           fonte?: string | null
           id?: string
           impactos_potenciais?: string[] | null
@@ -3792,6 +3825,7 @@ export type Database = {
           departamento?: string | null
           descricao?: string | null
           eixo?: Database["public"]["Enums"]["ergonomia_eixo"]
+          empresa_id?: string | null
           fonte?: string | null
           id?: string
           impactos_potenciais?: string[] | null
@@ -3806,6 +3840,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ergonomia_riscos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ergonomia_riscos_item_nr17_id_fkey"
             columns: ["item_nr17_id"]

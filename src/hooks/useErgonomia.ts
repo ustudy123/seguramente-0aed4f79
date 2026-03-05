@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "./useTenant";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type { 
   ItemNR17, 
@@ -15,20 +16,24 @@ import type {
 
 export function useErgonomia() {
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // Buscar itens NR-17
   const { data: itensNR17 = [], isLoading: isLoadingItens, refetch: refetchItens } = useQuery({
-    queryKey: ["ergonomia-itens-nr17", tenantId],
+    queryKey: ["ergonomia-itens-nr17", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("ergonomia_itens_nr17")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("codigo", { ascending: true });
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as ItemNR17[];
     },
@@ -37,17 +42,20 @@ export function useErgonomia() {
 
   // Buscar riscos
   const { data: riscos = [], isLoading: isLoadingRiscos } = useQuery({
-    queryKey: ["ergonomia-riscos", tenantId],
+    queryKey: ["ergonomia-riscos", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("ergonomia_riscos")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
         .order("created_at", { ascending: false });
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as ErgonomiaRisco[];
     },
@@ -56,16 +64,19 @@ export function useErgonomia() {
 
   // Buscar ações
   const { data: acoes = [], isLoading: isLoadingAcoes } = useQuery({
-    queryKey: ["ergonomia-acoes", tenantId],
+    queryKey: ["ergonomia-acoes", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("ergonomia_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as ErgonomiaAcao[];
     },
@@ -91,7 +102,7 @@ export function useErgonomia() {
       
       const { data, error } = await supabase
         .from("ergonomia_itens_nr17")
-        .insert({ ...item, tenant_id: tenantId })
+        .insert({ ...item, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
@@ -143,6 +154,7 @@ export function useErgonomia() {
       const itensComTenant = itensPadrao.map(item => ({
         ...item,
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
       }));
 
       const { data, error } = await supabase
@@ -170,7 +182,7 @@ export function useErgonomia() {
       
       const { data, error } = await supabase
         .from("ergonomia_riscos")
-        .insert({ ...risco, tenant_id: tenantId })
+        .insert({ ...risco, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
@@ -194,7 +206,7 @@ export function useErgonomia() {
       
       const { data, error } = await supabase
         .from("ergonomia_acoes")
-        .insert({ ...acao, tenant_id: tenantId })
+        .insert({ ...acao, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
