@@ -64,6 +64,23 @@ interface Cliente {
   aceita_beta: boolean;
   observacoes: string | null;
   responsavel_seguramente: string | null;
+  endereco: string | null;
+  representante: string | null;
+  cidade_foro: string | null;
+  created_at: string;
+}
+
+interface Contrato {
+  id: string;
+  cliente_id: string;
+  token: string;
+  status: 'pendente' | 'enviado' | 'assinado' | 'recusado';
+  html_contrato: string;
+  html_assinado: string | null;
+  assinatura_img: string | null;
+  assinado_em: string | null;
+  assinado_por: string | null;
+  expira_em: string;
   created_at: string;
 }
 
