@@ -2070,7 +2070,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         .insert({
           nome: form.nome_empresa,
           slug: slugUnique,
-          plano: form.tipo_cliente === 'pagante' ? 'pro' : 'free',
+          plano: form.tipo_cliente === 'pagante' ? 'professional' : 'free',
           ativo: true,
         })
         .select('id')
