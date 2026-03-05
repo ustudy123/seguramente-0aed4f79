@@ -103,7 +103,7 @@ export const useDashboardData = () => {
       const riscosAtivos = riscosRes.count || 0;
       const scoreCondicoes = itensTotal > 0 
         ? Math.round(((itensAtendidos + itensParciais * 0.5) / itensTotal) * 100) 
-        : (epis.length > 0 ? 50 : 30);
+        : (epis.length > 0 ? 50 : 0);
 
       // Calcular métricas Pilar 3
       const humores = humorRes.data || [];
@@ -112,7 +112,7 @@ export const useDashboardData = () => {
       const feedHoje = feedRes.count || 0;
       const scoreExperiencia = humores.length > 0 
         ? Math.round((humorPositivo / humores.length) * 80 + (ouvidoriaPendente === 0 ? 20 : Math.max(0, 20 - ouvidoriaPendente * 5)))
-        : 40;
+        : 0;
 
       // Calcular métricas Pilar 4
       const acoes = acoesRes.data || [];
@@ -133,7 +133,7 @@ export const useDashboardData = () => {
       
       const scoreGovernanca = acoes.length > 0 
         ? Math.min(100, Math.round((acoesConcluidas / acoes.length) * 50 + (evidencias > 0 ? 15 : 0) + (acoesEmAndamento > 0 ? 15 : 0) + Math.max(0, terceirosBonus) + (ptsBloqueadas === 0 && terceirosAtivos > 0 ? 10 : 0)))
-        : 35;
+        : 0;
 
       return {
         organizacao: {
