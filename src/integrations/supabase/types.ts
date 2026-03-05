@@ -3883,6 +3883,7 @@ export type Database = {
           created_at: string
           criado_por: string | null
           criado_por_nome: string | null
+          empresa_id: string | null
           id: string
           missao: string | null
           principios: Json | null
@@ -3897,6 +3898,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           criado_por_nome?: string | null
+          empresa_id?: string | null
           id?: string
           missao?: string | null
           principios?: Json | null
@@ -3911,6 +3913,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           criado_por_nome?: string | null
+          empresa_id?: string | null
           id?: string
           missao?: string | null
           principios?: Json | null
@@ -3920,6 +3923,13 @@ export type Database = {
           visao?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "estrategia_cultura_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "estrategia_cultura_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -3935,6 +3945,7 @@ export type Database = {
           criado_por: string | null
           criado_por_nome: string | null
           descricao: string | null
+          empresa_id: string | null
           id: string
           swot_id: string | null
           tenant_id: string
@@ -3946,6 +3957,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           swot_id?: string | null
           tenant_id: string
@@ -3957,6 +3969,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           swot_id?: string | null
           tenant_id?: string
@@ -3964,6 +3977,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "estrategia_oceano_azul_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "estrategia_oceano_azul_swot_id_fkey"
             columns: ["swot_id"]
@@ -4040,6 +4060,7 @@ export type Database = {
           cargo_id: string | null
           created_at: string
           departamento_id: string | null
+          empresa_id: string | null
           id: string
           nome_ocupante: string | null
           ordem: number | null
@@ -4053,6 +4074,7 @@ export type Database = {
           cargo_id?: string | null
           created_at?: string
           departamento_id?: string | null
+          empresa_id?: string | null
           id?: string
           nome_ocupante?: string | null
           ordem?: number | null
@@ -4066,6 +4088,7 @@ export type Database = {
           cargo_id?: string | null
           created_at?: string
           departamento_id?: string | null
+          empresa_id?: string | null
           id?: string
           nome_ocupante?: string | null
           ordem?: number | null
@@ -4091,6 +4114,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "estrategia_organograma_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "estrategia_organograma_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
@@ -4112,6 +4142,7 @@ export type Database = {
           criado_por: string | null
           criado_por_nome: string | null
           descricao: string | null
+          empresa_id: string | null
           escopo: string | null
           id: string
           periodo: string | null
@@ -4126,6 +4157,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           escopo?: string | null
           id?: string
           periodo?: string | null
@@ -4140,6 +4172,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           escopo?: string | null
           id?: string
           periodo?: string | null
@@ -4150,6 +4183,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "estrategia_swot_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "estrategia_swot_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -8035,6 +8075,7 @@ export type Database = {
           created_at: string
           data_ocorrencia: string
           descricao: string
+          empresa_id: string | null
           id: string
           is_advertencia: boolean | null
           registrado_por: string
@@ -8053,6 +8094,7 @@ export type Database = {
           created_at?: string
           data_ocorrencia?: string
           descricao: string
+          empresa_id?: string | null
           id?: string
           is_advertencia?: boolean | null
           registrado_por: string
@@ -8071,6 +8113,7 @@ export type Database = {
           created_at?: string
           data_ocorrencia?: string
           descricao?: string
+          empresa_id?: string | null
           id?: string
           is_advertencia?: boolean | null
           registrado_por?: string
@@ -8080,6 +8123,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ocorrencias_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ocorrencias_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -9220,6 +9270,7 @@ export type Database = {
           data_fim: string
           data_inicio: string
           descricao: string | null
+          empresa_id: string | null
           gatilho: string | null
           id: string
           observacoes: string | null
@@ -9247,6 +9298,7 @@ export type Database = {
           data_fim: string
           data_inicio: string
           descricao?: string | null
+          empresa_id?: string | null
           gatilho?: string | null
           id?: string
           observacoes?: string | null
@@ -9274,6 +9326,7 @@ export type Database = {
           data_fim?: string
           data_inicio?: string
           descricao?: string | null
+          empresa_id?: string | null
           gatilho?: string | null
           id?: string
           observacoes?: string | null
@@ -9288,6 +9341,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pdis_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pdis_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -9369,6 +9429,7 @@ export type Database = {
           data_fim: string
           data_inicio: string
           descricao: string | null
+          empresa_id: string | null
           encerrado_em: string | null
           encerrado_por: string | null
           encerrado_por_nome: string | null
@@ -9394,6 +9455,7 @@ export type Database = {
           data_fim: string
           data_inicio: string
           descricao?: string | null
+          empresa_id?: string | null
           encerrado_em?: string | null
           encerrado_por?: string | null
           encerrado_por_nome?: string | null
@@ -9419,6 +9481,7 @@ export type Database = {
           data_fim?: string
           data_inicio?: string
           descricao?: string | null
+          empresa_id?: string | null
           encerrado_em?: string | null
           encerrado_por?: string | null
           encerrado_por_nome?: string | null
@@ -9435,6 +9498,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "permissoes_trabalho_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "permissoes_trabalho_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -9463,6 +9533,7 @@ export type Database = {
           data_conclusao: string | null
           data_inicio: string | null
           descricao: string | null
+          empresa_id: string | null
           exige_evidencia: boolean | null
           gravidade: number | null
           id: string
@@ -9498,6 +9569,7 @@ export type Database = {
           data_conclusao?: string | null
           data_inicio?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           exige_evidencia?: boolean | null
           gravidade?: number | null
           id?: string
@@ -9533,6 +9605,7 @@ export type Database = {
           data_conclusao?: string | null
           data_inicio?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           exige_evidencia?: boolean | null
           gravidade?: number | null
           id?: string
@@ -9558,6 +9631,13 @@ export type Database = {
           urgencia?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "plano_acoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "plano_acoes_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -11854,6 +11934,7 @@ export type Database = {
           data_emissao: string | null
           data_vigencia: string | null
           empresa_emissora: string | null
+          empresa_id: string | null
           id: string
           observacoes: string | null
           profissional_responsavel: string | null
@@ -11876,6 +11957,7 @@ export type Database = {
           data_emissao?: string | null
           data_vigencia?: string | null
           empresa_emissora?: string | null
+          empresa_id?: string | null
           id?: string
           observacoes?: string | null
           profissional_responsavel?: string | null
@@ -11898,6 +11980,7 @@ export type Database = {
           data_emissao?: string | null
           data_vigencia?: string | null
           empresa_emissora?: string | null
+          empresa_id?: string | null
           id?: string
           observacoes?: string | null
           profissional_responsavel?: string | null
@@ -11908,6 +11991,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sst_documentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sst_documentos_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -12291,6 +12381,7 @@ export type Database = {
           contrato_inicio: string | null
           created_at: string
           email: string | null
+          empresa_id: string | null
           id: string
           nome_fantasia: string | null
           observacoes: string | null
@@ -12315,6 +12406,7 @@ export type Database = {
           contrato_inicio?: string | null
           created_at?: string
           email?: string | null
+          empresa_id?: string | null
           id?: string
           nome_fantasia?: string | null
           observacoes?: string | null
@@ -12339,6 +12431,7 @@ export type Database = {
           contrato_inicio?: string | null
           created_at?: string
           email?: string | null
+          empresa_id?: string | null
           id?: string
           nome_fantasia?: string | null
           observacoes?: string | null
@@ -12355,6 +12448,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "terceiros_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "terceiros_tenant_id_fkey"
             columns: ["tenant_id"]

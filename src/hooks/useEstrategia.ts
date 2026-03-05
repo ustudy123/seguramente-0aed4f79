@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type {
   EstrategiaSwot,
@@ -17,18 +18,21 @@ import type {
 
 export function useEstrategia() {
   const { tenantId, user } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   // ─── SWOT ───
   const { data: swots = [], isLoading: loadingSwots } = useQuery({
-    queryKey: ["estrategia_swot", tenantId],
+    queryKey: ["estrategia_swot", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("estrategia_swot" as never)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false }) as { data: EstrategiaSwot[] | null; error: Error | null };
+        .order("created_at", { ascending: false });
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q as { data: EstrategiaSwot[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaSwot[];
     },
@@ -39,7 +43,7 @@ export function useEstrategia() {
     mutationFn: async (input: { titulo: string; descricao?: string; escopo?: string; unidade?: string; periodo?: string; projeto?: string }) => {
       const { data, error } = await supabase
         .from("estrategia_swot" as never)
-        .insert({ ...input, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+        .insert({ ...input, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
         .select()
         .single() as { data: EstrategiaSwot | null; error: Error | null };
       if (error) throw error;
@@ -94,14 +98,16 @@ export function useEstrategia() {
 
   // ─── Oceano Azul ───
   const { data: oceanos = [], isLoading: loadingOceanos } = useQuery({
-    queryKey: ["estrategia_oceano_azul", tenantId],
+    queryKey: ["estrategia_oceano_azul", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("estrategia_oceano_azul" as never)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false }) as { data: EstrategiaOceanoAzul[] | null; error: Error | null };
+        .order("created_at", { ascending: false });
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q as { data: EstrategiaOceanoAzul[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaOceanoAzul[];
     },
@@ -112,7 +118,7 @@ export function useEstrategia() {
     mutationFn: async (input: { titulo: string; descricao?: string; swot_id?: string }) => {
       const { data, error } = await supabase
         .from("estrategia_oceano_azul" as never)
-        .insert({ ...input, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+        .insert({ ...input, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
         .select()
         .single() as { data: EstrategiaOceanoAzul | null; error: Error | null };
       if (error) throw error;

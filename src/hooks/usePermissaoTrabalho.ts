@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 
 export interface PermissaoTrabalho {
@@ -48,6 +49,7 @@ export interface PermissaoTrabalhador {
 
 export function usePermissaoTrabalho(terceiroId?: string) {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   const permissoes = useQuery({
@@ -118,6 +120,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
         .from("permissoes_trabalho" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           terceiro_id: payload.terceiro_id,
           codigo: "PT-TEMP", // trigger will replace
           data_inicio: payload.data_inicio,

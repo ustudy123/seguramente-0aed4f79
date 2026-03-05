@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type {
   Pdi, PdiInsert, PdiStatus,
@@ -12,18 +13,21 @@ import type {
 
 export function usePdi() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   // ── PDIs ───────────────────────────────
   const { data: pdis = [], isLoading } = useQuery({
-    queryKey: ["pdis", tenantId],
+    queryKey: ["pdis", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Pdi[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let q = supabase
         .from("pdis")
         .select(`*, metas:pdi_metas(*, acoes:pdi_acoes(*))`)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data || []).map(p => ({
         ...p,
@@ -49,7 +53,7 @@ export function usePdi() {
       if (!tenantId) throw new Error("Tenant não encontrado");
       const { data, error } = await supabase
         .from("pdis")
-        .insert({ ...d, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo } as any)
+        .insert({ ...d, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: profile?.nome_completo } as any)
         .select()
         .single();
       if (error) throw error;
