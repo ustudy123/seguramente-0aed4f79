@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, Circle, Clock, ChevronRight, Building2, Users, LayoutGrid,
   FileText, Upload, ArrowRight, Sparkles, AlertCircle, Loader2, CheckCheck,
-  BarChart3, Briefcase, Shield, Rocket, Star, ChevronDown, ChevronUp
+  BarChart3, Briefcase, Shield, Rocket, Star, ChevronDown, ChevronUp, Download
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
