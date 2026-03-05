@@ -66,15 +66,6 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Demo banner */}
-      {isDemo && (
-        <div className="flex items-center gap-2 p-3 rounded-lg border border-info/30 bg-info/5">
-          <Info className="w-4 h-4 text-info shrink-0" strokeWidth={1.75} />
-          <p className="text-xs text-muted-foreground">
-            <span className="font-semibold text-info">Modo Demonstração</span> — Os dados abaixo são fictícios para ilustrar o dashboard. Quando houver dados reais, eles substituirão automaticamente.
-          </p>
-        </div>
-      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -96,7 +87,7 @@ export function AnalyticsDashboard() {
             <CardTitle className="text-sm flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-warning" strokeWidth={1.75} />
               Insights e Gatilhos Inteligentes
-              {isDemo && <Badge variant="outline" className="text-[10px] text-info border-info/40">Demo</Badge>}
+              
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">

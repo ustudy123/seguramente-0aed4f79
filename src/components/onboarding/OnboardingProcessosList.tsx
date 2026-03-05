@@ -9,7 +9,13 @@ import { useOnboardingProcessos } from "@/hooks/useOnboarding";
 import { PROCESSO_STATUS_LABELS, type OnboardingProcesso } from "@/types/onboarding";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Info } from "lucide-react";
+
+const statusConfig: Record<string, { icon: any; color: string }> = {
+  pendente: { icon: Clock, color: "bg-muted text-muted-foreground" },
+  em_andamento: { icon: PlayCircle, color: "bg-primary/10 text-primary" },
+  concluido: { icon: CheckCircle2, color: "bg-green-100 text-green-700" },
+  cancelado: { icon: XCircle, color: "bg-destructive/10 text-destructive" },
+};
 
 export function OnboardingProcessosList() {
   const { processos, isLoading } = useOnboardingProcessos();
