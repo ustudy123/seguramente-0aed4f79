@@ -149,19 +149,21 @@ export function useDepartamentos() {
 // Cargos Hook
 export function useCargos() {
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   const { data: cargos = [], isLoading, error } = useQuery({
-    queryKey: ["cargos", tenantId],
+    queryKey: ["cargos", tenantId, empresaAtivaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("cargos")
-        .select(`
-          *,
-          departamento:departamentos(id, nome)
-        `)
+        .select(`*, departamento:departamentos(id, nome)`)
+        .eq("tenant_id", tenantId!)
         .order("nome");
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as (Cargo & { departamento: { id: string; nome: string } | null })[];
     },
@@ -172,7 +174,7 @@ export function useCargos() {
     mutationFn: async (cargo: Omit<Cargo, "id" | "tenant_id" | "created_at" | "updated_at" | "departamento">) => {
       const { data, error } = await supabase
         .from("cargos")
-        .insert({ ...cargo, tenant_id: tenantId! })
+        .insert({ ...cargo, tenant_id: tenantId!, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
