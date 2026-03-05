@@ -121,13 +121,13 @@ interface DocumentoLink {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const FASES: { value: Fase; label: string; color: string; border: string }[] = [
-  { value: 'prospeccao',  label: 'Prospecção',  color: 'bg-muted text-muted-foreground',          border: 'border-t-2 border-muted-foreground/30' },
-  { value: 'qualificacao',label: 'Qualificação', color: 'bg-accent text-accent-foreground',         border: 'border-t-2 border-accent' },
-  { value: 'kickoff',     label: 'Kickoff',      color: 'bg-secondary text-secondary-foreground',   border: 'border-t-2 border-secondary' },
-  { value: 'ativo',       label: 'Ativo',        color: 'bg-primary/15 text-primary',               border: 'border-t-2 border-primary' },
-  { value: 'suspenso',    label: 'Suspenso',     color: 'bg-muted text-muted-foreground border border-border', border: 'border-t-2 border-muted-foreground/50' },
-  { value: 'encerrado',   label: 'Encerrado',    color: 'bg-destructive/10 text-destructive',       border: 'border-t-2 border-destructive/50' },
+const FASES: { value: Fase; label: string; color: string; border: string; bgKanban: string }[] = [
+  { value: 'prospeccao',  label: 'Prospecção',  color: 'bg-muted text-muted-foreground',          border: 'border-t-2 border-muted-foreground/30', bgKanban: 'bg-slate-50 dark:bg-slate-900/40' },
+  { value: 'qualificacao',label: 'Qualificação', color: 'bg-accent text-accent-foreground',         border: 'border-t-2 border-accent', bgKanban: 'bg-amber-50/60 dark:bg-amber-950/20' },
+  { value: 'kickoff',     label: 'Kickoff',      color: 'bg-secondary text-secondary-foreground',   border: 'border-t-2 border-secondary', bgKanban: 'bg-blue-50/60 dark:bg-blue-950/20' },
+  { value: 'ativo',       label: 'Ativo',        color: 'bg-primary/15 text-primary',               border: 'border-t-2 border-primary', bgKanban: 'bg-emerald-50/60 dark:bg-emerald-950/20' },
+  { value: 'suspenso',    label: 'Suspenso',     color: 'bg-muted text-muted-foreground border border-border', border: 'border-t-2 border-muted-foreground/50', bgKanban: 'bg-orange-50/50 dark:bg-orange-950/20' },
+  { value: 'encerrado',   label: 'Encerrado',    color: 'bg-destructive/10 text-destructive',       border: 'border-t-2 border-destructive/50', bgKanban: 'bg-red-50/40 dark:bg-red-950/20' },
 ];
 
 const DOCS_CONFIG_TESTER: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
@@ -1087,20 +1087,25 @@ function DocStatusIcon({ status }: { status: Documento['status'] }) {
 function KanbanCard({
   cliente,
   onOpen,
-  onMover,
   faseAtual,
 }: {
   cliente: Cliente;
   onOpen: () => void;
-  onMover: (id: string, fase: Fase) => void;
   faseAtual: Fase;
 }) {
-  const idx = FASES.findIndex(f => f.value === faseAtual);
-  const proxima = FASES[idx + 1]?.value;
-  const anterior = FASES[idx - 1]?.value;
-
   return (
-    <div className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-all space-y-2">
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/cliente-id', cliente.id);
+        e.dataTransfer.effectAllowed = 'move';
+        (e.currentTarget as HTMLElement).style.opacity = '0.5';
+      }}
+      onDragEnd={(e) => {
+        (e.currentTarget as HTMLElement).style.opacity = '1';
+      }}
+      className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-all space-y-2 cursor-grab active:cursor-grabbing"
+    >
       <div className="cursor-pointer" onClick={onOpen}>
         <div className="flex items-center justify-between gap-1">
           <p className="font-semibold text-sm leading-tight truncate">{cliente.nome_empresa}</p>
@@ -1119,25 +1124,6 @@ function KanbanCard({
             Início: {format(new Date(cliente.data_inicio_piloto), 'dd/MM/yyyy')}
           </p>
         )}
-      </div>
-      {/* Setas de mover */}
-      <div className="flex gap-1 pt-1 border-t border-border">
-        <button
-          disabled={!anterior}
-          onClick={() => anterior && onMover(cliente.id, anterior)}
-          className="flex-1 flex items-center justify-center h-6 rounded text-xs text-muted-foreground hover:bg-muted disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-          title={anterior ? `Mover para ${FASES.find(f=>f.value===anterior)?.label}` : ''}
-        >
-          <ChevronLeft className="w-3 h-3" />
-        </button>
-        <button
-          disabled={!proxima}
-          onClick={() => proxima && onMover(cliente.id, proxima)}
-          className="flex-1 flex items-center justify-center h-6 rounded text-xs text-muted-foreground hover:bg-muted disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-          title={proxima ? `Mover para ${FASES.find(f=>f.value===proxima)?.label}` : ''}
-        >
-          <ChevronRight className="w-3 h-3" />
-        </button>
       </div>
     </div>
   );
@@ -1356,10 +1342,32 @@ export default function ProgramaValidador() {
               {FASES.filter(f => faseFilter === 'todas' || f.value === faseFilter).map(fase => {
                 const cards = clientesFiltrados.filter(c => c.fase === fase.value);
                 return (
-                  <div key={fase.value} className={`w-60 bg-muted/30 rounded-xl ${fase.border} flex flex-col`}>
+                  <div
+                    key={fase.value}
+                    className={`w-60 rounded-xl ${fase.border} ${fase.bgKanban} flex flex-col transition-all`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      (e.currentTarget as HTMLElement).classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                    }}
+                    onDragLeave={(e) => {
+                      (e.currentTarget as HTMLElement).classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLElement).classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+                      const clienteId = e.dataTransfer.getData('application/cliente-id');
+                      if (clienteId) {
+                        const cliente = clientes.find(c => c.id === clienteId);
+                        if (cliente && cliente.fase !== fase.value) {
+                          moverFaseMutation.mutate({ id: clienteId, fase: fase.value });
+                        }
+                      }
+                    }}
+                  >
                     <div className="px-3 py-2 flex items-center justify-between">
                       <span className="text-sm font-semibold">{fase.label}</span>
-                      <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">{cards.length}</span>
+                      <span className="text-xs text-muted-foreground bg-background/60 rounded-full px-2 py-0.5">{cards.length}</span>
                     </div>
                     <div className="flex-1 p-2 space-y-2 min-h-[120px]">
                       {cards.length === 0 ? (
@@ -1371,7 +1379,6 @@ export default function ProgramaValidador() {
                             cliente={c}
                             faseAtual={c.fase}
                             onOpen={() => setClienteSelecionado(c)}
-                            onMover={(id, novaFase) => moverFaseMutation.mutate({ id, fase: novaFase })}
                           />
                         ))
                       )}
