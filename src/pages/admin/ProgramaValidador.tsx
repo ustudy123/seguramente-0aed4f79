@@ -1368,11 +1368,15 @@ function DetalheCliente({
             </CardHeader>
             <CardContent className="space-y-4">
               {DOCS_CONFIG.map(({ tipo, label, descricao, itens }) => {
+                const isContrato = tipo === 'contrato_programa_validador';
+                const contratoAtivo = isContrato ? contratos[0] : null;
                 const doc = documentos.find(d => d.tipo === tipo);
-                const status = doc?.status || 'pendente';
+                // Para contrato, derivar status diretamente da tabela de contratos
+                const status = isContrato
+                  ? (contratoAtivo?.status === 'assinado' ? 'aceito' : contratoAtivo ? 'enviado' : 'pendente')
+                  : (doc?.status || 'pendente');
                 const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
                 const isGerando = gerandoDoc === tipo && gerarDocLinkMutation.isPending;
-                const isContrato = tipo === 'contrato_programa_validador';
 
                 return (
                   <div key={tipo} className={`rounded-lg border p-4 space-y-3 ${
