@@ -1199,7 +1199,9 @@ function DetalheCliente({
     },
   });
 
-  const docAceitos = documentos.filter(d => d.status === 'aceito').length;
+  const contratoAssinado = contratos[0]?.status === 'assinado';
+  const docAceitos = documentos.filter(d => d.status === 'aceito' && d.tipo !== 'contrato_programa_validador').length
+    + (contratoAssinado ? 1 : 0);
   const totalDocs = DOCS_CONFIG.length;
 
   return (
