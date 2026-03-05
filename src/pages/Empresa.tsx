@@ -107,6 +107,22 @@ export default function Empresa() {
             Gerencie o cadastro de todas as empresas do grupo
           </p>
         </div>
+
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
+          <div className="bg-primary/10 rounded-full p-2 mt-0.5 shrink-0">
+            <Building2 className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Sistema Multiempresa
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Aqui você visualiza e gerencia todas as empresas cadastradas no sistema. 
+              O Seguramente é <strong>multiempresa</strong> — você pode cadastrar quantas empresas precisar 
+              (matrizes, filiais e estabelecimentos) e alternar entre elas pelo seletor no cabeçalho.
+            </p>
+          </div>
+        </div>
         <EmpresaList
           empresas={empresas}
           isLoading={isLoadingList}
