@@ -1351,7 +1351,7 @@ function DetalheCliente({
             </CardContent>
           </Card>
 
-          {/* Checklist de documentos */}
+          {/* Documentos e Aceites */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center justify-between">
@@ -1360,12 +1360,12 @@ function DetalheCliente({
                   Documentos e Aceites
                 </span>
                 <span className="text-sm font-normal text-muted-foreground">
-                  {docAceitos}/{totalDocs} aceitos
+                  {docAceitos}/{totalDocs} concluídos
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1">
-              {DOCS_CONFIG.map(({ tipo, label }) => {
+            <CardContent className="space-y-4">
+              {DOCS_CONFIG.map(({ tipo, label, descricao, itens }) => {
                 const doc = documentos.find(d => d.tipo === tipo);
                 const status = doc?.status || 'pendente';
                 const linkAtivo = docLinks.find(l => l.tipo === tipo && l.status !== 'recusado');
