@@ -11174,10 +11174,12 @@ export type Database = {
       programa_validador_clientes: {
         Row: {
           aceita_beta: boolean | null
+          cidade_foro: string | null
           cnpj: string | null
           created_at: string
           data_fim_piloto: string | null
           data_inicio_piloto: string | null
+          endereco: string | null
           fase: string
           id: string
           nome_empresa: string
@@ -11187,6 +11189,7 @@ export type Database = {
           poc_nome: string | null
           poc_telefone: string | null
           quantidade_colaboradores: number | null
+          representante: string | null
           responsavel_seguramente: string | null
           segmento: string | null
           tamanho_empresa: string | null
@@ -11195,10 +11198,12 @@ export type Database = {
         }
         Insert: {
           aceita_beta?: boolean | null
+          cidade_foro?: string | null
           cnpj?: string | null
           created_at?: string
           data_fim_piloto?: string | null
           data_inicio_piloto?: string | null
+          endereco?: string | null
           fase?: string
           id?: string
           nome_empresa: string
@@ -11208,6 +11213,7 @@ export type Database = {
           poc_nome?: string | null
           poc_telefone?: string | null
           quantidade_colaboradores?: number | null
+          representante?: string | null
           responsavel_seguramente?: string | null
           segmento?: string | null
           tamanho_empresa?: string | null
@@ -11216,10 +11222,12 @@ export type Database = {
         }
         Update: {
           aceita_beta?: boolean | null
+          cidade_foro?: string | null
           cnpj?: string | null
           created_at?: string
           data_fim_piloto?: string | null
           data_inicio_piloto?: string | null
+          endereco?: string | null
           fase?: string
           id?: string
           nome_empresa?: string
@@ -11229,6 +11237,7 @@ export type Database = {
           poc_nome?: string | null
           poc_telefone?: string | null
           quantidade_colaboradores?: number | null
+          representante?: string | null
           responsavel_seguramente?: string | null
           segmento?: string | null
           tamanho_empresa?: string | null
@@ -11241,6 +11250,68 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programa_validador_contratos: {
+        Row: {
+          assinado_em: string | null
+          assinado_por: string | null
+          assinatura_img: string | null
+          cliente_id: string
+          created_at: string
+          enviado_em: string | null
+          expira_em: string
+          html_assinado: string | null
+          html_contrato: string
+          id: string
+          ip_assinatura: string | null
+          status: string
+          storage_path: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          assinado_em?: string | null
+          assinado_por?: string | null
+          assinatura_img?: string | null
+          cliente_id: string
+          created_at?: string
+          enviado_em?: string | null
+          expira_em?: string
+          html_assinado?: string | null
+          html_contrato: string
+          id?: string
+          ip_assinatura?: string | null
+          status?: string
+          storage_path?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          assinado_em?: string | null
+          assinado_por?: string | null
+          assinatura_img?: string | null
+          cliente_id?: string
+          created_at?: string
+          enviado_em?: string | null
+          expira_em?: string
+          html_assinado?: string | null
+          html_contrato?: string
+          id?: string
+          ip_assinatura?: string | null
+          status?: string
+          storage_path?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programa_validador_contratos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "programa_validador_clientes"
             referencedColumns: ["id"]
           },
         ]
