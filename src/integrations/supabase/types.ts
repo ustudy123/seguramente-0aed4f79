@@ -11188,6 +11188,7 @@ export type Database = {
           modulos_contratados: string[] | null
           nome_empresa: string
           observacoes: string | null
+          onboarding_token: string | null
           plano: string | null
           poc_cargo: string | null
           poc_email: string | null
@@ -11219,6 +11220,7 @@ export type Database = {
           modulos_contratados?: string[] | null
           nome_empresa: string
           observacoes?: string | null
+          onboarding_token?: string | null
           plano?: string | null
           poc_cargo?: string | null
           poc_email?: string | null
@@ -11250,6 +11252,7 @@ export type Database = {
           modulos_contratados?: string[] | null
           nome_empresa?: string
           observacoes?: string | null
+          onboarding_token?: string | null
           plano?: string | null
           poc_cargo?: string | null
           poc_email?: string | null
