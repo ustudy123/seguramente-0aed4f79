@@ -67,40 +67,37 @@ export function useIndicatorHistory(indicator: IndicatorType, monthsBack = 6) {
         }
 
         case "condicoes": {
-          const [nr17Res, episRes] = await Promise.all([
+          const [nr17Res] = await Promise.all([
             supabase.from("ergonomia_itens_nr17").select("id, status, created_at").eq("tenant_id", tenant.id),
-            supabase.from("epis").select("id, status, created_at").eq("tenant_id", tenant.id).match(empresaAtivaId ? { empresa_id: empresaAtivaId } : {}),
           ]);
           const nr17 = nr17Res.data || [];
-          const epis = episRes.data || [];
           return months.map((m) => {
             const cutoff = endOfMonth(m.year, m.month);
             const itens = nr17.filter(i => i.created_at <= cutoff);
             const atendidos = itens.filter(i => i.status === "atendido").length;
             const parciais = itens.filter(i => i.status === "parcial").length;
-            const episCount = epis.filter(e => e.created_at <= cutoff && e.status === "disponivel").length;
             const score = itens.length > 0
               ? Math.round(((atendidos + parciais * 0.5) / itens.length) * 100)
-              : (episCount > 0 ? 50 : 0);
+              : 0;
             return { month: m.label, score };
           });
         }
 
         case "experiencia": {
-          const [humorRes, ouvidoriaRes] = await Promise.all([
-            supabase.from("humor_diario").select("id, humor, data").eq("tenant_id", tenant.id).gte("data", from.split("T")[0]),
-            supabase.from("ouvidoria").select("id, status, created_at").eq("tenant_id", tenant.id).gte("created_at", from),
-          ]);
+          const humorRes = await supabase
+            .from("humor_diario")
+            .select("id, humor, data")
+            .eq("tenant_id", tenant.id)
+            .gte("data", from.split("T")[0]);
+
           const humores = humorRes.data || [];
-          const ouvidoria = ouvidoriaRes.data || [];
           return months.map((m) => {
             const mStart = startOfMonth(m.year, m.month).split("T")[0];
             const mEnd = endOfMonth(m.year, m.month).split("T")[0];
             const mHumor = humores.filter(h => h.data >= mStart && h.data <= mEnd);
             const positivo = mHumor.filter(h => ["bem", "animado", "motivado"].includes(h.humor)).length;
-            const pendente = ouvidoria.filter(o => o.created_at >= startOfMonth(m.year, m.month) && o.created_at <= endOfMonth(m.year, m.month) && o.status === "pendente").length;
-            const score = mHumor.length >= 3
-              ? Math.round((positivo / mHumor.length) * 80 + (pendente === 0 ? 20 : Math.max(0, 20 - pendente * 5)))
+            const score = mHumor.length > 0
+              ? Math.round((positivo / mHumor.length) * 100)
               : 0;
             return { month: m.label, score };
           });

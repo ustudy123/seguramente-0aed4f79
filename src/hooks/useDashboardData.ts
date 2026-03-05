@@ -101,17 +101,17 @@ export const useDashboardData = () => {
       const episDisponiveis = epis.filter(e => e.status === "disponivel").length;
       const episBaixoEstoque = epis.filter(e => e.quantidade_estoque <= e.quantidade_minima).length;
       const riscosAtivos = riscosRes.count || 0;
-      const scoreCondicoes = itensTotal > 0 
-        ? Math.round(((itensAtendidos + itensParciais * 0.5) / itensTotal) * 100) 
-        : (epis.length > 0 ? 50 : 0);
+      const scoreCondicoes = itensTotal > 0
+        ? Math.round(((itensAtendidos + itensParciais * 0.5) / itensTotal) * 100)
+        : 0;
 
       // Calcular métricas Pilar 3
       const humores = humorRes.data || [];
       const humorPositivo = humores.filter(h => ["bem", "animado", "motivado"].includes(h.humor)).length;
       const ouvidoriaPendente = ouvidoriaRes.count || 0;
       const feedHoje = feedRes.count || 0;
-      const scoreExperiencia = humores.length >= 3 
-        ? Math.round((humorPositivo / humores.length) * 80 + (ouvidoriaPendente === 0 ? 20 : Math.max(0, 20 - ouvidoriaPendente * 5)))
+      const scoreExperiencia = humores.length > 0
+        ? Math.round((humorPositivo / humores.length) * 100)
         : 0;
 
       // Calcular métricas Pilar 4
