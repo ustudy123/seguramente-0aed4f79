@@ -623,9 +623,11 @@ export function useEpis() {
 
   // ==================== ESTATÍSTICAS ====================
 
+  const tiposComEpiReal = new Set((episQuery.data || []).map((e) => e.tipo_id)).size;
+
   const stats = {
     totalEpis: episQuery.data?.length || 0,
-    totalTipos: tiposQuery.data?.length || 0,
+    totalTipos: tiposComEpiReal,
     entregasAtivas: entregasQuery.data?.filter((e) => e.status === "ativa").length || 0,
     estoqueBaixo:
       episQuery.data?.filter((e) => e.quantidade_estoque <= e.quantidade_minima).length || 0,
