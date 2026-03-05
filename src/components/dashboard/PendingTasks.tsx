@@ -8,7 +8,7 @@ const tasks = [
   {
     id: 1,
     title: "Férias pendentes de aprovação",
-    count: 5,
+    count: 0,
     icon: Calendar,
     path: "/ferias",
     priority: "high",
@@ -16,7 +16,7 @@ const tasks = [
   {
     id: 2,
     title: "Documentos vencendo",
-    count: 8,
+    count: 0,
     icon: FileWarning,
     path: "/documentos",
     priority: "high",
@@ -24,7 +24,7 @@ const tasks = [
   {
     id: 3,
     title: "Ajustes de ponto",
-    count: 12,
+    count: 0,
     icon: Clock,
     path: "/ponto",
     priority: "medium",
@@ -32,7 +32,7 @@ const tasks = [
   {
     id: 4,
     title: "Avaliações pendentes",
-    count: 15,
+    count: 0,
     icon: AlertCircle,
     path: "/avaliacoes",
     priority: "low",
@@ -40,7 +40,7 @@ const tasks = [
   {
     id: 5,
     title: "Desligamentos em processo",
-    count: 2,
+    count: 0,
     icon: UserX,
     path: "/colaboradores",
     priority: "medium",

@@ -73,32 +73,7 @@ export function DenunciasList() {
     enabled: !!tenantId,
   });
 
-  const demoDenuncias: Denuncia[] = [
-    {
-      id: "dd-1", profissional_id: "p1", denunciante_nome: "Ana Costa",
-      tipo: "fora_escopo", descricao: "Profissional realizou orientação nutricional sem habilitação para tal.",
-      gravidade: "alta", status: "aberta", acao_tomada: null,
-      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      profissional: { nome_completo: "Ricardo Mendes", conselho: "CREA" },
-    },
-    {
-      id: "dd-2", profissional_id: "p2", denunciante_nome: "Carlos Lima",
-      tipo: "nao_comparecimento", descricao: "Profissional não compareceu ao atendimento agendado sem aviso prévio.",
-      gravidade: "media", status: "em_analise", acao_tomada: null,
-      created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-      profissional: { nome_completo: "Fernanda Costa", conselho: "CRP" },
-    },
-    {
-      id: "dd-3", profissional_id: "p3", denunciante_nome: "Empresa XYZ",
-      tipo: "qualidade_insuficiente", descricao: "Laudo entregue incompleto, sem as análises quantitativas previstas no escopo.",
-      gravidade: "baixa", status: "resolvida", acao_tomada: "Profissional refez o laudo completo. Caso encerrado.",
-      created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-      profissional: { nome_completo: "Paulo Nascimento", conselho: "CREA" },
-    },
-  ];
-
-  const denuncias = realDenuncias.length > 0 ? realDenuncias : demoDenuncias;
-  const isDemo = realDenuncias.length === 0 && denuncias.length > 0;
+  const denuncias = realDenuncias;
 
   const handleUpdate = async () => {
     if (!selected || !novoStatus) return;
@@ -128,12 +103,6 @@ export function DenunciasList() {
   return (
     <>
       <div className="space-y-3">
-        {isDemo && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span><strong>Modo Demonstração</strong> — dados fictícios para visualização.</span>
-          </div>
-        )}
 
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground flex items-center gap-2">

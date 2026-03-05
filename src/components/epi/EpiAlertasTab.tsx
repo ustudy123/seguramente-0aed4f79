@@ -46,161 +46,6 @@ interface Alerta {
   dataReferencia?: string;
 }
 
-// Dados fictícios para demonstração quando não há dados reais
-function gerarDadosFicticios(): Alerta[] {
-  const hoje = new Date();
-  return [
-    {
-      id: "demo-ca-vencido-1",
-      tipo: "critico",
-      categoria: "CA Vencido",
-      titulo: "CA 38.245 vencido",
-      descricao: "Certificado de Aprovação venceu há 45 dias. Entregas com este EPI são juridicamente inválidas.",
-      item: "Capacete de Segurança",
-      diasRestantes: -45,
-      dataReferencia: format(addMonths(hoje, -1.5), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-ca-vencido-2",
-      tipo: "critico",
-      categoria: "CA Vencido",
-      titulo: "CA 41.102 vencido",
-      descricao: "Certificado de Aprovação venceu há 12 dias. Entregas com este EPI são juridicamente inválidas.",
-      item: "Luvas de Segurança",
-      diasRestantes: -12,
-      dataReferencia: format(addMonths(hoje, -0.4), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-epi-vencido-1",
-      tipo: "critico",
-      categoria: "EPI Vencido",
-      titulo: "Máscara Respiratória PFF2 com validade expirada",
-      descricao: "Item no estoque venceu há 20 dias. Deve ser descartado e reposto.",
-      item: "Máscara Respiratória PFF2",
-      diasRestantes: -20,
-      dataReferencia: format(addMonths(hoje, -0.7), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-entrega-vencida-1",
-      tipo: "critico",
-      categoria: "Entrega Vencida",
-      titulo: "EPI vencido em uso por João Silva",
-      descricao: "Botina de Segurança entregue venceu há 8 dias. Substituição imediata obrigatória.",
-      item: "Botina de Segurança",
-      colaborador: "João Silva",
-      diasRestantes: -8,
-      dataReferencia: format(addMonths(hoje, -0.3), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-entrega-vencida-2",
-      tipo: "critico",
-      categoria: "Entrega Vencida",
-      titulo: "EPI vencido em uso por Maria Santos",
-      descricao: "Óculos de Proteção entregue venceu há 3 dias. Substituição imediata obrigatória.",
-      item: "Óculos de Proteção",
-      colaborador: "Maria Santos",
-      diasRestantes: -3,
-      dataReferencia: format(addMonths(hoje, -0.1), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-estoque-zerado-1",
-      tipo: "critico",
-      categoria: "Estoque Baixo",
-      titulo: "Protetor Auricular — estoque zerado",
-      descricao: "0 un. em estoque (mínimo: 10). Risco de não conseguir atender entregas.",
-      item: "Protetor Auricular",
-    },
-    {
-      id: "demo-ca-vencendo-1",
-      tipo: "urgente",
-      categoria: "CA Vencendo",
-      titulo: "CA 39.871 vence em 18 dias",
-      descricao: "Renove o CA antes do vencimento para manter a conformidade legal.",
-      item: "Óculos de Proteção",
-      diasRestantes: 18,
-      dataReferencia: format(addMonths(hoje, 0.6), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-vida-util-1",
-      tipo: "urgente",
-      categoria: "Vida Útil Expirada",
-      titulo: "Vida útil do EPI de Carlos Oliveira expirou",
-      descricao: "Luvas de Segurança com vida útil de 6 meses expirou há 15 dias. Substituição recomendada.",
-      item: "Luvas de Segurança",
-      colaborador: "Carlos Oliveira",
-      diasRestantes: -15,
-      dataReferencia: format(addMonths(hoje, -0.5), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-entrega-vencendo-1",
-      tipo: "urgente",
-      categoria: "Entrega Vencendo",
-      titulo: "EPI de Ana Costa vence em 10 dias",
-      descricao: "Agende a substituição do Respirador Semi-Facial.",
-      item: "Respirador Semi-Facial",
-      colaborador: "Ana Costa",
-      diasRestantes: 10,
-      dataReferencia: format(addMonths(hoje, 0.3), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-estoque-baixo-1",
-      tipo: "urgente",
-      categoria: "Estoque Baixo",
-      titulo: "Colete Refletivo — estoque baixo",
-      descricao: "3 un. em estoque (mínimo: 10). Risco de não conseguir atender entregas.",
-      item: "Colete Refletivo",
-    },
-    {
-      id: "demo-estoque-baixo-2",
-      tipo: "urgente",
-      categoria: "Estoque Baixo",
-      titulo: "Cinto de Segurança — estoque baixo",
-      descricao: "2 un. em estoque (mínimo: 5). Risco de não conseguir atender entregas.",
-      item: "Cinto de Segurança",
-    },
-    {
-      id: "demo-ca-atencao-1",
-      tipo: "atencao",
-      categoria: "CA Atenção",
-      titulo: "CA 40.553 vence em 62 dias",
-      descricao: "Planeje a renovação do Certificado de Aprovação.",
-      item: "Abafador de Ruído",
-      diasRestantes: 62,
-      dataReferencia: format(addMonths(hoje, 2), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-ca-atencao-2",
-      tipo: "atencao",
-      categoria: "CA Atenção",
-      titulo: "CA 42.110 vence em 78 dias",
-      descricao: "Planeje a renovação do Certificado de Aprovação.",
-      item: "Avental de Segurança",
-      diasRestantes: 78,
-      dataReferencia: format(addMonths(hoje, 2.6), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-epi-atencao-1",
-      tipo: "atencao",
-      categoria: "EPI Vencendo",
-      titulo: "Protetor Facial vence em 55 dias",
-      descricao: "Monitore a validade e prepare reposição.",
-      item: "Protetor Facial",
-      diasRestantes: 55,
-      dataReferencia: format(addMonths(hoje, 1.8), "yyyy-MM-dd"),
-    },
-    {
-      id: "demo-vida-util-atencao-1",
-      tipo: "atencao",
-      categoria: "Vida Útil Atenção",
-      titulo: "EPI de Pedro Lima com vida útil expirando",
-      descricao: "Capacete de Segurança — vida útil expira em 22 dias.",
-      item: "Capacete de Segurança",
-      colaborador: "Pedro Lima",
-      diasRestantes: 22,
-      dataReferencia: format(addMonths(hoje, 0.7), "yyyy-MM-dd"),
-    },
-  ];
-}
 
 export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
   const [alertaParaAcao, setAlertaParaAcao] = useState<Alerta | null>(null);
@@ -381,15 +226,11 @@ export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
     const prioridade = { critico: 0, urgente: 1, atencao: 2, info: 3 };
     lista.sort((a, b) => prioridade[a.tipo] - prioridade[b.tipo]);
 
-    // Se não houver alertas reais, usar dados fictícios para demonstração
-    if (lista.length === 0) {
-      return gerarDadosFicticios();
-    }
 
     return lista;
   }, [epis, entregas, tipos, hoje]);
 
-  const isDemoData = alertas.length > 0 && alertas[0].id.startsWith("demo-");
+  
   const criticos = alertas.filter((a) => a.tipo === "critico");
   const urgentes = alertas.filter((a) => a.tipo === "urgente");
   const atencao = alertas.filter((a) => a.tipo === "atencao");
@@ -447,14 +288,6 @@ export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
 
   return (
     <div className="space-y-6">
-      {isDemoData && (
-        <div className="bg-muted/50 border border-dashed rounded-lg p-3 flex items-center gap-2 text-sm text-muted-foreground">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            <strong>Modo demonstração:</strong> Exibindo dados fictícios. Quando houver dados reais de EPIs com datas de validade, CAs e entregas cadastrados, os alertas serão gerados automaticamente.
-          </span>
-        </div>
-      )}
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <motion.div

@@ -87,7 +87,6 @@ export const DashboardPilares = () => {
           {
             label: "Riscos Ativos",
             value: data.condicoes.riscosAtivos,
-            change: data.condicoes.riscosAtivos > 5 ? 10 : -5,
             link: "/ergonomia",
             indicatorType: "riscos",
           },
@@ -109,7 +108,6 @@ export const DashboardPilares = () => {
             value: data.experiencia.humorTotal > 0 
               ? `${Math.round((data.experiencia.humorPositivo / data.experiencia.humorTotal) * 100)}%` 
               : "—",
-            change: data.experiencia.humorTotal > 0 ? 5 : undefined,
             indicatorType: "humor",
           },
           {
@@ -147,9 +145,6 @@ export const DashboardPilares = () => {
           {
             label: "Ações Concluídas",
             value: `${data.governanca.acoesConcluidas}/${data.governanca.acoesTotal}`,
-            change: data.governanca.acoesTotal > 0 
-              ? Math.round((data.governanca.acoesConcluidas / data.governanca.acoesTotal) * 100) - 50 
-              : undefined,
             indicatorType: "acoes",
           },
           {
