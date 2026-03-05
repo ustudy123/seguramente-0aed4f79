@@ -549,6 +549,16 @@ export default function OnboardingCliente() {
 
   const maturidade = calcularNivelMaturidade(cliente.quantidade_colaboradores);
 
+  const downloadDoc = (html: string, nomeArq: string) => {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArq;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Checklist items
   const checklistItems = [
     {
@@ -557,15 +567,19 @@ export default function OnboardingCliente() {
       sublabel: contratoAssinado ? `Assinado em ${contratoAtivo?.assinado_em ? new Date(contratoAtivo.assinado_em).toLocaleDateString('pt-BR') : '-'}` : 'Assinatura digital obrigatória para prosseguir',
       done: contratoAssinado,
       pending: !!contratoAtivo && !contratoAssinado,
-      link: contratoAtivo ? `${window.location.origin}/contrato-assinatura/${contratoAtivo.token}` : undefined,
+      link: contratoAtivo && !contratoAssinado ? `${window.location.origin}/contrato-assinatura/${contratoAtivo.token}` : undefined,
+      downloadHtml: contratoAssinado && contratoAtivo?.html_assinado ? contratoAtivo.html_assinado : null,
+      downloadNome: 'Contrato-Programa-Validador-Assinado.html',
     },
     {
       id: 'ata',
       label: 'Ata de Kickoff',
-      sublabel: ataAceita ? `Aceita em ${ataLink?.aceito_em ? new Date(ataLink.aceito_em).toLocaleDateString('pt-BR') : '-'}` : 'Documento operacional do projeto',
+      sublabel: ataAceita ? `Assinada em ${ataLink?.aceito_em ? new Date(ataLink.aceito_em).toLocaleDateString('pt-BR') : '-'}` : ataLink ? 'Aguardando sua assinatura' : 'Será disponibilizada pela equipe Seguramente',
       done: ataAceita,
       pending: !!ataLink && !ataAceita,
-      link: ataLink ? `${window.location.origin}/aceite-documento/${ataLink.token}` : undefined,
+      link: ataLink && !ataAceita ? `${window.location.origin}/aceite-documento/${ataLink.token}` : undefined,
+      downloadHtml: ataAceita && ataLink ? (ataLink.html_assinado || ataLink.html_documento) : null,
+      downloadNome: 'Ata-Kickoff-Assinada.html',
     },
     {
       id: 'empresa',
@@ -573,6 +587,8 @@ export default function OnboardingCliente() {
       sublabel: 'Dados básicos para configuração do sistema',
       done: !!cliente.cnpj,
       pending: false,
+      downloadHtml: null,
+      downloadNome: '',
     },
     {
       id: 'colaboradores',
@@ -580,6 +596,8 @@ export default function OnboardingCliente() {
       sublabel: 'Colaboradores, departamentos e funções',
       done: false,
       pending: false,
+      downloadHtml: null,
+      downloadNome: '',
     },
     {
       id: 'diagnostico',
@@ -587,6 +605,8 @@ export default function OnboardingCliente() {
       sublabel: maturidade.modulo,
       done: false,
       pending: false,
+      downloadHtml: null,
+      downloadNome: '',
     },
   ];
 
