@@ -24,7 +24,7 @@ export default function AceiteDocumento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_documento_links' as never)
-        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token)')
+        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token, tenant_id)')
         .eq('token', token!)
         .single() as any;
       if (error) throw error;
