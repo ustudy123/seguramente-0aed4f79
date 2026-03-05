@@ -2118,6 +2118,8 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         representante: form.representante || null,
         cidade_foro: form.cidade_foro || null,
         valor_mensal: form.tipo_cliente === 'pagante' && form.valor_mensal ? parseFloat(form.valor_mensal) : null,
+        activation_token: crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, ''),
+        activation_token_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         dia_vencimento: form.tipo_cliente === 'pagante' && form.dia_vencimento ? parseInt(form.dia_vencimento) : null,
         plano: form.tipo_cliente === 'pagante' ? form.plano || null : null,
         data_contrato: form.tipo_cliente === 'pagante' ? form.data_contrato || null : null,
