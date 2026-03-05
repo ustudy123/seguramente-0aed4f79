@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search, Info, CheckCircle2, Clock, Phone, Sparkles } from "lucide-react";
-import { formatCnpj, cleanCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { formatCnpj, cleanCnpj, buscarCnpj, type BrasilApiCnpjResponse } from "@/lib/brasilapi";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +69,7 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [cnpjData, setCnpjData] = useState<BrasilApiCnpjResponse | null>(null);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -96,14 +97,17 @@ export default function Register() {
     try {
       const resultado = await buscarCnpj(doc);
       if (resultado) {
+        setCnpjData(resultado);
         const nome = resultado.razao_social || resultado.nome_fantasia || "";
         form.setValue("tenantNome", nome);
         form.setValue("tenantSlug", generateSlug(nome));
         toast.success("Dados do CNPJ carregados!");
       } else {
+        setCnpjData(null);
         toast.error("CNPJ não encontrado na base de dados");
       }
     } catch {
+      setCnpjData(null);
       toast.error("Erro ao buscar CNPJ");
     } finally {
       setBuscandoCnpj(false);
@@ -122,6 +126,26 @@ export default function Register() {
           documento: cleanDoc,
           tenantNome: data.tenantNome,
           tenantSlug: data.tenantSlug,
+          empresaDados: cnpjData
+            ? {
+                razaoSocial: cnpjData.razao_social,
+                nomeFantasia: cnpjData.nome_fantasia,
+                cep: cnpjData.cep,
+                logradouro: cnpjData.logradouro,
+                numero: cnpjData.numero,
+                complemento: cnpjData.complemento,
+                bairro: cnpjData.bairro,
+                municipio: cnpjData.municipio,
+                uf: cnpjData.uf,
+                telefone: cnpjData.telefone,
+                emailEmpresa: cnpjData.email,
+                cnaeFiscal: cnpjData.cnae_fiscal,
+                cnaeDescricao: cnpjData.cnae_fiscal_descricao,
+                cnaesSecundarios: cnpjData.cnaes_secundarios,
+                porte: cnpjData.porte || null,
+                naturezaJuridica: cnpjData.natureza_juridica || null,
+              }
+            : null,
         },
       });
 
@@ -215,6 +239,7 @@ export default function Register() {
                       onValueChange={(val) => {
                         field.onChange(val);
                         form.setValue("documento", "");
+                        if (val === "pf") setCnpjData(null);
                       }}
                     >
                       <FormControl>
