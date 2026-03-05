@@ -285,8 +285,8 @@ function StepColaboradores({ cliente, onConcluir }: { cliente: Cliente; onConclu
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={e => { e.preventDefault(); setDragOver(false); toast.success("Planilha recebida! Processando..."); setTimeout(() => setModo('done'), 1500); }}
-          className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
-            dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/30 hover:border-primary/50'
+        className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
+            dragOver ? 'border-primary bg-primary/5' : 'border-muted/60 hover:border-primary/50'
           }`}
         >
           <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
@@ -318,7 +318,7 @@ function StepColaboradores({ cliente, onConcluir }: { cliente: Cliente; onConclu
         <button onClick={() => setModo('escolha')} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
           ← Voltar
         </button>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+        <div className="bg-accent/30 border border-accent rounded-lg p-3 text-xs text-accent-foreground">
           <strong>Ordem obrigatória de cadastro:</strong> Para garantir a integridade dos dados, siga a sequência abaixo.
         </div>
         {[
