@@ -604,6 +604,41 @@ function DetalheCliente({
     },
   });
 
+  const gerarContratoMutation = useMutation({
+    mutationFn: async () => {
+      const html = gerarHtmlContrato(cliente);
+      const { data, error } = await supabase
+        .from('programa_validador_contratos' as never)
+        .insert({ cliente_id: cliente.id, html_contrato: html, status: 'pendente' } as never)
+        .select()
+        .single() as any;
+      if (error) throw error;
+      await supabase.from('programa_validador_historico' as never).insert({
+        cliente_id: cliente.id,
+        tipo: 'contrato_gerado',
+        titulo: 'Contrato gerado para assinatura eletrônica',
+        autor: profile?.nome_completo || 'SuperAdmin',
+      } as never);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Contrato gerado! Copie o link e envie para o cliente.');
+      setShowGerarContrato(false);
+      qc.invalidateQueries({ queryKey: ['validador', 'contratos', cliente.id] });
+      qc.invalidateQueries({ queryKey: ['validador', 'historico', cliente.id] });
+    },
+    onError: (err: Error) => toast.error('Erro ao gerar contrato: ' + err.message),
+  });
+
+  const copiarLink = (token: string) => {
+    const url = `${window.location.origin}/contrato-assinatura/${token}`;
+    navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
+  };
+
+  const abrirContrato = (token: string) => {
+    window.open(`${window.location.origin}/contrato-assinatura/${token}`, '_blank');
+  };
+
   const adicionarNotaMutation = useMutation({
     mutationFn: async () => {
       await supabase.from('programa_validador_historico').insert({
