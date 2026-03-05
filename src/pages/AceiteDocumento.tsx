@@ -1,27 +1,30 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { CheckCircle2, FileText, ThumbsUp, ThumbsDown, AlertCircle } from 'lucide-react';
+import { CheckCircle2, FileText, ThumbsDown, AlertCircle, PenLine, RotateCcw, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import SignatureCanvas from 'react-signature-canvas';
 
 export default function AceiteDocumento() {
   const { token } = useParams<{ token: string }>();
-  const [etapa, setEtapa] = useState<'leitura' | 'concluido' | 'recusado'>('leitura');
+  const navigate = useNavigate();
+  const sigRef = useRef<SignatureCanvas>(null);
   const [nome, setNome] = useState('');
   const [motivo, setMotivo] = useState('');
   const [confirmandoRecusa, setConfirmandoRecusa] = useState(false);
+  const [etapa, setEtapa] = useState<'leitura' | 'assinatura' | 'recusado'>('leitura');
 
   const { data: link, isLoading, error } = useQuery({
     queryKey: ['doc-link', token],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('programa_validador_documento_links' as never)
-        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email)')
+        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token)')
         .eq('token', token!)
         .single() as any;
       if (error) throw error;
@@ -32,25 +35,48 @@ export default function AceiteDocumento() {
 
   const aceitarMutation = useMutation({
     mutationFn: async () => {
+      if (sigRef.current && sigRef.current.isEmpty()) {
+        throw new Error('Por favor, assine o documento antes de confirmar.');
+      }
+
       const agora = new Date().toISOString();
+      const dataFormatada = format(new Date(), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR });
+      const signatario = nome || link?.programa_validador_clientes?.poc_nome || 'Signatário';
+
+      // Gerar HTML assinado injetando bloco de assinatura
+      let htmlAssinado = link?.html_documento || '';
+      if (sigRef.current && !sigRef.current.isEmpty()) {
+        const assinaturaImg = sigRef.current.toDataURL('image/png');
+        const blocoAssinatura = `
+          <div style="margin-top:60px;padding:20px;border-top:2px solid #333;font-family:'Times New Roman',serif;">
+            <p style="font-weight:bold;font-size:13pt;text-transform:uppercase;">Assinatura Eletrônica</p>
+            <img src="${assinaturaImg}" style="max-width:300px;border-bottom:1px solid #333;display:block;margin:12px 0;" alt="Assinatura" />
+            <p style="font-size:12pt;font-weight:bold;">${signatario}</p>
+            <p style="font-size:11pt;color:#555;">Assinado digitalmente em ${dataFormatada}</p>
+            <p style="font-size:10pt;color:#888;">Token do documento: ${token}</p>
+          </div>`;
+        htmlAssinado = (htmlAssinado || '').replace(/<\/body>/, blocoAssinatura + '</body>');
+        if (!htmlAssinado.includes(blocoAssinatura)) htmlAssinado += blocoAssinatura;
+      }
+
       const { error } = await supabase
         .from('programa_validador_documento_links' as never)
         .update({
           status: 'aceito',
           aceito_em: agora,
-          aceito_por: nome || link?.programa_validador_clientes?.poc_nome || 'Signatário',
+          aceito_por: signatario,
+          html_assinado: htmlAssinado,
         } as never)
         .eq('token', token!) as any;
       if (error) throw error;
 
-      // Atualizar status do documento vinculado
+      // Atualizar documento vinculado
       if (link?.documento_id) {
         await supabase
           .from('programa_validador_documentos')
           .update({ status: 'aceito', aceito_em: agora })
           .eq('id', link.documento_id);
       } else {
-        // Upsert documento
         const { data: existing } = await supabase
           .from('programa_validador_documentos')
           .select('id')
@@ -77,12 +103,18 @@ export default function AceiteDocumento() {
       await supabase.from('programa_validador_historico' as never).insert({
         cliente_id: link.cliente_id,
         tipo: 'documento_aceito',
-        titulo: `Documento aceito eletronicamente`,
-        descricao: `Tipo: ${link.tipo} | Aceito por: ${nome || link?.programa_validador_clientes?.poc_nome}`,
-        autor: nome || link?.programa_validador_clientes?.poc_nome,
+        titulo: `Ata de Kickoff assinada eletronicamente`,
+        descricao: `Assinado por: ${signatario} em ${dataFormatada}`,
+        autor: signatario,
       } as never);
     },
-    onSuccess: () => setEtapa('concluido'),
+    onSuccess: () => {
+      const onboardingToken = link?.programa_validador_clientes?.onboarding_token;
+      toast.success('Ata assinada com sucesso!');
+      if (onboardingToken) {
+        navigate(`/onboarding-cliente/${onboardingToken}`);
+      }
+    },
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -102,14 +134,24 @@ export default function AceiteDocumento() {
       await supabase.from('programa_validador_historico' as never).insert({
         cliente_id: link.cliente_id,
         tipo: 'documento_recusado',
-        titulo: `Documento recusado`,
-        descricao: `Tipo: ${link.tipo} | Motivo: ${motivo || 'Não informado'}`,
+        titulo: `Ata de Kickoff recusada`,
+        descricao: `Motivo: ${motivo || 'Não informado'}`,
         autor: link?.programa_validador_clientes?.poc_nome || 'Destinatário',
       } as never);
     },
     onSuccess: () => setEtapa('recusado'),
     onError: (err: Error) => toast.error(err.message),
   });
+
+  const downloadDocumento = (html: string, nomeArq: string) => {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArq;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (isLoading) {
     return (
@@ -133,34 +175,43 @@ export default function AceiteDocumento() {
     );
   }
 
+  // Já assinado — mostrar confirmação + botão de download
   if (link.status === 'aceito') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-primary" />
-            <h2 className="text-xl font-bold mb-2">Documento já aceito</h2>
-            <p className="text-muted-foreground text-sm">
-              Este documento foi aceito em{' '}
-              {link.aceito_em ? format(new Date(link.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ''}
-              {link.aceito_por ? ` por ${link.aceito_por}` : ''}.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (etapa === 'concluido') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-6 text-primary" />
-            <h2 className="text-2xl font-bold mb-3">Documento aceito!</h2>
-            <p className="text-muted-foreground">
-              Obrigado. Seu aceite foi registrado com sucesso no <strong>Programa Validador Seguramente</strong>.
-            </p>
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center space-y-4">
+            <CheckCircle2 className="w-14 h-14 mx-auto text-primary" />
+            <div>
+              <h2 className="text-xl font-bold mb-1">Ata já assinada</h2>
+              <p className="text-muted-foreground text-sm">
+                Assinada em{' '}
+                {link.aceito_em ? format(new Date(link.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ''}
+                {link.aceito_por ? ` por ${link.aceito_por}` : ''}.
+              </p>
+            </div>
+            {(link.html_assinado || link.html_documento) && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => downloadDocumento(
+                  link.html_assinado || link.html_documento,
+                  'Ata-Kickoff-Assinada.html'
+                )}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Baixar Ata Assinada
+              </Button>
+            )}
+            {link?.programa_validador_clientes?.onboarding_token && (
+              <Button
+                variant="ghost"
+                className="w-full text-sm"
+                onClick={() => navigate(`/onboarding-cliente/${link.programa_validador_clientes.onboarding_token}`)}
+              >
+                ← Voltar ao portal
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -177,6 +228,15 @@ export default function AceiteDocumento() {
             <p className="text-muted-foreground">
               Sua recusa foi registrada. Nossa equipe entrará em contato em breve.
             </p>
+            {link?.programa_validador_clientes?.onboarding_token && (
+              <Button
+                variant="ghost"
+                className="w-full mt-4 text-sm"
+                onClick={() => navigate(`/onboarding-cliente/${link.programa_validador_clientes.onboarding_token}`)}
+              >
+                ← Voltar ao portal
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -192,78 +252,131 @@ export default function AceiteDocumento() {
             <FileText className="w-6 h-6 text-primary" />
             <span className="font-semibold text-primary">Seguramente</span>
           </div>
-          <h1 className="text-2xl font-bold">Documento para Aceite</h1>
-          <p className="text-muted-foreground text-sm">Programa Validador Beta</p>
+          <h1 className="text-2xl font-bold">Ata de Kickoff</h1>
+          <p className="text-muted-foreground text-sm">
+            {link?.programa_validador_clientes?.nome_empresa} · Programa Validador Beta
+          </p>
         </div>
 
-        {/* Documento */}
-        <Card>
-          <CardContent className="p-0">
-            <div
-              className="prose prose-sm max-w-none p-6 max-h-[60vh] overflow-y-auto"
-              dangerouslySetInnerHTML={{ __html: link.html_documento }}
-            />
-            <div className="p-4 border-t bg-muted/30 space-y-4">
+        {/* Etapa leitura */}
+        {etapa === 'leitura' && (
+          <Card>
+            <CardContent className="p-0">
+              <div
+                className="prose prose-sm max-w-none p-6 max-h-[60vh] overflow-y-auto"
+                dangerouslySetInnerHTML={{ __html: link.html_documento }}
+              />
+              <div className="p-4 border-t bg-muted/30 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Leia o documento completo acima e, se estiver de acordo, prossiga para assinar.
+                </p>
+                {confirmandoRecusa ? (
+                  <div className="space-y-3 p-3 border border-destructive/30 rounded-lg bg-destructive/5">
+                    <p className="text-sm font-medium text-destructive">Confirmar recusa da Ata?</p>
+                    <textarea
+                      className="w-full px-3 py-2 border rounded-md text-sm bg-background resize-none"
+                      placeholder="Motivo da recusa (opcional)..."
+                      rows={3}
+                      value={motivo}
+                      onChange={e => setMotivo(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setConfirmandoRecusa(false)}>Cancelar</Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={recusarMutation.isPending}
+                        onClick={() => recusarMutation.mutate()}
+                      >
+                        {recusarMutation.isPending ? 'Registrando...' : 'Confirmar Recusa'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1" onClick={() => setConfirmandoRecusa(true)}>
+                      <ThumbsDown className="w-4 h-4 mr-2" />
+                      Recusar
+                    </Button>
+                    <Button className="flex-1" onClick={() => setEtapa('assinatura')}>
+                      <PenLine className="w-4 h-4 mr-2" />
+                      Prosseguir para Assinar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Etapa assinatura */}
+        {etapa === 'assinatura' && (
+          <Card>
+            <CardContent className="p-6 space-y-5">
+              <button
+                onClick={() => setEtapa('leitura')}
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                ← Voltar para leitura
+              </button>
+
               <div>
-                <label className="text-sm font-medium">Seu nome completo</label>
+                <label className="text-sm font-medium block mb-1">Seu nome completo</label>
                 <input
                   type="text"
-                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm bg-background"
+                  className="w-full px-3 py-2 border rounded-md text-sm bg-background"
                   placeholder={link?.programa_validador_clientes?.poc_nome || 'Nome do responsável'}
                   value={nome}
                   onChange={e => setNome(e.target.value)}
                 />
               </div>
 
-              {confirmandoRecusa ? (
-                <div className="space-y-3 p-3 border border-destructive/30 rounded-lg bg-destructive/5">
-                  <p className="text-sm font-medium text-destructive">Confirmar recusa do documento?</p>
-                  <textarea
-                    className="w-full px-3 py-2 border rounded-md text-sm bg-background resize-none"
-                    placeholder="Motivo da recusa (opcional)..."
-                    rows={3}
-                    value={motivo}
-                    onChange={e => setMotivo(e.target.value)}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium">Assinatura</label>
+                  <button
+                    type="button"
+                    onClick={() => sigRef.current?.clear()}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3 h-3" /> Limpar
+                  </button>
+                </div>
+                <div className="border-2 border-dashed border-border rounded-lg bg-muted/20 overflow-hidden">
+                  <SignatureCanvas
+                    ref={sigRef}
+                    canvasProps={{
+                      width: 600,
+                      height: 180,
+                      className: 'w-full',
+                      style: { touchAction: 'none' },
+                    }}
+                    backgroundColor="transparent"
+                    penColor="#1a1a1a"
                   />
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setConfirmandoRecusa(false)}>Cancelar</Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={recusarMutation.isPending}
-                      onClick={() => recusarMutation.mutate()}
-                    >
-                      {recusarMutation.isPending ? 'Registrando...' : 'Confirmar Recusa'}
-                    </Button>
-                  </div>
                 </div>
-              ) : (
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setConfirmandoRecusa(true)}
-                  >
-                    <ThumbsDown className="w-4 h-4 mr-2" />
-                    Recusar
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    disabled={aceitarMutation.isPending}
-                    onClick={() => aceitarMutation.mutate()}
-                  >
-                    {aceitarMutation.isPending ? 'Registrando...' : (
-                      <>
-                        <ThumbsUp className="w-4 h-4 mr-2" />
-                        Aceitar Documento
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Assine com o mouse ou dedo na área acima
+                </p>
+              </div>
+
+              <Button
+                className="w-full"
+                disabled={aceitarMutation.isPending}
+                onClick={() => aceitarMutation.mutate()}
+              >
+                {aceitarMutation.isPending ? (
+                  'Registrando assinatura...'
+                ) : (
+                  <>
+                    <PenLine className="w-4 h-4 mr-2" />
+                    Assinar e Confirmar Ata de Kickoff
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
