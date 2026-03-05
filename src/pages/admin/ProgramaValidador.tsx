@@ -1409,8 +1409,8 @@ function DetalheCliente({
   });
 
   const gerarDocLinkMutation = useMutation({
-    mutationFn: async (tipo: TipoDoc) => {
-      const html = gerarHtmlDocumento(tipo, cliente);
+    mutationFn: async ({ tipo, htmlOverride }: { tipo: TipoDoc; htmlOverride?: string }) => {
+      const html = htmlOverride ?? gerarHtmlDocumento(tipo, cliente);
       const docExistente = documentos.find(d => d.tipo === tipo);
       const { data, error } = await supabase
         .from('programa_validador_documento_links' as never)
