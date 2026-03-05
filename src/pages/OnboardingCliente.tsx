@@ -1180,7 +1180,7 @@ export default function OnboardingCliente() {
                       <button onClick={() => setStepAtivo(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">
                         ← Voltar ao assistente
                       </button>
-                      <StepDiagnostico cliente={cliente} onConcluir={() => setStepAtivo(null)} />
+                      <StepDiagnostico cliente={cliente} onConcluir={() => navigate('/')} />
                     </motion.div>
                   )}
                 </AnimatePresence>
