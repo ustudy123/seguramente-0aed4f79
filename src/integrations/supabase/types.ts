@@ -11182,6 +11182,7 @@ export type Database = {
           data_inicio_piloto: string | null
           data_vigencia_fim: string | null
           dia_vencimento: number | null
+          empresa_cadastro_id: string | null
           endereco: string | null
           fase: string
           id: string
@@ -11214,6 +11215,7 @@ export type Database = {
           data_inicio_piloto?: string | null
           data_vigencia_fim?: string | null
           dia_vencimento?: number | null
+          empresa_cadastro_id?: string | null
           endereco?: string | null
           fase?: string
           id?: string
@@ -11246,6 +11248,7 @@ export type Database = {
           data_inicio_piloto?: string | null
           data_vigencia_fim?: string | null
           dia_vencimento?: number | null
+          empresa_cadastro_id?: string | null
           endereco?: string | null
           fase?: string
           id?: string
@@ -11269,6 +11272,13 @@ export type Database = {
           valor_mensal?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "programa_validador_clientes_empresa_cadastro_id_fkey"
+            columns: ["empresa_cadastro_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "programa_validador_clientes_tenant_id_fkey"
             columns: ["tenant_id"]
