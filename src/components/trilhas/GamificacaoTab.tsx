@@ -5,14 +5,12 @@ import { CertificadosList } from "./CertificadosList";
 import { RankingBoard } from "./RankingBoard";
 import { useGamificacao } from "@/hooks/useGamificacao";
 import { Card, CardContent } from "@/components/ui/card";
-import { DemoBanner } from "./DemoBanner";
 
 export function GamificacaoTab() {
-  const { minhasMedalhas, meusCertificados, ranking, isDemo } = useGamificacao();
+  const { minhasMedalhas, meusCertificados, ranking } = useGamificacao();
 
   return (
     <div className="space-y-6">
-      {isDemo && <DemoBanner />}
       {/* Summary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-border">

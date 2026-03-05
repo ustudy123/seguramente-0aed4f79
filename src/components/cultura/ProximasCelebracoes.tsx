@@ -26,51 +26,6 @@ interface CelebracaoItem {
   acao?: CulturaAcao;
 }
 
-// Demo data for when there's no real data
-const DEMO_CELEBRACOES: CelebracaoItem[] = [
-  {
-    nome: "Ana Souza",
-    tipo: "aniversario",
-    data: addDays(new Date(), 2),
-    diasRestantes: 2,
-    avatar: "/avatars/demo-ana-souza.jpg",
-    cargo: "Analista de RH",
-  },
-  {
-    nome: "Carlos Pereira",
-    tipo: "tempo_casa",
-    data: addDays(new Date(), 5),
-    diasRestantes: 5,
-    avatar: "/avatars/demo-carlos-pereira.jpg",
-    cargo: "Engenheiro de Segurança",
-    anos: 3,
-  },
-  {
-    nome: "Letícia Santos",
-    tipo: "aniversario",
-    data: addDays(new Date(), 10),
-    diasRestantes: 10,
-    avatar: "/avatars/demo-leticia-santos.jpg",
-    cargo: "Coordenadora de SST",
-  },
-  {
-    nome: "Rafael Oliveira",
-    tipo: "aniversario",
-    data: addDays(new Date(), 18),
-    diasRestantes: 18,
-    avatar: "/avatars/demo-rafael-oliveira.jpg",
-    cargo: "Técnico de Segurança",
-  },
-  {
-    nome: "Beatriz Lima",
-    tipo: "tempo_casa",
-    data: addDays(new Date(), 25),
-    diasRestantes: 25,
-    avatar: "/avatars/demo-beatriz-lima.jpg",
-    cargo: "Assistente Administrativo",
-    anos: 5,
-  },
-];
 
 interface Props {
   acoes: CulturaAcao[];
@@ -181,8 +136,7 @@ export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Pro
       acao: a,
     }));
 
-  const usarDemo = celebracoesReais.length === 0 && acoesProximas.length === 0;
-  const celebracoes = usarDemo ? DEMO_CELEBRACOES : [...celebracoesReais, ...acoesProximas].sort((a, b) => a.diasRestantes - b.diasRestantes);
+  const celebracoes = [...celebracoesReais, ...acoesProximas].sort((a, b) => a.diasRestantes - b.diasRestantes);
 
   const handleCriarAcao = async (item: CelebracaoItem) => {
     if (!onCreateAcao) return;

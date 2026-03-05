@@ -25,27 +25,9 @@ export function AfiliadosDashboard() {
     enabled: !!user?.id,
   });
 
-  const demoProfissional = {
-    id: "demo-prof",
-    nome_completo: "Mariana Silva",
-    link_afiliado: "https://seguramente.app/ref/mariana-silva",
-    codigo_afiliado: "MARIANA2026",
-    plano: "profissional",
-    selo_verificado: true,
-  };
+  const profissional = realProfissional;
 
-  const demoComissoes = [
-    { id: "dc-1", tipo: "indicacao_empresa", valor: 320, status: "pago", created_at: new Date(Date.now() - 3 * 86400000).toISOString() },
-    { id: "dc-2", tipo: "indicacao_empresa", valor: 280, status: "pago", created_at: new Date(Date.now() - 12 * 86400000).toISOString() },
-    { id: "dc-3", tipo: "recorrencia_mensal", valor: 150, status: "pendente", created_at: new Date(Date.now() - 1 * 86400000).toISOString() },
-    { id: "dc-4", tipo: "indicacao_empresa", valor: 320, status: "pendente", created_at: new Date(Date.now() - 0.5 * 86400000).toISOString() },
-    { id: "dc-5", tipo: "recorrencia_mensal", valor: 150, status: "pago", created_at: new Date(Date.now() - 30 * 86400000).toISOString() },
-  ];
-
-  const profissional = realProfissional || demoProfissional;
-  const isDemo = !realProfissional;
-
-  const { data: realComissoes = [] } = useQuery({
+  const { data: comissoes = [] } = useQuery({
     queryKey: ["marketplace-comissoes", realProfissional?.id],
     queryFn: async () => {
       if (!realProfissional?.id) return [];
@@ -59,8 +41,6 @@ export function AfiliadosDashboard() {
     },
     enabled: !!realProfissional?.id,
   });
-
-  const comissoes = isDemo ? demoComissoes : realComissoes;
 
   const copyLink = () => {
     if (profissional?.link_afiliado) {

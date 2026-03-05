@@ -18,7 +18,6 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTrilhaProgresso } from "@/hooks/useTrilhaProgresso";
-import { DemoBanner } from "./DemoBanner";
 import type { TrilhaComProgresso, TrilhaTipo } from "@/types/trilha";
 import { TRILHA_TIPO_LABELS, TRILHA_PRIORIDADE_LABELS } from "@/types/trilha";
 
@@ -38,7 +37,6 @@ interface MinhasTrilhasProps {
 
 export function MinhasTrilhas({ onOpenTrilha }: MinhasTrilhasProps) {
   const { minhasTrilhas, isLoading } = useTrilhaProgresso();
-  const isDemo = minhasTrilhas.length > 0 && minhasTrilhas[0].id.startsWith("demo-");
   const [filter, setFilter] = useState<"all" | "em_andamento" | "concluido" | "nao_iniciado">("all");
 
   const categorized = minhasTrilhas.map((t) => {
@@ -57,7 +55,6 @@ export function MinhasTrilhas({ onOpenTrilha }: MinhasTrilhasProps) {
 
   return (
     <div className="space-y-6">
-      {isDemo && <DemoBanner />}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card className="border-border">
           <CardContent className="p-4 flex items-center gap-3">

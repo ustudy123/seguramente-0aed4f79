@@ -13,84 +13,6 @@ import {
   ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, Cell, AreaChart, Area
 } from "recharts";
 
-// ========== DEMO DATA ==========
-function buildDemoData(): TrilhaAnalytics {
-  const tendencia: TendenciaMensal[] = [
-    { mes: "2025-09", conclusoes: 8, novos_inscritos: 22 },
-    { mes: "2025-10", conclusoes: 15, novos_inscritos: 18 },
-    { mes: "2025-11", conclusoes: 24, novos_inscritos: 31 },
-    { mes: "2025-12", conclusoes: 19, novos_inscritos: 12 },
-    { mes: "2026-01", conclusoes: 34, novos_inscritos: 27 },
-    { mes: "2026-02", conclusoes: 41, novos_inscritos: 35 },
-  ];
-
-  const engajamento: TrilhaEngajamento[] = [
-    { trilha_id: "1", trilha_nome: "NR-17 Ergonomia", total_inscritos: 42, total_concluidos: 31, taxa_conclusao: 74, pontos_medio: 850 },
-    { trilha_id: "2", trilha_nome: "Liderança Humanizada", total_inscritos: 28, total_concluidos: 12, taxa_conclusao: 43, pontos_medio: 620 },
-    { trilha_id: "3", trilha_nome: "Saúde Mental no Trabalho", total_inscritos: 55, total_concluidos: 38, taxa_conclusao: 69, pontos_medio: 780 },
-    { trilha_id: "4", trilha_nome: "Cultura de Segurança", total_inscritos: 35, total_concluidos: 8, taxa_conclusao: 23, pontos_medio: 430 },
-    { trilha_id: "5", trilha_nome: "Onboarding Técnico", total_inscritos: 18, total_concluidos: 16, taxa_conclusao: 89, pontos_medio: 920 },
-    { trilha_id: "6", trilha_nome: "Gestão de Conflitos", total_inscritos: 14, total_concluidos: 3, taxa_conclusao: 21, pontos_medio: 310 },
-  ];
-
-  const colaboradores: ColaboradorProgresso[] = [
-    { colaborador_id: "a", colaborador_nome: "Ana Souza", trilhas_iniciadas: 5, trilhas_concluidas: 4, pontos_total: 4250, ultima_atividade: "2026-02-15" },
-    { colaborador_id: "b", colaborador_nome: "Carlos Pereira", trilhas_iniciadas: 4, trilhas_concluidas: 3, pontos_total: 3180, ultima_atividade: "2026-02-14" },
-    { colaborador_id: "c", colaborador_nome: "Beatriz Lima", trilhas_iniciadas: 3, trilhas_concluidas: 3, pontos_total: 2940, ultima_atividade: "2026-02-12" },
-    { colaborador_id: "d", colaborador_nome: "Rafael Oliveira", trilhas_iniciadas: 4, trilhas_concluidas: 2, pontos_total: 2100, ultima_atividade: "2026-02-10" },
-    { colaborador_id: "e", colaborador_nome: "Letícia Santos", trilhas_iniciadas: 3, trilhas_concluidas: 2, pontos_total: 1870, ultima_atividade: "2026-01-28" },
-    { colaborador_id: "f", colaborador_nome: "Fernando Costa", trilhas_iniciadas: 2, trilhas_concluidas: 1, pontos_total: 950, ultima_atividade: "2026-01-15" },
-    { colaborador_id: "g", colaborador_nome: "Mariana Silva", trilhas_iniciadas: 1, trilhas_concluidas: 0, pontos_total: 320, ultima_atividade: "2025-12-20" },
-  ];
-
-  const modulos: ModuloRank[] = [
-    { modulo_id: "m1", titulo: "Postura e Ergonomia no Home Office", tipo: "video", conclusoes: 38, nota_media: 9.2 },
-    { modulo_id: "m2", titulo: "Identificação de Riscos Psicossociais", tipo: "quiz", conclusoes: 35, nota_media: 8.7 },
-    { modulo_id: "m3", titulo: "Comunicação Não-Violenta", tipo: "atividade_pratica", conclusoes: 31, nota_media: 8.9 },
-    { modulo_id: "m4", titulo: "Primeiros Socorros Básicos", tipo: "video", conclusoes: 28, nota_media: 9.5 },
-    { modulo_id: "m5", titulo: "Gestão de Tempo e Energia", tipo: "estudo_caso", conclusoes: 24, nota_media: 8.1 },
-  ];
-
-  const gatilhos: GatilhoIA[] = [
-    {
-      id: "humor_neg", tipo: "humor_negativo", titulo: "Humor Negativo Recorrente",
-      descricao: "7 colaborador(es) apresentam padrão de humor negativo recorrente nas últimas 2 semanas. Recomenda-se atribuir trilhas de Ergonomia & Saúde ou Bem-Estar.",
-      severidade: "critical", trilha_sugerida: "Saúde Mental no Trabalho", colaboradores_afetados: 7, dados: {},
-    },
-    {
-      id: "abandono", tipo: "abandono_trilha", titulo: "Trilhas Abandonadas",
-      descricao: "4 colaborador(es) não interagem com suas trilhas há mais de 14 dias. Considere enviar lembretes ou simplificar o conteúdo.",
-      severidade: "warning", colaboradores_afetados: 4, dados: { colaboradores: ["Fernando Costa", "Mariana Silva", "João Mendes", "Paula Ramos"] },
-    },
-    {
-      id: "baixa_conclusao", tipo: "img_baixo", titulo: "Trilhas com Baixa Conclusão",
-      descricao: "2 trilha(s) têm taxa de conclusão inferior a 30%. Revise a dificuldade, duração ou relevância do conteúdo.",
-      severidade: "warning", colaboradores_afetados: 49, dados: { trilhas: ["Cultura de Segurança", "Gestão de Conflitos"] },
-    },
-    {
-      id: "alta_perf", tipo: "alta_performance", titulo: "Colaboradores Destaque",
-      descricao: "3 colaborador(es) concluíram 3 ou mais trilhas. Considere reconhecimento formal ou atribuição de trilhas avançadas.",
-      severidade: "info", colaboradores_afetados: 3, dados: { colaboradores: ["Ana Souza", "Carlos Pereira", "Beatriz Lima"] },
-    },
-  ];
-
-  return {
-    totalTrilhas: 8,
-    trilhasAtivas: 6,
-    totalModulos: 47,
-    totalInscritos: 68,
-    totalConclusoes: 108,
-    taxaConclusao: 62,
-    totalPontosDistribuidos: 15610,
-    totalCertificados: 42,
-    totalMedalhas: 29,
-    engajamentoPorTrilha: engajamento,
-    progressoPorColaborador: colaboradores,
-    modulosMaisConcluidos: modulos,
-    tendenciaMensal: tendencia,
-    gatilhosIA: gatilhos,
-  };
-}
 
 function isDataEmpty(data: TrilhaAnalytics): boolean {
   return data.totalInscritos === 0 && data.totalConclusoes === 0 && data.totalCertificados === 0;
@@ -108,9 +30,8 @@ const CHART_COLORS = [
 export function AnalyticsDashboard() {
   const { data: realData, isLoading } = useAnalyticsTrilhas();
 
-  const demoData = useMemo(() => buildDemoData(), []);
-  const isDemo = realData ? isDataEmpty(realData) : true;
-  const data = isDemo ? demoData : realData!;
+  const isEmpty = realData ? isDataEmpty(realData) : true;
+  const data = realData;
 
   if (isLoading) {
     return (

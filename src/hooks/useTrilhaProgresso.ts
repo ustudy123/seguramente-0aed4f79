@@ -4,7 +4,6 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
 import type { TrilhaProgresso, TrilhaComProgresso, Trilha, TrilhaModulo } from "@/types/trilha";
-import { DEMO_MINHAS_TRILHAS } from "@/data/trilhas-demo";
 
 export function useTrilhaProgresso() {
   const { tenantId, user, profile } = useAuth();
@@ -26,7 +25,7 @@ export function useTrilhaProgresso() {
         .eq("status", "ativa")
         .order("created_at", { ascending: false }) as { data: Trilha[] | null; error: Error | null };
       if (tErr) throw tErr;
-      if (!trilhas?.length) return DEMO_MINHAS_TRILHAS;
+      if (!trilhas?.length) return [];
 
       // Fetch user's progress across all trilhas
       const { data: progresso, error: pErr } = await supabase
@@ -52,10 +51,7 @@ export function useTrilhaProgresso() {
     useQuery({
       queryKey: ["trilha_progresso", trilhaId, colaboradorId],
       queryFn: async (): Promise<TrilhaProgresso[]> => {
-        if (!trilhaId) return [];
-        // Demo trilhas don't have real progress
-        if (trilhaId.startsWith("demo-")) return [];
-        if (!tenantId || !colaboradorId) return [];
+        if (!trilhaId || !tenantId || !colaboradorId) return [];
         const { data, error } = await supabase
           .from("trilha_progresso" as never)
           .select("*")
@@ -70,10 +66,6 @@ export function useTrilhaProgresso() {
 
   const iniciarModuloMut = useMutation({
     mutationFn: async ({ trilhaId, moduloId }: { trilhaId: string; moduloId: string }) => {
-      if (trilhaId.startsWith("demo-") || moduloId.startsWith("dm")) {
-        toast.info("Modo demonstração — progresso não é salvo.");
-        return null;
-      }
       if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
       const { data, error } = await supabase
         .from("trilha_progresso" as never)
@@ -117,10 +109,6 @@ export function useTrilhaProgresso() {
       nota?: number;
       pontosObtidos?: number;
     }) => {
-      if (trilhaId.startsWith("demo-") || moduloId.startsWith("dm")) {
-        toast.info("Modo demonstração — progresso não é salvo.");
-        return null;
-      }
       if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
 
       let evidenciaUrl: string | null = null;

@@ -226,12 +226,6 @@ export function AvaliacaoFormulario() {
 
   return (
     <div className="space-y-4">
-      {/* Demo banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-sm text-amber-800">
-        <Info className="h-4 w-4 shrink-0" />
-        <span className="font-medium">Modo Demonstração</span> — Dados fictícios para visualização do formulário de avaliação.
-      </div>
-
       {/* Risk Alerts */}
       <Card className="border-amber-200 bg-amber-50/30">
         <CardContent className="p-4">
