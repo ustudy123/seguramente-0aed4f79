@@ -233,9 +233,16 @@ const ABNT_CSS = `
   }
 `;
 
-// ─── Gerador do contrato completo com todos os anexos ─────────────────────────
+// ─── Dispatcher: escolhe o template correto conforme tipo_cliente ─────────────
 
 function gerarHtmlContrato(cliente: Cliente): string {
+  if (cliente.tipo_cliente === 'pagante') return gerarHtmlContratoPagante(cliente);
+  return gerarHtmlContratoTester(cliente);
+}
+
+// ─── Contrato Tester (Programa Validador) ─────────────────────────────────────
+
+function gerarHtmlContratoTester(cliente: Cliente): string {
   const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   const empresa = cliente.nome_empresa;
   const cnpj = cliente.cnpj || '___________________';
