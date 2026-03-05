@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { nomeCompleto, email, tipoPessoa, documento, tenantNome, tenantSlug, empresaDados } = await req.json();
+    const { nomeCompleto, email, whatsapp, tipoPessoa, documento, tenantNome, tenantSlug, empresaDados } = await req.json();
 
     if (!nomeCompleto || !email || !tenantNome) {
       return new Response(JSON.stringify({ error: "Campos obrigatórios não preenchidos" }), {
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
         cnpj: documento || null,
         poc_nome: nomeCompleto,
         poc_email: email,
-        poc_telefone: empresaDados?.telefone || null,
+        poc_telefone: whatsapp || empresaDados?.telefone || null,
         representante: nomeCompleto,
         tipo_cliente: "pagante",
         fase: "prospeccao",
@@ -80,13 +80,16 @@ Deno.serve(async (req) => {
           `Tipo: ${tipoPessoa === "pj" ? "PJ" : "PF"}`,
           `Documento: ${documento || "não informado"}`,
           `Slug: ${tenantSlug || "não informado"}`,
+          whatsapp ? `WhatsApp: ${whatsapp}` : null,
           empresaDados?.nomeFantasia ? `Nome fantasia: ${empresaDados.nomeFantasia}` : null,
           empresaDados?.razaoSocial ? `Razão social: ${empresaDados.razaoSocial}` : null,
           empresaDados?.emailEmpresa ? `E-mail empresa: ${empresaDados.emailEmpresa}` : null,
           empresaDados?.cnaeFiscal ? `CNAE: ${empresaDados.cnaeFiscal}` : null,
           empresaDados?.cnaeDescricao ? `Atividade principal: ${empresaDados.cnaeDescricao}` : null,
+          empresaDados?.porte ? `Porte: ${empresaDados.porte}` : null,
+          empresaDados?.naturezaJuridica ? `Natureza jurídica: ${empresaDados.naturezaJuridica}` : null,
           empresaDados?.cnaesSecundarios?.length
-            ? `CNAEs secundários: ${empresaDados.cnaesSecundarios.map((c: { codigo: number; descricao: string }) => `${c.codigo} - ${c.descricao}`).join(" | ")}`
+            ? `CNAEs secundários: ${empresaDados.cnaesSecundarios.map((c: { codigo: number; descricao: string }) => `${c.codigo} - ${c.descricao}`).join(", ")}`
             : null,
         ]
           .filter(Boolean)

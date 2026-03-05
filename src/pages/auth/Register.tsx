@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search, Info, CheckCircle2, Clock, Phone, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search, Info, CheckCircle2, Clock, Phone, Sparkles, MessageCircle } from "lucide-react";
+import { PhoneInput, cleanPhone, validatePhone } from "@/components/ui/phone-input";
 import { formatCnpj, cleanCnpj, buscarCnpj, type BrasilApiCnpjResponse } from "@/lib/brasilapi";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ const registerSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Apenas letras minúsculas, números e hífen"),
   nomeCompleto: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
+  whatsapp: z.string().min(10, "WhatsApp inválido").max(15),
 }).refine((data) => {
   const clean = data.documento.replace(/\D/g, "");
   if (data.tipoPessoa === "pj") return clean.length === 14;
@@ -60,6 +62,12 @@ const registerSchema = z.object({
 }, {
   message: "Documento inválido",
   path: ["documento"],
+}).refine((data) => {
+  const clean = data.whatsapp.replace(/\D/g, "");
+  return clean.length === 10 || clean.length === 11;
+}, {
+  message: "WhatsApp inválido",
+  path: ["whatsapp"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -80,6 +88,7 @@ export default function Register() {
       tenantSlug: "",
       nomeCompleto: "",
       email: "",
+      whatsapp: "",
     },
     mode: "onChange",
   });
@@ -118,10 +127,12 @@ export default function Register() {
     setSubmitting(true);
     try {
       const cleanDoc = data.documento.replace(/\D/g, "");
+      const cleanWhatsapp = data.whatsapp.replace(/\D/g, "");
       const { data: result, error } = await supabase.functions.invoke("pre-register", {
         body: {
           nomeCompleto: data.nomeCompleto,
           email: data.email,
+          whatsapp: cleanWhatsapp,
           tipoPessoa: data.tipoPessoa,
           documento: cleanDoc,
           tenantNome: data.tenantNome,
@@ -378,6 +389,27 @@ export default function Register() {
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="whatsapp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      WhatsApp *
+                    </FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        value={field.value}
+                        onChange={(val) => form.setValue("whatsapp", val, { shouldValidate: true })}
+                      />
+                    </FormControl>
+                    <FormDescription>Para contato rápido da nossa equipe</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
