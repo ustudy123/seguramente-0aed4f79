@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 import { DEMO_MINHAS_MEDALHAS, DEMO_CERTIFICADOS, DEMO_RANKING, DEMO_MEDALHAS_CONFIG } from "@/data/trilhas-demo";
 
 export interface Medalha {
@@ -191,7 +192,7 @@ export function useGamificacao() {
       qc.invalidateQueries({ queryKey: ["trilha_medalhas_config"] });
       toast.success("Medalha criada!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const excluirMedalhaMut = useMutation({
@@ -203,7 +204,7 @@ export function useGamificacao() {
       qc.invalidateQueries({ queryKey: ["trilha_medalhas_config"] });
       toast.success("Medalha removida!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const isDemo =

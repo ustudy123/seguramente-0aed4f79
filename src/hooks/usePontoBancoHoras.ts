@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 
 export interface BancoHoras {
   id: string;
@@ -139,7 +140,7 @@ export function usePontoBancoHoras() {
       queryClient.invalidateQueries({ queryKey: ["ponto-bh-movimentacoes"] });
       toast.success("Movimentação registrada!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const criarBancoHorasMutation = useMutation({
@@ -157,7 +158,7 @@ export function usePontoBancoHoras() {
       queryClient.invalidateQueries({ queryKey: ["ponto-banco-horas"] });
       toast.success("Banco de horas criado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   return {

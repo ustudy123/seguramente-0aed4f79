@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search } from "lucide-react";
 import { formatCnpj, cleanCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { translateError } from "@/lib/translateError";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,15 +93,7 @@ export default function Register() {
 
   const tipoPessoa = form.watch("tipoPessoa");
 
-  const translateErrorMessage = (message: string): string => {
-    const translations: Record<string, string> = {
-      "User already registered": "Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.",
-      "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres.",
-      "Invalid email": "E-mail inválido.",
-      "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
-    };
-    return translations[message] || message;
-  };
+  // translateErrorMessage now uses shared utility
 
   const handleBuscarCnpj = async () => {
     const doc = form.getValues("documento");
@@ -138,7 +131,7 @@ export default function Register() {
     });
 
     if (error) {
-      const translatedMessage = translateErrorMessage(error.message || "");
+      const translatedMessage = translateError(error.message || "");
       toast.error("Erro ao criar conta", {
         description: translatedMessage || "Tente novamente mais tarde.",
       });

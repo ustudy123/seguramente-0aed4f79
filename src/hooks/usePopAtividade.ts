@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 
 export interface PopData {
   id: string;
@@ -255,7 +256,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
       salvarDocumentoPop(data).catch((err) => console.error("Erro ao salvar documento POP:", err));
       toast.success("POP criado com sucesso!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const atualizarPopMut = useMutation({
@@ -314,7 +315,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
       }
       toast.success("POP atualizado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const excluirPopMut = useMutation({
@@ -335,7 +336,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
       qc.invalidateQueries({ queryKey: ["documentos"] });
       toast.success("POP removido!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   // Fetch versions for a specific POP

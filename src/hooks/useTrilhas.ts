@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleMutationError } from "@/lib/toastError";
 import type { Trilha, TrilhaModulo, TrilhaQuizPergunta } from "@/types/trilha";
 import { DEMO_TRILHAS } from "@/data/trilhas-demo";
 
@@ -46,7 +47,7 @@ export function useTrilhas() {
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Trilha criada!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const atualizarTrilhaMut = useMutation({
@@ -61,7 +62,7 @@ export function useTrilhas() {
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Trilha atualizada!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const excluirTrilhaMut = useMutation({
@@ -73,7 +74,7 @@ export function useTrilhas() {
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Trilha removida!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   return {
@@ -132,7 +133,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Módulo adicionado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const atualizarModuloMut = useMutation({
@@ -147,7 +148,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       qc.invalidateQueries({ queryKey: ["trilha_modulos", trilhaId] });
       toast.success("Módulo atualizado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   const excluirModuloMut = useMutation({
@@ -160,7 +161,7 @@ export function useTrilhaModulos(trilhaId?: string) {
       qc.invalidateQueries({ queryKey: ["trilhas"] });
       toast.success("Módulo removido!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: handleMutationError,
   });
 
   return {

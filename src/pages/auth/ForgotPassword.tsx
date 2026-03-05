@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { translateError } from "@/lib/translateError";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -45,7 +46,7 @@ export default function ForgotPassword() {
 
     if (error) {
       toast.error("Erro ao enviar e-mail", {
-        description: error.message,
+        description: translateError(error.message),
       });
       return;
     }
