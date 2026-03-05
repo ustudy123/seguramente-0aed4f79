@@ -1181,7 +1181,34 @@ export default function OnboardingCliente() {
                       <button onClick={() => setStepAtivo(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">
                         ← Voltar ao assistente
                       </button>
-                      <StepDiagnostico cliente={cliente} onConcluir={() => navigate('/')} />
+      <StepDiagnostico cliente={cliente} onConcluir={async () => {
+                        // Pre-select the client's empresa in the global selector before navigating
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (user) {
+                            const { data: profile } = await supabase
+                              .from('profiles')
+                              .select('tenant_id')
+                              .eq('user_id', user.id)
+                              .maybeSingle();
+                            if (profile?.tenant_id) {
+                              const { data: empresas } = await supabase
+                                .from('empresa_cadastro')
+                                .select('id')
+                                .eq('tenant_id', profile.tenant_id)
+                                .eq('ativo', true)
+                                .order('created_at', { ascending: true })
+                                .limit(1);
+                              if (empresas && empresas.length > 0) {
+                                localStorage.setItem(`empresa_ativa_${profile.tenant_id}`, empresas[0].id);
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          // ignore, just navigate
+                        }
+                        navigate('/');
+                      }} />
                     </motion.div>
                   )}
                 </AnimatePresence>
