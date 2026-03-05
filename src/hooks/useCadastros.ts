@@ -56,16 +56,21 @@ export interface Filial {
 // Departamentos Hook
 export function useDepartamentos() {
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   const { data: departamentos = [], isLoading, error } = useQuery({
-    queryKey: ["departamentos", tenantId],
+    queryKey: ["departamentos", tenantId, empresaAtivaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("departamentos")
         .select("*")
+        .eq("tenant_id", tenantId!)
         .order("nome");
 
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Departamento[];
     },
@@ -76,7 +81,7 @@ export function useDepartamentos() {
     mutationFn: async (departamento: Omit<Departamento, "id" | "tenant_id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
         .from("departamentos")
-        .insert({ ...departamento, tenant_id: tenantId! })
+        .insert({ ...departamento, tenant_id: tenantId!, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
