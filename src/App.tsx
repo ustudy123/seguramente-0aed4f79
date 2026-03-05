@@ -54,6 +54,7 @@ import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
 import HubContabil from "./pages/HubContabil";
 import Configuracoes from "./pages/Configuracoes";
 import LandingPage from "./pages/LandingPage";
+import AssinaturaContrato from "./pages/AssinaturaContrato";
 import AnaliseJornada from "./pages/AnaliseJornada";
 
 // Cadastros Pages
