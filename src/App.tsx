@@ -57,6 +57,7 @@ import LandingPage from "./pages/LandingPage";
 import AssinaturaContrato from "./pages/AssinaturaContrato";
 import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
+import AtivarConta from "./pages/AtivarConta";
 import AnaliseJornada from "./pages/AnaliseJornada";
 
 // Cadastros Pages
