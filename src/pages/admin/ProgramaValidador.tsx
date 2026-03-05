@@ -2107,13 +2107,55 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           )}
         </div>
 
+        {/* CNPJ com busca automática */}
+        <div className="col-span-2">
+          <Label>CNPJ</Label>
+          <div className="flex gap-2 mt-1">
+            <Input
+              placeholder="00.000.000/0000-00"
+              value={form.cnpj}
+              onChange={e => {
+                const cleaned = e.target.value.replace(/\D/g, '');
+                if (cleaned.length <= 14) {
+                  const formatted = formatCnpj(cleaned);
+                  setForm(p => ({ ...p, cnpj: formatted }));
+                }
+              }}
+              maxLength={18}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={cnpjLoading || cleanCnpj(form.cnpj).length !== 14}
+              title="Buscar dados na Receita Federal"
+              onClick={async () => {
+                setCnpjLoading(true);
+                try {
+                  const result = await buscarCnpj(form.cnpj);
+                  if (!result) { toast.error('CNPJ não encontrado.'); return; }
+                  setForm(p => ({
+                    ...p,
+                    nome_empresa: result.razao_social || p.nome_empresa,
+                    endereco: [result.logradouro, result.numero, result.bairro, result.municipio, result.uf].filter(Boolean).join(', '),
+                    cidade_foro: result.municipio || p.cidade_foro,
+                    poc_email: result.email || p.poc_email,
+                  }));
+                  toast.success('Dados preenchidos automaticamente!');
+                } finally {
+                  setCnpjLoading(false);
+                }
+              }}
+            >
+              {cnpjLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Clique na lupa para preencher automaticamente pela Receita Federal</p>
+        </div>
+
         <div className="col-span-2">
           <Label>Nome da Empresa *</Label>
           <Input value={form.nome_empresa} onChange={e => setForm(p => ({ ...p, nome_empresa: e.target.value }))} />
-        </div>
-        <div>
-          <Label>CNPJ</Label>
-          <Input value={form.cnpj} onChange={e => setForm(p => ({ ...p, cnpj: e.target.value }))} />
         </div>
         <div>
           <Label>Fase</Label>
