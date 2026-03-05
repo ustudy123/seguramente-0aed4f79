@@ -318,7 +318,7 @@ export default function AtivarConta() {
           className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-[hsl(262,50%,45%)] px-6 py-5">
+          <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-white" />
