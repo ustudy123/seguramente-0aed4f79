@@ -61,6 +61,13 @@ interface Cliente {
   endereco: string | null;
   representante: string | null;
   cidade_foro: string | null;
+  tipo_cliente: 'tester' | 'pagante';
+  valor_mensal: number | null;
+  dia_vencimento: number | null;
+  plano: string | null;
+  modulos_contratados: string[] | null;
+  data_contrato: string | null;
+  data_vigencia_fim: string | null;
   created_at: string;
 }
 
@@ -121,7 +128,7 @@ const FASES: { value: Fase; label: string; color: string; border: string }[] = [
   { value: 'encerrado',   label: 'Encerrado',    color: 'bg-destructive/10 text-destructive',       border: 'border-t-2 border-destructive/50' },
 ];
 
-const DOCS_CONFIG: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
+const DOCS_CONFIG_TESTER: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
   {
     tipo: 'contrato_programa_validador',
     label: 'Contrato Programa Validador',
@@ -133,6 +140,24 @@ const DOCS_CONFIG: { tipo: TipoDoc; label: string; descricao: string; itens?: st
       'Anexo IV — Anexo Operacional',
       'Anexo V — Regras do Programa Validador',
       'Anexo VI — FAQ de Segurança e Boas Práticas',
+    ],
+  },
+  {
+    tipo: 'ata_kickoff',
+    label: 'Ata de Kickoff',
+    descricao: 'Registro operacional do início do projeto: responsáveis, escopo e cronograma.',
+  },
+];
+
+const DOCS_CONFIG_PAGANTE: { tipo: TipoDoc; label: string; descricao: string; itens?: string[] }[] = [
+  {
+    tipo: 'contrato_programa_validador',
+    label: 'Contrato de Licença de Uso',
+    descricao: 'Contrato de licença SaaS com todos os anexos jurídicos incorporados. Uma única assinatura.',
+    itens: [
+      'Anexo I — Termos de Uso da Plataforma',
+      'Anexo II — Política de Privacidade e LGPD',
+      'Anexo III — SLA e Suporte Técnico',
     ],
   },
   {
@@ -208,9 +233,16 @@ const ABNT_CSS = `
   }
 `;
 
-// ─── Gerador do contrato completo com todos os anexos ─────────────────────────
+// ─── Dispatcher: escolhe o template correto conforme tipo_cliente ─────────────
 
 function gerarHtmlContrato(cliente: Cliente): string {
+  if (cliente.tipo_cliente === 'pagante') return gerarHtmlContratoPagante(cliente);
+  return gerarHtmlContratoTester(cliente);
+}
+
+// ─── Contrato Tester (Programa Validador) ─────────────────────────────────────
+
+function gerarHtmlContratoTester(cliente: Cliente): string {
   const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   const empresa = cliente.nome_empresa;
   const cnpj = cliente.cnpj || '___________________';
@@ -656,7 +688,267 @@ ________________________________________________________________________________
 </html>`;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Contrato Pagante (Licença de Uso de Software) ────────────────────────────
+
+function gerarHtmlContratoPagante(cliente: Cliente): string {
+  const dataGeracao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const empresa = cliente.nome_empresa;
+  const cnpj = cliente.cnpj || '___________________';
+  const rep = cliente.representante || cliente.poc_nome || '___________________';
+  const foro = cliente.cidade_foro || 'São Paulo';
+  const endereco = cliente.endereco || '___________________';
+  const valorMensal = cliente.valor_mensal
+    ? cliente.valor_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : '___________________';
+  const diaVenc = cliente.dia_vencimento ? `dia ${cliente.dia_vencimento} de cada mês` : '___________________';
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${ABNT_CSS}</style>
+</head>
+<body>
+
+<h1>CONTRATO DE LICENÇA DE USO DE SOFTWARE</h1>
+<h1>E PRESTAÇÃO DE SERVIÇOS – PLATAFORMA SEGURAMENTE</h1>
+<p style="text-align:center;margin-top:4px;font-size:10pt;color:#666;">Gerado em ${dataGeracao}</p>
+
+<p>Pelo presente instrumento particular, de um lado:</p>
+
+<div class="partes">
+  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº __________, com sede em __________, doravante denominada <strong>SEGURAMENTE</strong>.</p>
+  <p style="margin-top:12px;margin-bottom:0;">E de outro lado:</p>
+  <p style="margin-bottom:0;"><strong>${empresa}</strong>, inscrita no CNPJ nº ${cnpj}, com sede em ${endereco}, neste ato representada por <strong>${rep}</strong>, doravante denominada <strong>CLIENTE</strong>.</p>
+</div>
+
+<p>As partes resolvem celebrar o presente Contrato de Licença de Uso de Software e Prestação de Serviços, que será regido pelas cláusulas e condições abaixo.</p>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 1 — OBJETO</span>
+  <p>O presente contrato tem por objeto a concessão ao CLIENTE de licença de uso não exclusiva e intransferível da plataforma digital Seguramente, disponibilizada no modelo Software as a Service (SaaS). A plataforma Seguramente consiste em sistema digital destinado ao apoio à gestão organizacional das empresas, incluindo funcionalidades relacionadas a:</p>
+  <ol type="I">
+    <li>gestão de saúde e segurança do trabalho;</li>
+    <li>organização de informações empresariais;</li>
+    <li>indicadores organizacionais;</li>
+    <li>gestão de processos internos;</li>
+    <li>avaliações organizacionais e psicossociais;</li>
+    <li>relatórios gerenciais e operacionais.</li>
+  </ol>
+  <p>O acesso à plataforma ocorre por meio da internet, mediante autenticação de usuários autorizados.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 2 — NATUREZA DA LICENÇA</span>
+  <p>A licença concedida ao CLIENTE é não exclusiva, intransferível e limitada ao período de vigência do contrato. O CLIENTE não adquire qualquer direito de propriedade sobre o software, limitando-se ao direito de uso conforme as condições estabelecidas neste contrato.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 3 — CONDIÇÕES DE ACESSO</span>
+  <p>O acesso ao sistema será realizado mediante credenciais de usuário e autenticação digital. O CLIENTE é responsável por controlar os usuários cadastrados, manter a confidencialidade das credenciais e garantir o uso adequado da plataforma. A SEGURAMENTE não se responsabiliza por acessos indevidos decorrentes de negligência do CLIENTE no controle de usuários.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 4 — SERVIÇOS INCLUÍDOS</span>
+  <p>O contrato inclui: disponibilização da plataforma Seguramente, acesso às funcionalidades contratadas, atualizações e melhorias do sistema, manutenção técnica da plataforma e suporte técnico dentro das condições estabelecidas no Anexo III (SLA).</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 5 — DISPONIBILIDADE DO SISTEMA</span>
+  <p>A SEGURAMENTE adotará esforços razoáveis para manter a plataforma disponível. Eventuais indisponibilidades podem ocorrer em razão de manutenções programadas, atualizações do sistema, falhas de infraestrutura ou eventos fora do controle da SEGURAMENTE. Tais situações não configuram descumprimento contratual.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 6 — PLANOS E REMUNERAÇÃO</span>
+  <p>Pela utilização da plataforma, o CLIENTE pagará à SEGURAMENTE o valor de <strong>${valorMensal}</strong>, com vencimento no ${diaVenc}, conforme plano${cliente.plano ? ` <strong>${cliente.plano}</strong>` : ''} contratado. Os valores poderão ser cobrados em periodicidade mensal ou anual, conforme plano contratado.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 7 — INADIMPLÊNCIA</span>
+  <p>Em caso de atraso no pagamento, poderão ser aplicados encargos de multa, juros e correção monetária, e a SEGURAMENTE poderá suspender o acesso à plataforma até a regularização do pagamento. Persistindo a inadimplência por período superior a 30 dias, a SEGURAMENTE poderá rescindir o contrato.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 8 — SUPORTE TÉCNICO</span>
+  <p>A SEGURAMENTE disponibilizará suporte técnico para dúvidas de uso do sistema, orientação operacional e identificação de falhas técnicas. O suporte não inclui consultoria especializada, análise jurídica ou assessoria técnica personalizada. As condições detalhadas de suporte e SLA constam do Anexo III.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 9 — LIMITAÇÃO DE RESPONSABILIDADE</span>
+  <p>A plataforma Seguramente constitui ferramenta de apoio à gestão empresarial. A SEGURAMENTE não se responsabiliza por decisões tomadas pelo CLIENTE com base nos dados do sistema, interpretações equivocadas de relatórios ou informações incorretas inseridas pelos usuários. A responsabilidade pela análise e utilização das informações é exclusivamente do CLIENTE.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 10 — SEGURANÇA DA INFORMAÇÃO</span>
+  <p>A SEGURAMENTE adota medidas técnicas e organizacionais de segurança da informação, incluindo controle de acesso, monitoramento de infraestrutura, segregação de dados entre empresas e práticas de proteção digital. Os dados são armazenados em infraestrutura de computação em nuvem operada por provedores especializados.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 11 — PROTEÇÃO DE DADOS (LGPD)</span>
+  <p>O tratamento de dados pessoais observará as disposições da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Para fins legais, o CLIENTE atua como CONTROLADOR dos dados e a SEGURAMENTE atua como OPERADORA dos dados. A SEGURAMENTE compromete-se a tratar os dados exclusivamente conforme as instruções do CLIENTE.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 12 — CONFIDENCIALIDADE</span>
+  <p>As partes comprometem-se a manter confidenciais todas as informações obtidas em razão deste contrato, incluindo dados empresariais, informações organizacionais, dados de colaboradores e informações técnicas da plataforma. Essa obrigação permanecerá válida mesmo após o encerramento do contrato.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 13 — PROPRIEDADE INTELECTUAL</span>
+  <p>Todos os direitos relacionados à plataforma Seguramente pertencem exclusivamente à SEGURAMENTE, incluindo software, algoritmos, estrutura do sistema, design e metodologias. É proibida qualquer forma de reprodução, modificação, engenharia reversa ou distribuição sem autorização.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 14 — USO INDEVIDO DA PLATAFORMA</span>
+  <p>É proibido utilizar a plataforma para práticas ilegais, violação de direitos de terceiros, uso fraudulento ou inserção de informações falsas. A SEGURAMENTE poderá suspender o acesso em caso de uso indevido.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 15 — ENCERRAMENTO DO CONTRATO</span>
+  <p>O contrato poderá ser encerrado: (I) por qualquer das partes, mediante aviso prévio de 30 dias; (II) por inadimplência; (III) por descumprimento contratual.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 16 — EXPORTAÇÃO DE DADOS</span>
+  <p>Em caso de encerramento do contrato, o CLIENTE poderá solicitar a exportação dos dados armazenados na plataforma, dentro de prazo razoável definido pela SEGURAMENTE.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 17 — ALTERAÇÕES NA PLATAFORMA</span>
+  <p>A SEGURAMENTE poderá realizar melhorias, atualizações ou modificações na plataforma visando evolução tecnológica do sistema.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 18 — DOCUMENTOS INTEGRANTES</span>
+  <p>Fazem parte integrante deste contrato, para todos os fins legais, os seguintes anexos:</p>
+  <ol type="I">
+    <li>Anexo I — Termos de Uso da Plataforma;</li>
+    <li>Anexo II — Política de Privacidade e Proteção de Dados (LGPD);</li>
+    <li>Anexo III — SLA e Suporte Técnico.</li>
+  </ol>
+  <p>A assinatura deste contrato implica concordância integral com todos os anexos.</p>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">CLÁUSULA 19 — FORO</span>
+  <p>Fica eleito o foro da comarca de <strong>${foro}</strong>, com renúncia de qualquer outro, para dirimir eventuais controvérsias.</p>
+</div>
+
+<div style="margin-top:40px;padding:20px;border:1px solid #ccc;background:#fafafa;">
+  <p style="text-align:center;font-weight:bold;text-transform:uppercase;font-size:11pt;">E POR ESTAREM DE ACORDO</p>
+  <p style="text-align:center;">As partes firmam o presente contrato.</p>
+</div>
+
+<div class="assinaturas">
+  <div class="assinatura-bloco">
+    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p>Representante: ______________________</p>
+    <p style="font-size:10pt;color:#666;">${dataGeracao}</p>
+  </div>
+  <div class="assinatura-bloco">
+    <p><strong>${empresa}</strong></p>
+    <p>Representante: ${rep}</p>
+    <p>Assinatura: ______________________</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+  <h3>ANEXO I — TERMOS DE USO DA PLATAFORMA</h3>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. ACEITAÇÃO DOS TERMOS</span>
+  <p>Ao acessar e utilizar a plataforma Seguramente, o CLIENTE declara ter lido, compreendido e concordado com todos os Termos de Uso aqui estabelecidos.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">2. DESCRIÇÃO DA PLATAFORMA</span>
+  <p>A plataforma Seguramente é um sistema SaaS destinado ao apoio à gestão organizacional, oferecendo funcionalidades de gestão de saúde e segurança do trabalho, recursos humanos, indicadores e relatórios gerenciais.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">3. CADASTRO E RESPONSABILIDADES</span>
+  <p>O CLIENTE é responsável por manter suas credenciais em sigilo, comunicar imediatamente qualquer uso não autorizado e garantir que todos os usuários cadastrados cumpram estes Termos.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">4. USOS PERMITIDOS E PROIBIDOS</span>
+  <p>É vedado utilizar a plataforma para fins ilícitos, praticar engenharia reversa do software, comercializar acesso a terceiros, inserir conteúdo falso ou prejudicial, ou violar direitos de terceiros.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">5. ATUALIZAÇÕES</span>
+  <p>A SEGURAMENTE pode atualizar estes Termos periodicamente. O CLIENTE será notificado de alterações relevantes.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+  <h3>ANEXO II — POLÍTICA DE PRIVACIDADE E LGPD</h3>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. COMPROMISSO COM A PRIVACIDADE</span>
+  <p>A SEGURAMENTE está comprometida com a proteção dos dados pessoais dos usuários da plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">2. PAPÉIS NO TRATAMENTO DE DADOS</span>
+  <p>Para os fins desta política: o CLIENTE atua como Controlador dos dados pessoais inseridos na plataforma; a SEGURAMENTE atua como Operadora, processando os dados conforme instruções do CLIENTE.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">3. DADOS COLETADOS E FINALIDADES</span>
+  <p>A plataforma coleta e processa: dados de cadastro e acesso, dados de colaboradores inseridos pelo CLIENTE, registros de utilização do sistema e dados para geração de relatórios e indicadores. Esses dados são utilizados exclusivamente para as finalidades contratadas.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">4. SEGURANÇA E ARMAZENAMENTO</span>
+  <p>Os dados são armazenados em infraestrutura certificada, com criptografia em repouso e em trânsito, controle de acesso por perfil e backups automáticos. Os dados são mantidos pelo período contratual e conforme exigências legais aplicáveis.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">5. DIREITOS DO TITULAR</span>
+  <p>Os titulares dos dados pessoais podem exercer seus direitos de acesso, correção, exclusão e portabilidade por meio do CLIENTE (Controlador), que deverá encaminhar as solicitações à SEGURAMENTE quando aplicável.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">6. COMPARTILHAMENTO DE DADOS</span>
+  <p>A SEGURAMENTE não vende, aluga ou compartilha dados pessoais com terceiros, exceto quando necessário para a prestação dos serviços contratados ou por exigência legal.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page-break">
+  <h3>ANEXO III — SLA E SUPORTE TÉCNICO</h3>
+</div>
+
+<div class="clausula">
+  <span class="clausula-titulo">1. DISPONIBILIDADE</span>
+  <p>A SEGURAMENTE compromete-se a manter a plataforma disponível com uptime mínimo de <strong>99% ao mês</strong>, excluindo janelas de manutenção programadas previamente comunicadas.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">2. JANELAS DE MANUTENÇÃO</span>
+  <p>Manutenções programadas serão comunicadas com antecedência mínima de 48 horas e realizadas preferencialmente em horários de menor utilização (0h–6h).</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">3. CANAIS E HORÁRIOS DE SUPORTE</span>
+  <p>O suporte técnico está disponível por e-mail e sistema de chamados, em dias úteis, das 08h às 18h (horário de Brasília).</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">4. CLASSIFICAÇÃO E PRAZOS DE ATENDIMENTO</span>
+  <ul>
+    <li><strong>Crítico</strong> (sistema indisponível): resposta em até 2 horas úteis, resolução em até 4 horas úteis;</li>
+    <li><strong>Alto</strong> (funcionalidade principal comprometida): resposta em até 4 horas úteis, resolução em até 1 dia útil;</li>
+    <li><strong>Médio</strong> (funcionalidade secundária afetada): resposta em até 1 dia útil, resolução em até 3 dias úteis;</li>
+    <li><strong>Baixo</strong> (dúvidas e solicitações): resposta em até 2 dias úteis.</li>
+  </ul>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">5. CRÉDITOS POR INDISPONIBILIDADE</span>
+  <p>Caso a disponibilidade mensal seja inferior ao SLA contratado, o CLIENTE poderá solicitar crédito proporcional, conforme análise da SEGURAMENTE mediante solicitação formal.</p>
+</div>
+<div class="clausula">
+  <span class="clausula-titulo">6. EXCLUSÕES DO SLA</span>
+  <p>Não são cobertos por este SLA: indisponibilidades causadas por falhas de conectividade do CLIENTE, ataques DDoS de grande escala, casos fortuitos ou de força maior, uso indevido da plataforma pelo CLIENTE ou terceiros autorizados por ele.</p>
+</div>
+
+</body>
+</html>`;
+}
+
+
 
 function FaseBadge({ fase }: { fase: Fase }) {
   const cfg = FASES.find(f => f.value === fase)!;
@@ -690,7 +982,12 @@ function KanbanCard({
   return (
     <div className="bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-all space-y-2">
       <div className="cursor-pointer" onClick={onOpen}>
-        <p className="font-semibold text-sm leading-tight">{cliente.nome_empresa}</p>
+        <div className="flex items-center justify-between gap-1">
+          <p className="font-semibold text-sm leading-tight truncate">{cliente.nome_empresa}</p>
+          <span className={`text-xs shrink-0 ${cliente.tipo_cliente === 'pagante' ? 'text-primary' : 'text-muted-foreground'}`}>
+            {cliente.tipo_cliente === 'pagante' ? '💼' : '🧪'}
+          </span>
+        </div>
         {cliente.poc_nome && (
           <p className="text-xs text-muted-foreground mt-0.5">{cliente.poc_nome}</p>
         )}
@@ -1129,7 +1426,7 @@ function DetalheCliente({
       await supabase.from('programa_validador_historico' as never).insert({
         cliente_id: cliente.id,
         tipo: 'documento_gerado',
-        titulo: `Link de aceite gerado: ${DOCS_CONFIG.find(d => d.tipo === tipo)?.label}`,
+        titulo: `Link de aceite gerado: ${(cliente.tipo_cliente === 'pagante' ? DOCS_CONFIG_PAGANTE : DOCS_CONFIG_TESTER).find(d => d.tipo === tipo)?.label}`,
         autor: profile?.nome_completo || 'SuperAdmin',
       } as never);
       return data;
@@ -1202,7 +1499,8 @@ function DetalheCliente({
   const contratoAssinado = contratos[0]?.status === 'assinado';
   const docAceitos = documentos.filter(d => d.status === 'aceito' && d.tipo !== 'contrato_programa_validador').length
     + (contratoAssinado ? 1 : 0);
-  const totalDocs = DOCS_CONFIG.length;
+  const docsConfig = cliente.tipo_cliente === 'pagante' ? DOCS_CONFIG_PAGANTE : DOCS_CONFIG_TESTER;
+  const totalDocs = docsConfig.length;
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
@@ -1213,6 +1511,9 @@ function DetalheCliente({
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{cliente.nome_empresa}</h1>
             <FaseBadge fase={cliente.fase} />
+            <Badge variant="outline" className={`text-xs ${cliente.tipo_cliente === 'pagante' ? 'border-primary text-primary' : 'border-accent text-accent-foreground'}`}>
+              {cliente.tipo_cliente === 'pagante' ? '💼 Pagante' : '🧪 Tester'}
+            </Badge>
             {cliente.aceita_beta && (
               <Badge variant="outline" className="text-xs">
                 <Shield className="w-3 h-3 mr-1" />Beta aceito
@@ -1369,7 +1670,7 @@ function DetalheCliente({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {DOCS_CONFIG.map(({ tipo, label, descricao, itens }) => {
+              {docsConfig.map(({ tipo, label, descricao, itens }) => {
                 const isContrato = tipo === 'contrato_programa_validador';
                 const contratoAtivo = isContrato ? contratos[0] : null;
                 const doc = documentos.find(d => d.tipo === tipo);
@@ -1632,8 +1933,38 @@ function DetalheCliente({
               {cliente.responsavel_seguramente && (
                 <p><span className="text-muted-foreground">Resp. Seguramente:</span> {cliente.responsavel_seguramente}</p>
               )}
+              {cliente.endereco && (
+                <p><span className="text-muted-foreground">Endereço:</span> {cliente.endereco}</p>
+              )}
+              {cliente.representante && (
+                <p><span className="text-muted-foreground">Representante:</span> {cliente.representante}</p>
+              )}
             </CardContent>
           </Card>
+
+          {/* Dados Comerciais (apenas pagante) */}
+          {cliente.tipo_cliente === 'pagante' && (
+            <Card className="border-primary/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-primary uppercase tracking-wide">💼 Dados Comerciais</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {cliente.plano && <p><span className="text-muted-foreground">Plano:</span> <strong>{cliente.plano}</strong></p>}
+                {cliente.valor_mensal && (
+                  <p><span className="text-muted-foreground">Mensalidade:</span> <strong>{cliente.valor_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p>
+                )}
+                {cliente.dia_vencimento && (
+                  <p><span className="text-muted-foreground">Vencimento:</span> dia {cliente.dia_vencimento}</p>
+                )}
+                {cliente.data_contrato && (
+                  <p><span className="text-muted-foreground">Contrato:</span> {format(new Date(cliente.data_contrato), 'dd/MM/yyyy')}</p>
+                )}
+                {cliente.data_vigencia_fim && (
+                  <p><span className="text-muted-foreground">Vigência até:</span> {format(new Date(cliente.data_vigencia_fim), 'dd/MM/yyyy')}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {cliente.observacoes && (
             <Card>
@@ -1675,6 +2006,15 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
     data_inicio_piloto: '',
     data_fim_piloto: '',
     observacoes: '',
+    tipo_cliente: 'tester' as 'tester' | 'pagante',
+    endereco: '',
+    representante: '',
+    cidade_foro: '',
+    valor_mensal: '',
+    dia_vencimento: '',
+    plano: '',
+    data_contrato: '',
+    data_vigencia_fim: '',
   });
 
   const criarMutation = useMutation({
@@ -1694,22 +2034,62 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         data_inicio_piloto: form.data_inicio_piloto || null,
         data_fim_piloto: form.data_fim_piloto || null,
         observacoes: form.observacoes || null,
+        tipo_cliente: form.tipo_cliente,
+        endereco: form.endereco || null,
+        representante: form.representante || null,
+        cidade_foro: form.cidade_foro || null,
+        valor_mensal: form.tipo_cliente === 'pagante' && form.valor_mensal ? parseFloat(form.valor_mensal) : null,
+        dia_vencimento: form.tipo_cliente === 'pagante' && form.dia_vencimento ? parseInt(form.dia_vencimento) : null,
+        plano: form.tipo_cliente === 'pagante' ? form.plano || null : null,
+        data_contrato: form.tipo_cliente === 'pagante' ? form.data_contrato || null : null,
+        data_vigencia_fim: form.tipo_cliente === 'pagante' ? form.data_vigencia_fim || null : null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Cliente adicionado ao programa validador!');
+      toast.success('Cliente adicionado!');
       onSuccess();
     },
     onError: () => toast.error('Erro ao salvar cliente'),
   });
 
+  const isPagante = form.tipo_cliente === 'pagante';
+
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Novo Cliente Validador</DialogTitle>
+        <DialogTitle>Novo Cliente</DialogTitle>
       </DialogHeader>
       <div className="grid grid-cols-2 gap-4">
+
+        {/* Identificador de Tipo */}
+        <div className="col-span-2">
+          <Label>Tipo de Cliente *</Label>
+          <div className="flex gap-3 mt-1">
+            {(['tester', 'pagante'] as const).map(t => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setForm(p => ({ ...p, tipo_cliente: t }))}
+                className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all ${
+                  form.tipo_cliente === t
+                    ? t === 'pagante'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-accent bg-accent/20 text-accent-foreground'
+                    : 'border-border hover:bg-muted'
+                }`}
+              >
+                {t === 'tester' ? '🧪 Tester (Programa Validador)' : '💼 Pagante (Cliente Ativo)'}
+              </button>
+            ))}
+          </div>
+          {isPagante && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Clientes pagantes recebem o <strong>Contrato de Licença de Uso</strong> com Termos, Privacidade e SLA.
+            </p>
+          )}
+        </div>
+
         <div className="col-span-2">
           <Label>Nome da Empresa *</Label>
           <Input value={form.nome_empresa} onChange={e => setForm(p => ({ ...p, nome_empresa: e.target.value }))} />
@@ -1727,6 +2107,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
             </SelectContent>
           </Select>
         </div>
+
         <Separator className="col-span-2" />
         <div>
           <Label>Responsável - Nome</Label>
@@ -1744,6 +2125,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           <Label>Responsável - Telefone</Label>
           <Input value={form.poc_telefone} onChange={e => setForm(p => ({ ...p, poc_telefone: e.target.value }))} />
         </div>
+
         <Separator className="col-span-2" />
         <div>
           <Label>Segmento</Label>
@@ -1769,14 +2151,59 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           <Label>Responsável Seguramente</Label>
           <Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} />
         </div>
+
+        {/* Dados para contrato */}
+        <div className="col-span-2">
+          <Label>Endereço (para contrato)</Label>
+          <Input value={form.endereco} onChange={e => setForm(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, nº, Cidade — Estado" />
+        </div>
         <div>
-          <Label>Início do Piloto</Label>
+          <Label>Representante Legal</Label>
+          <Input value={form.representante} onChange={e => setForm(p => ({ ...p, representante: e.target.value }))} placeholder="Nome completo" />
+        </div>
+        <div>
+          <Label>Cidade para Foro</Label>
+          <Input value={form.cidade_foro} onChange={e => setForm(p => ({ ...p, cidade_foro: e.target.value }))} placeholder="Ex: São Paulo" />
+        </div>
+
+        <div>
+          <Label>{isPagante ? 'Início do Contrato' : 'Início do Piloto'}</Label>
           <Input type="date" value={form.data_inicio_piloto} onChange={e => setForm(p => ({ ...p, data_inicio_piloto: e.target.value }))} />
         </div>
         <div>
-          <Label>Fim do Piloto</Label>
+          <Label>{isPagante ? 'Fim da Vigência' : 'Fim do Piloto'}</Label>
           <Input type="date" value={form.data_fim_piloto} onChange={e => setForm(p => ({ ...p, data_fim_piloto: e.target.value }))} />
         </div>
+
+        {/* Campos exclusivos para Pagante */}
+        {isPagante && (
+          <>
+            <div className="col-span-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wide">💼 Dados Comerciais</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+            </div>
+            <div>
+              <Label>Plano</Label>
+              <Input value={form.plano} onChange={e => setForm(p => ({ ...p, plano: e.target.value }))} placeholder="Ex: Profissional, Enterprise..." />
+            </div>
+            <div>
+              <Label>Valor Mensal (R$)</Label>
+              <Input type="number" step="0.01" value={form.valor_mensal} onChange={e => setForm(p => ({ ...p, valor_mensal: e.target.value }))} placeholder="Ex: 299.90" />
+            </div>
+            <div>
+              <Label>Dia de Vencimento</Label>
+              <Input type="number" min="1" max="31" value={form.dia_vencimento} onChange={e => setForm(p => ({ ...p, dia_vencimento: e.target.value }))} placeholder="Ex: 10" />
+            </div>
+            <div>
+              <Label>Data de Assinatura do Contrato</Label>
+              <Input type="date" value={form.data_contrato} onChange={e => setForm(p => ({ ...p, data_contrato: e.target.value }))} />
+            </div>
+          </>
+        )}
+
         <div className="col-span-2">
           <Label>Observações</Label>
           <Textarea value={form.observacoes} onChange={e => setForm(p => ({ ...p, observacoes: e.target.value }))} rows={3} />

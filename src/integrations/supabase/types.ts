@@ -11177,13 +11177,18 @@ export type Database = {
           cidade_foro: string | null
           cnpj: string | null
           created_at: string
+          data_contrato: string | null
           data_fim_piloto: string | null
           data_inicio_piloto: string | null
+          data_vigencia_fim: string | null
+          dia_vencimento: number | null
           endereco: string | null
           fase: string
           id: string
+          modulos_contratados: string[] | null
           nome_empresa: string
           observacoes: string | null
+          plano: string | null
           poc_cargo: string | null
           poc_email: string | null
           poc_nome: string | null
@@ -11194,20 +11199,27 @@ export type Database = {
           segmento: string | null
           tamanho_empresa: string | null
           tenant_id: string | null
+          tipo_cliente: string
           updated_at: string
+          valor_mensal: number | null
         }
         Insert: {
           aceita_beta?: boolean | null
           cidade_foro?: string | null
           cnpj?: string | null
           created_at?: string
+          data_contrato?: string | null
           data_fim_piloto?: string | null
           data_inicio_piloto?: string | null
+          data_vigencia_fim?: string | null
+          dia_vencimento?: number | null
           endereco?: string | null
           fase?: string
           id?: string
+          modulos_contratados?: string[] | null
           nome_empresa: string
           observacoes?: string | null
+          plano?: string | null
           poc_cargo?: string | null
           poc_email?: string | null
           poc_nome?: string | null
@@ -11218,20 +11230,27 @@ export type Database = {
           segmento?: string | null
           tamanho_empresa?: string | null
           tenant_id?: string | null
+          tipo_cliente?: string
           updated_at?: string
+          valor_mensal?: number | null
         }
         Update: {
           aceita_beta?: boolean | null
           cidade_foro?: string | null
           cnpj?: string | null
           created_at?: string
+          data_contrato?: string | null
           data_fim_piloto?: string | null
           data_inicio_piloto?: string | null
+          data_vigencia_fim?: string | null
+          dia_vencimento?: number | null
           endereco?: string | null
           fase?: string
           id?: string
+          modulos_contratados?: string[] | null
           nome_empresa?: string
           observacoes?: string | null
+          plano?: string | null
           poc_cargo?: string | null
           poc_email?: string | null
           poc_nome?: string | null
@@ -11242,7 +11261,9 @@ export type Database = {
           segmento?: string | null
           tamanho_empresa?: string | null
           tenant_id?: string | null
+          tipo_cliente?: string
           updated_at?: string
+          valor_mensal?: number | null
         }
         Relationships: [
           {
