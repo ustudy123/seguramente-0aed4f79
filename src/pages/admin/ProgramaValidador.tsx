@@ -2002,9 +2002,27 @@ function DetalheCliente({
 
           <Card>
             <CardContent className="p-3 text-xs text-muted-foreground">
-              Criado em {format(new Date(cliente.created_at), "dd/MM/yyyy", { locale: ptBR })}
-            </p>
+              <p>Criado em {format(new Date(cliente.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+            </CardContent>
           </Card>
+        </div>
+      </div>
+
+      <AtaKickoffDialog
+        open={showAtaDialog}
+        onClose={() => { setShowAtaDialog(false); setGerandoDoc(null); }}
+        onEnviar={(html) => {
+          gerarDocLinkMutation.mutate({ tipo: 'ata_kickoff', htmlOverride: html });
+          setShowAtaDialog(false);
+        }}
+        isLoading={gerarDocLinkMutation.isPending}
+        nomeEmpresa={cliente.nome_empresa}
+        pocNome={cliente.poc_nome}
+        responsavelSeguramente={cliente.responsavel_seguramente}
+      />
+    </div>
+  );
+}
         </div>
       </div>
 
