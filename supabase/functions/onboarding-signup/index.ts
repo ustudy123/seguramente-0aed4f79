@@ -64,6 +64,7 @@ serve(async (req) => {
 
   // Validate user from JWT
   const { data: userData, error: userError } = await admin.auth.getUser(jwt);
+  console.log("JWT validation result:", userError ? userError.message : "OK", "userId:", userData?.user?.id);
   if (userError || !userData?.user) {
     return json({ error: "Invalid token" }, 401);
   }
@@ -73,6 +74,7 @@ serve(async (req) => {
   let payload: Payload;
   try {
     payload = await req.json();
+    console.log("Payload received:", JSON.stringify(payload));
   } catch {
     return json({ error: "Invalid JSON" }, 400);
   }
