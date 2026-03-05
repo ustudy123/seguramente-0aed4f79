@@ -263,7 +263,7 @@ export default function AtivarConta() {
           transition={{ duration: 0.6 }}
           className="flex-1 text-center lg:text-left hidden lg:block"
         >
-          <div className="bg-[hsl(262,40%,10%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
+          <div className="bg-primary/10 backdrop-blur-md rounded-2xl p-8 space-y-6 border border-white/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <Shield className="h-5 w-5 text-primary-foreground" />
