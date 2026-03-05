@@ -16,6 +16,7 @@ export interface MarketplaceCategoria {
 export interface MarketplaceProfissional {
   id: string;
   user_id: string | null;
+  tenant_id: string | null;
   nome_completo: string;
   email: string;
   telefone: string | null;
@@ -108,12 +109,25 @@ export function useMarketplace() {
   });
 
   const { data: servicos = [], isLoading: isLoadingServicos } = useQuery({
-    queryKey: ["marketplace-servicos", filters],
+    queryKey: ["marketplace-servicos", tenantId, filters],
     queryFn: async () => {
+      if (!tenantId) return [];
+
+      const { data: profsDoTenant, error: profsError } = await supabase
+        .from("marketplace_profissionais")
+        .select("id")
+        .eq("status", "ativo")
+        .eq("tenant_id", tenantId);
+
+      if (profsError) throw profsError;
+      const profissionalIds = (profsDoTenant || []).map((p) => p.id);
+      if (profissionalIds.length === 0) return [];
+
       let query = supabase
         .from("marketplace_servicos")
         .select("*, profissional:marketplace_profissionais(*), categoria:marketplace_categorias(*)")
-        .eq("ativo", true);
+        .eq("ativo", true)
+        .in("profissional_id", profissionalIds);
 
       if (filters.categoria_id) {
         query = query.eq("categoria_id", filters.categoria_id);
@@ -129,11 +143,14 @@ export function useMarketplace() {
       if (error) throw error;
       return data as MarketplaceServico[];
     },
+    enabled: !!tenantId,
   });
 
   const { data: profissionais = [], isLoading: isLoadingProfissionais } = useQuery({
-    queryKey: ["marketplace-profissionais", filters],
+    queryKey: ["marketplace-profissionais", tenantId, filters],
     queryFn: async () => {
+      if (!tenantId) return [];
+
       // If user location is available, use proximity search
       if (filters.userLat && filters.userLng) {
         const { data, error } = await supabase.rpc("buscar_profissionais_proximos", {
@@ -143,6 +160,9 @@ export function useMarketplace() {
         });
         if (error) throw error;
         let results = (data || []) as unknown as (MarketplaceProfissional & { distancia_km: number })[];
+
+        results = results.filter((p) => p.tenant_id === tenantId);
+
         if (filters.estado) {
           results = results.filter((p) => p.estado === filters.estado);
         }
@@ -161,7 +181,8 @@ export function useMarketplace() {
       let query = supabase
         .from("marketplace_profissionais")
         .select("*")
-        .eq("status", "ativo");
+        .eq("status", "ativo")
+        .eq("tenant_id", tenantId);
 
       if (filters.estado) {
         query = query.eq("estado", filters.estado);
@@ -176,6 +197,7 @@ export function useMarketplace() {
       if (error) throw error;
       return data as MarketplaceProfissional[];
     },
+    enabled: !!tenantId,
   });
 
   const { data: contratacoes = [], isLoading: isLoadingContratacoes } = useQuery({

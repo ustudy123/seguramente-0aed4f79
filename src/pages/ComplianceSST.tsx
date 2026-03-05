@@ -41,12 +41,12 @@ const ComplianceSST = () => {
   const docVencidos = documentos.filter(d => d.status === "vencido").length;
   const docAnalisados = documentos.filter(d => d.analise_ia_status === "concluida").length;
 
-  const alertas = [
-    { tipo: "critico", descricao: "LTCAT vencido — exposição a agentes nocivos sem laudo atualizado", norma: "IN PRES/INSS 128/2022", documento: "LTCAT" },
-    { tipo: "critico", descricao: "Risco químico identificado no PGR sem exame correspondente no PCMSO", norma: "NR-07, NR-09", documento: "PGR / PCMSO" },
-    { tipo: "alerta", descricao: "Treinamento NR-35 (trabalho em altura) vencido para colaboradores", norma: "NR-35", documento: "PGR" },
-    { tipo: "atencao", descricao: "Vigência do PCMSO expira em 60 dias", norma: "NR-07", documento: "PCMSO" },
-  ];
+  const alertas: {
+    tipo: "critico" | "alerta" | "atencao";
+    descricao: string;
+    norma: string;
+    documento: string;
+  }[] = [];
 
   const indicadores = [
     { titulo: "Documentos Vigentes", valor: String(docVigentes), icone: Shield },
@@ -186,25 +186,32 @@ const ComplianceSST = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {alertas.slice(0, 4).map((alerta, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <div className="mt-0.5">
-                      {alerta.tipo === "critico" ? (
-                        <div className="w-3 h-3 rounded-full bg-destructive" />
-                      ) : alerta.tipo === "alerta" ? (
-                        <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      ) : (
-                        <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm">{alerta.descricao}</p>
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">{alerta.norma}</Badge>
+                {alertas.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    Nenhum alerta de conformidade no momento.
+                  </div>
+                ) : (
+                  alertas.slice(0, 4).map((alerta, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <div className="mt-0.5">
+                        {alerta.tipo === "critico" ? (
+                          <div className="w-3 h-3 rounded-full bg-destructive" />
+                        ) : alerta.tipo === "alerta" ? (
+                          <div className="w-3 h-3 rounded-full bg-amber-500" />
+                        ) : (
+                          <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm">{alerta.descricao}</p>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">{alerta.norma}</Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>
@@ -298,37 +305,46 @@ const ComplianceSST = () => {
           </div>
 
           <div className="space-y-3">
-            {alertas.map((alerta, i) => (
-              <Card key={i} className={alerta.tipo === "critico" ? "border-destructive/50" : ""}>
-                <CardContent className="p-4 flex items-start gap-4">
-                  <div className="mt-1">
-                    {alerta.tipo === "critico" ? (
-                      <AlertTriangle className="w-5 h-5 text-destructive" />
-                    ) : alerta.tipo === "alerta" ? (
-                      <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-yellow-500" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant={alerta.tipo === "critico" ? "destructive" : alerta.tipo === "alerta" ? "secondary" : "outline"} className="text-xs">
-                        {alerta.tipo === "critico" ? "🔴 Crítico" : alerta.tipo === "alerta" ? "🟠 Alerta Técnico" : "🟡 Atenção"}
-                      </Badge>
-                    </div>
-                    <p className="text-sm">{alerta.descricao}</p>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">{alerta.norma}</Badge>
-                      <Badge variant="outline" className="text-xs">{alerta.documento}</Badge>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline">
-                    <Zap className="w-4 h-4 mr-1" />
-                    Gerar Ação
-                  </Button>
+            {alertas.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <CheckCircle2 className="w-10 h-10 text-muted-foreground/50 mb-3" />
+                  <p className="text-sm text-muted-foreground">Nenhum alerta ativo no momento.</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              alertas.map((alerta, i) => (
+                <Card key={i} className={alerta.tipo === "critico" ? "border-destructive/50" : ""}>
+                  <CardContent className="p-4 flex items-start gap-4">
+                    <div className="mt-1">
+                      {alerta.tipo === "critico" ? (
+                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                      ) : alerta.tipo === "alerta" ? (
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-yellow-500" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant={alerta.tipo === "critico" ? "destructive" : alerta.tipo === "alerta" ? "secondary" : "outline"} className="text-xs">
+                          {alerta.tipo === "critico" ? "🔴 Crítico" : alerta.tipo === "alerta" ? "🟠 Alerta Técnico" : "🟡 Atenção"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm">{alerta.descricao}</p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">{alerta.norma}</Badge>
+                        <Badge variant="outline" className="text-xs">{alerta.documento}</Badge>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      <Zap className="w-4 h-4 mr-1" />
+                      Gerar Ação
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </TabsContent>
 
