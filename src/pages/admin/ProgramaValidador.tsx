@@ -1968,6 +1968,15 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
     data_inicio_piloto: '',
     data_fim_piloto: '',
     observacoes: '',
+    tipo_cliente: 'tester' as 'tester' | 'pagante',
+    endereco: '',
+    representante: '',
+    cidade_foro: '',
+    valor_mensal: '',
+    dia_vencimento: '',
+    plano: '',
+    data_contrato: '',
+    data_vigencia_fim: '',
   });
 
   const criarMutation = useMutation({
@@ -1987,22 +1996,62 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         data_inicio_piloto: form.data_inicio_piloto || null,
         data_fim_piloto: form.data_fim_piloto || null,
         observacoes: form.observacoes || null,
+        tipo_cliente: form.tipo_cliente,
+        endereco: form.endereco || null,
+        representante: form.representante || null,
+        cidade_foro: form.cidade_foro || null,
+        valor_mensal: form.tipo_cliente === 'pagante' && form.valor_mensal ? parseFloat(form.valor_mensal) : null,
+        dia_vencimento: form.tipo_cliente === 'pagante' && form.dia_vencimento ? parseInt(form.dia_vencimento) : null,
+        plano: form.tipo_cliente === 'pagante' ? form.plano || null : null,
+        data_contrato: form.tipo_cliente === 'pagante' ? form.data_contrato || null : null,
+        data_vigencia_fim: form.tipo_cliente === 'pagante' ? form.data_vigencia_fim || null : null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Cliente adicionado ao programa validador!');
+      toast.success('Cliente adicionado!');
       onSuccess();
     },
     onError: () => toast.error('Erro ao salvar cliente'),
   });
 
+  const isPagante = form.tipo_cliente === 'pagante';
+
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Novo Cliente Validador</DialogTitle>
+        <DialogTitle>Novo Cliente</DialogTitle>
       </DialogHeader>
       <div className="grid grid-cols-2 gap-4">
+
+        {/* Identificador de Tipo */}
+        <div className="col-span-2">
+          <Label>Tipo de Cliente *</Label>
+          <div className="flex gap-3 mt-1">
+            {(['tester', 'pagante'] as const).map(t => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setForm(p => ({ ...p, tipo_cliente: t }))}
+                className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all ${
+                  form.tipo_cliente === t
+                    ? t === 'pagante'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-accent bg-accent/20 text-accent-foreground'
+                    : 'border-border hover:bg-muted'
+                }`}
+              >
+                {t === 'tester' ? '🧪 Tester (Programa Validador)' : '💼 Pagante (Cliente Ativo)'}
+              </button>
+            ))}
+          </div>
+          {isPagante && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Clientes pagantes recebem o <strong>Contrato de Licença de Uso</strong> com Termos, Privacidade e SLA.
+            </p>
+          )}
+        </div>
+
         <div className="col-span-2">
           <Label>Nome da Empresa *</Label>
           <Input value={form.nome_empresa} onChange={e => setForm(p => ({ ...p, nome_empresa: e.target.value }))} />
@@ -2020,6 +2069,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
             </SelectContent>
           </Select>
         </div>
+
         <Separator className="col-span-2" />
         <div>
           <Label>Responsável - Nome</Label>
@@ -2037,6 +2087,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           <Label>Responsável - Telefone</Label>
           <Input value={form.poc_telefone} onChange={e => setForm(p => ({ ...p, poc_telefone: e.target.value }))} />
         </div>
+
         <Separator className="col-span-2" />
         <div>
           <Label>Segmento</Label>
@@ -2062,14 +2113,59 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           <Label>Responsável Seguramente</Label>
           <Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} />
         </div>
+
+        {/* Dados para contrato */}
+        <div className="col-span-2">
+          <Label>Endereço (para contrato)</Label>
+          <Input value={form.endereco} onChange={e => setForm(p => ({ ...p, endereco: e.target.value }))} placeholder="Rua, nº, Cidade — Estado" />
+        </div>
         <div>
-          <Label>Início do Piloto</Label>
+          <Label>Representante Legal</Label>
+          <Input value={form.representante} onChange={e => setForm(p => ({ ...p, representante: e.target.value }))} placeholder="Nome completo" />
+        </div>
+        <div>
+          <Label>Cidade para Foro</Label>
+          <Input value={form.cidade_foro} onChange={e => setForm(p => ({ ...p, cidade_foro: e.target.value }))} placeholder="Ex: São Paulo" />
+        </div>
+
+        <div>
+          <Label>{isPagante ? 'Início do Contrato' : 'Início do Piloto'}</Label>
           <Input type="date" value={form.data_inicio_piloto} onChange={e => setForm(p => ({ ...p, data_inicio_piloto: e.target.value }))} />
         </div>
         <div>
-          <Label>Fim do Piloto</Label>
+          <Label>{isPagante ? 'Fim da Vigência' : 'Fim do Piloto'}</Label>
           <Input type="date" value={form.data_fim_piloto} onChange={e => setForm(p => ({ ...p, data_fim_piloto: e.target.value }))} />
         </div>
+
+        {/* Campos exclusivos para Pagante */}
+        {isPagante && (
+          <>
+            <div className="col-span-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wide">💼 Dados Comerciais</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+            </div>
+            <div>
+              <Label>Plano</Label>
+              <Input value={form.plano} onChange={e => setForm(p => ({ ...p, plano: e.target.value }))} placeholder="Ex: Profissional, Enterprise..." />
+            </div>
+            <div>
+              <Label>Valor Mensal (R$)</Label>
+              <Input type="number" step="0.01" value={form.valor_mensal} onChange={e => setForm(p => ({ ...p, valor_mensal: e.target.value }))} placeholder="Ex: 299.90" />
+            </div>
+            <div>
+              <Label>Dia de Vencimento</Label>
+              <Input type="number" min="1" max="31" value={form.dia_vencimento} onChange={e => setForm(p => ({ ...p, dia_vencimento: e.target.value }))} placeholder="Ex: 10" />
+            </div>
+            <div>
+              <Label>Data de Assinatura do Contrato</Label>
+              <Input type="date" value={form.data_contrato} onChange={e => setForm(p => ({ ...p, data_contrato: e.target.value }))} />
+            </div>
+          </>
+        )}
+
         <div className="col-span-2">
           <Label>Observações</Label>
           <Textarea value={form.observacoes} onChange={e => setForm(p => ({ ...p, observacoes: e.target.value }))} rows={3} />
