@@ -210,7 +210,7 @@ export default function AtivarConta() {
       <div className="min-h-screen relative flex items-center justify-center p-4">
         <div className="absolute inset-0 z-0">
           <img src={authBg} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[hsl(262,40%,10%/0.88)]" />
+          <div className="absolute inset-0 bg-primary/90" />
         </div>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -223,16 +223,16 @@ export default function AtivarConta() {
             transition={{ type: "spring", delay: 0.2 }}
             className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto"
           >
-            <CheckCircle2 className="h-10 w-10 text-green-500" />
+            <CheckCircle2 className="h-10 w-10 text-green-600" />
           </motion.div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Conta Ativada!</h2>
-            <p className="text-gray-600 mt-2">
+            <h2 className="text-2xl font-bold text-foreground">Conta Ativada!</h2>
+            <p className="text-muted-foreground mt-2">
               Bem-vindo(a), <strong>{form.nome_completo}</strong>!<br />
               Você será redirecionado para o Portal de Implantação.
             </p>
           </div>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Redirecionando...
           </div>
