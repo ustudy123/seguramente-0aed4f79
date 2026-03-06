@@ -71,6 +71,7 @@ const menuSections: MenuSection[] = [
   { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
   { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
   { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
+  { title: "Psicossocial NR-01", icon: Brain, path: "/psicossocial" },
   { title: "EPIs", icon: Shield, path: "/epis" }]
 
 },
