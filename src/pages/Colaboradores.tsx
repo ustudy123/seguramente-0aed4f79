@@ -87,6 +87,7 @@ import { AdmissaoForm } from "@/components/admissao/AdmissaoForm";
 import { AdmissaoDetail } from "@/components/admissao/AdmissaoDetail";
 import { useAdmissoes } from "@/hooks/useAdmissoes";
 import { AdmissaoFormData } from "@/types/database";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface ColaboradorExtendido {
   id: string;
