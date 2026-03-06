@@ -197,14 +197,14 @@ export default function QADashboard() {
     }
   };
 
-  // ── Navigate iframe ──
+  // ── Navigate iframe via postMessage (no reload) ──
   const navigateIframe = useCallback((flowId: string) => {
     const route = FLOW_ROUTES[flowId] || "/";
     setIframeUrl(route);
-    if (iframeRef.current) {
-      iframeRef.current.src = `${baseUrl}${route}`;
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: "qa-navigate", route }, "*");
     }
-  }, [baseUrl]);
+  }, []);
 
   // ── Agent handlers (streaming) ──
   const runAgent = async (flow: string) => {
@@ -332,8 +332,8 @@ export default function QADashboard() {
       case "navigate":
         if (data.route) {
           setIframeUrl(data.route);
-          if (iframeRef.current) {
-            iframeRef.current.src = `${baseUrl}${data.route}`;
+          if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({ type: "qa-navigate", route: data.route }, "*");
           }
           if (data.label) setCurrentFlowLabel(data.label);
         }
