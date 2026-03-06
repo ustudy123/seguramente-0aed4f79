@@ -300,6 +300,36 @@ export default function Empresa() {
             </CardContent>
           </TabsContent>
         </Card>
+        {/* Bottom navigation */}
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="outline"
+            onClick={handlePrevTab}
+            disabled={isFirstTab}
+            className="gap-2"
+          >
+            ← Anterior
+          </Button>
+          <div className="flex items-center gap-2">
+            {!isLastTab ? (
+              <Button variant="outline" onClick={handleNextTab} className="gap-2">
+                Próxima aba →
+              </Button>
+            ) : null}
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || upsertCadastro.isPending}
+              className="gap-2"
+            >
+              {upsertCadastro.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              Salvar
+            </Button>
+          </div>
+        </div>
       </Tabs>
     </div>
   );
