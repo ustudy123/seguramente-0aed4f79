@@ -3884,6 +3884,7 @@ export type Database = {
           criado_por: string | null
           criado_por_nome: string | null
           empresa_id: string | null
+          grupo_economico_id: string | null
           id: string
           missao: string | null
           principios: Json | null
@@ -3899,6 +3900,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           empresa_id?: string | null
+          grupo_economico_id?: string | null
           id?: string
           missao?: string | null
           principios?: Json | null
@@ -3914,6 +3916,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           empresa_id?: string | null
+          grupo_economico_id?: string | null
           id?: string
           missao?: string | null
           principios?: Json | null
@@ -3928,6 +3931,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_cultura_grupo_economico_id_fkey"
+            columns: ["grupo_economico_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_economicos"
             referencedColumns: ["id"]
           },
           {
@@ -3946,6 +3956,7 @@ export type Database = {
           criado_por_nome: string | null
           descricao: string | null
           empresa_id: string | null
+          grupo_economico_id: string | null
           id: string
           swot_id: string | null
           tenant_id: string
@@ -3958,6 +3969,7 @@ export type Database = {
           criado_por_nome?: string | null
           descricao?: string | null
           empresa_id?: string | null
+          grupo_economico_id?: string | null
           id?: string
           swot_id?: string | null
           tenant_id: string
@@ -3970,6 +3982,7 @@ export type Database = {
           criado_por_nome?: string | null
           descricao?: string | null
           empresa_id?: string | null
+          grupo_economico_id?: string | null
           id?: string
           swot_id?: string | null
           tenant_id?: string
@@ -3982,6 +3995,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_oceano_azul_grupo_economico_id_fkey"
+            columns: ["grupo_economico_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_economicos"
             referencedColumns: ["id"]
           },
           {
@@ -4061,6 +4081,7 @@ export type Database = {
           created_at: string
           departamento_id: string | null
           empresa_id: string | null
+          grupo_economico_id: string | null
           id: string
           nome_ocupante: string | null
           ordem: number | null
@@ -4075,6 +4096,7 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           empresa_id?: string | null
+          grupo_economico_id?: string | null
           id?: string
           nome_ocupante?: string | null
           ordem?: number | null
@@ -4089,6 +4111,7 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           empresa_id?: string | null
+          grupo_economico_id?: string | null
           id?: string
           nome_ocupante?: string | null
           ordem?: number | null
@@ -4121,6 +4144,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "estrategia_organograma_grupo_economico_id_fkey"
+            columns: ["grupo_economico_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_economicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "estrategia_organograma_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
@@ -4144,6 +4174,7 @@ export type Database = {
           descricao: string | null
           empresa_id: string | null
           escopo: string | null
+          grupo_economico_id: string | null
           id: string
           periodo: string | null
           projeto: string | null
@@ -4159,6 +4190,7 @@ export type Database = {
           descricao?: string | null
           empresa_id?: string | null
           escopo?: string | null
+          grupo_economico_id?: string | null
           id?: string
           periodo?: string | null
           projeto?: string | null
@@ -4174,6 +4206,7 @@ export type Database = {
           descricao?: string | null
           empresa_id?: string | null
           escopo?: string | null
+          grupo_economico_id?: string | null
           id?: string
           periodo?: string | null
           projeto?: string | null
@@ -4188,6 +4221,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_swot_grupo_economico_id_fkey"
+            columns: ["grupo_economico_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_economicos"
             referencedColumns: ["id"]
           },
           {
