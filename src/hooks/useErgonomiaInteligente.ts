@@ -210,11 +210,11 @@ export function useErgonomiaInteligente() {
     // BOREOUT: Subcarga + apatia + falta de desafio (inversamente correlacionado com HE)
     const baixaAtividade = Math.max(0, 100 - jornadaFator); // Pouca HE pode indicar baixa atividade
     const fatoresBoreout = {
-      baixoDesafio: Math.max(0, 100 - totalRiscos * 10 - totalAcoes * 5 + baixaAtividade * 0.2),
-      repetitividade: Math.max(0, 50 - dados.riscosAtivos.cognitivo * 10 + baixaAtividade * 0.1),
-      faltaSentido: Math.max(0, percNegativo / 2),
-      apatia: Math.max(0, dados.humorUltimos7Dias.neutro / totalHumor * 100),
-      desconexao: Math.max(0, 100 - percPositivo),
+      baixoDesafio: Math.min(100, Math.max(0, 100 - totalRiscos * 10 - totalAcoes * 5 + baixaAtividade * 0.2)),
+      repetitividade: Math.min(100, Math.max(0, 50 - dados.riscosAtivos.cognitivo * 10 + baixaAtividade * 0.1)),
+      faltaSentido: Math.min(100, Math.max(0, percNegativo / 2)),
+      apatia: Math.min(100, Math.max(0, dados.humorUltimos7Dias.neutro / totalHumor * 100)),
+      desconexao: Math.min(100, Math.max(0, 100 - percPositivo)),
     };
     const scoreBoreout = Math.round(
       Object.values(fatoresBoreout).reduce((a, b) => a + b, 0) / 5
