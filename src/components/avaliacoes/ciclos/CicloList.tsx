@@ -31,8 +31,9 @@ import {
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { STATUS_CICLO_LABELS, type AvaliacaoCicloStatus } from "@/types/avaliacao";
+import { STATUS_CICLO_LABELS, type AvaliacaoCicloStatus, type AvaliacaoCiclo } from "@/types/avaliacao";
 import { CicloForm } from "./CicloForm";
+import { IniciarCicloDialog } from "./IniciarCicloDialog";
 
 const statusConfig: Record<AvaliacaoCicloStatus, { color: string; icon: typeof Play }> = {
   rascunho: { color: "bg-slate-100 text-slate-700", icon: Edit },
