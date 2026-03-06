@@ -131,7 +131,7 @@ export function GerarPdiModal({
     }
   };
 
-  // Dispara ao abrir o modal
+  const toggleMeta
   const handleOpen = (v: boolean) => {
     if (v) {
       setStep("loading");
