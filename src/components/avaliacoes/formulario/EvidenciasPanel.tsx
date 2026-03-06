@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface EvidenciasPanelProps {
   colaboradorId: string;
   colaboradorNome: string;
+  colaboradorCargo?: string;
   cicloNome: string;
   cicloId: string;
   dataInicio?: string;
