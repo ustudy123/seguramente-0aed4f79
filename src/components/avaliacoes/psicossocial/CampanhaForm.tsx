@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
