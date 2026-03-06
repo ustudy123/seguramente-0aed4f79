@@ -198,31 +198,35 @@ export function TemplateList() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>Novo Template de Avaliação</DialogTitle>
             <DialogDescription>
               Crie um modelo reutilizável para seus ciclos de avaliação
             </DialogDescription>
           </DialogHeader>
-          <TemplateForm onSuccess={() => setShowForm(false)} />
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <TemplateForm onSuccess={() => setShowForm(false)} />
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editingTemplate} onOpenChange={() => setEditingTemplate(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>Editar Template</DialogTitle>
             <DialogDescription>
               Modifique as configurações do template de avaliação
             </DialogDescription>
           </DialogHeader>
-          {editingTemplate && (
-            <TemplateForm 
-              template={editingTemplate}
-              onSuccess={() => setEditingTemplate(null)} 
-            />
-          )}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {editingTemplate && (
+              <TemplateForm 
+                template={editingTemplate}
+                onSuccess={() => setEditingTemplate(null)} 
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

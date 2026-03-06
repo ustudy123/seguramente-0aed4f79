@@ -383,19 +383,21 @@ export function MetasList() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>Nova Meta</DialogTitle>
             <DialogDescription>
               Defina um objetivo e seus resultados-chave (OKRs)
             </DialogDescription>
           </DialogHeader>
-          <MetaForm onSuccess={() => setShowForm(false)} />
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <MetaForm onSuccess={() => setShowForm(false)} />
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!okrMetaId} onOpenChange={(open) => !open && setOkrMetaId(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-full max-w-md max-h-[90vh] flex flex-col p-0">
           <DialogHeader>
             <DialogTitle>Novo Resultado-Chave</DialogTitle>
             <DialogDescription>Adicione um resultado-chave à meta</DialogDescription>
