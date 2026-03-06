@@ -183,7 +183,7 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
         </DialogHeader>
 
         {step === "review" && (
-          <div className="flex-1 overflow-hidden flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-muted/50 rounded-lg p-3 text-center">
