@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { ClipboardCheck, Clock, User, ChevronRight, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClipboardCheck, Clock, User, ChevronRight, AlertCircle, ArrowLeft } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TIPO_AVALIADOR_LABELS } from "@/types/avaliacao";
+import type { AvaliacaoResposta } from "@/types/avaliacao";
+import { AvaliacaoFormulario } from "@/components/avaliacoes/formulario/AvaliacaoFormulario";
 
 export function AvaliacaoInbox() {
   const { minhasAvaliacoes, isLoadingMinhasAvaliacoes } = useAvaliacoes();
+  const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<AvaliacaoResposta | null>(null);
 
   if (isLoadingMinhasAvaliacoes) {
     return (
