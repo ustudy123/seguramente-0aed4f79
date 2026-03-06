@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   Users,
+  UserCog,
   MessageSquareHeart,
   Clock,
   Calendar,
