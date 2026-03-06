@@ -4,8 +4,6 @@ import { supabasePublic } from "@/lib/supabasePublic";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import {
-  BLOCOS_PSICOSSOCIAL,
-  BLOCOS_DINAMICOS,
   type CampanhaPsicossocial,
   type ConvitePsicossocial,
   type RespostaPsicossocial,
@@ -14,7 +12,13 @@ import {
   type EstatisticasCampanha,
   type IndicadoresPsicossociais,
   type RadarDimensao,
+  type InstrumentoPsicossocial,
+  calcularIPSClassificacao,
 } from "@/types/psicossocial";
+import {
+  calcularIPSInstrumento,
+  getDimensoesByInstrumento,
+} from "@/data/instrumentos";
 
 // Gerar token único
 function gerarToken(): string {
