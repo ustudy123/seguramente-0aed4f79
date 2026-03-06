@@ -398,11 +398,11 @@ export function MetasList() {
 
       <Dialog open={!!okrMetaId} onOpenChange={(open) => !open && setOkrMetaId(null)}>
         <DialogContent className="w-full max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>Novo Resultado-Chave</DialogTitle>
             <DialogDescription>Adicione um resultado-chave à meta</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label>Resultado-Chave *</Label>
               <Input
@@ -419,7 +419,7 @@ export function MetasList() {
                 onChange={(e) => setOkrForm(f => ({ ...f, descricao: e.target.value }))}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Tipo</Label>
                 <Select value={okrForm.tipo} onValueChange={(v) => setOkrForm(f => ({ ...f, tipo: v }))}>
@@ -449,10 +449,10 @@ export function MetasList() {
                 onChange={(e) => setOkrForm(f => ({ ...f, unidade: e.target.value }))}
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setOkrMetaId(null)}>Cancelar</Button>
-              <Button onClick={handleAddOkr} disabled={!okrForm.key_result}>Adicionar</Button>
-            </div>
+          </div>
+          <div className="flex justify-end gap-2 px-6 py-4 border-t shrink-0">
+            <Button variant="outline" onClick={() => setOkrMetaId(null)}>Cancelar</Button>
+            <Button onClick={handleAddOkr} disabled={!okrForm.key_result}>Adicionar</Button>
           </div>
         </DialogContent>
       </Dialog>
