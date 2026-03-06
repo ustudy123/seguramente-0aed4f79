@@ -224,14 +224,16 @@ export function CicloList() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>Novo Ciclo de Avaliação</DialogTitle>
             <DialogDescription>
               Configure um novo ciclo de avaliação de desempenho
             </DialogDescription>
           </DialogHeader>
-          <CicloForm onSuccess={() => setShowForm(false)} />
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <CicloForm onSuccess={() => setShowForm(false)} />
+          </div>
         </DialogContent>
       </Dialog>
 
