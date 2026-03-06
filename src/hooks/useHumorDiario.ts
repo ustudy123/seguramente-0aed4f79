@@ -107,8 +107,28 @@ export interface HumorDiario {
 const humorDiarioTable = () => (supabase as any).from('humor_diario');
 const humorHistoricoTable = () => (supabase as any).from('humor_historico');
 
-// Intervalo em horas para solicitar novo registro de humor (com micro-pergunta)
+// Intervalo em horas para solicitar novo registro de humor (check-in meio de jornada)
 const INTERVALO_HORAS = 5;
+
+// Chaves de controle no localStorage para evitar múltiplas exibições no dia
+function getStorageKeys(userId: string, today: string) {
+  return {
+    morning: `humor_morning_${userId}_${today}`,   // primeiro login do dia
+    midday: `humor_midday_${userId}_${today}`,     // check-in após 5h
+  };
+}
+
+export function marcarHumorMorningVisto(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const keys = getStorageKeys(userId, today);
+  localStorage.setItem(keys.morning, "1");
+}
+
+export function marcarHumorMiddayVisto(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const keys = getStorageKeys(userId, today);
+  localStorage.setItem(keys.midday, "1");
+}
 
 // Verifica se passaram X horas desde o último registro
 function passaramHorasDesdeRegistro(updatedAt: string, horas: number): boolean {
@@ -261,12 +281,18 @@ export function useHumorDiario() {
   });
 
   // Verificar se precisa mostrar o popup:
-  // 1. Primeiro login do dia (não tem registro)
-  // 2. Passaram 6 horas desde o último registro/atualização
-  const precisaRegistrarHumor = isReady && !queryLoading && (
-    !humorHoje || 
-    passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS)
-  );
+  // Ocasião 1 (morning): primeiro acesso do dia — não tem registro E não foi mostrado hoje
+  // Ocasião 2 (midday): após 5h trabalhadas — já tem registro, passaram 5h E não foi mostrado o midday hoje
+  const keys = isReady ? getStorageKeys(user!.id, today) : null;
+  const morningJaMostrado = keys ? !!localStorage.getItem(keys.morning) : true;
+  const middayJaMostrado = keys ? !!localStorage.getItem(keys.midday) : true;
+
+  const precisaMorning = isReady && !queryLoading && !humorHoje && !morningJaMostrado;
+  const precisaMidday = isReady && !queryLoading && !!humorHoje && 
+    passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS) && 
+    !middayJaMostrado;
+
+  const precisaRegistrarHumor = precisaMorning || precisaMidday;
 
   // Flag para saber se é atualização (já tem registro) ou primeiro do dia
   const isAtualizacao = !!humorHoje;
@@ -276,6 +302,8 @@ export function useHumorDiario() {
     isLoading,
     precisaRegistrarHumor,
     isAtualizacao,
+    marcarMorningVisto: () => user?.id && marcarHumorMorningVisto(user.id),
+    marcarMiddayVisto: () => user?.id && marcarHumorMiddayVisto(user.id),
     registrarHumor,
     atualizarHumor,
     refetch,

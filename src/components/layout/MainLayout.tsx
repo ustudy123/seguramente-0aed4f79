@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AppSidebar } from "./AppSidebar";
@@ -10,14 +10,30 @@ import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 export const MainLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showHumorPopup, setShowHumorPopup] = useState(false);
-  const { precisaRegistrarHumor, isLoading } = useHumorDiario();
+  const { precisaRegistrarHumor, isLoading, marcarMorningVisto, marcarMiddayVisto, isAtualizacao } = useHumorDiario();
+  // Use ref to trigger popup only once per "need" transition (false → true)
+  const popupShownRef = useRef(false);
 
-  // Mostrar popup quando usuário não registrou humor hoje
   useEffect(() => {
-    if (!isLoading && precisaRegistrarHumor) {
+    if (!isLoading && precisaRegistrarHumor && !popupShownRef.current) {
+      popupShownRef.current = true;
       setShowHumorPopup(true);
     }
+    // Reset the ref when no longer needed so next occasion can fire
+    if (!isLoading && !precisaRegistrarHumor) {
+      popupShownRef.current = false;
+    }
   }, [isLoading, precisaRegistrarHumor]);
+
+  const handleHumorClose = () => {
+    // Mark the appropriate occasion as shown so it won't fire again today
+    if (isAtualizacao) {
+      marcarMiddayVisto();
+    } else {
+      marcarMorningVisto();
+    }
+    setShowHumorPopup(false);
+  };
 
   return (
     <EmpresaAtivaProvider>
@@ -39,10 +55,11 @@ export const MainLayout = () => {
           </main>
         </motion.div>
 
-        {/* Popup obrigatório de humor do dia */}
+        {/* Popup obrigatório de humor do dia — sem botão fechar quando automático */}
         <HumorDiarioPopup 
           open={showHumorPopup} 
-          onClose={() => setShowHumorPopup(false)} 
+          onClose={handleHumorClose}
+          isAutomatic
         />
       </div>
     </EmpresaAtivaProvider>
