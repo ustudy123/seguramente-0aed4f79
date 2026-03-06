@@ -269,26 +269,38 @@ export function usePsicossocial() {
     const concluidos = convites.filter(c => c.status === 'concluido').length;
     const expirados = convites.filter(c => c.status === 'expirado').length;
 
-    // Médias dos indicadores
-    const respostasComIndicadores = respostas.filter(r => r.indicadores);
-    let media_IRP_S, media_IBO_S, media_IBD_S, media_IREC_S, media_ICOP_S, media_INOT_S;
-
-    if (respostasComIndicadores.length > 0) {
-      media_IRP_S = respostasComIndicadores.reduce((a, r) => a + (r.indicadores?.IRP_S || 0), 0) / respostasComIndicadores.length;
-      media_IBO_S = respostasComIndicadores.reduce((a, r) => a + (r.indicadores?.IBO_S || 0), 0) / respostasComIndicadores.length;
-      media_IBD_S = respostasComIndicadores.reduce((a, r) => a + (r.indicadores?.IBD_S || 0), 0) / respostasComIndicadores.length;
-      media_IREC_S = respostasComIndicadores.reduce((a, r) => a + (r.indicadores?.IREC_S || 0), 0) / respostasComIndicadores.length;
-      media_ICOP_S = respostasComIndicadores.reduce((a, r) => a + (r.indicadores?.ICOP_S || 0), 0) / respostasComIndicadores.length;
-      
-      // INOT-S apenas para respostas que têm esse indicador
-      const respostasComINOT = respostasComIndicadores.filter(r => r.indicadores?.INOT_S !== undefined);
-      if (respostasComINOT.length > 0) {
-        media_INOT_S = respostasComINOT.reduce((a, r) => a + (r.indicadores?.INOT_S || 0), 0) / respostasComINOT.length;
-      }
-    }
-
     const MINIMO_ANONIMATO = 5;
     const anonimato_garantido = concluidos >= MINIMO_ANONIMATO;
+
+    // IPS médio agregado (só exibido com anonimato garantido)
+    const respostasComIPS = respostas.filter(r => r.indicadores?.IPS !== undefined);
+    let ips: number | undefined;
+    let radar: RadarDimensao[] | undefined;
+
+    if (anonimato_garantido && respostasComIPS.length > 0) {
+      ips = Math.round(
+        respostasComIPS.reduce((acc, r) => acc + (r.indicadores?.IPS ?? 0), 0) / respostasComIPS.length
+      );
+
+      // Agregar radar por dimensão (média de todas respostas)
+      const allRadar = respostasComIPS
+        .map(r => r.indicadores?.radar)
+        .filter((r): r is RadarDimensao[] => Array.isArray(r) && r.length > 0);
+
+      if (allRadar.length > 0) {
+        const subjects = allRadar[0].map(d => d.subject);
+        radar = subjects.map(subject => ({
+          subject,
+          value: Math.round(
+            allRadar.reduce((acc, r) => {
+              const found = r.find(d => d.subject === subject);
+              return acc + (found?.value ?? 50);
+            }, 0) / allRadar.length
+          ),
+          fullMark: 100,
+        }));
+      }
+    }
 
     return {
       total_convites: total,
@@ -298,12 +310,9 @@ export function usePsicossocial() {
       expirados,
       taxa_participacao: total > 0 ? (concluidos / total) * 100 : 0,
       anonimato_garantido,
-      media_IRP_S: anonimato_garantido && media_IRP_S ? Number(media_IRP_S.toFixed(2)) : undefined,
-      media_IBO_S: anonimato_garantido && media_IBO_S ? Number(media_IBO_S.toFixed(2)) : undefined,
-      media_IBD_S: anonimato_garantido && media_IBD_S ? Number(media_IBD_S.toFixed(2)) : undefined,
-      media_IREC_S: anonimato_garantido && media_IREC_S ? Number(media_IREC_S.toFixed(2)) : undefined,
-      media_ICOP_S: anonimato_garantido && media_ICOP_S ? Number(media_ICOP_S.toFixed(2)) : undefined,
-      media_INOT_S: anonimato_garantido && media_INOT_S ? Number(media_INOT_S.toFixed(2)) : undefined,
+      ips,
+      ips_classificacao: ips !== undefined ? calcularIPSClassificacao(ips) : undefined,
+      radar,
     };
   };
 
