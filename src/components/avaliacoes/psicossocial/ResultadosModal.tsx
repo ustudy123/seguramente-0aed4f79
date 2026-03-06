@@ -11,7 +11,9 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle2,
+  GitCompare,
 } from "lucide-react";
+import { ContaprovaOrganizacional } from "./ContaprovaOrganizacional";
 import {
   Dialog,
   DialogContent,
