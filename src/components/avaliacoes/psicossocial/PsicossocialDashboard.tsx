@@ -25,7 +25,8 @@ import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { CampanhaList } from "./CampanhaList";
 import { CampanhaForm } from "./CampanhaForm";
 import { IPSGauge } from "./IPSGauge";
-import { INSTRUMENTOS, type IPSClassificacao, getIPSLabel, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
+import { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
+import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
 const MINIMO_ANONIMATO = 5;
