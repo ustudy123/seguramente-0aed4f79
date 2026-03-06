@@ -183,96 +183,98 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
         </DialogHeader>
 
         {step === "review" && (
-          <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-muted/50 rounded-lg p-3 text-center">
-                <p className="text-2xl font-bold">{colaboradores.length}</p>
-                <p className="text-xs text-muted-foreground">Colaboradores</p>
-              </div>
-              <div className="bg-success/10 rounded-lg p-3 text-center">
-                <p className="text-2xl font-bold text-success">{elegíveis.length}</p>
-                <p className="text-xs text-muted-foreground">Elegíveis</p>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-3 text-center">
-                <p className="text-2xl font-bold text-primary">{totalAvaliacoes}</p>
-                <p className="text-xs text-muted-foreground">Avaliações a gerar</p>
-              </div>
-            </div>
-
-            {/* Aviso recém-admitidos */}
-            {recentAdmissoes.length > 0 && (
-              <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm">
-                <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
-                <div>
-                  <span className="font-medium text-foreground">
-                    {recentAdmissoes.length} colaborador(es) admitido(s) há menos de 30 dias.
-                  </span>
-                  <p className="text-muted-foreground text-xs mt-0.5">
-                    Considere excluí-los desta rodada ou usar um template de avaliação light para integração.
-                  </p>
+          <>
+            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-muted/50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold">{colaboradores.length}</p>
+                  <p className="text-xs text-muted-foreground">Colaboradores</p>
+                </div>
+                <div className="bg-success/10 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-success">{elegíveis.length}</p>
+                  <p className="text-xs text-muted-foreground">Elegíveis</p>
+                </div>
+                <div className="bg-primary/10 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-primary">{totalAvaliacoes}</p>
+                  <p className="text-xs text-muted-foreground">Avaliações a gerar</p>
                 </div>
               </div>
-            )}
 
-            {/* Tipos de avaliação que serão criadas */}
-            <div className="flex flex-wrap gap-2 text-xs">
-              {ciclo.config_360?.auto && <Badge variant="secondary">✓ Autoavaliação</Badge>}
-              {ciclo.config_360?.gestor && <Badge variant="secondary">✓ Avaliação pelo Gestor</Badge>}
-              {(ciclo.config_360?.pares || 0) > 0 && <Badge variant="secondary">✓ Avaliação de Pares</Badge>}
-              {ciclo.config_360?.subordinados && <Badge variant="secondary">✓ Avaliação de Subordinados</Badge>}
-              {ciclo.config_360?.cliente_interno && <Badge variant="secondary">✓ Cliente Interno</Badge>}
-            </div>
+              {/* Aviso recém-admitidos */}
+              {recentAdmissoes.length > 0 && (
+                <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm">
+                  <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                  <div>
+                    <span className="font-medium text-foreground">
+                      {recentAdmissoes.length} colaborador(es) admitido(s) há menos de 30 dias.
+                    </span>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      Considere excluí-los desta rodada ou usar um template de avaliação light para integração.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-            {/* Lista de colaboradores */}
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-medium mb-2">Desmarque para excluir do ciclo:</p>
-              <ScrollArea className="h-56 border rounded-lg">
-                <div className="p-2 space-y-1">
-                  {isLoadingColab ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">Carregando colaboradores...</div>
-                  ) : colaboradores.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      Nenhum colaborador cadastrado para esta empresa.
-                    </div>
-                  ) : (
-                    colaboradores.map(c => (
-                      <div
-                        key={c.id}
-                        className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors ${excluidos.has(c.id) ? "opacity-40" : ""}`}
-                      >
-                        <Checkbox
-                          id={`colab-${c.id}`}
-                          checked={!excluidos.has(c.id)}
-                          onCheckedChange={() => toggleExcluido(c.id)}
-                        />
-                        <Label htmlFor={`colab-${c.id}`} className="flex-1 cursor-pointer">
-                          <span className="font-medium text-sm">{c.nome_completo}</span>
-                          <span className="text-xs text-muted-foreground ml-2">{c.cargo}</span>
-                          {c.departamento && <span className="text-xs text-muted-foreground ml-1">• {c.departamento}</span>}
-                        </Label>
-                        {isRecentAdmissao(c.data_admissao) && (
-                          <Badge variant="outline" className="text-[10px] border-warning/50 text-warning">Novo</Badge>
-                        )}
+              {/* Tipos de avaliação que serão criadas */}
+              <div className="flex flex-wrap gap-2 text-xs">
+                {ciclo.config_360?.auto && <Badge variant="secondary">✓ Autoavaliação</Badge>}
+                {ciclo.config_360?.gestor && <Badge variant="secondary">✓ Avaliação pelo Gestor</Badge>}
+                {(ciclo.config_360?.pares || 0) > 0 && <Badge variant="secondary">✓ Avaliação de Pares</Badge>}
+                {ciclo.config_360?.subordinados && <Badge variant="secondary">✓ Avaliação de Subordinados</Badge>}
+                {ciclo.config_360?.cliente_interno && <Badge variant="secondary">✓ Cliente Interno</Badge>}
+              </div>
+
+              {/* Lista de colaboradores */}
+              <div className="flex-1 min-h-0">
+                <p className="text-sm font-medium mb-2">Desmarque para excluir do ciclo:</p>
+                <ScrollArea className="h-48 border rounded-lg">
+                  <div className="p-2 space-y-1">
+                    {isLoadingColab ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">Carregando colaboradores...</div>
+                    ) : colaboradores.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        Nenhum colaborador cadastrado para esta empresa.
                       </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
+                    ) : (
+                      colaboradores.map(c => (
+                        <div
+                          key={c.id}
+                          className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors ${excluidos.has(c.id) ? "opacity-40" : ""}`}
+                        >
+                          <Checkbox
+                            id={`colab-${c.id}`}
+                            checked={!excluidos.has(c.id)}
+                            onCheckedChange={() => toggleExcluido(c.id)}
+                          />
+                          <Label htmlFor={`colab-${c.id}`} className="flex-1 cursor-pointer">
+                            <span className="font-medium text-sm">{c.nome_completo}</span>
+                            <span className="text-xs text-muted-foreground ml-2">{c.cargo}</span>
+                            {c.departamento && <span className="text-xs text-muted-foreground ml-1">• {c.departamento}</span>}
+                          </Label>
+                          {isRecentAdmissao(c.data_admissao) && (
+                            <Badge variant="outline" className="text-[10px] border-warning/50 text-warning">Novo</Badge>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row justify-end gap-2 px-6 py-4 border-t shrink-0">
-            <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto">Cancelar</Button>
-            <Button
-              onClick={() => iniciarMutation.mutate()}
-              disabled={elegíveis.length === 0 || iniciarMutation.isPending}
-              className="gap-2 w-full sm:w-auto"
-            >
-              <Play className="h-4 w-4" />
-              Iniciar e Gerar {totalAvaliacoes} Avaliações
-            </Button>
-          </div>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 px-6 py-4 border-t shrink-0">
+              <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto">Cancelar</Button>
+              <Button
+                onClick={() => iniciarMutation.mutate()}
+                disabled={elegíveis.length === 0 || iniciarMutation.isPending}
+                className="gap-2 w-full sm:w-auto"
+              >
+                <Play className="h-4 w-4" />
+                Iniciar e Gerar {totalAvaliacoes} Avaliações
+              </Button>
+            </div>
+          </>
         )}
 
 
