@@ -34,6 +34,7 @@ import {
   Route,
   Search,
   X,
+  Brain,
   BarChart3 } from
 "lucide-react";
 import { cn } from "@/lib/utils";
