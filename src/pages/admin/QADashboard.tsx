@@ -1,32 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  Shield,
-  Database,
-  Server,
-  LayoutGrid,
-  Zap,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Bug,
-  Activity,
+  ArrowLeft, Shield, Database, Server, LayoutGrid, Zap,
+  AlertTriangle, CheckCircle, Info, ChevronDown, ChevronUp,
+  Loader2, Bug, Activity, Play, Bot, Clock, CheckCircle2,
+  XCircle, AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { useAuthContext } from "@/contexts/AuthContext";
+
+// ═══════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════
 
 interface Finding {
   categoria: string;
@@ -51,47 +45,56 @@ interface ScanResult {
   ai_summary: string;
 }
 
+interface StepResult {
+  step: string;
+  action: string;
+  status: "success" | "fail" | "warning";
+  details: string;
+  duration_ms: number;
+}
+
+interface FlowResult {
+  flow: string;
+  flow_label: string;
+  steps: StepResult[];
+  passed: number;
+  failed: number;
+  warnings: number;
+  total_duration_ms: number;
+}
+
+interface AgentResult {
+  success: boolean;
+  timestamp: string;
+  total_flows: number;
+  total_steps: number;
+  total_passed: number;
+  total_failed: number;
+  score: number;
+  flows: FlowResult[];
+  ai_report: string;
+}
+
+// ═══════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════
+
 const SCAN_CATEGORIES = [
-  {
-    id: "dados",
-    label: "Dados & Integridade",
-    icon: Database,
-    description: "Verifica integridade referencial, perfis órfãos, dados incompletos, inconsistências em admissões e atestados.",
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20",
-  },
-  {
-    id: "seguranca",
-    label: "Segurança & RLS",
-    icon: Shield,
-    description: "Testa acesso anônimo a tabelas sensíveis, verifica políticas RLS, analisa distribuição de roles e superadmins.",
-    color: "text-red-500",
-    bgColor: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20",
-  },
-  {
-    id: "edge_functions",
-    label: "Edge Functions",
-    icon: Server,
-    description: "Testa disponibilidade e resposta de todas as edge functions: IA, onboarding, notificações e integrações.",
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20",
-  },
-  {
-    id: "modulos",
-    label: "Módulos do Sistema",
-    icon: LayoutGrid,
-    description: "Verifica campanhas psicossociais, estoque EPIs, afastamentos, ASOs pendentes, alertas de ponto e documentos.",
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20",
-  },
-  {
-    id: "todos",
-    label: "Varredura Completa",
-    icon: Zap,
-    description: "Executa TODAS as verificações acima em sequência. Gera relatório completo com análise de IA.",
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20",
-  },
+  { id: "dados", label: "Dados & Integridade", icon: Database, description: "Verifica integridade referencial, perfis órfãos, dados incompletos, inconsistências em admissões e atestados.", color: "text-blue-500", bgColor: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
+  { id: "seguranca", label: "Segurança & RLS", icon: Shield, description: "Testa acesso anônimo a tabelas sensíveis, verifica políticas RLS, analisa distribuição de roles e superadmins.", color: "text-red-500", bgColor: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
+  { id: "edge_functions", label: "Edge Functions", icon: Server, description: "Testa disponibilidade e resposta de todas as edge functions: IA, onboarding, notificações e integrações.", color: "text-purple-500", bgColor: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20" },
+  { id: "modulos", label: "Módulos do Sistema", icon: LayoutGrid, description: "Verifica campanhas psicossociais, estoque EPIs, afastamentos, ASOs pendentes, alertas de ponto e documentos.", color: "text-amber-500", bgColor: "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20" },
+  { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações acima em sequência. Gera relatório completo com análise de IA.", color: "text-emerald-500", bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
+];
+
+const AGENT_FLOWS = [
+  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Cria, verifica, atualiza e exclui uma admissão completa com documentos.", steps: 6 },
+  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Registra atestado, valida campos, adiciona CID e limpa.", steps: 4 },
+  { id: "epi", label: "EPI (Entrega + Estoque)", icon: "🦺", description: "Cria EPI, registra entrega, verifica trigger de baixa de estoque.", steps: 5 },
+  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Cria ação, adiciona tarefa, conclui e verifica trigger de progresso.", steps: 5 },
+  { id: "rls_isolamento", label: "Isolamento Multi-Tenant", icon: "🔒", description: "Testa acesso anônimo e verifica integridade do isolamento por tenant.", steps: 3 },
+  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga todas as edge functions e verifica disponibilidade.", steps: 11 },
+  { id: "todos", label: "Executar TODOS os Fluxos", icon: "🚀", description: "Roda todos os fluxos acima em sequência. Gera relatório completo com IA.", steps: 34 },
 ];
 
 const severityConfig = {
@@ -102,32 +105,36 @@ const severityConfig = {
   info: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-100 text-emerald-700 border-emerald-200", label: "Info" },
 };
 
+// ═══════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════
+
 export default function QADashboard() {
   const navigate = useNavigate();
+  const { profile } = useAuthContext();
+
+  // Scan state
   const [scanning, setScanning] = useState<string | null>(null);
-  const [result, setResult] = useState<ScanResult | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [expandedFindings, setExpandedFindings] = useState<Set<number>>(new Set());
 
+  // Agent state
+  const [agentRunning, setAgentRunning] = useState<string | null>(null);
+  const [agentResult, setAgentResult] = useState<AgentResult | null>(null);
+  const [expandedFlows, setExpandedFlows] = useState<Set<string>>(new Set());
+
+  // ── Scan handlers ──
   const runScan = async (categoria: string) => {
     setScanning(categoria);
-    setResult(null);
+    setScanResult(null);
     setExpandedFindings(new Set());
-
     try {
-      const { data, error } = await supabase.functions.invoke("ai-qa-scan", {
-        body: { categoria },
-      });
-
+      const { data, error } = await supabase.functions.invoke("ai-qa-scan", { body: { categoria } });
       if (error) throw error;
-      setResult(data as ScanResult);
-
-      if (data.criticos > 0) {
-        toast.error(`Varredura concluída: ${data.criticos} problemas críticos encontrados`);
-      } else if (data.altos > 0) {
-        toast.warning(`Varredura concluída: ${data.altos} problemas de alta severidade`);
-      } else {
-        toast.success("Varredura concluída sem problemas críticos");
-      }
+      setScanResult(data as ScanResult);
+      if (data.criticos > 0) toast.error(`Varredura: ${data.criticos} problemas críticos`);
+      else if (data.altos > 0) toast.warning(`Varredura: ${data.altos} problemas altos`);
+      else toast.success("Varredura concluída sem problemas críticos");
     } catch (e: any) {
       toast.error(e.message || "Erro ao executar varredura");
     } finally {
@@ -135,16 +142,30 @@ export default function QADashboard() {
     }
   };
 
-  const toggleFinding = (index: number) => {
-    setExpandedFindings(prev => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
+  // ── Agent handlers ──
+  const runAgent = async (flow: string) => {
+    setAgentRunning(flow);
+    setAgentResult(null);
+    setExpandedFlows(new Set());
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-qa-agent", {
+        body: { flow, tenantId: profile?.tenant_id },
+      });
+      if (error) throw error;
+      setAgentResult(data as AgentResult);
+      if (data.total_failed > 0) toast.error(`Agente: ${data.total_failed} testes falharam`);
+      else toast.success(`Agente: todos os ${data.total_passed} testes passaram ✓`);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao executar agente");
+    } finally {
+      setAgentRunning(null);
+    }
   };
 
-  const healthScore = result ? Math.max(0, 100 - (result.criticos * 20 + result.altos * 10 + result.medios * 5 + result.baixos * 2)) : null;
+  const toggleFinding = (i: number) => setExpandedFindings(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; });
+  const toggleFlow = (f: string) => setExpandedFlows(p => { const n = new Set(p); n.has(f) ? n.delete(f) : n.add(f); return n; });
+
+  const healthScore = scanResult ? Math.max(0, 100 - (scanResult.criticos * 20 + scanResult.altos * 10 + scanResult.medios * 5 + scanResult.baixos * 2)) : null;
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -160,173 +181,316 @@ export default function QADashboard() {
               QA & Testes com IA
             </h1>
             <p className="text-muted-foreground mt-1">
-              Varredura automatizada com inteligência artificial — clique em uma categoria para iniciar
+              Varredura automatizada e agente de QA programático
             </p>
           </div>
         </div>
 
-        {/* Scan Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {SCAN_CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isScanning = scanning === cat.id;
-            const isAnyScanning = scanning !== null;
+        {/* Tabs */}
+        <Tabs defaultValue="agent" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="agent" className="gap-2">
+              <Bot className="w-4 h-4" /> Agente de QA
+            </TabsTrigger>
+            <TabsTrigger value="scan" className="gap-2">
+              <Database className="w-4 h-4" /> Varredura
+            </TabsTrigger>
+          </TabsList>
 
-            return (
-              <Card
-                key={cat.id}
-                className={`cursor-pointer transition-all border-2 ${cat.bgColor} ${isAnyScanning && !isScanning ? "opacity-50" : ""} ${cat.id === "todos" ? "md:col-span-2 lg:col-span-1" : ""}`}
-                onClick={() => !isAnyScanning && runScan(cat.id)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-3 rounded-xl bg-background/80 ${cat.color}`}>
-                      {isScanning ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      ) : (
-                        <Icon className="w-6 h-6" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">{cat.label}</h3>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        {cat.description}
-                      </p>
-                      {isScanning && (
-                        <p className="text-xs text-primary mt-2 font-medium animate-pulse">
-                          Executando varredura...
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Results */}
-        {result && (
-          <div className="space-y-4">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-              {healthScore !== null && (
-                <Card className="col-span-2 md:col-span-1">
-                  <CardContent className="p-4 text-center">
-                    <Activity className={`w-6 h-6 mx-auto ${healthScore >= 80 ? "text-emerald-500" : healthScore >= 50 ? "text-amber-500" : "text-red-500"}`} />
-                    <p className={`text-2xl font-bold mt-1 ${healthScore >= 80 ? "text-emerald-600" : healthScore >= 50 ? "text-amber-600" : "text-red-600"}`}>
-                      {healthScore}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">Saúde</p>
-                  </CardContent>
-                </Card>
-              )}
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-red-600">{result.criticos}</p>
-                  <p className="text-[10px] text-muted-foreground">Críticos</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-orange-500">{result.altos}</p>
-                  <p className="text-[10px] text-muted-foreground">Altos</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-amber-500">{result.medios}</p>
-                  <p className="text-[10px] text-muted-foreground">Médios</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-blue-500">{result.baixos}</p>
-                  <p className="text-[10px] text-muted-foreground">Baixos</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-emerald-500">{result.info}</p>
-                  <p className="text-[10px] text-muted-foreground">Info</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* AI Summary */}
-            {result.ai_summary && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-primary" />
-                    Análise da IA
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none text-foreground">
-                    <ReactMarkdown>{result.ai_summary}</ReactMarkdown>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Findings List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">
-                  {result.total_findings} findings encontrados
-                  <span className="text-muted-foreground font-normal ml-2">
-                    {new Date(result.timestamp).toLocaleString("pt-BR")}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {result.findings
-                  .sort((a, b) => {
-                    const order = { critico: 0, alto: 1, medio: 2, baixo: 3, info: 4 };
-                    return order[a.severidade] - order[b.severidade];
-                  })
-                  .map((finding, i) => {
-                    const config = severityConfig[finding.severidade];
-                    const SevIcon = config.icon;
-                    const isExpanded = expandedFindings.has(i);
-
-                    return (
-                      <Collapsible key={i} open={isExpanded} onOpenChange={() => toggleFinding(i)}>
-                        <CollapsibleTrigger asChild>
-                          <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                            <SevIcon className={`w-4 h-4 shrink-0 ${config.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-sm">{finding.titulo}</span>
-                                <Badge variant="outline" className={`text-[10px] ${config.bg}`}>
-                                  {config.label}
-                                </Badge>
-                                <Badge variant="secondary" className="text-[10px]">
-                                  {finding.modulo}
-                                </Badge>
-                              </div>
-                            </div>
-                            {finding.sugestao && (
-                              isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </div>
-                        </CollapsibleTrigger>
-                        {finding.sugestao && (
-                          <CollapsibleContent>
-                            <div className="ml-7 pl-4 pb-3 border-l-2 border-muted space-y-1">
-                              <p className="text-sm text-muted-foreground">{finding.descricao}</p>
-                              <p className="text-sm text-primary font-medium">💡 {finding.sugestao}</p>
-                            </div>
-                          </CollapsibleContent>
-                        )}
-                      </Collapsible>
-                    );
-                  })}
+          {/* ═══════════════════════════════════════════ */}
+          {/* TAB: AGENTE DE QA */}
+          {/* ═══════════════════════════════════════════ */}
+          <TabsContent value="agent" className="space-y-6">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4 flex items-start gap-3">
+                <Bot className="w-6 h-6 text-primary mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Agente de QA Programático</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    O agente executa ações reais no banco de dados (criar, ler, atualizar, deletar) simulando o comportamento de um usuário.
+                    Ao final, a IA analisa os resultados e gera um relatório com falhas e recomendações.
+                    <strong> Todos os dados de teste são removidos automaticamente.</strong>
+                  </p>
+                </div>
               </CardContent>
             </Card>
-          </div>
-        )}
+
+            {/* Flow buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {AGENT_FLOWS.map((f) => {
+                const isRunning = agentRunning === f.id;
+                const isAnyRunning = agentRunning !== null;
+                return (
+                  <Card
+                    key={f.id}
+                    className={`cursor-pointer transition-all border hover:shadow-md ${
+                      isAnyRunning && !isRunning ? "opacity-50 pointer-events-none" : ""
+                    } ${f.id === "todos" ? "border-primary/30 bg-primary/5" : ""}`}
+                    onClick={() => !isAnyRunning && runAgent(f.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{f.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm">{f.label}</h3>
+                            <Badge variant="secondary" className="text-[10px]">{f.steps} steps</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{f.description}</p>
+                          {isRunning && (
+                            <div className="flex items-center gap-2 mt-2 text-primary">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span className="text-xs font-medium animate-pulse">Executando testes...</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Agent Results */}
+            {agentResult && (
+              <div className="space-y-4">
+                {/* Score header */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <Card className={`col-span-2 md:col-span-1 ${agentResult.score >= 80 ? "border-emerald-300 bg-emerald-50" : agentResult.score >= 50 ? "border-amber-300 bg-amber-50" : "border-red-300 bg-red-50"}`}>
+                    <CardContent className="p-4 text-center">
+                      <Activity className={`w-6 h-6 mx-auto ${agentResult.score >= 80 ? "text-emerald-600" : agentResult.score >= 50 ? "text-amber-600" : "text-red-600"}`} />
+                      <p className={`text-3xl font-bold mt-1 ${agentResult.score >= 80 ? "text-emerald-700" : agentResult.score >= 50 ? "text-amber-700" : "text-red-700"}`}>
+                        {agentResult.score}%
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">Score</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-2xl font-bold text-foreground">{agentResult.total_flows}</p>
+                      <p className="text-[10px] text-muted-foreground">Fluxos</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-2xl font-bold text-foreground">{agentResult.total_steps}</p>
+                      <p className="text-[10px] text-muted-foreground">Steps</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-2xl font-bold text-emerald-600">{agentResult.total_passed}</p>
+                      <p className="text-[10px] text-muted-foreground">Passou</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-2xl font-bold text-red-600">{agentResult.total_failed}</p>
+                      <p className="text-[10px] text-muted-foreground">Falhou</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Flow details */}
+                {agentResult.flows.map((flow) => {
+                  const isExpanded = expandedFlows.has(flow.flow);
+                  const allPassed = flow.failed === 0;
+                  return (
+                    <Card key={flow.flow} className={`border ${allPassed ? "border-emerald-200" : "border-red-200"}`}>
+                      <Collapsible open={isExpanded} onOpenChange={() => toggleFlow(flow.flow)}>
+                        <CollapsibleTrigger asChild>
+                          <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors pb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {allPassed ? (
+                                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                ) : (
+                                  <XCircle className="w-5 h-5 text-red-600" />
+                                )}
+                                <div>
+                                  <CardTitle className="text-sm">{flow.flow_label}</CardTitle>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant={allPassed ? "default" : "destructive"} className="text-[10px]">
+                                      {flow.passed}/{flow.steps.length} passou
+                                    </Badge>
+                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                      <Clock className="w-3 h-3" /> {flow.total_duration_ms}ms
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </div>
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <CardContent className="pt-0">
+                            <div className="space-y-2">
+                              {flow.steps.map((step, i) => (
+                                <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
+                                  step.status === "success" ? "bg-emerald-50/50" : step.status === "fail" ? "bg-red-50/50" : "bg-amber-50/50"
+                                }`}>
+                                  {step.status === "success" ? (
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                                  ) : step.status === "fail" ? (
+                                    <XCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                                  ) : (
+                                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-medium text-sm">{step.step}</span>
+                                      <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{step.action}</code>
+                                      <span className="text-[10px] text-muted-foreground">{step.duration_ms}ms</span>
+                                    </div>
+                                    <p className={`text-xs mt-0.5 ${step.status === "fail" ? "text-red-700" : "text-muted-foreground"}`}>
+                                      {step.details}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </Card>
+                  );
+                })}
+
+                {/* AI Report */}
+                {agentResult.ai_report && (
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-primary" />
+                        Relatório do Agente de QA (IA)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm max-w-none text-foreground">
+                        <ReactMarkdown>{agentResult.ai_report}</ReactMarkdown>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════ */}
+          {/* TAB: VARREDURA (existing scan) */}
+          {/* ═══════════════════════════════════════════ */}
+          <TabsContent value="scan" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {SCAN_CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                const isScanning = scanning === cat.id;
+                const isAnyScanning = scanning !== null;
+                return (
+                  <Card
+                    key={cat.id}
+                    className={`cursor-pointer transition-all border-2 ${cat.bgColor} ${isAnyScanning && !isScanning ? "opacity-50" : ""}`}
+                    onClick={() => !isAnyScanning && runScan(cat.id)}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-3 rounded-xl bg-background/80 ${cat.color}`}>
+                          {isScanning ? <Loader2 className="w-6 h-6 animate-spin" /> : <Icon className="w-6 h-6" />}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground">{cat.label}</h3>
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{cat.description}</p>
+                          {isScanning && <p className="text-xs text-primary mt-2 font-medium animate-pulse">Executando varredura...</p>}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Scan Results */}
+            {scanResult && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  {healthScore !== null && (
+                    <Card className="col-span-2 md:col-span-1">
+                      <CardContent className="p-4 text-center">
+                        <Activity className={`w-6 h-6 mx-auto ${healthScore >= 80 ? "text-emerald-500" : healthScore >= 50 ? "text-amber-500" : "text-red-500"}`} />
+                        <p className={`text-2xl font-bold mt-1 ${healthScore >= 80 ? "text-emerald-600" : healthScore >= 50 ? "text-amber-600" : "text-red-600"}`}>{healthScore}</p>
+                        <p className="text-[10px] text-muted-foreground">Saúde</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-red-600">{scanResult.criticos}</p><p className="text-[10px] text-muted-foreground">Críticos</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-orange-500">{scanResult.altos}</p><p className="text-[10px] text-muted-foreground">Altos</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-amber-500">{scanResult.medios}</p><p className="text-[10px] text-muted-foreground">Médios</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-blue-500">{scanResult.baixos}</p><p className="text-[10px] text-muted-foreground">Baixos</p></CardContent></Card>
+                  <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-emerald-500">{scanResult.info}</p><p className="text-[10px] text-muted-foreground">Info</p></CardContent></Card>
+                </div>
+
+                {scanResult.ai_summary && (
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> Análise da IA</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="prose prose-sm max-w-none text-foreground">
+                        <ReactMarkdown>{scanResult.ai_summary}</ReactMarkdown>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">
+                      {scanResult.total_findings} findings
+                      <span className="text-muted-foreground font-normal ml-2">{new Date(scanResult.timestamp).toLocaleString("pt-BR")}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {scanResult.findings
+                      .sort((a, b) => {
+                        const order = { critico: 0, alto: 1, medio: 2, baixo: 3, info: 4 };
+                        return order[a.severidade] - order[b.severidade];
+                      })
+                      .map((finding, i) => {
+                        const config = severityConfig[finding.severidade];
+                        const SevIcon = config.icon;
+                        const isExpanded = expandedFindings.has(i);
+                        return (
+                          <Collapsible key={i} open={isExpanded} onOpenChange={() => toggleFinding(i)}>
+                            <CollapsibleTrigger asChild>
+                              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                                <SevIcon className={`w-4 h-4 shrink-0 ${config.color}`} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-sm">{finding.titulo}</span>
+                                    <Badge variant="outline" className={`text-[10px] ${config.bg}`}>{config.label}</Badge>
+                                    <Badge variant="secondary" className="text-[10px]">{finding.modulo}</Badge>
+                                  </div>
+                                </div>
+                                {finding.sugestao && (isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />)}
+                              </div>
+                            </CollapsibleTrigger>
+                            {finding.sugestao && (
+                              <CollapsibleContent>
+                                <div className="ml-7 pl-4 pb-3 border-l-2 border-muted space-y-1">
+                                  <p className="text-sm text-muted-foreground">{finding.descricao}</p>
+                                  <p className="text-sm text-primary font-medium">💡 {finding.sugestao}</p>
+                                </div>
+                              </CollapsibleContent>
+                            )}
+                          </Collapsible>
+                        );
+                      })}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

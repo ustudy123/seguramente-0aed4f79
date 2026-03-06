@@ -95,3 +95,6 @@ verify_jwt = false
 
 [functions.ai-qa-scan]
 verify_jwt = false
+
+[functions.ai-qa-agent]
+verify_jwt = false
