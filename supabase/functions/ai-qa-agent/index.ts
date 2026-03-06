@@ -70,8 +70,9 @@ serve(async (req) => {
     }
 
     const encoder = new TextEncoder();
-    const STEP_DELAY = 2500; // 2.5 seconds between steps for visual feedback
-    const NAV_DELAY = 2000; // 2s after navigation for visual effect
+    const STEP_DELAY = 4000; // 4 seconds between steps for visual feedback
+    const NAV_DELAY = 3000; // 3s after navigation for visual effect
+    const REFRESH_DELAY = 1500; // 1.5s after refresh to let UI update
 
     const body = new ReadableStream({
       async start(controller) {
@@ -85,6 +86,12 @@ serve(async (req) => {
         const navigateTo = async (route: string, label?: string) => {
           send("navigate", { route, label });
           await delay(NAV_DELAY);
+        };
+
+        // Tell iframe to invalidate all queries so UI reflects DB changes
+        const refreshIframe = async () => {
+          send("refresh", {});
+          await delay(REFRESH_DELAY);
         };
 
         const flows: FlowResult[] = [];
