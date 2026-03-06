@@ -9,6 +9,7 @@ import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 import { useIframeNavigation } from "@/hooks/useIframeNavigation";
 
 export const MainLayout = () => {
+  useIframeNavigation(); // Listen for QA Agent navigation commands
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showHumorPopup, setShowHumorPopup] = useState(false);
   const { precisaRegistrarHumor, isLoading, marcarMorningVisto, marcarMiddayVisto, isAtualizacao } = useHumorDiario();
