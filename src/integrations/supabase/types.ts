@@ -13451,6 +13451,16 @@ export type Database = {
           token: string
         }[]
       }
+      buscar_contratos_por_cliente: {
+        Args: { p_cliente_id: string }
+        Returns: {
+          assinado_em: string
+          html_assinado: string
+          id: string
+          status: string
+          token: string
+        }[]
+      }
       buscar_convite_por_token: {
         Args: { p_token: string }
         Returns: {
@@ -13479,6 +13489,18 @@ export type Database = {
           iniciado_em: string
           status: string
           tenant_id: string
+          token: string
+        }[]
+      }
+      buscar_doc_links_por_cliente: {
+        Args: { p_cliente_id: string }
+        Returns: {
+          aceito_em: string
+          html_assinado: string
+          html_documento: string
+          id: string
+          status: string
+          tipo: string
           token: string
         }[]
       }

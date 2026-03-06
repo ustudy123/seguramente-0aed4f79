@@ -204,13 +204,10 @@ export default function AceiteDocumento() {
     mutationFn: async () => {
       const agora = new Date().toISOString();
       const { error } = await supabase
-        .from('programa_validador_documento_links' as never)
-        .update({
-          status: 'recusado',
-          recusado_em: agora,
-          motivo_recusa: motivo || 'Não informado',
-        } as never)
-        .eq('token', token!) as any;
+        .rpc('atualizar_documento_link_por_token', {
+          p_token: token!,
+          p_status: 'recusado',
+        });
       if (error) throw error;
 
       await supabase.from('programa_validador_historico' as never).insert({
