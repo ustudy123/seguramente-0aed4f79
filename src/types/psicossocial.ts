@@ -11,6 +11,102 @@ export type CampanhaPeriodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anu
 export type EventoGatilhoTipo = 'acidente' | 'denuncia' | 'reestruturacao' | 'conflito' | 'ia_sugestao' | 'solicitacao_colaborador';
 export type ConvitePsicossocialStatus = 'pendente' | 'iniciado' | 'concluido' | 'expirado';
 export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
+export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'customizado';
+export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
+
+// IPS - Índice Psicossocial Seguramente (0-100)
+export type IPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
+
+export function calcularIPSClassificacao(score: number): IPSClassificacao {
+  if (score >= 80) return 'saudavel';
+  if (score >= 65) return 'estavel';
+  if (score >= 50) return 'atencao';
+  if (score >= 35) return 'risco';
+  return 'critico';
+}
+
+export function getIPSColor(classificacao: IPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'text-emerald-600';
+    case 'estavel': return 'text-blue-600';
+    case 'atencao': return 'text-amber-600';
+    case 'risco': return 'text-orange-600';
+    case 'critico': return 'text-red-600';
+  }
+}
+
+export function getIPSBgColor(classificacao: IPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'bg-emerald-100';
+    case 'estavel': return 'bg-blue-100';
+    case 'atencao': return 'bg-amber-100';
+    case 'risco': return 'bg-orange-100';
+    case 'critico': return 'bg-red-100';
+  }
+}
+
+export function getIPSLabel(classificacao: IPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'Ambiente Saudável';
+    case 'estavel': return 'Ambiente Estável';
+    case 'atencao': return 'Atenção';
+    case 'risco': return 'Risco Psicossocial';
+    case 'critico': return 'Risco Crítico';
+  }
+}
+
+// Radar data
+export interface RadarDimensao {
+  subject: string;
+  value: number;
+  fullMark: number;
+}
+
+// Dimension result
+export interface DimensaoResultado {
+  dimensao: string;
+  codigo?: string;
+  score: number;
+  nivel: 'otimo' | 'bom' | 'atencao' | 'critico';
+  categoria: string;
+}
+
+// Instrumento config
+export interface InstrumentoConfig {
+  id: InstrumentoPsicossocial;
+  nome: string;
+  descricao: string;
+  uso: string;
+  totalPerguntas: number;
+  dimensoes: string[];
+}
+
+export const INSTRUMENTOS: InstrumentoConfig[] = [
+  {
+    id: 'copsoq',
+    nome: 'COPSOQ',
+    descricao: 'Copenhagen Psychosocial Questionnaire',
+    uso: 'Diagnóstico geral de riscos psicossociais',
+    totalPerguntas: 40,
+    dimensoes: ['Demanda de Trabalho', 'Controle e Autonomia', 'Relações Sociais', 'Justiça Organizacional', 'Segurança Psicológica', 'Sentido do Trabalho', 'Monotonia', 'Equilíbrio Trabalho-Vida'],
+  },
+  {
+    id: 'hse',
+    nome: 'HSE Management Standards',
+    descricao: 'Health and Safety Executive (UK)',
+    uso: 'Avaliação focada em gestão organizacional',
+    totalPerguntas: 35,
+    dimensoes: ['Demanda', 'Controle', 'Suporte do Gestor', 'Suporte dos Pares', 'Relacionamentos', 'Função', 'Gestão de Mudanças'],
+  },
+  {
+    id: 'proart',
+    nome: 'PROART',
+    descricao: 'Protocolo de Avaliação dos Riscos Psicossociais',
+    uso: 'Diagnóstico aprofundado em cenários críticos',
+    totalPerguntas: 50,
+    dimensoes: ['Organização do Trabalho', 'Estilo de Gestão', 'Laços Sociais', 'Sofrimento Patogênico', 'Danos Relacionados ao Trabalho'],
+  },
+];
 
 // Escala padrão de respostas (0 a 4)
 export const ESCALA_RESPOSTAS = [
