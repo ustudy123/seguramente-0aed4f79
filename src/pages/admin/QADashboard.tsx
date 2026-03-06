@@ -4,8 +4,7 @@ import {
   ArrowLeft, Shield, Database, Server, LayoutGrid, Zap,
   AlertTriangle, CheckCircle, Info, ChevronDown, ChevronUp,
   Loader2, Bug, Activity, Play, Bot, Clock, CheckCircle2,
-  XCircle, AlertCircle, Monitor, Maximize2, Minimize2,
-  Eye, Globe,
+  XCircle, AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
