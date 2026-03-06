@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.ai-nf-ocr]
 verify_jwt = false
+
+[functions.ai-pgr-riscos]
+verify_jwt = false
