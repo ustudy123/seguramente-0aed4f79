@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 interface HumorDiarioPopupProps {
   open: boolean;
   onClose: () => void;
+  /** When true (automatic popup), hides the close button — user must select a mood */
+  isAutomatic?: boolean;
 }
 
 type Step = "humor" | "micropergunta";
