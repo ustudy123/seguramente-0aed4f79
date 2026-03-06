@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
   Sparkles, ChevronRight, ChevronLeft, Send, Save,
-  AlertTriangle, Flame, Battery, FileText, MessageSquare,
+  AlertTriangle, Flame, Battery, FileText,
   BookOpen, Target, User, Briefcase,
   Calendar, CheckCircle2, TrendingUp, Loader2,
-  ThumbsUp, ThumbsDown, Minus, GitBranch,
 } from "lucide-react";
 import { GerarPdiModal } from "./GerarPdiModal";
+import { EvidenciasPanel } from "./EvidenciasPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
