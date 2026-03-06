@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateCpf, cleanCpf } from "@/lib/cpf";
 import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
+import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxField";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
