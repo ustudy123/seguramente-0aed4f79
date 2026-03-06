@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
