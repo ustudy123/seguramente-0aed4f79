@@ -210,10 +210,21 @@ function parsarNivel(valor: string): string | null {
   return NIVEIS_VALIDOS[normalizado] || null;
 }
 
+export interface ResultadoImportacao {
+  total: number;
+  departamentosCriados: number;
+  cargosCriados: number;
+  colaboradoresInseridos: number;
+  colaboradoresAtualizados: number;
+  erros: { linha: number; mensagem: string }[];
+}
+
 export function useImportacaoPlanilha() {
   const { tenantId } = useTenant();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  const str = (val: any) => String(val || "").trim();
 
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
     return new Promise((resolve, reject) => {
@@ -225,82 +236,111 @@ export function useImportacaoPlanilha() {
           const workbook = XLSX.read(data, { type: "array", cellDates: true });
           const primeiraAba = workbook.SheetNames[0];
           const planilha = workbook.Sheets[primeiraAba];
-          
-          // Converter para JSON
           const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: false, defval: "" }) as string[][];
           
-          if (jsonData.length < 2) {
-            reject(new Error("Planilha vazia ou sem dados"));
-            return;
-          }
+          if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
           
-          const headers = jsonData[0].map(h => String(h || "").trim());
+          const headers = jsonData[0].map(h => str(h));
           
-          // Encontrar índices das colunas
-          const indices = {
+          const idx = {
             nome: encontrarColuna(headers, "nome"),
             cpf: encontrarColuna(headers, "cpf"),
             sexo: encontrarColuna(headers, "sexo"),
             dataNascimento: encontrarColuna(headers, "dataNascimento"),
+            estadoCivil: encontrarColuna(headers, "estadoCivil"),
+            naturalidade: encontrarColuna(headers, "naturalidade"),
+            nacionalidade: encontrarColuna(headers, "nacionalidade"),
+            nomeMae: encontrarColuna(headers, "nomeMae"),
+            nomePai: encontrarColuna(headers, "nomePai"),
+            rg: encontrarColuna(headers, "rg"),
+            pis: encontrarColuna(headers, "pis"),
+            email: encontrarColuna(headers, "email"),
+            telefone: encontrarColuna(headers, "telefone"),
+            celular: encontrarColuna(headers, "celular"),
+            cep: encontrarColuna(headers, "cep"),
+            endereco: encontrarColuna(headers, "endereco"),
+            numero: encontrarColuna(headers, "numero"),
+            complemento: encontrarColuna(headers, "complemento"),
+            bairro: encontrarColuna(headers, "bairro"),
+            cidade: encontrarColuna(headers, "cidade"),
+            estado: encontrarColuna(headers, "estado"),
             situacao: encontrarColuna(headers, "situacao"),
             filial: encontrarColuna(headers, "filial"),
             cargo: encontrarColuna(headers, "cargo"),
             departamento: encontrarColuna(headers, "departamento"),
             nivel: encontrarColuna(headers, "nivel"),
+            tipoContrato: encontrarColuna(headers, "tipoContrato"),
+            dataAdmissao: encontrarColuna(headers, "dataAdmissao"),
+            salario: encontrarColuna(headers, "salario"),
+            centroCusto: encontrarColuna(headers, "centroCusto"),
+            gestorImediato: encontrarColuna(headers, "gestorImediato"),
+            banco: encontrarColuna(headers, "banco"),
+            agencia: encontrarColuna(headers, "agencia"),
+            conta: encontrarColuna(headers, "conta"),
+            tipoConta: encontrarColuna(headers, "tipoConta"),
+            chavePix: encontrarColuna(headers, "chavePix"),
           };
           
-          // Validar colunas obrigatórias
-          if (indices.nome === -1) {
-            reject(new Error("Coluna 'Nome' não encontrada na planilha"));
-            return;
-          }
-          if (indices.cpf === -1) {
-            reject(new Error("Coluna 'CPF' não encontrada na planilha"));
-            return;
-          }
-          if (indices.cargo === -1) {
-            reject(new Error("Coluna 'Cargo' não encontrada na planilha"));
-            return;
-          }
+          if (idx.nome === -1) { reject(new Error("Coluna 'Nome' não encontrada na planilha")); return; }
+          if (idx.cpf === -1) { reject(new Error("Coluna 'CPF' não encontrada na planilha")); return; }
+          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo' não encontrada na planilha")); return; }
           
-          // Processar linhas
           const dados: DadosPlanilha[] = [];
           
           for (let i = 1; i < jsonData.length; i++) {
-            const linha = jsonData[i];
+            const l = jsonData[i];
             const erros: string[] = [];
+            const g = (i: number) => i !== -1 ? str(l[i]) : "";
             
-            const nome = String(linha[indices.nome] || "").trim();
-            const cpfRaw = String(linha[indices.cpf] || "").trim();
+            const nome = g(idx.nome);
+            const cpfRaw = g(idx.cpf);
             const cpf = formatarCPF(cpfRaw);
-            const sexo = indices.sexo !== -1 ? parsarSexo(String(linha[indices.sexo] || "")) : "";
-            const dataNascimento = indices.dataNascimento !== -1 ? parsarData(linha[indices.dataNascimento]) || "" : "";
-            const situacao = indices.situacao !== -1 ? parsarSituacao(linha[indices.situacao]) : "concluido";
-            const filial = indices.filial !== -1 ? String(linha[indices.filial] || "").trim() : "";
-            const cargo = String(linha[indices.cargo] || "").trim();
-            const departamento = indices.departamento !== -1 ? String(linha[indices.departamento] || "").trim() : "";
-            const nivel = indices.nivel !== -1 ? parsarNivel(String(linha[indices.nivel] || "")) || "" : "";
+            const cargo = g(idx.cargo);
             
-            // Validações
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
             if (!cargo) erros.push("Cargo é obrigatório");
-            
-            // Ignorar linhas completamente vazias
             if (!nome && !cpf && !cargo) continue;
             
             dados.push({
               nome,
               cpf,
-              sexo,
-              dataNascimento,
-              situacao,
-              filial,
+              sexo: idx.sexo !== -1 ? parsarSexo(g(idx.sexo)) : "",
+              dataNascimento: idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "",
+              estadoCivil: g(idx.estadoCivil),
+              naturalidade: g(idx.naturalidade),
+              nacionalidade: g(idx.nacionalidade),
+              nomeMae: g(idx.nomeMae),
+              nomePai: g(idx.nomePai),
+              rg: g(idx.rg),
+              pis: g(idx.pis),
+              email: g(idx.email),
+              telefone: g(idx.telefone),
+              celular: g(idx.celular),
+              cep: g(idx.cep),
+              endereco: g(idx.endereco),
+              numero: g(idx.numero),
+              complemento: g(idx.complemento),
+              bairro: g(idx.bairro),
+              cidade: g(idx.cidade),
+              estado: g(idx.estado),
+              situacao: idx.situacao !== -1 ? parsarSituacao(l[idx.situacao]) : "concluido",
+              filial: g(idx.filial),
               cargo,
-              departamento,
-              nivel,
-              linha: i + 1, // Linha na planilha (1-indexed, contando header)
+              departamento: g(idx.departamento),
+              nivel: idx.nivel !== -1 ? parsarNivel(g(idx.nivel)) || "" : "",
+              tipoContrato: g(idx.tipoContrato),
+              dataAdmissao: idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "",
+              salario: g(idx.salario),
+              centroCusto: g(idx.centroCusto),
+              gestorImediato: g(idx.gestorImediato),
+              banco: g(idx.banco),
+              agencia: g(idx.agencia),
+              conta: g(idx.conta),
+              tipoConta: g(idx.tipoConta),
+              chavePix: g(idx.chavePix),
+              linha: i + 1,
               erros,
             });
           }
@@ -460,11 +500,36 @@ export function useImportacaoPlanilha() {
           cpf: dado.cpf,
           genero: dado.sexo || null,
           data_nascimento: dado.dataNascimento || null,
+          estado_civil: dado.estadoCivil || null,
+          naturalidade: dado.naturalidade || null,
+          nacionalidade: dado.nacionalidade || null,
+          nome_mae: dado.nomeMae || null,
+          nome_pai: dado.nomePai || null,
+          rg: dado.rg || null,
+          email: dado.email || `${dado.cpf}@importado.temp`,
+          telefone: dado.telefone || null,
+          celular: dado.celular || null,
+          cep: dado.cep || null,
+          endereco: dado.endereco || null,
+          numero: dado.numero || null,
+          complemento: dado.complemento || null,
+          bairro: dado.bairro || null,
+          cidade: dado.cidade || null,
+          estado: dado.estado || null,
           status: dado.situacao as "rascunho" | "aguardando_documentos" | "em_analise" | "aprovado" | "reprovado" | "concluido",
           filial: dado.filial || null,
           cargo: dado.cargo,
           departamento: dado.departamento || null,
-          email: `${dado.cpf}@importado.temp`, // Email temporário
+          tipo_contrato: dado.tipoContrato || null,
+          data_admissao: dado.dataAdmissao || null,
+          salario: dado.salario ? parseFloat(dado.salario.replace(/[^\d,\.]/g, "").replace(",", ".")) || null : null,
+          centro_custo: dado.centroCusto || null,
+          gestor_imediato: dado.gestorImediato || null,
+          banco: dado.banco || null,
+          agencia: dado.agencia || null,
+          conta: dado.conta || null,
+          tipo_conta: dado.tipoConta || null,
+          chave_pix: dado.chavePix || null,
         };
         
         try {
