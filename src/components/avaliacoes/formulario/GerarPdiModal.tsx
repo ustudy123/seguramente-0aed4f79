@@ -180,7 +180,7 @@ export function GerarPdiModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-primary" />
