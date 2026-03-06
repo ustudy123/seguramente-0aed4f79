@@ -70,6 +70,7 @@ import Filiais from "./pages/cadastros/Filiais";
 // Admin Pages
 import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import ManualSistema from "./pages/admin/ManualSistema";
+import QADashboard from "./pages/admin/QADashboard";
 import ProgramaValidador from "./pages/admin/ProgramaValidador";
 import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 
@@ -125,6 +126,14 @@ const App = () => (
             element={
               <SuperAdminRoute>
                 <ManualSistema />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/qa"
+            element={
+              <SuperAdminRoute>
+                <QADashboard />
               </SuperAdminRoute>
             }
           />

@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.avaliacao-ia-rascunho]
 verify_jwt = false
+
+[functions.ai-qa-scan]
+verify_jwt = false
