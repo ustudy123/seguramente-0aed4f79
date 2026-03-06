@@ -229,7 +229,7 @@ export default function Usuarios() {
                     <div className="flex items-center gap-1 text-sm">
                       <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                       <span>{ativos.length}</span>
-                      {ativos.length > 1 && <Sparkles className="w-3 h-3 text-purple-500" title="Multiempresa" />}
+                      {ativos.length > 1 && <Sparkles className="w-3 h-3 text-purple-500" />}
                     </div>
 
                     <QualidadeScoreIndicator score={score} pct={pct} />
