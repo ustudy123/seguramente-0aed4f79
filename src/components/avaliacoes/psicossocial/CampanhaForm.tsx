@@ -143,6 +143,16 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
           </DialogDescription>
         </DialogHeader>
 
+        {/* Banner do Assistente quando instrumento pré-selecionado */}
+        {instrumentoSugerido && (
+          <div className="flex items-start gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <Sparkles className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-purple-800 leading-relaxed">
+              <strong>Instrumento recomendado pelo Assistente:</strong> o instrumento <strong>{instrumentoSugerido.toUpperCase()}</strong> foi pré-selecionado com base na análise organizacional. Você pode alterá-lo abaixo se preferir.
+            </p>
+          </div>
+        )}
+
         {/* Aviso de anonimato obrigatório */}
         <div className="flex items-start gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
           <LockKeyhole className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
