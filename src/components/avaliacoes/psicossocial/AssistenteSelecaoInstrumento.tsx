@@ -175,9 +175,9 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
 
   const total = (s: number) => Math.min(100, Math.round(s));
 
-  return [
+  const result: InstrumentoScore[] = [
     {
-      id: 'sipro',
+      id: 'sipro' as const,
       nome: 'SIPRO',
       descricao: 'Instrumento autoral Seguramente — alinhado à NR-01, NR-17, ISO 45001 e ISO 45003. Diagnóstico multidimensional com 52 itens e cálculo integrado ao sistema.',
       score: total(sipro),
@@ -187,7 +187,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       icone: '⭐',
     },
     {
-      id: 'copsoq',
+      id: 'copsoq' as const,
       nome: 'COPSOQ III',
       descricao: 'Instrumento psicossocial mais utilizado internacionalmente, com base científica robusta e ampla cobertura de fatores organizacionais.',
       score: total(copsoq),
@@ -197,7 +197,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       icone: '🌍',
     },
     {
-      id: 'hse',
+      id: 'hse' as const,
       nome: 'HSE Management Standards',
       descricao: 'Focado em fatores organizacionais de estresse relacionados à gestão, liderança e mudanças organizacionais.',
       score: total(hse),
@@ -207,7 +207,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       icone: '🏛️',
     },
     {
-      id: 'proart',
+      id: 'proart' as const,
       nome: 'PROART',
       descricao: 'Instrumento aprofundado para investigação detalhada de sofrimento e danos relacionados ao trabalho. Indicado quando há sinais críticos.',
       score: total(proart),
@@ -216,7 +216,8 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       bgCor: 'bg-amber-50 border-amber-200',
       icone: '🔬',
     },
-  ].sort((a, b) => b.score - a.score);
+  ];
+  return result.sort((a, b) => b.score - a.score);
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -262,7 +263,7 @@ export function AssistenteSelecaoInstrumento({
       const tenantId = user ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id : null;
 
       const [campanhasRes, afastamentosRes, escalasRes, empresaRes] = await Promise.allSettled([
-        tenantId ? supabase.from('psicossocial_campanhas').select('id').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
+        tenantId ? (supabase as any).from('psicossocial_campanhas').select('id').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
         tenantId ? supabase.from('afastamentos').select('motivo_principal, nexo_trabalho').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
         tenantId ? supabase.from('ponto_escalas').select('turno, jornada_diaria_minutos').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
         tenantId ? supabase.from('empresa_cadastro').select('total_colaboradores, grau_risco').eq('tenant_id', tenantId).single() : Promise.resolve({ data: null }),
