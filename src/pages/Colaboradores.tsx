@@ -87,6 +87,7 @@ import { AdmissaoForm } from "@/components/admissao/AdmissaoForm";
 import { AdmissaoDetail } from "@/components/admissao/AdmissaoDetail";
 import { useAdmissoes } from "@/hooks/useAdmissoes";
 import { AdmissaoFormData } from "@/types/database";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface ColaboradorExtendido {
   id: string;
@@ -123,6 +124,7 @@ function AtivosTab() {
   const navigate = useNavigate();
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -164,20 +166,26 @@ function AtivosTab() {
 
   const handleImportSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
+    queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
     queryClient.invalidateQueries({ queryKey: ["cargos"] });
     queryClient.invalidateQueries({ queryKey: ["departamentos"] });
   };
 
   const { data: colaboradores = [], isLoading, refetch } = useQuery({
-    queryKey: ["colaboradores-list", tenantId],
+    queryKey: ["colaboradores-list", tenantId, empresaAtivaId],
     queryFn: async (): Promise<ColaboradorExtendido[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("admissoes")
         .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
         .eq("tenant_id", tenantId)
-        .eq("status", "concluido")
-        .order("nome_completo");
+        .eq("status", "concluido");
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query.order("nome_completo");
       if (error) throw error;
       return data || [];
     },
