@@ -70,10 +70,21 @@ serve(async (req) => {
     }
 
     const encoder = new TextEncoder();
+    const STEP_DELAY = 2000; // 2 seconds between steps for visual feedback
+    const NAV_DELAY = 1500; // 1.5s after navigation for iframe to load
+
     const body = new ReadableStream({
       async start(controller) {
         const send = (event: string, data: any) => {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        };
+
+        const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+        // Navigate iframe to a route with label
+        const navigateTo = async (route: string, label?: string) => {
+          send("navigate", { route, label });
+          await delay(NAV_DELAY);
         };
 
         const flows: FlowResult[] = [];
@@ -82,6 +93,7 @@ serve(async (req) => {
           send("step_start", { flow: flowId, step: stepName, action });
           const result = await runStep(stepName, action, fn);
           send("step_done", { flow: flowId, ...result });
+          await delay(STEP_DELAY);
           return result;
         };
 
