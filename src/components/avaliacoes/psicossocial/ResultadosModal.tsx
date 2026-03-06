@@ -202,12 +202,16 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
           </div>
         ) : (
           <Tabs defaultValue="visao_geral" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="visao_geral">Visão Geral</TabsTrigger>
               <TabsTrigger value="dimensoes">Por Dimensão</TabsTrigger>
               <TabsTrigger value="ia">
                 <Sparkles className="h-3.5 w-3.5 mr-1 text-purple-500" />
                 Análise IA
+              </TabsTrigger>
+              <TabsTrigger value="contraprova">
+                <GitCompare className="h-3.5 w-3.5 mr-1" />
+                Contraprova
               </TabsTrigger>
               <TabsTrigger value="participacao">Participação</TabsTrigger>
             </TabsList>
