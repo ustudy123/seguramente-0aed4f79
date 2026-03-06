@@ -46,6 +46,7 @@ export function CicloList() {
   const { ciclos, isLoadingCiclos, updateCiclo, deleteCiclo } = useAvaliacoes();
   const [showForm, setShowForm] = useState(false);
   const [editingCiclo, setEditingCiclo] = useState<string | null>(null);
+  const [iniciarCiclo, setIniciarCiclo] = useState<AvaliacaoCiclo | null>(null);
 
   const handleStatusChange = async (id: string, newStatus: AvaliacaoCicloStatus) => {
     await updateCiclo({ id, status: newStatus });
