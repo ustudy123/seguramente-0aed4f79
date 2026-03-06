@@ -171,15 +171,20 @@ function AtivosTab() {
   };
 
   const { data: colaboradores = [], isLoading, refetch } = useQuery({
-    queryKey: ["colaboradores-list", tenantId],
+    queryKey: ["colaboradores-list", tenantId, empresaAtivaId],
     queryFn: async (): Promise<ColaboradorExtendido[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("admissoes")
         .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
         .eq("tenant_id", tenantId)
-        .eq("status", "concluido")
-        .order("nome_completo");
+        .eq("status", "concluido");
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query.order("nome_completo");
       if (error) throw error;
       return data || [];
     },
