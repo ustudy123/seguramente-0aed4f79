@@ -169,7 +169,14 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
   const [isSaving, setIsSaving] = useState(false);
   const [showGerarPdi, setShowGerarPdi] = useState(false);
   const [avaliacaoConcluida, setAvaliacaoConcluida] = useState(false);
-
+  // Evidências anexadas à avaliação
+  const [evidenciasAnexadas, setEvidenciasAnexadas] = useState<{ id: string; tipo: string; descricao: string }[]>([]);
+  const handleAnexarEvidencia = (id: string, tipo: string, descricao: string) => {
+    setEvidenciasAnexadas(prev => {
+      if (prev.some(e => e.id === id)) return prev.filter(e => e.id !== id); // toggle
+      return [...prev, { id, tipo, descricao }];
+    });
+  };
   const isLastStep = currentStep === dimensoes.length;
   const totalCriterios = dimensoes.reduce((acc, d) => acc + d.criterios.length, 0);
   const criteriosPreenchidos = Object.keys(notas).filter(k => notas[k] > 0).length;
