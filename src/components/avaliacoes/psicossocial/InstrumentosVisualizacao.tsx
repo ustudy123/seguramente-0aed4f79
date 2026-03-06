@@ -10,13 +10,14 @@ import {
   BookOpen,
   Hash,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS } from "@/data/instrumentos";
+import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS, SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from "@/data/instrumentos";
 
 function NormaBadge({ norma }: { norma: string }) {
   const colors: Record<string, string> = {
@@ -161,7 +162,7 @@ export function InstrumentosVisualizacao() {
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1">
             <Layers className="h-3 w-3" />
-            {COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS} perguntas total
+            {COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS} perguntas total
           </Badge>
         </div>
       </div>
@@ -191,7 +192,7 @@ export function InstrumentosVisualizacao() {
       </Card>
 
       <Tabs defaultValue="copsoq">
-        <TabsList className="w-full sm:w-auto">
+        <TabsList className="w-full sm:w-auto flex-wrap h-auto gap-1">
           <TabsTrigger value="copsoq" className="gap-2">
             <Brain className="h-4 w-4" />
             COPSOQ III
@@ -206,6 +207,11 @@ export function InstrumentosVisualizacao() {
             <AlertTriangle className="h-4 w-4" />
             PROART
             <Badge variant="secondary" className="text-xs ml-1">{PROART_TOTAL_PERGUNTAS}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="sipro" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            SIPRO
+            <Badge variant="secondary" className="text-xs ml-1">{SIPRO_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -288,6 +294,38 @@ export function InstrumentosVisualizacao() {
           </Card>
           <div className="space-y-2">
             {PROART_DIMENSOES.map((dim, i) => (
+              <DimensaoCard key={dim.id} dimensao={dim} numero={i + 1} />
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* SIPRO */}
+        <TabsContent value="sipro" className="mt-4 space-y-3">
+          <Card className="bg-violet-50/40 border-violet-200">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-violet-600" />
+                  <span><strong>Instrumento autoral Seguramente</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-violet-600" />
+                  <span><strong>{SIPRO_DIMENSOES.length}</strong> dimensões · 5 grupos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  <span><strong>{SIPRO_DIMENSOES.filter(d => d.tipo === 'risco').length}</strong> fatores de risco</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <span><strong>{SIPRO_DIMENSOES.filter(d => d.tipo === 'protetor').length}</strong> fatores protetores</span>
+                </div>
+                <span className="text-muted-foreground">SIPRO · NR-01 · ISO 45001 · ISO 45003 · Cronobiologia · Ergonomia Cognitiva · Gera IRP-S</span>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="space-y-2">
+            {SIPRO_DIMENSOES.map((dim, i) => (
               <DimensaoCard key={dim.id} dimensao={dim} numero={i + 1} />
             ))}
           </div>
