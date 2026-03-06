@@ -290,7 +290,7 @@ export function HubServicos() {
                                 {prof.nome_completo}
                               </h4>
                               {prof.selo_verificado && (
-                                <ShieldCheck className="h-4 w-4 text-primary shrink-0" title="Verificado" />
+                                <ShieldCheck className="h-4 w-4 text-primary shrink-0" aria-label="Verificado" />
                               )}
                               {prof.conselho && (
                                 <Badge variant="outline" className="text-xs">
