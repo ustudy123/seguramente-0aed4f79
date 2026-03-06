@@ -13,6 +13,7 @@ import {
   type GerarConvitesInput,
   type EstatisticasCampanha,
   type IndicadoresPsicossociais,
+  type RadarDimensao,
 } from "@/types/psicossocial";
 
 // Gerar token único
