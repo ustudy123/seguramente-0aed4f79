@@ -123,6 +123,7 @@ function AtivosTab() {
   const navigate = useNavigate();
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
