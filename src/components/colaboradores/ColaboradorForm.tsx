@@ -38,6 +38,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { validateCpf, cleanCpf } from "@/lib/cpf";
 import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxField";
+import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxField";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
