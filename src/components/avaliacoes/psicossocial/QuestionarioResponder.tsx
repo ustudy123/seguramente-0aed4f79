@@ -16,6 +16,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { COPSOQ_DIMENSOES } from "@/data/instrumentos/copsoq";
 import { HSE_DIMENSOES } from "@/data/instrumentos/hse";
+import { PROART_DIMENSOES } from "@/data/instrumentos/proart";
+import { SIPRO_DIMENSOES } from "@/data/instrumentos/sipro";
 import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
 
@@ -39,6 +41,8 @@ function getDimensoesByInstrumento(instrumento: InstrumentoPsicossocial): Dimens
   switch (instrumento) {
     case 'copsoq': return COPSOQ_DIMENSOES;
     case 'hse': return HSE_DIMENSOES;
+    case 'proart': return PROART_DIMENSOES;
+    case 'sipro': return SIPRO_DIMENSOES;
     default: return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES];
   }
 }
