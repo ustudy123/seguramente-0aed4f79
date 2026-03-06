@@ -440,62 +440,270 @@ serve(async (req) => {
         }
 
         // ═══════════════════════════════════════════════════
-        // FLOW: EPI
+        // FLOW: EPI (Completo — Tipo → EPI → Local → Entrada → Entrega → Devolução → Movimentações)
         // ═══════════════════════════════════════════════════
         if (flow === "epi" || flow === "todos") {
-          send("flow_start", { flow: "epi", label: "EPI (Entrega + Estoque)" });
+          send("flow_start", { flow: "epi", label: "EPI — Fluxo Completo" });
           await navigateTo("/epis", "EPIs — Equipamentos de Proteção");
           const steps: StepResult[] = [];
+          let tipoId: string | null = null;
           let epiId: string | null = null;
+          let localId: string | null = null;
           let entregaId: string | null = null;
+          let movimentacaoIds: string[] = [];
 
-          steps.push(await runStepStreamed("epi", "1. Criar EPI", "INSERT epis", async () => {
+          // 1. Criar Categoria/Tipo de EPI
+          steps.push(await runStepStreamed("epi", "1. Criar Tipo de EPI", "INSERT epi_tipos", async () => {
+            if (!effectiveTenant) throw new Error("tenantId obrigatório");
+            const { data, error } = await supabaseAdmin.from("epi_tipos").insert({
+              tenant_id: effectiveTenant,
+              nome: "QA Agent — Luva de Proteção Mecânica",
+              categoria: "maos",
+              descricao: "Luva de vaqueta para proteção contra riscos mecânicos — criada pelo agente de QA",
+              ca_numero: "CA-QA-99999",
+              ca_validade: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
+              fabricante: "QA Safety Ltda",
+              marca: "QA ProGrip",
+              unidade_medida: "par",
+              tipo_durabilidade: "duravel",
+              estoque_minimo: 10,
+              controla_tamanho: true,
+              validade_meses: 12,
+            }).select("id, nome, ca_numero").single();
+            if (error) throw new Error(error.message);
+            tipoId = data.id;
+            return `Tipo criado: "${data.nome}", CA: ${data.ca_numero}, ID: ${data.id.slice(0,8)}...`;
+          }));
+
+          // 2. Verificar Tipo criado
+          steps.push(await runStepStreamed("epi", "2. Verificar Tipo de EPI", "SELECT epi_tipos", async () => {
+            if (!tipoId) throw new Error("Tipo não criado no passo anterior");
+            const { data, error } = await supabaseAdmin.from("epi_tipos").select("*").eq("id", tipoId).single();
+            if (error) throw new Error(error.message);
+            if (data.nome !== "QA Agent — Luva de Proteção Mecânica") throw new Error("Nome do tipo divergente");
+            if (data.categoria !== "maos") throw new Error(`Categoria divergente: ${data.categoria}`);
+            if (data.estoque_minimo !== 10) throw new Error(`Estoque mínimo divergente: ${data.estoque_minimo}`);
+            if (!data.controla_tamanho) throw new Error("Controle de tamanho deveria estar ativo");
+            return `Verificado: ${data.nome}, Cat: ${data.categoria}, Fabricante: ${data.fabricante}, Durabilidade: ${data.tipo_durabilidade}, Estoque mín: ${data.estoque_minimo}`;
+          }));
+
+          // 3. Criar Local de Estoque
+          steps.push(await runStepStreamed("epi", "3. Criar Local de Estoque", "INSERT epi_locais_estoque", async () => {
+            if (!effectiveTenant) throw new Error("tenantId obrigatório");
+            const { data, error } = await supabaseAdmin.from("epi_locais_estoque").insert({
+              tenant_id: effectiveTenant,
+              nome: "QA — Almoxarifado Central Teste",
+              tipo: "almoxarifado_central",
+              responsavel_nome: "QA Agent Responsável",
+              observacoes: "Local de estoque criado pelo agente de QA para testes",
+              ativo: true,
+            }).select("id, nome").single();
+            if (error) throw new Error(error.message);
+            localId = data.id;
+            return `Local criado: "${data.nome}", ID: ${data.id.slice(0,8)}...`;
+          }));
+
+          // 4. Criar item EPI vinculado ao Tipo
+          await navigateTo("/epis", "EPIs — Cadastrando novo item");
+          steps.push(await runStepStreamed("epi", "4. Criar Item EPI", "INSERT epis", async () => {
+            if (!tipoId || !effectiveTenant || !localId) throw new Error("Tipo ou Local não criados");
             const { data, error } = await supabaseAdmin.from("epis").insert({
-              tenant_id: effectiveTenant, nome: "QA Agent — Luva Teste",
-              ca: "CA-QA-0000", quantidade_estoque: 100, estoque_minimo: 10,
-              validade_ca: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
-            }).select("id").single();
+              tenant_id: effectiveTenant,
+              tipo_id: tipoId,
+              ca: "CA-QA-99999",
+              marca: "QA ProGrip",
+              modelo: "Modelo QA-500",
+              tamanho: "G",
+              quantidade_estoque: 0,
+              quantidade_minima: 5,
+              local_estoque_id: localId,
+              localizacao: "Prateleira A3",
+              custo_unitario: 45.90,
+              data_validade: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
+              observacoes: "Item criado pelo agente de QA — teste completo",
+              status: "ativo",
+            }).select("id, ca, marca, modelo, tamanho, quantidade_estoque").single();
             if (error) throw new Error(error.message);
             epiId = data.id;
-            return `EPI criado: ${data.id}, Estoque: 100`;
+            return `EPI criado: ${data.marca} ${data.modelo} (${data.tamanho}), CA: ${data.ca}, Estoque: ${data.quantidade_estoque}, ID: ${data.id.slice(0,8)}...`;
           }));
 
-          steps.push(await runStepStreamed("epi", "2. Registrar Entrega", "INSERT epi_entregas", async () => {
-            if (!epiId) throw new Error("EPI não criado");
-            const { data, error } = await supabaseAdmin.from("epi_entregas").insert({
-              tenant_id: effectiveTenant, epi_id: epiId,
-              colaborador_nome: "QA Agent — Colaborador", colaborador_cpf: "999.888.777-00",
-              quantidade: 2, data_entrega: new Date().toISOString().split("T")[0], status: "ativa",
+          // 5. Registrar Entrada de Estoque
+          await navigateTo("/epis", "EPIs — Movimentar Estoque (Entrada)");
+          steps.push(await runStepStreamed("epi", "5. Registrar Entrada de Estoque", "INSERT epi_estoque_local + UPDATE epis + INSERT epi_movimentacoes", async () => {
+            if (!epiId || !localId || !effectiveTenant) throw new Error("EPI ou Local ausente");
+
+            // Upsert estoque local
+            const { error: estoqueError } = await supabaseAdmin.from("epi_estoque_local").insert({
+              tenant_id: effectiveTenant,
+              epi_id: epiId,
+              local_estoque_id: localId,
+              quantidade: 50,
+              tamanho: "G",
+            });
+            if (estoqueError) throw new Error(`Estoque local: ${estoqueError.message}`);
+
+            // Atualizar estoque global
+            const { error: updateError } = await supabaseAdmin.from("epis").update({
+              quantidade_estoque: 50,
+            }).eq("id", epiId);
+            if (updateError) throw new Error(`Update estoque global: ${updateError.message}`);
+
+            // Registrar movimentação
+            const { data: mov, error: movError } = await supabaseAdmin.from("epi_movimentacoes").insert({
+              tenant_id: effectiveTenant,
+              epi_id: epiId,
+              tipo: "entrada",
+              subtipo: "compra",
+              local_estoque_id: localId,
+              tamanho: "G",
+              quantidade: 50,
+              quantidade_anterior: 0,
+              quantidade_atual: 50,
+              motivo: "Compra (sem nota): Entrada inicial de teste pelo agente de QA",
+              realizado_por_nome: "QA Agent",
             }).select("id").single();
+            if (movError) throw new Error(`Movimentação: ${movError.message}`);
+            if (mov) movimentacaoIds.push(mov.id);
+
+            return `Entrada registrada: +50 unidades (G) no Almoxarifado Central. Estoque: 0 → 50`;
+          }));
+
+          // 6. Verificar Estoque Após Entrada
+          steps.push(await runStepStreamed("epi", "6. Verificar Estoque Após Entrada", "SELECT epis + epi_estoque_local", async () => {
+            if (!epiId || !localId) throw new Error("EPI ou Local ausente");
+            const { data: epi } = await supabaseAdmin.from("epis").select("quantidade_estoque").eq("id", epiId).single();
+            if (!epi) throw new Error("EPI não encontrado");
+            if (epi.quantidade_estoque !== 50) throw new Error(`Estoque global divergente: ${epi.quantidade_estoque} (esperado: 50)`);
+
+            const { data: local } = await supabaseAdmin.from("epi_estoque_local")
+              .select("quantidade")
+              .eq("epi_id", epiId).eq("local_estoque_id", localId).eq("tamanho", "G")
+              .single();
+            if (!local) throw new Error("Estoque local não encontrado");
+            if (local.quantidade !== 50) throw new Error(`Estoque local divergente: ${local.quantidade} (esperado: 50)`);
+
+            return `✓ Estoque global: ${epi.quantidade_estoque} | Estoque local (G): ${local.quantidade}`;
+          }));
+
+          // 7. Registrar Entrega ao Colaborador
+          await navigateTo("/epis", "EPIs — Registrando Entrega");
+          steps.push(await runStepStreamed("epi", "7. Registrar Entrega", "INSERT epi_entregas", async () => {
+            if (!epiId || !effectiveTenant) throw new Error("EPI ausente");
+            const { data, error } = await supabaseAdmin.from("epi_entregas").insert({
+              tenant_id: effectiveTenant,
+              epi_id: epiId,
+              colaborador_nome: "QA Agent — João da Silva Teste",
+              colaborador_cpf: "999.888.777-00",
+              colaborador_cargo: "Eletricista",
+              colaborador_departamento: "Manutenção",
+              quantidade: 2,
+              tamanho: "G",
+              data_entrega: new Date().toISOString().split("T")[0],
+              motivo_entrega: "Substituição por desgaste natural",
+              observacoes: "Entrega registrada pelo agente de QA — teste de fluxo completo",
+              status: "ativa",
+            }).select("id, colaborador_nome, quantidade, tamanho").single();
             if (error) throw new Error(error.message);
             entregaId = data.id;
-            return `Entrega registrada: ${data.id}, Qtd: 2`;
+            return `Entrega registrada: ${data.quantidade}x (${data.tamanho}) para "${data.colaborador_nome}", ID: ${data.id.slice(0,8)}...`;
           }));
 
-          steps.push(await runStepStreamed("epi", "3. Verificar Trigger Estoque", "SELECT epis", async () => {
+          // 8. Verificar Trigger de Baixa de Estoque
+          steps.push(await runStepStreamed("epi", "8. Verificar Trigger Baixa Estoque", "SELECT epis (pós-entrega)", async () => {
             if (!epiId) throw new Error("EPI não encontrado");
-            await new Promise(r => setTimeout(r, 300));
+            await delay(500); // aguardar trigger
             const { data, error } = await supabaseAdmin.from("epis").select("quantidade_estoque").eq("id", epiId).single();
             if (error) throw new Error(error.message);
-            if (data.quantidade_estoque === 98) return `Trigger OK: estoque 100 → 98 ✓`;
-            return `⚠️ Estoque: ${data.quantidade_estoque} (esperado 98)`;
+            if (data.quantidade_estoque === 48) return `✓ Trigger OK: estoque 50 → 48 (baixa de 2 unidades pela entrega)`;
+            if (data.quantidade_estoque === 50) return `⚠️ Trigger NÃO executou: estoque continua em 50 (esperado: 48)`;
+            return `Estoque atual: ${data.quantidade_estoque} (esperado: 48)`;
           }));
 
-          steps.push(await runStepStreamed("epi", "4. Verificar Estoque Mínimo", "SELECT epis", async () => {
+          // 9. Registrar Devolução
+          await navigateTo("/epis", "EPIs — Registrando Devolução");
+          steps.push(await runStepStreamed("epi", "9. Registrar Devolução", "UPDATE epi_entregas (devolvido)", async () => {
+            if (!entregaId) throw new Error("Entrega não registrada");
+            const { error } = await supabaseAdmin.from("epi_entregas").update({
+              status: "devolvido",
+              data_devolucao_efetiva: new Date().toISOString().split("T")[0],
+              observacoes: "Devolução registrada pelo agente de QA — teste de fluxo completo",
+            }).eq("id", entregaId);
+            if (error) throw new Error(error.message);
+            return `Devolução registrada para entrega ${entregaId.slice(0,8)}...`;
+          }));
+
+          // 10. Verificar Trigger de Reposição de Estoque
+          steps.push(await runStepStreamed("epi", "10. Verificar Trigger Reposição Estoque", "SELECT epis (pós-devolução)", async () => {
             if (!epiId) throw new Error("EPI não encontrado");
-            const { data } = await supabaseAdmin.from("epis").select("quantidade_estoque, estoque_minimo").eq("id", epiId).single();
+            await delay(500);
+            const { data } = await supabaseAdmin.from("epis").select("quantidade_estoque").eq("id", epiId).single();
             if (!data) throw new Error("EPI não encontrado");
-            const alerta = data.quantidade_estoque <= data.estoque_minimo;
-            return alerta ? `⚠️ Estoque abaixo do mínimo: ${data.quantidade_estoque} ≤ ${data.estoque_minimo}` : `Estoque OK: ${data.quantidade_estoque} > ${data.estoque_minimo}`;
+            if (data.quantidade_estoque === 50) return `✓ Trigger OK: estoque restaurado 48 → 50 (devolução de 2 unidades)`;
+            return `Estoque: ${data.quantidade_estoque} (esperado: 50 após devolução)`;
           }));
 
-          steps.push(await runStepStreamed("epi", "5. Cleanup", "DELETE", async () => {
-            if (entregaId) await supabaseAdmin.from("epi_entregas").delete().eq("id", entregaId);
-            if (epiId) await supabaseAdmin.from("epis").delete().eq("id", epiId);
-            return "Dados de teste removidos";
+          // 11. Verificar Estoque Mínimo e Alerta
+          steps.push(await runStepStreamed("epi", "11. Verificar Estoque Mínimo", "SELECT epis (quantidade_minima)", async () => {
+            if (!epiId) throw new Error("EPI não encontrado");
+            const { data } = await supabaseAdmin.from("epis").select("quantidade_estoque, quantidade_minima").eq("id", epiId).single();
+            if (!data) throw new Error("EPI não encontrado");
+            const abaixo = data.quantidade_estoque <= data.quantidade_minima;
+            return abaixo
+              ? `⚠️ ALERTA: Estoque (${data.quantidade_estoque}) ≤ Mínimo (${data.quantidade_minima})`
+              : `✓ Estoque OK: ${data.quantidade_estoque} > Mínimo ${data.quantidade_minima}`;
           }));
 
-          const fr = buildFlowResult("epi", "EPI (Entrega + Estoque)", steps);
+          // 12. Verificar Histórico de Movimentações
+          await navigateTo("/epis", "EPIs — Histórico de Movimentações");
+          steps.push(await runStepStreamed("epi", "12. Verificar Movimentações", "SELECT epi_movimentacoes", async () => {
+            if (!epiId) throw new Error("EPI não encontrado");
+            const { data, error } = await supabaseAdmin.from("epi_movimentacoes")
+              .select("id, tipo, subtipo, quantidade, motivo, created_at")
+              .eq("epi_id", epiId)
+              .order("created_at", { ascending: true });
+            if (error) throw new Error(error.message);
+            if (!data || data.length === 0) return `⚠️ Nenhuma movimentação encontrada para este EPI`;
+            const resumo = data.map((m: any) => `${m.tipo}(${m.subtipo || '-'}): ${m.quantidade}`).join(", ");
+            return `${data.length} movimentação(ões): ${resumo}`;
+          }));
+
+          // 13. Listar EPIs via Auth Client (RLS)
+          steps.push(await runStepStreamed("epi", "13. Listar EPIs via Auth (RLS)", "SELECT epis (auth client)", async () => {
+            if (!authClient) throw new Error("Auth client não disponível");
+            const { data, error } = await authClient.from("epis").select("id, ca, quantidade_estoque, status").eq("tenant_id", effectiveTenant);
+            if (error) throw new Error(`RLS bloqueou: ${error.message}`);
+            const encontrouTeste = data?.some((e: any) => e.id === epiId);
+            return `${data?.length || 0} EPIs visíveis pelo auth client. EPI de teste ${encontrouTeste ? "encontrado ✓" : "NÃO encontrado ⚠️"}`;
+          }));
+
+          // 14. Cleanup Completo
+          steps.push(await runStepStreamed("epi", "14. Cleanup Completo", "DELETE (todos dados de teste)", async () => {
+            const removidos: string[] = [];
+            if (entregaId) {
+              await supabaseAdmin.from("epi_entregas").delete().eq("id", entregaId);
+              removidos.push("entrega");
+            }
+            if (epiId) {
+              await supabaseAdmin.from("epi_movimentacoes").delete().eq("epi_id", epiId);
+              removidos.push("movimentações");
+              await supabaseAdmin.from("epi_estoque_local").delete().eq("epi_id", epiId);
+              removidos.push("estoque local");
+              await supabaseAdmin.from("epis").delete().eq("id", epiId);
+              removidos.push("EPI");
+            }
+            if (localId) {
+              await supabaseAdmin.from("epi_locais_estoque").delete().eq("id", localId);
+              removidos.push("local de estoque");
+            }
+            if (tipoId) {
+              await supabaseAdmin.from("epi_tipos").delete().eq("id", tipoId);
+              removidos.push("tipo EPI");
+            }
+            return `Dados removidos: ${removidos.join(", ")}`;
+          }));
+
+          const fr = buildFlowResult("epi", "EPI — Fluxo Completo", steps);
           flows.push(fr);
           send("flow_done", fr);
         }
