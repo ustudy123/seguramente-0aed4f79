@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { LayoutGrid, Plus, Users, Pencil, Trash2, Loader2 } from "lucide-react";
+import { LayoutGrid, Plus, Users, Pencil, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -21,11 +20,12 @@ import { QUADRANTES_9BOX, type Avaliacao9Box } from "@/types/avaliacao";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-function getPosicao(desempenho: number, potencial: number) {
-  const d = desempenho <= 2 ? 1 : desempenho <= 4 ? 2 : 3;
-  const p = potencial <= 2 ? 1 : potencial <= 4 ? 2 : 3;
-  const key = `${d}-${p}`;
-  return { key, d, p };
+type Nivel = 1 | 2 | 3;
+
+function toNivel(v: number): Nivel {
+  if (v <= 1) return 1;
+  if (v === 2) return 2;
+  return 3;
 }
 
 export function Matriz9Box() {
@@ -35,24 +35,22 @@ export function Matriz9Box() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedQuadrante, setSelectedQuadrante] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [cicloFiltro, setCicloFiltro] = useState<string>("todos");
 
   // Form state
   const [cicloId, setCicloId] = useState<string>("");
   const [colaboradorId, setColaboradorId] = useState<string>("");
-  const [desempenho, setDesempenho] = useState(3);
-  const [potencial, setPotencial] = useState(3);
+  const [desempenho, setDesempenho] = useState<Nivel>(2);
+  const [potencial, setPotencial] = useState<Nivel>(2);
   const [justificativa, setJustificativa] = useState("");
   const [editando, setEditando] = useState<Avaliacao9Box | null>(null);
-
-  // Filtro por ciclo na visualização
-  const [cicloFiltro, setCicloFiltro] = useState<string>("todos");
 
   const dadosFiltrados = cicloFiltro === "todos"
     ? nineBoxData
     : nineBoxData.filter(d => d.ciclo_id === cicloFiltro);
 
   const colaboradoresPorQuadrante = dadosFiltrados.reduce((acc, item) => {
-    const { key } = getPosicao(item.desempenho, item.potencial);
+    const key = `${item.desempenho}-${item.potencial}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(item);
     return acc;
@@ -76,8 +74,8 @@ export function Matriz9Box() {
       setEditando(null);
       setCicloId(ciclos[0]?.id || "");
       setColaboradorId("");
-      setDesempenho(3);
-      setPotencial(3);
+      setDesempenho(2);
+      setPotencial(2);
       setJustificativa("");
     }
     setModalOpen(true);
@@ -88,15 +86,15 @@ export function Matriz9Box() {
       toast.error("Selecione um colaborador");
       return;
     }
-    const colaborador = colaboradores.find(c => c.user_id === colaboradorId);
-    const { key: quadrante } = getPosicao(desempenho, potencial);
+    const colaborador = colaboradores.find(c => c.id === colaboradorId);
+    const quadrante = `${desempenho}-${potencial}`;
 
     setIsSaving(true);
     try {
       if (editando) {
         await update9Box({
           id: editando.id,
-          ciclo_id: cicloId || null,
+          ciclo_id: cicloId || undefined,
           desempenho,
           potencial,
           quadrante,
@@ -119,10 +117,9 @@ export function Matriz9Box() {
     }
   };
 
-  const previewQuadrante = getPosicao(desempenho, potencial);
-  const previewConfig = QUADRANTES_9BOX[previewQuadrante.key];
-
-  const LABEL_ESCALA = ["", "1", "2", "3", "4", "5"];
+  const previewConfig = QUADRANTES_9BOX[`${desempenho}-${potencial}`];
+  const NIVEIS: Nivel[] = [1, 2, 3];
+  const NIVEL_LABEL: Record<Nivel, string> = { 1: "Baixo", 2: "Médio", 3: "Alto" };
 
   return (
     <div className="space-y-4">
@@ -135,7 +132,6 @@ export function Matriz9Box() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {/* Filtro por ciclo */}
           <Select value={cicloFiltro} onValueChange={setCicloFiltro}>
             <SelectTrigger className="w-48 text-sm">
               <SelectValue placeholder="Filtrar por ciclo" />
@@ -207,7 +203,7 @@ export function Matriz9Box() {
                                 <>
                                   <div className="flex -space-x-2">
                                     {colaboradoresQ.slice(0, 3).map((c, i) => (
-                                      <div key={c.id} className="w-8 h-8 rounded-full bg-white border-2 border-white shadow flex items-center justify-center text-xs font-bold text-gray-700" style={{ zIndex: 3 - i }}>
+                                      <div key={c.id} className="w-8 h-8 rounded-full bg-background border-2 border-background shadow flex items-center justify-center text-xs font-bold text-foreground" style={{ zIndex: 3 - i }}>
                                         {c.colaborador_nome.charAt(0)}
                                       </div>
                                     ))}
@@ -236,8 +232,8 @@ export function Matriz9Box() {
                 <p className="text-center text-xs text-muted-foreground mt-1">Desempenho →</p>
               </div>
               <div className="flex items-center pl-2">
-                <span className="text-xs font-medium text-muted-foreground transform -rotate-90 whitespace-nowrap" style={{ writingMode: "vertical-rl" }}>
-                  ← Potencial
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
+                  Potencial ↑
                 </span>
               </div>
             </div>
@@ -305,8 +301,8 @@ export function Matriz9Box() {
           <div className="space-y-5 py-2">
             {/* Ciclo */}
             <div className="space-y-1.5">
-              <Label>Ciclo de Avaliação (opcional)</Label>
-              <Select value={cicloId} onValueChange={setCicloId}>
+              <Label>Ciclo de Avaliação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+              <Select value={cicloId || "nenhum"} onValueChange={v => setCicloId(v === "nenhum" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um ciclo..." />
                 </SelectTrigger>
@@ -328,7 +324,7 @@ export function Matriz9Box() {
                 </SelectTrigger>
                 <SelectContent>
                   {colaboradores.map(c => (
-                    <SelectItem key={c.user_id} value={c.user_id}>{c.nome_completo}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>{c.nome_completo}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -336,31 +332,51 @@ export function Matriz9Box() {
 
             {/* Desempenho */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Desempenho</Label>
-                <span className="text-sm font-semibold text-primary">{desempenho}/5</span>
-              </div>
-              <Slider min={1} max={5} step={1} value={[desempenho]} onValueChange={([v]) => setDesempenho(v)} className="w-full" />
-              <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                <span>Baixo</span><span>Médio</span><span>Alto</span>
+              <Label>Desempenho</Label>
+              <div className="flex gap-2">
+                {NIVEIS.map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setDesempenho(n)}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all",
+                      desempenho === n
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    )}
+                  >
+                    {NIVEL_LABEL[n]}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Potencial */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Potencial</Label>
-                <span className="text-sm font-semibold text-primary">{potencial}/5</span>
-              </div>
-              <Slider min={1} max={5} step={1} value={[potencial]} onValueChange={([v]) => setPotencial(v)} className="w-full" />
-              <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                <span>Baixo</span><span>Médio</span><span>Alto</span>
+              <Label>Potencial</Label>
+              <div className="flex gap-2">
+                {NIVEIS.map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setPotencial(n)}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all",
+                      potencial === n
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    )}
+                  >
+                    {NIVEL_LABEL[n]}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Preview do quadrante */}
             {previewConfig && (
-              <div className={cn("flex items-center gap-3 p-3 rounded-lg border", previewConfig.cor)}>
+              <div className={cn("flex items-center gap-3 p-3 rounded-lg", previewConfig.cor)}>
                 <LayoutGrid className="h-5 w-5 text-white shrink-0" />
                 <div>
                   <p className="font-semibold text-white text-sm">{previewConfig.nome}</p>
