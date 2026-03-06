@@ -15,8 +15,8 @@ import { ManualCulturaModal } from "./ManualCulturaModal";
 
 type ListField = "valores" | "principios" | "comportamentos_esperados" | "comportamentos_nao_tolerados";
 
-export function CulturaSection() {
-  const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia();
+export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
+  const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia(escopo);
   const { profile } = useAuth();
   const [form, setForm] = useState({
     missao: "",
