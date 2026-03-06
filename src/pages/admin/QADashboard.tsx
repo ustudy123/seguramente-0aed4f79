@@ -122,20 +122,68 @@ const SCAN_CATEGORIES = [
   { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações.", color: "text-emerald-500", bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
 ];
 
-const AGENT_FLOWS = [
-  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login, verificação de perfil, roles e sessão.", steps: 5 },
-  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Cria empresa, departamento, cargo e valida.", steps: 7 },
-  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão com dados bancários, endereço, documentos.", steps: 8 },
-  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Atestados assistencial e ocupacional.", steps: 4 },
-  { id: "epi", label: "EPI — Fluxo Completo", icon: "🦺", description: "Tipo → EPI → Local → Entrada → Entrega → Devolução → Movimentações.", steps: 14 },
-  { id: "estrategia_swot", label: "Estratégia SWOT", icon: "📊", description: "CRUD completo, 4 quadrantes, XSS, IDOR, RLS, exclusão cascata.", steps: 14 },
-  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com tarefas e trigger de progresso.", steps: 5 },
-  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Tipo de benefício, validação auth.", steps: 4 },
-  { id: "ocorrencias", label: "Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status.", steps: 3 },
-  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Cria pasta, verifica via auth.", steps: 3 },
-  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Anônimo, cross-tenant, integridade.", steps: 4 },
-  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga 11 edge functions.", steps: 11 },
-  { id: "todos", label: "Executar TODOS", icon: "🚀", description: "Todos os 12 fluxos + relatório IA.", steps: 82 },
+interface AgentFlow {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  steps: number;
+  category: string;
+}
+
+const AGENT_FLOW_CATEGORIES = [
+  { id: "infra", label: "🔧 Infraestrutura & Auth" },
+  { id: "estrutura", label: "🏢 Estrutura Organizacional" },
+  { id: "pessoas", label: "👥 Pessoas & Cultura" },
+  { id: "sst", label: "🛡️ Saúde & Segurança" },
+  { id: "estrategia", label: "📊 Estratégia & Planos" },
+  { id: "docs_fin", label: "📁 Documentos & Financeiro" },
+];
+
+const AGENT_FLOWS: AgentFlow[] = [
+  // Infraestrutura
+  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login, perfil, roles e sessão.", steps: 5, category: "infra" },
+  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Anônimo, cross-tenant, integridade.", steps: 4, category: "infra" },
+  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga edge functions.", steps: 11, category: "infra" },
+
+  // Estrutura Organizacional
+  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Empresa, departamento, cargo.", steps: 7, category: "estrutura" },
+  { id: "departamentos", label: "Departamentos", icon: "🏗️", description: "CRUD departamentos e validação.", steps: 4, category: "estrutura" },
+  { id: "cargos", label: "Funções / Cargos", icon: "💼", description: "CRUD cargos com faixa salarial.", steps: 4, category: "estrutura" },
+  { id: "filiais", label: "Estabelecimentos / Obras", icon: "🏭", description: "Unidades e filiais.", steps: 3, category: "estrutura" },
+  { id: "terceiros", label: "Terceiros & SST", icon: "👷", description: "Terceiros, documentos, trabalhadores.", steps: 5, category: "estrutura" },
+  { id: "marketplace", label: "Rede de Parceiros", icon: "🏪", description: "Profissionais e marketplace.", steps: 3, category: "estrutura" },
+
+  // Pessoas & Cultura
+  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão com dados e documentos.", steps: 8, category: "pessoas" },
+  { id: "onboarding", label: "Onboarding", icon: "🎓", description: "Templates e processos.", steps: 4, category: "pessoas" },
+  { id: "ferias", label: "Férias", icon: "🏖️", description: "Solicitação e aprovação.", steps: 4, category: "pessoas" },
+  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Assistencial e ocupacional.", steps: 4, category: "pessoas" },
+  { id: "ocorrencias", label: "Feedback & Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status.", steps: 3, category: "pessoas" },
+  { id: "ouvidoria", label: "Ouvidoria", icon: "📢", description: "Canal de denúncias e sugestões.", steps: 3, category: "pessoas" },
+  { id: "ponto", label: "Ponto Eletrônico", icon: "⏰", description: "Marcações, escalas, banco de horas.", steps: 5, category: "pessoas" },
+  { id: "trilhas", label: "Trilhas de Aprendizado", icon: "🛤️", description: "Trilhas, módulos, progresso.", steps: 5, category: "pessoas" },
+  { id: "cultura", label: "Cultura & Celebrações", icon: "🎉", description: "Aniversários, datas, ações.", steps: 3, category: "pessoas" },
+  { id: "bem_estar", label: "Bem-Estar", icon: "💚", description: "Pesquisas e indicadores.", steps: 3, category: "pessoas" },
+  { id: "avaliacoes", label: "Avaliações", icon: "⭐", description: "Templates, ciclos, 9Box.", steps: 5, category: "pessoas" },
+  { id: "pdi", label: "PDI", icon: "🎯", description: "Planos de desenvolvimento.", steps: 4, category: "pessoas" },
+
+  // Saúde & Segurança
+  { id: "epi", label: "EPI — Fluxo Completo", icon: "🦺", description: "Tipo → EPI → Local → Entrada → Entrega → Devolução.", steps: 14, category: "sst" },
+  { id: "compliance_sst", label: "Compliance SST", icon: "📋", description: "Documentos SST, PCMSO, PGR.", steps: 4, category: "sst" },
+  { id: "incidentes", label: "Incidentes & Acidentes", icon: "🚨", description: "Registro e investigação.", steps: 4, category: "sst" },
+  { id: "ergonomia", label: "Ergonomia", icon: "🪑", description: "Avaliações ergonômicas.", steps: 3, category: "sst" },
+  { id: "psicossocial", label: "Psicossocial NR-01", icon: "🧠", description: "Questionários e IPS.", steps: 4, category: "sst" },
+
+  // Estratégia & Planos
+  { id: "estrategia_swot", label: "Estratégia SWOT", icon: "📊", description: "CRUD completo, 4 quadrantes, XSS, IDOR.", steps: 14, category: "estrategia" },
+  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com tarefas e trigger.", steps: 5, category: "estrategia" },
+
+  // Documentos & Financeiro
+  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Pastas e documentos.", steps: 3, category: "docs_fin" },
+  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Tipos e atribuições.", steps: 4, category: "docs_fin" },
+  { id: "hub_contabil", label: "Hub Contábil", icon: "📊", description: "Competências e checklists.", steps: 3, category: "docs_fin" },
+  { id: "financeiro", label: "Financeiro", icon: "💰", description: "Certidões e guias.", steps: 3, category: "docs_fin" },
 ];
 
 const severityConfig = {
