@@ -112,6 +112,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
       nome: data.nome,
       descricao: data.descricao,
       tipo: data.tipo,
+      instrumento: data.instrumento,
       periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
       data_inicio: data.data_inicio,
       data_fim: data.data_fim,
