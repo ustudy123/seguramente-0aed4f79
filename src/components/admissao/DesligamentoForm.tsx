@@ -214,8 +214,92 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
         observacoes_desligamento: form.observacoes_desligamento || null,
       });
 
-      // Registrar rescisão no Hub Contábil
       const competencia = form.data_desligamento.slice(0, 7);
+
+      // ── Gerar verbas rescisórias no módulo Financeiro ──
+      if (tenantId) {
+        try {
+          // Buscar salário do colaborador
+          const { data: admissaoData } = await supabase
+            .from("admissoes")
+            .select("salario, cpf, departamento, empresa_id")
+            .eq("id", admissao.id)
+            .single();
+
+          const salarioBase = admissaoData?.salario || 0;
+
+          // Calcular verbas
+          const multaFgtsValor = salarioBase * (temMultaFGTS / 100);
+          const avisoPrevioIndenizadoValor =
+            form.tipo_aviso_previo === "indenizado" ? (salarioBase / 30) * diasAvisoPrevio : 0;
+
+          const totalProventos = salarioBase + avisoPrevioIndenizadoValor;
+          const totalDescontos = 0; // simplificado — INSS/IR calculados à parte
+          const totalLiquido = totalProventos - totalDescontos + multaFgtsValor;
+
+          // Buscar ou criar período rescisório
+          const { data: periodoExistente } = await supabase
+            .from("folha_periodos" as never)
+            .select("id")
+            .eq("tenant_id", tenantId)
+            .eq("competencia", competencia)
+            .eq("status", "rescisao" as never)
+            .maybeSingle() as any;
+
+          let periodoId: string;
+
+          if (periodoExistente?.id) {
+            periodoId = periodoExistente.id;
+          } else {
+            const { data: novoPeriodo, error: errPeriodo } = await supabase
+              .from("folha_periodos" as never)
+              .insert({
+                tenant_id: tenantId,
+                competencia,
+                status: "aberto",
+                observacoes: `Verbas rescisórias — ${competencia}`,
+                total_bruto: 0,
+                total_descontos: 0,
+                total_liquido: 0,
+                total_colaboradores: 0,
+              } as never)
+              .select("id")
+              .single() as any;
+
+            if (errPeriodo) throw errPeriodo;
+            periodoId = novoPeriodo.id;
+          }
+
+          // Inserir item de verba rescisória
+          await supabase
+            .from("folha_itens" as never)
+            .insert({
+              tenant_id: tenantId,
+              periodo_id: periodoId,
+              colaborador_id: admissao.id,
+              colaborador_nome: admissao.nome_completo,
+              colaborador_cpf: admissaoData?.cpf || null,
+              cargo: admissao.cargo || null,
+              departamento: admissaoData?.departamento || null,
+              salario_base: salarioBase,
+              total_proventos: totalProventos,
+              total_descontos: totalDescontos,
+              total_liquido: totalLiquido,
+              status: "pendente",
+              observacoes: `Rescisão ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | Aviso: ${diasAvisoPrevio}d | Multa FGTS: ${temMultaFGTS}% (R$ ${multaFgtsValor.toFixed(2)}) | Seguro-desemprego: ${elegibilidadeSeguro ? "Elegível" : "Não elegível"}`,
+            } as never);
+
+          queryClient.invalidateQueries({ queryKey: ["folha-periodos"] });
+          queryClient.invalidateQueries({ queryKey: ["folha-itens"] });
+          toast.success("Verbas rescisórias registradas no módulo Financeiro!");
+        } catch (err: any) {
+          // Não bloqueia o desligamento por erro no financeiro
+          console.error("Erro ao gerar verbas rescisórias:", err);
+          toast.warning("Desligamento registrado, mas houve erro ao lançar verbas no Financeiro.");
+        }
+      }
+
+      // Registrar rescisão no Hub Contábil
       await enviarParaHub({
         tipo: "calculo_rescisorio",
         competencia,
