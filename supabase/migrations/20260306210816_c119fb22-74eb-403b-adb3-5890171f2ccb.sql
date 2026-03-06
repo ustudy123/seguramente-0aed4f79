@@ -1,0 +1,7 @@
+
+ALTER TABLE public.questionario_psicossocial_campanhas
+  DROP CONSTRAINT questionario_psicossocial_campanhas_instrumento_check;
+
+ALTER TABLE public.questionario_psicossocial_campanhas
+  ADD CONSTRAINT questionario_psicossocial_campanhas_instrumento_check
+  CHECK (instrumento = ANY (ARRAY['copsoq'::text, 'hse'::text, 'proart'::text, 'customizado'::text, 'sipro'::text]));
