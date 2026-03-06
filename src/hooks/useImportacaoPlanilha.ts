@@ -461,6 +461,7 @@ export function useImportacaoPlanilha() {
               departamento_id: departamentoId,
               nivel: cargoInfo.nivel || null,
               ativo: true,
+              empresa_id: empresaAtivaId || null,
             })
             .select("id")
             .single();
