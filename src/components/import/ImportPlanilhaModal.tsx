@@ -124,11 +124,36 @@ export function ImportPlanilhaModal({
     }
   };
 
+  const COLS = [
+    "Nome", "CPF", "Sexo", "Data Nascimento", "Estado Civil", "Naturalidade", "Nacionalidade",
+    "Nome Mãe", "Nome Pai", "RG", "PIS/PASEP",
+    "E-mail", "Telefone", "Celular",
+    "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado",
+    "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo", "Departamento", "Nível",
+    "Tipo Contrato", "Data Admissão", "Salário", "Centro de Custo", "Gestor Imediato",
+    "Banco", "Agência", "Conta", "Tipo Conta", "Chave PIX",
+  ];
+
   const templateData = [
-    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO ( 0 para inativo; 1 para ativo)", "BR/PDH", "Nome função", "Departamento", "Nível"],
-    ["Joana da Silva", "338.172.580-70", "Masculino", "15/03/1990", "1 ( ativo)", "Matriz", "Analista de RH", "Recursos Humanos", "Pleno"],
-    ["Ana Paula Padrao", "987.654.321-00", "Feminino", "22/08/1985", "1 (ativo)", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente"],
-    ["Maria Aparecida Meneghel", "408.785.550-30", "Masculino", "10/01/1995", "0 ( inativo)", "Matriz", "Desenvolvedor", "TI", "Junior"],
+    COLS,
+    [
+      "João da Silva", "338.172.580-70", "Masculino", "15/03/1990", "Solteiro", "São Paulo", "Brasileiro",
+      "Maria da Silva", "José da Silva", "12.345.678-9", "123.45678.12-3",
+      "joao@empresa.com", "(11) 3000-0000", "(11) 99000-0000",
+      "01310-100", "Av. Paulista", "1000", "Sala 10", "Bela Vista", "São Paulo", "SP",
+      "1", "Sede", "Analista de RH", "Recursos Humanos", "Pleno",
+      "CLT", "01/03/2024", "5000,00", "RH-01", "Carlos Souza",
+      "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
+    ],
+    [
+      "Ana Paula Padrão", "987.654.321-00", "Feminino", "22/08/1985", "Casado", "Rio de Janeiro", "Brasileira",
+      "Joana Padrão", "", "98.765.432-1", "",
+      "ana@empresa.com", "", "(21) 98000-0000",
+      "", "", "", "", "", "", "",
+      "1", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente",
+      "CLT", "15/06/2020", "12000,00", "FIN-01", "",
+      "", "", "", "", "",
+    ],
   ];
 
   const downloadTemplateCSV = () => {
