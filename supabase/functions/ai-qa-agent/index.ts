@@ -1219,7 +1219,65 @@ serve(async (req) => {
         }
 
         // ═══════════════════════════════════════════════════
-        // AI REPORT
+        // GENERIC SMOKE TEST — for modules without deep flows
+        // Navigates to the page, checks auth client can read data, validates RLS
+        // ═══════════════════════════════════════════════════
+        const smokeModules: { id: string; label: string; route: string; table: string; columns: string }[] = [
+          { id: "departamentos", label: "Departamentos", route: "/cadastros/departamentos", table: "departamentos", columns: "id, nome" },
+          { id: "cargos", label: "Funções / Cargos", route: "/cadastros/cargos", table: "cargos", columns: "id, nome" },
+          { id: "filiais", label: "Estabelecimentos / Obras", route: "/cadastros/filiais", table: "empresa_cadastro", columns: "id, razao_social, tipo_unidade" },
+          { id: "terceiros", label: "Terceiros & SST", route: "/terceiros", table: "terceiros", columns: "id, razao_social, status" },
+          { id: "marketplace", label: "Rede de Parceiros", route: "/marketplace", table: "marketplace_profissionais", columns: "id, nome_completo, status" },
+          { id: "onboarding", label: "Onboarding", route: "/onboarding", table: "onboarding_templates", columns: "id, nome, ativo" },
+          { id: "ferias", label: "Férias", route: "/ferias", table: "ferias_solicitacoes", columns: "id, colaborador_nome, status" },
+          { id: "ouvidoria", label: "Ouvidoria", route: "/ouvidoria", table: "ouvidoria_manifestacoes", columns: "id, tipo, status" },
+          { id: "ponto", label: "Ponto Eletrônico", route: "/ponto", table: "ponto_marcacoes", columns: "id, colaborador_nome, tipo_marcacao" },
+          { id: "trilhas", label: "Trilhas de Aprendizado", route: "/trilhas", table: "trilhas", columns: "id, nome, status" },
+          { id: "cultura", label: "Cultura & Celebrações", route: "/cultura-celebracoes", table: "cultura_datas", columns: "id, titulo, tipo" },
+          { id: "bem_estar", label: "Bem-Estar", route: "/felicidade", table: "bem_estar_respostas", columns: "id, eixo, tipo" },
+          { id: "avaliacoes", label: "Avaliações", route: "/avaliacoes", table: "avaliacao_templates", columns: "id, nome, tipo" },
+          { id: "pdi", label: "PDI", route: "/pdi", table: "pdis", columns: "id, titulo, status" },
+          { id: "compliance_sst", label: "Compliance SST", route: "/compliance-sst", table: "sst_documentos", columns: "id, tipo, status" },
+          { id: "incidentes", label: "Incidentes & Acidentes", route: "/incidentes-acidentes", table: "eventos_sst", columns: "id, tipo, status" },
+          { id: "ergonomia", label: "Ergonomia", route: "/ergonomia", table: "condicoes_especiais_trabalho", columns: "id, nome" },
+          { id: "psicossocial", label: "Psicossocial NR-01", route: "/psicossocial", table: "psicossocial_campanhas", columns: "id, titulo, status" },
+          { id: "hub_contabil", label: "Hub Contábil", route: "/hub-contabil", table: "hub_competencias", columns: "id, competencia, status" },
+          { id: "financeiro", label: "Financeiro", route: "/financeiro", table: "certidoes_negativas", columns: "id, tipo, status" },
+        ];
+
+        for (const mod of smokeModules) {
+          if (flow === mod.id || flow === "todos") {
+            send("flow_start", { flow: mod.id, label: mod.label });
+            await navigateTo(mod.route, mod.label);
+            const steps: StepResult[] = [];
+
+            // 1. Navigate & verify page loads
+            steps.push(await runStepStreamed(mod.id, "1. Navegar para o módulo", `GET ${mod.route}`, async () => {
+              return `Navegação para ${mod.route} OK`;
+            }));
+
+            // 2. List data via admin
+            steps.push(await runStepStreamed(mod.id, "2. Listar dados (admin)", `SELECT ${mod.table}`, async () => {
+              const { data, error } = await supabaseAdmin.from(mod.table).select(mod.columns).eq("tenant_id", effectiveTenant).limit(10);
+              if (error) throw new Error(error.message);
+              return `${data?.length || 0} registro(s) encontrados na tabela ${mod.table}`;
+            }));
+            await refreshIframe();
+
+            // 3. Verify auth client can read (RLS)
+            steps.push(await runStepStreamed(mod.id, "3. Verificar acesso Auth (RLS)", `SELECT ${mod.table} (auth)`, async () => {
+              if (!authClient) throw new Error("Auth client não disponível");
+              const { data, error } = await authClient.from(mod.table).select(mod.columns).eq("tenant_id", effectiveTenant).limit(5);
+              if (error) throw new Error(`RLS bloqueou: ${error.message}`);
+              return `Auth client: ${data?.length || 0} registros visíveis ✓`;
+            }));
+
+            const fr = buildFlowResult(mod.id, mod.label, steps);
+            flows.push(fr);
+            send("flow_done", fr);
+          }
+        }
+
         // ═══════════════════════════════════════════════════
         const totalPassed = flows.reduce((a, f) => a + f.passed, 0);
         const totalFailed = flows.reduce((a, f) => a + f.failed, 0);

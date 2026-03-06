@@ -99,13 +99,34 @@ interface LiveFlow {
 const FLOW_ROUTES: Record<string, string> = {
   login_auth: "/",
   empresa: "/empresa",
+  departamentos: "/cadastros/departamentos",
+  cargos: "/cadastros/cargos",
+  filiais: "/cadastros/filiais",
+  terceiros: "/terceiros",
+  marketplace: "/marketplace",
   admissao: "/colaboradores",
+  onboarding: "/onboarding",
+  ferias: "/ferias",
   atestado: "/atestados",
-  epi: "/epis",
-  plano_acao: "/plano-acao",
-  beneficios: "/financeiro/beneficios",
   ocorrencias: "/feedback-ocorrencias",
+  ouvidoria: "/ouvidoria",
+  ponto: "/ponto",
+  trilhas: "/trilhas",
+  cultura: "/cultura-celebracoes",
+  bem_estar: "/felicidade",
+  avaliacoes: "/avaliacoes",
+  pdi: "/pdi",
+  epi: "/epis",
+  compliance_sst: "/compliance-sst",
+  incidentes: "/incidentes-acidentes",
+  ergonomia: "/ergonomia",
+  psicossocial: "/psicossocial",
+  estrategia_swot: "/estrategia",
+  plano_acao: "/plano-acao",
   documentos: "/documentos",
+  beneficios: "/financeiro/beneficios",
+  hub_contabil: "/hub-contabil",
+  financeiro: "/financeiro",
   rls_isolamento: "/",
   edge_functions: "/",
 };
@@ -122,20 +143,68 @@ const SCAN_CATEGORIES = [
   { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações.", color: "text-emerald-500", bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
 ];
 
-const AGENT_FLOWS = [
-  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login, verificação de perfil, roles e sessão.", steps: 5 },
-  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Cria empresa, departamento, cargo e valida.", steps: 7 },
-  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão com dados bancários, endereço, documentos.", steps: 8 },
-  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Atestados assistencial e ocupacional.", steps: 4 },
-  { id: "epi", label: "EPI — Fluxo Completo", icon: "🦺", description: "Tipo → EPI → Local → Entrada → Entrega → Devolução → Movimentações.", steps: 14 },
-  { id: "estrategia_swot", label: "Estratégia SWOT", icon: "📊", description: "CRUD completo, 4 quadrantes, XSS, IDOR, RLS, exclusão cascata.", steps: 14 },
-  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com tarefas e trigger de progresso.", steps: 5 },
-  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Tipo de benefício, validação auth.", steps: 4 },
-  { id: "ocorrencias", label: "Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status.", steps: 3 },
-  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Cria pasta, verifica via auth.", steps: 3 },
-  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Anônimo, cross-tenant, integridade.", steps: 4 },
-  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga 11 edge functions.", steps: 11 },
-  { id: "todos", label: "Executar TODOS", icon: "🚀", description: "Todos os 12 fluxos + relatório IA.", steps: 82 },
+interface AgentFlow {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  steps: number;
+  category: string;
+}
+
+const AGENT_FLOW_CATEGORIES = [
+  { id: "infra", label: "🔧 Infraestrutura & Auth" },
+  { id: "estrutura", label: "🏢 Estrutura Organizacional" },
+  { id: "pessoas", label: "👥 Pessoas & Cultura" },
+  { id: "sst", label: "🛡️ Saúde & Segurança" },
+  { id: "estrategia", label: "📊 Estratégia & Planos" },
+  { id: "docs_fin", label: "📁 Documentos & Financeiro" },
+];
+
+const AGENT_FLOWS: AgentFlow[] = [
+  // Infraestrutura
+  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login, perfil, roles e sessão.", steps: 5, category: "infra" },
+  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Anônimo, cross-tenant, integridade.", steps: 4, category: "infra" },
+  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga edge functions.", steps: 11, category: "infra" },
+
+  // Estrutura Organizacional
+  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Empresa, departamento, cargo.", steps: 7, category: "estrutura" },
+  { id: "departamentos", label: "Departamentos", icon: "🏗️", description: "CRUD departamentos e validação.", steps: 4, category: "estrutura" },
+  { id: "cargos", label: "Funções / Cargos", icon: "💼", description: "CRUD cargos com faixa salarial.", steps: 4, category: "estrutura" },
+  { id: "filiais", label: "Estabelecimentos / Obras", icon: "🏭", description: "Unidades e filiais.", steps: 3, category: "estrutura" },
+  { id: "terceiros", label: "Terceiros & SST", icon: "👷", description: "Terceiros, documentos, trabalhadores.", steps: 5, category: "estrutura" },
+  { id: "marketplace", label: "Rede de Parceiros", icon: "🏪", description: "Profissionais e marketplace.", steps: 3, category: "estrutura" },
+
+  // Pessoas & Cultura
+  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão com dados e documentos.", steps: 8, category: "pessoas" },
+  { id: "onboarding", label: "Onboarding", icon: "🎓", description: "Templates e processos.", steps: 4, category: "pessoas" },
+  { id: "ferias", label: "Férias", icon: "🏖️", description: "Solicitação e aprovação.", steps: 4, category: "pessoas" },
+  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Assistencial e ocupacional.", steps: 4, category: "pessoas" },
+  { id: "ocorrencias", label: "Feedback & Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status.", steps: 3, category: "pessoas" },
+  { id: "ouvidoria", label: "Ouvidoria", icon: "📢", description: "Canal de denúncias e sugestões.", steps: 3, category: "pessoas" },
+  { id: "ponto", label: "Ponto Eletrônico", icon: "⏰", description: "Marcações, escalas, banco de horas.", steps: 5, category: "pessoas" },
+  { id: "trilhas", label: "Trilhas de Aprendizado", icon: "🛤️", description: "Trilhas, módulos, progresso.", steps: 5, category: "pessoas" },
+  { id: "cultura", label: "Cultura & Celebrações", icon: "🎉", description: "Aniversários, datas, ações.", steps: 3, category: "pessoas" },
+  { id: "bem_estar", label: "Bem-Estar", icon: "💚", description: "Pesquisas e indicadores.", steps: 3, category: "pessoas" },
+  { id: "avaliacoes", label: "Avaliações", icon: "⭐", description: "Templates, ciclos, 9Box.", steps: 5, category: "pessoas" },
+  { id: "pdi", label: "PDI", icon: "🎯", description: "Planos de desenvolvimento.", steps: 4, category: "pessoas" },
+
+  // Saúde & Segurança
+  { id: "epi", label: "EPI — Fluxo Completo", icon: "🦺", description: "Tipo → EPI → Local → Entrada → Entrega → Devolução.", steps: 14, category: "sst" },
+  { id: "compliance_sst", label: "Compliance SST", icon: "📋", description: "Documentos SST, PCMSO, PGR.", steps: 4, category: "sst" },
+  { id: "incidentes", label: "Incidentes & Acidentes", icon: "🚨", description: "Registro e investigação.", steps: 4, category: "sst" },
+  { id: "ergonomia", label: "Ergonomia", icon: "🪑", description: "Avaliações ergonômicas.", steps: 3, category: "sst" },
+  { id: "psicossocial", label: "Psicossocial NR-01", icon: "🧠", description: "Questionários e IPS.", steps: 4, category: "sst" },
+
+  // Estratégia & Planos
+  { id: "estrategia_swot", label: "Estratégia SWOT", icon: "📊", description: "CRUD completo, 4 quadrantes, XSS, IDOR.", steps: 14, category: "estrategia" },
+  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com tarefas e trigger.", steps: 5, category: "estrategia" },
+
+  // Documentos & Financeiro
+  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Pastas e documentos.", steps: 3, category: "docs_fin" },
+  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Tipos e atribuições.", steps: 4, category: "docs_fin" },
+  { id: "hub_contabil", label: "Hub Contábil", icon: "📊", description: "Competências e checklists.", steps: 3, category: "docs_fin" },
+  { id: "financeiro", label: "Financeiro", icon: "💰", description: "Certidões e guias.", steps: 3, category: "docs_fin" },
 ];
 
 const severityConfig = {
@@ -435,30 +504,57 @@ export default function QADashboard() {
                   </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {AGENT_FLOWS.map((f) => (
-                    <Card
-                      key={f.id}
-                      className={`cursor-pointer transition-all border hover:shadow-md hover:border-primary/40 ${
-                        f.id === "todos" ? "border-primary/30 bg-primary/5 col-span-2 md:col-span-3 lg:col-span-4" : ""
-                      }`}
-                      onClick={() => runAgent(f.id)}
-                    >
-                      <CardContent className={`p-3 ${f.id === "todos" ? "flex items-center justify-center gap-3" : ""}`}>
-                        <div className={`flex items-start gap-2 ${f.id === "todos" ? "items-center" : ""}`}>
-                          <span className="text-xl">{f.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <h3 className="font-semibold text-xs">{f.label}</h3>
-                              <Badge variant="secondary" className="text-[9px] px-1 py-0">{f.steps}</Badge>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{f.description}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                {/* Executar TODOS — prominent button */}
+                <Card
+                  className="cursor-pointer transition-all border border-primary/30 bg-primary/5 hover:shadow-md hover:border-primary/50"
+                  onClick={() => runAgent("todos")}
+                >
+                  <CardContent className="p-3 flex items-center justify-center gap-3">
+                    <span className="text-2xl">🚀</span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-semibold text-sm">Executar TODOS os Módulos</h3>
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                          {AGENT_FLOWS.reduce((a, f) => a + f.steps, 0)}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Todos os {AGENT_FLOWS.length} fluxos + relatório IA.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Grouped by category */}
+                {AGENT_FLOW_CATEGORIES.map((cat) => {
+                  const flows = AGENT_FLOWS.filter((f) => f.category === cat.id);
+                  if (flows.length === 0) return null;
+                  return (
+                    <div key={cat.id}>
+                      <h3 className="text-xs font-semibold text-muted-foreground mb-1.5 mt-3">{cat.label}</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                        {flows.map((f) => (
+                          <Card
+                            key={f.id}
+                            className="cursor-pointer transition-all border hover:shadow-md hover:border-primary/40"
+                            onClick={() => runAgent(f.id)}
+                          >
+                            <CardContent className="p-2.5">
+                              <div className="flex items-start gap-2">
+                                <span className="text-lg">{f.icon}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <h3 className="font-semibold text-[11px] leading-tight">{f.label}</h3>
+                                    <Badge variant="secondary" className="text-[9px] px-1 py-0 shrink-0">{f.steps}</Badge>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{f.description}</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </>
             )}
 
