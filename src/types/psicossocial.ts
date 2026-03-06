@@ -174,12 +174,49 @@ export interface CampanhaPsicossocial {
   updated_at: string;
 }
 
+// Convites
+export interface ConvitePsicossocial {
+  id: string;
+  tenant_id: string;
+  campanha_id: string;
+  colaborador_id?: string;
+  colaborador_nome: string;
+  colaborador_cpf?: string;
+  colaborador_cargo?: string;
+  colaborador_departamento?: string;
+  token: string;
+  status: ConvitePsicossocialStatus;
+  enviado_via?: ConviteEnviadoVia;
+  enviado_em?: string;
+  iniciado_em?: string;
+  concluido_em?: string;
+  lembrete_enviado?: boolean;
+  created_at: string;
+  updated_at: string;
+  campanha?: CampanhaPsicossocial;
+}
+
+// Respostas
+export interface RespostaPsicossocial {
+  id: string;
+  tenant_id: string;
+  campanha_id: string;
+  convite_id: string;
+  colaborador_id?: string;
+  respostas: Record<string, number>;
+  indicadores?: IndicadoresPsicossociais;
+  identificacao_voluntaria: boolean;
+  tempo_resposta_segundos?: number;
+  ip_address?: string;
+  user_agent?: string;
+  concluido_em?: string;
+  created_at: string;
+}
+
 // Indicadores calculados
 export interface IndicadoresPsicossociais {
-  // IPS: Índice Psicossocial Seguramente (0-100)
   IPS?: number;
   IPS_classificacao?: IPSClassificacao;
-  // Sub-índices legados (escala 0-4)
   IRP_S: number;
   IBO_S: number;
   IBD_S: number;
@@ -191,7 +228,6 @@ export interface IndicadoresPsicossociais {
     media: number;
     nivel: 'baixo' | 'moderado' | 'alto' | 'critico';
   }[];
-  // Detalhes por dimensão (nova estrutura)
   dimensoes?: DimensaoResultado[];
   radar?: RadarDimensao[];
 }
@@ -204,7 +240,6 @@ export interface EstatisticasCampanha {
   concluidos: number;
   expirados: number;
   taxa_participacao: number;
-  // Regra de anonimato: mínimo 5 respostas para liberar análise
   anonimato_garantido: boolean;
   ips?: number;
   ips_classificacao?: IPSClassificacao;
