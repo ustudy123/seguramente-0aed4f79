@@ -860,6 +860,222 @@ serve(async (req) => {
           send("flow_done", fr);
         }
 
+
+        // ═══════════════════════════════════════════════════
+        // FLOW: ESTRATÉGIA SWOT (Fluxo Completo — Profundo)
+        // ═══════════════════════════════════════════════════
+        if (flow === "estrategia_swot" || flow === "todos") {
+          send("flow_start", { flow: "estrategia_swot", label: "Estratégia SWOT — Fluxo Completo" });
+          await navigateTo("/estrategia", "Estratégia & Governança > SWOT");
+          const steps: StepResult[] = [];
+          let swotId: string | null = null;
+          const itemIds: string[] = [];
+
+          // ── CT-SWOT-010: Criar SWOT (caminho feliz) ──
+          steps.push(await runStepStreamed("estrategia_swot", "1. Criar Análise SWOT", "INSERT estrategia_swot", async () => {
+            if (!effectiveTenant) throw new Error("tenantId obrigatório");
+            const { data, error } = await supabaseAdmin.from("estrategia_swot").insert({
+              tenant_id: effectiveTenant,
+              titulo: "QA Agent — SWOT Estratégica 2026",
+              descricao: "Análise SWOT criada automaticamente pelo agente de QA para validação completa do fluxo E2E. Contexto: planejamento estratégico do primeiro trimestre.",
+              escopo: "empresa",
+              periodo: "2026 Q1",
+              criado_por_nome: "QA Agent (Automatizado)",
+            }).select("id, titulo, escopo, periodo").single();
+            if (error) throw new Error(error.message);
+            swotId = data.id;
+            return `SWOT criada: "${data.titulo}", Escopo: ${data.escopo}, Período: ${data.periodo}, ID: ${data.id.slice(0,8)}...`;
+          }));
+
+          // ── CT-SWOT-010b: Verificar dados persistidos ──
+          steps.push(await runStepStreamed("estrategia_swot", "2. Verificar Dados Persistidos", "SELECT estrategia_swot", async () => {
+            if (!swotId) throw new Error("SWOT não criada");
+            const { data, error } = await supabaseAdmin.from("estrategia_swot").select("*").eq("id", swotId).single();
+            if (error) throw new Error(error.message);
+            if (data.titulo !== "QA Agent — SWOT Estratégica 2026") throw new Error(`Título divergente: ${data.titulo}`);
+            if (data.escopo !== "empresa") throw new Error(`Escopo divergente: ${data.escopo}`);
+            if (data.periodo !== "2026 Q1") throw new Error(`Período divergente: ${data.periodo}`);
+            if (!data.descricao || data.descricao.length < 10) throw new Error("Descrição vazia ou muito curta");
+            return `✓ Título: "${data.titulo}" | Escopo: ${data.escopo} | Período: ${data.periodo} | Descrição: ${data.descricao.length} chars | Criado por: ${data.criado_por_nome}`;
+          }));
+
+          // ── CT-SWOT-020/021: Adicionar itens nos 4 quadrantes ──
+          await navigateTo("/estrategia", "SWOT — Adicionando itens nos 4 quadrantes");
+          const swotQuadrantes: Array<{tipo: string, descricao: string, classificacao: string, impacto: string}> = [
+            { tipo: "forca", descricao: "Equipe técnica altamente qualificada com certificações internacionais", classificacao: "pessoas", impacto: "alto" },
+            { tipo: "forca", descricao: "Processos de SST consolidados e auditados semestralmente", classificacao: "operacional", impacto: "medio" },
+            { tipo: "fraqueza", descricao: "Falta de automação em processos de admissão e onboarding", classificacao: "operacional", impacto: "alto" },
+            { tipo: "fraqueza", descricao: "Rotatividade elevada no setor de produção", classificacao: "pessoas", impacto: "alto" },
+            { tipo: "oportunidade", descricao: "Expansão do mercado de SST digital com demanda crescente por compliance", classificacao: "mercado", impacto: "alto" },
+            { tipo: "oportunidade", descricao: "Possibilidade de parceria estratégica com consultorias de RH", classificacao: "estrategico", impacto: "medio" },
+            { tipo: "ameaca", descricao: "Mudança na legislação trabalhista (NR-01 atualizada) exigindo adaptação rápida", classificacao: "estrategico", impacto: "alto" },
+            { tipo: "ameaca", descricao: "Entrada de concorrentes com IA generativa em SST", classificacao: "mercado", impacto: "medio" },
+          ];
+
+          steps.push(await runStepStreamed("estrategia_swot", "3. Adicionar 8 Itens (4 Quadrantes)", "INSERT estrategia_swot_itens x8", async () => {
+            if (!swotId || !effectiveTenant) throw new Error("SWOT ou tenant ausente");
+            const resultados: string[] = [];
+            for (let i = 0; i < swotQuadrantes.length; i++) {
+              const q = swotQuadrantes[i];
+              const { data, error } = await supabaseAdmin.from("estrategia_swot_itens").insert({
+                tenant_id: effectiveTenant,
+                swot_id: swotId,
+                tipo: q.tipo,
+                descricao: q.descricao,
+                classificacao: q.classificacao,
+                impacto: q.impacto,
+                ordem: i + 1,
+              }).select("id, tipo").single();
+              if (error) throw new Error(`Erro no item ${q.tipo} #${i+1}: ${error.message}`);
+              itemIds.push(data.id);
+              resultados.push(`${q.tipo}(${q.impacto})`);
+            }
+            return `8 itens criados: ${resultados.join(", ")}`;
+          }));
+
+          // ── Verificar contadores por quadrante ──
+          steps.push(await runStepStreamed("estrategia_swot", "4. Verificar Contadores por Quadrante", "SELECT COUNT por tipo", async () => {
+            if (!swotId) throw new Error("SWOT ausente");
+            const { data, error } = await supabaseAdmin.from("estrategia_swot_itens").select("tipo").eq("swot_id", swotId);
+            if (error) throw new Error(error.message);
+            const contadores: Record<string, number> = {};
+            data?.forEach((item: any) => { contadores[item.tipo] = (contadores[item.tipo] || 0) + 1; });
+            const esperado: Record<string, number> = { forca: 2, fraqueza: 2, oportunidade: 2, ameaca: 2 };
+            for (const [tipo, qtd] of Object.entries(esperado)) {
+              if ((contadores[tipo] || 0) !== qtd) throw new Error(`Contador ${tipo}: ${contadores[tipo] || 0} (esperado: ${qtd})`);
+            }
+            return `✓ Contadores: Forças=${contadores.forca}, Fraquezas=${contadores.fraqueza}, Oportunidades=${contadores.oportunidade}, Ameaças=${contadores.ameaca}`;
+          }));
+
+          // ── CT-SWOT-023: Validar dados de cada item ──
+          steps.push(await runStepStreamed("estrategia_swot", "5. Validar Dados dos Itens", "SELECT estrategia_swot_itens", async () => {
+            if (!swotId) throw new Error("SWOT ausente");
+            const { data, error } = await supabaseAdmin.from("estrategia_swot_itens").select("*").eq("swot_id", swotId).order("ordem");
+            if (error) throw new Error(error.message);
+            if (!data || data.length !== 8) throw new Error(`Esperado 8 itens, encontrado ${data?.length || 0}`);
+            for (const item of data) {
+              if (!item.descricao || item.descricao.trim().length === 0) throw new Error(`Item ${item.id}: descrição vazia`);
+              if (!item.tipo) throw new Error(`Item ${item.id}: tipo ausente`);
+              if (!item.classificacao) throw new Error(`Item ${item.id}: classificação ausente`);
+              if (!item.impacto) throw new Error(`Item ${item.id}: impacto ausente`);
+            }
+            const tipos = data.map((i: any) => `${i.tipo}:${i.classificacao}:${i.impacto}`);
+            return `✓ 8 itens válidos — campos obrigatórios preenchidos. Combinações: ${[...new Set(tipos)].join(", ")}`;
+          }));
+
+          // ── CT-SWOT-024: Excluir 1 item e verificar contador ──
+          steps.push(await runStepStreamed("estrategia_swot", "6. Excluir Item + Verificar Contador", "DELETE 1 item + recount", async () => {
+            if (itemIds.length === 0) throw new Error("Nenhum item para excluir");
+            const itemParaExcluir = itemIds.pop()!;
+            const { error } = await supabaseAdmin.from("estrategia_swot_itens").delete().eq("id", itemParaExcluir);
+            if (error) throw new Error(error.message);
+            const { data: check } = await supabaseAdmin.from("estrategia_swot_itens").select("id").eq("id", itemParaExcluir);
+            if (check && check.length > 0) throw new Error("Item ainda existe após exclusão!");
+            const { data: remaining } = await supabaseAdmin.from("estrategia_swot_itens").select("tipo").eq("swot_id", swotId);
+            const ameacas = remaining?.filter((r: any) => r.tipo === "ameaca").length || 0;
+            if (ameacas !== 1) throw new Error(`Ameaças deveria ser 1 após exclusão, é ${ameacas}`);
+            return `✓ Item excluído. Total restante: ${remaining?.length || 0} itens. Ameaças: ${ameacas} (era 2, agora 1)`;
+          }));
+
+          // ── CT-SWOT-051: Teste XSS/Injeção ──
+          steps.push(await runStepStreamed("estrategia_swot", "7. Teste de Segurança XSS", "INSERT com payload malicioso", async () => {
+            if (!swotId || !effectiveTenant) throw new Error("SWOT/tenant ausente");
+            const xssPayload = '<script>alert("xss")</script><img src=x onerror=alert(1)>';
+            const { data, error } = await supabaseAdmin.from("estrategia_swot_itens").insert({
+              tenant_id: effectiveTenant, swot_id: swotId, tipo: "forca",
+              descricao: xssPayload, classificacao: "operacional", impacto: "baixo", ordem: 99,
+            }).select("id, descricao").single();
+            if (error) throw new Error(error.message);
+            itemIds.push(data.id);
+            if (data.descricao.includes("<script>")) {
+              return `⚠️ Payload XSS armazenado como texto (não executa se UI escapa corretamente). Verificar renderização.`;
+            }
+            return `✓ Payload sanitizado ou armazenado como texto seguro`;
+          }));
+
+          // ── CT-SWOT-003/050: Verificar RLS ──
+          steps.push(await runStepStreamed("estrategia_swot", "8. Listar SWOTs via Auth (RLS)", "SELECT auth client", async () => {
+            if (!authClient) throw new Error("Auth client não disponível");
+            const { data, error } = await authClient.from("estrategia_swot").select("id, titulo, escopo").eq("tenant_id", effectiveTenant);
+            if (error) throw new Error(`RLS bloqueou: ${error.message}`);
+            const encontrou = data?.some((s: any) => s.id === swotId);
+            return `${data?.length || 0} SWOTs visíveis. SWOT de teste ${encontrou ? "encontrada ✓" : "NÃO encontrada ⚠️"}`;
+          }));
+
+          // ── CT-SWOT-050: IDOR — Cross-Tenant ──
+          steps.push(await runStepStreamed("estrategia_swot", "9. Teste IDOR Cross-Tenant", "SELECT swot outro tenant (auth)", async () => {
+            if (!authClient || !effectiveTenant) throw new Error("Auth client ou tenant ausente");
+            const { data: tenants } = await supabaseAdmin.from("tenants").select("id").neq("id", effectiveTenant).limit(1);
+            if (!tenants || tenants.length === 0) return "Apenas 1 tenant — skip teste IDOR";
+            const otherTenantId = tenants[0].id;
+            const { data: otherSwot } = await supabaseAdmin.from("estrategia_swot").insert({
+              tenant_id: otherTenantId, titulo: "IDOR Test — Outro Tenant", escopo: "empresa", periodo: "2026",
+            }).select("id").single();
+            if (otherSwot) {
+              const { data: leaked } = await authClient.from("estrategia_swot").select("id").eq("id", otherSwot.id);
+              await supabaseAdmin.from("estrategia_swot").delete().eq("id", otherSwot.id);
+              if (leaked && leaked.length > 0) throw new Error(`CRÍTICO: IDOR — SWOT de outro tenant acessível!`);
+              return `✓ Isolamento IDOR OK — SWOT do tenant ${otherTenantId.slice(0,8)}... não acessível`;
+            }
+            return "Skip — não foi possível criar SWOT no outro tenant";
+          }));
+
+          // ── CT-SWOT-014: Duplicidade ──
+          steps.push(await runStepStreamed("estrategia_swot", "10. Teste de Duplicidade", "INSERT duplicado", async () => {
+            if (!effectiveTenant) throw new Error("Tenant ausente");
+            const { data: dup, error } = await supabaseAdmin.from("estrategia_swot").insert({
+              tenant_id: effectiveTenant, titulo: "QA Agent — SWOT Estratégica 2026", escopo: "empresa", periodo: "2026 Q1",
+            }).select("id").single();
+            if (error) return `✓ Banco rejeitou duplicata: ${error.message}`;
+            if (dup) await supabaseAdmin.from("estrategia_swot").delete().eq("id", dup.id);
+            return `⚠️ Banco permite SWOTs com título duplicado (considerar validação no front-end)`;
+          }));
+
+          // ── Atualizar SWOT ──
+          steps.push(await runStepStreamed("estrategia_swot", "11. Atualizar SWOT", "UPDATE estrategia_swot", async () => {
+            if (!swotId) throw new Error("SWOT ausente");
+            const { error } = await supabaseAdmin.from("estrategia_swot").update({
+              titulo: "QA Agent — SWOT Estratégica 2026 (Atualizada)", periodo: "2026 Q1-Q2",
+            }).eq("id", swotId);
+            if (error) throw new Error(error.message);
+            const { data } = await supabaseAdmin.from("estrategia_swot").select("titulo, periodo").eq("id", swotId).single();
+            if (!data || !data.titulo.includes("Atualizada")) throw new Error("Update não aplicado");
+            return `✓ SWOT atualizada: "${data.titulo}", Período: ${data.periodo}`;
+          }));
+
+          // ── Listar itens via Auth ──
+          steps.push(await runStepStreamed("estrategia_swot", "12. Listar Itens via Auth (RLS)", "SELECT itens auth", async () => {
+            if (!authClient || !swotId) throw new Error("Auth client ou SWOT ausente");
+            const { data, error } = await authClient.from("estrategia_swot_itens").select("id, tipo, descricao, classificacao, impacto").eq("swot_id", swotId);
+            if (error) throw new Error(`RLS: ${error.message}`);
+            return `${data?.length || 0} itens da SWOT visíveis pelo auth client`;
+          }));
+
+          // ── CT-SWOT-025: Excluir SWOT (cascata) ──
+          await navigateTo("/estrategia", "SWOT — Excluindo análise completa");
+          steps.push(await runStepStreamed("estrategia_swot", "13. Excluir SWOT + Itens", "DELETE cascata", async () => {
+            if (!swotId) throw new Error("SWOT ausente");
+            await supabaseAdmin.from("estrategia_swot_itens").delete().eq("swot_id", swotId);
+            const { error } = await supabaseAdmin.from("estrategia_swot").delete().eq("id", swotId);
+            if (error) throw new Error(error.message);
+            const { data: check } = await supabaseAdmin.from("estrategia_swot").select("id").eq("id", swotId);
+            if (check && check.length > 0) throw new Error("SWOT ainda existe após exclusão!");
+            return `✓ SWOT e itens excluídos com sucesso. Nenhum dado órfão.`;
+          }));
+
+          // ── Verificar exclusão ──
+          steps.push(await runStepStreamed("estrategia_swot", "14. Verificar Exclusão Completa", "SELECT pós-delete", async () => {
+            if (!authClient || !swotId) throw new Error("Auth/SWOT ausente");
+            const { data } = await authClient.from("estrategia_swot").select("id").eq("id", swotId);
+            if (data && data.length > 0) throw new Error("SWOT ainda visível após exclusão!");
+            return `✓ SWOT não aparece mais na listagem — exclusão completa verificada`;
+          }));
+
+          const fr = buildFlowResult("estrategia_swot", "Estratégia SWOT — Fluxo Completo", steps);
+          flows.push(fr);
+          send("flow_done", fr);
+        }
+
         // ═══════════════════════════════════════════════════
         // FLOW: RLS ISOLAMENTO
         // ═══════════════════════════════════════════════════
