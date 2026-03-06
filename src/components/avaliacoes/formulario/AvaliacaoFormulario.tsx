@@ -648,6 +648,7 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
         </div>
       </div>
     </div>
+    </>
   );
 }
 
