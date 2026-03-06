@@ -204,10 +204,9 @@ export function QuestionarioResponder({
                         <span className="text-muted-foreground mr-1.5">{pi + 1}.</span>
                         {pergunta.texto}
                         {pergunta.invertida && (
-                          <Shield
-                            className="inline h-3 w-3 text-emerald-500 ml-1.5"
-                            title="Pergunta protetora"
-                          />
+                          <span title="Pergunta protetora">
+                            <Shield className="inline h-3 w-3 text-emerald-500 ml-1.5" />
+                          </span>
                         )}
                       </p>
                       <div className="grid grid-cols-5 gap-1.5">
