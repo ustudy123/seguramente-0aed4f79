@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import { HumorDiarioPopup } from "@/components/humor/HumorDiarioPopup";
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
+import { useIframeNavigation } from "@/hooks/useIframeNavigation";
 
 export const MainLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
