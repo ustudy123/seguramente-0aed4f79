@@ -454,6 +454,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
               )}
             </TabsContent>
 
+            {/* ── Tab: Contraprova Organizacional ── */}
+            <TabsContent value="contraprova" className="mt-4">
+              <ContaprovaOrganizacional campanha={campanha} ips={ips} />
+            </TabsContent>
+
             {/* ── Tab: Participação ── */}
             <TabsContent value="participacao" className="mt-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-4">
