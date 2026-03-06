@@ -498,6 +498,7 @@ export function useImportacaoPlanilha() {
         
         const dadosAdmissao = {
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           nome_completo: dado.nome,
           cpf: dado.cpf,
           genero: dado.sexo || null,
