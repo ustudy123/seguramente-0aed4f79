@@ -52,7 +52,7 @@ export function GerarPdiModal({
   colaboradorDepartamento,
   onPdiGerado,
 }: GerarPdiModalProps) {
-  const { pdis, createPdi, createMeta, isCreatingPdi } = usePdi();
+  const { pdis, createPdi, createMeta } = usePdi();
 
   const [step, setStep] = useState<"loading" | "review" | "done">("loading");
   const [metas, setMetas] = useState<MetaSugerida[]>([]);
@@ -62,29 +62,27 @@ export function GerarPdiModal({
   const [isSaving, setIsSaving] = useState(false);
   const hasLoadedRef = useRef(false);
 
-  // Dispara loadSuggestions quando o modal abre
+  // Dispara loadSuggestions quando o modal abre pela primeira vez
   useEffect(() => {
     if (open && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
-      setStep("loading");
-      setMetas([]);
       loadSuggestions();
     }
     if (!open) {
       hasLoadedRef.current = false;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Carrega sugestões da IA ao abrir
   const loadSuggestions = async () => {
     setStep("loading");
+    setMetas([]);
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 55000); // 55s timeout
+      const timeout = setTimeout(() => controller.abort(), 55000);
 
       const res = await fetch(`${supabaseUrl}/functions/v1/ai-pdi-from-avaliacao`, {
         method: "POST",
@@ -131,16 +129,6 @@ export function GerarPdiModal({
     }
   };
 
-  const toggleMeta
-  const handleOpen = (v: boolean) => {
-    if (v) {
-      setStep("loading");
-      setMetas([]);
-      loadSuggestions();
-    }
-    onOpenChange(v);
-  };
-
   const toggleMeta = (idx: number) => {
     setMetasSelecionadas(prev => {
       const next = new Set(prev);
@@ -157,7 +145,6 @@ export function GerarPdiModal({
     }
     setIsSaving(true);
     try {
-      // Verificar se já existe PDI ativo para o colaborador
       const existing = pdis.find(
         p => p.colaborador_id === resposta.avaliado_id && ["ativo", "rascunho"].includes(p.status)
       );
@@ -187,7 +174,6 @@ export function GerarPdiModal({
         pdiId = created.id;
       }
 
-      // Criar metas selecionadas
       for (const meta of selectedMetas) {
         await createMeta({
           pdi_id: pdiId,
@@ -218,7 +204,7 @@ export function GerarPdiModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-lg">
@@ -250,7 +236,6 @@ export function GerarPdiModal({
           {/* REVIEW */}
           {step === "review" && (
             <div className="space-y-5">
-              {/* Dados do PDI */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground uppercase tracking-wide">
                   <Target className="h-4 w-4" />
@@ -270,7 +255,6 @@ export function GerarPdiModal({
 
               <Separator />
 
-              {/* Metas sugeridas */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground uppercase tracking-wide">
@@ -311,8 +295,6 @@ export function GerarPdiModal({
                               {meta.descricao && (
                                 <p className="text-xs text-muted-foreground">{meta.descricao}</p>
                               )}
-
-                              {/* SMART breakdown */}
                               <div className="grid grid-cols-1 gap-1 mt-2">
                                 {[
                                   { key: "S", label: "Específica", value: meta.especifica },
@@ -325,7 +307,6 @@ export function GerarPdiModal({
                                   </div>
                                 ))}
                               </div>
-
                               {meta.data_fim_sugerida && (
                                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                   <Calendar className="h-3 w-3" />
@@ -360,7 +341,6 @@ export function GerarPdiModal({
           )}
         </ScrollArea>
 
-        {/* Footer */}
         {step === "review" && (
           <div className="px-6 py-4 border-t flex items-center justify-between gap-3">
             <Button variant="ghost" onClick={() => onOpenChange(false)} className="gap-2">
