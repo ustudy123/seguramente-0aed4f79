@@ -190,7 +190,7 @@ export default function Empresa() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="dados" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
           <TabsTrigger value="dados" className="text-xs">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
