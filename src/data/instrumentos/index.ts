@@ -1,8 +1,10 @@
 export * from './copsoq';
 export * from './hse';
+export * from './proart';
 
 import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS } from './copsoq';
 import { HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS } from './hse';
+import { PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS } from './proart';
 import type { DimensaoInstrumento } from './copsoq';
 
 export type { DimensaoInstrumento };
