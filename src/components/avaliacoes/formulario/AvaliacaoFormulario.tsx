@@ -388,7 +388,9 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
       pontos_fortes: pontosFortes,
       areas_desenvolvimento: areasDesenvolvimento,
     });
-    onConcluir?.();
+    // Após concluir, abrir modal para gerar PDI com IA
+    setAvaliacaoConcluida(true);
+    setShowGerarPdi(true);
   };
 
   // Se não há resposta selecionada, mostrar seletor de avaliações
