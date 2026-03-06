@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularIPSInstrumento, getDimensoesByInstrumento, COPSOQ_DIMENSOES, HSE_DIMENSOES } from "@/data/instrumentos";
+import { calcularIPSInstrumento, getDimensoesByInstrumento, COPSOQ_DIMENSOES, HSE_DIMENSOES, PROART_DIMENSOES } from "@/data/instrumentos";
 import { calcularIPSClassificacao } from "@/types/psicossocial";
 import { calcularIndicadores } from "@/hooks/usePsicossocial";
 
