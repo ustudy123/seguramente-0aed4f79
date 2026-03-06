@@ -356,10 +356,18 @@ export function PsicossocialDashboard() {
         </TabsContent>
       </Tabs>
 
+      {/* Assistente de Seleção */}
+      <AssistenteSelecaoInstrumento
+        open={showAssistente}
+        onOpenChange={setShowAssistente}
+        onSelectInstrumento={handleAssistenteSelect}
+      />
+
       {/* Modal de Nova Campanha */}
       <CampanhaForm
         open={showForm}
         onOpenChange={setShowForm}
+        instrumentoSugerido={instrumentoPreSelecionado}
       />
     </div>
   );
