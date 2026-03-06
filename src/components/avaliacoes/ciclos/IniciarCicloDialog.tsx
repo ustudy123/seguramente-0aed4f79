@@ -189,13 +189,13 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
 
             {/* Aviso recém-admitidos */}
             {recentAdmissoes.length > 0 && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
-                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm">
+                <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium text-amber-800">
+                  <span className="font-medium text-foreground">
                     {recentAdmissoes.length} colaborador(es) admitido(s) há menos de 30 dias.
                   </span>
-                  <p className="text-amber-700 text-xs mt-0.5">
+                  <p className="text-muted-foreground text-xs mt-0.5">
                     Considere excluí-los desta rodada ou usar um template de avaliação light para integração.
                   </p>
                 </div>
