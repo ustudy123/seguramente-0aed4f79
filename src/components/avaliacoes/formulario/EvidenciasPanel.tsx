@@ -21,12 +21,14 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import { ErgonomiaContextPanel } from "./ErgonomiaContextPanel";
 import { useAvaliacaoEvidencias } from "@/hooks/useAvaliacaoEvidencias";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EvidenciasPanelProps {
   colaboradorId: string;
   colaboradorNome: string;
+  colaboradorCargo?: string;
   cicloNome: string;
   cicloId: string;
   dataInicio?: string;
@@ -247,7 +249,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
 
 // ── Painel Principal ───────────────────────────────────────────────────────────
 export function EvidenciasPanel({
-  colaboradorId, colaboradorNome, cicloNome, cicloId,
+  colaboradorId, colaboradorNome, colaboradorCargo, cicloNome, cicloId,
   dataInicio, dataFim, evidenciasAnexadas, onAnexarEvidencia,
 }: EvidenciasPanelProps) {
   const { tenantId, user } = useAuth();
@@ -513,6 +515,17 @@ export function EvidenciasPanel({
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Painel de Contexto Ergonômico NR-17 */}
+      {tenantId && user?.id && colaboradorCargo && (
+        <ErgonomiaContextPanel
+          colaboradorNome={colaboradorNome}
+          colaboradorCargo={colaboradorCargo}
+          cicloNome={cicloNome}
+          tenantId={tenantId}
+          userId={user.id}
+        />
+      )}
     </>
   );
 }

@@ -515,6 +515,7 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
           <EvidenciasPanel
             colaboradorId={resposta.avaliado_id}
             colaboradorNome={resposta.avaliado_nome}
+            colaboradorCargo={resposta.ciclo?.template?.tipo === "360" ? undefined : (resposta as any).colaborador_cargo}
             cicloNome={resposta.ciclo?.nome || ""}
             cicloId={resposta.ciclo_id}
             dataInicio={resposta.ciclo?.data_inicio}
