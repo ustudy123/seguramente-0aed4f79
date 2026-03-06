@@ -65,6 +65,8 @@ export function QuestionarioResponder({
   nomeCampanha,
 }: QuestionarioResponderProps) {
   const dimensoes = getDimensoesByInstrumento(instrumento);
+  // SIPRO usa escala 1-5; demais instrumentos usam 0-4
+  const ESCALA = instrumento === 'sipro' ? ESCALA_SIPRO : ESCALA_PADRAO;
   const [dimAtual, setDimAtual] = useState(0);
   const [tempoInicio] = useState(Date.now());
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
