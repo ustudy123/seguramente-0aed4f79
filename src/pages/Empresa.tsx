@@ -22,6 +22,15 @@ type ViewMode = 'list' | 'edit' | 'new';
 export default function Empresa() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('dados');
+
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'importar'];
+  const currentTabIndex = TABS.indexOf(activeTab);
+  const isFirstTab = currentTabIndex === 0;
+  const isLastTab = currentTabIndex === TABS.length - 1;
+
+  const handleNextTab = () => { if (!isLastTab) setActiveTab(TABS[currentTabIndex + 1]); };
+  const handlePrevTab = () => { if (!isFirstTab) setActiveTab(TABS[currentTabIndex - 1]); };
 
   const {
     empresas,
@@ -135,6 +144,7 @@ export default function Empresa() {
     );
   }
 
+
   // EDIT/NEW VIEW
   const isFormLoading = viewMode === 'edit' && isLoading;
 
@@ -180,7 +190,7 @@ export default function Empresa() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="dados" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
           <TabsTrigger value="dados" className="text-xs">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
@@ -290,6 +300,36 @@ export default function Empresa() {
             </CardContent>
           </TabsContent>
         </Card>
+        {/* Bottom navigation */}
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="outline"
+            onClick={handlePrevTab}
+            disabled={isFirstTab}
+            className="gap-2"
+          >
+            ← Anterior
+          </Button>
+          <div className="flex items-center gap-2">
+            {!isLastTab ? (
+              <Button variant="outline" onClick={handleNextTab} className="gap-2">
+                Próxima aba →
+              </Button>
+            ) : null}
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || upsertCadastro.isPending}
+              className="gap-2"
+            >
+              {upsertCadastro.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              Salvar
+            </Button>
+          </div>
+        </div>
       </Tabs>
     </div>
   );
