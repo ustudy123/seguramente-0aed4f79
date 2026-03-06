@@ -66,8 +66,20 @@ export function GerarPdiModal({
   const loadSuggestions = async () => {
     setStep("loading");
     try {
-      const { data, error } = await supabase.functions.invoke("ai-pdi-from-avaliacao", {
-        body: {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000); // 55s timeout
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/ai-pdi-from-avaliacao`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseKey}`,
+          "apikey": supabaseKey,
+        },
+        body: JSON.stringify({
           colaboradorNome: resposta.avaliado_nome,
           colaboradorCargo,
           colaboradorDepartamento,
@@ -78,16 +90,29 @@ export function GerarPdiModal({
           resumo: resposta.comentario_geral,
           notas,
           dimensoes,
-        },
+        }),
+        signal: controller.signal,
       });
-      if (error) throw error;
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
       setMetas(data.metas || []);
       setTituloPdi(data.titulo_pdi || `PDI — Desenvolvimento de ${resposta.avaliado_nome}`);
       setDescricaoPdi(data.descricao_pdi || "");
       setMetasSelecionadas(new Set(data.metas?.map((_: unknown, i: number) => i) || []));
       setStep("review");
     } catch (e: any) {
-      toast.error("Erro ao gerar sugestões: " + (e.message || "Tente novamente"));
+      console.error("Erro PDI IA:", e);
+      const msg = e?.name === "AbortError"
+        ? "Tempo limite excedido. Tente novamente."
+        : (e.message || "Tente novamente");
+      toast.error("Erro ao gerar sugestões: " + msg);
       onOpenChange(false);
     }
   };
