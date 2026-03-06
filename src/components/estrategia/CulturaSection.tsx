@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useAuth } from "@/hooks/useAuth";
+import type { EstrategiaOrganograma } from "@/types/estrategia";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ManualCulturaModal } from "./ManualCulturaModal";
@@ -14,7 +15,7 @@ import { ManualCulturaModal } from "./ManualCulturaModal";
 type ListField = "valores" | "principios" | "comportamentos_esperados" | "comportamentos_nao_tolerados";
 
 export function CulturaSection() {
-  const { cultura, loadingCultura, upsertCultura } = useEstrategia();
+  const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia();
   const { profile } = useAuth();
   const [form, setForm] = useState({
     missao: "",
@@ -125,6 +126,7 @@ export function CulturaSection() {
         body: {
           ...form,
           empresa_nome: profile?.nome_completo || "Nossa Empresa",
+          organograma: organograma || [],
         },
       });
 
