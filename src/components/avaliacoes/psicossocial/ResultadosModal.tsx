@@ -38,8 +38,13 @@ import {
   type CampanhaPsicossocial,
   getIPSColor,
   getIPSBgColor,
+  getIRPSColor,
+  getIRPSBgColor,
+  getIRPSLabel,
   calcularIPSClassificacao,
+  calcularIRPSClassificacao,
   type IPSClassificacao,
+  type IRPSClassificacao,
 } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
@@ -65,9 +70,22 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
   const isLoading = loadingStats || loadingRespostas;
 
+  const isSipro = campanha.instrumento === 'sipro';
+
   // IPS e classificação a partir das estatísticas reais
   const ips = stats?.ips;
-  const ipsClass = ips !== undefined ? calcularIPSClassificacao(ips) : null;
+  const ipsClass = ips !== undefined
+    ? isSipro
+      ? calcularIRPSClassificacao(ips) as unknown as IPSClassificacao
+      : calcularIPSClassificacao(ips)
+    : null;
+
+  // Label e cor do score principal conforme instrumento
+  const scoreLabel = isSipro ? 'IRP-S — Índice de Risco Psicossocial' : 'IPS — Índice Psicossocial';
+  const scoreDescricao = isSipro
+    ? 'Score 0–100: quanto maior, maior o risco organizacional'
+    : 'Score 0–100: quanto maior, mais saudável o ambiente';
+
 
   // Dimensões por resposta → agregar média por dimensão
   const dimensoesAgregadas = (() => {
@@ -238,14 +256,17 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                   <div className="grid gap-4 md:grid-cols-2">
                     <Card className="border-purple-200 bg-gradient-to-br from-purple-50/50 to-background">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                      <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                           <Brain className="h-4 w-4 text-purple-600" />
-                          IPS — Índice Psicossocial
+                          {scoreLabel}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="flex flex-col items-center">
                         {ips !== undefined && ipsClass ? (
-                          <IPSGauge score={ips} classificacao={ipsClass} size="lg" />
+                          <>
+                            <IPSGauge score={ips} classificacao={ipsClass} size="lg" />
+                            <p className="text-xs text-muted-foreground text-center mt-2">{scoreDescricao}</p>
+                          </>
                         ) : (
                           <p className="text-muted-foreground text-sm py-6">Score indisponível</p>
                         )}

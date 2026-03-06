@@ -14,6 +14,8 @@ import {
   type RadarDimensao,
   type InstrumentoPsicossocial,
   calcularIPSClassificacao,
+  calcularIRPSClassificacao,
+  ipsParaIrps,
 } from "@/types/psicossocial";
 import {
   calcularIPSInstrumento,
@@ -37,10 +39,15 @@ export function calcularIndicadores(
   type ValidKey = typeof validKeys[number];
   const instrumentoKey: ValidKey = validKeys.includes(instrumento as ValidKey)
     ? instrumento as ValidKey
-    : 'copsoq';
+    : 'sipro';
   const dimensoes = getDimensoesByInstrumento(instrumentoKey);
   const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
-  const classificacao = calcularIPSClassificacao(ips);
+
+  // Para SIPRO: IRP-S é o índice de RISCO (alto = pior), invertido do IPS
+  const irps = instrumento === 'sipro' ? ipsParaIrps(ips) : ips;
+  const classificacao = instrumento === 'sipro'
+    ? calcularIRPSClassificacao(irps) as unknown as ReturnType<typeof calcularIPSClassificacao>
+    : calcularIPSClassificacao(ips);
 
   const nivelMap: Record<string, 'baixo' | 'moderado' | 'alto' | 'critico'> = {
     otimo: 'baixo',
@@ -51,7 +58,11 @@ export function calcularIndicadores(
 
   const detalhes = dimensoes.map(dim => ({
     bloco: dim.nome,
-    media: porDimensao[dim.id]?.score ?? 50,
+    media: instrumento === 'sipro'
+      // Para SIPRO: score da dimensão já reflete condição de proteção/risco
+      // Converter para perspectiva de risco: fatores de risco = score alto = pior
+      ? (dim.tipo === 'risco' ? porDimensao[dim.id]?.score ?? 50 : 100 - (porDimensao[dim.id]?.score ?? 50))
+      : porDimensao[dim.id]?.score ?? 50,
     nivel: nivelMap[porDimensao[dim.id]?.nivel ?? 'moderado'] ?? 'moderado' as 'baixo' | 'moderado' | 'alto' | 'critico',
   }));
 
@@ -61,10 +72,11 @@ export function calcularIndicadores(
     fullMark: 100,
   }));
 
+  // IRP-S: score de risco 0-100 (para SIPRO), IPS: score de saúde 0-100 (demais)
   return {
-    IPS: ips,
+    IPS: instrumento === 'sipro' ? irps : ips,
     IPS_classificacao: classificacao,
-    IRP_S: ips,
+    IRP_S: instrumento === 'sipro' ? irps : ips,
     IBO_S: ips,
     IBD_S: ips,
     IREC_S: ips,
