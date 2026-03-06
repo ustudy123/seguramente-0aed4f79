@@ -12,9 +12,12 @@ import { Label } from "@/components/ui/label";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { SwotDetail } from "./SwotDetail";
 import type { EstrategiaSwot } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 
-export function SwotSection() {
-  const { swots, loadingSwots, createSwot, deleteSwot } = useEstrategia();
+interface Props { escopo: EstrategiaEscopo; }
+
+export function SwotSection({ escopo }: Props) {
+  const { swots, loadingSwots, createSwot, deleteSwot } = useEstrategia(escopo);
   const [selectedSwot, setSelectedSwot] = useState<EstrategiaSwot | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });

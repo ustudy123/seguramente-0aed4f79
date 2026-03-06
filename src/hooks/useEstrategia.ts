@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
+import type { EstrategiaEscopo } from "@/components/estrategia/EstrategiaEscopoSelector";
 import type {
   EstrategiaSwot,
   SwotItem,
