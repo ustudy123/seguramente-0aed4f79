@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Brain, ArrowRight, ArrowLeft, CheckCircle2,
-  Building2, Users, Clock, Activity, TrendingUp, Shield,
-  Globe, Search, Lightbulb, Star, Award, FileText,
-  ChevronRight, BarChart3, AlertTriangle, Lock, Zap,
+  Building2, AlertTriangle, Shield,
+  FileText, Clock, Search, Award, Zap, Activity,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -14,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
