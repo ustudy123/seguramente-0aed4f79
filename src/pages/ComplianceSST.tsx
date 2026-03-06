@@ -23,6 +23,7 @@ import {
 import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTUploadModal } from "@/components/sst/SSTUploadModal";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
+import { SSTAlertasTab } from "@/components/sst/SSTAlertasTab";
 import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -294,55 +295,8 @@ const ComplianceSST = () => {
         <TabsContent value="alertas" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Alertas de Conformidade</h2>
-            <div className="flex gap-2">
-              <Badge variant="destructive">{alertas.filter(a => a.tipo === "critico").length} Críticos</Badge>
-              <Badge variant="secondary">{alertas.filter(a => a.tipo === "alerta").length} Alertas</Badge>
-              <Badge variant="outline">{alertas.filter(a => a.tipo === "atencao").length} Atenção</Badge>
-            </div>
           </div>
-
-          <div className="space-y-3">
-            {alertas.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <CheckCircle2 className="w-10 h-10 text-muted-foreground/50 mb-3" />
-                  <p className="text-sm text-muted-foreground">Nenhum alerta ativo no momento.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              alertas.map((alerta, i) => (
-                <Card key={i} className={alerta.tipo === "critico" ? "border-destructive/50" : ""}>
-                  <CardContent className="p-4 flex items-start gap-4">
-                    <div className="mt-1">
-                      {alerta.tipo === "critico" ? (
-                        <AlertTriangle className="w-5 h-5 text-destructive" />
-                      ) : alerta.tipo === "alerta" ? (
-                        <AlertTriangle className="w-5 h-5 text-amber-500" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-yellow-500" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant={alerta.tipo === "critico" ? "destructive" : alerta.tipo === "alerta" ? "secondary" : "outline"} className="text-xs">
-                          {alerta.tipo === "critico" ? "🔴 Crítico" : alerta.tipo === "alerta" ? "🟠 Alerta Técnico" : "🟡 Atenção"}
-                        </Badge>
-                      </div>
-                      <p className="text-sm">{alerta.descricao}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">{alerta.norma}</Badge>
-                        <Badge variant="outline" className="text-xs">{alerta.documento}</Badge>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      <Target className="w-4 h-4 mr-1" />
-                      Gerar Ação
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+          <SSTAlertasTab documentos={documentos} />
         </TabsContent>
 
         {/* AÇÕES */}

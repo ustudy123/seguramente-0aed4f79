@@ -1,100 +1,107 @@
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  AlertTriangle,
-  AlertCircle,
-  Sparkles,
   FileText,
   ChevronDown,
   ChevronUp,
   Target,
   ArrowRight,
   Info,
-  X,
-  Trash2,
-  RotateCcw,
+  Sparkles,
+  CalendarClock,
+  ListChecks,
+  Import,
 } from "lucide-react";
 import { SSTDocumento } from "@/hooks/useSSTDocumentos";
-import { SSTCriarAcaoModal } from "./SSTCriarAcaoModal";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface SSTAchado {
-  titulo: string;
+interface AcaoDocumento {
+  numero?: string;
   descricao: string;
-  norma?: string;
-  severidade: "critico" | "alerta" | "atencao";
+  responsavel?: string;
+  prazo?: string;
+  recurso?: string;
+  origem: string; // doc tipo, e.g. "PGR", "PCMSO"
+  docId: string;
 }
 
-interface DocComAchados {
+interface DocComAcoes {
   doc: SSTDocumento;
-  achados: SSTAchado[];
+  acoes: AcaoDocumento[];
 }
 
-function parseAchadosFromAnalise(analise: any): SSTAchado[] {
-  if (!analise) return [];
-  const resultado: string = analise.resultado || "";
+/** Parse action plan / cronograma items from the AI analysis text */
+function parseAcoesFromAnalise(doc: SSTDocumento): AcaoDocumento[] {
+  const resultado: string = doc.analise_ia?.resultado || "";
   if (!resultado) return [];
 
-  const achados: SSTAchado[] = [];
+  const acoes: AcaoDocumento[] = [];
   const linhas = resultado.split("\n");
-  let currentSeveridade: "critico" | "alerta" | "atencao" = "atencao";
+  let inAcoesSection = false;
 
   for (const linha of linhas) {
     const l = linha.trim();
 
-    if (l.includes("🔴") || l.toLowerCase().includes("crítico") || l.toLowerCase().includes("critico")) {
-      currentSeveridade = "critico";
-    } else if (l.includes("🟠") || l.toLowerCase().includes("alerta técnico") || l.toLowerCase().includes("alerta tecnico")) {
-      currentSeveridade = "alerta";
-    } else if (l.includes("🟡") || l.toLowerCase().includes("atenção") || l.toLowerCase().includes("atencao")) {
-      currentSeveridade = "atencao";
+    // Detect section headers that indicate action plan / schedule
+    if (
+      /plano\s+de\s+a[çc][aã]o/i.test(l) ||
+      /cronograma/i.test(l) ||
+      /a[çc][oõ]es\s+(previstas|planejadas|recomendadas|corretivas|preventivas)/i.test(l) ||
+      /medidas\s+(de\s+controle|preventivas|corretivas)/i.test(l) ||
+      /programa\s+de\s+a[çc][oõ]es/i.test(l)
+    ) {
+      inAcoesSection = true;
+      continue;
     }
 
-    const bulletMatch = l.match(/^[-•*]\s+(.+)/);
-    if (bulletMatch) {
-      const texto = bulletMatch[1].trim();
-      if (texto.length > 20) {
-        const normaMatch = texto.match(/(NR[-\s]?\d+|LINACH|eSocial S-\d+)/i);
-        achados.push({
-          titulo: texto.length > 80 ? texto.substring(0, 80) + "…" : texto,
-          descricao: texto,
-          norma: normaMatch ? normaMatch[0] : undefined,
-          severidade: currentSeveridade,
-        });
-      }
+    // Leave section on next major header (e.g., ##, bold title)
+    if (inAcoesSection && (l.startsWith("##") || (l.startsWith("**") && l.endsWith("**") && l.length < 60 && !l.match(/^\*\*[-•]/))) ) {
+      inAcoesSection = false;
+    }
+
+    if (!inAcoesSection) continue;
+
+    // Match numbered or bulleted items
+    const match = l.match(/^(?:\d+[.)]\s*|[-•*]\s*)(.+)/);
+    if (match) {
+      const texto = match[1].replace(/\*\*/g, "").trim();
+      if (texto.length < 15) continue;
+
+      // Try to extract prazo from text
+      const prazoMatch = texto.match(/(?:prazo[:\s]+|até\s+)(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2}|\d+\s+(?:dias?|meses?|semanas?))/i);
+      const respMatch = texto.match(/(?:responsável[:\s]+|resp[.:\s]+)([A-ZÀ-Ú][^,\n]{2,40})/i);
+
+      acoes.push({
+        descricao: texto.length > 160 ? texto.substring(0, 160) + "…" : texto,
+        prazo: prazoMatch?.[1],
+        responsavel: respMatch?.[1]?.trim(),
+        origem: doc.tipo,
+        docId: doc.id,
+      });
     }
   }
 
-  const unique = achados.filter((a, i, arr) =>
-    arr.findIndex(b => b.titulo === a.titulo) === i
-  );
-
-  const ordem = { critico: 0, alerta: 1, atencao: 2 };
-  return unique.sort((a, b) => ordem[a.severidade] - ordem[b.severidade]).slice(0, 20);
-}
-
-// ── localStorage helpers ──────────────────────────────────────────────────────
-const DISMISSED_KEY = "sst_achados_descartados";
-
-function loadDismissed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(DISMISSED_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
-  } catch {
-    return new Set();
+  // Also scan for structured 5W2H blocks anywhere in the text
+  const blocoMatches = [...resultado.matchAll(/\*\*O qu[eê][:\s]*\*\*\s*([^\n*]{10,120})/gi)];
+  for (const m of blocoMatches) {
+    const texto = m[1].trim();
+    if (texto.length > 10 && !acoes.some(a => a.descricao.includes(texto.substring(0, 30)))) {
+      acoes.push({
+        descricao: texto,
+        origem: doc.tipo,
+        docId: doc.id,
+      });
+    }
   }
-}
 
-function saveDismissed(set: Set<string>) {
-  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]));
-}
-
-function achadoKey(docId: string, titulo: string): string {
-  return `${docId}::${titulo}`;
+  const unique = acoes.filter((a, i, arr) => arr.findIndex(b => b.descricao === a.descricao) === i);
+  return unique.slice(0, 30);
 }
 
 interface Props {
@@ -103,116 +110,63 @@ interface Props {
 
 export function SSTAcoesTab({ documentos }: Props) {
   const navigate = useNavigate();
-  const [selectedAchado, setSelectedAchado] = useState<SSTAchado | null>(null);
-  const [selectedDoc, setSelectedDoc] = useState<SSTDocumento | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const { tenantId, user, profile } = useAuth();
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
-  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
-  const [showDismissed, setShowDismissed] = useState(false);
+  const [importando, setImportando] = useState<Set<string>>(new Set());
 
-  const handleDismiss = useCallback((docId: string, achado: SSTAchado) => {
-    const key = achadoKey(docId, achado.titulo);
-    setDismissed(prev => {
-      const next = new Set(prev);
-      next.add(key);
-      saveDismissed(next);
-      return next;
-    });
-    toast("Achado descartado", {
-      description: achado.titulo.substring(0, 60),
-      action: {
-        label: "Desfazer",
-        onClick: () => {
-          setDismissed(prev => {
-            const next = new Set(prev);
-            next.delete(key);
-            saveDismissed(next);
-            return next;
-          });
-        },
-      },
-    });
-  }, []);
-
-  const handleRestore = useCallback((docId: string, achado: SSTAchado) => {
-    const key = achadoKey(docId, achado.titulo);
-    setDismissed(prev => {
-      const next = new Set(prev);
-      next.delete(key);
-      saveDismissed(next);
-      return next;
-    });
-    toast.success("Achado restaurado.");
-  }, []);
-
-  const handleRestoreAll = () => {
-    setDismissed(new Set());
-    saveDismissed(new Set());
-    toast.success("Todos os achados descartados foram restaurados.");
-  };
-
-  const docsAnalisados = useMemo((): DocComAchados[] => {
+  const docsComAcoes = useMemo((): DocComAcoes[] => {
     return documentos
       .filter(d => d.analise_ia_status === "concluida" && d.analise_ia?.resultado)
-      .map(doc => ({
-        doc,
-        achados: parseAchadosFromAnalise(doc.analise_ia),
-      }))
-      .filter(d => d.achados.length > 0);
+      .map(doc => ({ doc, acoes: parseAcoesFromAnalise(doc) }))
+      .filter(d => d.acoes.length > 0);
   }, [documentos]);
 
-  const docsAtivos = useMemo(() =>
-    docsAnalisados.map(({ doc, achados }) => ({
-      doc,
-      achados: achados.filter(a => !dismissed.has(achadoKey(doc.id, a.titulo))),
-      descartados: achados.filter(a => dismissed.has(achadoKey(doc.id, a.titulo))),
-    })),
-  [docsAnalisados, dismissed]);
-
-  const totalDescartados = useMemo(() =>
-    docsAtivos.reduce((acc, d) => acc + d.descartados.length, 0),
-  [docsAtivos]);
-
-  const totalAchados = docsAtivos.reduce((acc, d) => acc + d.achados.length, 0);
-  const totalCriticos = docsAtivos.reduce((acc, d) =>
-    acc + d.achados.filter(a => a.severidade === "critico").length, 0);
-  const totalAlertas = docsAtivos.reduce((acc, d) =>
-    acc + d.achados.filter(a => a.severidade === "alerta").length, 0);
+  const totalAcoes = docsComAcoes.reduce((acc, d) => acc + d.acoes.length, 0);
 
   const toggleDoc = (id: string) => {
     setExpandedDocs(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const handleCriarAcao = (achado: SSTAchado, doc: SSTDocumento) => {
-    setSelectedAchado(achado);
-    setSelectedDoc(doc);
-    setModalOpen(true);
-  };
+  const handleImportar = async (acao: AcaoDocumento, doc: SSTDocumento) => {
+    if (!tenantId || !user) return;
+    const key = `${acao.docId}::${acao.descricao.substring(0, 20)}`;
+    setImportando(prev => new Set(prev).add(key));
 
-  const severidadeConfig = {
-    critico: {
-      label: "🔴 Crítico",
-      badgeClass: "bg-destructive/10 text-destructive border-destructive/30",
-      icon: <AlertTriangle className="w-4 h-4 text-destructive" />,
-      cardClass: "border-destructive/30",
-    },
-    alerta: {
-      label: "🟠 Alerta Técnico",
-      badgeClass: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-700",
-      icon: <AlertTriangle className="w-4 h-4 text-amber-500" />,
-      cardClass: "border-amber-200 dark:border-amber-800",
-    },
-    atencao: {
-      label: "🟡 Atenção",
-      badgeClass: "bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-700",
-      icon: <AlertCircle className="w-4 h-4 text-yellow-500" />,
-      cardClass: "",
-    },
+    try {
+      const prazoDate = new Date();
+      prazoDate.setDate(prazoDate.getDate() + 90);
+
+      const { error } = await supabase.from("plano_acoes").insert({
+        tenant_id: tenantId,
+        titulo: acao.descricao.substring(0, 100),
+        descricao: acao.descricao,
+        onde: acao.responsavel ? undefined : undefined,
+        prazo: acao.prazo
+          ? acao.prazo
+          : prazoDate.toISOString().split("T")[0],
+        responsavel_nome: acao.responsavel || profile?.nome_completo || user.email || "A definir",
+        prioridade: "medio",
+        status: "pendente",
+        origem_modulo: "compliance_sst",
+        origem_descricao: `Importado do ${doc.tipo} — ${doc.empresa_emissora || doc.arquivo_nome}`,
+        criado_por: user.id,
+        criado_por_nome: profile?.nome_completo || user.email,
+      } as never);
+
+      if (error) throw error;
+
+      toast.success("Ação importada para o Plano de Ação!", {
+        action: { label: "Ver Plano", onClick: () => navigate("/plano-acao") },
+      });
+    } catch (err: any) {
+      toast.error("Erro ao importar ação: " + err.message);
+    } finally {
+      setImportando(prev => { const next = new Set(prev); next.delete(key); return next; });
+    }
   };
 
   if (documentos.length === 0) {
@@ -222,23 +176,23 @@ export function SSTAcoesTab({ documentos }: Props) {
           <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
           <p className="font-medium mb-1">Nenhum documento carregado</p>
           <p className="text-sm text-muted-foreground">
-            Envie documentos SST e execute a análise IA para identificar não-conformidades e gerar ações.
+            Envie documentos SST e execute a análise IA para importar os planos de ação e cronogramas contidos neles.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  if (docsAnalisados.length === 0) {
+  if (docsComAcoes.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
           <div className="p-4 bg-primary/10 rounded-2xl mb-4">
-            <Sparkles className="w-10 h-10 text-primary" />
+            <ListChecks className="w-10 h-10 text-primary" />
           </div>
-          <p className="font-semibold mb-1">Nenhuma análise IA concluída</p>
+          <p className="font-semibold mb-1">Nenhum plano de ação identificado</p>
           <p className="text-sm text-muted-foreground max-w-sm mb-4">
-            Acesse a aba <strong>Documentos</strong>, selecione um documento e execute a <strong>Análise IA</strong> para identificar automaticamente não-conformidades e gerar ações.
+            Execute a <strong>Análise IA</strong> nos documentos. O sistema identificará automaticamente cronogramas e planos de ação presentes no PGR, PCMSO e outros documentos.
           </p>
           <Button variant="outline" size="sm" onClick={() => navigate("/plano-acao")}>
             <ArrowRight className="w-4 h-4 mr-1" />
@@ -252,90 +206,68 @@ export function SSTAcoesTab({ documentos }: Props) {
   return (
     <div className="space-y-6">
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="border-destructive/30">
+      <div className="grid grid-cols-2 gap-4">
+        <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-destructive">{totalCriticos}</p>
-            <p className="text-xs text-muted-foreground mt-1">Críticos</p>
-          </CardContent>
-        </Card>
-        <Card className="border-amber-200 dark:border-amber-800">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-amber-600">{totalAlertas}</p>
-            <p className="text-xs text-muted-foreground mt-1">Alertas Técnicos</p>
+            <p className="text-2xl font-bold text-foreground">{docsComAcoes.length}</p>
+            <p className="text-xs text-muted-foreground mt-1">Docs com Ações</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{totalAchados}</p>
-            <p className="text-xs text-muted-foreground mt-1">Achados Ativos</p>
+            <p className="text-2xl font-bold text-primary">{totalAcoes}</p>
+            <p className="text-xs text-muted-foreground mt-1">Ações Identificadas</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Info bar */}
-      <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
-        <div className="flex items-start gap-2">
-          <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+      {/* Legend */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+        <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+        <div>
           <p className="text-muted-foreground">
-            Clique em <strong className="text-foreground">Criar ação</strong> para gerar uma ação 5W2H com IA, ou em{" "}
-            <strong className="text-foreground">✕</strong> para descartar achados irrelevantes.
+            As ações abaixo foram <strong className="text-foreground">extraídas na íntegra</strong> das seções de{" "}
+            <strong className="text-foreground">Plano de Ação / Cronograma</strong> presentes nos documentos analisados pela IA.
+            Clique em <strong className="text-foreground">Importar</strong> para enviá-las ao módulo Plano de Ação.
           </p>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Badge variant="outline" className="text-xs gap-1">
+              <FileText className="w-3 h-3" /> Origem gravada no Plano de Ação
+            </Badge>
+            <Badge variant="outline" className="text-xs gap-1">
+              <CalendarClock className="w-3 h-3" /> Prazo extraído quando disponível
+            </Badge>
+          </div>
         </div>
-        {totalDescartados > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-shrink-0 text-muted-foreground gap-1 whitespace-nowrap"
-            onClick={() => setShowDismissed(v => !v)}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            {showDismissed ? "Ocultar" : `${totalDescartados} descartado${totalDescartados > 1 ? "s" : ""}`}
-          </Button>
-        )}
       </div>
 
-      {/* Findings grouped by document */}
-      {docsAtivos.map(({ doc, achados, descartados }) => {
+      {/* Docs with action plans */}
+      {docsComAcoes.map(({ doc, acoes }) => {
         const isExpanded = expandedDocs.has(doc.id);
-        const criticos = achados.filter(a => a.severidade === "critico").length;
-        const alertas = achados.filter(a => a.severidade === "alerta").length;
-        const hasActive = achados.length > 0;
-        const hasDescartados = descartados.length > 0;
-
-        if (!hasActive && !(showDismissed && hasDescartados)) return null;
-
         return (
-          <Card key={doc.id} className={!hasActive ? "opacity-60" : ""}>
-            <CardHeader
-              className="pb-3 cursor-pointer"
-              onClick={() => toggleDoc(doc.id)}
-            >
+          <Card key={doc.id}>
+            <CardHeader className="pb-3 cursor-pointer" onClick={() => toggleDoc(doc.id)}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <FileText className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-base">{doc.tipo}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      {doc.tipo}
+                      <Badge variant="secondary" className="text-[10px] font-normal">
+                        Origem
+                      </Badge>
+                    </CardTitle>
                     <CardDescription className="text-xs">
                       {doc.empresa_emissora || doc.profissional_responsavel || doc.arquivo_nome}
                     </CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {criticos > 0 && (
-                    <Badge variant="destructive" className="text-xs">{criticos} crítico{criticos > 1 ? "s" : ""}</Badge>
-                  )}
-                  {alertas > 0 && (
-                    <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">{alertas} alerta{alertas > 1 ? "s" : ""}</Badge>
-                  )}
-                  {hasActive && (
-                    <Badge variant="secondary" className="text-xs">{achados.length} ativo{achados.length > 1 ? "s" : ""}</Badge>
-                  )}
-                  {hasDescartados && showDismissed && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">{descartados.length} descartado{descartados.length > 1 ? "s" : ""}</Badge>
-                  )}
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {acoes.length} ação{acoes.length > 1 ? "ões" : ""}
+                  </Badge>
                   {isExpanded ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground" />
                   ) : (
@@ -349,94 +281,49 @@ export function SSTAcoesTab({ documentos }: Props) {
               <>
                 <Separator />
                 <CardContent className="pt-4 space-y-3">
-                  {/* Active achados */}
-                  {achados.map((achado, i) => {
-                    const cfg = severidadeConfig[achado.severidade];
+                  {acoes.map((acao, i) => {
+                    const key = `${acao.docId}::${acao.descricao.substring(0, 20)}`;
+                    const loading = importando.has(key);
                     return (
                       <div
                         key={i}
-                        className={`flex items-start gap-3 p-3 rounded-lg border ${cfg.cardClass} bg-background`}
+                        className="flex items-start gap-3 p-3 rounded-lg border bg-background"
                       >
-                        <div className="mt-0.5 flex-shrink-0">{cfg.icon}</div>
+                        <div className="mt-0.5 flex-shrink-0">
+                          <Sparkles className="w-4 h-4 text-primary/60" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                            <Badge variant="outline" className={`text-[10px] ${cfg.badgeClass}`}>
-                              {cfg.label}
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/30">
+                              {acao.origem}
                             </Badge>
-                            {achado.norma && (
-                              <Badge variant="outline" className="text-[10px]">{achado.norma}</Badge>
+                            {acao.prazo && (
+                              <Badge variant="outline" className="text-[10px] gap-1">
+                                <CalendarClock className="w-3 h-3" />
+                                {acao.prazo}
+                              </Badge>
+                            )}
+                            {acao.responsavel && (
+                              <Badge variant="outline" className="text-[10px]">
+                                {acao.responsavel}
+                              </Badge>
                             )}
                           </div>
-                          <p className="text-sm font-medium leading-snug">{achado.titulo}</p>
-                          {achado.descricao !== achado.titulo && (
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{achado.descricao}</p>
-                          )}
+                          <p className="text-sm leading-snug">{acao.descricao}</p>
                         </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <Button
-                            size="sm"
-                            variant={achado.severidade === "critico" ? "default" : "outline"}
-                            className="gap-1"
-                            onClick={() => handleCriarAcao(achado, doc)}
-                          >
-                            <Sparkles className="w-3 h-3" />
-                            Criar ação
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title="Descartar achado"
-                            onClick={() => handleDismiss(doc.id, achado)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 flex-shrink-0"
+                          disabled={loading}
+                          onClick={() => handleImportar(acao, doc)}
+                        >
+                          <Import className="w-3 h-3" />
+                          {loading ? "Importando…" : "Importar"}
+                        </Button>
                       </div>
                     );
                   })}
-
-                  {/* Dismissed achados */}
-                  {showDismissed && hasDescartados && (
-                    <>
-                      {hasActive && <Separator className="my-1" />}
-                      <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 pt-1">
-                        <Trash2 className="w-3 h-3" />
-                        Descartados — clique em ↩ para restaurar
-                      </p>
-                      {descartados.map((achado, i) => {
-                        const cfg = severidadeConfig[achado.severidade];
-                        return (
-                          <div
-                            key={`d-${i}`}
-                            className="flex items-start gap-3 p-3 rounded-lg border border-dashed bg-muted/20"
-                          >
-                            <div className="mt-0.5 flex-shrink-0 opacity-40">{cfg.icon}</div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-0.5 opacity-50">
-                                <Badge variant="outline" className={`text-[10px] ${cfg.badgeClass}`}>
-                                  {cfg.label}
-                                </Badge>
-                                {achado.norma && (
-                                  <Badge variant="outline" className="text-[10px]">{achado.norma}</Badge>
-                                )}
-                              </div>
-                              <p className="text-sm leading-snug line-through text-muted-foreground">{achado.titulo}</p>
-                            </div>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 flex-shrink-0"
-                              title="Restaurar achado"
-                              onClick={() => handleRestore(doc.id, achado)}
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
                 </CardContent>
               </>
             )}
@@ -450,9 +337,7 @@ export function SSTAcoesTab({ documentos }: Props) {
                   onClick={() => toggleDoc(doc.id)}
                 >
                   <ChevronDown className="w-4 h-4 mr-1" />
-                  {hasActive
-                    ? `Ver ${achados.length} achado${achados.length > 1 ? "s" : ""} ativo${achados.length > 1 ? "s" : ""}`
-                    : `${descartados.length} descartado${descartados.length > 1 ? "s" : ""} — clique para ver`}
+                  Ver {acoes.length} ação{acoes.length > 1 ? "ões" : ""} identificada{acoes.length > 1 ? "s" : ""}
                 </Button>
               </CardContent>
             )}
@@ -460,37 +345,24 @@ export function SSTAcoesTab({ documentos }: Props) {
         );
       })}
 
-      {/* Footer actions */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
-        {totalDescartados > 0 && (
-          <Button variant="outline" size="sm" className="gap-2" onClick={handleRestoreAll}>
-            <RotateCcw className="w-4 h-4" />
-            Restaurar todos ({totalDescartados})
-          </Button>
-        )}
-        <Card className="border-dashed flex-1">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Target className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Gerenciar ações de SST</p>
-                <p className="text-xs text-muted-foreground">Ações criadas vão para o Plano de Ação com origem "Compliance SST"</p>
-              </div>
+      {/* Footer */}
+      <Card className="border-dashed">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Target className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Gerenciar todas as ações de SST</p>
+              <p className="text-xs text-muted-foreground">
+                Ações importadas ficam no Plano de Ação com origem "Compliance SST"
+              </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => navigate("/plano-acao")}>
-              <ArrowRight className="w-4 h-4 mr-1" />
-              Plano de Ação
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <SSTCriarAcaoModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        achado={selectedAchado}
-        documento={selectedDoc}
-      />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate("/plano-acao")}>
+            <ArrowRight className="w-4 h-4 mr-1" />
+            Plano de Ação
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
