@@ -185,6 +185,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "empresa" || flow === "todos") {
           send("flow_start", { flow: "empresa", label: "Cadastro de Empresa" });
+          await navigateTo("/empresa", "Cadastro de Empresa");
           const steps: StepResult[] = [];
           let empresaId: string | null = null;
           let deptId: string | null = null;
