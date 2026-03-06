@@ -444,7 +444,7 @@ export default function QADashboard() {
               QA & Testes com IA
             </h1>
             <p className="text-muted-foreground text-sm">
-              Agente visual com iframe ao vivo + varredura automatizada
+              Agente de testes automatizados + varredura de integridade
             </p>
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function QADashboard() {
         <Tabs defaultValue="agent" className="space-y-4">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="agent" className="gap-2">
-              <Bot className="w-4 h-4" /> Agente Visual
+              <Bot className="w-4 h-4" /> Agente de Testes
             </TabsTrigger>
             <TabsTrigger value="scan" className="gap-2">
               <Database className="w-4 h-4" /> Varredura
