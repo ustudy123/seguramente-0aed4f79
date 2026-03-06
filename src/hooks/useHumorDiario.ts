@@ -281,12 +281,18 @@ export function useHumorDiario() {
   });
 
   // Verificar se precisa mostrar o popup:
-  // 1. Primeiro login do dia (não tem registro)
-  // 2. Passaram 6 horas desde o último registro/atualização
-  const precisaRegistrarHumor = isReady && !queryLoading && (
-    !humorHoje || 
-    passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS)
-  );
+  // Ocasião 1 (morning): primeiro acesso do dia — não tem registro E não foi mostrado hoje
+  // Ocasião 2 (midday): após 5h trabalhadas — já tem registro, passaram 5h E não foi mostrado o midday hoje
+  const keys = isReady ? getStorageKeys(user!.id, today) : null;
+  const morningJaMostrado = keys ? !!localStorage.getItem(keys.morning) : true;
+  const middayJaMostrado = keys ? !!localStorage.getItem(keys.midday) : true;
+
+  const precisaMorning = isReady && !queryLoading && !humorHoje && !morningJaMostrado;
+  const precisaMidday = isReady && !queryLoading && !!humorHoje && 
+    passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS) && 
+    !middayJaMostrado;
+
+  const precisaRegistrarHumor = precisaMorning || precisaMidday;
 
   // Flag para saber se é atualização (já tem registro) ou primeiro do dia
   const isAtualizacao = !!humorHoje;
@@ -296,6 +302,8 @@ export function useHumorDiario() {
     isLoading,
     precisaRegistrarHumor,
     isAtualizacao,
+    marcarMorningVisto: () => user?.id && marcarHumorMorningVisto(user.id),
+    marcarMiddayVisto: () => user?.id && marcarHumorMiddayVisto(user.id),
     registrarHumor,
     atualizarHumor,
     refetch,
