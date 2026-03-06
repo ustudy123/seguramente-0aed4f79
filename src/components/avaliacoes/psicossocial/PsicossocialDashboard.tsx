@@ -25,7 +25,8 @@ import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { CampanhaList } from "./CampanhaList";
 import { CampanhaForm } from "./CampanhaForm";
 import { IPSGauge } from "./IPSGauge";
-import { INSTRUMENTOS, type IPSClassificacao, getIPSLabel, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
+import { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
+import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
 const MINIMO_ANONIMATO = 5;
@@ -184,83 +185,8 @@ export function PsicossocialDashboard() {
         </TabsContent>
 
         {/* Tab: Instrumentos */}
-        <TabsContent value="instrumentos" className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            {INSTRUMENTOS.map((inst) => (
-              <motion.div
-                key={inst.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Card className="h-full hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{inst.nome}</CardTitle>
-                        <CardDescription className="text-xs mt-1">{inst.descricao}</CardDescription>
-                      </div>
-                      <Badge variant="outline" className="text-xs shrink-0">{inst.totalPerguntas} perguntas</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">{inst.uso}</p>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dimensões avaliadas</p>
-                      <div className="flex flex-wrap gap-1">
-                        {inst.dimensoes.slice(0, 5).map(d => (
-                          <Badge key={d} variant="secondary" className="text-xs">{d}</Badge>
-                        ))}
-                        {inst.dimensoes.length > 5 && (
-                          <Badge variant="secondary" className="text-xs">+{inst.dimensoes.length - 5}</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2 gap-2"
-                      onClick={() => setShowForm(true)}
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Criar campanha com {inst.nome}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Dimensões psicossociais avaliadas */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Dimensões Psicossociais Avaliadas</CardTitle>
-              <CardDescription>Baseadas em NR-01, NR-17, ISO 45001 e ISO 45003</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  { icon: AlertTriangle, label: 'Demanda de Trabalho', desc: 'Carga, ritmo, pressão por tempo', color: 'bg-red-100 text-red-600' },
-                  { icon: Brain, label: 'Controle e Autonomia', desc: 'Participação, decisões, liberdade', color: 'bg-purple-100 text-purple-600' },
-                  { icon: Users, label: 'Relações Sociais', desc: 'Suporte da liderança e equipe', color: 'bg-blue-100 text-blue-600' },
-                  { icon: ShieldCheck, label: 'Justiça Organizacional', desc: 'Reconhecimento, tratamento justo', color: 'bg-emerald-100 text-emerald-600' },
-                  { icon: Heart, label: 'Segurança Psicológica', desc: 'Liberdade de expressão', color: 'bg-pink-100 text-pink-600' },
-                  { icon: Sparkles, label: 'Sentido e Propósito', desc: 'Significado, motivação', color: 'bg-amber-100 text-amber-600' },
-                  { icon: Activity, label: 'Monotonia / Boreout', desc: 'Repetitividade, estímulo cognitivo', color: 'bg-slate-100 text-slate-600' },
-                  { icon: TrendingUp, label: 'Equilíbrio Trabalho-Vida', desc: 'Conflito pessoal-profissional', color: 'bg-orange-100 text-orange-600' },
-                ].map(({ icon: Icon, label, desc, color }) => (
-                  <div key={label} className="flex items-start gap-3 p-3 rounded-lg border">
-                    <div className={cn("p-2 rounded-lg shrink-0", color)}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="text-xs text-muted-foreground">{desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="instrumentos" className="mt-4">
+          <InstrumentosVisualizacao />
         </TabsContent>
 
         {/* Tab: Indicadores */}

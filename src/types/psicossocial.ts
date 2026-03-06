@@ -84,18 +84,18 @@ export interface InstrumentoConfig {
 export const INSTRUMENTOS: InstrumentoConfig[] = [
   {
     id: 'copsoq',
-    nome: 'COPSOQ',
+    nome: 'COPSOQ III',
     descricao: 'Copenhagen Psychosocial Questionnaire',
-    uso: 'Diagnóstico geral de riscos psicossociais',
-    totalPerguntas: 40,
-    dimensoes: ['Demanda de Trabalho', 'Controle e Autonomia', 'Relações Sociais', 'Justiça Organizacional', 'Segurança Psicológica', 'Sentido do Trabalho', 'Monotonia', 'Equilíbrio Trabalho-Vida'],
+    uso: 'Diagnóstico geral de riscos psicossociais — 13 dimensões validadas internacionalmente',
+    totalPerguntas: 43,
+    dimensoes: ['Demanda Quantitativa', 'Demanda Cognitiva', 'Demanda Emocional', 'Influência e Controle', 'Suporte dos Colegas', 'Suporte da Liderança', 'Clareza de Papéis', 'Conflito de Papéis', 'Reconhecimento', 'Previsibilidade', 'Sentido do Trabalho', 'Burnout', 'Equilíbrio Trabalho-Vida'],
   },
   {
     id: 'hse',
     nome: 'HSE Management Standards',
     descricao: 'Health and Safety Executive (UK)',
-    uso: 'Avaliação focada em gestão organizacional',
-    totalPerguntas: 35,
+    uso: 'Avaliação focada em gestão organizacional — 7 padrões HSE',
+    totalPerguntas: 36,
     dimensoes: ['Demanda', 'Controle', 'Suporte do Gestor', 'Suporte dos Pares', 'Relacionamentos', 'Função', 'Gestão de Mudanças'],
   },
   {
