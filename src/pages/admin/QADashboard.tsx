@@ -483,30 +483,57 @@ export default function QADashboard() {
                   </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {AGENT_FLOWS.map((f) => (
-                    <Card
-                      key={f.id}
-                      className={`cursor-pointer transition-all border hover:shadow-md hover:border-primary/40 ${
-                        f.id === "todos" ? "border-primary/30 bg-primary/5 col-span-2 md:col-span-3 lg:col-span-4" : ""
-                      }`}
-                      onClick={() => runAgent(f.id)}
-                    >
-                      <CardContent className={`p-3 ${f.id === "todos" ? "flex items-center justify-center gap-3" : ""}`}>
-                        <div className={`flex items-start gap-2 ${f.id === "todos" ? "items-center" : ""}`}>
-                          <span className="text-xl">{f.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <h3 className="font-semibold text-xs">{f.label}</h3>
-                              <Badge variant="secondary" className="text-[9px] px-1 py-0">{f.steps}</Badge>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{f.description}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                {/* Executar TODOS — prominent button */}
+                <Card
+                  className="cursor-pointer transition-all border border-primary/30 bg-primary/5 hover:shadow-md hover:border-primary/50"
+                  onClick={() => runAgent("todos")}
+                >
+                  <CardContent className="p-3 flex items-center justify-center gap-3">
+                    <span className="text-2xl">🚀</span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-semibold text-sm">Executar TODOS os Módulos</h3>
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                          {AGENT_FLOWS.reduce((a, f) => a + f.steps, 0)}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Todos os {AGENT_FLOWS.length} fluxos + relatório IA.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Grouped by category */}
+                {AGENT_FLOW_CATEGORIES.map((cat) => {
+                  const flows = AGENT_FLOWS.filter((f) => f.category === cat.id);
+                  if (flows.length === 0) return null;
+                  return (
+                    <div key={cat.id}>
+                      <h3 className="text-xs font-semibold text-muted-foreground mb-1.5 mt-3">{cat.label}</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                        {flows.map((f) => (
+                          <Card
+                            key={f.id}
+                            className="cursor-pointer transition-all border hover:shadow-md hover:border-primary/40"
+                            onClick={() => runAgent(f.id)}
+                          >
+                            <CardContent className="p-2.5">
+                              <div className="flex items-start gap-2">
+                                <span className="text-lg">{f.icon}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <h3 className="font-semibold text-[11px] leading-tight">{f.label}</h3>
+                                    <Badge variant="secondary" className="text-[9px] px-1 py-0 shrink-0">{f.steps}</Badge>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{f.description}</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </>
             )}
 
