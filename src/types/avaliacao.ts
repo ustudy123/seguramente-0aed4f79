@@ -6,7 +6,7 @@
 export type AvaliacaoTipo = 'simples' | '360';
 export type AvaliacaoCicloStatus = 'rascunho' | 'ativo' | 'encerrado' | 'analisando';
 export type RespostaStatus = 'pendente' | 'em_andamento' | 'concluida';
-export type TipoAvaliador = 'auto' | 'gestor' | 'par' | 'subordinado';
+export type TipoAvaliador = 'auto' | 'gestor' | 'par' | 'subordinado' | 'cliente_interno';
 export type MetaPeriodo = 'mensal' | 'trimestral' | 'semestral' | 'anual';
 export type MetaStatus = 'nao_iniciada' | 'em_andamento' | 'concluida' | 'cancelada' | 'atrasada';
 export type OkrTipo = 'percentual' | 'quantidade' | 'binario' | 'monetario';
@@ -76,6 +76,7 @@ export interface Config360 {
   gestor: boolean;
   pares: number;
   subordinados: boolean;
+  cliente_interno: boolean;
 }
 
 export interface AvaliacaoCiclo {
@@ -363,6 +364,7 @@ export const TIPO_AVALIADOR_LABELS: Record<TipoAvaliador, string> = {
   gestor: 'Gestor',
   par: 'Par',
   subordinado: 'Subordinado',
+  cliente_interno: 'Cliente Interno',
 };
 
 export const STATUS_RESPOSTA_LABELS: Record<RespostaStatus, string> = {

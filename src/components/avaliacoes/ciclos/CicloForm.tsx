@@ -40,6 +40,7 @@ const formSchema = z.object({
   gestor: z.boolean().default(true),
   pares: z.number().min(0).max(5).default(0),
   subordinados: z.boolean().default(false),
+  cliente_interno: z.boolean().default(false),
   justificativa_extremas: z.boolean().default(true),
 });
 
@@ -82,6 +83,7 @@ export function CicloForm({ onSuccess }: CicloFormProps) {
       gestor: true,
       pares: 0,
       subordinados: false,
+      cliente_interno: false,
       justificativa_extremas: true,
     },
   });
@@ -96,6 +98,7 @@ export function CicloForm({ onSuccess }: CicloFormProps) {
       gestor: data.gestor,
       pares: data.pares,
       subordinados: data.subordinados,
+      cliente_interno: data.cliente_interno,
     };
 
     const cicloData: AvaliacaoCicloInsert = {
@@ -376,6 +379,24 @@ export function CicloForm({ onSuccess }: CicloFormProps) {
                         <FormLabel className="text-sm">Avaliação de Subordinados</FormLabel>
                         <FormDescription className="text-[10px]">
                           Subordinados avaliam o gestor (para líderes)
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cliente_interno"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <FormLabel className="text-sm">Cliente Interno</FormLabel>
+                        <FormDescription className="text-[10px]">
+                          Outras áreas/clientes internos avaliam o colaborador (opcional)
                         </FormDescription>
                       </div>
                       <FormControl>
