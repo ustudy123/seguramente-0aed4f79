@@ -337,17 +337,19 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Total de Colaboradores</Label>
-        <Input
-          type="number"
-          placeholder="Quantidade total"
-          value={data.total_colaboradores || ''}
-          onChange={(e) => onChange({ total_colaboradores: parseInt(e.target.value) || 0 })}
-        />
-        <p className="text-xs text-muted-foreground">
-          Utilizado para cálculos de obrigatoriedade (CIPA, PCD, Jovem Aprendiz)
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Total de Colaboradores</Label>
+          <Input
+            type="number"
+            placeholder="Ex: 150"
+            value={data.total_colaboradores || ''}
+            onChange={(e) => onChange({ total_colaboradores: parseInt(e.target.value) || 0 })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Usado para CIPA, PCD e Jovem Aprendiz
+          </p>
+        </div>
       </div>
     </div>
   );
