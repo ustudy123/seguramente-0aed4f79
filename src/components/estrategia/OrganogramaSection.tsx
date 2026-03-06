@@ -14,6 +14,13 @@ import { useCargos } from "@/hooks/useCadastros";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
+import { OrgCanvas } from "./organograma/OrgCanvas";
+import { OrgTree } from "./organograma/OrgTree";
+import { useCargos } from "@/hooks/useCadastros";
+import { useColaboradores } from "@/hooks/useColaboradores";
+import { toast } from "sonner";
+import type { EstrategiaOrganograma } from "@/types/estrategia";
 import { OrgCanvas } from "./organograma/OrgCanvas";
 import { OrgTree } from "./organograma/OrgTree";
 
