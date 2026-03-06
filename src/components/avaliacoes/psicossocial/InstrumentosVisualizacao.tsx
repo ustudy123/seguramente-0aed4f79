@@ -191,8 +191,13 @@ export function InstrumentosVisualizacao() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="copsoq">
+      <Tabs defaultValue="sipro">
         <TabsList className="w-full sm:w-auto flex-wrap h-auto gap-1">
+          <TabsTrigger value="sipro" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            SIPRO
+            <Badge variant="secondary" className="text-xs ml-1">{SIPRO_TOTAL_PERGUNTAS}</Badge>
+          </TabsTrigger>
           <TabsTrigger value="copsoq" className="gap-2">
             <Brain className="h-4 w-4" />
             COPSOQ III
@@ -207,11 +212,6 @@ export function InstrumentosVisualizacao() {
             <AlertTriangle className="h-4 w-4" />
             PROART
             <Badge variant="secondary" className="text-xs ml-1">{PROART_TOTAL_PERGUNTAS}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="sipro" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            SIPRO
-            <Badge variant="secondary" className="text-xs ml-1">{SIPRO_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
         </TabsList>
 
