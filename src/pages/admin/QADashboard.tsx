@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Shield, Database, Server, LayoutGrid, Zap,
@@ -75,6 +75,23 @@ interface AgentResult {
   ai_report: string;
 }
 
+// Live streaming state
+interface LiveStep {
+  flow: string;
+  step: string;
+  action: string;
+  status: "running" | "success" | "fail" | "warning";
+  details?: string;
+  duration_ms?: number;
+}
+
+interface LiveFlow {
+  flow: string;
+  label: string;
+  status: "running" | "done";
+  steps: LiveStep[];
+}
+
 // ═══════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════
@@ -123,6 +140,12 @@ export default function QADashboard() {
   const [agentResult, setAgentResult] = useState<AgentResult | null>(null);
   const [expandedFlows, setExpandedFlows] = useState<Set<string>>(new Set());
 
+  // Live streaming state
+  const [liveFlows, setLiveFlows] = useState<LiveFlow[]>([]);
+  const [liveMessage, setLiveMessage] = useState<string>("");
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const liveContainerRef = useRef<HTMLDivElement>(null);
+
   // ── Scan handlers ──
   const runScan = async (categoria: string) => {
     setScanning(categoria);
@@ -142,24 +165,148 @@ export default function QADashboard() {
     }
   };
 
-  // ── Agent handlers ──
+  // ── Agent handlers (streaming) ──
   const runAgent = async (flow: string) => {
     setAgentRunning(flow);
     setAgentResult(null);
     setExpandedFlows(new Set());
+    setLiveFlows([]);
+    setLiveMessage("Conectando ao agente...");
+    setIsGeneratingReport(false);
+
     try {
-      const { data, error } = await supabase.functions.invoke("ai-qa-agent", {
-        body: { flow, tenantId: profile?.tenant_id },
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "diayjpsrcerycycyaxst";
+      const url = `https://${projectId}.supabase.co/functions/v1/ai-qa-agent`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+        },
+        body: JSON.stringify({ flow, tenantId: profile?.tenant_id, stream: true }),
       });
-      if (error) throw error;
-      setAgentResult(data as AgentResult);
-      if (data.total_failed > 0) toast.error(`Agente: ${data.total_failed} testes falharam`);
-      else toast.success(`Agente: todos os ${data.total_passed} testes passaram ✓`);
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `HTTP ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Stream não disponível");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        let currentEvent = "";
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith("data: ") && currentEvent) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              handleSSEEvent(currentEvent, data);
+            } catch { /* skip bad json */ }
+            currentEvent = "";
+          }
+        }
+      }
     } catch (e: any) {
       toast.error(e.message || "Erro ao executar agente");
+      setLiveMessage("");
     } finally {
       setAgentRunning(null);
+      setLiveMessage("");
+      setIsGeneratingReport(false);
     }
+  };
+
+  const handleSSEEvent = (event: string, data: any) => {
+    switch (event) {
+      case "flow_start":
+        setLiveFlows(prev => [...prev, {
+          flow: data.flow,
+          label: data.label,
+          status: "running",
+          steps: [],
+        }]);
+        setLiveMessage(`▶ ${data.label}`);
+        break;
+
+      case "step_start":
+        setLiveFlows(prev => prev.map(f =>
+          f.flow === data.flow
+            ? {
+              ...f,
+              steps: [...f.steps, {
+                flow: data.flow,
+                step: data.step,
+                action: data.action,
+                status: "running" as const,
+              }],
+            }
+            : f
+        ));
+        setLiveMessage(`⏳ ${data.step} — ${data.action}`);
+        break;
+
+      case "step_done":
+        setLiveFlows(prev => prev.map(f =>
+          f.flow === data.flow
+            ? {
+              ...f,
+              steps: f.steps.map(s =>
+                s.step === data.step
+                  ? { ...s, status: data.status, details: data.details, duration_ms: data.duration_ms }
+                  : s
+              ),
+            }
+            : f
+        ));
+        setLiveMessage(
+          data.status === "success"
+            ? `✅ ${data.step} — ${data.duration_ms}ms`
+            : `❌ ${data.step} — ${data.details?.slice(0, 60)}`
+        );
+        break;
+
+      case "flow_done":
+        setLiveFlows(prev => prev.map(f =>
+          f.flow === data.flow ? { ...f, status: "done" } : f
+        ));
+        break;
+
+      case "ai_start":
+        setIsGeneratingReport(true);
+        setLiveMessage("🤖 Gerando relatório com IA...");
+        break;
+
+      case "complete":
+        setAgentResult(data as AgentResult);
+        setExpandedFlows(new Set(data.flows?.map((f: FlowResult) => f.flow) || []));
+        if (data.total_failed > 0) toast.error(`Agente: ${data.total_failed} testes falharam`);
+        else toast.success(`Agente: todos os ${data.total_passed} testes passaram ✓`);
+        break;
+    }
+
+    // Auto-scroll
+    setTimeout(() => {
+      liveContainerRef.current?.scrollTo({
+        top: liveContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 50);
   };
 
   const toggleFinding = (i: number) => setExpandedFindings(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; });
@@ -205,10 +352,10 @@ export default function QADashboard() {
               <CardContent className="p-4 flex items-start gap-3">
                 <Bot className="w-6 h-6 text-primary mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Agente de QA Programático</p>
+                  <p className="font-semibold text-sm">Agente de QA Programático — Tempo Real</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    O agente executa ações reais no banco de dados (criar, ler, atualizar, deletar) simulando o comportamento de um usuário.
-                    Ao final, a IA analisa os resultados e gera um relatório com falhas e recomendações.
+                    O agente executa ações reais no banco de dados simulando o comportamento de um usuário.
+                    Acompanhe cada passo sendo executado em tempo real na tela.
                     <strong> Todos os dados de teste são removidos automaticamente.</strong>
                   </p>
                 </div>
@@ -240,7 +387,7 @@ export default function QADashboard() {
                           {isRunning && (
                             <div className="flex items-center gap-2 mt-2 text-primary">
                               <Loader2 className="w-3 h-3 animate-spin" />
-                              <span className="text-xs font-medium animate-pulse">Executando testes...</span>
+                              <span className="text-xs font-medium animate-pulse">Executando...</span>
                             </div>
                           )}
                         </div>
@@ -250,6 +397,81 @@ export default function QADashboard() {
                 );
               })}
             </div>
+
+            {/* ═══ LIVE TERMINAL ═══ */}
+            {(agentRunning || (liveFlows.length > 0 && !agentResult)) && (
+              <Card className="border-primary/30 overflow-hidden">
+                <CardHeader className="pb-2 bg-muted/30">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary animate-pulse" />
+                    Execução em Tempo Real
+                    {liveMessage && (
+                      <span className="text-xs font-normal text-muted-foreground ml-2 truncate max-w-[400px]">
+                        {liveMessage}
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div
+                    ref={liveContainerRef}
+                    className="max-h-[400px] overflow-y-auto bg-slate-950 text-slate-100 p-4 font-mono text-xs space-y-1"
+                  >
+                    {liveFlows.map((liveFlow) => (
+                      <div key={liveFlow.flow} className="mb-3">
+                        <div className="flex items-center gap-2 text-primary font-semibold mb-1">
+                          {liveFlow.status === "running" ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          )}
+                          <span>═══ {liveFlow.label} ═══</span>
+                        </div>
+                        {liveFlow.steps.map((step, i) => (
+                          <div key={i} className="flex items-start gap-2 pl-4">
+                            {step.status === "running" ? (
+                              <Loader2 className="w-3 h-3 animate-spin text-blue-400 mt-0.5 shrink-0" />
+                            ) : step.status === "success" ? (
+                              <span className="text-emerald-400 shrink-0">✓</span>
+                            ) : step.status === "fail" ? (
+                              <span className="text-red-400 shrink-0">✗</span>
+                            ) : (
+                              <span className="text-amber-400 shrink-0">⚠</span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <span className={`${
+                                step.status === "running" ? "text-blue-300" :
+                                step.status === "success" ? "text-emerald-300" :
+                                step.status === "fail" ? "text-red-300" : "text-amber-300"
+                              }`}>
+                                {step.step}
+                              </span>
+                              <span className="text-slate-500 ml-2">{step.action}</span>
+                              {step.duration_ms !== undefined && (
+                                <span className="text-slate-600 ml-2">{step.duration_ms}ms</span>
+                              )}
+                              {step.details && (
+                                <div className={`text-[10px] mt-0.5 ${
+                                  step.status === "fail" ? "text-red-400/80" : "text-slate-500"
+                                }`}>
+                                  → {step.details.slice(0, 120)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                    {isGeneratingReport && (
+                      <div className="flex items-center gap-2 text-primary pt-2">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Gerando relatório com IA...</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Agent Results */}
             {agentResult && (
