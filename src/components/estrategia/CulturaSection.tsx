@@ -126,6 +126,7 @@ export function CulturaSection() {
         body: {
           ...form,
           empresa_nome: profile?.nome_completo || "Nossa Empresa",
+          organograma: organograma || [],
         },
       });
 
