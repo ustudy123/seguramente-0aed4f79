@@ -76,6 +76,7 @@ import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
