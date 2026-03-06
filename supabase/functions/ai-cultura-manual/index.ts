@@ -162,6 +162,15 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks. O HTM
       html = html.replace(/^```html?\n?/, "").replace(/\n?```$/, "");
     }
 
+    // Inject the org chart section before </body> if it exists, otherwise append
+    if (orgSection) {
+      if (html.includes("</body>")) {
+        html = html.replace("</body>", `${orgSection}</body>`);
+      } else {
+        html = html + orgSection;
+      }
+    }
+
     return new Response(JSON.stringify({ html }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
