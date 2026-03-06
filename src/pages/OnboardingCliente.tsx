@@ -190,15 +190,13 @@ function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcluir: ()
     }
     setSalvando(true);
     try {
-      await supabase
-        .from('programa_validador_clientes' as never)
-        .update({
-          nome_empresa: form.razao_social,
-          cnpj: form.cnpj,
-          segmento: form.segmento,
-          quantidade_colaboradores: parseInt(form.quantidade_colaboradores) || null,
-        } as never)
-        .eq('id', cliente.id);
+      await supabase.rpc('atualizar_cliente_por_onboarding_token', {
+          p_token: token,
+          p_nome_empresa: form.razao_social,
+          p_cnpj: form.cnpj,
+          p_segmento: form.segmento,
+          p_quantidade_colaboradores: parseInt(form.quantidade_colaboradores) || null,
+        });
       toast.success("Dados salvos com sucesso!");
       onConcluir();
     } catch (e) {
