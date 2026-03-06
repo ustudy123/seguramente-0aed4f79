@@ -798,11 +798,8 @@ export default function OnboardingCliente() {
     queryFn: async (): Promise<Contrato[]> => {
       if (!cliente?.id) return [];
       const { data } = await supabase
-        .from('programa_validador_contratos' as never)
-        .select('id, token, status, assinado_em, html_assinado')
-        .eq('cliente_id', cliente.id)
-        .order('created_at', { ascending: false }) as { data: Contrato[] | null };
-      return data || [];
+        .rpc('buscar_contratos_por_cliente', { p_cliente_id: cliente.id });
+      return (data || []) as unknown as Contrato[];
     },
     enabled: !!cliente?.id,
     refetchInterval: 15000,
@@ -814,11 +811,8 @@ export default function OnboardingCliente() {
     queryFn: async (): Promise<DocumentoLink[]> => {
       if (!cliente?.id) return [];
       const { data } = await supabase
-        .from('programa_validador_documento_links' as never)
-        .select('id, tipo, token, status, aceito_em, html_assinado, html_documento')
-        .eq('cliente_id', cliente.id)
-        .order('created_at', { ascending: false }) as { data: DocumentoLink[] | null };
-      return data || [];
+        .rpc('buscar_doc_links_por_cliente', { p_cliente_id: cliente.id });
+      return (data || []) as unknown as DocumentoLink[];
     },
     enabled: !!cliente?.id,
     refetchInterval: 15000,
