@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { BLOCOS_DINAMICOS, type CampanhaPsicossocial } from "@/types/psicossocial";
+import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type InstrumentoPsicossocial } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 
 const MENSAGEM_INSTITUCIONAL_PADRAO = `Você pode optar por se identificar caso deseje acompanhamento individual.
@@ -59,6 +59,7 @@ const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
   tipo: z.enum(['regular', 'extraordinaria']).default('regular'),
+  instrumento: z.enum(['copsoq', 'hse', 'proart', 'customizado']).default('copsoq'),
   periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().min(1, "Data de término é obrigatória"),
