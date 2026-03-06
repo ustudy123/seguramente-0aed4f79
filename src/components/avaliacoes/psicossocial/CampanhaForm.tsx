@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, UserCheck, FileText, Info, Calendar, RefreshCw } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -38,13 +37,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type InstrumentoPsicossocial } from "@/types/psicossocial";
+import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 
-const MENSAGEM_INSTITUCIONAL_PADRAO = `Você pode optar por se identificar caso deseje acompanhamento individual.
-Sua identificação será utilizada apenas para ações de cuidado e não para punição.`;
-
-const POLITICA_USO_DADOS_PADRAO = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Os dados são tratados de acordo com a LGPD e as respostas individuais não serão utilizadas para decisões punitivas.`;
+const POLITICA_USO_DADOS_PADRAO = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
 
 const MOTIVOS_EXTRAORDINARIA = [
   { value: 'acidente', label: 'Acidente de trabalho' },
@@ -63,9 +59,6 @@ const formSchema = z.object({
   periodicidade: z.enum(['mensal', 'trimestral', 'semestral', 'anual']).optional(),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().min(1, "Data de término é obrigatória"),
-  anonimo: z.boolean().default(true),
-  permite_identificacao_voluntaria: z.boolean().default(true),
-  mensagem_institucional: z.string().optional(),
   politica_uso_dados: z.string().optional(),
   blocos_dinamicos: z.array(z.string()).default([]),
   motivo_extraordinaria: z.string().optional(),
@@ -78,7 +71,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface CampanhaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  campanhaAnterior?: CampanhaPsicossocial; // Para reaplicação baseada em campanha anterior
+  campanhaAnterior?: CampanhaPsicossocial;
 }
 
 export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaFormProps) {
@@ -95,16 +88,12 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
       periodicidade: 'trimestral',
       data_inicio: format(new Date(), "yyyy-MM-dd"),
       data_fim: format(addDays(new Date(), 30), "yyyy-MM-dd"),
-      anonimo: campanhaAnterior?.anonimo ?? true,
-      permite_identificacao_voluntaria: campanhaAnterior?.permite_identificacao_voluntaria ?? true,
-      mensagem_institucional: campanhaAnterior?.mensagem_institucional ?? MENSAGEM_INSTITUCIONAL_PADRAO,
       politica_uso_dados: campanhaAnterior?.politica_uso_dados ?? POLITICA_USO_DADOS_PADRAO,
       blocos_dinamicos: campanhaAnterior?.blocos_dinamicos ?? [],
       campanha_anterior_id: campanhaAnterior?.id,
     },
   });
 
-  const anonimo = form.watch("anonimo");
   const tipo = form.watch("tipo");
 
   const onSubmit = async (data: FormValues) => {
@@ -116,9 +105,10 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
       periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
       data_inicio: data.data_inicio,
       data_fim: data.data_fim,
-      anonimo: data.anonimo,
-      permite_identificacao_voluntaria: data.anonimo ? data.permite_identificacao_voluntaria : false,
-      mensagem_institucional: data.anonimo && data.permite_identificacao_voluntaria ? data.mensagem_institucional : undefined,
+      // Sempre anônimo, sem identificação voluntária
+      anonimo: true,
+      permite_identificacao_voluntaria: false,
+      mensagem_institucional: undefined,
       politica_uso_dados: data.politica_uso_dados,
       blocos_dinamicos: data.blocos_dinamicos,
       motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
@@ -129,7 +119,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
     onOpenChange(false);
   };
 
-  // Campanhas anteriores para seleção (apenas regulares encerradas)
   const campanhasAnteriores = campanhas.filter(c => c.status === 'encerrada');
 
   return (
@@ -145,12 +134,20 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
             {isReaplicacao ? 'Reaplicação Extraordinária' : 'Nova Campanha Psicossocial'}
           </DialogTitle>
           <DialogDescription>
-            {isReaplicacao 
+            {isReaplicacao
               ? 'Configure uma reaplicação controlada baseada na campanha anterior'
               : 'Configure uma nova campanha de avaliação de riscos psicossociais'
             }
           </DialogDescription>
         </DialogHeader>
+
+        {/* Aviso de anonimato obrigatório */}
+        <div className="flex items-start gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <LockKeyhole className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-emerald-800 leading-relaxed">
+            <strong>Anonimato obrigatório:</strong> Toda campanha psicossocial é 100% anônima por padrão. Não é possível vincular respostas a colaboradores individuais. Os resultados são exibidos apenas de forma agregada, com mínimo de 5 respostas para garantir o anonimato estatístico.
+          </p>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -184,7 +181,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      {tipo === 'regular' 
+                      {tipo === 'regular'
                         ? 'Avaliação periódica programada (trimestral, semestral, anual)'
                         : 'Reaplicação sob demanda por evento crítico ou necessidade'
                       }
@@ -263,10 +260,10 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                     <FormItem>
                       <FormLabel>Descrição do Motivo</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Descreva o evento ou situação que motivou esta reaplicação..."
                           rows={2}
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                     </FormItem>
@@ -303,6 +300,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                 )}
               </>
             )}
+
             {/* Instrumento */}
             <FormField
               control={form.control}
@@ -346,9 +344,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                 <FormItem>
                   <FormLabel>Nome da Campanha *</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Ex: Avaliação Psicossocial Q1 2026" 
-                      {...field} 
+                    <Input
+                      placeholder="Ex: Avaliação Psicossocial Q1 2026"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -364,9 +362,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="Descreva o objetivo desta campanha..."
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -410,88 +408,31 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                 <AccordionTrigger className="px-4 hover:no-underline">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-emerald-600" />
-                    <span className="font-medium">Configuração de Privacidade</span>
+                    <span className="font-medium">Política de Dados (LGPD)</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4 space-y-4">
-                  {/* Anonimato */}
-                  <FormField
-                    control={form.control}
-                    name="anonimo"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-emerald-50/50">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-emerald-600" />
-                            <FormLabel className="text-base">Anônimo por Padrão</FormLabel>
-                          </div>
-                          <FormDescription>
-                            Nome e CPF não são exibidos. Metadados (setor, cargo, turno) são preservados para análise.
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  {/* Anonimato sempre ativo */}
+                  <div className="flex items-start gap-3 rounded-lg border p-4 bg-emerald-50/50">
+                    <Shield className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-emerald-800 text-sm">Anonimato Total — Obrigatório</p>
+                      <p className="text-xs text-emerald-700 mt-1">
+                        Este questionário é 100% anônimo. Não é possível vincular respostas a colaboradores individuais. Os resultados são exibidos apenas de forma agregada (mínimo 5 respostas).
+                      </p>
+                    </div>
+                  </div>
 
-                  {/* Identificação Voluntária - só aparece se anônimo */}
-                  {anonimo && (
-                    <FormField
-                      control={form.control}
-                      name="permite_identificacao_voluntaria"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-blue-50/50">
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-2">
-                              <UserCheck className="h-4 w-4 text-blue-600" />
-                              <FormLabel className="text-base">Permitir Identificação Voluntária</FormLabel>
-                            </div>
-                            <FormDescription>
-                              Colaborador pode optar por se identificar para receber acompanhamento individual
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {/* Mensagem Institucional - só aparece se identificação voluntária */}
-                  {anonimo && form.watch("permite_identificacao_voluntaria") && (
-                    <FormField
-                      control={form.control}
-                      name="mensagem_institucional"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Info className="h-4 w-4 text-blue-600" />
-                            Mensagem Institucional
-                          </FormLabel>
-                          <FormDescription>
-                            Exibida ao colaborador ao escolher se identificar
-                          </FormDescription>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Mensagem sobre uso dos dados..."
-                              rows={3}
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                  {/* Separação de módulos */}
+                  <div className="flex items-start gap-3 rounded-lg border p-4 bg-blue-50/50">
+                    <FileText className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-blue-800 text-sm">Separação entre Psicossocial e Ouvidoria</p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Este módulo é destinado ao diagnóstico organizacional coletivo. Para manifestações individuais, solicitações de apoio ou denúncias, o colaborador deve utilizar o canal de Ouvidoria.
+                      </p>
+                    </div>
+                  </div>
 
                   {/* Política de Uso de Dados */}
                   <FormField
@@ -500,17 +441,17 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-gray-600" />
-                          Política de Uso dos Dados (LGPD)
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          Texto da Política de Dados
                         </FormLabel>
                         <FormDescription>
-                          Texto exibido a todos os colaboradores antes de iniciar
+                          Exibido ao colaborador antes de iniciar o questionário
                         </FormDescription>
                         <FormControl>
-                          <Textarea 
+                          <Textarea
                             placeholder="Política de privacidade..."
                             rows={3}
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
