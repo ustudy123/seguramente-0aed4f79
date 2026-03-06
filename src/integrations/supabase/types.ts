@@ -11715,6 +11715,225 @@ export type Database = {
           },
         ]
       }
+      psicossocial_alertas: {
+        Row: {
+          acao_criada_id: string | null
+          campanha_id: string | null
+          created_at: string
+          descricao: string | null
+          funcao: string | null
+          id: string
+          metadados: Json | null
+          resolvido: boolean | null
+          resolvido_em: string | null
+          setor: string | null
+          severidade: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          acao_criada_id?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          funcao?: string | null
+          id?: string
+          metadados?: Json | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          setor?: string | null
+          severidade?: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          acao_criada_id?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          funcao?: string | null
+          id?: string
+          metadados?: Json | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          setor?: string | null
+          severidade?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_alertas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psicossocial_dimensoes: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          codigo: string
+          created_at: string
+          descricao: string | null
+          id: string
+          instrumento: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          instrumento?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          instrumento?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: []
+      }
+      psicossocial_evidencias: {
+        Row: {
+          campanha_id: string | null
+          created_at: string
+          id: string
+          indicador: string
+          metadados: Json | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          peso: number | null
+          referencia_id: string | null
+          tenant_id: string
+          tipo_modulo: string
+          valor: number | null
+          valor_texto: string | null
+        }
+        Insert: {
+          campanha_id?: string | null
+          created_at?: string
+          id?: string
+          indicador: string
+          metadados?: Json | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          peso?: number | null
+          referencia_id?: string | null
+          tenant_id: string
+          tipo_modulo: string
+          valor?: number | null
+          valor_texto?: string | null
+        }
+        Update: {
+          campanha_id?: string | null
+          created_at?: string
+          id?: string
+          indicador?: string
+          metadados?: Json | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          peso?: number | null
+          referencia_id?: string | null
+          tenant_id?: string
+          tipo_modulo?: string
+          valor?: number | null
+          valor_texto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_evidencias_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psicossocial_inventario_riscos: {
+        Row: {
+          acao_recomendada: string | null
+          campanha_id: string | null
+          classificacao: string
+          created_at: string
+          evidencias: Json | null
+          exposicao: string
+          fator_psicossocial: string
+          funcao: string | null
+          id: string
+          plano_acao_id: string | null
+          probabilidade: string
+          setor: string | null
+          severidade: string
+          status: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          acao_recomendada?: string | null
+          campanha_id?: string | null
+          classificacao?: string
+          created_at?: string
+          evidencias?: Json | null
+          exposicao?: string
+          fator_psicossocial: string
+          funcao?: string | null
+          id?: string
+          plano_acao_id?: string | null
+          probabilidade?: string
+          setor?: string | null
+          severidade?: string
+          status?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          acao_recomendada?: string | null
+          campanha_id?: string | null
+          classificacao?: string
+          created_at?: string
+          evidencias?: Json | null
+          exposicao?: string
+          fator_psicossocial?: string
+          funcao?: string | null
+          id?: string
+          plano_acao_id?: string | null
+          probabilidade?: string
+          setor?: string | null
+          severidade?: string
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_inventario_riscos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questionario_psicossocial_campanhas: {
         Row: {
           anonimo: boolean
@@ -11728,18 +11947,25 @@ export type Database = {
           data_inicio: string
           departamentos_ids: string[] | null
           descricao: string | null
+          escopo: string | null
+          escopo_valores: string[] | null
           evento_gatilho_id: string | null
           evento_gatilho_tipo: string | null
           id: string
+          instrumento: string | null
+          ips_classificacao: string | null
+          ips_score: number | null
           mensagem_institucional: string | null
           motivo_extraordinaria: string | null
           nome: string
           periodicidade: string | null
           permite_identificacao_voluntaria: boolean
           politica_uso_dados: string | null
+          radar_data: Json | null
           status: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo: string
+          total_respostas: number | null
           updated_at: string
         }
         Insert: {
@@ -11754,18 +11980,25 @@ export type Database = {
           data_inicio: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          escopo?: string | null
+          escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
           id?: string
+          instrumento?: string | null
+          ips_classificacao?: string | null
+          ips_score?: number | null
           mensagem_institucional?: string | null
           motivo_extraordinaria?: string | null
           nome: string
           periodicidade?: string | null
           permite_identificacao_voluntaria?: boolean
           politica_uso_dados?: string | null
+          radar_data?: Json | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo?: string
+          total_respostas?: number | null
           updated_at?: string
         }
         Update: {
@@ -11780,18 +12013,25 @@ export type Database = {
           data_inicio?: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          escopo?: string | null
+          escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
           id?: string
+          instrumento?: string | null
+          ips_classificacao?: string | null
+          ips_score?: number | null
           mensagem_institucional?: string | null
           motivo_extraordinaria?: string | null
           nome?: string
           periodicidade?: string | null
           permite_identificacao_voluntaria?: boolean
           politica_uso_dados?: string | null
+          radar_data?: Json | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id?: string
           tipo?: string
+          total_respostas?: number | null
           updated_at?: string
         }
         Relationships: [
