@@ -260,20 +260,21 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
                 </div>
               </ScrollArea>
             </div>
+          </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button variant="outline" onClick={handleClose}>Cancelar</Button>
-              <Button
-                onClick={() => iniciarMutation.mutate()}
-                disabled={elegíveis.length === 0 || iniciarMutation.isPending}
-                className="gap-2"
-              >
-                <Play className="h-4 w-4" />
-                Iniciar e Gerar {totalAvaliacoes} Avaliações
-              </Button>
-            </div>
+          <div className="flex flex-col sm:flex-row justify-end gap-2 px-6 py-4 border-t shrink-0">
+            <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto">Cancelar</Button>
+            <Button
+              onClick={() => iniciarMutation.mutate()}
+              disabled={elegíveis.length === 0 || iniciarMutation.isPending}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <Play className="h-4 w-4" />
+              Iniciar e Gerar {totalAvaliacoes} Avaliações
+            </Button>
           </div>
         )}
+
 
         {step === "generating" && (
           <div className="flex-1 flex flex-col items-center justify-center gap-6 py-8">
