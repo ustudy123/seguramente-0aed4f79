@@ -257,6 +257,7 @@ export interface NovaCampanha {
   nome: string;
   descricao?: string;
   tipo?: CampanhaPsicossocialTipo;
+  instrumento?: InstrumentoPsicossocial;
   periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;
