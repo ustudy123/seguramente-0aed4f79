@@ -3,23 +3,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   Shield,
   FileText,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  TrendingDown,
   Upload,
   Search,
   BarChart3,
   FileCheck,
   AlertCircle,
   ArrowRight,
-  Activity,
   BookOpen,
-  Zap,
   Target,
   Trash2,
   Loader2,
