@@ -1,0 +1,112 @@
+import { describe, it, expect } from "vitest";
+import {
+  calcularIPSClassificacao,
+  getIPSColor,
+  getIPSBgColor,
+  getIPSLabel,
+  INSTRUMENTOS,
+  ESCALA_RESPOSTAS,
+  BLOCOS_PSICOSSOCIAL,
+} from "@/types/psicossocial";
+
+describe("calcularIPSClassificacao (types)", () => {
+  const cases: [number, string][] = [
+    [100, "saudavel"],
+    [80, "saudavel"],
+    [79, "estavel"],
+    [65, "estavel"],
+    [64, "atencao"],
+    [50, "atencao"],
+    [49, "risco"],
+    [35, "risco"],
+    [34, "critico"],
+    [0, "critico"],
+  ];
+
+  cases.forEach(([score, expected]) => {
+    it(`${score} → ${expected}`, () => {
+      expect(calcularIPSClassificacao(score)).toBe(expected);
+    });
+  });
+});
+
+describe("getIPSColor", () => {
+  it("retorna classe CSS para cada classificação", () => {
+    expect(getIPSColor("saudavel")).toContain("emerald");
+    expect(getIPSColor("estavel")).toContain("blue");
+    expect(getIPSColor("atencao")).toContain("amber");
+    expect(getIPSColor("risco")).toContain("orange");
+    expect(getIPSColor("critico")).toContain("red");
+  });
+});
+
+describe("getIPSBgColor", () => {
+  it("retorna background para cada classificação", () => {
+    expect(getIPSBgColor("saudavel")).toContain("bg-");
+    expect(getIPSBgColor("critico")).toContain("bg-");
+  });
+});
+
+describe("getIPSLabel", () => {
+  it("retorna label em português", () => {
+    expect(getIPSLabel("saudavel")).toBe("Ambiente Saudável");
+    expect(getIPSLabel("critico")).toBe("Risco Crítico");
+  });
+});
+
+describe("INSTRUMENTOS config", () => {
+  it("tem pelo menos COPSOQ e HSE", () => {
+    const ids = INSTRUMENTOS.map(i => i.id);
+    expect(ids).toContain("copsoq");
+    expect(ids).toContain("hse");
+  });
+
+  it("COPSOQ tem 43 perguntas", () => {
+    const copsoq = INSTRUMENTOS.find(i => i.id === "copsoq")!;
+    expect(copsoq.totalPerguntas).toBe(43);
+  });
+
+  it("HSE tem 36 perguntas", () => {
+    const hse = INSTRUMENTOS.find(i => i.id === "hse")!;
+    expect(hse.totalPerguntas).toBe(36);
+  });
+});
+
+describe("ESCALA_RESPOSTAS", () => {
+  it("tem 5 opções de 0 a 4", () => {
+    expect(ESCALA_RESPOSTAS.length).toBe(5);
+    expect(ESCALA_RESPOSTAS[0].valor).toBe(0);
+    expect(ESCALA_RESPOSTAS[4].valor).toBe(4);
+  });
+
+  it("cada opção tem label e emoji", () => {
+    for (const op of ESCALA_RESPOSTAS) {
+      expect(op.label).toBeTruthy();
+      expect(op.emoji).toBeTruthy();
+    }
+  });
+});
+
+describe("BLOCOS_PSICOSSOCIAL", () => {
+  it("tem blocos definidos", () => {
+    expect(BLOCOS_PSICOSSOCIAL.length).toBeGreaterThan(0);
+  });
+
+  it("cada bloco tem perguntas com id e texto", () => {
+    for (const bloco of BLOCOS_PSICOSSOCIAL) {
+      expect(bloco.id).toBeTruthy();
+      expect(bloco.titulo).toBeTruthy();
+      expect(bloco.perguntas.length).toBeGreaterThan(0);
+      for (const p of bloco.perguntas) {
+        expect(p.id).toBeTruthy();
+        expect(p.texto).toBeTruthy();
+      }
+    }
+  });
+
+  it("IDs de perguntas são únicos", () => {
+    const ids = BLOCOS_PSICOSSOCIAL.flatMap(b => b.perguntas.map(p => p.id));
+    const unique = new Set(ids);
+    expect(unique.size).toBe(ids.length);
+  });
+});
