@@ -162,6 +162,17 @@ interface AdmissaoFormProps {
 
 export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const { departamentos } = useDepartamentos();
+  const { filiais } = useFiliais();
+  const { empresaAtivaId } = useEmpresaAtiva();
+
+  const departamentosOptions = departamentos.filter(
+    (d) => typeof d?.nome === 'string' && d.nome.trim().length > 0,
+  );
+  const estabelecimentosOptions = filiais.filter(
+    (f) => typeof f?.nome === 'string' && f.nome.trim().length > 0 &&
+      (!empresaAtivaId || f.empresa_id === empresaAtivaId),
+  );
   const [documentos, setDocumentos] = useState<DocumentoAdmissao[]>(
     DOCUMENTOS_OBRIGATORIOS.map((doc, index) => ({
       ...doc,
