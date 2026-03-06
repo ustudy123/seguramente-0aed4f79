@@ -190,15 +190,13 @@ function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcluir: ()
     }
     setSalvando(true);
     try {
-      await supabase
-        .from('programa_validador_clientes' as never)
-        .update({
-          nome_empresa: form.razao_social,
-          cnpj: form.cnpj,
-          segmento: form.segmento,
-          quantidade_colaboradores: parseInt(form.quantidade_colaboradores) || null,
-        } as never)
-        .eq('id', cliente.id);
+      await supabase.rpc('atualizar_cliente_por_onboarding_token', {
+          p_token: cliente.onboarding_token,
+          p_nome_empresa: form.razao_social,
+          p_cnpj: form.cnpj,
+          p_segmento: form.segmento,
+          p_quantidade_colaboradores: parseInt(form.quantidade_colaboradores) || null,
+        });
       toast.success("Dados salvos com sucesso!");
       onConcluir();
     } catch (e) {
@@ -784,13 +782,10 @@ export default function OnboardingCliente() {
     queryKey: ['onboarding-cliente', token],
     queryFn: async (): Promise<Cliente | null> => {
       if (!token) return null;
-      const { data, error } = await supabase
-        .from('programa_validador_clientes' as never)
-        .select('*')
-        .eq('onboarding_token', token)
-        .maybeSingle() as { data: Cliente | null; error: Error | null };
+      const { data: rows, error } = await supabase
+        .rpc('buscar_cliente_por_onboarding_token', { p_token: token });
       if (error) throw error;
-      return data;
+      return (rows?.[0] as unknown as Cliente) || null;
     },
     enabled: !!token,
   });
@@ -801,11 +796,8 @@ export default function OnboardingCliente() {
     queryFn: async (): Promise<Contrato[]> => {
       if (!cliente?.id) return [];
       const { data } = await supabase
-        .from('programa_validador_contratos' as never)
-        .select('id, token, status, assinado_em, html_assinado')
-        .eq('cliente_id', cliente.id)
-        .order('created_at', { ascending: false }) as { data: Contrato[] | null };
-      return data || [];
+        .rpc('buscar_contratos_por_cliente', { p_cliente_id: cliente.id });
+      return (data || []) as unknown as Contrato[];
     },
     enabled: !!cliente?.id,
     refetchInterval: 15000,
@@ -817,11 +809,8 @@ export default function OnboardingCliente() {
     queryFn: async (): Promise<DocumentoLink[]> => {
       if (!cliente?.id) return [];
       const { data } = await supabase
-        .from('programa_validador_documento_links' as never)
-        .select('id, tipo, token, status, aceito_em, html_assinado, html_documento')
-        .eq('cliente_id', cliente.id)
-        .order('created_at', { ascending: false }) as { data: DocumentoLink[] | null };
-      return data || [];
+        .rpc('buscar_doc_links_por_cliente', { p_cliente_id: cliente.id });
+      return (data || []) as unknown as DocumentoLink[];
     },
     enabled: !!cliente?.id,
     refetchInterval: 15000,

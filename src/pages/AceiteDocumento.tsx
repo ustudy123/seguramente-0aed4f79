@@ -22,13 +22,22 @@ export default function AceiteDocumento() {
   const { data: link, isLoading, error } = useQuery({
     queryKey: ['doc-link', token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('programa_validador_documento_links' as never)
-        .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token, tenant_id)')
-        .eq('token', token!)
-        .single() as any;
+      const { data: rows, error } = await supabase
+        .rpc('buscar_documento_link_por_token', { p_token: token! });
       if (error) throw error;
-      return data;
+      const row = rows?.[0];
+      if (!row) throw new Error('Documento não encontrado');
+      // Map RPC result to the shape the component expects
+      return {
+        ...row,
+        programa_validador_clientes: {
+          nome_empresa: row.cliente_nome_empresa,
+          poc_nome: row.cliente_poc_nome,
+          poc_email: row.cliente_poc_email,
+          onboarding_token: row.cliente_onboarding_token,
+          tenant_id: row.cliente_tenant_id,
+        },
+      };
     },
     enabled: !!token,
   });
@@ -60,22 +69,20 @@ export default function AceiteDocumento() {
       }
 
       const { error } = await supabase
-        .from('programa_validador_documento_links' as never)
-        .update({
-          status: 'aceito',
-          aceito_em: agora,
-          aceito_por: signatario,
-          html_assinado: htmlAssinado,
-        } as never)
-        .eq('token', token!) as any;
+        .rpc('atualizar_documento_link_por_token', {
+          p_token: token!,
+          p_status: 'aceito',
+          p_html_assinado: htmlAssinado,
+          p_assinante_nome: signatario,
+        });
       if (error) throw error;
 
       // Atualizar documento vinculado
-      if (link?.documento_id) {
+      if ((link as any)?.documento_id) {
         await supabase
           .from('programa_validador_documentos')
           .update({ status: 'aceito', aceito_em: agora })
-          .eq('id', link.documento_id);
+          .eq('id', (link as any).documento_id);
       } else {
         const { data: existing } = await supabase
           .from('programa_validador_documentos')
@@ -197,13 +204,10 @@ export default function AceiteDocumento() {
     mutationFn: async () => {
       const agora = new Date().toISOString();
       const { error } = await supabase
-        .from('programa_validador_documento_links' as never)
-        .update({
-          status: 'recusado',
-          recusado_em: agora,
-          motivo_recusa: motivo || 'Não informado',
-        } as never)
-        .eq('token', token!) as any;
+        .rpc('atualizar_documento_link_por_token', {
+          p_token: token!,
+          p_status: 'recusado',
+        });
       if (error) throw error;
 
       await supabase.from('programa_validador_historico' as never).insert({
@@ -262,7 +266,7 @@ export default function AceiteDocumento() {
               <p className="text-muted-foreground text-sm">
                 Assinada em{' '}
                 {link.aceito_em ? format(new Date(link.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ''}
-                {link.aceito_por ? ` por ${link.aceito_por}` : ''}.
+                {(link as any)?.aceito_por ? ` por ${(link as any).aceito_por}` : ''}.
               </p>
             </div>
             {(link.html_assinado || link.html_documento) && (

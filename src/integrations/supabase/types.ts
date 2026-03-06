@@ -13385,12 +13385,92 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assinar_contrato_por_token: {
+        Args: {
+          p_assinante_ip: string
+          p_assinante_nome: string
+          p_assinatura_imagem: string
+          p_html_assinado: string
+          p_token: string
+        }
+        Returns: undefined
+      }
+      atualizar_cliente_por_onboarding_token: {
+        Args: {
+          p_cnpj?: string
+          p_nome_empresa?: string
+          p_quantidade_colaboradores?: number
+          p_segmento?: string
+          p_token: string
+        }
+        Returns: undefined
+      }
       atualizar_convite_por_token: {
         Args: { p_status: string; p_token: string }
         Returns: undefined
       }
+      atualizar_documento_link_por_token: {
+        Args: {
+          p_assinante_ip?: string
+          p_assinante_nome?: string
+          p_html_assinado?: string
+          p_status: string
+          p_token: string
+        }
+        Returns: undefined
+      }
       auto_abrir_competencia_mensal: { Args: never; Returns: undefined }
       bloquear_profissionais_expirados: { Args: never; Returns: undefined }
+      buscar_cliente_por_activation_token: {
+        Args: { p_token: string }
+        Returns: {
+          activation_token_expires_at: string
+          cnpj: string
+          conta_ativada: boolean
+          id: string
+          nome_empresa: string
+          onboarding_token: string
+          poc_email: string
+          poc_nome: string
+          tenant_id: string
+        }[]
+      }
+      buscar_cliente_por_onboarding_token: {
+        Args: { p_token: string }
+        Returns: {
+          activation_token_expires_at: string
+          cnpj: string
+          conta_ativada: boolean
+          id: string
+          nome_empresa: string
+          onboarding_token: string
+          poc_email: string
+          poc_nome: string
+          tenant_id: string
+        }[]
+      }
+      buscar_contrato_por_token: {
+        Args: { p_token: string }
+        Returns: {
+          assinado_em: string
+          cliente_id: string
+          html_assinado: string
+          html_contrato: string
+          id: string
+          status: string
+          token: string
+        }[]
+      }
+      buscar_contratos_por_cliente: {
+        Args: { p_cliente_id: string }
+        Returns: {
+          assinado_em: string
+          html_assinado: string
+          id: string
+          status: string
+          token: string
+        }[]
+      }
       buscar_convite_por_token: {
         Args: { p_token: string }
         Returns: {
@@ -13419,6 +13499,36 @@ export type Database = {
           iniciado_em: string
           status: string
           tenant_id: string
+          token: string
+        }[]
+      }
+      buscar_doc_links_por_cliente: {
+        Args: { p_cliente_id: string }
+        Returns: {
+          aceito_em: string
+          html_assinado: string
+          html_documento: string
+          id: string
+          status: string
+          tipo: string
+          token: string
+        }[]
+      }
+      buscar_documento_link_por_token: {
+        Args: { p_token: string }
+        Returns: {
+          aceito_em: string
+          cliente_id: string
+          cliente_nome_empresa: string
+          cliente_onboarding_token: string
+          cliente_poc_email: string
+          cliente_poc_nome: string
+          cliente_tenant_id: string
+          html_assinado: string
+          html_documento: string
+          id: string
+          status: string
+          tipo: string
           token: string
         }[]
       }

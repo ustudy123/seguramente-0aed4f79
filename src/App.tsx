@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -75,6 +76,7 @@ import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -184,6 +186,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

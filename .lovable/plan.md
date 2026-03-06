@@ -1,82 +1,65 @@
 
+## Seletor Global de Empresa Ativa
 
-# Varredura de Qualidade do Seguramente
+### Problema
+Hoje o sistema mostra apenas o nome do tenant no header ("Empresa SudomedS"), mas quando o usuario trabalha com varias empresas do mesmo grupo, precisa de uma forma rapida de trocar a empresa ativa para filtrar dados em todos os modulos.
 
-## Diagnóstico Atual
+### Solucao Proposta
+Criar um **seletor de empresa** no header que substitui o indicador estático do tenant. O seletor tera:
+- Dropdown clicavel mostrando a empresa ativa atual
+- Campo de busca para filtrar empresas por razao social, nome fantasia ou CNPJ
+- Lista das empresas ativas do tenant
+- Opcao "Todas as empresas" para visao consolidada
+- Persistencia da selecao no localStorage
 
-Fiz uma varredura completa no sistema. Aqui esta o resultado organizado por prioridade:
+### Componentes
 
----
+1. **Context Global (`EmpresaAtivaContext`)** - Novo contexto React que armazena a empresa selecionada e disponibiliza para toda a aplicacao
+   - Estado: `empresaAtiva` (empresa selecionada ou null para "todas")
+   - Lista de empresas do tenant via `useEmpresaCadastro`
+   - Persistencia no `localStorage` por usuario
 
-## 1. Seguranca (12 findings - 4 criticos, 8 warnings)
+2. **Componente Seletor (`EmpresaSelector`)** - Dropdown no header com:
+   - Icone de empresa + nome da empresa ativa (ou "Todas as empresas")
+   - Popover com campo de busca e lista scrollavel
+   - Busca por razao social, nome fantasia e CNPJ
+   - Indicador visual da empresa selecionada
 
-### Criticos (precisam correcao imediata)
-- **Dados pessoais de clientes expostos**: tabela `programa_validador_clientes` permite leitura publica de nomes, emails, telefones, CPF/CNPJ
-- **Contratos com assinaturas expostos**: tabela `programa_validador_contratos` sem restricao de token
-- **Links de documentos expostos**: tabela `programa_validador_documento_links` sem validacao de token  
-- **Campanhas psicossociais expostas**: tabela `questionario_psicossocial_campanhas` legivel publicamente
+3. **Integracao no Header** - Substituir o bloco estatico "Empresa / SudomedS" pelo novo componente `EmpresaSelector`
 
-### Warnings
-- 5 policies RLS com `USING (true)` ou `WITH CHECK (true)` em operacoes INSERT/UPDATE/DELETE
-- Protecao contra senhas vazadas desabilitada no Supabase Auth
-- `landing_vagas` e `marketplace_categorias` sem protecao contra escrita
+4. **Hook `useEmpresaAtiva`** - Hook para consumir o contexto em qualquer modulo que precise filtrar por empresa
 
----
+### Detalhes Tecnicos
 
-## 2. Testes Automatizados (praticamente inexistentes)
+**Arquivos a criar:**
+- `src/contexts/EmpresaAtivaContext.tsx` - Context + Provider + hook
+- `src/components/layout/EmpresaSelector.tsx` - Componente UI do seletor
 
-Existe apenas 1 teste placeholder (`example.test.ts` com `expect(true).toBe(true)`). Zero cobertura real.
+**Arquivos a editar:**
+- `src/components/layout/Header.tsx` - Trocar indicador estatico pelo seletor
+- `src/components/layout/MainLayout.tsx` ou `src/App.tsx` - Envolver com `EmpresaAtivaProvider`
 
-### Testes prioritarios a criar:
-- **`useAuth`**: login, logout, roles, superadmin
-- **`usePsicossocial`**: calcularIndicadores (COPSOQ/HSE), regra de anonimato (5 respostas)
-- **`usePlanoAcao`**: CRUD de acoes 5W2H
-- **Componentes criticos**: CampanhaForm, QuestionarioResponder, ResultadosModal
-- **Edge Functions**: ai-psicossocial-analise, onboarding-signup
+**Estrutura do Context:**
+```typescript
+interface EmpresaAtivaContextType {
+  empresaAtiva: EmpresaCadastro | null; // null = todas
+  empresaAtivaId: string | null;
+  setEmpresaAtiva: (empresa: EmpresaCadastro | null) => void;
+  empresas: EmpresaCadastro[];
+  isLoading: boolean;
+}
+```
 
----
+**UI do Seletor:**
+- Usa Popover do Radix com Command (cmdk) para busca
+- Mostra razao social + CNPJ formatado
+- Badge "Matriz"/"Filial" em cada item
+- Largura fixa de ~300px no dropdown
 
-## 3. Qualidade de Codigo
+**Persistencia:**
+- Salva `empresaAtivaId` no `localStorage` com chave por tenant (`empresa_ativa_{tenantId}`)
+- Ao carregar, busca o ID salvo e seleciona automaticamente
+- Se a empresa salva nao existir mais, volta para "Todas"
 
-- **982 console.log/error/warn** em 91 arquivos (excesso de logs em producao)
-- **2847 usos de `any`** em 166 arquivos (tipagem fraca)
-- **737 blocos catch** em 85 arquivos -- muitos com tratamento generico (`catch (e: any)`)
-- Sem error boundaries globais para capturar crashes de UI
-
----
-
-## 4. Usabilidade e Boas Praticas
-
-- Sem loading skeletons consistentes (alguns modulos tem, outros nao)
-- Sem feedback visual padronizado para estados vazios
-- Sem validacao de formularios consistente (alguns usam zod, outros nao)
-
----
-
-## Plano de Execucao Recomendado
-
-### Fase 1 -- Seguranca (urgente)
-1. Corrigir as 4 policies RLS criticas (restringir por token real)
-2. Remover as 5 policies `USING (true)` em operacoes de escrita
-3. Habilitar leaked password protection no Supabase
-
-### Fase 2 -- Testes Automatizados
-4. Criar testes unitarios para `calcularIndicadores` (COPSOQ + HSE)
-5. Criar testes para `useAuth` (mock do Supabase)
-6. Criar testes para componentes criticos (CampanhaForm, QuestionarioResponder)
-
-### Fase 3 -- Qualidade de Codigo
-7. Adicionar Error Boundary global
-8. Limpeza de console.logs desnecessarios
-9. Substituir `as any` criticos por tipos corretos
-
-### Fase 4 -- Usabilidade
-10. Padronizar estados vazios e loading states
-11. Padronizar validacao de formularios com zod
-
----
-
-## Recomendacao
-
-Sugiro comecar pela **Fase 1 (Seguranca)** -- os 4 findings criticos expõem dados pessoais publicamente e precisam de correcao imediata. Em seguida, **Fase 2 (Testes)** para garantir que as correcoes e funcionalidades existentes funcionam corretamente.
-
+### Beneficio Futuro
+Com o contexto global de empresa ativa, qualquer modulo podera usar `useEmpresaAtiva()` para filtrar dados automaticamente pela empresa selecionada (colaboradores, documentos, acoes, etc.).

@@ -63,11 +63,10 @@ export default function AtivarConta() {
 
   async function fetchCliente() {
     setLoading(true);
-    const { data, error } = await supabasePublic
-      .from("programa_validador_clientes")
-      .select("id, nome_empresa, poc_nome, poc_email, cnpj, onboarding_token, conta_ativada, activation_token_expires_at, tenant_id")
-      .eq("activation_token", token!)
-      .maybeSingle();
+    const { data: rows, error } = await supabasePublic
+      .rpc("buscar_cliente_por_activation_token", { p_token: token! });
+
+    const data = rows?.[0] || null;
 
     if (error || !data) {
       setError("Token inválido ou expirado. Solicite um novo convite.");
