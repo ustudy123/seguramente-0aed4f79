@@ -197,7 +197,10 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     atividadeEconomica: "",
   });
   const [cnaeSearch, setCnaeSearch] = useState("");
+  const [importandoPGR, setImportandoPGR] = useState(false);
+  const [pgrInfo, setPgrInfo] = useState<{ nome: string; data: string } | null>(null);
   const { empresaAtiva } = useEmpresaAtiva();
+  const { toast } = useToast();
 
   // Pré-preencher com dados da empresa ativa ao abrir o wizard
   useEffect(() => {
