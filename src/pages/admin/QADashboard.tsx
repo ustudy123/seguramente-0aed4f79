@@ -127,14 +127,15 @@ const AGENT_FLOWS = [
   { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Cria empresa, departamento, cargo e valida.", steps: 7 },
   { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão com dados bancários, endereço, documentos.", steps: 8 },
   { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Atestados assistencial e ocupacional.", steps: 4 },
-  { id: "epi", label: "EPI (Entrega + Estoque)", icon: "🦺", description: "EPI, entrega, trigger de estoque.", steps: 5 },
+  { id: "epi", label: "EPI — Fluxo Completo", icon: "🦺", description: "Tipo → EPI → Local → Entrada → Entrega → Devolução → Movimentações.", steps: 14 },
+  { id: "estrategia_swot", label: "Estratégia SWOT", icon: "📊", description: "CRUD completo, 4 quadrantes, XSS, IDOR, RLS, exclusão cascata.", steps: 14 },
   { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com tarefas e trigger de progresso.", steps: 5 },
   { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Tipo de benefício, validação auth.", steps: 4 },
   { id: "ocorrencias", label: "Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status.", steps: 3 },
   { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Cria pasta, verifica via auth.", steps: 3 },
   { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Anônimo, cross-tenant, integridade.", steps: 4 },
   { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga 11 edge functions.", steps: 11 },
-  { id: "todos", label: "Executar TODOS", icon: "🚀", description: "Todos os 11 fluxos + relatório IA.", steps: 59 },
+  { id: "todos", label: "Executar TODOS", icon: "🚀", description: "Todos os 12 fluxos + relatório IA.", steps: 82 },
 ];
 
 const severityConfig = {
