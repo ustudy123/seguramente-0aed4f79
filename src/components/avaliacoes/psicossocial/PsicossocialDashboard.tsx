@@ -10,7 +10,6 @@ import {
   Link as LinkIcon,
   AlertTriangle,
   TrendingUp,
-  Heart,
   ShieldCheck,
   FileText,
   Activity,
@@ -26,14 +25,24 @@ import { CampanhaList } from "./CampanhaList";
 import { CampanhaForm } from "./CampanhaForm";
 import { IPSGauge } from "./IPSGauge";
 import { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
+import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
 const MINIMO_ANONIMATO = 5;
 
 export function PsicossocialDashboard() {
+  const [showAssistente, setShowAssistente] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const { campanhas, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
+
+  const handleNovaCampanha = () => setShowAssistente(true);
+
+  const handleAssistenteSelect = (instrumento: string, _manual: boolean) => {
+    setInstrumentoPreSelecionado(instrumento);
+    setShowForm(true);
+  };
 
   const totalCampanhas = campanhas.length;
   const campanhasEncerradas = campanhas.filter(c => c.status === 'encerrada').length;
