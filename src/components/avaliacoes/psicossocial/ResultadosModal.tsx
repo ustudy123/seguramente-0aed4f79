@@ -38,8 +38,13 @@ import {
   type CampanhaPsicossocial,
   getIPSColor,
   getIPSBgColor,
+  getIRPSColor,
+  getIRPSBgColor,
+  getIRPSLabel,
   calcularIPSClassificacao,
+  calcularIRPSClassificacao,
   type IPSClassificacao,
+  type IRPSClassificacao,
 } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
