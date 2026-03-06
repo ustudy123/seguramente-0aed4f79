@@ -238,14 +238,8 @@ export default function QADashboard() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const liveContainerRef = useRef<HTMLDivElement>(null);
 
-  // Iframe state
-  const [iframeUrl, setIframeUrl] = useState("/");
+   // Flow label state
   const [currentFlowLabel, setCurrentFlowLabel] = useState("");
-  const [iframeExpanded, setIframeExpanded] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Get base URL for iframe
-  const baseUrl = window.location.origin;
 
   // ── Scan handlers ──
   const runScan = async (categoria: string) => {
@@ -491,13 +485,12 @@ export default function QADashboard() {
               <>
                 <Card className="border-primary/20 bg-primary/5">
                   <CardContent className="p-3 flex items-start gap-3">
-                    <Eye className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <Bot className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-semibold text-sm">Agente Visual — Iframe ao Vivo</p>
+                      <p className="font-semibold text-sm">Agente de Testes Automatizado</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         O agente autentica como <code className="bg-muted px-1 rounded text-[10px]">wallasmonteirobarros@gmail.com</code>,
-                        navega pelas telas reais do sistema e você acompanha tudo ao vivo no iframe.
-                        Os passos aparecem ao lado em tempo real.
+                        executa testes reais no banco e exibe os logs em tempo real.
                       </p>
                     </div>
                   </CardContent>
