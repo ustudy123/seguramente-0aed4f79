@@ -335,7 +335,7 @@ const ComplianceSST = () => {
                       </div>
                     </div>
                     <Button size="sm" variant="outline">
-                      <Zap className="w-4 h-4 mr-1" />
+                      <Target className="w-4 h-4 mr-1" />
                       Gerar Ação
                     </Button>
                   </CardContent>
