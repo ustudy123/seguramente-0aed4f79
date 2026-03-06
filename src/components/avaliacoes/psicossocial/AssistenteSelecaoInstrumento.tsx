@@ -30,6 +30,14 @@ interface SystemData {
   totalCampanhasAnteriores: number;
   temEscalaIrregular: boolean;
   grauRisco: number; // 1-4
+  // Condições especiais do cadastro da empresa
+  possuiTerceiroTurno: boolean;
+  trabalhoAltura: boolean;
+  espacoConfinado: boolean;
+  insalubridade: boolean;
+  periculosidade: boolean;
+  aposentadoriaEspecial: boolean;
+  cnae: string | null;
 }
 
 interface ChecklistRespostas {
