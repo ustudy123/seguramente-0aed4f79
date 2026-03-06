@@ -161,7 +161,7 @@ export function useAvaliacoes() {
       
       return (data || []).map(c => ({
         ...c,
-        config_360: (c.config_360 as unknown as Config360) || { auto: true, gestor: true, pares: 0, subordinados: false },
+        config_360: (c.config_360 as unknown as Config360) || { auto: true, gestor: true, pares: 0, subordinados: false, cliente_interno: false },
         template: c.template as unknown as AvaliacaoTemplate,
       }));
     },
