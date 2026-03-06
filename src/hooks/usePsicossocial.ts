@@ -19,7 +19,9 @@ import {
 } from "@/types/psicossocial";
 import {
   calcularIPSInstrumento,
+  calcularIRPS,
   getDimensoesByInstrumento,
+  getLabelNivelIRPS,
 } from "@/data/instrumentos";
 
 // Gerar token único
