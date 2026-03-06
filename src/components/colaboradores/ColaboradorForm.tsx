@@ -320,7 +320,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 )}
               />
 
-              {/* Tipo Vínculo | Função */}
+              {/* Tipo Vínculo | Data Admissão | Centro de Custo */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -348,16 +348,12 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 />
                 <FormField
                   control={form.control}
-                  name="cargo"
+                  name="data_admissao"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Função *</FormLabel>
+                      <FormLabel>Data de Admissão *</FormLabel>
                       <FormControl>
-                        <CargoComboboxField
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled={isSubmitting}
-                        />
+                        <Input type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -365,32 +361,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 />
               </div>
 
-              {/* Departamento | Estabelecimento */}
+              {/* Estabelecimento | Departamento */}
               <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="departamento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departamento</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {departamentosOptions.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.nome.trim()}>
-                              {dept.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="estabelecimento"
@@ -415,39 +387,52 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* Data Admissão | Centro de Custo */}
-              <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="data_admissao"
+                  name="departamento"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Admissão *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="centro_custo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Centro de Custo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: CC-001" {...field} />
-                      </FormControl>
+                      <FormLabel>Departamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {departamentosOptions.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.nome.trim()}>
+                              {dept.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* Gestor Imediato */}
+              {/* Função — linha inteira */}
+              <FormField
+                control={form.control}
+                name="cargo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Função *</FormLabel>
+                    <FormControl>
+                      <CargoComboboxField
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Gestor Imediato — linha inteira */}
               <FormField
                 control={form.control}
                 name="gestor_imediato"
@@ -460,6 +445,21 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                         onChange={field.onChange}
                         disabled={isSubmitting}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Centro de Custo */}
+              <FormField
+                control={form.control}
+                name="centro_custo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Centro de Custo</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: CC-001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
