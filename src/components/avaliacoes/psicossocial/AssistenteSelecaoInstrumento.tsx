@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Brain, ArrowRight, ArrowLeft, CheckCircle2,
-  Building2, Users, Clock, Activity, TrendingUp, Shield,
-  Globe, Search, Lightbulb, Star, Award, FileText,
-  ChevronRight, BarChart3, AlertTriangle, Lock, Zap,
+  Building2, AlertTriangle, Shield,
+  FileText, Clock, Search, Award, Zap, Activity,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -14,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -234,6 +234,7 @@ export function AssistenteSelecaoInstrumento({
   open, onOpenChange, onSelectInstrumento,
 }: AssistenteSelecaoInstrumentoProps) {
   const { user } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [step, setStep] = useState<Step>('choice');
   const [sysData, setSysData] = useState<SystemData | null>(null);
   const [respostas, setRespostas] = useState<ChecklistRespostas>({
@@ -260,19 +261,65 @@ export function AssistenteSelecaoInstrumento({
   const loadSystemData = async () => {
     setStep('auto-loading');
     try {
-      const tenantId = user ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id : null;
+      const tenantId = user
+        ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id
+        : null;
 
-      const [campanhasRes, afastamentosRes, escalasRes, empresaRes] = await Promise.allSettled([
-        tenantId ? (supabase as any).from('psicossocial_campanhas').select('id').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
-        tenantId ? supabase.from('afastamentos').select('motivo_principal, nexo_trabalho').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
-        tenantId ? supabase.from('ponto_escalas').select('turno, jornada_diaria_minutos').eq('tenant_id', tenantId) : Promise.resolve({ data: [] }),
-        tenantId ? supabase.from('empresa_cadastro').select('total_colaboradores, grau_risco').eq('tenant_id', tenantId).single() : Promise.resolve({ data: null }),
-      ]);
+      // Queries paralelas — filtrando por empresa ativa quando disponível
+      const empresaFilter = empresaAtivaId ? { empresa_id: empresaAtivaId } : {};
 
-      const campanhas = campanhasRes.status === 'fulfilled' ? (campanhasRes.value.data || []) : [];
+      const [campanhasRes, afastamentosRes, escalasRes, empresaRes, colaboradoresRes, setoresRes] =
+        await Promise.allSettled([
+          // Campanhas psicossociais anteriores
+          tenantId
+            ? (supabase as any).from('psicossocial_campanhas').select('id', { count: 'exact' }).eq('tenant_id', tenantId)
+            : Promise.resolve({ data: [], count: 0 }),
+
+          // Afastamentos filtrados pela empresa ativa
+          tenantId
+            ? supabase.from('afastamentos')
+                .select('motivo_principal, nexo_trabalho')
+                .eq('tenant_id', tenantId)
+                .match(empresaFilter)
+            : Promise.resolve({ data: [] }),
+
+          // Escalas de ponto
+          tenantId
+            ? supabase.from('ponto_escalas').select('turno, jornada_diaria_minutos').eq('tenant_id', tenantId)
+            : Promise.resolve({ data: [] }),
+
+          // Dados da empresa ativa (grau de risco)
+          tenantId && empresaAtivaId
+            ? supabase.from('empresa_cadastro').select('grau_risco, total_colaboradores').eq('id', empresaAtivaId).single()
+            : tenantId
+              ? supabase.from('empresa_cadastro').select('grau_risco, total_colaboradores').eq('tenant_id', tenantId).limit(1).single()
+              : Promise.resolve({ data: null }),
+
+          // Contagem real de colaboradores ativos (admissoes com status ativo/concluido)
+          tenantId
+            ? supabase.from('admissoes')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId)
+                .not('status', 'eq', 'desligado')
+                .match(empresaFilter)
+            : Promise.resolve({ count: 0, data: [] }),
+
+          // Contagem de setores/departamentos
+          tenantId
+            ? supabase.from('departamentos')
+                .select('id', { count: 'exact', head: true })
+                .eq('tenant_id', tenantId)
+                .eq('ativo', true)
+                .match(empresaAtivaId ? { empresa_id: empresaAtivaId } : {})
+            : Promise.resolve({ count: 0, data: [] }),
+        ]);
+
+      const campanhas = campanhasRes.status === 'fulfilled' ? ((campanhasRes.value as any).data || []) : [];
       const afastamentos = afastamentosRes.status === 'fulfilled' ? (afastamentosRes.value.data || []) : [];
       const escalas = escalasRes.status === 'fulfilled' ? (escalasRes.value.data || []) : [];
       const empresa = empresaRes.status === 'fulfilled' ? (empresaRes.value as any).data : null;
+      const totalColabCount = colaboradoresRes.status === 'fulfilled' ? ((colaboradoresRes.value as any).count ?? 0) : 0;
+      const totalSetoresCount = setoresRes.status === 'fulfilled' ? ((setoresRes.value as any).count ?? 0) : 0;
 
       const afastSaudeMental = afastamentos.filter((a: any) =>
         a.motivo_principal === 'f' || a.nexo_trabalho === 'sim'
@@ -281,12 +328,17 @@ export function AssistenteSelecaoInstrumento({
       const temNoturno = escalas.some((e: any) => e.turno === 'noturno' || e.turno === 'terceiro');
       const temRevezamento = escalas.some((e: any) => e.turno === 'revezamento' || e.turno === 'irregular');
 
+      // Colaboradores: preferir contagem real, fallback ao campo do cadastro
+      const totalColaboradores = totalColabCount > 0
+        ? totalColabCount
+        : (empresa?.total_colaboradores ?? 0);
+
       setSysData({
-        totalColaboradores: empresa?.total_colaboradores ?? 50,
-        totalSetores: 3,
+        totalColaboradores,
+        totalSetores: totalSetoresCount,
         temTurnoNoturno: temNoturno,
         temTurnoRevezamento: temRevezamento,
-        mediaHorasExtras: 60,
+        mediaHorasExtras: 0,
         totalAfastamentosSaudeMental: afastSaudeMental,
         totalAfastamentos: afastamentos.length,
         totalCampanhasAnteriores: campanhas.length,
@@ -295,7 +347,7 @@ export function AssistenteSelecaoInstrumento({
       });
     } catch {
       setSysData({
-        totalColaboradores: 50, totalSetores: 3, temTurnoNoturno: false,
+        totalColaboradores: 0, totalSetores: 0, temTurnoNoturno: false,
         temTurnoRevezamento: false, mediaHorasExtras: 0, totalAfastamentosSaudeMental: 0,
         totalAfastamentos: 0, totalCampanhasAnteriores: 0, temEscalaIrregular: false, grauRisco: 2,
       });
