@@ -22,6 +22,7 @@ export interface DimensaoInstrumento {
   descricao: string;
   tipo: 'risco' | 'protetor';
   normas: string[];
+  grupo?: string;
   perguntas: PerguntaInstrumento[];
 }
 
