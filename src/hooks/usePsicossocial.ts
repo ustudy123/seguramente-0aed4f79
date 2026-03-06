@@ -30,8 +30,10 @@ function gerarToken(): string {
 }
 
 /**
- * Calcular indicadores IPS a partir das respostas usando instrumento COPSOQ/HSE.
- * Retorna IPS 0-100 + detalhes por dimensão.
+ * Calcular indicadores psicossociais a partir das respostas.
+ *
+ * SIPRO: usa calcularIRPS() — escala 1-5, fórmula ((média-1)/4)×100, quanto maior = maior risco.
+ * Demais: usa calcularIPSInstrumento() — escala 0-4, quanto maior = melhor condição.
  */
 export function calcularIndicadores(
   respostas: Record<string, number>,
@@ -43,13 +45,55 @@ export function calcularIndicadores(
     ? instrumento as ValidKey
     : 'sipro';
   const dimensoes = getDimensoesByInstrumento(instrumentoKey);
-  const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
 
-  // Para SIPRO: IRP-S é o índice de RISCO (alto = pior), invertido do IPS
-  const irps = instrumento === 'sipro' ? ipsParaIrps(ips) : ips;
-  const classificacao = instrumento === 'sipro'
-    ? calcularIRPSClassificacao(irps) as unknown as ReturnType<typeof calcularIPSClassificacao>
-    : calcularIPSClassificacao(ips);
+  if (instrumento === 'sipro') {
+    // ── SIPRO: modelo estatístico próprio ──────────────────────────────────
+    // Escala 1-5 | Protetores invertidos (6-x) | Score ((média-1)/4)×100
+    const resultado = calcularIRPS(respostas, dimensoes);
+
+    const radar: RadarDimensao[] = dimensoes.map(dim => ({
+      subject: dim.nome.split(' ').slice(0, 2).join(' '),
+      value: resultado.porDimensao[dim.id]?.score ?? 0,
+      fullMark: 100,
+    }));
+
+    const nivelIrpsMap: Record<string, 'baixo' | 'moderado' | 'alto' | 'critico'> = {
+      favoravel: 'baixo',
+      atencao: 'moderado',
+      moderado: 'alto',
+      elevado: 'critico',
+    };
+
+    const detalhes = dimensoes.map(dim => ({
+      bloco: dim.nome,
+      media: resultado.porDimensao[dim.id]?.score ?? 0,
+      nivel: (nivelIrpsMap[resultado.porDimensao[dim.id]?.nivel ?? 'atencao'] ?? 'moderado') as 'baixo' | 'moderado' | 'alto' | 'critico',
+    }));
+
+    // Mapear IRP-S para classificação compatível com IPS (semântica invertida para UI)
+    const irps = resultado.irps;
+    let classificacao: ReturnType<typeof calcularIPSClassificacao>;
+    if (irps <= 24) classificacao = 'saudavel';
+    else if (irps <= 49) classificacao = 'estavel';
+    else if (irps <= 74) classificacao = 'atencao';
+    else classificacao = 'critico';
+
+    return {
+      IPS: irps,
+      IPS_classificacao: classificacao,
+      IRP_S: irps,
+      IBO_S: irps,
+      IBD_S: irps,
+      IREC_S: irps,
+      ICOP_S: irps,
+      detalhes,
+      radar,
+    };
+  }
+
+  // ── Instrumentos padrão: COPSOQ, HSE, PROART ─────────────────────────────
+  const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
+  const classificacao = calcularIPSClassificacao(ips);
 
   const nivelMap: Record<string, 'baixo' | 'moderado' | 'alto' | 'critico'> = {
     otimo: 'baixo',
@@ -60,12 +104,8 @@ export function calcularIndicadores(
 
   const detalhes = dimensoes.map(dim => ({
     bloco: dim.nome,
-    media: instrumento === 'sipro'
-      // Para SIPRO: score da dimensão já reflete condição de proteção/risco
-      // Converter para perspectiva de risco: fatores de risco = score alto = pior
-      ? (dim.tipo === 'risco' ? porDimensao[dim.id]?.score ?? 50 : 100 - (porDimensao[dim.id]?.score ?? 50))
-      : porDimensao[dim.id]?.score ?? 50,
-    nivel: nivelMap[porDimensao[dim.id]?.nivel ?? 'moderado'] ?? 'moderado' as 'baixo' | 'moderado' | 'alto' | 'critico',
+    media: porDimensao[dim.id]?.score ?? 50,
+    nivel: (nivelMap[porDimensao[dim.id]?.nivel ?? 'moderado'] ?? 'moderado') as 'baixo' | 'moderado' | 'alto' | 'critico',
   }));
 
   const radar: RadarDimensao[] = dimensoes.map(dim => ({
@@ -74,11 +114,10 @@ export function calcularIndicadores(
     fullMark: 100,
   }));
 
-  // IRP-S: score de risco 0-100 (para SIPRO), IPS: score de saúde 0-100 (demais)
   return {
-    IPS: instrumento === 'sipro' ? irps : ips,
+    IPS: ips,
     IPS_classificacao: classificacao,
-    IRP_S: instrumento === 'sipro' ? irps : ips,
+    IRP_S: ips,
     IBO_S: ips,
     IBD_S: ips,
     IREC_S: ips,
@@ -87,6 +126,7 @@ export function calcularIndicadores(
     radar,
   };
 }
+
 
 export function usePsicossocial() {
   const { tenantId, user, profile } = useAuth();
