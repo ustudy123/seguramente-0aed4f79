@@ -521,7 +521,7 @@ serve(async (req) => {
               custo_unitario: 45.90,
               data_validade: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
               observacoes: "Item criado pelo agente de QA — teste completo",
-              status: "ativo",
+              status: "disponivel",
             }).select("id, ca, marca, modelo, tamanho, quantidade_estoque").single();
             if (error) throw new Error(error.message);
             epiId = data.id;
