@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   AlertTriangle,
   AlertCircle,
-  CheckCircle2,
   Sparkles,
   FileText,
   ChevronDown,
@@ -14,10 +13,14 @@ import {
   Target,
   ArrowRight,
   Info,
+  X,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 import { SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTCriarAcaoModal } from "./SSTCriarAcaoModal";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface SSTAchado {
   titulo: string;
