@@ -14,6 +14,8 @@ import {
   type RadarDimensao,
   type InstrumentoPsicossocial,
   calcularIPSClassificacao,
+  calcularIRPSClassificacao,
+  ipsParaIrps,
 } from "@/types/psicossocial";
 import {
   calcularIPSInstrumento,
