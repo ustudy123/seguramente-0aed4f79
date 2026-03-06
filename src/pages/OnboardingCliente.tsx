@@ -191,7 +191,7 @@ function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcluir: ()
     setSalvando(true);
     try {
       await supabase.rpc('atualizar_cliente_por_onboarding_token', {
-          p_token: token,
+          p_token: cliente.onboarding_token,
           p_nome_empresa: form.razao_social,
           p_cnpj: form.cnpj,
           p_segmento: form.segmento,
