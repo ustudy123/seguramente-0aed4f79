@@ -107,8 +107,28 @@ export interface HumorDiario {
 const humorDiarioTable = () => (supabase as any).from('humor_diario');
 const humorHistoricoTable = () => (supabase as any).from('humor_historico');
 
-// Intervalo em horas para solicitar novo registro de humor (com micro-pergunta)
+// Intervalo em horas para solicitar novo registro de humor (check-in meio de jornada)
 const INTERVALO_HORAS = 5;
+
+// Chaves de controle no localStorage para evitar múltiplas exibições no dia
+function getStorageKeys(userId: string, today: string) {
+  return {
+    morning: `humor_morning_${userId}_${today}`,   // primeiro login do dia
+    midday: `humor_midday_${userId}_${today}`,     // check-in após 5h
+  };
+}
+
+export function marcarHumorMorningVisto(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const keys = getStorageKeys(userId, today);
+  localStorage.setItem(keys.morning, "1");
+}
+
+export function marcarHumorMiddayVisto(userId: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const keys = getStorageKeys(userId, today);
+  localStorage.setItem(keys.midday, "1");
+}
 
 // Verifica se passaram X horas desde o último registro
 function passaramHorasDesdeRegistro(updatedAt: string, horas: number): boolean {
