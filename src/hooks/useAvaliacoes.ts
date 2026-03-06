@@ -305,7 +305,7 @@ export function useAvaliacoes() {
           avaliado_nome: data.avaliado_nome,
           avaliador_id: data.avaliador_id || user?.id,
           avaliador_nome: data.avaliador_nome || profile?.nome_completo,
-          tipo_avaliador: data.tipo_avaliador,
+          tipo_avaliador: data.tipo_avaliador as "auto" | "gestor" | "par" | "subordinado",
           status: data.status,
           notas_criterios: (data.notas_criterios || {}) as unknown as Json,
           nota_geral: data.nota_geral,
