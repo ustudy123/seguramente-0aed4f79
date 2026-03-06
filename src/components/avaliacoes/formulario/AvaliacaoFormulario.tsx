@@ -218,22 +218,34 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
     if (!resposta) return;
     setIsGeneratingIA(true);
     try {
-      const { data, error } = await import("@/integrations/supabase/client").then(m =>
-        m.supabase.functions.invoke("avaliacao-ia-rascunho", {
-          body: {
-            colaboradorNome: resposta.avaliado_nome,
-            notas,
-            evidencias,
-            dimensoes: dimensoes.map(d => ({ id: d.id, nome: d.nome, criterios: d.criterios })),
-          },
-        })
-      );
-      if (error) throw error;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`${supabaseUrl}/functions/v1/avaliacao-ia-rascunho`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseKey}`,
+          "apikey": supabaseKey,
+        },
+        body: JSON.stringify({
+          colaboradorNome: resposta.avaliado_nome,
+          notas,
+          evidencias,
+          dimensoes: dimensoes.map(d => ({ id: d.id, nome: d.nome, criterios: d.criterios })),
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
       if (data?.pontos_fortes) setPontosFortes(data.pontos_fortes);
       if (data?.areas_desenvolvimento) setAreasDesenvolvimento(data.areas_desenvolvimento);
       if (data?.resumo) setResumo(data.resumo);
       toast.success("Rascunho gerado pela IA — revise e ajuste conforme necessário");
-    } catch (e) {
+    } catch (e: any) {
+      console.error("Erro IA rascunho:", e);
       toast.error("Erro ao gerar rascunho. Tente novamente.");
     } finally {
       setIsGeneratingIA(false);
