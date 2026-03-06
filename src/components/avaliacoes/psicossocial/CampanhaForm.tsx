@@ -112,6 +112,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
       nome: data.nome,
       descricao: data.descricao,
       tipo: data.tipo,
+      instrumento: data.instrumento,
       periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
       data_inicio: data.data_inicio,
       data_fim: data.data_fim,
@@ -302,6 +303,41 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
                 )}
               </>
             )}
+            {/* Instrumento */}
+            <FormField
+              control={form.control}
+              name="instrumento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-purple-600" />
+                    Instrumento de Avaliação *
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o instrumento" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {INSTRUMENTOS.map(inst => (
+                        <SelectItem key={inst.id} value={inst.id}>
+                          <div>
+                            <span className="font-medium">{inst.nome}</span>
+                            <span className="text-muted-foreground text-xs ml-2">— {inst.totalPerguntas} questões</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    {INSTRUMENTOS.find(i => i.id === field.value)?.uso || 'Selecione o instrumento adequado ao objetivo da campanha'}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Nome */}
             <FormField
               control={form.control}

@@ -108,6 +108,7 @@ export function usePsicossocial() {
           nome: dados.nome,
           descricao: dados.descricao,
           tipo: dados.tipo || 'regular',
+          instrumento: dados.instrumento || 'copsoq',
           periodicidade: dados.periodicidade,
           data_inicio: dados.data_inicio,
           data_fim: dados.data_fim,
