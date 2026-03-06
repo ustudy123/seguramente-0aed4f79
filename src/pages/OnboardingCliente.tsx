@@ -784,13 +784,10 @@ export default function OnboardingCliente() {
     queryKey: ['onboarding-cliente', token],
     queryFn: async (): Promise<Cliente | null> => {
       if (!token) return null;
-      const { data, error } = await supabase
-        .from('programa_validador_clientes' as never)
-        .select('*')
-        .eq('onboarding_token', token)
-        .maybeSingle() as { data: Cliente | null; error: Error | null };
+      const { data: rows, error } = await supabase
+        .rpc('buscar_cliente_por_onboarding_token', { p_token: token });
       if (error) throw error;
-      return data;
+      return (rows?.[0] as unknown as Cliente) || null;
     },
     enabled: !!token,
   });
