@@ -11,7 +11,56 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { missao, visao, valores, principios, comportamentos_esperados, comportamentos_nao_tolerados, empresa_nome } = await req.json();
+    const { missao, visao, valores, principios, comportamentos_esperados, comportamentos_nao_tolerados, empresa_nome, organograma } = await req.json();
+
+    // Build organogram HTML section from tree data
+    function buildOrgHtml(nodes: any[], level = 0): string {
+      if (!nodes || nodes.length === 0) return "";
+      const indent = level * 32;
+      return nodes.map((node: any) => {
+        const children = (node.children || []);
+        const bg = level === 0 ? "#1e3a5f" : level === 1 ? "#2d8a6e" : level === 2 ? "#f4a261" : "#6c757d";
+        const textColor = "#ffffff";
+        const childrenHtml = buildOrgHtml(children, level + 1);
+        return `
+          <div style="margin-left:${indent}px; margin-bottom:8px;">
+            <div style="display:inline-block; background:${bg}; color:${textColor}; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+              <span>📌 ${node.titulo}</span>${node.nome_ocupante ? `<span style="font-weight:400; font-size:12px; margin-left:8px; opacity:0.85;">— ${node.nome_ocupante}</span>` : ""}
+            </div>
+            ${childrenHtml ? `<div style="border-left:3px solid ${bg}; margin-left:16px; padding-left:16px; margin-top:8px;">${childrenHtml}</div>` : ""}
+          </div>`;
+      }).join("");
+    }
+
+    // Build flat-to-tree structure
+    function buildTree(flat: any[]): any[] {
+      if (!flat || flat.length === 0) return [];
+      const map = new Map<string, any>();
+      const roots: any[] = [];
+      flat.forEach((n: any) => map.set(n.id, { ...n, children: [] }));
+      flat.forEach((n: any) => {
+        const node = map.get(n.id)!;
+        if (n.parent_id && map.has(n.parent_id)) {
+          map.get(n.parent_id).children.push(node);
+        } else {
+          roots.push(node);
+        }
+      });
+      return roots;
+    }
+
+    const orgTree = buildTree(organograma || []);
+    const orgHtml = orgTree.length > 0 ? buildOrgHtml(orgTree) : "";
+    const orgSection = orgHtml ? `
+      <div style="margin: 40px 0; padding: 40px; background: #f8f9fa; border-radius: 16px;">
+        <div style="background: linear-gradient(135deg, #1e3a5f, #2d8a6e); color: #fff; padding: 24px 32px; border-radius: 12px; margin-bottom: 32px;">
+          <h2 style="margin:0; font-size:28px; font-weight:700;">🏢 Estrutura Organizacional</h2>
+          <p style="margin:8px 0 0; font-size:15px; opacity:0.85;">Hierarquia e responsabilidades da equipe</p>
+        </div>
+        <div style="padding: 8px 0;">
+          ${orgHtml}
+        </div>
+      </div>` : "";
 
     if (!missao && !visao && valores?.length === 0 && principios?.length === 0) {
       return new Response(JSON.stringify({ error: "Preencha ao menos Missão, Visão ou Valores antes de gerar o manual." }), {
