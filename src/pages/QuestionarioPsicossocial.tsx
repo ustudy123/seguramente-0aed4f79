@@ -40,9 +40,10 @@ function getInstrumentoLabel(instrumento?: string) {
 }
 
 function getTotalPerguntas(instrumento?: string) {
-  const dims = getDimensoesByInstrumento(
-    (instrumento as 'copsoq' | 'hse' | 'ambos') || 'copsoq'
-  );
+  const valid = ['copsoq', 'hse', 'proart', 'sipro', 'ambos'] as const;
+  type V = typeof valid[number];
+  const key: V = valid.includes(instrumento as V) ? instrumento as V : 'sipro';
+  const dims = getDimensoesByInstrumento(key);
   return dims.reduce((acc, d) => acc + d.perguntas.length, 0);
 }
 
