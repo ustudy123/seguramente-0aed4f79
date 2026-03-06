@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { useMetas } from "@/hooks/useMetas";
+import { useAvaliacaoPermissoes } from "@/hooks/useAvaliacaoPermissoes";
 import { AvaliacaoInbox } from "@/components/avaliacoes/resposta/AvaliacaoInbox";
 import { CicloList } from "@/components/avaliacoes/ciclos/CicloList";
 import { MetasList } from "@/components/avaliacoes/metas/MetasList";
