@@ -98,6 +98,19 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
             status: "pendente",
           });
         }
+
+        // Cliente interno (avaliador será definido posteriormente pelo RH)
+        if (ciclo.config_360?.cliente_interno) {
+          respostas.push({
+            ciclo_id: ciclo.id,
+            avaliado_id: colab.id,
+            avaliado_nome: colab.nome_completo,
+            avaliador_id: null,
+            avaliador_nome: "A definir (Cliente Interno)",
+            tipo_avaliador: "cliente_interno",
+            status: "pendente",
+          });
+        }
       }
 
       // Inserir respostas em lote (batch de 50)
@@ -208,6 +221,7 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
               {ciclo.config_360?.gestor && <Badge variant="secondary">✓ Avaliação pelo Gestor</Badge>}
               {(ciclo.config_360?.pares || 0) > 0 && <Badge variant="secondary">✓ Avaliação de Pares</Badge>}
               {ciclo.config_360?.subordinados && <Badge variant="secondary">✓ Avaliação de Subordinados</Badge>}
+              {ciclo.config_360?.cliente_interno && <Badge variant="secondary">✓ Cliente Interno</Badge>}
             </div>
 
             {/* Lista de colaboradores */}
