@@ -45,49 +45,90 @@ function parseAcoesFromAnalise(doc: SSTDocumento): AcaoDocumento[] {
   const linhas = resultado.split("\n");
   let inAcoesSection = false;
 
+  // Broad regex to detect any section about action plans — covers common document structures
+  const isSectionHeader = (l: string) =>
+    /plano[s]?\s+de\s+a[çc][aã][o]?/i.test(l) ||
+    /plano[s]?\s+de\s+a[çc][oõ]es/i.test(l) ||
+    /a[çc][oõ]es\s+associad[ao]s/i.test(l) ||
+    /a[çc][oõ]es\s+(previstas|planejadas|recomendadas|corretivas|preventivas|propostas)/i.test(l) ||
+    /cronograma\s+(de\s+a[çc][oõ]es|de\s+implanta|previsto)/i.test(l) ||
+    /^cronograma$/i.test(l) ||
+    /medidas\s+(de\s+controle|preventivas|corretivas|recomendadas)/i.test(l) ||
+    /programa\s+de\s+a[çc][oõ]es/i.test(l) ||
+    /recomenda[çc][oõ]es\s+(t[eé]cnicas|de\s+melhoria|de\s+controle)/i.test(l) ||
+    /setores?.+a[çc][oõ]es/i.test(l) ||
+    /a[çc][oõ]es.+setor/i.test(l);
+
+  // Regex to detect a new unrelated major section (forces exit from action section)
+  const isUnrelatedSection = (l: string) =>
+    /^#{1,3}\s/.test(l) && !isSectionHeader(l) &&
+    !/a[çc][oõ]/i.test(l) && !/cronograma/i.test(l) && !/medida/i.test(l);
+
   for (const linha of linhas) {
     const l = linha.trim();
+    if (!l) continue;
 
-    // Detect section headers that indicate action plan / schedule
-    if (
-      /plano\s+de\s+a[çc][aã]o/i.test(l) ||
-      /cronograma/i.test(l) ||
-      /a[çc][oõ]es\s+(previstas|planejadas|recomendadas|corretivas|preventivas)/i.test(l) ||
-      /medidas\s+(de\s+controle|preventivas|corretivas)/i.test(l) ||
-      /programa\s+de\s+a[çc][oõ]es/i.test(l)
-    ) {
+    // Enter action section
+    if (isSectionHeader(l)) {
       inAcoesSection = true;
       continue;
     }
 
-    // Leave section on next major header (e.g., ##, bold title)
-    if (inAcoesSection && (l.startsWith("##") || (l.startsWith("**") && l.endsWith("**") && l.length < 60 && !l.match(/^\*\*[-•]/))) ) {
+    // Exit on a clearly unrelated major header (##, ### not about actions)
+    if (inAcoesSection && isUnrelatedSection(l)) {
       inAcoesSection = false;
     }
 
     if (!inAcoesSection) continue;
 
-    // Match numbered or bulleted items
-    const match = l.match(/^(?:\d+[.)]\s*|[-•*]\s*)(.+)/);
-    if (match) {
-      const texto = match[1].replace(/\*\*/g, "").trim();
-      if (texto.length < 15) continue;
+    // Strip markdown formatting for matching
+    const lClean = l.replace(/\*\*/g, "").replace(/^#+\s*/, "").trim();
 
-      // Try to extract prazo from text
-      const prazoMatch = texto.match(/(?:prazo[:\s]+|até\s+)(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2}|\d+\s+(?:dias?|meses?|semanas?))/i);
-      const respMatch = texto.match(/(?:responsável[:\s]+|resp[.:\s]+)([A-ZÀ-Ú][^,\n]{2,40})/i);
+    // Match: numbered items (1. 1) 1-), bulleted (- • *), or table rows with |
+    const matchBullet = lClean.match(/^(?:\d+[.):\-]\s*|[-•*]\s+)(.+)/);
+    const matchTable = lClean.match(/^\|(.+)\|/); // table row
 
-      acoes.push({
-        descricao: texto.length > 160 ? texto.substring(0, 160) + "…" : texto,
-        prazo: prazoMatch?.[1],
-        responsavel: respMatch?.[1]?.trim(),
-        origem: doc.tipo,
-        docId: doc.id,
-      });
+    let texto = "";
+
+    if (matchBullet) {
+      texto = matchBullet[1].trim();
+    } else if (matchTable) {
+      // Extract meaningful cells from table rows (skip separator lines like |---|)
+      const cells = matchTable[1]
+        .split("|")
+        .map(c => c.trim())
+        .filter(c => c && !/^[-:]+$/.test(c));
+      if (cells.length >= 1) {
+        texto = cells.join(" — ");
+      }
+    } else if (lClean.length >= 20 && !isSectionHeader(lClean)) {
+      // Plain paragraph lines inside the section (common in PDFs converted to text)
+      // Accept lines that look like action descriptions (not just a heading)
+      if (!/^[A-ZÁÉÍÓÚÀÃÕÂÊÎÔÛ\s]{5,}$/.test(lClean)) { // skip ALL-CAPS headers
+        texto = lClean;
+      }
     }
+
+    if (!texto || texto.length < 15) continue;
+
+    // Try to extract prazo from text
+    const prazoMatch = texto.match(
+      /(?:prazo[:\s]+|até\s+|data[:\s]+)(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2}|\d+\s+(?:dias?|meses?|semanas?))/i
+    );
+    const respMatch = texto.match(
+      /(?:responsável[:\s]+|resp(?:onsável)?[.:\s]+|executor[:\s]+)([A-ZÀ-Ú][^,|\n]{2,40})/i
+    );
+
+    acoes.push({
+      descricao: texto.length > 200 ? texto.substring(0, 200) + "…" : texto,
+      prazo: prazoMatch?.[1],
+      responsavel: respMatch?.[1]?.trim(),
+      origem: doc.tipo,
+      docId: doc.id,
+    });
   }
 
-  // Also scan for structured 5W2H blocks anywhere in the text
+  // Also scan for structured 5W2H blocks ("**O que:**") anywhere in the full text
   const blocoMatches = [...resultado.matchAll(/\*\*O qu[eê][:\s]*\*\*\s*([^\n*]{10,120})/gi)];
   for (const m of blocoMatches) {
     const texto = m[1].trim();
@@ -101,7 +142,7 @@ function parseAcoesFromAnalise(doc: SSTDocumento): AcaoDocumento[] {
   }
 
   const unique = acoes.filter((a, i, arr) => arr.findIndex(b => b.descricao === a.descricao) === i);
-  return unique.slice(0, 30);
+  return unique.slice(0, 50);
 }
 
 interface Props {
