@@ -142,13 +142,13 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
 
   const fetchTrilhas = async () => {
     setIsLoadingTrilhas(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("trilhas")
       .select("id, nome, tipo")
       .eq("tenant_id", tenantId)
       .eq("status", "ativa")
       .order("nome");
-    setTrilhas(data || []);
+    setTrilhas((data || []) as { id: string; nome: string; tipo: string }[]);
     setIsLoadingTrilhas(false);
   };
 
