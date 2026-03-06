@@ -4,5 +4,5 @@ export { CampanhaForm } from "./CampanhaForm";
 export { DistribuicaoModal } from "./DistribuicaoModal";
 export { ResultadosModal } from "./ResultadosModal";
 export { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
-export { QuestionarioResponder } from "./QuestionarioResponder";
+export { ContaprovaOrganizacional } from "./ContaprovaOrganizacional";
 
