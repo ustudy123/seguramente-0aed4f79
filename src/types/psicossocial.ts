@@ -14,7 +14,7 @@ export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
 export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'sipro' | 'customizado';
 export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
 
-// IPS - Índice Psicossocial Seguramente (0-100)
+// IPS - Índice Psicossocial Seguramente (0-100, higher = healthier)
 export type IPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 
 export function calcularIPSClassificacao(score: number): IPSClassificacao {
@@ -24,6 +24,51 @@ export function calcularIPSClassificacao(score: number): IPSClassificacao {
   if (score >= 35) return 'risco';
   return 'critico';
 }
+
+// IRP-S — Índice de Risco Psicossocial Seguramente (0-100, higher = more risk)
+// Escala científica do SIPRO conforme matriz teórica do instrumento
+export type IRPSClassificacao = 'saudavel' | 'atencao' | 'risco' | 'risco_elevado';
+
+export function calcularIRPSClassificacao(score: number): IRPSClassificacao {
+  if (score <= 25) return 'saudavel';
+  if (score <= 50) return 'atencao';
+  if (score <= 75) return 'risco';
+  return 'risco_elevado';
+}
+
+export function getIRPSColor(classificacao: IRPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'text-emerald-600';
+    case 'atencao': return 'text-amber-600';
+    case 'risco': return 'text-orange-600';
+    case 'risco_elevado': return 'text-red-600';
+  }
+}
+
+export function getIRPSBgColor(classificacao: IRPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'bg-emerald-100';
+    case 'atencao': return 'bg-amber-100';
+    case 'risco': return 'bg-orange-100';
+    case 'risco_elevado': return 'bg-red-100';
+  }
+}
+
+export function getIRPSLabel(classificacao: IRPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'Ambiente Saudável';
+    case 'atencao': return 'Atenção';
+    case 'risco': return 'Risco Psicossocial';
+    case 'risco_elevado': return 'Risco Elevado';
+  }
+}
+
+/** Converte score IPS (alto=bom) para IRP-S (alto=ruim) para uso no SIPRO */
+export function ipsParaIrps(ips: number): number {
+  return 100 - ips;
+}
+
+
 
 export function getIPSColor(classificacao: IPSClassificacao): string {
   switch (classificacao) {
