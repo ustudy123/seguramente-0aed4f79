@@ -78,11 +78,11 @@ export default function AceiteDocumento() {
       if (error) throw error;
 
       // Atualizar documento vinculado
-      if (link?.documento_id) {
+      if ((link as any)?.documento_id) {
         await supabase
           .from('programa_validador_documentos')
           .update({ status: 'aceito', aceito_em: agora })
-          .eq('id', link.documento_id);
+          .eq('id', (link as any).documento_id);
       } else {
         const { data: existing } = await supabase
           .from('programa_validador_documentos')
@@ -269,7 +269,7 @@ export default function AceiteDocumento() {
               <p className="text-muted-foreground text-sm">
                 Assinada em{' '}
                 {link.aceito_em ? format(new Date(link.aceito_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ''}
-                {link.aceito_por ? ` por ${link.aceito_por}` : ''}.
+                {(link as any)?.aceito_por ? ` por ${(link as any).aceito_por}` : ''}.
               </p>
             </div>
             {(link.html_assinado || link.html_documento) && (
