@@ -282,6 +282,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "admissao" || flow === "todos") {
           send("flow_start", { flow: "admissao", label: "Fluxo de Admissão" });
+          await navigateTo("/colaboradores", "Colaboradores — Admissão");
           const steps: StepResult[] = [];
           let admissaoId: string | null = null;
           const testCpf = "999.888.777-00";
