@@ -21,8 +21,8 @@ const QUADRANT_CONFIG: Record<OceanoQuadrante, { icon: React.ElementType; bg: st
   criar: { icon: Sparkles, bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-700", description: "O que devemos começar a fazer?" },
 };
 
-export function OceanoAzulSection() {
-  const { oceanos, loadingOceanos, createOceano, deleteOceano, useOceanoItens, createOceanoItem, deleteOceanoItem, swots } = useEstrategia();
+export function OceanoAzulSection({ escopo }: { escopo: EstrategiaEscopo }) {
+  const { oceanos, loadingOceanos, createOceano, deleteOceano, useOceanoItens, createOceanoItem, deleteOceanoItem, swots } = useEstrategia(escopo);
   const [selectedOceano, setSelectedOceano] = useState<EstrategiaOceanoAzul | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", swot_id: "" });
