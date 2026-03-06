@@ -364,6 +364,7 @@ export const TIPO_AVALIADOR_LABELS: Record<TipoAvaliador, string> = {
   gestor: 'Gestor',
   par: 'Par',
   subordinado: 'Subordinado',
+  cliente_interno: 'Cliente Interno',
 };
 
 export const STATUS_RESPOSTA_LABELS: Record<RespostaStatus, string> = {
