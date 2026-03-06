@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,7 @@ import {
   FileText,
   Scale,
   Search,
+  FileSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -194,7 +197,10 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     atividadeEconomica: "",
   });
   const [cnaeSearch, setCnaeSearch] = useState("");
+  const [importandoPGR, setImportandoPGR] = useState(false);
+  const [pgrInfo, setPgrInfo] = useState<{ nome: string; data: string } | null>(null);
   const { empresaAtiva } = useEmpresaAtiva();
+  const { toast } = useToast();
 
   // Pré-preencher com dados da empresa ativa ao abrir o wizard
   useEffect(() => {
@@ -274,6 +280,67 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     });
     onOpenChange(false);
     setStep(0);
+  };
+
+  const importarRiscosDoPGR = async () => {
+    if (!empresaAtiva) {
+      toast({ title: "Nenhuma empresa selecionada", variant: "destructive" });
+      return;
+    }
+    setImportandoPGR(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", session?.user?.id)
+        .single();
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-pgr-riscos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            empresa_id: empresaAtiva.id,
+            tenant_id: profile?.tenant_id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.found) {
+        toast({
+          title: "PGR não encontrado",
+          description: "Nenhum PGR cadastrado no Compliance SST para esta empresa. Selecione os riscos manualmente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (result.riscos?.length > 0) {
+        setParams(p => ({ ...p, riscos: result.riscos }));
+        setPgrInfo({ nome: result.pgr_nome || "PGR", data: result.pgr_data || "" });
+        toast({
+          title: "Riscos importados do PGR! ✅",
+          description: `${result.riscos.length} categoria(s) identificada(s) em "${result.pgr_nome}".${result.from_cache ? " (cache)" : " (IA)"}`,
+        });
+      } else {
+        toast({
+          title: "PGR encontrado, mas sem riscos mapeados",
+          description: "Não foi possível identificar riscos automaticamente. Complete manualmente.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Erro ao importar riscos", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setImportandoPGR(false);
+    }
   };
 
   const preview = getPreviewEstrutura({ ...params, grauRisco: grauRiscoFinal });
@@ -424,7 +491,29 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label className="font-semibold">Exposição a riscos ocupacionais</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <Label className="font-semibold">Exposição a riscos ocupacionais</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={importarRiscosDoPGR}
+                      disabled={importandoPGR}
+                      className="gap-2 text-xs h-8"
+                    >
+                      {importandoPGR
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <FileSearch className="w-3.5 h-3.5 text-primary" />
+                      }
+                      {importandoPGR ? "Analisando PGR..." : "Importar do PGR"}
+                    </Button>
+                  </div>
+                  {pgrInfo && (
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-primary">
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                      <span>Riscos identificados via IA a partir do PGR: <strong>{pgrInfo.nome}</strong>{pgrInfo.data ? ` (${pgrInfo.data})` : ""}</span>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">Selecione os riscos presentes na empresa. Isso define quais pastas e treinamentos serão incluídos.</p>
                   <div className="grid grid-cols-1 gap-2">
                     {RISCOS_OCUPACIONAIS.map(r => (
