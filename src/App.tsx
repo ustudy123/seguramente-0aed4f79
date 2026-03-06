@@ -30,6 +30,7 @@ import AprendizadoPapeis from "./pages/AprendizadoPapeis";
 import Trilhas from "./pages/Trilhas";
 import Estrategia from "./pages/Estrategia";
 import Ergonomia from "./pages/Ergonomia";
+import Psicossocial from "./pages/Psicossocial";
 import ComplianceSST from "./pages/ComplianceSST";
 import PlanoAcao from "./pages/PlanoAcao";
 import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
@@ -159,6 +160,7 @@ const App = () => (
               <Route path="/estrategia" element={<Estrategia />} />
               <Route path="/ouvidoria" element={<Ouvidoria />} />
               <Route path="/ergonomia" element={<Ergonomia />} />
+              <Route path="/psicossocial" element={<Psicossocial />} />
               <Route path="/felicidade" element={<BemEstar />} />
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/marketplace" element={<Marketplace />} />
