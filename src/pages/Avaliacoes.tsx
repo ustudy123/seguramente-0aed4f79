@@ -28,6 +28,7 @@ import { AvaliacaoConfig } from "@/components/avaliacoes/config/AvaliacaoConfig"
 
 export default function Avaliacoes() {
   const [activeTab, setActiveTab] = useState("inbox");
+  const { podeVerCiclos, podeVerConfiguracoes, podeVerTemplates, podeVerResultados, podeCriarCiclo } = useAvaliacaoPermissoes();
   
   const { 
     ciclosAtivos, 
