@@ -324,7 +324,7 @@ export function HubServicos() {
                             <div className="flex items-center gap-4 mt-2">
                               {prof.nota_media && (
                                 <span className="flex items-center gap-1 text-xs">
-                                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                  <Star className="h-3 w-3 text-warning fill-warning" />
                                   <span className="font-medium">{Number(prof.nota_media).toFixed(1)}</span>
                                   {prof.total_avaliacoes > 0 && (
                                     <span className="text-muted-foreground">({prof.total_avaliacoes})</span>
