@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Sparkles, ChevronRight, ChevronLeft, Send, Save,
   AlertTriangle, Flame, Battery, FileText, MessageSquare,
-  BookOpen, Target, Clock, User, Building, Briefcase,
-  Calendar, CheckCircle2, TrendingUp, Loader2, Info,
-  ThumbsUp, ThumbsDown, Minus,
+  BookOpen, Target, User, Briefcase,
+  Calendar, CheckCircle2, TrendingUp, Loader2,
+  ThumbsUp, ThumbsDown, Minus, GitBranch,
 } from "lucide-react";
+import { GerarPdiModal } from "./GerarPdiModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -300,6 +301,8 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
   const [areasDesenvolvimento, setAreasDesenvolvimento] = useState(resposta?.areas_desenvolvimento || "");
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showGerarPdi, setShowGerarPdi] = useState(false);
+  const [avaliacaoConcluida, setAvaliacaoConcluida] = useState(false);
 
   const isLastStep = currentStep === dimensoes.length;
   const totalCriterios = dimensoes.reduce((acc, d) => acc + d.criterios.length, 0);
@@ -385,7 +388,9 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
       pontos_fortes: pontosFortes,
       areas_desenvolvimento: areasDesenvolvimento,
     });
-    onConcluir?.();
+    // Após concluir, abrir modal para gerar PDI com IA
+    setAvaliacaoConcluida(true);
+    setShowGerarPdi(true);
   };
 
   // Se não há resposta selecionada, mostrar seletor de avaliações
@@ -397,6 +402,26 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
   const risco = evidencias?.risco;
 
   return (
+    <>
+      {/* Modal Gerar PDI com IA */}
+      {showGerarPdi && resposta && (
+        <GerarPdiModal
+          open={showGerarPdi}
+          onOpenChange={(v) => {
+            setShowGerarPdi(v);
+            if (!v && avaliacaoConcluida) onConcluir?.();
+          }}
+          resposta={resposta}
+          notas={notas}
+          dimensoes={dimensoes.map(d => ({ id: d.id, nome: d.nome, criterios: d.criterios }))}
+          colaboradorCargo={undefined}
+          colaboradorDepartamento={undefined}
+          onPdiGerado={() => {
+            setShowGerarPdi(false);
+            onConcluir?.();
+          }}
+        />
+      )}
     <div className="space-y-4">
       {/* Alertas de Risco Humano */}
       {(risco?.burnout || risco?.boreout) && (
@@ -623,6 +648,7 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
         </div>
       </div>
     </div>
+    </>
   );
 }
 
