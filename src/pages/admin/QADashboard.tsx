@@ -97,7 +97,7 @@ interface LiveFlow {
 // ═══════════════════════════════════════════════════
 
 const FLOW_ROUTES: Record<string, string> = {
-  login_auth: "/login",
+  login_auth: "/",
   empresa: "/empresa",
   admissao: "/colaboradores",
   atestado: "/atestados",
@@ -106,8 +106,8 @@ const FLOW_ROUTES: Record<string, string> = {
   beneficios: "/financeiro/beneficios",
   ocorrencias: "/feedback-ocorrencias",
   documentos: "/documentos",
-  rls_isolamento: "/configuracoes",
-  edge_functions: "/admin",
+  rls_isolamento: "/",
+  edge_functions: "/",
 };
 
 // ═══════════════════════════════════════════════════
@@ -327,6 +327,16 @@ export default function QADashboard() {
             ? `✅ ${data.step}`
             : `❌ ${data.step}`
         );
+        break;
+
+      case "navigate":
+        if (data.route) {
+          setIframeUrl(data.route);
+          if (iframeRef.current) {
+            iframeRef.current.src = `${baseUrl}${data.route}`;
+          }
+          if (data.label) setCurrentFlowLabel(data.label);
+        }
         break;
 
       case "flow_done":

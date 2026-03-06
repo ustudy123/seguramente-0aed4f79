@@ -70,10 +70,21 @@ serve(async (req) => {
     }
 
     const encoder = new TextEncoder();
+    const STEP_DELAY = 2000; // 2 seconds between steps for visual feedback
+    const NAV_DELAY = 1500; // 1.5s after navigation for iframe to load
+
     const body = new ReadableStream({
       async start(controller) {
         const send = (event: string, data: any) => {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        };
+
+        const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+        // Navigate iframe to a route with label
+        const navigateTo = async (route: string, label?: string) => {
+          send("navigate", { route, label });
+          await delay(NAV_DELAY);
         };
 
         const flows: FlowResult[] = [];
@@ -82,6 +93,7 @@ serve(async (req) => {
           send("step_start", { flow: flowId, step: stepName, action });
           const result = await runStep(stepName, action, fn);
           send("step_done", { flow: flowId, ...result });
+          await delay(STEP_DELAY);
           return result;
         };
 
@@ -104,6 +116,7 @@ serve(async (req) => {
 
         if (flow === "login_auth" || flow === "todos") {
           send("flow_start", { flow: "login_auth", label: "Autenticação & Perfil" });
+          await navigateTo("/", "Autenticação & Perfil");
           const steps: StepResult[] = [];
 
           steps.push(await runStepStreamed("login_auth", "1. Login com credenciais", `signIn ${TEST_EMAIL}`, async () => {
@@ -113,12 +126,14 @@ serve(async (req) => {
             return `Login OK — UID: ${user.id}, Email: ${user.email}`;
           }));
 
+          await navigateTo("/", "Dashboard — verificando perfil");
+
           steps.push(await runStepStreamed("login_auth", "2. Verificar Perfil", "SELECT profiles", async () => {
             if (!authClient) throw new Error("Login não realizado");
             const { data, error } = await authClient.from("profiles").select("*").eq("user_id", authUser.id).single();
             if (error) throw new Error(error.message);
             authTenantId = data.tenant_id;
-            return `Perfil: ${data.full_name || data.email}, Tenant: ${data.tenant_id?.slice(0, 8)}...`;
+            return `Perfil: ${data.nome_completo || data.full_name || 'sem nome'}, Tenant: ${data.tenant_id?.slice(0, 8)}...`;
           }));
 
           steps.push(await runStepStreamed("login_auth", "3. Verificar Roles", "SELECT user_roles", async () => {
@@ -170,6 +185,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "empresa" || flow === "todos") {
           send("flow_start", { flow: "empresa", label: "Cadastro de Empresa" });
+          await navigateTo("/empresa", "Cadastro de Empresa");
           const steps: StepResult[] = [];
           let empresaId: string | null = null;
           let deptId: string | null = null;
@@ -266,6 +282,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "admissao" || flow === "todos") {
           send("flow_start", { flow: "admissao", label: "Fluxo de Admissão" });
+          await navigateTo("/colaboradores", "Colaboradores — Admissão");
           const steps: StepResult[] = [];
           let admissaoId: string | null = null;
           const testCpf = "999.888.777-00";
@@ -371,6 +388,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "atestado" || flow === "todos") {
           send("flow_start", { flow: "atestado", label: "Atestado Médico" });
+          await navigateTo("/atestados", "Atestados — Gestão de Saúde");
           const steps: StepResult[] = [];
           let atestadoId: string | null = null;
 
@@ -426,6 +444,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "epi" || flow === "todos") {
           send("flow_start", { flow: "epi", label: "EPI (Entrega + Estoque)" });
+          await navigateTo("/epis", "EPIs — Equipamentos de Proteção");
           const steps: StepResult[] = [];
           let epiId: string | null = null;
           let entregaId: string | null = null;
@@ -486,6 +505,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "plano_acao" || flow === "todos") {
           send("flow_start", { flow: "plano_acao", label: "Plano de Ação" });
+          await navigateTo("/plano-acao", "Plano de Ação");
           const steps: StepResult[] = [];
           let acaoId: string | null = null;
           let tarefaId: string | null = null;
@@ -552,6 +572,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "beneficios" || flow === "todos") {
           send("flow_start", { flow: "beneficios", label: "Benefícios" });
+          await navigateTo("/financeiro/beneficios", "Financeiro — Benefícios");
           const steps: StepResult[] = [];
           let tipoId: string | null = null;
 
@@ -595,6 +616,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "ocorrencias" || flow === "todos") {
           send("flow_start", { flow: "ocorrencias", label: "Ocorrências" });
+          await navigateTo("/feedback-ocorrencias", "Feedback & Ocorrências");
           const steps: StepResult[] = [];
           let ocorrenciaId: string | null = null;
 
@@ -635,6 +657,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "rls_isolamento" || flow === "todos") {
           send("flow_start", { flow: "rls_isolamento", label: "Isolamento Multi-Tenant (RLS)" });
+          await navigateTo("/", "Dashboard — Teste de Isolamento RLS");
           const steps: StepResult[] = [];
 
           steps.push(await runStepStreamed("rls_isolamento", "1. Listar Tenants", "SELECT tenants", async () => {
@@ -685,6 +708,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "documentos" || flow === "todos") {
           send("flow_start", { flow: "documentos", label: "Gestão de Documentos" });
+          await navigateTo("/documentos", "Gestão de Documentos");
           const steps: StepResult[] = [];
           let pastaId: string | null = null;
 
@@ -720,6 +744,7 @@ serve(async (req) => {
         // ═══════════════════════════════════════════════════
         if (flow === "edge_functions" || flow === "todos") {
           send("flow_start", { flow: "edge_functions", label: "Health Check Edge Functions" });
+          await navigateTo("/", "Dashboard — Health Check Functions");
           const steps: StepResult[] = [];
           const fns = [
             "onboarding-signup", "extract-atestado", "ai-plano-acao", "ai-chat",
