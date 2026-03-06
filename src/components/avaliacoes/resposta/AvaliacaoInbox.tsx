@@ -1,15 +1,38 @@
 import { useState } from "react";
-import { ClipboardCheck, Clock, User, ChevronRight, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClipboardCheck, Clock, User, ChevronRight, AlertCircle, ArrowLeft } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TIPO_AVALIADOR_LABELS } from "@/types/avaliacao";
+import type { AvaliacaoResposta } from "@/types/avaliacao";
+import { AvaliacaoFormulario } from "@/components/avaliacoes/formulario/AvaliacaoFormulario";
 
 export function AvaliacaoInbox() {
   const { minhasAvaliacoes, isLoadingMinhasAvaliacoes } = useAvaliacoes();
+  const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<AvaliacaoResposta | null>(null);
+
+  // Se selecionou, mostra o formulário com botão de voltar
+  if (avaliacaoSelecionada) {
+    return (
+      <div className="space-y-4">
+        <Button
+          variant="ghost"
+          className="gap-2"
+          onClick={() => setAvaliacaoSelecionada(null)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para Minha Caixa
+        </Button>
+        <AvaliacaoFormulario
+          resposta={avaliacaoSelecionada}
+          onConcluir={() => setAvaliacaoSelecionada(null)}
+        />
+      </div>
+    );
+  }
 
   if (isLoadingMinhasAvaliacoes) {
     return (
@@ -62,16 +85,17 @@ export function AvaliacaoInbox() {
           const isUrgent = dataFim && dataFim <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
           return (
-            <Card 
-              key={avaliacao.id} 
-              className={`hover:shadow-md transition-shadow cursor-pointer ${
-                isUrgent ? "border-amber-300 bg-amber-50/50" : ""
+            <Card
+              key={avaliacao.id}
+              onClick={() => setAvaliacaoSelecionada(avaliacao)}
+              className={`hover:shadow-md transition-all cursor-pointer hover:border-primary/40 ${
+                isUrgent ? "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20" : ""
               }`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="outline">
                         {TIPO_AVALIADOR_LABELS[avaliacao.tipo_avaliador]}
                       </Badge>
@@ -81,7 +105,7 @@ export function AvaliacaoInbox() {
                           Prazo próximo
                         </Badge>
                       )}
-                      <Badge 
+                      <Badge
                         variant={avaliacao.status === "pendente" ? "secondary" : "default"}
                       >
                         {avaliacao.status === "pendente" ? "Não iniciada" : "Em andamento"}
@@ -113,7 +137,11 @@ export function AvaliacaoInbox() {
                     </div>
                   </div>
 
-                  <Button variant="ghost" size="icon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); setAvaliacaoSelecionada(avaliacao); }}
+                  >
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
