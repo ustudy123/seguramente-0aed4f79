@@ -97,7 +97,7 @@ export function HumorDiarioPopup({ open, onClose, isAutomatic = false }: HumorDi
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent 
-        className="sm:max-w-lg" 
+        className={cn("sm:max-w-lg", isAutomatic && "[&>button:first-child]:hidden")}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
