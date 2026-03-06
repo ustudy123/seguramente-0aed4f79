@@ -11,8 +11,193 @@ import type { DimensaoInstrumento } from './copsoq';
 
 export type { DimensaoInstrumento };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Tipos do SIPRO
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type NivelIRPS = 'favoravel' | 'atencao' | 'moderado' | 'elevado';
+
+export interface DimensaoIRPS {
+  id: string;
+  nome: string;
+  tipo: 'risco' | 'protetor';
+  grupo?: string;
+  /** Score 0–100 orientado para risco (quanto maior, pior) */
+  score: number;
+  nivel: NivelIRPS;
+  /** Média bruta original na escala 1-5 (antes da transformação) */
+  mediaBruta: number;
+  /** Desvio padrão dos itens respondidos */
+  desvioPadrao: number;
+  /** Quantidade de itens válidos / total */
+  itensValidos: number;
+  itensTotal: number;
+  /** true se dimensão atingiu mínimo de 75% de itens respondidos */
+  valida: boolean;
+}
+
+export interface ResultadoIRPS {
+  /** IRP-S geral (0–100), onde maior = maior risco */
+  irps: number;
+  nivel: NivelIRPS;
+  porDimensao: Record<string, DimensaoIRPS>;
+  /** Desvio padrão entre as dimensões válidas */
+  desvioPadraoGeral: number;
+  /** Número de dimensões válidas */
+  dimensoesValidas: number;
+  dimensoesTotal: number;
+  /** true se atingiu 80% de dimensões válidas para cálculo do índice geral */
+  indiceValido: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers estatísticos
+// ─────────────────────────────────────────────────────────────────────────────
+
+function media(valores: number[]): number {
+  if (valores.length === 0) return 0;
+  return valores.reduce((a, b) => a + b, 0) / valores.length;
+}
+
+function desvioPadrao(valores: number[]): number {
+  if (valores.length < 2) return 0;
+  const m = media(valores);
+  const variancia = valores.reduce((acc, v) => acc + (v - m) ** 2, 0) / valores.length;
+  return Math.sqrt(variancia);
+}
+
 /**
- * Calcular IPS (0-100) a partir das respostas de um instrumento
+ * Recodifica item protetor para direção de risco (escala 1-5).
+ * Regra: valor_recodificado = 6 - valor_original
+ * Protetor com resposta 5 (máxima proteção) → vira 1 (mínimo risco)
+ * Protetor com resposta 1 (mínima proteção) → vira 5 (máximo risco)
+ */
+function recodificarItem(raw: number, invertida: boolean): number {
+  return invertida ? 6 - raw : raw;
+}
+
+/**
+ * Transforma média bruta (escala 1-5) em score 0-100 orientado para risco.
+ * Fórmula: ((média - 1) / 4) × 100
+ */
+function transformarScore(mediaBruta: number): number {
+  return Math.round(((mediaBruta - 1) / 4) * 100);
+}
+
+function classificarNivelIRPS(score: number): NivelIRPS {
+  if (score <= 24) return 'favoravel';
+  if (score <= 49) return 'atencao';
+  if (score <= 74) return 'moderado';
+  return 'elevado';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cálculo principal do SIPRO — Modelo Estatístico V1
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calcula o IRP-S (Índice de Risco Psicossocial Seguramente) conforme
+ * modelo estatístico documentado:
+ *
+ * Etapa 1: Coletar respostas na escala 1–5.
+ * Etapa 2: Inverter itens protetores (6 - raw).
+ * Etapa 3: Calcular média dos itens válidos por dimensão (≥75% respondidos).
+ * Etapa 4: Transformar para 0–100 via ((média - 1) / 4) × 100.
+ * Etapa 5: IRP-S = média das dimensões válidas (≥80% válidas para índice geral).
+ * Etapa 6: Calcular dispersão (desvio padrão) por dimensão e global.
+ *
+ * Escala de resposta: 1=Nunca … 5=Sempre
+ * Quanto maior o score, maior o risco psicossocial.
+ *
+ * Faixas de classificação:
+ *   0–24  → Condição Favorável (baixo risco)
+ *   25–49 → Atenção Leve
+ *   50–74 → Risco Moderado
+ *   75–100→ Risco Elevado
+ */
+export function calcularIRPS(
+  respostas: Record<string, number>,
+  dimensoes: DimensaoInstrumento[]
+): ResultadoIRPS {
+  const porDimensao: Record<string, DimensaoIRPS> = {};
+  const scoresValidos: number[] = [];
+
+  for (const dim of dimensoes) {
+    const itensTotal = dim.perguntas.length;
+    const valoresRecodificados: number[] = [];
+
+    for (const p of dim.perguntas) {
+      const raw = respostas[p.id];
+      // Apenas processa itens efetivamente respondidos (não undefined/null)
+      if (raw != null && raw >= 1 && raw <= 5) {
+        valoresRecodificados.push(recodificarItem(raw, !!p.invertida));
+      }
+    }
+
+    const itensValidos = valoresRecodificados.length;
+    // Dimensão válida somente com ≥75% dos itens respondidos
+    const valida = itensTotal > 0 && (itensValidos / itensTotal) >= 0.75;
+
+    let score = 50; // padrão neutro quando inválido
+    let mediaBruta = 3;
+    let dp = 0;
+
+    if (valida && itensValidos > 0) {
+      mediaBruta = media(valoresRecodificados);
+      dp = desvioPadrao(valoresRecodificados);
+      score = transformarScore(mediaBruta);
+    }
+
+    const nivel = classificarNivelIRPS(score);
+
+    porDimensao[dim.id] = {
+      id: dim.id,
+      nome: dim.nome,
+      tipo: dim.tipo,
+      grupo: dim.grupo,
+      score,
+      nivel,
+      mediaBruta: Math.round(mediaBruta * 100) / 100,
+      desvioPadrao: Math.round(dp * 100) / 100,
+      itensValidos,
+      itensTotal,
+      valida,
+    };
+
+    if (valida) {
+      scoresValidos.push(score);
+    }
+  }
+
+  const dimensoesTotal = dimensoes.length;
+  const dimensoesValidas = scoresValidos.length;
+  // Índice geral válido somente com ≥80% das dimensões válidas
+  const indiceValido = dimensoesTotal > 0 && (dimensoesValidas / dimensoesTotal) >= 0.80;
+
+  const irps = indiceValido && scoresValidos.length > 0
+    ? Math.round(media(scoresValidos))
+    : 0;
+
+  const dpGeral = desvioPadrao(scoresValidos);
+
+  return {
+    irps,
+    nivel: classificarNivelIRPS(irps),
+    porDimensao,
+    desvioPadraoGeral: Math.round(dpGeral * 100) / 100,
+    dimensoesValidas,
+    dimensoesTotal,
+    indiceValido,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cálculo IPS — instrumentos padrão (COPSOQ, HSE, PROART) — escala 0-4
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calcular IPS (0-100) a partir das respostas de instrumentos padrão.
+ * Escala 0-4: invertida=true → maior valor = melhor (protetor).
  */
 export function calcularIPSInstrumento(
   respostas: Record<string, number>,
@@ -31,12 +216,9 @@ export function calcularIPSInstrumento(
       const raw = respostas[p.id] ?? 2;
       const peso = p.peso ?? 1;
 
-      let valorNormalizado: number;
-      if (p.invertida) {
-        valorNormalizado = raw;
-      } else {
-        valorNormalizado = 4 - raw;
-      }
+      // Escala 0-4: protetor (invertida=true) → maior resposta = melhor → manter raw
+      // Risco (invertida=false) → maior resposta = pior → inverter: 4 - raw
+      const valorNormalizado = p.invertida ? raw : 4 - raw;
 
       for (let i = 0; i < peso; i++) {
         valoresDim.push(valorNormalizado);
@@ -47,6 +229,8 @@ export function calcularIPSInstrumento(
       ? valoresDim.reduce((a, b) => a + b, 0) / valoresDim.length
       : 2;
 
+    // IPS: quanto maior, melhor. Para fator protetor, raw alto = bom = score alto.
+    // Para fator risco, (4-raw) alto = bom = score alto.
     const score100 = Math.round((mediaDim / 4) * 100);
     scores.push(score100);
 
@@ -80,4 +264,37 @@ export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | '
   if (instrumento === 'proart') return PROART_TOTAL_PERGUNTAS;
   if (instrumento === 'sipro') return SIPRO_TOTAL_PERGUNTAS;
   return COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS;
+}
+
+/** Retorna label de classificação IRP-S em português */
+export function getLabelNivelIRPS(nivel: NivelIRPS): string {
+  const labels: Record<NivelIRPS, string> = {
+    favoravel: 'Condição Favorável',
+    atencao: 'Atenção Leve',
+    moderado: 'Risco Moderado',
+    elevado: 'Risco Elevado',
+  };
+  return labels[nivel];
+}
+
+/** Retorna cor Tailwind para o nível IRP-S */
+export function getCorNivelIRPS(nivel: NivelIRPS): string {
+  const cores: Record<NivelIRPS, string> = {
+    favoravel: 'text-emerald-600',
+    atencao: 'text-yellow-600',
+    moderado: 'text-orange-600',
+    elevado: 'text-red-600',
+  };
+  return cores[nivel];
+}
+
+/** Retorna cor de fundo Tailwind para o nível IRP-S */
+export function getBgNivelIRPS(nivel: NivelIRPS): string {
+  const cores: Record<NivelIRPS, string> = {
+    favoravel: 'bg-emerald-50 border-emerald-200',
+    atencao: 'bg-yellow-50 border-yellow-200',
+    moderado: 'bg-orange-50 border-orange-200',
+    elevado: 'bg-red-50 border-red-200',
+  };
+  return cores[nivel];
 }
