@@ -101,7 +101,7 @@ interface Props {
   documentos: SSTDocumento[];
 }
 
-export function SSTAcoesTab({ documentos }: Props) {
+export function SSTAlertasTab({ documentos }: Props) {
   const navigate = useNavigate();
   const [selectedAchado, setSelectedAchado] = useState<SSTAchado | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<SSTDocumento | null>(null);
