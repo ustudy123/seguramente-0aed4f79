@@ -166,6 +166,7 @@ function AtivosTab() {
 
   const handleImportSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
+    queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
     queryClient.invalidateQueries({ queryKey: ["cargos"] });
     queryClient.invalidateQueries({ queryKey: ["departamentos"] });
   };
