@@ -22,6 +22,15 @@ type ViewMode = 'list' | 'edit' | 'new';
 export default function Empresa() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('dados');
+
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'importar'];
+  const currentTabIndex = TABS.indexOf(activeTab);
+  const isFirstTab = currentTabIndex === 0;
+  const isLastTab = currentTabIndex === TABS.length - 1;
+
+  const handleNextTab = () => { if (!isLastTab) setActiveTab(TABS[currentTabIndex + 1]); };
+  const handlePrevTab = () => { if (!isFirstTab) setActiveTab(TABS[currentTabIndex - 1]); };
 
   const {
     empresas,
