@@ -76,7 +76,7 @@ export function PsicossocialDashboard() {
             NR-01 · NR-17 · ISO 45001 · ISO 45003 — Análise multidimensional baseada em evidências
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
+        <Button onClick={handleNovaCampanha} className="gap-2">
           <Plus className="h-4 w-4" />
           Nova Campanha
         </Button>
@@ -190,7 +190,7 @@ export function PsicossocialDashboard() {
 
         {/* Tab: Campanhas */}
         <TabsContent value="campanhas" className="mt-4">
-          <CampanhaList campanhas={campanhas} onNovaCampanha={() => setShowForm(true)} />
+        <CampanhaList campanhas={campanhas} onNovaCampanha={handleNovaCampanha} />
         </TabsContent>
 
         {/* Tab: Instrumentos */}
