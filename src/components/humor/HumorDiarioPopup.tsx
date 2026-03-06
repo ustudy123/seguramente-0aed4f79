@@ -27,7 +27,7 @@ interface HumorDiarioPopupProps {
 
 type Step = "humor" | "micropergunta";
 
-export function HumorDiarioPopup({ open, onClose }: HumorDiarioPopupProps) {
+export function HumorDiarioPopup({ open, onClose, isAutomatic = false }: HumorDiarioPopupProps) {
   const [step, setStep] = useState<Step>("humor");
   const [selectedHumor, setSelectedHumor] = useState<string | null>(null);
   const [microPerguntaResposta, setMicroPerguntaResposta] = useState<string | null>(null);
