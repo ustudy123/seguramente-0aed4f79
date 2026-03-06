@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTenant } from "./useTenant";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -221,6 +222,7 @@ export interface ResultadoImportacao {
 
 export function useImportacaoPlanilha() {
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -496,6 +498,7 @@ export function useImportacaoPlanilha() {
         
         const dadosAdmissao = {
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           nome_completo: dado.nome,
           cpf: dado.cpf,
           genero: dado.sexo || null,
