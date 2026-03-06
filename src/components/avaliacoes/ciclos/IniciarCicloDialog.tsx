@@ -123,7 +123,7 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
           avaliado_nome: r.avaliado_nome,
           avaliador_id: r.avaliador_id,
           avaliador_nome: r.avaliador_nome || null,
-          tipo_avaliador: r.tipo_avaliador,
+          tipo_avaliador: r.tipo_avaliador as "auto" | "gestor" | "par" | "subordinado",
           status: r.status || "pendente",
           notas_criterios: {} as unknown as Json,
           tenant_id: tenantId,
