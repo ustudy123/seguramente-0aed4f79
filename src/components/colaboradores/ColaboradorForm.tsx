@@ -261,7 +261,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         <EmpresaAtivaBanner />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 pr-1">
             <FormField
               control={form.control}
               name="nome_completo"
