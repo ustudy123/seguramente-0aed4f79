@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS } from "@/data/instrumentos";
+import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS, HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS, PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS } from "@/data/instrumentos";
 
 function NormaBadge({ norma }: { norma: string }) {
   const colors: Record<string, string> = {
@@ -161,7 +161,7 @@ export function InstrumentosVisualizacao() {
         <div className="flex gap-2">
           <Badge variant="outline" className="gap-1">
             <Layers className="h-3 w-3" />
-            {COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS} perguntas total
+            {COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS} perguntas total
           </Badge>
         </div>
       </div>
@@ -201,6 +201,11 @@ export function InstrumentosVisualizacao() {
             <CheckCircle2 className="h-4 w-4" />
             HSE Management Standards
             <Badge variant="secondary" className="text-xs ml-1">{HSE_TOTAL_PERGUNTAS}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="proart" className="gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            PROART
+            <Badge variant="secondary" className="text-xs ml-1">{PROART_TOTAL_PERGUNTAS}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -255,6 +260,34 @@ export function InstrumentosVisualizacao() {
           </Card>
           <div className="space-y-2">
             {HSE_DIMENSOES.map((dim, i) => (
+              <DimensaoCard key={dim.id} dimensao={dim} numero={i + 1} />
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* PROART */}
+        <TabsContent value="proart" className="mt-4 space-y-3">
+          <Card className="bg-amber-50/40 border-amber-200">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-amber-600" />
+                  <span><strong>{PROART_DIMENSOES.length}</strong> dimensões — Protocolo brasileiro</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  <span><strong>{PROART_DIMENSOES.filter(d => d.tipo === 'risco').length}</strong> fatores de risco</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <span><strong>{PROART_DIMENSOES.filter(d => d.tipo === 'protetor').length}</strong> fatores protetores</span>
+                </div>
+                <span className="text-muted-foreground">Protocolo de Avaliação dos Riscos Psicossociais · Mendes & Ferreira (2007) · NR-01, ISO 45003</span>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="space-y-2">
+            {PROART_DIMENSOES.map((dim, i) => (
               <DimensaoCard key={dim.id} dimensao={dim} numero={i + 1} />
             ))}
           </div>
