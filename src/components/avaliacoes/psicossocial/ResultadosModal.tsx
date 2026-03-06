@@ -256,14 +256,17 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                   <div className="grid gap-4 md:grid-cols-2">
                     <Card className="border-purple-200 bg-gradient-to-br from-purple-50/50 to-background">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                      <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                           <Brain className="h-4 w-4 text-purple-600" />
-                          IPS — Índice Psicossocial
+                          {scoreLabel}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="flex flex-col items-center">
                         {ips !== undefined && ipsClass ? (
-                          <IPSGauge score={ips} classificacao={ipsClass} size="lg" />
+                          <>
+                            <IPSGauge score={ips} classificacao={ipsClass} size="lg" />
+                            <p className="text-xs text-muted-foreground text-center mt-2">{scoreDescricao}</p>
+                          </>
                         ) : (
                           <p className="text-muted-foreground text-sm py-6">Score indisponível</p>
                         )}
