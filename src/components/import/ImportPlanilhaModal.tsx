@@ -124,11 +124,36 @@ export function ImportPlanilhaModal({
     }
   };
 
+  const COLS = [
+    "Nome", "CPF", "Sexo", "Data Nascimento", "Estado Civil", "Naturalidade", "Nacionalidade",
+    "Nome Mãe", "Nome Pai", "RG", "PIS/PASEP",
+    "E-mail", "Telefone", "Celular",
+    "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado",
+    "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo", "Departamento", "Nível",
+    "Tipo Contrato", "Data Admissão", "Salário", "Centro de Custo", "Gestor Imediato",
+    "Banco", "Agência", "Conta", "Tipo Conta", "Chave PIX",
+  ];
+
   const templateData = [
-    ["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO ( 0 para inativo; 1 para ativo)", "BR/PDH", "Nome função", "Departamento", "Nível"],
-    ["Joana da Silva", "338.172.580-70", "Masculino", "15/03/1990", "1 ( ativo)", "Matriz", "Analista de RH", "Recursos Humanos", "Pleno"],
-    ["Ana Paula Padrao", "987.654.321-00", "Feminino", "22/08/1985", "1 (ativo)", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente"],
-    ["Maria Aparecida Meneghel", "408.785.550-30", "Masculino", "10/01/1995", "0 ( inativo)", "Matriz", "Desenvolvedor", "TI", "Junior"],
+    COLS,
+    [
+      "João da Silva", "338.172.580-70", "Masculino", "15/03/1990", "Solteiro", "São Paulo", "Brasileiro",
+      "Maria da Silva", "José da Silva", "12.345.678-9", "123.45678.12-3",
+      "joao@empresa.com", "(11) 3000-0000", "(11) 99000-0000",
+      "01310-100", "Av. Paulista", "1000", "Sala 10", "Bela Vista", "São Paulo", "SP",
+      "1", "Sede", "Analista de RH", "Recursos Humanos", "Pleno",
+      "CLT", "01/03/2024", "5000,00", "RH-01", "Carlos Souza",
+      "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
+    ],
+    [
+      "Ana Paula Padrão", "987.654.321-00", "Feminino", "22/08/1985", "Casado", "Rio de Janeiro", "Brasileira",
+      "Joana Padrão", "", "98.765.432-1", "",
+      "ana@empresa.com", "", "(21) 98000-0000",
+      "", "", "", "", "", "", "",
+      "1", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente",
+      "CLT", "15/06/2020", "12000,00", "FIN-01", "",
+      "", "", "", "", "",
+    ],
   ];
 
   const downloadTemplateCSV = () => {
@@ -141,23 +166,9 @@ export function ImportPlanilhaModal({
   };
 
   const downloadTemplateXLSX = () => {
-    // Aba de dados
     const wsData = XLSX.utils.aoa_to_sheet(templateData);
-    
-    // Ajustar largura das colunas na aba de dados
-    wsData["!cols"] = [
-      { wch: 30 }, // Nome
-      { wch: 18 }, // CPF
-      { wch: 12 }, // Sexo
-      { wch: 16 }, // Data Nascimento
-      { wch: 38 }, // SITUAÇÃO
-      { wch: 12 }, // BR/PDH
-      { wch: 22 }, // Nome cargo
-      { wch: 20 }, // Departamento
-      { wch: 14 }, // Nível
-    ];
+    wsData["!cols"] = COLS.map(() => ({ wch: 22 }));
 
-    // Aba de instruções
     const instrucoesData = [
       ["INSTRUÇÕES DE PREENCHIMENTO DA PLANILHA DE IMPORTAÇÃO"],
       [""],
@@ -169,14 +180,41 @@ export function ImportPlanilhaModal({
       ["COLUNA", "OBRIGATÓRIO", "DESCRIÇÃO", "VALORES ACEITOS", "EXEMPLOS"],
       [""],
       ["Nome", "SIM", "Nome completo do colaborador", "Texto livre", "Maria da Silva Santos"],
-      ["CPF", "SIM", "CPF do colaborador (com ou sem pontuação)", "11 dígitos numéricos", "123.456.789-00 ou 12345678900"],
+      ["CPF", "SIM", "CPF do colaborador (com ou sem pontuação)", "11 dígitos numéricos", "123.456.789-00"],
       ["Sexo", "NÃO", "Gênero do colaborador", "Masculino, Feminino, M, F", "Masculino"],
       ["Data Nascimento", "NÃO", "Data de nascimento", "DD/MM/AAAA ou AAAA-MM-DD", "15/03/1990"],
+      ["Estado Civil", "NÃO", "Estado civil", "Solteiro, Casado, Divorciado, Viúvo, União Estável", "Casado"],
+      ["Naturalidade", "NÃO", "Cidade onde nasceu", "Texto livre", "São Paulo"],
+      ["Nacionalidade", "NÃO", "Nacionalidade", "Texto livre", "Brasileiro"],
+      ["Nome Mãe", "NÃO", "Nome completo da mãe", "Texto livre", "Maria da Silva"],
+      ["Nome Pai", "NÃO", "Nome completo do pai", "Texto livre", "José da Silva"],
+      ["RG", "NÃO", "Número do RG", "Texto livre", "12.345.678-9"],
+      ["PIS/PASEP", "NÃO", "Número do PIS/NIS/NIT", "Texto livre", "123.45678.12-3"],
+      ["E-mail", "NÃO", "E-mail do colaborador", "Endereço de e-mail válido", "joao@empresa.com"],
+      ["Telefone", "NÃO", "Telefone fixo", "Formato livre", "(11) 3000-0000"],
+      ["Celular", "NÃO", "Celular/WhatsApp", "Formato livre", "(11) 99000-0000"],
+      ["CEP", "NÃO", "CEP do endereço", "Somente números ou 00000-000", "01310-100"],
+      ["Endereço", "NÃO", "Logradouro", "Texto livre", "Av. Paulista"],
+      ["Número", "NÃO", "Número do endereço", "Texto livre", "1000"],
+      ["Complemento", "NÃO", "Complemento", "Texto livre", "Sala 10"],
+      ["Bairro", "NÃO", "Bairro", "Texto livre", "Bela Vista"],
+      ["Cidade", "NÃO", "Município", "Texto livre", "São Paulo"],
+      ["Estado", "NÃO", "UF", "Sigla com 2 letras", "SP"],
       ["SITUAÇÃO", "NÃO", "Status do colaborador no sistema", "0 = Inativo (desligado), 1 = Ativo", "1"],
-      ["BR/PDH", "NÃO", "Estabelecimento/Unidade do colaborador", "Nome do estabelecimento cadastrado", "Matriz, Filial SP"],
-      ["Nome função", "SIM", "Função do colaborador", "Nome da função", "Analista de RH"],
+      ["Filial", "NÃO", "Estabelecimento/Unidade do colaborador", "Nome do estabelecimento cadastrado", "Sede"],
+      ["Cargo", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
       ["Departamento", "NÃO", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
+      ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, PJ, Estágio, Temporário, Freelancer", "CLT"],
+      ["Data Admissão", "NÃO", "Data de admissão", "DD/MM/AAAA ou AAAA-MM-DD", "01/03/2024"],
+      ["Salário", "NÃO", "Salário base bruto", "Número (use . ou , como decimal)", "5000,00"],
+      ["Centro de Custo", "NÃO", "Centro de custo", "Texto livre", "RH-01"],
+      ["Gestor Imediato", "NÃO", "Nome do gestor direto", "Texto livre", "Carlos Souza"],
+      ["Banco", "NÃO", "Código ou nome do banco", "Texto livre", "341 ou Itaú"],
+      ["Agência", "NÃO", "Número da agência", "Texto livre", "0001"],
+      ["Conta", "NÃO", "Número da conta", "Texto livre", "12345-6"],
+      ["Tipo Conta", "NÃO", "Tipo da conta bancária", "Corrente, Poupança", "Corrente"],
+      ["Chave PIX", "NÃO", "Chave PIX", "CPF, e-mail, telefone ou chave aleatória", "joao@empresa.com"],
       [""],
       ["═══════════════════════════════════════════════════════════════════════════"],
       [""],
@@ -184,24 +222,10 @@ export function ImportPlanilhaModal({
       [""],
       ["1. As colunas marcadas como OBRIGATÓRIO devem ser preenchidas para que o registro seja importado."],
       ["2. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
-      ["3. Departamentos e Funções não cadastrados serão criados automaticamente."],
+      ["3. Departamentos e Cargos não cadastrados serão criados automaticamente."],
       ["4. A primeira linha deve conter os cabeçalhos (não apagar)."],
       ["5. Linhas completamente vazias serão ignoradas."],
       ["6. Registros com erros serão listados ao final da importação."],
-      [""],
-      ["═══════════════════════════════════════════════════════════════════════════"],
-      [""],
-      ["NÍVEIS ACEITOS (variações reconhecidas):"],
-      [""],
-      ["Nível", "Variações aceitas"],
-      ["Estagiário", "estagiario, estagiário"],
-      ["Junior", "junior, júnior, jr"],
-      ["Pleno", "pleno, pl"],
-      ["Senior", "senior, sênior, sr"],
-      ["Especialista", "especialista, esp"],
-      ["Coordenador", "coordenador, coord"],
-      ["Gerente", "gerente, ger"],
-      ["Diretor", "diretor, dir"],
       [""],
       ["═══════════════════════════════════════════════════════════════════════════"],
       [""],
@@ -217,15 +241,7 @@ export function ImportPlanilhaModal({
     ];
 
     const wsInstrucoes = XLSX.utils.aoa_to_sheet(instrucoesData);
-    
-    // Ajustar largura das colunas na aba de instruções
-    wsInstrucoes["!cols"] = [
-      { wch: 20 }, // Coluna
-      { wch: 14 }, // Obrigatório
-      { wch: 45 }, // Descrição
-      { wch: 50 }, // Valores aceitos
-      { wch: 30 }, // Exemplos
-    ];
+    wsInstrucoes["!cols"] = [{ wch: 20 }, { wch: 14 }, { wch: 45 }, { wch: 50 }, { wch: 30 }];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsData, "Dados");
@@ -330,7 +346,7 @@ export function ImportPlanilhaModal({
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
-                    {["Nome", "CPF", "Sexo", "Data Nascimento", "SITUAÇÃO (0=Inativo; 1=Ativo)", "BR/PDH", "Nome função", "Departamento", "Nível"].map(col => (
+                    {COLS.map(col => (
                       <Badge key={col} variant="secondary" className="text-xs">
                         {col}
                       </Badge>
