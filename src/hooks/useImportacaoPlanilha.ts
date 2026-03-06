@@ -222,6 +222,7 @@ export interface ResultadoImportacao {
 
 export function useImportacaoPlanilha() {
   const { tenantId } = useTenant();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
 
