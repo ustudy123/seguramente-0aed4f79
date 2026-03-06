@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Shield, Database, Server, LayoutGrid, Zap,
   AlertTriangle, CheckCircle, Info, ChevronDown, ChevronUp,
   Loader2, Bug, Activity, Play, Bot, Clock, CheckCircle2,
-  XCircle, AlertCircle,
+  XCircle, AlertCircle, Monitor, Maximize2, Minimize2,
+  Eye, Globe,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,6 @@ interface AgentResult {
   ai_report: string;
 }
 
-// Live streaming state
 interface LiveStep {
   flow: string;
   step: string;
@@ -93,30 +93,48 @@ interface LiveFlow {
 }
 
 // ═══════════════════════════════════════════════════
+// ROUTE MAPPING — which page to show for each flow
+// ═══════════════════════════════════════════════════
+
+const FLOW_ROUTES: Record<string, string> = {
+  login_auth: "/login",
+  empresa: "/empresa",
+  admissao: "/colaboradores",
+  atestado: "/atestados",
+  epi: "/epis",
+  plano_acao: "/plano-acao",
+  beneficios: "/financeiro/beneficios",
+  ocorrencias: "/feedback-ocorrencias",
+  documentos: "/documentos",
+  rls_isolamento: "/configuracoes",
+  edge_functions: "/admin",
+};
+
+// ═══════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════
 
 const SCAN_CATEGORIES = [
-  { id: "dados", label: "Dados & Integridade", icon: Database, description: "Verifica integridade referencial, perfis órfãos, dados incompletos, inconsistências em admissões e atestados.", color: "text-blue-500", bgColor: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
-  { id: "seguranca", label: "Segurança & RLS", icon: Shield, description: "Testa acesso anônimo a tabelas sensíveis, verifica políticas RLS, analisa distribuição de roles e superadmins.", color: "text-red-500", bgColor: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
-  { id: "edge_functions", label: "Edge Functions", icon: Server, description: "Testa disponibilidade e resposta de todas as edge functions: IA, onboarding, notificações e integrações.", color: "text-purple-500", bgColor: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20" },
-  { id: "modulos", label: "Módulos do Sistema", icon: LayoutGrid, description: "Verifica campanhas psicossociais, estoque EPIs, afastamentos, ASOs pendentes, alertas de ponto e documentos.", color: "text-amber-500", bgColor: "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20" },
-  { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações acima em sequência. Gera relatório completo com análise de IA.", color: "text-emerald-500", bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
+  { id: "dados", label: "Dados & Integridade", icon: Database, description: "Verifica integridade referencial, perfis órfãos, dados incompletos.", color: "text-blue-500", bgColor: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
+  { id: "seguranca", label: "Segurança & RLS", icon: Shield, description: "Testa acesso anônimo, políticas RLS, distribuição de roles.", color: "text-red-500", bgColor: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
+  { id: "edge_functions", label: "Edge Functions", icon: Server, description: "Testa disponibilidade de todas as edge functions.", color: "text-purple-500", bgColor: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20" },
+  { id: "modulos", label: "Módulos do Sistema", icon: LayoutGrid, description: "Verifica campanhas, estoque EPIs, afastamentos, ASOs.", color: "text-amber-500", bgColor: "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20" },
+  { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações.", color: "text-emerald-500", bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
 ];
 
 const AGENT_FLOWS = [
-  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login com credenciais de teste, verificação de perfil, roles e sessão.", steps: 5 },
-  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Cria empresa, departamento, cargo, valida via auth e limpa.", steps: 7 },
-  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão completa com dados bancários, endereço, documentos e conclusão.", steps: 8 },
-  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Atestados assistencial e ocupacional com CID e validação.", steps: 4 },
-  { id: "epi", label: "EPI (Entrega + Estoque)", icon: "🦺", description: "Cria EPI, entrega, verifica trigger de estoque e alerta mínimo.", steps: 5 },
-  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com 2 tarefas, conclusão parcial e verificação de trigger.", steps: 5 },
-  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Cria tipo de benefício, valida via auth client e limpa.", steps: 4 },
-  { id: "ocorrencias", label: "Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status e verifica limpeza.", steps: 3 },
-  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Cria pasta, verifica via auth client e limpa.", steps: 3 },
-  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Acesso anônimo, cross-tenant e integridade profiles×tenants.", steps: 4 },
-  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga todas as 11 edge functions.", steps: 11 },
-  { id: "todos", label: "Executar TODOS os Fluxos", icon: "🚀", description: "Executa todos os 11 fluxos acima. Login → Empresa → Admissão → ... → IA Report.", steps: 59 },
+  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login, verificação de perfil, roles e sessão.", steps: 5 },
+  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Cria empresa, departamento, cargo e valida.", steps: 7 },
+  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão com dados bancários, endereço, documentos.", steps: 8 },
+  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Atestados assistencial e ocupacional.", steps: 4 },
+  { id: "epi", label: "EPI (Entrega + Estoque)", icon: "🦺", description: "EPI, entrega, trigger de estoque.", steps: 5 },
+  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com tarefas e trigger de progresso.", steps: 5 },
+  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Tipo de benefício, validação auth.", steps: 4 },
+  { id: "ocorrencias", label: "Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status.", steps: 3 },
+  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Cria pasta, verifica via auth.", steps: 3 },
+  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Anônimo, cross-tenant, integridade.", steps: 4 },
+  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga 11 edge functions.", steps: 11 },
+  { id: "todos", label: "Executar TODOS", icon: "🚀", description: "Todos os 11 fluxos + relatório IA.", steps: 59 },
 ];
 
 const severityConfig = {
@@ -151,6 +169,15 @@ export default function QADashboard() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const liveContainerRef = useRef<HTMLDivElement>(null);
 
+  // Iframe state
+  const [iframeUrl, setIframeUrl] = useState("/");
+  const [currentFlowLabel, setCurrentFlowLabel] = useState("");
+  const [iframeExpanded, setIframeExpanded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Get base URL for iframe
+  const baseUrl = window.location.origin;
+
   // ── Scan handlers ──
   const runScan = async (categoria: string) => {
     setScanning(categoria);
@@ -170,6 +197,15 @@ export default function QADashboard() {
     }
   };
 
+  // ── Navigate iframe ──
+  const navigateIframe = useCallback((flowId: string) => {
+    const route = FLOW_ROUTES[flowId] || "/";
+    setIframeUrl(route);
+    if (iframeRef.current) {
+      iframeRef.current.src = `${baseUrl}${route}`;
+    }
+  }, [baseUrl]);
+
   // ── Agent handlers (streaming) ──
   const runAgent = async (flow: string) => {
     setAgentRunning(flow);
@@ -178,6 +214,10 @@ export default function QADashboard() {
     setLiveFlows([]);
     setLiveMessage("Conectando ao agente...");
     setIsGeneratingReport(false);
+    setCurrentFlowLabel("");
+
+    // Navigate iframe to dashboard first
+    navigateIframe("login_auth");
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -237,7 +277,7 @@ export default function QADashboard() {
     }
   };
 
-  const handleSSEEvent = (event: string, data: any) => {
+  const handleSSEEvent = useCallback((event: string, data: any) => {
     switch (event) {
       case "flow_start":
         setLiveFlows(prev => [...prev, {
@@ -247,6 +287,9 @@ export default function QADashboard() {
           steps: [],
         }]);
         setLiveMessage(`▶ ${data.label}`);
+        setCurrentFlowLabel(data.label);
+        // Navigate iframe to matching page
+        navigateIframe(data.flow);
         break;
 
       case "step_start":
@@ -263,7 +306,7 @@ export default function QADashboard() {
             }
             : f
         ));
-        setLiveMessage(`⏳ ${data.step} — ${data.action}`);
+        setLiveMessage(`⏳ ${data.step}`);
         break;
 
       case "step_done":
@@ -281,8 +324,8 @@ export default function QADashboard() {
         ));
         setLiveMessage(
           data.status === "success"
-            ? `✅ ${data.step} — ${data.duration_ms}ms`
-            : `❌ ${data.step} — ${data.details?.slice(0, 60)}`
+            ? `✅ ${data.step}`
+            : `❌ ${data.step}`
         );
         break;
 
@@ -295,6 +338,8 @@ export default function QADashboard() {
       case "ai_start":
         setIsGeneratingReport(true);
         setLiveMessage("🤖 Gerando relatório com IA...");
+        setCurrentFlowLabel("Relatório IA");
+        navigateIframe("login_auth");
         break;
 
       case "complete":
@@ -305,44 +350,46 @@ export default function QADashboard() {
         break;
     }
 
-    // Auto-scroll
+    // Auto-scroll log
     setTimeout(() => {
       liveContainerRef.current?.scrollTo({
         top: liveContainerRef.current.scrollHeight,
         behavior: "smooth",
       });
     }, 50);
-  };
+  }, [navigateIframe]);
 
   const toggleFinding = (i: number) => setExpandedFindings(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; });
   const toggleFlow = (f: string) => setExpandedFlows(p => { const n = new Set(p); n.has(f) ? n.delete(f) : n.add(f); return n; });
 
   const healthScore = scanResult ? Math.max(0, 100 - (scanResult.criticos * 20 + scanResult.altos * 10 + scanResult.medios * 5 + scanResult.baixos * 2)) : null;
 
+  const isAgentActive = agentRunning !== null || (liveFlows.length > 0 && !agentResult);
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="max-w-[1600px] mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              <Bug className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Bug className="w-7 h-7 text-primary" />
               QA & Testes com IA
             </h1>
-            <p className="text-muted-foreground mt-1">
-              Varredura automatizada e agente de QA programático
+            <p className="text-muted-foreground text-sm">
+              Agente visual com iframe ao vivo + varredura automatizada
             </p>
           </div>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="agent" className="space-y-6">
+        <Tabs defaultValue="agent" className="space-y-4">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="agent" className="gap-2">
-              <Bot className="w-4 h-4" /> Agente de QA
+              <Bot className="w-4 h-4" /> Agente Visual
             </TabsTrigger>
             <TabsTrigger value="scan" className="gap-2">
               <Database className="w-4 h-4" /> Varredura
@@ -350,132 +397,160 @@ export default function QADashboard() {
           </TabsList>
 
           {/* ═══════════════════════════════════════════ */}
-          {/* TAB: AGENTE DE QA */}
+          {/* TAB: AGENTE VISUAL */}
           {/* ═══════════════════════════════════════════ */}
-          <TabsContent value="agent" className="space-y-6">
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-4 flex items-start gap-3">
-                <Bot className="w-6 h-6 text-primary mt-0.5" />
-                <div>
-                  <p className="font-semibold text-sm">Agente de QA Programático — Tempo Real</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    O agente autentica como <code className="bg-muted px-1 rounded text-[10px]">wallasmonteirobarros@gmail.com</code> e executa ações reais
-                    simulando comportamento de usuário. Testa login, CRUD, triggers, RLS e edge functions.
-                    <strong> Todos os dados de teste são removidos automaticamente.</strong>
-                  </p>
+          <TabsContent value="agent" className="space-y-4">
+            {/* Flow selection grid — compact when running */}
+            {!isAgentActive && !agentResult && (
+              <>
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-3 flex items-start gap-3">
+                    <Eye className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-semibold text-sm">Agente Visual — Iframe ao Vivo</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        O agente autentica como <code className="bg-muted px-1 rounded text-[10px]">wallasmonteirobarros@gmail.com</code>,
+                        navega pelas telas reais do sistema e você acompanha tudo ao vivo no iframe.
+                        Os passos aparecem ao lado em tempo real.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {AGENT_FLOWS.map((f) => (
+                    <Card
+                      key={f.id}
+                      className={`cursor-pointer transition-all border hover:shadow-md hover:border-primary/40 ${
+                        f.id === "todos" ? "border-primary/30 bg-primary/5 col-span-2 md:col-span-3 lg:col-span-4" : ""
+                      }`}
+                      onClick={() => runAgent(f.id)}
+                    >
+                      <CardContent className={`p-3 ${f.id === "todos" ? "flex items-center justify-center gap-3" : ""}`}>
+                        <div className={`flex items-start gap-2 ${f.id === "todos" ? "items-center" : ""}`}>
+                          <span className="text-xl">{f.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-semibold text-xs">{f.label}</h3>
+                              <Badge variant="secondary" className="text-[9px] px-1 py-0">{f.steps}</Badge>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{f.description}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+              </>
+            )}
 
-            {/* Flow buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {AGENT_FLOWS.map((f) => {
-                const isRunning = agentRunning === f.id;
-                const isAnyRunning = agentRunning !== null;
-                return (
-                  <Card
-                    key={f.id}
-                    className={`cursor-pointer transition-all border hover:shadow-md ${
-                      isAnyRunning && !isRunning ? "opacity-50 pointer-events-none" : ""
-                    } ${f.id === "todos" ? "border-primary/30 bg-primary/5" : ""}`}
-                    onClick={() => !isAnyRunning && runAgent(f.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{f.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-sm">{f.label}</h3>
-                            <Badge variant="secondary" className="text-[10px]">{f.steps} steps</Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">{f.description}</p>
-                          {isRunning && (
-                            <div className="flex items-center gap-2 mt-2 text-primary">
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              <span className="text-xs font-medium animate-pulse">Executando...</span>
-                            </div>
-                          )}
+            {/* ═══ LIVE VIEW: IFRAME + LOG ═══ */}
+            {isAgentActive && (
+              <div className={`grid gap-4 ${iframeExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-[1fr_380px]"}`}>
+                {/* LEFT: Iframe showing the real app */}
+                <Card className="overflow-hidden border-primary/30">
+                  <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium">{currentFlowLabel || "Navegando..."}</span>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                        <Globe className="w-2.5 h-2.5 mr-1" />
+                        {iframeUrl}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {agentRunning && (
+                        <div className="flex items-center gap-1 mr-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                          <span className="text-[10px] text-red-500 font-medium">AO VIVO</span>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* ═══ LIVE TERMINAL ═══ */}
-            {(agentRunning || (liveFlows.length > 0 && !agentResult)) && (
-              <Card className="border-primary/30 overflow-hidden">
-                <CardHeader className="pb-2 bg-muted/30">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-primary animate-pulse" />
-                    Execução em Tempo Real
-                    {liveMessage && (
-                      <span className="text-xs font-normal text-muted-foreground ml-2 truncate max-w-[400px]">
-                        {liveMessage}
-                      </span>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div
-                    ref={liveContainerRef}
-                    className="max-h-[400px] overflow-y-auto bg-slate-950 text-slate-100 p-4 font-mono text-xs space-y-1"
-                  >
-                    {liveFlows.map((liveFlow) => (
-                      <div key={liveFlow.flow} className="mb-3">
-                        <div className="flex items-center gap-2 text-primary font-semibold mb-1">
-                          {liveFlow.status === "running" ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          )}
-                          <span>═══ {liveFlow.label} ═══</span>
-                        </div>
-                        {liveFlow.steps.map((step, i) => (
-                          <div key={i} className="flex items-start gap-2 pl-4">
-                            {step.status === "running" ? (
-                              <Loader2 className="w-3 h-3 animate-spin text-blue-400 mt-0.5 shrink-0" />
-                            ) : step.status === "success" ? (
-                              <span className="text-emerald-400 shrink-0">✓</span>
-                            ) : step.status === "fail" ? (
-                              <span className="text-red-400 shrink-0">✗</span>
-                            ) : (
-                              <span className="text-amber-400 shrink-0">⚠</span>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <span className={`${
-                                step.status === "running" ? "text-blue-300" :
-                                step.status === "success" ? "text-emerald-300" :
-                                step.status === "fail" ? "text-red-300" : "text-amber-300"
-                              }`}>
-                                {step.step}
-                              </span>
-                              <span className="text-slate-500 ml-2">{step.action}</span>
-                              {step.duration_ms !== undefined && (
-                                <span className="text-slate-600 ml-2">{step.duration_ms}ms</span>
-                              )}
-                              {step.details && (
-                                <div className={`text-[10px] mt-0.5 ${
-                                  step.status === "fail" ? "text-red-400/80" : "text-slate-500"
-                                }`}>
-                                  → {step.details.slice(0, 120)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                    {isGeneratingReport && (
-                      <div className="flex items-center gap-2 text-primary pt-2">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Gerando relatório com IA...</span>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => setIframeExpanded(!iframeExpanded)}
+                      >
+                        {iframeExpanded ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <div className={`bg-background ${iframeExpanded ? "h-[70vh]" : "h-[500px]"}`}>
+                    <iframe
+                      ref={iframeRef}
+                      src={`${baseUrl}${iframeUrl}`}
+                      className="w-full h-full border-0"
+                      title="QA Agent — Tela ao Vivo"
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                </Card>
+
+                {/* RIGHT: Step log */}
+                {!iframeExpanded && (
+                  <Card className="overflow-hidden border-muted">
+                    <CardHeader className="py-2 px-3 bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-primary animate-pulse" />
+                        <span className="text-xs font-medium">Log de Execução</span>
+                        {liveMessage && (
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                            {liveMessage}
+                          </span>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <div
+                      ref={liveContainerRef}
+                      className="h-[500px] overflow-y-auto p-3 space-y-1 bg-card"
+                    >
+                      {liveFlows.map((liveFlow) => (
+                        <div key={liveFlow.flow} className="mb-3">
+                          <div className="flex items-center gap-2 font-semibold text-xs mb-1.5 text-primary">
+                            {liveFlow.status === "running" ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            )}
+                            <span>{liveFlow.label}</span>
+                          </div>
+                          {liveFlow.steps.map((step, i) => (
+                            <div key={i} className="flex items-start gap-2 pl-4 py-0.5">
+                              {step.status === "running" ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-primary mt-0.5 shrink-0" />
+                              ) : step.status === "success" ? (
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
+                              ) : step.status === "fail" ? (
+                                <XCircle className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+                              ) : (
+                                <AlertCircle className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[11px] font-medium text-foreground">{step.step}</span>
+                                {step.duration_ms !== undefined && (
+                                  <span className="text-[9px] text-muted-foreground ml-1">{step.duration_ms}ms</span>
+                                )}
+                                {step.details && (
+                                  <div className={`text-[9px] mt-0 leading-tight ${
+                                    step.status === "fail" ? "text-destructive" : "text-muted-foreground"
+                                  }`}>
+                                    {step.details.slice(0, 100)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                      {isGeneratingReport && (
+                        <div className="flex items-center gap-2 text-primary pt-2">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span className="text-xs">Gerando relatório com IA...</span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
+              </div>
             )}
 
             {/* Agent Results */}
@@ -483,10 +558,10 @@ export default function QADashboard() {
               <div className="space-y-4">
                 {/* Score header */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <Card className={`col-span-2 md:col-span-1 ${agentResult.score >= 80 ? "border-emerald-300 bg-emerald-50" : agentResult.score >= 50 ? "border-amber-300 bg-amber-50" : "border-red-300 bg-red-50"}`}>
+                  <Card className={`col-span-2 md:col-span-1 ${agentResult.score >= 80 ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30" : agentResult.score >= 50 ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30" : "border-red-300 bg-red-50 dark:bg-red-950/30"}`}>
                     <CardContent className="p-4 text-center">
                       <Activity className={`w-6 h-6 mx-auto ${agentResult.score >= 80 ? "text-emerald-600" : agentResult.score >= 50 ? "text-amber-600" : "text-red-600"}`} />
-                      <p className={`text-3xl font-bold mt-1 ${agentResult.score >= 80 ? "text-emerald-700" : agentResult.score >= 50 ? "text-amber-700" : "text-red-700"}`}>
+                      <p className={`text-3xl font-bold mt-1 ${agentResult.score >= 80 ? "text-emerald-700 dark:text-emerald-400" : agentResult.score >= 50 ? "text-amber-700 dark:text-amber-400" : "text-red-700 dark:text-red-400"}`}>
                         {agentResult.score}%
                       </p>
                       <p className="text-[10px] text-muted-foreground">Score</p>
@@ -512,10 +587,17 @@ export default function QADashboard() {
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-2xl font-bold text-red-600">{agentResult.total_failed}</p>
+                      <p className="text-2xl font-bold text-destructive">{agentResult.total_failed}</p>
                       <p className="text-[10px] text-muted-foreground">Falhou</p>
                     </CardContent>
                   </Card>
+                </div>
+
+                {/* Rerun button */}
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={() => { setAgentResult(null); setLiveFlows([]); }}>
+                    <Play className="w-3 h-3 mr-1" /> Executar Novamente
+                  </Button>
                 </div>
 
                 {/* Flow details */}
@@ -532,7 +614,7 @@ export default function QADashboard() {
                                 {allPassed ? (
                                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                                 ) : (
-                                  <XCircle className="w-5 h-5 text-red-600" />
+                                  <XCircle className="w-5 h-5 text-destructive" />
                                 )}
                                 <div>
                                   <CardTitle className="text-sm">{flow.flow_label}</CardTitle>
@@ -555,12 +637,12 @@ export default function QADashboard() {
                             <div className="space-y-2">
                               {flow.steps.map((step, i) => (
                                 <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
-                                  step.status === "success" ? "bg-emerald-50/50" : step.status === "fail" ? "bg-red-50/50" : "bg-amber-50/50"
+                                  step.status === "success" ? "bg-emerald-50/50 dark:bg-emerald-950/20" : step.status === "fail" ? "bg-red-50/50 dark:bg-red-950/20" : "bg-amber-50/50 dark:bg-amber-950/20"
                                 }`}>
                                   {step.status === "success" ? (
                                     <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                                   ) : step.status === "fail" ? (
-                                    <XCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                                    <XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
                                   ) : (
                                     <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                                   )}
@@ -570,7 +652,7 @@ export default function QADashboard() {
                                       <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{step.action}</code>
                                       <span className="text-[10px] text-muted-foreground">{step.duration_ms}ms</span>
                                     </div>
-                                    <p className={`text-xs mt-0.5 ${step.status === "fail" ? "text-red-700" : "text-muted-foreground"}`}>
+                                    <p className={`text-xs mt-0.5 ${step.status === "fail" ? "text-destructive" : "text-muted-foreground"}`}>
                                       {step.details}
                                     </p>
                                   </div>
@@ -590,7 +672,7 @@ export default function QADashboard() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Bot className="w-4 h-4 text-primary" />
-                        Relatório do Agente de QA (IA)
+                        Relatório do Agente (IA)
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -605,7 +687,7 @@ export default function QADashboard() {
           </TabsContent>
 
           {/* ═══════════════════════════════════════════ */}
-          {/* TAB: VARREDURA (existing scan) */}
+          {/* TAB: VARREDURA */}
           {/* ═══════════════════════════════════════════ */}
           <TabsContent value="scan" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -627,7 +709,7 @@ export default function QADashboard() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-foreground">{cat.label}</h3>
                           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{cat.description}</p>
-                          {isScanning && <p className="text-xs text-primary mt-2 font-medium animate-pulse">Executando varredura...</p>}
+                          {isScanning && <p className="text-xs text-primary mt-2 font-medium animate-pulse">Executando...</p>}
                         </div>
                       </div>
                     </CardContent>
@@ -679,8 +761,8 @@ export default function QADashboard() {
                   <CardContent className="space-y-2">
                     {scanResult.findings
                       .sort((a, b) => {
-                        const order = { critico: 0, alto: 1, medio: 2, baixo: 3, info: 4 };
-                        return order[a.severidade] - order[b.severidade];
+                        const order: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3, info: 4 };
+                        return (order[a.severidade] ?? 4) - (order[b.severidade] ?? 4);
                       })
                       .map((finding, i) => {
                         const config = severityConfig[finding.severidade];
