@@ -111,7 +111,7 @@ const dadosProfissionaisSchema = z.object({
   tipoContrato: z.string().min(1, 'Tipo de contrato obrigatório'),
   jornadaTrabalho: z.string().min(1, 'Jornada de trabalho obrigatória'),
   salario: z.string().min(1, 'Salário obrigatório'),
-  gestorImediato: z.string().min(2, 'Gestor imediato obrigatório'),
+  gestorImediato: z.string().optional(),
   centroCusto: z.string().optional(),
 });
 
