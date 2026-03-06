@@ -38,6 +38,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { validateCpf, cleanCpf } from "@/lib/cpf";
 import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxField";
+import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxField";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
@@ -457,7 +458,11 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   <FormItem>
                     <FormLabel>Gestor Imediato</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do gestor" {...field} />
+                      <GestorComboboxField
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
