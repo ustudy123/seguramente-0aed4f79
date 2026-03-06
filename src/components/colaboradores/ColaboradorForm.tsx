@@ -101,13 +101,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
   const isEditMode = !!colaborador;
 
-  const cargosOptions = cargos.filter(
-    (c) => typeof c?.nome === "string" && c.nome.trim().length > 0,
-  );
   const departamentosOptions = departamentos.filter(
     (d) => typeof d?.nome === "string" && d.nome.trim().length > 0,
   );
-  // Filtrar estabelecimentos/obras pela empresa ativa
   const estabelecimentosOptions = filiais.filter(
     (f) => typeof f?.nome === "string" && f.nome.trim().length > 0 &&
       (!empresaAtivaId || f.empresa_id === empresaAtivaId),
@@ -130,7 +126,6 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
     },
   });
 
-  // Preencher formulário quando em modo edição
   useEffect(() => {
     if (open && colaborador) {
       form.reset({
@@ -168,12 +163,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       toast.error("Erro: Tenant não identificado");
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       if (isEditMode && colaborador) {
-        // Modo EDIÇÃO - UPDATE
         const { error } = await supabase
           .from("admissoes")
           .update({
@@ -200,10 +192,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           }
           return;
         }
-
         toast.success("Colaborador atualizado com sucesso!");
       } else {
-        // Modo CRIAÇÃO - INSERT
         const { error } = await supabase.from("admissoes").insert({
           tenant_id: tenantId,
           nome_completo: data.nome_completo,
@@ -230,7 +220,6 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           }
           return;
         }
-
         toast.success("Colaborador cadastrado com sucesso!");
       }
 
@@ -249,64 +238,74 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>{isEditMode ? "Editar Colaborador" : "Novo Colaborador"}</DialogTitle>
-          <DialogDescription>
-            {isEditMode 
-              ? "Atualize os dados do colaborador." 
-              : "Preencha os dados para cadastrar um novo colaborador."}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="w-[95vw] max-w-xl max-h-[92vh] flex flex-col gap-0 p-0 overflow-hidden">
 
-        <EmpresaAtivaBanner />
+        {/* Header fixo */}
+        <div className="px-6 pt-5 pb-4 border-b shrink-0">
+          <DialogHeader>
+            <DialogTitle>{isEditMode ? "Editar Colaborador" : "Novo Colaborador"}</DialogTitle>
+            <DialogDescription className="text-sm">
+              {isEditMode
+                ? "Atualize os dados do colaborador."
+                : "Preencha os dados para cadastrar um novo colaborador."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-3">
+            <EmpresaAtivaBanner />
+          </div>
+        </div>
 
+        {/* Corpo scrollável */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="overflow-y-auto flex-1 space-y-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
 
-            {/* Linha 1: Nome completo */}
-            <FormField
-              control={form.control}
-              name="nome_completo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome Completo *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="João da Silva" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Linha 2: CPF | Celular | Email */}
-            <div className="grid grid-cols-3 gap-3">
+              {/* Nome */}
               <FormField
                 control={form.control}
-                name="cpf"
+                name="nome_completo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CPF *</FormLabel>
+                    <FormLabel>Nome Completo *</FormLabel>
                     <FormControl>
-                      <CpfInput value={field.value} onChange={field.onChange} />
+                      <Input placeholder="João da Silva" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="celular"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Celular</FormLabel>
-                    <FormControl>
-                      <PhoneInput value={field.value} onChange={field.onChange} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
+              {/* CPF | Celular */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF *</FormLabel>
+                      <FormControl>
+                        <CpfInput value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="celular"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Celular</FormLabel>
+                      <FormControl>
+                        <PhoneInput value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Email */}
               <FormField
                 control={form.control}
                 name="email"
@@ -320,137 +319,135 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   </FormItem>
                 )}
               />
-            </div>
 
-            {/* Linha 3: Tipo de Vínculo | Função | Data Admissão */}
-            <div className="grid grid-cols-3 gap-3">
-              <FormField
-                control={form.control}
-                name="tipo_contrato"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Vínculo *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+              {/* Tipo Vínculo | Função */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="tipo_contrato"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Vínculo *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TIPOS_VINCULO.map((tipo) => (
+                            <SelectItem key={tipo.value} value={tipo.value}>
+                              {tipo.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cargo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Função *</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
+                        <CargoComboboxField
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled={isSubmitting}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {TIPOS_VINCULO.map((tipo) => (
-                          <SelectItem key={tipo.value} value={tipo.value}>
-                            {tipo.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-              <FormField
-                control={form.control}
-                name="cargo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Função *</FormLabel>
-                    <FormControl>
-                      <CargoComboboxField
-                        value={field.value}
-                        onChange={field.onChange}
-                        disabled={isSubmitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Departamento | Estabelecimento */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="departamento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Departamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {departamentosOptions.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.nome.trim()}>
+                              {dept.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="estabelecimento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estabelecimento / Obra</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {estabelecimentosOptions.map((est) => (
+                            <SelectItem key={est.id} value={est.nome.trim()}>
+                              {est.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-              <FormField
-                control={form.control}
-                name="data_admissao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Admissão *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Linha 4: Departamento | Estabelecimento */}
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="departamento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Departamento</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+              {/* Data Admissão | Centro de Custo */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="data_admissao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de Admissão *</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
+                        <Input type="date" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {departamentosOptions.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.nome.trim()}>
-                            {dept.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="estabelecimento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estabelecimento / Obra</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="centro_custo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Centro de Custo</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
+                        <Input placeholder="Ex: CC-001" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {estabelecimentosOptions.map((est) => (
-                          <SelectItem key={est.id} value={est.nome.trim()}>
-                            {est.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            {/* Linha 5: Centro de Custo | Gestor Imediato */}
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="centro_custo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Centro de Custo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: CC-001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+              {/* Gestor Imediato */}
               <FormField
                 control={form.control}
                 name="gestor_imediato"
@@ -468,9 +465,11 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   </FormItem>
                 )}
               />
+
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            {/* Footer fixo */}
+            <div className="flex justify-end gap-3 px-6 py-4 border-t bg-background shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -486,6 +485,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             </div>
           </form>
         </Form>
+
       </DialogContent>
     </Dialog>
   );
