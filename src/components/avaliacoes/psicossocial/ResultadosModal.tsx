@@ -88,6 +88,8 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
 
   // Dimensões por resposta → agregar média por dimensão
+  // Para SIPRO (IRP-S): maior score = maior risco → críticas têm score ALTO, pontos fortes têm score BAIXO
+  // Para demais: menor score = pior → críticas têm score BAIXO, pontos fortes têm score ALTO
   const dimensoesAgregadas = (() => {
     if (!stats?.anonimato_garantido || respostas.length < MINIMO_ANONIMATO) return [];
     const mapa: Record<string, number[]> = {};
@@ -97,14 +99,29 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
         mapa[d.bloco].push(d.media);
       });
     });
-    return Object.entries(mapa).map(([bloco, valores]) => ({
+    const arr = Object.entries(mapa).map(([bloco, valores]) => ({
       bloco,
       media: Math.round(valores.reduce((a, b) => a + b, 0) / valores.length),
-    })).sort((a, b) => a.media - b.media); // ordenado do pior para o melhor
+    }));
+    // SIPRO: ordenar do mais crítico (maior score) para o menos
+    // Outros: ordenar do mais crítico (menor score) para o melhor
+    return isSipro
+      ? arr.sort((a, b) => b.media - a.media)
+      : arr.sort((a, b) => a.media - b.media);
   })();
 
+  // Para SIPRO: crítico = score alto (≥50); ponto forte = score baixo (≤24)
+  // Para demais: crítico = score baixo (<65); ponto forte = score alto (≥65)
+  const limiarCritico = isSipro ? 50 : 65;
+  const limiarForte = isSipro ? 25 : 65;
+  const isCritico = (media: number) => isSipro ? media >= limiarCritico : media < limiarCritico;
+  const isForte = (media: number) => isSipro ? media <= limiarForte : media >= limiarForte;
+
   const getNivelScore = (score: number): { label: string; cls: IPSClassificacao } => {
-    const cls = calcularIPSClassificacao(score);
+    // Para SIPRO usa lógica invertida: alto = ruim
+    const cls = isSipro
+      ? (score >= 75 ? 'critico' : score >= 50 ? 'atencao' : score >= 25 ? 'estavel' : 'saudavel') as IPSClassificacao
+      : calcularIPSClassificacao(score);
     const labels: Record<IPSClassificacao, string> = {
       saudavel: 'Saudável',
       estavel: 'Estável',
