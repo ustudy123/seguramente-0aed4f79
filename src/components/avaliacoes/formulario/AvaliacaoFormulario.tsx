@@ -301,6 +301,8 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
   const [areasDesenvolvimento, setAreasDesenvolvimento] = useState(resposta?.areas_desenvolvimento || "");
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showGerarPdi, setShowGerarPdi] = useState(false);
+  const [avaliacaoConcluida, setAvaliacaoConcluida] = useState(false);
 
   const isLastStep = currentStep === dimensoes.length;
   const totalCriterios = dimensoes.reduce((acc, d) => acc + d.criterios.length, 0);
