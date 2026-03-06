@@ -75,15 +75,16 @@ export function calcularIPSInstrumento(
   return { ips, porDimensao };
 }
 
-export function getDimensoesByInstrumento(instrumento: 'copsoq' | 'hse' | 'ambos'): DimensaoInstrumento[] {
+export function getDimensoesByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'ambos'): DimensaoInstrumento[] {
   if (instrumento === 'copsoq') return COPSOQ_DIMENSOES;
   if (instrumento === 'hse') return HSE_DIMENSOES;
-  // Ambos: sem duplicatas de dimensões similares
-  return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES];
+  if (instrumento === 'proart') return PROART_DIMENSOES;
+  return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES, ...PROART_DIMENSOES];
 }
 
-export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | 'ambos'): number {
+export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'ambos'): number {
   if (instrumento === 'copsoq') return COPSOQ_TOTAL_PERGUNTAS;
   if (instrumento === 'hse') return HSE_TOTAL_PERGUNTAS;
-  return COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS;
+  if (instrumento === 'proart') return PROART_TOTAL_PERGUNTAS;
+  return COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS;
 }
