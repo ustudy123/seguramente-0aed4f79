@@ -177,8 +177,8 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
                 <p className="text-2xl font-bold">{colaboradores.length}</p>
                 <p className="text-xs text-muted-foreground">Colaboradores</p>
               </div>
-              <div className="bg-green-50 rounded-lg p-3 text-center">
-                <p className="text-2xl font-bold text-green-700">{elegíveis.length}</p>
+              <div className="bg-success/10 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-success">{elegíveis.length}</p>
                 <p className="text-xs text-muted-foreground">Elegíveis</p>
               </div>
               <div className="bg-primary/10 rounded-lg p-3 text-center">
