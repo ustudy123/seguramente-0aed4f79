@@ -1230,7 +1230,7 @@ serve(async (req) => {
           { id: "marketplace", label: "Rede de Parceiros", route: "/marketplace", table: "marketplace_profissionais", columns: "id, nome_completo, status" },
           { id: "onboarding", label: "Onboarding", route: "/onboarding", table: "onboarding_templates", columns: "id, nome, ativo" },
           { id: "ferias", label: "Férias", route: "/ferias", table: "ferias_solicitacoes", columns: "id, colaborador_nome, status" },
-          { id: "ouvidoria", label: "Ouvidoria", route: "/ouvidoria", table: "ouvidoria_manifestacoes", columns: "id, tipo, status" },
+          { id: "ouvidoria", label: "Ouvidoria", route: "/ouvidoria", table: "ouvidoria", columns: "id, tipo, status" },
           { id: "ponto", label: "Ponto Eletrônico", route: "/ponto", table: "ponto_marcacoes", columns: "id, colaborador_nome, tipo_marcacao" },
           { id: "trilhas", label: "Trilhas de Aprendizado", route: "/trilhas", table: "trilhas", columns: "id, nome, status" },
           { id: "cultura", label: "Cultura & Celebrações", route: "/cultura-celebracoes", table: "cultura_datas", columns: "id, titulo, tipo" },
