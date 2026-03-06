@@ -171,8 +171,8 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Play className="h-5 w-5 text-primary" />
             Iniciar Ciclo: {ciclo.nome}
