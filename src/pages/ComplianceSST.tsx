@@ -3,23 +3,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   Shield,
   FileText,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  TrendingDown,
   Upload,
   Search,
   BarChart3,
   FileCheck,
   AlertCircle,
   ArrowRight,
-  Activity,
   BookOpen,
-  Zap,
   Target,
   Trash2,
   Loader2,
@@ -27,6 +23,7 @@ import {
 import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTUploadModal } from "@/components/sst/SSTUploadModal";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
+import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -338,7 +335,7 @@ const ComplianceSST = () => {
                       </div>
                     </div>
                     <Button size="sm" variant="outline">
-                      <Zap className="w-4 h-4 mr-1" />
+                      <Target className="w-4 h-4 mr-1" />
                       Gerar Ação
                     </Button>
                   </CardContent>
@@ -350,22 +347,13 @@ const ComplianceSST = () => {
 
         {/* AÇÕES */}
         <TabsContent value="acoes" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações Legais de SST</CardTitle>
-              <CardDescription>Ações geradas a partir de obrigações identificadas nos documentos</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Target className="w-12 h-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                As ações de SST são integradas ao módulo de Plano de Ação com origem "Legal / SST".
-              </p>
-              <Button variant="outline" className="mt-4" onClick={() => navigate("/plano-acao")}>
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Ir para Plano de Ação
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Ações de Compliance SST</h2>
+            <Badge variant="secondary" className="text-xs">
+              {documentos.filter(d => d.analise_ia_status === "concluida").length} doc{documentos.filter(d => d.analise_ia_status === "concluida").length !== 1 ? "s" : ""} analisado{documentos.filter(d => d.analise_ia_status === "concluida").length !== 1 ? "s" : ""}
+            </Badge>
+          </div>
+          <SSTAcoesTab documentos={documentos} />
         </TabsContent>
 
         {/* eSocial */}

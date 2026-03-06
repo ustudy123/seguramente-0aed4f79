@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.ai-pgr-riscos]
 verify_jwt = false
+
+[functions.ai-sst-acao-sugestao]
+verify_jwt = false
