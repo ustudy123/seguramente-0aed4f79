@@ -409,7 +409,7 @@ export function useImportacaoPlanilha() {
         if (!mapaDepartamentos[depNome.toLowerCase()]) {
           const { data: novoDep, error } = await supabase
             .from("departamentos")
-            .insert({ tenant_id: tenantId, nome: depNome, ativo: true })
+            .insert({ tenant_id: tenantId, nome: depNome, ativo: true, empresa_id: empresaAtivaId || null })
             .select("id")
             .single();
           
@@ -461,6 +461,7 @@ export function useImportacaoPlanilha() {
               departamento_id: departamentoId,
               nivel: cargoInfo.nivel || null,
               ativo: true,
+              empresa_id: empresaAtivaId || null,
             })
             .select("id")
             .single();
