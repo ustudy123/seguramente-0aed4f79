@@ -123,6 +123,15 @@ const Documentos = () => {
     }
   }, [needsSync, syncing, syncColaboradores]);
 
+  // Auto-abrir wizard quando não há estrutura de pastas (primeira vez)
+  useEffect(() => {
+    if (!loading && pastas.length === 0 && !showWizard && !initializing) {
+      // Pequeno delay para aguardar animação da página
+      const timer = setTimeout(() => setShowWizard(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, pastas.length, initializing]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
     setShowUploadForm(true);
