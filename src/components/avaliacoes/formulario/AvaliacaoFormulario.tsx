@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Sparkles, ChevronRight, ChevronLeft, Send, Save,
-  AlertTriangle, Flame, Battery, FileText,
+  AlertTriangle, Flame, Battery,
   BookOpen, Target, User, Briefcase,
   Calendar, CheckCircle2, TrendingUp, Loader2,
 } from "lucide-react";
@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
