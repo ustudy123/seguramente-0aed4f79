@@ -238,7 +238,7 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
                           {c.departamento && <span className="text-xs text-muted-foreground ml-1">• {c.departamento}</span>}
                         </Label>
                         {isRecentAdmissao(c.data_admissao) && (
-                          <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700">Novo</Badge>
+                          <Badge variant="outline" className="text-[10px] border-warning/50 text-warning">Novo</Badge>
                         )}
                       </div>
                     ))
@@ -278,8 +278,8 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
 
         {step === "done" && (
           <div className="flex-1 flex flex-col items-center justify-center gap-6 py-8">
-            <div className="p-4 bg-green-100 rounded-full">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            <div className="p-4 bg-success/10 rounded-full">
+              <CheckCircle2 className="h-10 w-10 text-success" />
             </div>
             <div className="text-center space-y-1">
               <h3 className="font-semibold text-lg">Ciclo iniciado com sucesso!</h3>
