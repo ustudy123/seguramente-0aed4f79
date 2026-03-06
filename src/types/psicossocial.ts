@@ -145,81 +145,55 @@ export interface CampanhaPsicossocial {
   nome: string;
   descricao?: string;
   status: CampanhaPsicossocialStatus;
-  tipo: CampanhaPsicossocialTipo; // regular ou extraordinária
-  periodicidade?: CampanhaPeriodicidade; // Para campanhas regulares
+  tipo: CampanhaPsicossocialTipo;
+  instrumento?: InstrumentoPsicossocial;
+  escopo?: EscopoCampanha;
+  escopo_valores?: string[];
+  periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;
   anonimo: boolean;
-  permite_identificacao_voluntaria: boolean; // Permite que colaborador opte por se identificar
-  mensagem_institucional?: string; // Mensagem personalizada sobre uso dos dados
-  politica_uso_dados?: string; // Política de uso dos dados para LGPD
+  permite_identificacao_voluntaria?: boolean;
+  mensagem_institucional?: string;
+  politica_uso_dados?: string;
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];
-  // Campos para reaplicação controlada
-  motivo_extraordinaria?: string; // Motivo da reaplicação
-  evento_gatilho_tipo?: EventoGatilhoTipo; // Tipo do evento que disparou
-  evento_gatilho_id?: string; // ID do evento relacionado
-  campanha_anterior_id?: string; // Referência para comparação
+  motivo_extraordinaria?: string;
+  evento_gatilho_tipo?: EventoGatilhoTipo;
+  evento_gatilho_id?: string;
+  campanha_anterior_id?: string;
   criado_por?: string;
   criado_por_nome?: string;
+  // Resultados calculados
+  ips_score?: number;
+  ips_classificacao?: IPSClassificacao;
+  total_respostas?: number;
+  radar_data?: RadarDimensao[];
   created_at: string;
   updated_at: string;
-}
-
-// Convites
-export interface ConvitePsicossocial {
-  id: string;
-  tenant_id: string;
-  campanha_id: string;
-  colaborador_id?: string;
-  colaborador_nome: string;
-  colaborador_cpf?: string;
-  colaborador_cargo?: string;
-  colaborador_departamento?: string;
-  token: string;
-  status: ConvitePsicossocialStatus;
-  enviado_via?: ConviteEnviadoVia;
-  enviado_em?: string;
-  iniciado_em?: string;
-  concluido_em?: string;
-  lembrete_enviado?: boolean;
-  created_at: string;
-  updated_at: string;
-  // Relacionamentos
-  campanha?: CampanhaPsicossocial;
-}
-
-// Respostas
-export interface RespostaPsicossocial {
-  id: string;
-  tenant_id: string;
-  campanha_id: string;
-  convite_id: string;
-  colaborador_id?: string;
-  respostas: Record<string, number>; // { pergunta_id: valor }
-  indicadores?: IndicadoresPsicossociais;
-  identificacao_voluntaria: boolean; // Se colaborador optou por se identificar
-  tempo_resposta_segundos?: number;
-  ip_address?: string;
-  user_agent?: string;
-  concluido_em?: string;
-  created_at: string;
 }
 
 // Indicadores calculados
 export interface IndicadoresPsicossociais {
-  IRP_S: number; // Índice Risco Psicossocial (geral)
-  IBO_S: number; // Índice Burnout
-  IBD_S: number; // Índice Boreout
-  IREC_S: number; // Índice Recuperação
-  ICOP_S: number; // Índice Clareza Organizacional
-  INOT_S?: number; // Índice de Risco do Trabalho Noturno (quando aplicável)
+  // IPS: Índice Psicossocial Seguramente (0-100)
+  IPS?: number;
+  IPS_classificacao?: IPSClassificacao;
+  // Sub-índices legados (escala 0-4)
+  IRP_S: number;
+  IBO_S: number;
+  IBD_S: number;
+  IREC_S: number;
+  ICOP_S: number;
+  INOT_S?: number;
   detalhes: {
     bloco: string;
     media: number;
     nivel: 'baixo' | 'moderado' | 'alto' | 'critico';
   }[];
+  // Detalhes por dimensão (nova estrutura)
+  dimensoes?: DimensaoResultado[];
+  radar?: RadarDimensao[];
 }
 
 // Estatísticas de campanha
@@ -230,6 +204,11 @@ export interface EstatisticasCampanha {
   concluidos: number;
   expirados: number;
   taxa_participacao: number;
+  // Regra de anonimato: mínimo 5 respostas para liberar análise
+  anonimato_garantido: boolean;
+  ips?: number;
+  ips_classificacao?: IPSClassificacao;
+  radar?: RadarDimensao[];
   media_IRP_S?: number;
   media_IBO_S?: number;
   media_IBD_S?: number;
