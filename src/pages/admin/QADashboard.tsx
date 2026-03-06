@@ -105,13 +105,18 @@ const SCAN_CATEGORIES = [
 ];
 
 const AGENT_FLOWS = [
-  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Cria, verifica, atualiza e exclui uma admissão completa com documentos.", steps: 6 },
-  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Registra atestado, valida campos, adiciona CID e limpa.", steps: 4 },
-  { id: "epi", label: "EPI (Entrega + Estoque)", icon: "🦺", description: "Cria EPI, registra entrega, verifica trigger de baixa de estoque.", steps: 5 },
-  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Cria ação, adiciona tarefa, conclui e verifica trigger de progresso.", steps: 5 },
-  { id: "rls_isolamento", label: "Isolamento Multi-Tenant", icon: "🔒", description: "Testa acesso anônimo e verifica integridade do isolamento por tenant.", steps: 3 },
-  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga todas as edge functions e verifica disponibilidade.", steps: 11 },
-  { id: "todos", label: "Executar TODOS os Fluxos", icon: "🚀", description: "Roda todos os fluxos acima em sequência. Gera relatório completo com IA.", steps: 34 },
+  { id: "login_auth", label: "Autenticação & Perfil", icon: "🔑", description: "Login com credenciais de teste, verificação de perfil, roles e sessão.", steps: 5 },
+  { id: "empresa", label: "Cadastro de Empresa", icon: "🏢", description: "Cria empresa, departamento, cargo, valida via auth e limpa.", steps: 7 },
+  { id: "admissao", label: "Admissão Completa", icon: "👤", description: "Admissão completa com dados bancários, endereço, documentos e conclusão.", steps: 8 },
+  { id: "atestado", label: "Atestado Médico", icon: "🏥", description: "Atestados assistencial e ocupacional com CID e validação.", steps: 4 },
+  { id: "epi", label: "EPI (Entrega + Estoque)", icon: "🦺", description: "Cria EPI, entrega, verifica trigger de estoque e alerta mínimo.", steps: 5 },
+  { id: "plano_acao", label: "Plano de Ação", icon: "📋", description: "Ação com 2 tarefas, conclusão parcial e verificação de trigger.", steps: 5 },
+  { id: "beneficios", label: "Benefícios", icon: "🎁", description: "Cria tipo de benefício, valida via auth client e limpa.", steps: 4 },
+  { id: "ocorrencias", label: "Ocorrências", icon: "⚠️", description: "Cria ocorrência, atualiza status e verifica limpeza.", steps: 3 },
+  { id: "documentos", label: "Gestão de Documentos", icon: "📁", description: "Cria pasta, verifica via auth client e limpa.", steps: 3 },
+  { id: "rls_isolamento", label: "Isolamento RLS", icon: "🔒", description: "Acesso anônimo, cross-tenant e integridade profiles×tenants.", steps: 4 },
+  { id: "edge_functions", label: "Health Check Functions", icon: "⚡", description: "Pinga todas as 11 edge functions.", steps: 11 },
+  { id: "todos", label: "Executar TODOS os Fluxos", icon: "🚀", description: "Executa todos os 11 fluxos acima. Login → Empresa → Admissão → ... → IA Report.", steps: 59 },
 ];
 
 const severityConfig = {
