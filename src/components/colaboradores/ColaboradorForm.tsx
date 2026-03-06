@@ -248,7 +248,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Editar Colaborador" : "Novo Colaborador"}</DialogTitle>
           <DialogDescription>
@@ -261,7 +261,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         <EmpresaAtivaBanner />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 pr-1">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="overflow-y-auto flex-1 space-y-3">
+
+            {/* Linha 1: Nome completo */}
             <FormField
               control={form.control}
               name="nome_completo"
@@ -276,7 +278,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Linha 2: CPF | Celular | Email */}
+            <div className="grid grid-cols-3 gap-3">
               <FormField
                 control={form.control}
                 name="cpf"
@@ -284,16 +287,12 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   <FormItem>
                     <FormLabel>CPF *</FormLabel>
                     <FormControl>
-                      <CpfInput
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
+                      <CpfInput value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="celular"
@@ -301,10 +300,20 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   <FormItem>
                     <FormLabel>Celular</FormLabel>
                     <FormControl>
-                      <PhoneInput
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
+                      <PhoneInput value={field.value} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email *</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@empresa.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -312,21 +321,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email *</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="email@empresa.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+            {/* Linha 3: Tipo de Vínculo | Função | Data Admissão */}
+            <div className="grid grid-cols-3 gap-3">
               <FormField
                 control={form.control}
                 name="tipo_contrato"
@@ -369,9 +365,24 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="data_admissao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Admissão *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Linha 4: Departamento | Estabelecimento */}
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="departamento"
@@ -423,7 +434,8 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Linha 5: Centro de Custo | Gestor Imediato */}
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="centro_custo"
@@ -453,21 +465,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="data_admissao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Admissão *</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
