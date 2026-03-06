@@ -88,6 +88,8 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
 
   // Dimensões por resposta → agregar média por dimensão
+  // Para SIPRO (IRP-S): maior score = maior risco → críticas têm score ALTO, pontos fortes têm score BAIXO
+  // Para demais: menor score = pior → críticas têm score BAIXO, pontos fortes têm score ALTO
   const dimensoesAgregadas = (() => {
     if (!stats?.anonimato_garantido || respostas.length < MINIMO_ANONIMATO) return [];
     const mapa: Record<string, number[]> = {};
@@ -97,14 +99,29 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
         mapa[d.bloco].push(d.media);
       });
     });
-    return Object.entries(mapa).map(([bloco, valores]) => ({
+    const arr = Object.entries(mapa).map(([bloco, valores]) => ({
       bloco,
       media: Math.round(valores.reduce((a, b) => a + b, 0) / valores.length),
-    })).sort((a, b) => a.media - b.media); // ordenado do pior para o melhor
+    }));
+    // SIPRO: ordenar do mais crítico (maior score) para o menos
+    // Outros: ordenar do mais crítico (menor score) para o melhor
+    return isSipro
+      ? arr.sort((a, b) => b.media - a.media)
+      : arr.sort((a, b) => a.media - b.media);
   })();
 
+  // Para SIPRO: crítico = score alto (≥50); ponto forte = score baixo (≤24)
+  // Para demais: crítico = score baixo (<65); ponto forte = score alto (≥65)
+  const limiarCritico = isSipro ? 50 : 65;
+  const limiarForte = isSipro ? 25 : 65;
+  const isCritico = (media: number) => isSipro ? media >= limiarCritico : media < limiarCritico;
+  const isForte = (media: number) => isSipro ? media <= limiarForte : media >= limiarForte;
+
   const getNivelScore = (score: number): { label: string; cls: IPSClassificacao } => {
-    const cls = calcularIPSClassificacao(score);
+    // Para SIPRO usa lógica invertida: alto = ruim
+    const cls = isSipro
+      ? (score >= 75 ? 'critico' : score >= 50 ? 'atencao' : score >= 25 ? 'estavel' : 'saudavel') as IPSClassificacao
+      : calcularIPSClassificacao(score);
     const labels: Record<IPSClassificacao, string> = {
       saudavel: 'Saudável',
       estavel: 'Estável',
@@ -298,11 +315,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2 text-red-600">
                             <AlertTriangle className="h-4 w-4" />
-                            Dimensões Críticas
+                            {isSipro ? 'Maiores Riscos (IRP-S)' : 'Dimensões Críticas'}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                          {dimensoesAgregadas.filter(d => d.media < 65).slice(0, 4).map(d => {
+                          {dimensoesAgregadas.filter(d => isCritico(d.media)).slice(0, 4).map(d => {
                             const nivel = getNivelScore(d.media);
                             return (
                               <div key={d.bloco} className="flex items-center justify-between">
@@ -314,8 +331,10 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                               </div>
                             );
                           })}
-                          {dimensoesAgregadas.filter(d => d.media < 65).length === 0 && (
-                            <p className="text-sm text-muted-foreground">Nenhuma dimensão crítica 🎉</p>
+                          {dimensoesAgregadas.filter(d => isCritico(d.media)).length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              {isSipro ? 'Nenhuma dimensão em risco 🎉' : 'Nenhuma dimensão crítica 🎉'}
+                            </p>
                           )}
                         </CardContent>
                       </Card>
@@ -324,11 +343,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2 text-emerald-600">
                             <CheckCircle2 className="h-4 w-4" />
-                            Pontos Fortes
+                            {isSipro ? 'Condições Favoráveis (IRP-S)' : 'Pontos Fortes'}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                          {[...dimensoesAgregadas].reverse().filter(d => d.media >= 65).slice(0, 4).map(d => {
+                          {[...dimensoesAgregadas].reverse().filter(d => isForte(d.media)).slice(0, 4).map(d => {
                             const nivel = getNivelScore(d.media);
                             return (
                               <div key={d.bloco} className="flex items-center justify-between">
@@ -340,8 +359,10 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                               </div>
                             );
                           })}
-                          {[...dimensoesAgregadas].reverse().filter(d => d.media >= 65).length === 0 && (
-                            <p className="text-sm text-muted-foreground">Sem dimensões saudáveis ainda</p>
+                          {[...dimensoesAgregadas].reverse().filter(d => isForte(d.media)).length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              {isSipro ? 'Sem dimensões favoráveis ainda' : 'Sem dimensões saudáveis ainda'}
+                            </p>
                           )}
                         </CardContent>
                       </Card>

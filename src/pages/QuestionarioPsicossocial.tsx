@@ -35,6 +35,7 @@ function getInstrumentoLabel(instrumento?: string) {
     case 'copsoq': return 'COPSOQ III — 13 dimensões psicossociais';
     case 'hse': return 'HSE Management Standards — 7 padrões';
     case 'proart': return 'PROART — Protocolo de Avaliação de Riscos';
+    case 'sipro': return 'SIPRO — Índice Seguramente de Risco Psicossocial';
     default: return 'Questionário Psicossocial';
   }
 }

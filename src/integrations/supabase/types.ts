@@ -13480,6 +13480,7 @@ export type Database = {
           campanha_data_inicio: string
           campanha_descricao: string
           campanha_id: string
+          campanha_instrumento: string
           campanha_mensagem_institucional: string
           campanha_nome: string
           campanha_permite_identificacao_voluntaria: boolean

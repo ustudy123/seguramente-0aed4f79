@@ -30,9 +30,9 @@ export function calcularIPSClassificacao(score: number): IPSClassificacao {
 export type IRPSClassificacao = 'saudavel' | 'atencao' | 'risco' | 'risco_elevado';
 
 export function calcularIRPSClassificacao(score: number): IRPSClassificacao {
-  if (score <= 25) return 'saudavel';
-  if (score <= 50) return 'atencao';
-  if (score <= 75) return 'risco';
+  if (score <= 24) return 'saudavel';
+  if (score <= 49) return 'atencao';
+  if (score <= 74) return 'risco';
   return 'risco_elevado';
 }
 
