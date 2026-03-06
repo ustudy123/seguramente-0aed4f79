@@ -9,17 +9,23 @@ import {
   ExternalLink,
   Star,
   Clock,
-  CheckCircle2,
-  Search
+  Search,
+  MapPin,
+  ShieldCheck,
+  Loader2,
+  UserX
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-// Tipos para o Hub de Serviços
+// ── Tipos ──────────────────────────────────────────────────────────────────
+
 interface ConteudoEducativo {
   id: string;
   titulo: string;
@@ -27,23 +33,21 @@ interface ConteudoEducativo {
   categoria: string;
   duracao?: string;
   descricao: string;
-  url?: string;
   tags: string[];
 }
 
-interface ProfissionalServico {
-  id: string;
-  nome: string;
-  especialidade: string;
-  tipo: 'ergonomista' | 'engenheiro_sst' | 'psicologo' | 'medico_trabalho' | 'consultor';
-  avaliacao: number;
-  atendimentos: number;
-  disponivel: boolean;
-  descricao: string;
-}
+// Segmentos relevantes para Ergonomia/SST
+const SEGMENTOS_ERGONOMIA = [
+  'Ergonomia', 'Fisioterapia', 'SST', 'Saúde Ocupacional', 'Saúde Mental',
+  'AET', 'AEP', 'PCMSO', 'LER/DORT', 'Ginástica Laboral', 'Biomecânica',
+  'NR-17', 'Medicina do Trabalho', 'Psicologia Organizacional', 'Psicossocial',
+];
 
-// Dados de exemplo para demonstração
-const CONTEUDOS_EXEMPLO: ConteudoEducativo[] = [
+const CONSELHOS_RELEVANTES = ['CREFITO', 'CRM', 'CRP', 'CFP', 'CREA'];
+
+// ── Conteúdo educativo (estático por ora) ─────────────────────────────────
+
+const CONTEUDOS: ConteudoEducativo[] = [
   {
     id: '1',
     titulo: 'Introdução à NR-17: Ergonomia no Trabalho',
@@ -89,49 +93,6 @@ const CONTEUDOS_EXEMPLO: ConteudoEducativo[] = [
   },
 ];
 
-const PROFISSIONAIS_EXEMPLO: ProfissionalServico[] = [
-  {
-    id: '1',
-    nome: 'Dr. Carlos Ergonomista',
-    especialidade: 'Ergonomia Física e Cognitiva',
-    tipo: 'ergonomista',
-    avaliacao: 4.9,
-    atendimentos: 150,
-    disponivel: true,
-    descricao: 'Especialista em AET com 15 anos de experiência.',
-  },
-  {
-    id: '2',
-    nome: 'Eng. Maria SST',
-    especialidade: 'Segurança do Trabalho',
-    tipo: 'engenheiro_sst',
-    avaliacao: 4.8,
-    atendimentos: 200,
-    disponivel: true,
-    descricao: 'Engenheira de segurança com foco em indústrias.',
-  },
-  {
-    id: '3',
-    nome: 'Dra. Ana Psicologia',
-    especialidade: 'Psicologia Organizacional',
-    tipo: 'psicologo',
-    avaliacao: 5.0,
-    atendimentos: 80,
-    disponivel: false,
-    descricao: 'Especialista em saúde mental e clima organizacional.',
-  },
-  {
-    id: '4',
-    nome: 'Dr. Pedro Ocupacional',
-    especialidade: 'Medicina do Trabalho',
-    tipo: 'medico_trabalho',
-    avaliacao: 4.7,
-    atendimentos: 300,
-    disponivel: true,
-    descricao: 'Médico do trabalho com expertise em ergonomia.',
-  },
-];
-
 const TIPO_ICONS = {
   texto: FileText,
   video: Video,
@@ -140,35 +101,52 @@ const TIPO_ICONS = {
   trilha: BookOpen,
 };
 
-const TIPO_COLORS = {
-  ergonomista: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
-  engenheiro_sst: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
-  psicologo: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
-  medico_trabalho: 'bg-green-500/10 text-green-600 border-green-500/30',
-  consultor: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
-};
+// ── Hook: busca profissionais reais do Marketplace ────────────────────────
 
-const TIPO_LABELS = {
-  ergonomista: 'Ergonomista',
-  engenheiro_sst: 'Eng. SST',
-  psicologo: 'Psicólogo',
-  medico_trabalho: 'Médico',
-  consultor: 'Consultor',
-};
+function useProfissionaisSST(search: string) {
+  return useQuery({
+    queryKey: ['hub-profissionais-sst', search],
+    queryFn: async () => {
+      let query = supabase
+        .from('marketplace_profissionais')
+        .select('id, nome_completo, conselho, especialidades, areas_atuacao, status, nota_media, total_avaliacoes, foto_url, bio, cidade, estado, selo_verificado, modalidades_atendimento')
+        .eq('status', 'ativo')
+        .in('conselho', CONSELHOS_RELEVANTES)
+        .order('nota_media', { ascending: false })
+        .limit(20);
+
+      if (search.trim()) {
+        query = query.or(
+          `nome_completo.ilike.%${search}%,bio.ilike.%${search}%`
+        );
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // Filtro adicional: ao menos uma especialidade/área alinhada com ergonomia/SST
+      return (data || []).filter((p) => {
+        const esp = (p.especialidades || []).join(' ').toLowerCase();
+        const areas = (p.areas_atuacao || []).join(' ').toLowerCase();
+        const keywords = SEGMENTOS_ERGONOMIA.map((s) => s.toLowerCase());
+        return keywords.some((k) => esp.includes(k) || areas.includes(k));
+      });
+    },
+  });
+}
+
+// ── Componente ─────────────────────────────────────────────────────────────
 
 export function HubServicos() {
   const [searchConteudo, setSearchConteudo] = useState("");
   const [searchProfissional, setSearchProfissional] = useState("");
 
-  const conteudosFiltrados = CONTEUDOS_EXEMPLO.filter(c =>
+  const { data: profissionais = [], isLoading: loadingProf } = useProfissionaisSST(searchProfissional);
+
+  const conteudosFiltrados = CONTEUDOS.filter((c) =>
     c.titulo.toLowerCase().includes(searchConteudo.toLowerCase()) ||
     c.categoria.toLowerCase().includes(searchConteudo.toLowerCase()) ||
-    c.tags.some(t => t.toLowerCase().includes(searchConteudo.toLowerCase()))
-  );
-
-  const profissionaisFiltrados = PROFISSIONAIS_EXEMPLO.filter(p =>
-    p.nome.toLowerCase().includes(searchProfissional.toLowerCase()) ||
-    p.especialidade.toLowerCase().includes(searchProfissional.toLowerCase())
+    c.tags.some((t) => t.toLowerCase().includes(searchConteudo.toLowerCase()))
   );
 
   return (
@@ -192,7 +170,7 @@ export function HubServicos() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Hub de Conhecimento */}
+          {/* ── Conhecimento ── */}
           <TabsContent value="conhecimento" className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -256,88 +234,125 @@ export function HubServicos() {
             )}
           </TabsContent>
 
-          {/* Hub de Profissionais */}
+          {/* ── Profissionais (Rede de Parceiros – dados reais) ── */}
           <TabsContent value="profissionais" className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar profissionais..."
-                value={searchProfissional}
-                onChange={(e) => setSearchProfissional(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome ou especialidade..."
+                  value={searchProfissional}
+                  onChange={(e) => setSearchProfissional(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {profissionaisFiltrados.map((profissional, index) => (
-                <motion.div
-                  key={profissional.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card className={cn(
-                    "border-border/50 hover:shadow-md transition-all",
-                    !profissional.disponivel && "opacity-60"
-                  )}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                          <Users className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-foreground">
-                              {profissional.nome}
-                            </h4>
-                            <Badge 
-                              variant="outline" 
-                              className={cn("text-xs", TIPO_COLORS[profissional.tipo])}
-                            >
-                              {TIPO_LABELS[profissional.tipo]}
-                            </Badge>
-                            {profissional.disponivel ? (
-                              <Badge className="bg-success/10 text-success border-success/30 text-xs">
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Disponível
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                Indisponível
-                              </Badge>
+            <p className="text-xs text-muted-foreground">
+              Profissionais ativos na Rede de Parceiros com atuação em Fisioterapia, Ergonomia, SST, Saúde Ocupacional e Saúde Mental.
+            </p>
+
+            {loadingProf ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                <span className="text-sm text-muted-foreground">Buscando profissionais...</span>
+              </div>
+            ) : profissionais.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <UserX className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                <p className="font-medium">Nenhum profissional cadastrado</p>
+                <p className="text-xs mt-1">Cadastre profissionais no módulo <strong>Rede de Parceiros</strong> para que apareçam aqui.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {profissionais.map((prof, index) => (
+                  <motion.div
+                    key={prof.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card className="border-border/50 hover:shadow-md transition-all">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <Avatar className="w-12 h-12 shrink-0">
+                            {prof.foto_url && !prof.foto_url.startsWith('/avatars') && (
+                              <AvatarImage src={prof.foto_url} alt={prof.nome_completo} />
                             )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {profissional.especialidade}
-                          </p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="flex items-center gap-1 text-xs">
-                              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                              {profissional.avaliacao}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {profissional.atendimentos} atendimentos
-                            </span>
-                          </div>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          disabled={!profissional.disponivel}
-                          variant={profissional.disponivel ? "default" : "secondary"}
-                        >
-                          Solicitar
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                              {prof.nome_completo.split(' ').slice(0, 2).map((n: string) => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
 
-            {profissionaisFiltrados.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum profissional encontrado</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold text-sm text-foreground">
+                                {prof.nome_completo}
+                              </h4>
+                              {prof.selo_verificado && (
+                                <ShieldCheck className="h-4 w-4 text-primary shrink-0" aria-label="Verificado" />
+                              )}
+                              {prof.conselho && (
+                                <Badge variant="outline" className="text-xs">
+                                  {prof.conselho}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {prof.bio && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {prof.bio}
+                              </p>
+                            )}
+
+                            {/* Especialidades */}
+                            {prof.especialidades && prof.especialidades.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {(prof.especialidades as string[]).slice(0, 4).map((esp: string, i: number) => (
+                                  <Badge key={i} variant="secondary" className="text-xs">
+                                    {esp}
+                                  </Badge>
+                                ))}
+                                {prof.especialidades.length > 4 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{prof.especialidades.length - 4}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-4 mt-2">
+                              {prof.nota_media && (
+                                <span className="flex items-center gap-1 text-xs">
+                                  <Star className="h-3 w-3 text-warning fill-warning" />
+                                  <span className="font-medium">{Number(prof.nota_media).toFixed(1)}</span>
+                                  {prof.total_avaliacoes > 0 && (
+                                    <span className="text-muted-foreground">({prof.total_avaliacoes})</span>
+                                  )}
+                                </span>
+                              )}
+                              {(prof.cidade || prof.estado) && (
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <MapPin className="h-3 w-3" />
+                                  {[prof.cidade, prof.estado].filter(Boolean).join(', ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="shrink-0"
+                            onClick={() => window.location.href = '/marketplace'}
+                          >
+                            Ver perfil
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
               </div>
             )}
           </TabsContent>
