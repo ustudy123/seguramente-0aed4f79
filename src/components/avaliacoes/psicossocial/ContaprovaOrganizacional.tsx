@@ -305,16 +305,15 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
   // Calcular alinhamento geral
   const evidenciasComResultado = evidencias.filter(e => e.corrobora !== null);
   const corroboram = evidenciasComResultado.filter(e => e.corrobora === true).length;
-  const contradizem = evidenciasComResultado.filter(e => e.corrobora === false).length;
   const alinhamento = evidenciasComResultado.length > 0
     ? Math.round((corroboram / evidenciasComResultado.length) * 100)
     : null;
 
   const getBadgeTendencia = (t: EvidenciaItem["tendencia"]) => {
     switch (t) {
-      case "positiva": return <Badge variant="outline" className="text-emerald-600 border-emerald-300 bg-emerald-50/50 text-xs">✓ Saudável</Badge>;
-      case "alerta": return <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50/50 text-xs">⚠ Atenção</Badge>;
-      case "negativa": return <Badge variant="outline" className="text-red-600 border-red-300 bg-red-50/50 text-xs">✗ Crítico</Badge>;
+      case "positiva": return <Badge variant="outline" className="text-[hsl(var(--chart-2))] border-[hsl(var(--chart-2)/0.4)] text-xs">✓ Saudável</Badge>;
+      case "alerta": return <Badge variant="outline" className="text-[hsl(var(--chart-5))] border-[hsl(var(--chart-5)/0.4)] text-xs">⚠ Atenção</Badge>;
+      case "negativa": return <Badge variant="outline" className="text-destructive border-destructive/40 text-xs">✗ Crítico</Badge>;
       default: return <Badge variant="outline" className="text-muted-foreground text-xs">– Neutro</Badge>;
     }
   };
