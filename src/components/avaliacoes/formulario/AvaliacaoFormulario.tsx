@@ -513,10 +513,15 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
 
         {/* Painel lateral de evidências */}
         <div className="lg:col-span-1">
-          <PainelEvidencias
+          <EvidenciasPanel
             colaboradorId={resposta.avaliado_id}
+            colaboradorNome={resposta.avaliado_nome}
+            cicloNome={resposta.ciclo?.nome || ""}
+            cicloId={resposta.ciclo_id}
             dataInicio={resposta.ciclo?.data_inicio}
             dataFim={resposta.ciclo?.data_fim}
+            evidenciasAnexadas={evidenciasAnexadas.map(e => e.id)}
+            onAnexarEvidencia={handleAnexarEvidencia}
           />
         </div>
       </div>
