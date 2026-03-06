@@ -83,3 +83,9 @@ verify_jwt = false
 
 [functions.ai-sst-acao-sugestao]
 verify_jwt = false
+
+[functions.ai-pdi-from-avaliacao]
+verify_jwt = false
+
+[functions.avaliacao-ia-rascunho]
+verify_jwt = false
