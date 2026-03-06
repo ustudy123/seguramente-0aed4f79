@@ -13430,7 +13430,12 @@ export type Database = {
       terceiro_acesso: "eventual" | "recorrente" | "continuo"
       terceiro_doc_status: "valido" | "a_vencer" | "vencido" | "pendente"
       terceiro_status: "liberado" | "restrito" | "bloqueado"
-      tipo_avaliador: "auto" | "gestor" | "par" | "subordinado"
+      tipo_avaliador:
+        | "auto"
+        | "gestor"
+        | "par"
+        | "subordinado"
+        | "cliente_interno"
       tipo_competencia: "tecnica" | "comportamental" | "cognitiva"
       tipo_conteudo_funcao:
         | "manual"
@@ -13794,7 +13799,13 @@ export const Constants = {
       terceiro_acesso: ["eventual", "recorrente", "continuo"],
       terceiro_doc_status: ["valido", "a_vencer", "vencido", "pendente"],
       terceiro_status: ["liberado", "restrito", "bloqueado"],
-      tipo_avaliador: ["auto", "gestor", "par", "subordinado"],
+      tipo_avaliador: [
+        "auto",
+        "gestor",
+        "par",
+        "subordinado",
+        "cliente_interno",
+      ],
       tipo_competencia: ["tecnica", "comportamental", "cognitiva"],
       tipo_conteudo_funcao: [
         "manual",

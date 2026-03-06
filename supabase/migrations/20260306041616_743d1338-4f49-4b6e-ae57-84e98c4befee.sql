@@ -1,0 +1,1 @@
+ALTER TYPE public.tipo_avaliador ADD VALUE IF NOT EXISTS 'cliente_interno';
