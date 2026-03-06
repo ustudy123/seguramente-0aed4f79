@@ -2,7 +2,49 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
 // ============================================================
-// Mock do Supabase
+// Mock do Supabase — must use vi.hoisted for factory mocks
+// ============================================================
+
+const {
+  supabaseMock,
+  unsubscribeMock,
+  getAuthStateCallback,
+  setAuthStateCallback,
+} = vi.hoisted(() => {
+  const unsubscribeMock = vi.fn();
+  let _authStateCallback: any = null;
+
+  const supabaseMock = {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      onAuthStateChange: vi.fn((cb: any) => {
+        _authStateCallback = cb;
+        return { data: { subscription: { unsubscribe: unsubscribeMock } } };
+      }),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn().mockResolvedValue({}),
+    },
+    from: vi.fn(),
+    functions: { invoke: vi.fn() },
+  };
+
+  return {
+    supabaseMock,
+    unsubscribeMock,
+    getAuthStateCallback: () => _authStateCallback,
+    setAuthStateCallback: (v: any) => { _authStateCallback = v; },
+  };
+});
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: supabaseMock,
+}));
+
+import { useAuth } from "@/hooks/useAuth";
+
+// ============================================================
+// Helpers
 // ============================================================
 
 const mockSession = {
@@ -18,25 +60,6 @@ const mockProfile = {
   cargo: "Analista",
 };
 
-let authStateCallback: ((event: string, session: any) => void) | null = null;
-const unsubscribeMock = vi.fn();
-
-const supabaseMock = {
-  auth: {
-    getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-    onAuthStateChange: vi.fn((cb: any) => {
-      authStateCallback = cb;
-      return { data: { subscription: { unsubscribe: unsubscribeMock } } };
-    }),
-    signInWithPassword: vi.fn(),
-    signUp: vi.fn(),
-    signOut: vi.fn().mockResolvedValue({}),
-  },
-  from: vi.fn(),
-  functions: { invoke: vi.fn() },
-};
-
-// Helper to mock chained from().select().eq()...
 function mockFromChain(results: Record<string, { data: any; error: any }>) {
   supabaseMock.from.mockImplementation((table: string) => {
     const result = results[table] || { data: null, error: null };
@@ -47,20 +70,12 @@ function mockFromChain(results: Record<string, { data: any; error: any }>) {
       maybeSingle: vi.fn().mockResolvedValue(result),
       single: vi.fn().mockResolvedValue(result),
     };
-    // For user_roles which doesn't use maybeSingle
     if (table === "user_roles") {
       chain.eq = vi.fn().mockResolvedValue(result);
     }
     return chain;
   });
 }
-
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: supabaseMock,
-}));
-
-// Import after mock
-import { useAuth } from "@/hooks/useAuth";
 
 // ============================================================
 // Tests
@@ -69,7 +84,7 @@ import { useAuth } from "@/hooks/useAuth";
 describe("useAuth", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    authStateCallback = null;
+    setAuthStateCallback(null);
     supabaseMock.auth.getSession.mockResolvedValue({ data: { session: null } });
   });
 
