@@ -260,14 +260,8 @@ export default function QADashboard() {
     }
   };
 
-  // ── Navigate iframe via postMessage (no reload) ──
-  const navigateIframe = useCallback((flowId: string) => {
-    const route = FLOW_ROUTES[flowId] || "/";
-    setIframeUrl(route);
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ type: "qa-navigate", route }, "*");
-    }
-  }, []);
+  // ── Navigate stub (iframe removed) ──
+  const navigateIframe = useCallback((_flowId: string) => {}, []);
 
   // ── Agent handlers (streaming) ──
   const runAgent = async (flow: string) => {
@@ -393,20 +387,10 @@ export default function QADashboard() {
         break;
 
       case "navigate":
-        if (data.route) {
-          setIframeUrl(data.route);
-          if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({ type: "qa-navigate", route: data.route }, "*");
-          }
-          if (data.label) setCurrentFlowLabel(data.label);
-        }
+        if (data.label) setCurrentFlowLabel(data.label);
         break;
 
       case "refresh":
-        // Tell the iframe to invalidate all React Query caches so UI reflects DB mutations
-        if (iframeRef.current?.contentWindow) {
-          iframeRef.current.contentWindow.postMessage({ type: "qa-refresh" }, "*");
-        }
         break;
 
       case "flow_done":
