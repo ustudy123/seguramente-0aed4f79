@@ -70,9 +70,22 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
   const isLoading = loadingStats || loadingRespostas;
 
+  const isSipro = campanha.instrumento === 'sipro';
+
   // IPS e classificação a partir das estatísticas reais
   const ips = stats?.ips;
-  const ipsClass = ips !== undefined ? calcularIPSClassificacao(ips) : null;
+  const ipsClass = ips !== undefined
+    ? isSipro
+      ? calcularIRPSClassificacao(ips) as unknown as IPSClassificacao
+      : calcularIPSClassificacao(ips)
+    : null;
+
+  // Label e cor do score principal conforme instrumento
+  const scoreLabel = isSipro ? 'IRP-S — Índice de Risco Psicossocial' : 'IPS — Índice Psicossocial';
+  const scoreDescricao = isSipro
+    ? 'Score 0–100: quanto maior, maior o risco organizacional'
+    : 'Score 0–100: quanto maior, mais saudável o ambiente';
+
 
   // Dimensões por resposta → agregar média por dimensão
   const dimensoesAgregadas = (() => {
