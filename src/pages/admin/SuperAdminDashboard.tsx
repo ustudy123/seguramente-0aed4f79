@@ -3,7 +3,8 @@
  import { 
    Building2, 
    Users, 
-   Plus, 
+    Plus,
+    Bug, 
    Search, 
    MoreVertical,
     Shield,
@@ -133,9 +134,13 @@ import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
                   Programa Validador
                 </Button>
                 <Button variant="outline" onClick={() => navigate('/admin/manual')}>
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Manual do Sistema
-                </Button>
+                   <BookOpen className="w-4 h-4 mr-2" />
+                   Manual do Sistema
+                 </Button>
+                 <Button variant="outline" onClick={() => navigate('/admin/qa')}>
+                   <Bug className="w-4 h-4 mr-2" />
+                   QA & Testes IA
+                 </Button>
                <Button onClick={() => setShowTenantForm(true)}>
                  <Plus className="w-4 h-4 mr-2" />
                  Nova Empresa
