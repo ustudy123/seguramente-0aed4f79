@@ -378,8 +378,8 @@ export function usePsicossocial() {
     tempoSegundos: number,
     identificacaoVoluntaria: boolean = false
   ): Promise<void> => {
-    const blocosDinamicos = convite.campanha?.blocos_dinamicos || [];
-    const indicadores = calcularIndicadores(respostas, blocosDinamicos);
+    const instrumento = (convite.campanha?.instrumento || 'copsoq') as InstrumentoPsicossocial;
+    const indicadores = calcularIndicadores(respostas, instrumento);
 
     const { error } = await supabasePublic
       .rpc('salvar_resposta_psicossocial', {
