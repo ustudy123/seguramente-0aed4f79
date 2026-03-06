@@ -31,11 +31,13 @@ function gerarToken(): string {
  */
 export function calcularIndicadores(
   respostas: Record<string, number>,
-  instrumento: InstrumentoPsicossocial = 'copsoq'
+  instrumento: InstrumentoPsicossocial = 'sipro'
 ): IndicadoresPsicossociais {
-  const instrumentoKey = instrumento === 'proart' || instrumento === 'customizado'
-    ? 'copsoq' as const
-    : instrumento as 'copsoq' | 'hse';
+  const validKeys = ['copsoq', 'hse', 'proart', 'sipro'] as const;
+  type ValidKey = typeof validKeys[number];
+  const instrumentoKey: ValidKey = validKeys.includes(instrumento as ValidKey)
+    ? instrumento as ValidKey
+    : 'copsoq';
   const dimensoes = getDimensoesByInstrumento(instrumentoKey);
   const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
   const classificacao = calcularIPSClassificacao(ips);
