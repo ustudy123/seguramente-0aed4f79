@@ -359,8 +359,8 @@ export default function QADashboard() {
                 <div>
                   <p className="font-semibold text-sm">Agente de QA Programático — Tempo Real</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    O agente executa ações reais no banco de dados simulando o comportamento de um usuário.
-                    Acompanhe cada passo sendo executado em tempo real na tela.
+                    O agente autentica como <code className="bg-muted px-1 rounded text-[10px]">wallasmonteirobarros@gmail.com</code> e executa ações reais
+                    simulando comportamento de usuário. Testa login, CRUD, triggers, RLS e edge functions.
                     <strong> Todos os dados de teste são removidos automaticamente.</strong>
                   </p>
                 </div>
