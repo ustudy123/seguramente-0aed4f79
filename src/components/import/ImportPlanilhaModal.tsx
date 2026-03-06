@@ -365,6 +365,14 @@ export function ImportPlanilhaModal({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-4"
               >
+                {/* Empresa vinculada */}
+                {empresaAtiva && (
+                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
+                    <Building2 className="w-4 h-4 text-primary shrink-0" />
+                    <span>Os colaboradores serão vinculados à empresa: <strong>{empresaAtiva.nome_fantasia || empresaAtiva.razao_social}</strong></span>
+                  </div>
+                )}
+
                 {/* Arquivo selecionado */}
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
