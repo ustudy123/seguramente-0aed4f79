@@ -248,7 +248,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Editar Colaborador" : "Novo Colaborador"}</DialogTitle>
           <DialogDescription>
@@ -261,7 +261,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         <EmpresaAtivaBanner />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 pr-1">
             <FormField
               control={form.control}
               name="nome_completo"
