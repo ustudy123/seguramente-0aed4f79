@@ -49,6 +49,14 @@ export function CicloList() {
   const [iniciarCiclo, setIniciarCiclo] = useState<AvaliacaoCiclo | null>(null);
 
   const handleStatusChange = async (id: string, newStatus: AvaliacaoCicloStatus) => {
+    // Se está ativando, abre o dialog de geração automática
+    if (newStatus === "ativo") {
+      const ciclo = ciclos.find(c => c.id === id);
+      if (ciclo) {
+        setIniciarCiclo(ciclo);
+        return;
+      }
+    }
     await updateCiclo({ id, status: newStatus });
   };
 
