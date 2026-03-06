@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useDepartamentos, useFiliais } from '@/hooks/useCadastros';
+import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
+import { GestorComboboxField } from '@/components/colaboradores/GestorComboboxField';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
