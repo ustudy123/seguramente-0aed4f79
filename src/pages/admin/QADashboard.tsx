@@ -340,6 +340,13 @@ export default function QADashboard() {
         }
         break;
 
+      case "refresh":
+        // Tell the iframe to invalidate all React Query caches so UI reflects DB mutations
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage({ type: "qa-refresh" }, "*");
+        }
+        break;
+
       case "flow_done":
         setLiveFlows(prev => prev.map(f =>
           f.flow === data.flow ? { ...f, status: "done" } : f

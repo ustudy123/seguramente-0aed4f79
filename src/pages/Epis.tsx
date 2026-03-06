@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus, HardHat, Package, Users, History, Shield, AlertTriangle, Wrench, ArrowDownCircle, Warehouse, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,14 @@ const Epis = () => {
   } = useEpis();
 
   const perm = useEpiPermissions();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("entregas");
+
+  // Sync tab from URL query param (used by QA Agent)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
   const [showTipoForm, setShowTipoForm] = useState(false);
   const [showEpiForm, setShowEpiForm] = useState(false);
   const [showEntregaForm, setShowEntregaForm] = useState(false);
