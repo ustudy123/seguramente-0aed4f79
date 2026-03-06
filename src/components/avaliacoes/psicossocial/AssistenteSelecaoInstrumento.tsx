@@ -157,12 +157,12 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     motivosSipro.push("afastamentos por saúde mental detectados no sistema");
   }
 
-  if (sys.temTurnoNoturno || sys.temTurnoRevezamento) {
+  if (sys.temTurnoNoturno || sys.temTurnoRevezamento || sys.possuiTerceiroTurno) {
     sipro += 15;
-    motivosSipro.push("turnos noturnos/revezamento — Ritmo Biológico e Recuperação coberto");
+    motivosSipro.push("turnos noturnos/revezamento — Bloco CET: Ritmo Biológico incluído");
   }
 
-  if (sys.mediaHorasExtras > 120) { // > 2h extras/semana em média
+  if (sys.mediaHorasExtras > 120) {
     sipro += 10; proart += 10;
     motivosSipro.push("excesso de horas extras detectado");
   }
@@ -170,6 +170,26 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
   if (sys.grauRisco >= 3) {
     proart += 10; sipro += 10;
     motivosSipro.push(`empresa grau de risco ${sys.grauRisco} (NR-04)`);
+  }
+
+  if (sys.insalubridade || sys.periculosidade || sys.aposentadoriaEspecial) {
+    sipro += 10; proart += 5;
+    const conds = [
+      sys.insalubridade && 'insalubridade',
+      sys.periculosidade && 'periculosidade',
+      sys.aposentadoriaEspecial && 'aposentadoria especial',
+    ].filter(Boolean).join(', ');
+    motivosSipro.push(`condições especiais de trabalho: ${conds}`);
+  }
+
+  if (sys.trabalhoAltura) {
+    sipro += 8;
+    motivosSipro.push("trabalho em altura — Bloco CET específico disponível");
+  }
+
+  if (sys.espacoConfinado) {
+    sipro += 8;
+    motivosSipro.push("espaço confinado — Bloco CET específico disponível");
   }
 
   if (sys.totalCampanhasAnteriores === 0) {
