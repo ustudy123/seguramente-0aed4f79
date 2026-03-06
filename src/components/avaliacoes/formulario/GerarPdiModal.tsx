@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { usePdi } from "@/hooks/usePdi";
 import { PDI_META_CATEGORIA_LABELS } from "@/types/pdi";
 import type { PdiMetaCategoria } from "@/types/pdi";
