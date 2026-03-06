@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Form,
   FormControl,
@@ -39,6 +40,10 @@ import {
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const POLITICA_USO_DADOS_PADRAO = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
 
@@ -50,6 +55,27 @@ const MOTIVOS_EXTRAORDINARIA = [
   { value: 'ia_sugestao', label: 'Sugestão da IA (preventivo)' },
   { value: 'solicitacao_colaborador', label: 'Solicitação de colaborador' },
 ];
+
+// Mapeamento: campo do cadastro → id do bloco CET
+const MAPA_EMPRESA_BLOCOS: Record<string, string> = {
+  possui_terceiro_turno: 'cet_noturno',
+  trabalho_altura: 'cet_altura',
+  espaco_confinado: 'cet_confinado',
+};
+
+interface EmpresaDados {
+  grau_risco: number | null;
+  total_colaboradores: number | null;
+  cnae_principal: string | null;
+  possui_terceiro_turno: boolean | null;
+  possui_escalas_especiais: boolean | null;
+  trabalho_altura: boolean | null;
+  espaco_confinado: boolean | null;
+  insalubridade: boolean | null;
+  periculosidade: boolean | null;
+  aposentadoria_especial: boolean | null;
+  razao_social: string | null;
+}
 
 const formSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -77,6 +103,10 @@ interface CampanhaFormProps {
 
 export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumentoSugerido }: CampanhaFormProps) {
   const { criarCampanha, campanhas } = usePsicossocial();
+  const { empresaAtivaId } = useEmpresaAtiva();
+  const { user } = useAuth();
+  const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
+  const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
 
   const isReaplicacao = !!campanhaAnterior;
 
@@ -97,6 +127,51 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   });
 
   const tipo = form.watch("tipo");
+  const instrumento = form.watch("instrumento");
+
+  // Buscar dados da empresa ao abrir o form
+  useEffect(() => {
+    if (!open) return;
+    const fetchEmpresa = async () => {
+      try {
+        const tenantId = user
+          ? (await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).single()).data?.tenant_id
+          : null;
+        if (!tenantId) return;
+
+        const query = supabase
+          .from('empresa_cadastro')
+          .select(
+            'grau_risco, total_colaboradores, cnae_principal, possui_terceiro_turno, possui_escalas_especiais, trabalho_altura, espaco_confinado, insalubridade, periculosidade, aposentadoria_especial, razao_social'
+          )
+          .eq('tenant_id', tenantId);
+
+        const { data } = empresaAtivaId
+          ? await query.eq('id', empresaAtivaId).single()
+          : await query.limit(1).single();
+
+        if (!data) return;
+        setEmpresaDados(data as EmpresaDados);
+
+        // Detectar blocos CET automaticamente
+        const detectados: string[] = [];
+        Object.entries(MAPA_EMPRESA_BLOCOS).forEach(([campo, blocoId]) => {
+          if ((data as any)[campo] === true) detectados.push(blocoId);
+        });
+        setBlocosAutoDetectados(detectados);
+
+        // Pré-selecionar blocos detectados (só se ainda não há seleção do campanhaAnterior)
+        if (!campanhaAnterior && detectados.length > 0) {
+          const atuais = form.getValues('blocos_dinamicos') ?? [];
+          const merged = Array.from(new Set([...atuais, ...detectados]));
+          form.setValue('blocos_dinamicos', merged);
+        }
+      } catch {
+        // silencioso
+      }
+    };
+    fetchEmpresa();
+  }, [open, empresaAtivaId, user]);
 
   const onSubmit = async (data: FormValues) => {
     await criarCampanha.mutateAsync({
@@ -107,7 +182,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
       periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
       data_inicio: data.data_inicio,
       data_fim: data.data_fim,
-      // Sempre anônimo, sem identificação voluntária
       anonimo: true,
       permite_identificacao_voluntaria: false,
       mensagem_institucional: undefined,
@@ -122,6 +196,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   };
 
   const campanhasAnteriores = campanhas.filter(c => c.status === 'encerrada');
+
+  // Instrumentos que suportam blocos CET (SIPRO é o único por ora)
+  const instrumentoSuportaCET = instrumento === 'sipro' || instrumento === 'customizado';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,6 +227,58 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
             <p className="text-xs text-purple-800 leading-relaxed">
               <strong>Instrumento recomendado pelo Assistente:</strong> o instrumento <strong>{instrumentoSugerido.toUpperCase()}</strong> foi pré-selecionado com base na análise organizacional. Você pode alterá-lo abaixo se preferir.
             </p>
+          </div>
+        )}
+
+        {/* Banner dados da empresa detectados */}
+        {empresaDados && (
+          <div className="rounded-lg border bg-muted/40 p-3 space-y-1.5">
+            <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Info className="h-3.5 w-3.5 text-blue-500" />
+              Perfil da empresa detectado automaticamente
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {empresaDados.grau_risco && (
+                <Badge variant="outline" className="text-xs">
+                  Grau de risco {empresaDados.grau_risco} (NR-04)
+                </Badge>
+              )}
+              {empresaDados.cnae_principal && (
+                <Badge variant="outline" className="text-xs">
+                  CNAE {empresaDados.cnae_principal}
+                </Badge>
+              )}
+              {empresaDados.insalubridade && (
+                <Badge variant="outline" className="text-xs text-amber-700 border-amber-300">
+                  Insalubridade
+                </Badge>
+              )}
+              {empresaDados.periculosidade && (
+                <Badge variant="outline" className="text-xs text-red-700 border-red-300">
+                  Periculosidade
+                </Badge>
+              )}
+              {empresaDados.possui_terceiro_turno && (
+                <Badge variant="outline" className="text-xs text-indigo-700 border-indigo-300">
+                  3º Turno
+                </Badge>
+              )}
+              {empresaDados.trabalho_altura && (
+                <Badge variant="outline" className="text-xs text-orange-700 border-orange-300">
+                  Trabalho em Altura
+                </Badge>
+              )}
+              {empresaDados.espaco_confinado && (
+                <Badge variant="outline" className="text-xs text-orange-700 border-orange-300">
+                  Espaço Confinado
+                </Badge>
+              )}
+              {empresaDados.aposentadoria_especial && (
+                <Badge variant="outline" className="text-xs text-purple-700 border-purple-300">
+                  Aposent. Especial
+                </Badge>
+              )}
+            </div>
           </div>
         )}
 
@@ -485,38 +614,72 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                     Blocos Especiais (CET)
                   </FormLabel>
                   <FormDescription>
-                    Selecione os blocos adicionais para condições especiais de trabalho
+                    Perguntas adicionais para condições especiais de trabalho detectadas no cadastro da empresa
                   </FormDescription>
+
+                  {/* Aviso se instrumento não suporta CET */}
+                  {!instrumentoSuportaCET && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
+                      <span>
+                        Os Blocos CET são exclusivos do <strong>SIPRO</strong>. Para o instrumento selecionado, estes blocos não serão aplicados mesmo que marcados. Para incluir blocos CET, selecione o SIPRO como instrumento.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Aviso de detecção automática */}
+                  {blocosAutoDetectados.length > 0 && instrumentoSuportaCET && (
+                    <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
+                      <span>
+                        <strong>Detecção automática:</strong> {blocosAutoDetectados.length} bloco(s) foram pré-selecionados com base no cadastro da empresa.
+                      </span>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-3 mt-2">
-                    {BLOCOS_DINAMICOS.map((bloco) => (
-                      <div
-                        key={bloco.id}
-                        className="flex items-start space-x-3 rounded-lg border p-3"
-                      >
-                        <Checkbox
-                          id={bloco.id}
-                          checked={field.value?.includes(bloco.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              field.onChange([...field.value, bloco.id]);
-                            } else {
-                              field.onChange(field.value.filter((id: string) => id !== bloco.id));
-                            }
-                          }}
-                        />
-                        <div className="grid gap-1.5 leading-none">
-                          <label
-                            htmlFor={bloco.id}
-                            className="text-sm font-medium leading-none cursor-pointer"
-                          >
-                            {bloco.titulo}
-                          </label>
-                          <p className="text-xs text-muted-foreground">
-                            {bloco.perguntas.length} perguntas adicionais
-                          </p>
+                    {BLOCOS_DINAMICOS.map((bloco) => {
+                      const isAutoDetectado = blocosAutoDetectados.includes(bloco.id);
+                      return (
+                        <div
+                          key={bloco.id}
+                          className={`flex items-start space-x-3 rounded-lg border p-3 transition-colors ${
+                            isAutoDetectado
+                              ? 'bg-blue-50/60 border-blue-200'
+                              : 'bg-background'
+                          }`}
+                        >
+                          <Checkbox
+                            id={bloco.id}
+                            checked={field.value?.includes(bloco.id)}
+                            disabled={!instrumentoSuportaCET}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange([...field.value, bloco.id]);
+                              } else {
+                                field.onChange(field.value.filter((id: string) => id !== bloco.id));
+                              }
+                            }}
+                          />
+                          <div className="grid gap-1 leading-none">
+                            <label
+                              htmlFor={bloco.id}
+                              className={`text-sm font-medium leading-none cursor-pointer ${!instrumentoSuportaCET ? 'opacity-50' : ''}`}
+                            >
+                              {bloco.titulo}
+                              {isAutoDetectado && (
+                                <Badge variant="secondary" className="ml-1.5 text-[10px] py-0 h-4 bg-blue-100 text-blue-700">
+                                  auto
+                                </Badge>
+                              )}
+                            </label>
+                            <p className="text-xs text-muted-foreground">
+                              {bloco.perguntas.length} perguntas adicionais
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </FormItem>
               )}

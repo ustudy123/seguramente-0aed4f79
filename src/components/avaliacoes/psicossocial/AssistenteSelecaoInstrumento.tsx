@@ -30,6 +30,14 @@ interface SystemData {
   totalCampanhasAnteriores: number;
   temEscalaIrregular: boolean;
   grauRisco: number; // 1-4
+  // Condições especiais do cadastro da empresa
+  possuiTerceiroTurno: boolean;
+  trabalhoAltura: boolean;
+  espacoConfinado: boolean;
+  insalubridade: boolean;
+  periculosidade: boolean;
+  aposentadoriaEspecial: boolean;
+  cnae: string | null;
 }
 
 interface ChecklistRespostas {
@@ -149,12 +157,12 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     motivosSipro.push("afastamentos por saúde mental detectados no sistema");
   }
 
-  if (sys.temTurnoNoturno || sys.temTurnoRevezamento) {
+  if (sys.temTurnoNoturno || sys.temTurnoRevezamento || sys.possuiTerceiroTurno) {
     sipro += 15;
-    motivosSipro.push("turnos noturnos/revezamento — Ritmo Biológico e Recuperação coberto");
+    motivosSipro.push("turnos noturnos/revezamento — Bloco CET: Ritmo Biológico incluído");
   }
 
-  if (sys.mediaHorasExtras > 120) { // > 2h extras/semana em média
+  if (sys.mediaHorasExtras > 120) {
     sipro += 10; proart += 10;
     motivosSipro.push("excesso de horas extras detectado");
   }
@@ -162,6 +170,26 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
   if (sys.grauRisco >= 3) {
     proart += 10; sipro += 10;
     motivosSipro.push(`empresa grau de risco ${sys.grauRisco} (NR-04)`);
+  }
+
+  if (sys.insalubridade || sys.periculosidade || sys.aposentadoriaEspecial) {
+    sipro += 10; proart += 5;
+    const conds = [
+      sys.insalubridade && 'insalubridade',
+      sys.periculosidade && 'periculosidade',
+      sys.aposentadoriaEspecial && 'aposentadoria especial',
+    ].filter(Boolean).join(', ');
+    motivosSipro.push(`condições especiais de trabalho: ${conds}`);
+  }
+
+  if (sys.trabalhoAltura) {
+    sipro += 8;
+    motivosSipro.push("trabalho em altura — Bloco CET específico disponível");
+  }
+
+  if (sys.espacoConfinado) {
+    sipro += 8;
+    motivosSipro.push("espaço confinado — Bloco CET específico disponível");
   }
 
   if (sys.totalCampanhasAnteriores === 0) {
@@ -288,14 +316,18 @@ export function AssistenteSelecaoInstrumento({
             ? supabase.from('ponto_escalas').select('turno, jornada_diaria_minutos').eq('tenant_id', tenantId)
             : Promise.resolve({ data: [] }),
 
-          // Dados da empresa ativa (grau de risco)
+          // Dados completos da empresa ativa
           tenantId && empresaAtivaId
-            ? supabase.from('empresa_cadastro').select('grau_risco, total_colaboradores').eq('id', empresaAtivaId).single()
+            ? supabase.from('empresa_cadastro')
+                .select('grau_risco, total_colaboradores, cnae_principal, possui_terceiro_turno, possui_escalas_especiais, trabalho_altura, espaco_confinado, insalubridade, periculosidade, aposentadoria_especial')
+                .eq('id', empresaAtivaId).single()
             : tenantId
-              ? supabase.from('empresa_cadastro').select('grau_risco, total_colaboradores').eq('tenant_id', tenantId).limit(1).single()
+              ? supabase.from('empresa_cadastro')
+                  .select('grau_risco, total_colaboradores, cnae_principal, possui_terceiro_turno, possui_escalas_especiais, trabalho_altura, espaco_confinado, insalubridade, periculosidade, aposentadoria_especial')
+                  .eq('tenant_id', tenantId).limit(1).single()
               : Promise.resolve({ data: null }),
 
-          // Contagem real de colaboradores ativos (admissoes com status ativo/concluido)
+          // Contagem real de colaboradores ativos
           tenantId
             ? supabase.from('admissoes')
                 .select('id', { count: 'exact', head: true })
@@ -336,20 +368,29 @@ export function AssistenteSelecaoInstrumento({
       setSysData({
         totalColaboradores,
         totalSetores: totalSetoresCount,
-        temTurnoNoturno: temNoturno,
-        temTurnoRevezamento: temRevezamento,
+        temTurnoNoturno: temNoturno || !!empresa?.possui_terceiro_turno,
+        temTurnoRevezamento: temRevezamento || !!empresa?.possui_escalas_especiais,
         mediaHorasExtras: 0,
         totalAfastamentosSaudeMental: afastSaudeMental,
         totalAfastamentos: afastamentos.length,
         totalCampanhasAnteriores: campanhas.length,
         temEscalaIrregular: temRevezamento,
         grauRisco: empresa?.grau_risco ?? 2,
+        possuiTerceiroTurno: !!empresa?.possui_terceiro_turno,
+        trabalhoAltura: !!empresa?.trabalho_altura,
+        espacoConfinado: !!empresa?.espaco_confinado,
+        insalubridade: !!empresa?.insalubridade,
+        periculosidade: !!empresa?.periculosidade,
+        aposentadoriaEspecial: !!empresa?.aposentadoria_especial,
+        cnae: empresa?.cnae_principal ?? null,
       });
     } catch {
       setSysData({
         totalColaboradores: 0, totalSetores: 0, temTurnoNoturno: false,
         temTurnoRevezamento: false, mediaHorasExtras: 0, totalAfastamentosSaudeMental: 0,
         totalAfastamentos: 0, totalCampanhasAnteriores: 0, temEscalaIrregular: false, grauRisco: 2,
+        possuiTerceiroTurno: false, trabalhoAltura: false, espacoConfinado: false,
+        insalubridade: false, periculosidade: false, aposentadoriaEspecial: false, cnae: null,
       });
     }
     setStep('checklist');
@@ -546,17 +587,23 @@ export function AssistenteSelecaoInstrumento({
                   className="mb-5 p-3 rounded-lg bg-blue-50 border border-blue-200">
                   <p className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1.5">
                     <Activity className="h-3.5 w-3.5" />
-                    Dados detectados automaticamente
+                    Dados detectados automaticamente do cadastro da empresa
                   </p>
                   <div className="grid grid-cols-2 gap-1.5 text-xs text-blue-800">
-                    <span>👥 {sysData.totalColaboradores} colaboradores</span>
+                    <span>👥 {sysData.totalColaboradores} colaboradores ativos</span>
                     <span>📋 {sysData.totalCampanhasAnteriores} campanhas anteriores</span>
-                    {sysData.temTurnoNoturno && <span>🌙 Turno noturno detectado</span>}
+                    <span>🏷️ Grau de risco {sysData.grauRisco} (NR-04)</span>
+                    {sysData.cnae && <span>🏭 CNAE {sysData.cnae}</span>}
+                    {(sysData.temTurnoNoturno || sysData.possuiTerceiroTurno) && <span>🌙 3º turno / noturno</span>}
                     {sysData.temTurnoRevezamento && <span>🔄 Revezamento detectado</span>}
+                    {sysData.trabalhoAltura && <span>⬆️ Trabalho em altura</span>}
+                    {sysData.espacoConfinado && <span>🔒 Espaço confinado</span>}
+                    {sysData.insalubridade && <span>⚠️ Insalubridade</span>}
+                    {sysData.periculosidade && <span>🔴 Periculosidade</span>}
+                    {sysData.aposentadoriaEspecial && <span>📅 Aposent. especial</span>}
                     {sysData.totalAfastamentosSaudeMental > 0 && (
-                      <span>⚠️ {sysData.totalAfastamentosSaudeMental} afastamentos saúde mental</span>
+                      <span>🏥 {sysData.totalAfastamentosSaudeMental} afastamentos saúde mental</span>
                     )}
-                    <span>🏷️ Grau de risco {sysData.grauRisco}</span>
                   </div>
                 </motion.div>
               )}
