@@ -515,6 +515,17 @@ export function EvidenciasPanel({
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Painel de Contexto Ergonômico NR-17 */}
+      {tenantId && user?.id && colaboradorCargo && (
+        <ErgonomiaContextPanel
+          colaboradorNome={colaboradorNome}
+          colaboradorCargo={colaboradorCargo}
+          cicloNome={cicloNome}
+          tenantId={tenantId}
+          userId={user.id}
+        />
+      )}
     </>
   );
 }
