@@ -62,153 +62,192 @@ interface InstrumentoScore {
 // ─── Scoring Engine ───────────────────────────────────────────────────────────
 
 function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScore[] {
+  // Cada instrumento começa em 0. O total de pontos disponíveis por critério é
+  // distribuído de forma proporcional entre os candidatos, garantindo disputa real.
   let sipro = 0, copsoq = 0, hse = 0, proart = 0;
   const motivosSipro: string[] = [];
   const motivosCopsoq: string[] = [];
   const motivosHse: string[] = [];
   const motivosProart: string[] = [];
 
-  // --- Tamanho da empresa ---
-  if (sys.totalColaboradores <= 100) {
-    sipro += 30;
-    motivosSipro.push(`empresa com ${sys.totalColaboradores} colaboradores`);
+  // ── 1. TAMANHO DA EMPRESA (máx 20 pts, distribuídos) ──
+  if (sys.totalColaboradores < 50) {
+    sipro += 20;
+    motivosSipro.push(`pequena empresa (${sys.totalColaboradores} colaboradores) — SIPRO abrange todas as dimensões`);
+  } else if (sys.totalColaboradores <= 200) {
+    sipro += 14; copsoq += 10; hse += 6;
+    motivosCopsoq.push(`empresa de porte médio (${sys.totalColaboradores} colaboradores)`);
   } else if (sys.totalColaboradores <= 500) {
-    sipro += 15; copsoq += 20;
-    motivosCopsoq.push("empresa de médio porte (100-500 colaboradores)");
+    copsoq += 16; sipro += 10; hse += 8;
+    motivosCopsoq.push("empresa de médio-grande porte — COPSOQ amplamente validado");
   } else {
-    copsoq += 30;
-    motivosCopsoq.push("empresa de grande porte (500+ colaboradores)");
+    copsoq += 20; hse += 14; sipro += 6;
+    motivosCopsoq.push("grande empresa (500+) — COPSOQ III referência global");
+    motivosHse.push("escala grande favorece HSE como padrão de gestão");
   }
 
-  // --- Experiência prévia ---
+  // ── 2. EXPERIÊNCIA PRÉVIA (máx 20 pts) ──
   if (c.experienciaPrevia === 'nunca') {
-    sipro += 25;
-    motivosSipro.push("primeira avaliação psicossocial");
+    sipro += 20; copsoq += 8;
+    motivosSipro.push("primeira avaliação — SIPRO oferece onboarding integrado");
   } else if (c.experienciaPrevia === 'uma_vez') {
-    sipro += 15; copsoq += 10;
-  } else if (c.experienciaPrevia === 'periodicamente') {
-    copsoq += 15; proart += 10;
-    motivosCopsoq.push("empresa com histórico de avaliações periódicas");
+    sipro += 12; copsoq += 12; hse += 8;
+    motivosCopsoq.push("experiência prévia permite comparação com benchmarks");
+  } else {
+    copsoq += 20; proart += 14; hse += 10;
+    motivosCopsoq.push("avaliações periódicas — COPSOQ permite séries históricas comparadas");
+    motivosProart.push("histórico de avaliações favorece aprofundamento com PROART");
   }
 
-  // --- Objetivo ---
-  if (c.objetivo === 'diagnostico' || c.objetivo === 'pgr') {
-    sipro += 25;
-    motivosSipro.push(c.objetivo === 'pgr' ? "integração ao PGR" : "objetivo de diagnóstico inicial");
+  // ── 3. OBJETIVO PRINCIPAL (máx 25 pts) ──
+  if (c.objetivo === 'diagnostico') {
+    sipro += 25; copsoq += 18;
+    motivosSipro.push("diagnóstico inicial — SIPRO cobre 12 dimensões NR-01/ISO 45003");
+    motivosCopsoq.push("COPSOQ III também é referência para diagnósticos abrangentes");
+  } else if (c.objetivo === 'pgr') {
+    sipro += 25; copsoq += 15;
+    motivosSipro.push("integração nativa ao PGR dentro do Seguramente");
+    motivosCopsoq.push("COPSOQ aceito em auditoria de PGR");
   } else if (c.objetivo === 'gestao_lideranca') {
-    hse += 35;
-    motivosHse.push("foco em gestão e liderança organizacional");
+    hse += 25; copsoq += 18; sipro += 8;
+    motivosHse.push("HSE Management Standards criado especificamente para gestão de líderes");
+    motivosCopsoq.push("COPSOQ inclui fatores de liderança e suporte social");
   } else if (c.objetivo === 'investigar_afastamentos') {
-    proart += 30; sipro += 10;
-    motivosProart.push("investigação de aumento de afastamentos");
+    proart += 25; sipro += 12; copsoq += 8;
+    motivosProart.push("PROART investiga sofrimento e danos — indicado para afastamentos");
+    motivosSipro.push("SIPRO detecta dimensões com risco de sobrecarga");
   } else if (c.objetivo === 'auditoria') {
-    copsoq += 20;
-    motivosCopsoq.push("referência internacional para auditoria");
+    copsoq += 25; hse += 18; sipro += 10;
+    motivosCopsoq.push("COPSOQ III referência internacional para auditorias externas");
+    motivosHse.push("HSE padrão britânico reconhecido por órgãos regulatórios");
   }
 
-  // --- Sinais de risco ---
+  // ── 4. SINAIS DE RISCO PSICOSSOCIAL (máx 20 pts) ──
   if (c.sinaisRisco === 'varios') {
-    proart += 25; sipro += 10;
-    motivosProart.push("múltiplos sinais de risco psicossocial identificados");
+    proart += 20; copsoq += 14; sipro += 10;
+    motivosProart.push("múltiplos sinais de risco — PROART aprofunda causas e sofrimento");
+    motivosCopsoq.push("COPSOQ quantifica os fatores de risco com precisão");
   } else if (c.sinaisRisco === 'alguns') {
-    sipro += 10; copsoq += 10;
+    sipro += 16; copsoq += 16; proart += 10;
+    motivosSipro.push("sinais moderados — SIPRO mapeia dimensões de atenção");
   } else {
-    sipro += 15;
-    motivosSipro.push("ambiente sem sinais críticos de risco");
+    sipro += 12; hse += 12; copsoq += 8;
+    motivosHse.push("sem sinais críticos — HSE ideal para monitoramento preventivo");
+    motivosSipro.push("ambiente estável — diagnóstico de base recomendado");
   }
 
-  // --- Complexidade organizacional ---
-  const complexidade = c.complexidade.length;
-  if (complexidade >= 4) {
-    copsoq += 20;
-    motivosCopsoq.push("alta complexidade organizacional");
-  } else if (complexidade >= 2) {
-    sipro += 10; copsoq += 10;
+  // ── 5. COMPLEXIDADE ORGANIZACIONAL (máx 15 pts) ──
+  const nComplexidade = c.complexidade.length;
+  if (nComplexidade >= 4) {
+    copsoq += 15; sipro += 10; hse += 8;
+    motivosCopsoq.push("alta complexidade organizacional — COPSOQ abrange todos os fatores");
+  } else if (nComplexidade >= 2) {
+    sipro += 12; copsoq += 10; hse += 6;
+  } else if (nComplexidade === 1) {
+    hse += 12; sipro += 8;
+    motivosHse.push("baixa complexidade favorece abordagem objetiva do HSE");
   } else {
-    sipro += 15;
+    hse += 10; sipro += 8; copsoq += 6;
   }
 
   if (c.complexidade.includes('turno_noturno') || c.complexidade.includes('turnos')) {
     sipro += 10;
-    motivosSipro.push("trabalho em turnos — dimensão Ritmo Biológico inclusa");
+    motivosSipro.push("turnos noturnos — Bloco CET Ritmo Biológico exclusivo do SIPRO");
   }
   if (c.complexidade.includes('alta_pressao')) {
-    proart += 15; copsoq += 10;
-    motivosProart.push("trabalho sob alta pressão identificado");
+    proart += 10; copsoq += 8;
+    motivosProart.push("alta pressão — PROART avalia prazer/sofrimento no trabalho");
+  }
+  if (c.complexidade.includes('teletrabalho') || c.complexidade.includes('hibrido')) {
+    copsoq += 8; hse += 6;
+    motivosCopsoq.push("teletrabalho/híbrido — COPSOQ inclui fatores de isolamento");
   }
 
-  // --- Tipo de trabalho ---
-  if (c.tipoPredominante === 'saude' || c.tipoPredominante === 'educacao') {
-    proart += 15; copsoq += 10;
-    motivosProart.push(`trabalho em ${c.tipoPredominante === 'saude' ? 'saúde' : 'educação'} — alta demanda emocional`);
+  // ── 6. SETOR / TIPO DE TRABALHO (máx 15 pts) ──
+  if (c.tipoPredominante === 'saude') {
+    proart += 15; copsoq += 10; sipro += 6;
+    motivosProart.push("setor saúde — alta demanda emocional e risco de burnout");
+    motivosCopsoq.push("COPSOQ validado extensivamente em trabalhadores da saúde");
+  } else if (c.tipoPredominante === 'educacao') {
+    proart += 12; copsoq += 12; sipro += 6;
+    motivosProart.push("educação — PROART detecta sofrimento por falta de sentido");
+    motivosCopsoq.push("COPSOQ cobre exigências emocionais do ensino");
   } else if (c.tipoPredominante === 'industrial' || c.tipoPredominante === 'logistica') {
-    sipro += 15;
-    motivosSipro.push(`setor ${c.tipoPredominante} — foco em condições de trabalho físico-cognitivas`);
+    sipro += 15; proart += 6;
+    motivosSipro.push(`setor ${c.tipoPredominante} — SIPRO avalia ergonomia e ritmo biológico`);
+  } else if (c.tipoPredominante === 'administrativo' || c.tipoPredominante === 'servicos') {
+    hse += 12; copsoq += 10; sipro += 6;
+    motivosHse.push("setor administrativo/serviços — HSE foca em demandas e controle");
+  } else if (c.tipoPredominante === 'comercial') {
+    copsoq += 12; hse += 10; sipro += 6;
+    motivosCopsoq.push("setor comercial — COPSOQ avalia pressão de metas e suporte");
   } else {
-    sipro += 5; hse += 5;
+    sipro += 8; copsoq += 8; hse += 6;
   }
 
-  // --- Dados automáticos do sistema ---
-  if (sys.totalAfastamentosSaudeMental > 5) {
-    proart += 20;
-    motivosProart.push(`${sys.totalAfastamentosSaudeMental} afastamentos por saúde mental registrados`);
+  // ── 7. DADOS OBJETIVOS DO SISTEMA (máx 20 pts, bônus baseados em evidências) ──
+  if (sys.totalAfastamentosSaudeMental > 10) {
+    proart += 20; sipro += 8; copsoq += 6;
+    motivosProart.push(`${sys.totalAfastamentosSaudeMental} afastamentos saúde mental — PROART investiga causas`);
+  } else if (sys.totalAfastamentosSaudeMental > 3) {
+    proart += 14; sipro += 10; copsoq += 8;
+    motivosProart.push("afastamentos por saúde mental — aprofundamento recomendado");
   } else if (sys.totalAfastamentosSaudeMental > 0) {
-    sipro += 10;
-    motivosSipro.push("afastamentos por saúde mental detectados no sistema");
+    sipro += 10; copsoq += 8;
+    motivosSipro.push("afastamentos por saúde mental detectados — mapeamento preventivo");
   }
 
   if (sys.temTurnoNoturno || sys.temTurnoRevezamento || sys.possuiTerceiroTurno) {
-    sipro += 15;
-    motivosSipro.push("turnos noturnos/revezamento — Bloco CET: Ritmo Biológico incluído");
+    sipro += 12; proart += 5;
+    motivosSipro.push("turnos/revezamento — Bloco CET Ritmo Biológico incluso no SIPRO");
   }
 
-  if (sys.mediaHorasExtras > 120) {
-    sipro += 10; proart += 10;
-    motivosSipro.push("excesso de horas extras detectado");
+  if (sys.mediaHorasExtras > 180) {
+    proart += 12; sipro += 8; copsoq += 6;
+    motivosProart.push("horas extras elevadas — PROART avalia sobrecarga e danos");
+  } else if (sys.mediaHorasExtras > 80) {
+    sipro += 8; copsoq += 6;
+    motivosSipro.push("horas extras moderadas — dimensão Ritmo & Carga inclusa");
   }
 
   if (sys.grauRisco >= 3) {
-    proart += 10; sipro += 10;
-    motivosSipro.push(`empresa grau de risco ${sys.grauRisco} (NR-04)`);
+    proart += 10; sipro += 8; copsoq += 5;
+    motivosProart.push(`grau de risco ${sys.grauRisco} (NR-04) — investigação aprofundada recomendada`);
+    motivosSipro.push(`grau de risco ${sys.grauRisco} — SIPRO cobre dimensões de segurança`);
+  } else if (sys.grauRisco === 2) {
+    sipro += 6; hse += 8;
+    motivosHse.push("grau de risco 2 — HSE adequado para gestão preventiva");
   }
 
-  if (sys.insalubridade || sys.periculosidade || sys.aposentadoriaEspecial) {
-    sipro += 10; proart += 5;
-    const conds = [
-      sys.insalubridade && 'insalubridade',
-      sys.periculosidade && 'periculosidade',
-      sys.aposentadoriaEspecial && 'aposentadoria especial',
-    ].filter(Boolean).join(', ');
-    motivosSipro.push(`condições especiais de trabalho: ${conds}`);
+  if (sys.insalubridade || sys.periculosidade) {
+    sipro += 8; proart += 6;
+    const conds = [sys.insalubridade && 'insalubridade', sys.periculosidade && 'periculosidade'].filter(Boolean).join(', ');
+    motivosSipro.push(`${conds} detectada — Blocos CET disponíveis no SIPRO`);
   }
 
-  if (sys.trabalhoAltura) {
-    sipro += 8;
-    motivosSipro.push("trabalho em altura — Bloco CET específico disponível");
-  }
-
-  if (sys.espacoConfinado) {
-    sipro += 8;
-    motivosSipro.push("espaço confinado — Bloco CET específico disponível");
+  if (sys.trabalhoAltura || sys.espacoConfinado) {
+    sipro += 6;
+    motivosSipro.push("condições de trabalho especiais — SIPRO possui blocos CET dedicados");
   }
 
   if (sys.totalCampanhasAnteriores === 0) {
-    sipro += 20;
-    motivosSipro.push("nenhuma campanha psicossocial anterior no sistema");
+    sipro += 10; copsoq += 8;
+    motivosSipro.push("primeira campanha — SIPRO integrado ao fluxo do Seguramente");
+  } else if (sys.totalCampanhasAnteriores >= 2) {
+    copsoq += 10; proart += 8;
+    motivosCopsoq.push("histórico de campanhas — COPSOQ permite comparação longitudinal");
   }
 
-  // Boost autoral Seguramente
-  sipro += 5;
-  motivosSipro.push("instrumento validado e integrado ao Seguramente");
-
-  const total = (s: number) => Math.min(100, Math.round(s));
+  // ── Normalização: converter para escala 0-100 relativa ao maior score ──
+  const rawMax = Math.max(sipro, copsoq, hse, proart);
+  const normalize = (v: number) => rawMax === 0 ? 0 : Math.round((v / rawMax) * 100);
 
   const result: InstrumentoScore[] = [
     {
       id: 'sipro' as const,
       nome: 'SIPRO',
       descricao: 'Instrumento autoral Seguramente — alinhado à NR-01, NR-17, ISO 45001 e ISO 45003. Diagnóstico multidimensional com 52 itens e cálculo integrado ao sistema.',
-      score: total(sipro),
+      score: normalize(sipro),
       motivos: motivosSipro.filter(Boolean).slice(0, 4),
       cor: 'text-purple-700',
       bgCor: 'bg-purple-50 border-purple-200',
@@ -218,7 +257,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       id: 'copsoq' as const,
       nome: 'COPSOQ III',
       descricao: 'Instrumento psicossocial mais utilizado internacionalmente, com base científica robusta e ampla cobertura de fatores organizacionais.',
-      score: total(copsoq),
+      score: normalize(copsoq),
       motivos: motivosCopsoq.filter(Boolean).slice(0, 4),
       cor: 'text-blue-700',
       bgCor: 'bg-blue-50 border-blue-200',
@@ -228,7 +267,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       id: 'hse' as const,
       nome: 'HSE Management Standards',
       descricao: 'Focado em fatores organizacionais de estresse relacionados à gestão, liderança e mudanças organizacionais.',
-      score: total(hse),
+      score: normalize(hse),
       motivos: motivosHse.filter(Boolean).slice(0, 4),
       cor: 'text-emerald-700',
       bgCor: 'bg-emerald-50 border-emerald-200',
@@ -238,7 +277,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
       id: 'proart' as const,
       nome: 'PROART',
       descricao: 'Instrumento aprofundado para investigação detalhada de sofrimento e danos relacionados ao trabalho. Indicado quando há sinais críticos.',
-      score: total(proart),
+      score: normalize(proart),
       motivos: motivosProart.filter(Boolean).slice(0, 4),
       cor: 'text-amber-700',
       bgCor: 'bg-amber-50 border-amber-200',
