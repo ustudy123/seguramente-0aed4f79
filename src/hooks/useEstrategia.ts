@@ -17,14 +17,18 @@ import type {
   EstrategiaOrganograma,
 } from "@/types/estrategia";
 
-export function useEstrategia() {
+export function useEstrategia(escopo?: EstrategiaEscopo) {
   const { tenantId, user } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
+  // Resolve effective scope filters
+  const isGrupo = escopo?.tipo === "grupo";
+  const grupoId = isGrupo ? escopo.grupoId : null;
+
   // ─── SWOT ───
   const { data: swots = [], isLoading: loadingSwots } = useQuery({
-    queryKey: ["estrategia_swot", tenantId, empresaAtivaId],
+    queryKey: ["estrategia_swot", tenantId, isGrupo ? grupoId : empresaAtivaId, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
       let q = supabase
@@ -32,7 +36,11 @@ export function useEstrategia() {
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
-      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      if (isGrupo && grupoId) {
+        q = q.eq("grupo_economico_id", grupoId);
+      } else if (empresaAtivaId) {
+        q = q.eq("empresa_id", empresaAtivaId);
+      }
       const { data, error } = await q as { data: EstrategiaSwot[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaSwot[];
