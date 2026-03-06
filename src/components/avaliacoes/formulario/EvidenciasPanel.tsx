@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { useAvaliacaoEvidencias } from "@/hooks/useAvaliacaoEvidencias";
+import { ErgonomiaContextPanel } from "./ErgonomiaContextPanel";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EvidenciasPanelProps {
