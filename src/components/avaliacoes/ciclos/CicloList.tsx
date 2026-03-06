@@ -31,8 +31,9 @@ import {
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { STATUS_CICLO_LABELS, type AvaliacaoCicloStatus } from "@/types/avaliacao";
+import { STATUS_CICLO_LABELS, type AvaliacaoCicloStatus, type AvaliacaoCiclo } from "@/types/avaliacao";
 import { CicloForm } from "./CicloForm";
+import { IniciarCicloDialog } from "./IniciarCicloDialog";
 
 const statusConfig: Record<AvaliacaoCicloStatus, { color: string; icon: typeof Play }> = {
   rascunho: { color: "bg-slate-100 text-slate-700", icon: Edit },
@@ -45,8 +46,17 @@ export function CicloList() {
   const { ciclos, isLoadingCiclos, updateCiclo, deleteCiclo } = useAvaliacoes();
   const [showForm, setShowForm] = useState(false);
   const [editingCiclo, setEditingCiclo] = useState<string | null>(null);
+  const [iniciarCiclo, setIniciarCiclo] = useState<AvaliacaoCiclo | null>(null);
 
   const handleStatusChange = async (id: string, newStatus: AvaliacaoCicloStatus) => {
+    // Se está ativando, abre o dialog de geração automática
+    if (newStatus === "ativo") {
+      const ciclo = ciclos.find(c => c.id === id);
+      if (ciclo) {
+        setIniciarCiclo(ciclo);
+        return;
+      }
+    }
     await updateCiclo({ id, status: newStatus });
   };
 
@@ -224,6 +234,15 @@ export function CicloList() {
           <CicloForm onSuccess={() => setShowForm(false)} />
         </DialogContent>
       </Dialog>
+
+      {iniciarCiclo && (
+        <IniciarCicloDialog
+          ciclo={iniciarCiclo}
+          open={!!iniciarCiclo}
+          onOpenChange={(open) => { if (!open) setIniciarCiclo(null); }}
+          onSuccess={() => setIniciarCiclo(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,23 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Sparkles,
-  ChevronRight,
-  ChevronLeft,
-  Send,
-  Save,
-  AlertTriangle,
-  Flame,
-  Battery,
-  FileText,
-  MessageSquare,
-  BookOpen,
-  Target,
-  Clock,
-  User,
-  Building,
-  Briefcase,
-  Calendar,
-  Info,
+  Sparkles, ChevronRight, ChevronLeft, Send, Save,
+  AlertTriangle, Flame, Battery, FileText, MessageSquare,
+  BookOpen, Target, Clock, User, Building, Briefcase,
+  Calendar, CheckCircle2, TrendingUp, Loader2, Info,
+  ThumbsUp, ThumbsDown, Minus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,78 +14,55 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useAvaliacoes } from "@/hooks/useAvaliacoes";
+import { useAvaliacaoEvidencias } from "@/hooks/useAvaliacaoEvidencias";
+import type { AvaliacaoResposta, NotasCriterios, Categoria, Criterio } from "@/types/avaliacao";
 
-// Demo data for visualization
-const demoColaborador = {
-  nome: "Mariana Silva",
-  funcao: "Analista de SST",
-  setor: "Segurança do Trabalho",
-  unidade: "Matriz - São Paulo",
-  gestor: "Roberto Lima",
-  tempoEmpresa: "2 anos e 4 meses",
-  ciclo: "2026 – Semestre 1",
-  foto: "/avatars/mariana-silva.jpg",
-};
-
-const DIMENSOES = [
+// =========================================================
+// DIMENSÕES FIXAS (fallback quando template não tem dimensões)
+// =========================================================
+const DIMENSOES_PADRAO = [
   {
-    id: "entrega",
-    nome: "Entrega e Qualidade",
-    descricao: "Performance técnica e resultados",
-    icon: Target,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
+    id: "entrega", nome: "Entrega e Qualidade", descricao: "Performance técnica e resultados",
+    icon: Target, color: "text-primary", bgColor: "bg-primary/10",
     criterios: [
-      { id: "e1", nome: "Qualidade da entrega", descricao: "Nível de qualidade das entregas realizadas" },
-      { id: "e2", nome: "Cumprimento de prazos", descricao: "Pontualidade na entrega das demandas" },
-      { id: "e3", nome: "Padrão técnico", descricao: "Domínio técnico demonstrado no trabalho" },
-      { id: "e4", nome: "Retrabalho / erros", descricao: "Frequência de correções necessárias (inverso)" },
+      { id: "e1", nome: "Qualidade da entrega", descricao: "Nível de qualidade das entregas realizadas", categoria: "entrega", peso: 1 },
+      { id: "e2", nome: "Cumprimento de prazos", descricao: "Pontualidade na entrega das demandas", categoria: "entrega", peso: 1 },
+      { id: "e3", nome: "Padrão técnico", descricao: "Domínio técnico demonstrado no trabalho", categoria: "entrega", peso: 1 },
+      { id: "e4", nome: "Retrabalho / erros", descricao: "Frequência de correções necessárias (inverso)", categoria: "entrega", peso: 1 },
     ],
   },
   {
-    id: "competencias",
-    nome: "Competências",
-    descricao: "Função e comportamento",
-    icon: Briefcase,
-    color: "text-purple-600",
-    bgColor: "bg-purple-50",
+    id: "competencias", nome: "Competências", descricao: "Função e comportamento",
+    icon: Briefcase, color: "text-info", bgColor: "bg-info/10",
     criterios: [
-      { id: "c1", nome: "Competências técnicas", descricao: "Domínio do conhecimento técnico da função" },
-      { id: "c2", nome: "Competências comportamentais", descricao: "Soft skills e relações interpessoais" },
-      { id: "c3", nome: "Aderência a POPs/manuais", descricao: "Seguimento de procedimentos padronizados" },
+      { id: "c1", nome: "Competências técnicas", descricao: "Domínio do conhecimento técnico da função", categoria: "competencias", peso: 1 },
+      { id: "c2", nome: "Competências comportamentais", descricao: "Soft skills e relações interpessoais", categoria: "competencias", peso: 1 },
+      { id: "c3", nome: "Aderência a POPs/manuais", descricao: "Seguimento de procedimentos padronizados", categoria: "competencias", peso: 1 },
     ],
   },
   {
-    id: "evolucao",
-    nome: "Evolução e Aprendizado",
-    descricao: "Desenvolvimento contínuo",
-    icon: BookOpen,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
+    id: "evolucao", nome: "Evolução e Aprendizado", descricao: "Desenvolvimento contínuo",
+    icon: BookOpen, color: "text-success", bgColor: "bg-success/10",
     criterios: [
-      { id: "ev1", nome: "Adesão a trilhas", descricao: "Participação em treinamentos e capacitações" },
-      { id: "ev2", nome: "Progresso em PDI", descricao: "Evolução nas metas de desenvolvimento individual" },
-      { id: "ev3", nome: "Conclusão de onboarding", descricao: "Integração completa quando aplicável" },
+      { id: "ev1", nome: "Adesão a trilhas", descricao: "Participação em treinamentos e capacitações", categoria: "evolucao", peso: 1 },
+      { id: "ev2", nome: "Progresso em PDI", descricao: "Evolução nas metas de desenvolvimento individual", categoria: "evolucao", peso: 1 },
+      { id: "ev3", nome: "Conclusão de onboarding", descricao: "Integração completa quando aplicável", categoria: "evolucao", peso: 1 },
     ],
   },
   {
-    id: "contexto",
-    nome: "Contexto de Trabalho",
-    descricao: "Ergonomia cognitiva + risco humano",
-    icon: AlertTriangle,
-    color: "text-amber-600",
-    bgColor: "bg-amber-50",
+    id: "contexto", nome: "Contexto de Trabalho", descricao: "Ergonomia cognitiva + risco humano",
+    icon: AlertTriangle, color: "text-warning", bgColor: "bg-warning/10",
     criterios: [
-      { id: "cx1", nome: "Sobrecarga percebida", descricao: "Nível de carga de trabalho adequado" },
-      { id: "cx2", nome: "Clareza de papel", descricao: "Compreensão clara das responsabilidades" },
-      { id: "cx3", nome: "Autonomia", descricao: "Grau de autonomia para decisões operacionais" },
-      { id: "cx4", nome: "Pausas e jornada", descricao: "Adequação da jornada e intervalos" },
+      { id: "cx1", nome: "Sobrecarga percebida", descricao: "Nível de carga de trabalho adequado", categoria: "contexto", peso: 1 },
+      { id: "cx2", nome: "Clareza de papel", descricao: "Compreensão clara das responsabilidades", categoria: "contexto", peso: 1 },
+      { id: "cx3", nome: "Autonomia", descricao: "Grau de autonomia para decisões operacionais", categoria: "contexto", peso: 1 },
+      { id: "cx4", nome: "Pausas e jornada", descricao: "Adequação da jornada e intervalos", categoria: "contexto", peso: 1 },
     ],
   },
 ];
@@ -111,44 +75,7 @@ const ESCALA_LABELS: Record<number, string> = {
   5: "Excepcional",
 };
 
-const demoEvidencias = {
-  feedbacks: [
-    { tipo: "positivo", texto: "Excelente condução do DDS sobre riscos elétricos", data: "2026-01-15", autor: "Roberto Lima" },
-    { tipo: "positivo", texto: "Proatividade na revisão do PPRA", data: "2025-12-10", autor: "Paulo Nascimento" },
-    { tipo: "neutro", texto: "Alinhamento sobre o novo PGR", data: "2025-11-20", autor: "Roberto Lima" },
-  ],
-  metas: [
-    { titulo: "Reduzir incidentes em 20%", progresso: 75, status: "em_andamento" },
-    { titulo: "Implementar 3 POPs novos", progresso: 100, status: "concluida" },
-  ],
-  trilhas: [
-    { nome: "NR-17 Ergonomia Cognitiva", concluida: true },
-    { nome: "Gestão de Riscos Psicossociais", concluida: true },
-    { nome: "Liderança em SST", concluida: false },
-  ],
-  ocorrencias: [] as { tipo: string; descricao: string }[],
-  acoes: [
-    { titulo: "Revisão AEP Setor Administrativo", status: "concluida" },
-    { titulo: "Mapeamento de riscos NR-12", status: "em_andamento" },
-  ],
-};
-
-const demoAlertasRisco = {
-  burnout: "moderado" as const,
-  boreout: "baixo" as const,
-  psicossocial: { irp: 2.1, texto: "Setor com IRP dentro da normalidade" },
-  ergonomia: { clareza: 85, complexidade: "média" },
-};
-
-function EscalaRating({
-  value,
-  onChange,
-  max = 5,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  max?: number;
-}) {
+function EscalaRating({ value, onChange, max = 5 }: { value: number; onChange: (v: number) => void; max?: number }) {
   return (
     <div className="flex gap-1.5">
       {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
@@ -166,18 +93,19 @@ function EscalaRating({
               {n}
             </button>
           </TooltipTrigger>
-          <TooltipContent>{ESCALA_LABELS[n]}</TooltipContent>
+          <TooltipContent>{ESCALA_LABELS[n] || n}</TooltipContent>
         </Tooltip>
       ))}
     </div>
   );
 }
 
-function RiscoIndicator({ nivel, label, icon: Icon }: { nivel: string; label: string; icon: typeof Flame }) {
+function RiscoIndicator({ nivel, label, icon: Icon }: { nivel: string | null; label: string; icon: typeof Flame }) {
+  if (!nivel) return null;
   const colors: Record<string, string> = {
-    baixo: "bg-green-100 text-green-700",
-    moderado: "bg-amber-100 text-amber-700",
-    alto: "bg-red-100 text-red-700",
+    baixo: "bg-success/10 text-success",
+    moderado: "bg-warning/10 text-warning",
+    alto: "bg-destructive/10 text-destructive",
   };
   return (
     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${colors[nivel] || "bg-muted"}`}>
@@ -187,89 +115,337 @@ function RiscoIndicator({ nivel, label, icon: Icon }: { nivel: string; label: st
   );
 }
 
-export function AvaliacaoFormulario() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [notas, setNotas] = useState<Record<string, number>>({});
-  const [justificativas, setJustificativas] = useState<Record<string, string>>({});
-  const [resumo, setResumo] = useState("");
-  const [pontosFortes, setPontosFortes] = useState("");
-  const [areasDesenvolvimento, setAreasDesenvolvimento] = useState("");
-  const [isGeneratingIA, setIsGeneratingIA] = useState(false);
-  const [evidenciaTab, setEvidenciaTab] = useState("feedbacks");
+// =========================================================
+// PAINEL DE EVIDÊNCIAS
+// =========================================================
+function PainelEvidencias({ colaboradorId, dataInicio, dataFim }: { colaboradorId: string; dataInicio?: string; dataFim?: string }) {
+  const { data: ev, isLoading } = useAvaliacaoEvidencias(colaboradorId, dataInicio, dataFim);
+  const [tab, setTab] = useState("feedbacks");
 
-  const dimensaoAtual = DIMENSOES[currentStep];
-  const isLastStep = currentStep === DIMENSOES.length;
-  const totalCriterios = DIMENSOES.reduce((acc, d) => acc + d.criterios.length, 0);
-  const criteriosPreenchidos = Object.keys(notas).length;
-  const progressoGeral = Math.round((criteriosPreenchidos / totalCriterios) * 100);
+  if (isLoading) {
+    return (
+      <Card className="h-full">
+        <CardContent className="p-4 flex items-center justify-center h-48">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const total = (ev?.feedbacks.length || 0) + (ev?.ocorrencias.length || 0) + (ev?.metas.length || 0) + (ev?.trilhas.length || 0);
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <FileText className="h-4 w-4 text-muted-foreground" />
+          Evidências do Período
+          <Badge variant="secondary" className="ml-auto">{total}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden p-0">
+        <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
+          <TabsList className="grid grid-cols-4 mx-4 mb-0">
+            <TabsTrigger value="feedbacks" className="text-[11px] gap-1">
+              <ThumbsUp className="h-3 w-3" />
+              <span className="hidden sm:inline">Feed.</span>
+              {(ev?.feedbacks.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.feedbacks.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="ocorrencias" className="text-[11px] gap-1">
+              <MessageSquare className="h-3 w-3" />
+              <span className="hidden sm:inline">Ocorr.</span>
+              {(ev?.ocorrencias.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.ocorrencias.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="metas" className="text-[11px] gap-1">
+              <Target className="h-3 w-3" />
+              <span className="hidden sm:inline">Metas</span>
+              {(ev?.metas.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.metas.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="trilhas" className="text-[11px] gap-1">
+              <BookOpen className="h-3 w-3" />
+              <span className="hidden sm:inline">Trilhas</span>
+              {(ev?.trilhas.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.trilhas.length}</Badge>}
+            </TabsTrigger>
+          </TabsList>
+
+          <ScrollArea className="flex-1 px-4 pt-3">
+            <TabsContent value="feedbacks" className="mt-0 space-y-2">
+              {ev?.feedbacks.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum feedback no período</p>
+              ) : ev?.feedbacks.map(f => (
+                <div key={f.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-[10px] h-4 capitalize">{f.categoria}</Badge>
+                    <span className="text-[10px] text-muted-foreground ml-auto">
+                      {format(new Date(f.created_at), "dd/MM/yy", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <p className="text-xs">{f.descricao}</p>
+                  {f.registrado_por_nome && (
+                    <p className="text-[10px] text-muted-foreground">por {f.registrado_por_nome}</p>
+                  )}
+                </div>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="ocorrencias" className="mt-0 space-y-2">
+              {ev?.ocorrencias.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhuma ocorrência no período</p>
+              ) : ev?.ocorrencias.map(o => (
+                <div key={o.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    {o.tipo === "positiva" ? <ThumbsUp className="h-3 w-3 text-success" /> :
+                     o.tipo === "negativa" ? <ThumbsDown className="h-3 w-3 text-destructive" /> :
+                     <Minus className="h-3 w-3 text-muted-foreground" />}
+                    <Badge variant="outline" className={`text-[10px] h-4 capitalize ${
+                      o.tipo === "positiva" ? "border-success/40 text-success" :
+                      o.tipo === "negativa" ? "border-destructive/40 text-destructive" : ""
+                    }`}>{o.tipo}</Badge>
+                    {o.is_advertencia && <Badge variant="destructive" className="text-[10px] h-4">Advertência</Badge>}
+                    <span className="text-[10px] text-muted-foreground ml-auto">
+                      {format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <p className="text-xs">{o.descricao}</p>
+                </div>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="metas" className="mt-0 space-y-2">
+              {ev?.metas.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhuma meta cadastrada</p>
+              ) : ev?.metas.map(m => (
+                <div key={m.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1.5">
+                  <p className="text-xs font-medium">{m.titulo}</p>
+                  <div className="flex items-center gap-2">
+                    <Progress value={m.progresso} className="h-1.5 flex-1" />
+                    <span className="text-[10px] font-medium">{m.progresso}%</span>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] h-4 capitalize">{m.status.replace(/_/g, " ")}</Badge>
+                </div>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="trilhas" className="mt-0 space-y-2">
+              {ev?.trilhas.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhuma trilha atribuída</p>
+              ) : ev?.trilhas.map(t => (
+                <div key={t.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-medium flex-1">{t.nome}</p>
+                    {t.status === "concluida" && <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Progress value={t.percentual} className="h-1.5 flex-1" />
+                    <span className="text-[10px] font-medium">{t.percentual}%</span>
+                  </div>
+                </div>
+              ))}
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
+
+// =========================================================
+// COMPONENTE PRINCIPAL
+// =========================================================
+interface AvaliacaoFormularioProps {
+  resposta?: AvaliacaoResposta;
+  onConcluir?: () => void;
+}
+
+export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormularioProps) {
+  const { updateResposta, submitResposta, isSubmittingResposta } = useAvaliacoes();
+  const { data: evidencias } = useAvaliacaoEvidencias(
+    resposta?.avaliado_id || null,
+    resposta?.ciclo?.data_inicio,
+    resposta?.ciclo?.data_fim,
+  );
+
+  // Derivar dimensões do template ou usar padrão
+  const template = resposta?.ciclo?.template;
+  const criteriosTemplate = (template?.criterios as unknown as Criterio[]) || [];
+  const categoriasTemplate = (template?.categorias as unknown as Categoria[]) || [];
+
+  const dimensoes = categoriasTemplate.length > 0
+    ? categoriasTemplate.map(cat => {
+        const DimIcon = DIMENSOES_PADRAO.find(d => d.id === cat.id)?.icon || Target;
+        const dimColor = DIMENSOES_PADRAO.find(d => d.id === cat.id)?.color || "text-primary";
+        const dimBg = DIMENSOES_PADRAO.find(d => d.id === cat.id)?.bgColor || "bg-primary/10";
+        return {
+          id: cat.id,
+          nome: cat.nome,
+          descricao: cat.descricao || "",
+          icon: DimIcon,
+          color: dimColor,
+          bgColor: dimBg,
+          criterios: criteriosTemplate.filter(c => c.categoria === cat.id),
+        };
+      })
+    : DIMENSOES_PADRAO;
+
+  const escalaMin = template?.escala_min || 1;
+  const escalaMax = template?.escala_max || 5;
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [notas, setNotas] = useState<Record<string, number>>(() => {
+    return (resposta?.notas_criterios as NotasCriterios) || {};
+  });
+  const [justificativas, setJustificativas] = useState<Record<string, string>>({});
+  const [resumo, setResumo] = useState(resposta?.comentario_geral || "");
+  const [pontosFortes, setPontosFortes] = useState(resposta?.pontos_fortes || "");
+  const [areasDesenvolvimento, setAreasDesenvolvimento] = useState(resposta?.areas_desenvolvimento || "");
+  const [isGeneratingIA, setIsGeneratingIA] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const isLastStep = currentStep === dimensoes.length;
+  const totalCriterios = dimensoes.reduce((acc, d) => acc + d.criterios.length, 0);
+  const criteriosPreenchidos = Object.keys(notas).filter(k => notas[k] > 0).length;
+  const progressoGeral = totalCriterios > 0 ? Math.round((criteriosPreenchidos / totalCriterios) * 100) : 0;
 
   const needsJustification = (criterioId: string) => {
     const nota = notas[criterioId];
-    return nota === 1 || nota === 5;
+    return nota === escalaMin || nota === escalaMax;
   };
 
-  const handleGenerateIA = async () => {
-    setIsGeneratingIA(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setPontosFortes(
-      "Mariana demonstra domínio técnico sólido, especialmente na condução de análises ergonômicas e revisões de PGR. Destaca-se pela proatividade na implementação de POPs e pela adesão exemplar às trilhas de desenvolvimento."
-    );
-    setAreasDesenvolvimento(
-      "Recomenda-se investir em competências de liderança para prepará-la para futuras responsabilidades de gestão. A sobrecarga percebida moderada sugere revisão da distribuição de demandas no setor."
-    );
-    setResumo(
-      "Mariana apresenta desempenho acima da média, com entregas consistentes e evolução contínua. O contexto de trabalho está adequado, mas há sinais de sobrecarga que merecem atenção preventiva. Recomenda-se PDI focado em liderança e redistribuição parcial de atividades."
-    );
-    setIsGeneratingIA(false);
-    toast.success("Rascunho gerado pela IA — revise e ajuste conforme necessário");
+  // Auto-save ao mudar de step
+  const handleSave = async () => {
+    if (!resposta?.id) return;
+    setIsSaving(true);
+    try {
+      await updateResposta({
+        id: resposta.id,
+        notas_criterios: notas,
+        comentario_geral: resumo,
+        pontos_fortes: pontosFortes,
+        areas_desenvolvimento: areasDesenvolvimento,
+        status: "em_andamento",
+        data_inicio: resposta.data_inicio || new Date().toISOString(),
+      });
+    } catch (e) {
+      // silencioso — toast já exibido pelo hook
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleNextStep = async () => {
+    await handleSave();
+    setCurrentStep(s => Math.min(s + 1, dimensoes.length));
+  };
+
+  const handlePrevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
+
+  const handleGenerateIA = async () => {
+    if (!resposta) return;
+    setIsGeneratingIA(true);
+    try {
+      const { data, error } = await import("@/integrations/supabase/client").then(m =>
+        m.supabase.functions.invoke("avaliacao-ia-rascunho", {
+          body: {
+            colaboradorNome: resposta.avaliado_nome,
+            notas,
+            evidencias,
+            dimensoes: dimensoes.map(d => ({ id: d.id, nome: d.nome, criterios: d.criterios })),
+          },
+        })
+      );
+      if (error) throw error;
+      if (data?.pontos_fortes) setPontosFortes(data.pontos_fortes);
+      if (data?.areas_desenvolvimento) setAreasDesenvolvimento(data.areas_desenvolvimento);
+      if (data?.resumo) setResumo(data.resumo);
+      toast.success("Rascunho gerado pela IA — revise e ajuste conforme necessário");
+    } catch (e) {
+      toast.error("Erro ao gerar rascunho. Tente novamente.");
+    } finally {
+      setIsGeneratingIA(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!resposta?.id) return;
+    // Verificar justificativas obrigatórias
+    const faltandoJustificativa = dimensoes.flatMap(d => d.criterios).filter(c =>
+      needsJustification(c.id) && !justificativas[c.id]?.trim()
+    );
+    if (faltandoJustificativa.length > 0) {
+      toast.error(`Justificativa obrigatória para: ${faltandoJustificativa.map(c => c.nome).join(", ")}`);
+      return;
+    }
+    await submitResposta({
+      id: resposta.id,
+      notas_criterios: notas,
+      nota_geral: totalCriterios > 0
+        ? Math.round((Object.values(notas).reduce((a, b) => a + b, 0) / Object.keys(notas).length) * 10) / 10
+        : undefined,
+      comentario_geral: resumo,
+      pontos_fortes: pontosFortes,
+      areas_desenvolvimento: areasDesenvolvimento,
+    });
+    onConcluir?.();
+  };
+
+  // Se não há resposta selecionada, mostrar seletor de avaliações
+  if (!resposta) {
+    return <SeletorAvaliacao />;
+  }
+
+  const dimensaoAtual = dimensoes[currentStep];
+  const risco = evidencias?.risco;
 
   return (
     <div className="space-y-4">
-      {/* Risk Alerts */}
-      <Card className="border-amber-200 bg-amber-50/30">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Alertas de Risco Humano
+      {/* Alertas de Risco Humano */}
+      {(risco?.burnout || risco?.boreout) && (
+        <Card className="border-warning/30 bg-warning/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                Alertas de Risco Humano
+                <Badge variant="outline" className="text-[10px]">⚠️ Não diagnóstico</Badge>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <RiscoIndicator nivel={risco.burnout} label="Burnout" icon={Flame} />
+                <RiscoIndicator nivel={risco.boreout} label="Boreout" icon={Battery} />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <RiscoIndicator nivel={demoAlertasRisco.burnout} label="Burnout" icon={Flame} />
-              <RiscoIndicator nivel={demoAlertasRisco.boreout} label="Boreout" icon={Battery} />
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {demoAlertasRisco.psicossocial.texto} • Clareza de papéis: {demoAlertasRisco.ergonomia.clareza}% • Complexidade cognitiva: {demoAlertasRisco.ergonomia.complexidade}
-          </p>
-        </CardContent>
-      </Card>
+            {risco.irp !== null && (
+              <p className="text-xs text-muted-foreground mt-1">
+                IRP Psicossocial: <strong>{risco.irp}</strong>
+                {risco.campanha_nome && ` • Campanha: ${risco.campanha_nome}`}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Main content: Form + Evidence sidebar */}
+      {/* Layout: Formulário + Evidências */}
       <div className="grid lg:grid-cols-3 gap-4">
-        {/* Left: Form */}
+        {/* Formulário */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Header */}
+          {/* Cabeçalho do colaborador */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                  <img src={demoColaborador.foto} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg">{demoColaborador.nome}</h3>
+                  <h3 className="font-semibold text-lg">{resposta.avaliado_nome}</h3>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{demoColaborador.funcao}</span>
-                    <span className="flex items-center gap-1"><Building className="h-3.5 w-3.5" />{demoColaborador.setor}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{demoColaborador.tempoEmpresa}</span>
-                    <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{demoColaborador.ciclo}</span>
+                    <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{resposta.ciclo?.nome}</span>
+                    <Badge variant="outline" className="capitalize">{resposta.tipo_avaliador}</Badge>
                   </div>
                 </div>
+                {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
               </div>
               <div className="mt-3">
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">Progresso da avaliação</span>
+                  <span className="text-muted-foreground">Progresso</span>
                   <span className="font-medium">{progressoGeral}%</span>
                 </div>
                 <Progress value={progressoGeral} className="h-2" />
@@ -277,43 +453,34 @@ export function AvaliacaoFormulario() {
             </CardContent>
           </Card>
 
-          {/* Dimension tabs */}
+          {/* Tabs de dimensões */}
           <Card>
             <CardContent className="p-0">
               <div className="flex border-b overflow-x-auto">
-                {DIMENSOES.map((dim, idx) => {
+                {dimensoes.map((dim, idx) => {
                   const DimIcon = dim.icon;
-                  const dimNotas = dim.criterios.filter((c) => notas[c.id] !== undefined).length;
+                  const dimNotas = dim.criterios.filter(c => notas[c.id] !== undefined && notas[c.id] > 0).length;
                   const isComplete = dimNotas === dim.criterios.length;
                   return (
-                    <button
-                      key={dim.id}
-                      onClick={() => setCurrentStep(idx)}
+                    <button key={dim.id} onClick={() => setCurrentStep(idx)}
                       className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-                        currentStep === idx
-                          ? "border-primary text-primary"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
+                        currentStep === idx ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       <DimIcon className={`h-4 w-4 ${currentStep === idx ? dim.color : ""}`} />
                       <span className="hidden sm:inline">{dim.nome}</span>
-                      {isComplete && <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-green-100 text-green-700">✓</Badge>}
-                      {!isComplete && dimNotas > 0 && (
-                        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{dimNotas}/{dim.criterios.length}</Badge>
-                      )}
+                      {isComplete && <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-success/20 text-success">✓</Badge>}
+                      {!isComplete && dimNotas > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{dimNotas}/{dim.criterios.length}</Badge>}
                     </button>
                   );
                 })}
-                <button
-                  onClick={() => setCurrentStep(DIMENSOES.length)}
+                <button onClick={() => setCurrentStep(dimensoes.length)}
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-                    currentStep === DIMENSOES.length
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                    currentStep === dimensoes.length ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Sparkles className="h-4 w-4" />
-                  <span className="hidden sm:inline">Resumo Final</span>
+                  <span className="hidden sm:inline">Resumo</span>
                 </button>
               </div>
 
@@ -324,34 +491,44 @@ export function AvaliacaoFormulario() {
                       <h3 className={`font-semibold ${dimensaoAtual.color}`}>{dimensaoAtual.nome}</h3>
                       <p className="text-sm text-muted-foreground">{dimensaoAtual.descricao}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        ⚠️ Notas 1 ou 5 exigem justificativa obrigatória
+                        ⚠️ Notas {escalaMin} ou {escalaMax} exigem justificativa obrigatória
                       </p>
                     </div>
 
-                    {dimensaoAtual.criterios.map((criterio) => (
+                    {dimensaoAtual.criterios.map(criterio => (
                       <div key={criterio.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4 flex-wrap">
                           <div>
                             <Label className="font-medium">{criterio.nome}</Label>
-                            <p className="text-xs text-muted-foreground">{criterio.descricao}</p>
+                            {criterio.descricao && <p className="text-xs text-muted-foreground">{criterio.descricao}</p>}
                           </div>
                           <EscalaRating
                             value={notas[criterio.id] || 0}
-                            onChange={(v) => setNotas((prev) => ({ ...prev, [criterio.id]: v }))}
+                            onChange={v => setNotas(prev => ({ ...prev, [criterio.id]: v }))}
+                            max={escalaMax}
                           />
                         </div>
                         {needsJustification(criterio.id) && (
                           <Textarea
                             placeholder={`Justifique a nota ${notas[criterio.id]} (obrigatório)...`}
                             value={justificativas[criterio.id] || ""}
-                            onChange={(e) => setJustificativas((prev) => ({ ...prev, [criterio.id]: e.target.value }))}
+                            onChange={e => setJustificativas(prev => ({ ...prev, [criterio.id]: e.target.value }))}
                             rows={2}
-                            className="border-amber-300"
+                            className="border-warning/40"
                           />
                         )}
                         <Separator />
                       </div>
                     ))}
+
+                    <div className="flex justify-between pt-2">
+                      <Button variant="outline" onClick={handlePrevStep} disabled={currentStep === 0} className="gap-2">
+                        <ChevronLeft className="h-4 w-4" /> Anterior
+                      </Button>
+                      <Button onClick={handleNextStep} className="gap-2">
+                        Próximo <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
 
@@ -362,21 +539,16 @@ export function AvaliacaoFormulario() {
                         <h3 className="font-semibold">Resumo Final</h3>
                         <p className="text-sm text-muted-foreground">Sintetize os pontos principais da avaliação</p>
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={handleGenerateIA}
-                        disabled={isGeneratingIA}
-                        className="gap-2"
-                      >
+                      <Button variant="outline" onClick={handleGenerateIA} disabled={isGeneratingIA} className="gap-2">
                         <Sparkles className="h-4 w-4" />
-                        {isGeneratingIA ? "Gerando..." : "Gerar Rascunho IA"}
+                        {isGeneratingIA ? "Gerando..." : "Gerar com IA"}
                       </Button>
                     </div>
 
                     {isGeneratingIA && (
                       <div className="p-4 bg-muted/50 rounded-lg text-center">
-                        <div className="animate-pulse flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                          <Sparkles className="h-4 w-4 animate-spin" />
+                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           Analisando evidências e gerando rascunho...
                         </div>
                       </div>
@@ -385,242 +557,134 @@ export function AvaliacaoFormulario() {
                     <div className="space-y-4">
                       <div>
                         <Label>Pontos Fortes</Label>
-                        <Textarea
-                          value={pontosFortes}
-                          onChange={(e) => setPontosFortes(e.target.value)}
-                          rows={3}
-                          placeholder="Descreva os principais pontos fortes do colaborador..."
-                        />
+                        <Textarea value={pontosFortes} onChange={e => setPontosFortes(e.target.value)} rows={3}
+                          placeholder="Descreva os principais pontos fortes..." />
                       </div>
                       <div>
                         <Label>Áreas de Desenvolvimento</Label>
-                        <Textarea
-                          value={areasDesenvolvimento}
-                          onChange={(e) => setAreasDesenvolvimento(e.target.value)}
-                          rows={3}
-                          placeholder="Indique as áreas que precisam de desenvolvimento..."
-                        />
+                        <Textarea value={areasDesenvolvimento} onChange={e => setAreasDesenvolvimento(e.target.value)} rows={3}
+                          placeholder="Indique as áreas que precisam de desenvolvimento..." />
                       </div>
                       <div>
                         <Label>Resumo Geral</Label>
-                        <Textarea
-                          value={resumo}
-                          onChange={(e) => setResumo(e.target.value)}
-                          rows={4}
-                          placeholder="Resumo da avaliação, incluindo recomendações de PDI e trilhas..."
-                        />
+                        <Textarea value={resumo} onChange={e => setResumo(e.target.value)} rows={4}
+                          placeholder="Resumo consolidado da avaliação..." />
                       </div>
-                      {(pontosFortes || areasDesenvolvimento || resumo) && (
-                        <Badge variant="secondary" className="gap-1">
-                          <Sparkles className="h-3 w-3" />
-                          Assistido por IA — revise antes de enviar
-                        </Badge>
-                      )}
+                    </div>
+
+                    {/* Resumo de notas */}
+                    <div className="border rounded-lg p-4 space-y-2">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" /> Visão geral das notas
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {dimensoes.map(dim => {
+                          const notasDim = dim.criterios.map(c => notas[c.id]).filter(Boolean);
+                          const media = notasDim.length > 0 ? (notasDim.reduce((a, b) => a + b, 0) / notasDim.length).toFixed(1) : "—";
+                          return (
+                            <div key={dim.id} className="flex items-center justify-between text-sm p-2 bg-muted/40 rounded">
+                              <span className="text-muted-foreground truncate">{dim.nome}</span>
+                              <span className="font-bold ml-2">{media}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <Button variant="outline" onClick={handlePrevStep} className="gap-2">
+                        <ChevronLeft className="h-4 w-4" /> Anterior
+                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleSave} disabled={isSaving} className="gap-2">
+                          <Save className="h-4 w-4" />
+                          {isSaving ? "Salvando..." : "Salvar Rascunho"}
+                        </Button>
+                        <Button onClick={handleSubmit} disabled={isSubmittingResposta} className="gap-2">
+                          <Send className="h-4 w-4" />
+                          {isSubmittingResposta ? "Enviando..." : "Concluir Avaliação"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Navigation */}
-              <div className="flex items-center justify-between p-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep((p) => Math.max(0, p - 1))}
-                  disabled={currentStep === 0}
-                  className="gap-1"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Anterior
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="gap-1" onClick={() => toast.success("Rascunho salvo")}>
-                    <Save className="h-4 w-4" />
-                    Salvar Rascunho
-                  </Button>
-                  {isLastStep ? (
-                    <Button className="gap-1" onClick={() => toast.success("Avaliação enviada com sucesso!")}>
-                      <Send className="h-4 w-4" />
-                      Enviar Avaliação
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => setCurrentStep((p) => Math.min(DIMENSOES.length, p + 1))}
-                      className="gap-1"
-                    >
-                      Próximo
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Post-evaluation actions */}
-          {isLastStep && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Ações Pós-Avaliação</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Redirecionando para criação de PDI...")}>
-                    <Target className="h-3.5 w-3.5" />
-                    Gerar/Atualizar PDI
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Redirecionando para criar ação 5W2H...")}>
-                    <FileText className="h-3.5 w-3.5" />
-                    Criar Ação 5W2H
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Redirecionando para atribuir trilha...")}>
-                    <BookOpen className="h-3.5 w-3.5" />
-                    Atribuir Trilha
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Redirecionando para criar meta SMART...")}>
-                    <Target className="h-3.5 w-3.5" />
-                    Criar Meta SMART
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Todas as ações criadas terão origem rastreável: "Avaliação de Desempenho – {demoColaborador.ciclo}"
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right: Evidence sidebar */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Evidências do Período
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Tabs value={evidenciaTab} onValueChange={setEvidenciaTab}>
-                <TabsList className="w-full rounded-none border-b bg-transparent h-auto p-0">
-                  <TabsTrigger value="feedbacks" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-3 py-2">
-                    Feedbacks
-                    <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{demoEvidencias.feedbacks.length}</Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="metas" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-3 py-2">
-                    Metas
-                    <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{demoEvidencias.metas.length}</Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="trilhas" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-3 py-2">
-                    Trilhas
-                  </TabsTrigger>
-                  <TabsTrigger value="acoes" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-3 py-2">
-                    Ações
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="feedbacks" className="p-3 space-y-2 mt-0">
-                  {demoEvidencias.feedbacks.map((fb, i) => (
-                    <div key={i} className="p-2.5 bg-muted/50 rounded-lg space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] ${
-                            fb.tipo === "positivo" ? "bg-green-100 text-green-700" :
-                            fb.tipo === "negativo" ? "bg-red-100 text-red-700" :
-                            "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {fb.tipo}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground">{fb.data}</span>
-                      </div>
-                      <p className="text-xs">{fb.texto}</p>
-                      <p className="text-[10px] text-muted-foreground">por {fb.autor}</p>
-                    </div>
-                  ))}
-                  <Button variant="ghost" size="sm" className="w-full text-xs">
-                    Anexar como evidência
-                  </Button>
-                </TabsContent>
-
-                <TabsContent value="metas" className="p-3 space-y-2 mt-0">
-                  {demoEvidencias.metas.map((m, i) => (
-                    <div key={i} className="p-2.5 bg-muted/50 rounded-lg space-y-1.5">
-                      <p className="text-xs font-medium">{m.titulo}</p>
-                      <div className="flex items-center justify-between text-[10px]">
-                        <Badge
-                          variant="secondary"
-                          className={m.status === "concluida" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}
-                        >
-                          {m.status === "concluida" ? "Concluída" : "Em andamento"}
-                        </Badge>
-                        <span>{m.progresso}%</span>
-                      </div>
-                      <Progress value={m.progresso} className="h-1" />
-                    </div>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="trilhas" className="p-3 space-y-2 mt-0">
-                  {demoEvidencias.trilhas.map((t, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
-                      <p className="text-xs">{t.nome}</p>
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] ${t.concluida ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
-                      >
-                        {t.concluida ? "✓ Concluída" : "Pendente"}
-                      </Badge>
-                    </div>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="acoes" className="p-3 space-y-2 mt-0">
-                  {demoEvidencias.acoes.map((a, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
-                      <p className="text-xs">{a.titulo}</p>
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] ${a.status === "concluida" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}
-                      >
-                        {a.status === "concluida" ? "Concluída" : "Em andamento"}
-                      </Badge>
-                    </div>
-                  ))}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          {/* Psicossocial summary */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Indicadores Contextuais
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">IRP Psicossocial (setor)</span>
-                  <span className="font-medium">{demoAlertasRisco.psicossocial.irp}/4</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Clareza de papéis</span>
-                  <span className="font-medium">{demoAlertasRisco.ergonomia.clareza}%</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Complexidade cognitiva</span>
-                  <Badge variant="secondary" className="text-[10px]">{demoAlertasRisco.ergonomia.complexidade}</Badge>
-                </div>
-              </div>
-              <Separator />
-              <p className="text-[10px] text-muted-foreground">
-                ⚠️ Estes indicadores são contextuais e não configuram diagnóstico clínico. Servem como sinalização para decisões de gestão.
-              </p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Painel lateral de evidências */}
+        <div className="lg:col-span-1">
+          <PainelEvidencias
+            colaboradorId={resposta.avaliado_id}
+            dataInicio={resposta.ciclo?.data_inicio}
+            dataFim={resposta.ciclo?.data_fim}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// SELETOR DE AVALIAÇÕES (quando não há resposta pré-selecionada)
+// =========================================================
+function SeletorAvaliacao() {
+  const { minhasAvaliacoes, isLoadingMinhasAvaliacoes } = useAvaliacoes();
+  const [selected, setSelected] = useState<AvaliacaoResposta | null>(null);
+
+  if (selected) {
+    return <AvaliacaoFormulario resposta={selected} onConcluir={() => setSelected(null)} />;
+  }
+
+  if (isLoadingMinhasAvaliacoes) {
+    return (
+      <Card><CardContent className="p-8 text-center">
+        <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+      </CardContent></Card>
+    );
+  }
+
+  if (minhasAvaliacoes.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="p-4 bg-muted rounded-full"><CheckCircle2 className="h-8 w-8 text-muted-foreground" /></div>
+            <div>
+              <h3 className="font-semibold text-lg">Nenhuma avaliação pendente</h3>
+              <p className="text-muted-foreground text-sm">Você não tem avaliações para responder no momento.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold">Selecione uma avaliação para responder</h2>
+        <p className="text-sm text-muted-foreground">Você tem {minhasAvaliacoes.length} avaliação(ões) pendente(s)</p>
+      </div>
+      <div className="grid gap-3">
+        {minhasAvaliacoes.map(av => (
+          <Card key={av.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelected(av)}>
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="capitalize">{av.tipo_avaliador}</Badge>
+                  <Badge variant={av.status === "pendente" ? "secondary" : "default"}>
+                    {av.status === "pendente" ? "Não iniciada" : "Em andamento"}
+                  </Badge>
+                </div>
+                <p className="font-semibold">Avaliar: {av.avaliado_nome}</p>
+                <p className="text-sm text-muted-foreground">{av.ciclo?.nome}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
