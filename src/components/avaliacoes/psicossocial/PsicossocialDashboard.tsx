@@ -10,7 +10,6 @@ import {
   Link as LinkIcon,
   AlertTriangle,
   TrendingUp,
-  Heart,
   ShieldCheck,
   FileText,
   Activity,
@@ -26,14 +25,24 @@ import { CampanhaList } from "./CampanhaList";
 import { CampanhaForm } from "./CampanhaForm";
 import { IPSGauge } from "./IPSGauge";
 import { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
+import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
 const MINIMO_ANONIMATO = 5;
 
 export function PsicossocialDashboard() {
+  const [showAssistente, setShowAssistente] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const { campanhas, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
+
+  const handleNovaCampanha = () => setShowAssistente(true);
+
+  const handleAssistenteSelect = (instrumento: string, _manual: boolean) => {
+    setInstrumentoPreSelecionado(instrumento);
+    setShowForm(true);
+  };
 
   const totalCampanhas = campanhas.length;
   const campanhasEncerradas = campanhas.filter(c => c.status === 'encerrada').length;
@@ -67,7 +76,7 @@ export function PsicossocialDashboard() {
             NR-01 · NR-17 · ISO 45001 · ISO 45003 — Análise multidimensional baseada em evidências
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
+        <Button onClick={handleNovaCampanha} className="gap-2">
           <Plus className="h-4 w-4" />
           Nova Campanha
         </Button>
@@ -181,7 +190,7 @@ export function PsicossocialDashboard() {
 
         {/* Tab: Campanhas */}
         <TabsContent value="campanhas" className="mt-4">
-          <CampanhaList campanhas={campanhas} onNovaCampanha={() => setShowForm(true)} />
+        <CampanhaList campanhas={campanhas} onNovaCampanha={handleNovaCampanha} />
         </TabsContent>
 
         {/* Tab: Instrumentos */}
@@ -347,10 +356,18 @@ export function PsicossocialDashboard() {
         </TabsContent>
       </Tabs>
 
+      {/* Assistente de Seleção */}
+      <AssistenteSelecaoInstrumento
+        open={showAssistente}
+        onOpenChange={setShowAssistente}
+        onSelectInstrumento={handleAssistenteSelect}
+      />
+
       {/* Modal de Nova Campanha */}
       <CampanhaForm
         open={showForm}
         onOpenChange={setShowForm}
+        instrumentoSugerido={instrumentoPreSelecionado}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -72,9 +72,10 @@ interface CampanhaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campanhaAnterior?: CampanhaPsicossocial;
+  instrumentoSugerido?: string;
 }
 
-export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaFormProps) {
+export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumentoSugerido }: CampanhaFormProps) {
   const { criarCampanha, campanhas } = usePsicossocial();
 
   const isReaplicacao = !!campanhaAnterior;
@@ -85,6 +86,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
       nome: isReaplicacao ? `Reaplicação - ${campanhaAnterior.nome}` : "",
       descricao: "",
       tipo: isReaplicacao ? 'extraordinaria' : 'regular',
+      instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
       periodicidade: 'trimestral',
       data_inicio: format(new Date(), "yyyy-MM-dd"),
       data_fim: format(addDays(new Date(), 30), "yyyy-MM-dd"),
@@ -140,6 +142,16 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
             }
           </DialogDescription>
         </DialogHeader>
+
+        {/* Banner do Assistente quando instrumento pré-selecionado */}
+        {instrumentoSugerido && (
+          <div className="flex items-start gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <Sparkles className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-purple-800 leading-relaxed">
+              <strong>Instrumento recomendado pelo Assistente:</strong> o instrumento <strong>{instrumentoSugerido.toUpperCase()}</strong> foi pré-selecionado com base na análise organizacional. Você pode alterá-lo abaixo se preferir.
+            </p>
+          </div>
+        )}
 
         {/* Aviso de anonimato obrigatório */}
         <div className="flex items-start gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
