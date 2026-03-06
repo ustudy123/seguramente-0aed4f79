@@ -56,7 +56,7 @@ function CriarAcaoModal({ open, onOpenChange, colaboradorNome, cicloNome, contex
     if (!titulo.trim()) { toast.error("Informe o título da ação"); return; }
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("plano_acoes").insert({
+      const { error } = await (supabase as any).from("plano_acoes").insert({
         tenant_id: tenantId,
         titulo: titulo.trim(),
         descricao: descricao.trim() || null,
@@ -64,9 +64,13 @@ function CriarAcaoModal({ open, onOpenChange, colaboradorNome, cicloNome, contex
         status: "pendente",
         progresso: 0,
         responsavel_id: userId,
-        origem: "avaliacao_desempenho",
-        descricao_origem: `Avaliação de Desempenho — Ciclo: ${cicloNome} | Colaborador: ${colaboradorNome}`,
         criado_por: userId,
+        origem_modulo: "manual",
+        origem_descricao: `📊 Avaliação de Desempenho — Ciclo: ${cicloNome} | Colaborador: ${colaboradorNome}`,
+        prioridade: "medio",
+        tipo: "melhoria",
+        exige_evidencia: false,
+        codigo: "",
       });
       if (error) throw error;
       toast.success("Ação criada com rastreabilidade no Plano de Ação!");
