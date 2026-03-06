@@ -47,9 +47,9 @@ describe("getDimensoesByInstrumento", () => {
     expect(dims.length).toBeGreaterThan(0);
   });
 
-  it("retorna ambos (COPSOQ + HSE + PROART) sem duplicatas", () => {
+  it("retorna ambos (COPSOQ + HSE + PROART + SIPRO) sem duplicatas", () => {
     const dims = getDimensoesByInstrumento("ambos");
-    expect(dims.length).toBe(COPSOQ_DIMENSOES.length + HSE_DIMENSOES.length + PROART_DIMENSOES.length);
+    expect(dims.length).toBe(COPSOQ_DIMENSOES.length + HSE_DIMENSOES.length + PROART_DIMENSOES.length + SIPRO_DIMENSOES.length);
   });
 });
 
