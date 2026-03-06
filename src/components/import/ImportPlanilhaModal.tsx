@@ -256,12 +256,12 @@ export function ImportPlanilhaModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle>{titulo}</DialogTitle>
           <DialogDescription>{descricao}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto min-h-0">
           <AnimatePresence mode="wait">
             {/* Etapa: Upload */}
             {etapa === "upload" && (
@@ -363,18 +363,18 @@ export function ImportPlanilhaModal({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
+                className="flex flex-col gap-4 h-full"
               >
                 {/* Empresa vinculada */}
                 {empresaAtiva && (
-                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
+                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm shrink-0">
                     <Building2 className="w-4 h-4 text-primary shrink-0" />
                     <span>Os colaboradores serão vinculados à empresa: <strong>{empresaAtiva.nome_fantasia || empresaAtiva.razao_social}</strong></span>
                   </div>
                 )}
 
                 {/* Arquivo selecionado */}
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg shrink-0">
                   <div className="flex items-center gap-3">
                     <FileSpreadsheet className="w-8 h-8 text-primary" />
                     <div>
@@ -390,7 +390,7 @@ export function ImportPlanilhaModal({
                 </div>
 
                 {/* Resumo */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 shrink-0">
                   <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-success" />
@@ -406,7 +406,7 @@ export function ImportPlanilhaModal({
                 </div>
 
                 {/* Preview da tabela */}
-                <ScrollArea className="h-[300px] border rounded-lg">
+                <ScrollArea className="flex-1 border rounded-lg min-h-0">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -448,8 +448,8 @@ export function ImportPlanilhaModal({
                   )}
                 </ScrollArea>
 
-                {/* Ações */}
-                <div className="flex justify-end gap-3">
+                {/* Ações — sempre visíveis no rodapé */}
+                <div className="flex justify-end gap-3 pt-2 shrink-0 border-t">
                   <Button variant="outline" onClick={resetar}>
                     Voltar
                   </Button>
