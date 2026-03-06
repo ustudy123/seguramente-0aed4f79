@@ -49,7 +49,7 @@ describe("getDimensoesByInstrumento", () => {
 
   it("retorna ambos (COPSOQ + HSE + PROART) sem duplicatas", () => {
     const dims = getDimensoesByInstrumento("ambos");
-    expect(dims.length).toBe(COPSOQ_DIMENSOES.length + HSE_DIMENSOES.length + 5); // 5 = PROART dimensoes
+    expect(dims.length).toBe(COPSOQ_DIMENSOES.length + HSE_DIMENSOES.length + PROART_DIMENSOES.length);
   });
 });
 
