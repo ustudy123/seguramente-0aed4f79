@@ -5,7 +5,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import type { NotasCriterios } from "@/types/avaliacao";
 
 export interface ResultadosCicloData {
-  ciclos: Array<{ id: string; nome: string; status: string }>;
+  ciclos: Array<{ id: string; nome: string; status: string; data_inicio: string }>;
   resumo: {
     mediaGeral: number;
     totalConcluidas: number;
@@ -15,12 +15,9 @@ export interface ResultadosCicloData {
   };
   distribuicao: Array<{ nota: string; quantidade: number; fill: string }>;
   porSetor: Array<{ setor: string; media: number; colaboradores: number }>;
-  topColaboradores: Array<{
-    nome: string;
-    setor: string;
-    nota: number;
-  }>;
+  topColaboradores: Array<{ nome: string; setor: string; nota: number }>;
   dimensoes: Array<{ dimensao: string; media: number }>;
+  evolucaoCicloAnterior: { mediaAnterior: number | null; deltaMedia: number | null; nomeCicloAnterior: string | null } | null;
 }
 
 const NOTE_FILLS = [
@@ -31,7 +28,10 @@ const NOTE_FILLS = [
   "hsl(160, 70%, 45%)",
 ];
 
-export function useResultadosAvaliacao(selectedCicloId?: string) {
+export function useResultadosAvaliacao(
+  selectedCicloId?: string,
+  filters?: { setor?: string; funcao?: string; unidade?: string }
+) {
   const { tenantId } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
 
@@ -54,6 +54,10 @@ export function useResultadosAvaliacao(selectedCicloId?: string) {
 
   const cicloId = selectedCicloId || ciclos[0]?.id;
 
+  // Ciclo anterior (para evolução)
+  const cicloAtualIdx = ciclos.findIndex(c => c.id === cicloId);
+  const cicloAnterior = cicloAtualIdx >= 0 ? ciclos[cicloAtualIdx + 1] : null;
+
   const { data: respostas = [], isLoading: isLoadingRespostas } = useQuery({
     queryKey: ["avaliacao-respostas-resultados", tenantId, cicloId],
     queryFn: async () => {
@@ -69,11 +73,39 @@ export function useResultadosAvaliacao(selectedCicloId?: string) {
     enabled: !!tenantId && !!cicloId,
   });
 
+  const { data: respostasCicloAnterior = [] } = useQuery({
+    queryKey: ["avaliacao-respostas-ciclo-anterior", tenantId, cicloAnterior?.id],
+    queryFn: async () => {
+      if (!tenantId || !cicloAnterior?.id) return [];
+      const { data } = await supabase
+        .from("avaliacao_respostas")
+        .select("avaliado_id, avaliado_nome, nota_geral, status")
+        .eq("tenant_id", tenantId)
+        .eq("ciclo_id", cicloAnterior.id)
+        .eq("status", "concluida");
+      return data || [];
+    },
+    enabled: !!tenantId && !!cicloAnterior?.id,
+  });
+
+  // Buscar profiles para cruzar setor/departamento
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles-resultados-avd", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("user_id, nome_completo, departamento, cargo")
+        .eq("tenant_id", tenantId);
+      return (data || []) as Array<{ user_id: string; nome_completo: string; departamento?: string; cargo?: string }>;
+    },
+    enabled: !!tenantId,
+  });
+
   const { data: pdisCount = 0 } = useQuery({
     queryKey: ["pdis-count-avaliacao", tenantId, cicloId],
     queryFn: async () => {
       if (!tenantId || !cicloId) return 0;
-      const cicloNome = ciclos.find(c => c.id === cicloId)?.nome || "";
       const { count, error } = await supabase
         .from("pdis")
         .select("*", { count: "exact", head: true })
@@ -85,16 +117,28 @@ export function useResultadosAvaliacao(selectedCicloId?: string) {
     enabled: !!tenantId && !!cicloId,
   });
 
-  // Compute derived data
-  const concluidas = respostas.filter(r => r.status === "concluida");
+  // --- Filtros ---
+  const concluidas = respostas.filter(r => {
+    if (r.status !== "concluida") return false;
+    if (filters?.setor || filters?.funcao) {
+      const p = profiles.find(p => p.user_id === r.avaliado_id);
+      if (filters?.setor && p?.departamento?.toLowerCase() !== filters.setor.toLowerCase()) return false;
+      if (filters?.funcao && p?.cargo?.toLowerCase() !== filters.funcao.toLowerCase()) return false;
+    }
+    return true;
+  });
+
   const totalRespostas = respostas.length;
   const totalConcluidas = concluidas.length;
-  const mediaGeral = concluidas.length > 0
-    ? Math.round((concluidas.reduce((sum, r) => sum + (r.nota_geral || 0), 0) / concluidas.length) * 10) / 10
-    : 0;
+  const mediaGeral =
+    concluidas.length > 0
+      ? Math.round(
+          (concluidas.reduce((sum, r) => sum + (r.nota_geral || 0), 0) / concluidas.length) * 10
+        ) / 10
+      : 0;
   const taxaParticipacao = totalRespostas > 0 ? Math.round((totalConcluidas / totalRespostas) * 100) : 0;
 
-  // Distribution by note range
+  // Distribuição por faixa de nota
   const distribuicao = [
     { nota: "1 – Insuficiente", range: [1, 1.99] },
     { nota: "2 – Em Desenv.", range: [2, 2.99] },
@@ -114,13 +158,31 @@ export function useResultadosAvaliacao(selectedCicloId?: string) {
   const topColaboradores = [...concluidas]
     .sort((a, b) => (b.nota_geral || 0) - (a.nota_geral || 0))
     .slice(0, 5)
-    .map(r => ({
-      nome: r.avaliado_nome,
-      setor: "—",
-      nota: r.nota_geral || 0,
-    }));
+    .map(r => {
+      const p = profiles.find(pr => pr.user_id === r.avaliado_id);
+      return {
+        nome: r.avaliado_nome,
+        setor: p?.departamento || "—",
+        nota: r.nota_geral || 0,
+      };
+    });
 
-  // Dimension averages from notas_criterios
+  // Por setor
+  const setorMap: Record<string, { total: number; count: number }> = {};
+  concluidas.forEach(r => {
+    const p = profiles.find(pr => pr.user_id === r.avaliado_id);
+    const setor = p?.departamento || "Não informado";
+    if (!setorMap[setor]) setorMap[setor] = { total: 0, count: 0 };
+    setorMap[setor].total += r.nota_geral || 0;
+    setorMap[setor].count += 1;
+  });
+  const porSetor = Object.entries(setorMap).map(([setor, { total, count }]) => ({
+    setor,
+    media: Math.round((total / count) * 10) / 10,
+    colaboradores: count,
+  })).sort((a, b) => b.media - a.media);
+
+  // Dimensões / critérios
   const dimensaoMap: Record<string, number[]> = {};
   concluidas.forEach(r => {
     const notas = (r.notas_criterios as unknown as NotasCriterios) || {};
@@ -129,13 +191,33 @@ export function useResultadosAvaliacao(selectedCicloId?: string) {
       dimensaoMap[criterioId].push(nota as number);
     });
   });
-
   const dimensoes = Object.entries(dimensaoMap)
     .slice(0, 6)
     .map(([dim, notas]) => ({
       dimensao: dim.length > 12 ? dim.slice(0, 12) + "…" : dim,
       media: Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10,
     }));
+
+  // Evolução vs ciclo anterior
+  const mediaAnterior =
+    respostasCicloAnterior.length > 0
+      ? Math.round(
+          (respostasCicloAnterior.reduce((sum: number, r: any) => sum + (r.nota_geral || 0), 0) /
+            respostasCicloAnterior.length) *
+            10
+        ) / 10
+      : null;
+  const evolucaoCicloAnterior = cicloAnterior
+    ? {
+        mediaAnterior,
+        deltaMedia: mediaAnterior !== null ? Math.round((mediaGeral - mediaAnterior) * 10) / 10 : null,
+        nomeCicloAnterior: cicloAnterior.nome,
+      }
+    : null;
+
+  // Listas únicas para filtros
+  const setoresDisponiveis = [...new Set(profiles.map(p => p.departamento).filter(Boolean))].sort();
+  const funcoesDisponiveis = [...new Set(profiles.map(p => p.cargo).filter(Boolean))].sort();
 
   const resumo = {
     mediaGeral,
@@ -151,8 +233,15 @@ export function useResultadosAvaliacao(selectedCicloId?: string) {
     resumo,
     distribuicao,
     topColaboradores,
+    porSetor,
     dimensoes,
+    evolucaoCicloAnterior,
+    setoresDisponiveis,
+    funcoesDisponiveis,
     isLoading: isLoadingCiclos || isLoadingRespostas,
     hasDados: concluidas.length > 0,
+    // Para exportação
+    respostasBruto: concluidas,
+    profiles,
   };
 }
