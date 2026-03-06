@@ -414,6 +414,7 @@ export function usePsicossocial() {
         descricao: row.campanha_descricao,
         tipo: row.campanha_tipo,
         status: row.campanha_status,
+        instrumento: row.campanha_instrumento || 'sipro',
         data_inicio: row.campanha_data_inicio,
         data_fim: row.campanha_data_fim,
         anonimo: row.campanha_anonimo,
