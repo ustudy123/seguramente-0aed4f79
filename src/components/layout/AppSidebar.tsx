@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   Users,
+  UserCog,
   MessageSquareHeart,
   Clock,
   Calendar,
@@ -92,6 +93,7 @@ const menuSections: MenuSection[] = [
   sectionIcon: Users,
   items: [
   { title: "Colaboradores", icon: Users, path: "/colaboradores" },
+  { title: "Usuários do Sistema", icon: UserCog, path: "/usuarios" },
   { title: "Onboarding", icon: UserPlus, path: "/onboarding" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
   { title: "Atestados", icon: Stethoscope, path: "/atestados" },

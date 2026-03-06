@@ -13380,6 +13380,267 @@ export type Database = {
         }
         Relationships: []
       }
+      usuario_audit_log: {
+        Row: {
+          acao: string
+          created_at: string
+          executor_id: string | null
+          executor_nome: string | null
+          id: string
+          ip_address: string | null
+          justificativa: string | null
+          objeto: string
+          origem: string | null
+          tenant_id: string
+          usuario_id: string | null
+          valor_anterior: Json | null
+          valor_novo: Json | null
+          vinculo_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          executor_id?: string | null
+          executor_nome?: string | null
+          id?: string
+          ip_address?: string | null
+          justificativa?: string | null
+          objeto: string
+          origem?: string | null
+          tenant_id: string
+          usuario_id?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+          vinculo_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          executor_id?: string | null
+          executor_nome?: string | null
+          id?: string
+          ip_address?: string | null
+          justificativa?: string | null
+          objeto?: string
+          origem?: string | null
+          tenant_id?: string
+          usuario_id?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+          vinculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuario_vinculos: {
+        Row: {
+          aprovado_por_nome: string | null
+          aprovado_por_user_id: string | null
+          contexto_operacional: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          empresa_id: string
+          id: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["vinculo_status"]
+          tenant_id: string
+          tipo_vinculo: Database["public"]["Enums"]["usuario_tipo"]
+          unidade_filial: string | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          aprovado_por_nome?: string | null
+          aprovado_por_user_id?: string | null
+          contexto_operacional?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          empresa_id: string
+          id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["vinculo_status"]
+          tenant_id: string
+          tipo_vinculo?: Database["public"]["Enums"]["usuario_tipo"]
+          unidade_filial?: string | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          aprovado_por_nome?: string | null
+          aprovado_por_user_id?: string | null
+          contexto_operacional?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          empresa_id?: string
+          id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["vinculo_status"]
+          tenant_id?: string
+          tipo_vinculo?: Database["public"]["Enums"]["usuario_tipo"]
+          unidade_filial?: string | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_vinculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_vinculos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_vinculos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_base"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios_base: {
+        Row: {
+          alerta_duplicidade: boolean | null
+          autenticacao_2fa: boolean | null
+          auth_user_id: string | null
+          cargo_funcao: string | null
+          convite_aceito_em: string | null
+          convite_enviado_em: string | null
+          convite_expira_em: string | null
+          convite_token: string | null
+          cpf: string | null
+          created_at: string
+          criado_por_nome: string | null
+          criado_por_user_id: string | null
+          data_nascimento: string | null
+          duplicidade_nivel: string | null
+          email_principal: string
+          email_validado: boolean | null
+          foto_url: string | null
+          id: string
+          idioma: string | null
+          matricula: string | null
+          nome_completo: string
+          nome_social: string | null
+          observacoes: string | null
+          origem_cadastro: string | null
+          primeiro_acesso_em: string | null
+          qualidade_pct: number | null
+          qualidade_score: Database["public"]["Enums"]["qualidade_score"] | null
+          status: Database["public"]["Enums"]["usuario_status"]
+          sugestao_tipo_ia: Database["public"]["Enums"]["usuario_tipo"] | null
+          telefone_principal: string | null
+          telefone_validado: boolean | null
+          tenant_id: string
+          tipo_usuario: Database["public"]["Enums"]["usuario_tipo"] | null
+          ultimo_acesso_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          alerta_duplicidade?: boolean | null
+          autenticacao_2fa?: boolean | null
+          auth_user_id?: string | null
+          cargo_funcao?: string | null
+          convite_aceito_em?: string | null
+          convite_enviado_em?: string | null
+          convite_expira_em?: string | null
+          convite_token?: string | null
+          cpf?: string | null
+          created_at?: string
+          criado_por_nome?: string | null
+          criado_por_user_id?: string | null
+          data_nascimento?: string | null
+          duplicidade_nivel?: string | null
+          email_principal: string
+          email_validado?: boolean | null
+          foto_url?: string | null
+          id?: string
+          idioma?: string | null
+          matricula?: string | null
+          nome_completo: string
+          nome_social?: string | null
+          observacoes?: string | null
+          origem_cadastro?: string | null
+          primeiro_acesso_em?: string | null
+          qualidade_pct?: number | null
+          qualidade_score?:
+            | Database["public"]["Enums"]["qualidade_score"]
+            | null
+          status?: Database["public"]["Enums"]["usuario_status"]
+          sugestao_tipo_ia?: Database["public"]["Enums"]["usuario_tipo"] | null
+          telefone_principal?: string | null
+          telefone_validado?: boolean | null
+          tenant_id: string
+          tipo_usuario?: Database["public"]["Enums"]["usuario_tipo"] | null
+          ultimo_acesso_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alerta_duplicidade?: boolean | null
+          autenticacao_2fa?: boolean | null
+          auth_user_id?: string | null
+          cargo_funcao?: string | null
+          convite_aceito_em?: string | null
+          convite_enviado_em?: string | null
+          convite_expira_em?: string | null
+          convite_token?: string | null
+          cpf?: string | null
+          created_at?: string
+          criado_por_nome?: string | null
+          criado_por_user_id?: string | null
+          data_nascimento?: string | null
+          duplicidade_nivel?: string | null
+          email_principal?: string
+          email_validado?: boolean | null
+          foto_url?: string | null
+          id?: string
+          idioma?: string | null
+          matricula?: string | null
+          nome_completo?: string
+          nome_social?: string | null
+          observacoes?: string | null
+          origem_cadastro?: string | null
+          primeiro_acesso_em?: string | null
+          qualidade_pct?: number | null
+          qualidade_score?:
+            | Database["public"]["Enums"]["qualidade_score"]
+            | null
+          status?: Database["public"]["Enums"]["usuario_status"]
+          sugestao_tipo_ia?: Database["public"]["Enums"]["usuario_tipo"] | null
+          telefone_principal?: string | null
+          telefone_validado?: boolean | null
+          tenant_id?: string
+          tipo_usuario?: Database["public"]["Enums"]["usuario_tipo"] | null
+          ultimo_acesso_em?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_base_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -13766,6 +14027,11 @@ export type Database = {
         | "bloqueada"
         | "encerrada"
         | "cancelada"
+      qualidade_score:
+        | "completo"
+        | "suficiente"
+        | "incompleto"
+        | "inconsistente"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
       swot_classificacao:
@@ -13822,6 +14088,37 @@ export type Database = {
         | "processos"
         | "onboarding"
       trilha_visibilidade: "publica" | "restrita"
+      usuario_status:
+        | "rascunho"
+        | "pendente_convite"
+        | "convite_enviado"
+        | "aguardando_ativacao"
+        | "ativo"
+        | "bloqueado"
+        | "suspenso"
+        | "inativo"
+        | "arquivado"
+      usuario_tipo:
+        | "administrador"
+        | "rh_dp"
+        | "gestor"
+        | "lideranca"
+        | "tecnico_seguranca"
+        | "saude_ocupacional"
+        | "clinica_parceira"
+        | "consultor_externo"
+        | "prestador_terceiro"
+        | "auditor"
+        | "implantador"
+        | "suporte_autorizado"
+        | "corporativo_multiempresa"
+      vinculo_status:
+        | "ativo"
+        | "pendente"
+        | "suspenso"
+        | "revogado"
+        | "encerrado"
+        | "expirado"
       workflow_status: "pendente" | "aprovado" | "rejeitado"
     }
     CompositeTypes: {
@@ -14134,6 +14431,12 @@ export const Constants = {
         "encerrada",
         "cancelada",
       ],
+      qualidade_score: [
+        "completo",
+        "suficiente",
+        "incompleto",
+        "inconsistente",
+      ],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
       swot_classificacao: [
@@ -14195,6 +14498,40 @@ export const Constants = {
         "onboarding",
       ],
       trilha_visibilidade: ["publica", "restrita"],
+      usuario_status: [
+        "rascunho",
+        "pendente_convite",
+        "convite_enviado",
+        "aguardando_ativacao",
+        "ativo",
+        "bloqueado",
+        "suspenso",
+        "inativo",
+        "arquivado",
+      ],
+      usuario_tipo: [
+        "administrador",
+        "rh_dp",
+        "gestor",
+        "lideranca",
+        "tecnico_seguranca",
+        "saude_ocupacional",
+        "clinica_parceira",
+        "consultor_externo",
+        "prestador_terceiro",
+        "auditor",
+        "implantador",
+        "suporte_autorizado",
+        "corporativo_multiempresa",
+      ],
+      vinculo_status: [
+        "ativo",
+        "pendente",
+        "suspenso",
+        "revogado",
+        "encerrado",
+        "expirado",
+      ],
       workflow_status: ["pendente", "aprovado", "rejeitado"],
     },
   },
