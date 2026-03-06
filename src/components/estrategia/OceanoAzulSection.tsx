@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { OceanoItemAcaoModal } from "./OceanoItemAcaoModal";
 import type { EstrategiaOceanoAzul, OceanoQuadrante } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { OCEANO_QUADRANTE_LABELS } from "@/types/estrategia";
 
 const QUADRANT_CONFIG: Record<OceanoQuadrante, { icon: React.ElementType; bg: string; border: string; text: string; description: string }> = {

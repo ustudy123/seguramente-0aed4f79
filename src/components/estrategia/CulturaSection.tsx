@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useAuth } from "@/hooks/useAuth";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ManualCulturaModal } from "./ManualCulturaModal";
