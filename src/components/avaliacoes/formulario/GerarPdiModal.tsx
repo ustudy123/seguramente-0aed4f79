@@ -60,6 +60,21 @@ export function GerarPdiModal({
   const [descricaoPdi, setDescricaoPdi] = useState("");
   const [metasSelecionadas, setMetasSelecionadas] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
+  const hasLoadedRef = useRef(false);
+
+  // Dispara loadSuggestions quando o modal abre
+  useEffect(() => {
+    if (open && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      setStep("loading");
+      setMetas([]);
+      loadSuggestions();
+    }
+    if (!open) {
+      hasLoadedRef.current = false;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // Carrega sugestões da IA ao abrir
   const loadSuggestions = async () => {
