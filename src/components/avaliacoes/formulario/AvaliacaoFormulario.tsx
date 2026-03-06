@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
   Sparkles, ChevronRight, ChevronLeft, Send, Save,
-  AlertTriangle, Flame, Battery, FileText, MessageSquare,
+  AlertTriangle, Flame, Battery,
   BookOpen, Target, User, Briefcase,
   Calendar, CheckCircle2, TrendingUp, Loader2,
-  ThumbsUp, ThumbsDown, Minus, GitBranch,
 } from "lucide-react";
 import { GerarPdiModal } from "./GerarPdiModal";
+import { EvidenciasPanel } from "./EvidenciasPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -117,140 +116,6 @@ function RiscoIndicator({ nivel, label, icon: Icon }: { nivel: string | null; la
 }
 
 // =========================================================
-// PAINEL DE EVIDÊNCIAS
-// =========================================================
-function PainelEvidencias({ colaboradorId, dataInicio, dataFim }: { colaboradorId: string; dataInicio?: string; dataFim?: string }) {
-  const { data: ev, isLoading } = useAvaliacaoEvidencias(colaboradorId, dataInicio, dataFim);
-  const [tab, setTab] = useState("feedbacks");
-
-  if (isLoading) {
-    return (
-      <Card className="h-full">
-        <CardContent className="p-4 flex items-center justify-center h-48">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const total = (ev?.feedbacks.length || 0) + (ev?.ocorrencias.length || 0) + (ev?.metas.length || 0) + (ev?.trilhas.length || 0);
-
-  return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <FileText className="h-4 w-4 text-muted-foreground" />
-          Evidências do Período
-          <Badge variant="secondary" className="ml-auto">{total}</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden p-0">
-        <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
-          <TabsList className="grid grid-cols-4 mx-4 mb-0">
-            <TabsTrigger value="feedbacks" className="text-[11px] gap-1">
-              <ThumbsUp className="h-3 w-3" />
-              <span className="hidden sm:inline">Feed.</span>
-              {(ev?.feedbacks.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.feedbacks.length}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="ocorrencias" className="text-[11px] gap-1">
-              <MessageSquare className="h-3 w-3" />
-              <span className="hidden sm:inline">Ocorr.</span>
-              {(ev?.ocorrencias.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.ocorrencias.length}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="metas" className="text-[11px] gap-1">
-              <Target className="h-3 w-3" />
-              <span className="hidden sm:inline">Metas</span>
-              {(ev?.metas.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.metas.length}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="trilhas" className="text-[11px] gap-1">
-              <BookOpen className="h-3 w-3" />
-              <span className="hidden sm:inline">Trilhas</span>
-              {(ev?.trilhas.length || 0) > 0 && <Badge variant="secondary" className="h-4 px-1 text-[9px]">{ev?.trilhas.length}</Badge>}
-            </TabsTrigger>
-          </TabsList>
-
-          <ScrollArea className="flex-1 px-4 pt-3">
-            <TabsContent value="feedbacks" className="mt-0 space-y-2">
-              {ev?.feedbacks.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Nenhum feedback no período</p>
-              ) : ev?.feedbacks.map(f => (
-                <div key={f.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="text-[10px] h-4 capitalize">{f.categoria}</Badge>
-                    <span className="text-[10px] text-muted-foreground ml-auto">
-                      {format(new Date(f.created_at), "dd/MM/yy", { locale: ptBR })}
-                    </span>
-                  </div>
-                  <p className="text-xs">{f.descricao}</p>
-                  {f.registrado_por_nome && (
-                    <p className="text-[10px] text-muted-foreground">por {f.registrado_por_nome}</p>
-                  )}
-                </div>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="ocorrencias" className="mt-0 space-y-2">
-              {ev?.ocorrencias.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Nenhuma ocorrência no período</p>
-              ) : ev?.ocorrencias.map(o => (
-                <div key={o.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    {o.tipo === "positiva" ? <ThumbsUp className="h-3 w-3 text-success" /> :
-                     o.tipo === "negativa" ? <ThumbsDown className="h-3 w-3 text-destructive" /> :
-                     <Minus className="h-3 w-3 text-muted-foreground" />}
-                    <Badge variant="outline" className={`text-[10px] h-4 capitalize ${
-                      o.tipo === "positiva" ? "border-success/40 text-success" :
-                      o.tipo === "negativa" ? "border-destructive/40 text-destructive" : ""
-                    }`}>{o.tipo}</Badge>
-                    {o.is_advertencia && <Badge variant="destructive" className="text-[10px] h-4">Advertência</Badge>}
-                    <span className="text-[10px] text-muted-foreground ml-auto">
-                      {format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}
-                    </span>
-                  </div>
-                  <p className="text-xs">{o.descricao}</p>
-                </div>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="metas" className="mt-0 space-y-2">
-              {ev?.metas.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Nenhuma meta cadastrada</p>
-              ) : ev?.metas.map(m => (
-                <div key={m.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1.5">
-                  <p className="text-xs font-medium">{m.titulo}</p>
-                  <div className="flex items-center gap-2">
-                    <Progress value={m.progresso} className="h-1.5 flex-1" />
-                    <span className="text-[10px] font-medium">{m.progresso}%</span>
-                  </div>
-                  <Badge variant="outline" className="text-[10px] h-4 capitalize">{m.status.replace(/_/g, " ")}</Badge>
-                </div>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="trilhas" className="mt-0 space-y-2">
-              {ev?.trilhas.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Nenhuma trilha atribuída</p>
-              ) : ev?.trilhas.map(t => (
-                <div key={t.id} className="p-2.5 bg-muted/40 rounded-lg space-y-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-medium flex-1">{t.nome}</p>
-                    {t.status === "concluida" && <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Progress value={t.percentual} className="h-1.5 flex-1" />
-                    <span className="text-[10px] font-medium">{t.percentual}%</span>
-                  </div>
-                </div>
-              ))}
-            </TabsContent>
-          </ScrollArea>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
-
-// =========================================================
 // COMPONENTE PRINCIPAL
 // =========================================================
 interface AvaliacaoFormularioProps {
@@ -303,7 +168,14 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
   const [isSaving, setIsSaving] = useState(false);
   const [showGerarPdi, setShowGerarPdi] = useState(false);
   const [avaliacaoConcluida, setAvaliacaoConcluida] = useState(false);
-
+  // Evidências anexadas à avaliação
+  const [evidenciasAnexadas, setEvidenciasAnexadas] = useState<{ id: string; tipo: string; descricao: string }[]>([]);
+  const handleAnexarEvidencia = (id: string, tipo: string, descricao: string) => {
+    setEvidenciasAnexadas(prev => {
+      if (prev.some(e => e.id === id)) return prev.filter(e => e.id !== id); // toggle
+      return [...prev, { id, tipo, descricao }];
+    });
+  };
   const isLastStep = currentStep === dimensoes.length;
   const totalCriterios = dimensoes.reduce((acc, d) => acc + d.criterios.length, 0);
   const criteriosPreenchidos = Object.keys(notas).filter(k => notas[k] > 0).length;
@@ -640,10 +512,15 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
 
         {/* Painel lateral de evidências */}
         <div className="lg:col-span-1">
-          <PainelEvidencias
+          <EvidenciasPanel
             colaboradorId={resposta.avaliado_id}
+            colaboradorNome={resposta.avaliado_nome}
+            cicloNome={resposta.ciclo?.nome || ""}
+            cicloId={resposta.ciclo_id}
             dataInicio={resposta.ciclo?.data_inicio}
             dataFim={resposta.ciclo?.data_fim}
+            evidenciasAnexadas={evidenciasAnexadas.map(e => e.id)}
+            onAnexarEvidencia={handleAnexarEvidencia}
           />
         </div>
       </div>
