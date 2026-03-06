@@ -249,7 +249,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
 
 // ── Painel Principal ───────────────────────────────────────────────────────────
 export function EvidenciasPanel({
-  colaboradorId, colaboradorNome, cicloNome, cicloId,
+  colaboradorId, colaboradorNome, colaboradorCargo, cicloNome, cicloId,
   dataInicio, dataFim, evidenciasAnexadas, onAnexarEvidencia,
 }: EvidenciasPanelProps) {
   const { tenantId, user } = useAuth();
