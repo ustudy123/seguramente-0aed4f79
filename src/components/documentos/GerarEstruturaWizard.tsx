@@ -491,7 +491,29 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label className="font-semibold">Exposição a riscos ocupacionais</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <Label className="font-semibold">Exposição a riscos ocupacionais</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={importarRiscosDoPGR}
+                      disabled={importandoPGR}
+                      className="gap-2 text-xs h-8"
+                    >
+                      {importandoPGR
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <FileSearch className="w-3.5 h-3.5 text-primary" />
+                      }
+                      {importandoPGR ? "Analisando PGR..." : "Importar do PGR"}
+                    </Button>
+                  </div>
+                  {pgrInfo && (
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-primary">
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                      <span>Riscos identificados via IA a partir do PGR: <strong>{pgrInfo.nome}</strong>{pgrInfo.data ? ` (${pgrInfo.data})` : ""}</span>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">Selecione os riscos presentes na empresa. Isso define quais pastas e treinamentos serão incluídos.</p>
                   <div className="grid grid-cols-1 gap-2">
                     {RISCOS_OCUPACIONAIS.map(r => (
