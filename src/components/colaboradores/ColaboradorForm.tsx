@@ -358,20 +358,13 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Função *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {cargosOptions.map((cargo) => (
-                          <SelectItem key={cargo.id} value={cargo.nome.trim()}>
-                            {cargo.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <CargoComboboxField
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
