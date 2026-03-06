@@ -402,6 +402,26 @@ export function AvaliacaoFormulario({ resposta, onConcluir }: AvaliacaoFormulari
   const risco = evidencias?.risco;
 
   return (
+    <>
+      {/* Modal Gerar PDI com IA */}
+      {showGerarPdi && resposta && (
+        <GerarPdiModal
+          open={showGerarPdi}
+          onOpenChange={(v) => {
+            setShowGerarPdi(v);
+            if (!v && avaliacaoConcluida) onConcluir?.();
+          }}
+          resposta={resposta}
+          notas={notas}
+          dimensoes={dimensoes.map(d => ({ id: d.id, nome: d.nome, criterios: d.criterios }))}
+          colaboradorCargo={undefined}
+          colaboradorDepartamento={undefined}
+          onPdiGerado={() => {
+            setShowGerarPdi(false);
+            onConcluir?.();
+          }}
+        />
+      )}
     <div className="space-y-4">
       {/* Alertas de Risco Humano */}
       {(risco?.burnout || risco?.boreout) && (
