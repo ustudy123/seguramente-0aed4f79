@@ -116,6 +116,7 @@ serve(async (req) => {
 
         if (flow === "login_auth" || flow === "todos") {
           send("flow_start", { flow: "login_auth", label: "Autenticação & Perfil" });
+          await navigateTo("/", "Autenticação & Perfil");
           const steps: StepResult[] = [];
 
           steps.push(await runStepStreamed("login_auth", "1. Login com credenciais", `signIn ${TEST_EMAIL}`, async () => {
@@ -125,12 +126,14 @@ serve(async (req) => {
             return `Login OK — UID: ${user.id}, Email: ${user.email}`;
           }));
 
+          await navigateTo("/", "Dashboard — verificando perfil");
+
           steps.push(await runStepStreamed("login_auth", "2. Verificar Perfil", "SELECT profiles", async () => {
             if (!authClient) throw new Error("Login não realizado");
             const { data, error } = await authClient.from("profiles").select("*").eq("user_id", authUser.id).single();
             if (error) throw new Error(error.message);
             authTenantId = data.tenant_id;
-            return `Perfil: ${data.full_name || data.email}, Tenant: ${data.tenant_id?.slice(0, 8)}...`;
+            return `Perfil: ${data.nome_completo || data.full_name || 'sem nome'}, Tenant: ${data.tenant_id?.slice(0, 8)}...`;
           }));
 
           steps.push(await runStepStreamed("login_auth", "3. Verificar Roles", "SELECT user_roles", async () => {
