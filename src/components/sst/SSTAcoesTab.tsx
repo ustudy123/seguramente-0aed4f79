@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ import {
   CalendarClock,
   ListChecks,
   Import,
+  X,
+  RotateCcw,
+  EyeOff,
 } from "lucide-react";
 import { SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +30,7 @@ interface AcaoDocumento {
   responsavel?: string;
   prazo?: string;
   recurso?: string;
-  origem: string; // doc tipo, e.g. "PGR", "PCMSO"
+  origem: string;
   docId: string;
 }
 
@@ -36,7 +39,49 @@ interface DocComAcoes {
   acoes: AcaoDocumento[];
 }
 
-/** Parse action plan / cronograma items from the AI analysis text */
+// ─── Infinitive verb detection ──────────────────────────────────────────────
+// Portuguese infinitive verbs end in -ar, -er, -ir, -or (e.g. aumentar, implementar, reduzir)
+const INFINITIVO_REGEX =
+  /\b(?:[a-záàâãéêíóôõúüç]+(?:ar|er|ir|or))\b/i;
+
+// Action-instruction keywords commonly found in SST docs
+const ACAO_KEYWORDS =
+  /\b(?:implementar|instalar|adquirir|fornecer|realizar|elaborar|treinar|capacitar|revisar|atualizar|substituir|adequar|reduzir|aumentar|melhorar|corrigir|providenciar|garantir|verificar|avaliar|monitorar|controlar|sinalizar|proteger|prevenir|implantar|desenvolver|executar|promover|conscientizar|fiscalizar|inspecionar|medir|cadastrar|comunicar|notificar|registrar|assegurar|cumprir|observar|acompanhar|solicitar)\b/i;
+
+/** Returns true if the text looks like an action instruction */
+function isActionText(text: string): boolean {
+  const t = text.trim();
+  // Must have minimum length
+  if (t.length < 15) return false;
+  // Skip pure headings / metadata lines (e.g. "Responsável:", "Prazo:", "Setor:")
+  if (/^(?:responsável|prazo|setor|local|data|recurso|custo|meta|objetivo|empresa|cargo|nome)[:\s]/i.test(t)) return false;
+  // Match known action keywords OR starts with an infinitive verb
+  if (ACAO_KEYWORDS.test(t)) return true;
+  // Starts with infinitive verb (first word ends in -ar/-er/-ir/-or)
+  const firstWord = t.split(/[\s,;:]/)[0];
+  if (INFINITIVO_REGEX.test(firstWord) && firstWord.length >= 4) return true;
+  return false;
+}
+
+// ─── localStorage helpers ────────────────────────────────────────────────────
+const LS_KEY = "sst_acoes_descartadas_v2";
+
+function loadDescartadas(): Set<string> {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function saveDescartadas(s: Set<string>) {
+  localStorage.setItem(LS_KEY, JSON.stringify([...s]));
+}
+
+function makeKey(acao: AcaoDocumento) {
+  return `${acao.docId}::${acao.descricao.substring(0, 40)}`;
+}
+
+// ─── Parser ──────────────────────────────────────────────────────────────────
 function parseAcoesFromAnalise(doc: SSTDocumento): AcaoDocumento[] {
   const resultado: string = doc.analise_ia?.resultado || "";
   if (!resultado) return [];
@@ -45,7 +90,6 @@ function parseAcoesFromAnalise(doc: SSTDocumento): AcaoDocumento[] {
   const linhas = resultado.split("\n");
   let inAcoesSection = false;
 
-  // Broad regex to detect any section about action plans — covers common document structures
   const isSectionHeader = (l: string) =>
     /plano[s]?\s+de\s+a[çc][aã][o]?/i.test(l) ||
     /plano[s]?\s+de\s+a[çc][oõ]es/i.test(l) ||
@@ -59,101 +103,80 @@ function parseAcoesFromAnalise(doc: SSTDocumento): AcaoDocumento[] {
     /setores?.+a[çc][oõ]es/i.test(l) ||
     /a[çc][oõ]es.+setor/i.test(l);
 
-  // Regex to detect a new unrelated major section (forces exit from action section)
   const isUnrelatedSection = (l: string) =>
     /^#{1,3}\s/.test(l) && !isSectionHeader(l) &&
     !/a[çc][oõ]/i.test(l) && !/cronograma/i.test(l) && !/medida/i.test(l);
 
-  for (const linha of linhas) {
-    const l = linha.trim();
-    if (!l) continue;
-
-    // Enter action section
-    if (isSectionHeader(l)) {
-      inAcoesSection = true;
-      continue;
-    }
-
-    // Exit on a clearly unrelated major header (##, ### not about actions)
-    if (inAcoesSection && isUnrelatedSection(l)) {
-      inAcoesSection = false;
-    }
-
-    if (!inAcoesSection) continue;
-
-    // Strip markdown formatting for matching
-    const lClean = l.replace(/\*\*/g, "").replace(/^#+\s*/, "").trim();
-
-    // Match: numbered items (1. 1) 1-), bulleted (- • *), or table rows with |
-    const matchBullet = lClean.match(/^(?:\d+[.):\-]\s*|[-•*]\s+)(.+)/);
-    const matchTable = lClean.match(/^\|(.+)\|/); // table row
-
-    let texto = "";
-
-    if (matchBullet) {
-      texto = matchBullet[1].trim();
-    } else if (matchTable) {
-      // Extract meaningful cells from table rows (skip separator lines like |---|)
-      const cells = matchTable[1]
-        .split("|")
-        .map(c => c.trim())
-        .filter(c => c && !/^[-:]+$/.test(c));
-      if (cells.length >= 1) {
-        texto = cells.join(" — ");
-      }
-    } else if (lClean.length >= 20 && !isSectionHeader(lClean)) {
-      // Plain paragraph lines inside the section (common in PDFs converted to text)
-      // Accept lines that look like action descriptions (not just a heading)
-      if (!/^[A-ZÁÉÍÓÚÀÃÕÂÊÎÔÛ\s]{5,}$/.test(lClean)) { // skip ALL-CAPS headers
-        texto = lClean;
-      }
-    }
-
-    if (!texto || texto.length < 15) continue;
-
-    // Try to extract prazo from text
-    const prazoMatch = texto.match(
+  const pushIfAction = (texto: string) => {
+    const t = texto.replace(/\*\*/g, "").trim();
+    if (!isActionText(t)) return;
+    const prazoMatch = t.match(
       /(?:prazo[:\s]+|até\s+|data[:\s]+)(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2}|\d+\s+(?:dias?|meses?|semanas?))/i
     );
-    const respMatch = texto.match(
+    const respMatch = t.match(
       /(?:responsável[:\s]+|resp(?:onsável)?[.:\s]+|executor[:\s]+)([A-ZÀ-Ú][^,|\n]{2,40})/i
     );
-
     acoes.push({
-      descricao: texto.length > 200 ? texto.substring(0, 200) + "…" : texto,
+      descricao: t.length > 200 ? t.substring(0, 200) + "…" : t,
       prazo: prazoMatch?.[1],
       responsavel: respMatch?.[1]?.trim(),
       origem: doc.tipo,
       docId: doc.id,
     });
-  }
+  };
 
-  // Also scan for structured 5W2H blocks ("**O que:**") anywhere in the full text
-  const blocoMatches = [...resultado.matchAll(/\*\*O qu[eê][:\s]*\*\*\s*([^\n*]{10,120})/gi)];
-  for (const m of blocoMatches) {
-    const texto = m[1].trim();
-    if (texto.length > 10 && !acoes.some(a => a.descricao.includes(texto.substring(0, 30)))) {
-      acoes.push({
-        descricao: texto,
-        origem: doc.tipo,
-        docId: doc.id,
-      });
+  for (const linha of linhas) {
+    const l = linha.trim();
+    if (!l) continue;
+
+    if (isSectionHeader(l)) { inAcoesSection = true; continue; }
+    if (inAcoesSection && isUnrelatedSection(l)) { inAcoesSection = false; }
+    if (!inAcoesSection) continue;
+
+    const lClean = l.replace(/\*\*/g, "").replace(/^#+\s*/, "").trim();
+
+    const matchBullet = lClean.match(/^(?:\d+[.):\-]\s*|[-•*]\s+)(.+)/);
+    const matchTable = lClean.match(/^\|(.+)\|/);
+
+    if (matchBullet) {
+      pushIfAction(matchBullet[1]);
+    } else if (matchTable) {
+      const cells = matchTable[1]
+        .split("|")
+        .map(c => c.trim())
+        .filter(c => c && !/^[-:]+$/.test(c));
+      if (cells.length >= 1) pushIfAction(cells.join(" — "));
+    } else if (lClean.length >= 20 && !isSectionHeader(lClean)) {
+      if (!/^[A-ZÁÉÍÓÚÀÃÕÂÊÎÔÛ\s]{5,}$/.test(lClean)) {
+        pushIfAction(lClean);
+      }
     }
   }
 
-  const unique = acoes.filter((a, i, arr) => arr.findIndex(b => b.descricao === a.descricao) === i);
-  return unique.slice(0, 50);
+  // 5W2H "O que:" blocks anywhere in the text
+  const blocoMatches = [...resultado.matchAll(/\*\*O qu[eê][:\s]*\*\*\s*([^\n*]{10,120})/gi)];
+  for (const m of blocoMatches) {
+    const texto = m[1].trim();
+    if (isActionText(texto) && !acoes.some(a => a.descricao.includes(texto.substring(0, 30)))) {
+      acoes.push({ descricao: texto, origem: doc.tipo, docId: doc.id });
+    }
+  }
+
+  return acoes
+    .filter((a, i, arr) => arr.findIndex(b => b.descricao === a.descricao) === i)
+    .slice(0, 50);
 }
 
-interface Props {
-  documentos: SSTDocumento[];
-}
+// ─── Component ───────────────────────────────────────────────────────────────
+interface Props { documentos: SSTDocumento[]; }
 
 export function SSTAcoesTab({ documentos }: Props) {
   const navigate = useNavigate();
   const { tenantId, user, profile } = useAuth();
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
   const [importando, setImportando] = useState<Set<string>>(new Set());
+  const [descartadas, setDescartadas] = useState<Set<string>>(loadDescartadas);
+  const [mostrarDescartadas, setMostrarDescartadas] = useState(false);
 
   const docsComAcoes = useMemo((): DocComAcoes[] => {
     return documentos
@@ -163,6 +186,10 @@ export function SSTAcoesTab({ documentos }: Props) {
   }, [documentos]);
 
   const totalAcoes = docsComAcoes.reduce((acc, d) => acc + d.acoes.length, 0);
+  const totalDescartadas = useMemo(
+    () => docsComAcoes.reduce((acc, { acoes }) => acc + acoes.filter(a => descartadas.has(makeKey(a))).length, 0),
+    [docsComAcoes, descartadas]
+  );
 
   const toggleDoc = (id: string) => {
     setExpandedDocs(prev => {
@@ -172,23 +199,58 @@ export function SSTAcoesTab({ documentos }: Props) {
     });
   };
 
+  const handleDescartar = useCallback((acao: AcaoDocumento) => {
+    const key = makeKey(acao);
+    setDescartadas(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      saveDescartadas(next);
+      return next;
+    });
+    toast("Ação descartada", {
+      action: {
+        label: "Desfazer",
+        onClick: () => {
+          setDescartadas(prev => {
+            const next = new Set(prev);
+            next.delete(key);
+            saveDescartadas(next);
+            return next;
+          });
+        },
+      },
+    });
+  }, []);
+
+  const handleRestaurar = useCallback((acao: AcaoDocumento) => {
+    const key = makeKey(acao);
+    setDescartadas(prev => {
+      const next = new Set(prev);
+      next.delete(key);
+      saveDescartadas(next);
+      return next;
+    });
+    toast.success("Ação restaurada.");
+  }, []);
+
+  const handleRestaurarTodas = () => {
+    setDescartadas(new Set());
+    saveDescartadas(new Set());
+    toast.success("Todas as ações descartadas foram restauradas.");
+  };
+
   const handleImportar = async (acao: AcaoDocumento, doc: SSTDocumento) => {
     if (!tenantId || !user) return;
-    const key = `${acao.docId}::${acao.descricao.substring(0, 20)}`;
+    const key = `${acao.docId}::imp::${acao.descricao.substring(0, 20)}`;
     setImportando(prev => new Set(prev).add(key));
-
     try {
       const prazoDate = new Date();
       prazoDate.setDate(prazoDate.getDate() + 90);
-
       const { error } = await supabase.from("plano_acoes").insert({
         tenant_id: tenantId,
         titulo: acao.descricao.substring(0, 100),
         descricao: acao.descricao,
-        onde: acao.responsavel ? undefined : undefined,
-        prazo: acao.prazo
-          ? acao.prazo
-          : prazoDate.toISOString().split("T")[0],
+        prazo: acao.prazo ?? prazoDate.toISOString().split("T")[0],
         responsavel_nome: acao.responsavel || profile?.nome_completo || user.email || "A definir",
         prioridade: "medio",
         status: "pendente",
@@ -197,9 +259,7 @@ export function SSTAcoesTab({ documentos }: Props) {
         criado_por: user.id,
         criado_por_nome: profile?.nome_completo || user.email,
       } as never);
-
       if (error) throw error;
-
       toast.success("Ação importada para o Plano de Ação!", {
         action: { label: "Ver Plano", onClick: () => navigate("/plano-acao") },
       });
@@ -233,11 +293,12 @@ export function SSTAcoesTab({ documentos }: Props) {
           </div>
           <p className="font-semibold mb-1">Nenhum plano de ação identificado</p>
           <p className="text-sm text-muted-foreground max-w-sm mb-4">
-            Execute a <strong>Análise IA</strong> nos documentos. O sistema identificará automaticamente cronogramas e planos de ação presentes no PGR, PCMSO e outros documentos.
+            Execute a <strong>Análise IA</strong> nos documentos. O sistema identificará automaticamente
+            ações com verbos no infinitivo (ex: "aumentar", "implementar") nas seções de Plano de Ação
+            e Cronograma do PGR, PCMSO e outros documentos.
           </p>
           <Button variant="outline" size="sm" onClick={() => navigate("/plano-acao")}>
-            <ArrowRight className="w-4 h-4 mr-1" />
-            Ver Plano de Ação
+            <ArrowRight className="w-4 h-4 mr-1" /> Ver Plano de Ação
           </Button>
         </CardContent>
       </Card>
@@ -256,8 +317,8 @@ export function SSTAcoesTab({ documentos }: Props) {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{totalAcoes}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ações Identificadas</p>
+            <p className="text-2xl font-bold text-primary">{totalAcoes - totalDescartadas}</p>
+            <p className="text-xs text-muted-foreground mt-1">Ações Ativas</p>
           </CardContent>
         </Card>
       </div>
@@ -267,9 +328,10 @@ export function SSTAcoesTab({ documentos }: Props) {
         <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
         <div>
           <p className="text-muted-foreground">
-            As ações abaixo foram <strong className="text-foreground">extraídas na íntegra</strong> das seções de{" "}
-            <strong className="text-foreground">Plano de Ação / Cronograma</strong> presentes nos documentos analisados pela IA.
-            Clique em <strong className="text-foreground">Importar</strong> para enviá-las ao módulo Plano de Ação.
+            São listadas apenas frases que <strong className="text-foreground">instruem uma ação</strong> —
+            identificadas por verbos no infinitivo (ex: <em>implementar, aumentar, reduzir</em>).
+            Clique em <strong className="text-foreground">Importar</strong> para enviá-las ao Plano de Ação
+            ou em <strong className="text-foreground">Descartar</strong> para removê-las da lista.
           </p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant="outline" className="text-xs gap-1">
@@ -282,9 +344,30 @@ export function SSTAcoesTab({ documentos }: Props) {
         </div>
       </div>
 
+      {/* Discarded bar */}
+      {totalDescartadas > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-dashed bg-muted/30 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <EyeOff className="w-4 h-4" />
+            <span>{totalDescartadas} ação{totalDescartadas > 1 ? "ões" : ""} descartada{totalDescartadas > 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setMostrarDescartadas(v => !v)}>
+              {mostrarDescartadas ? "Ocultar" : "Mostrar"}
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={handleRestaurarTodas}>
+              <RotateCcw className="w-3 h-3 mr-1" /> Restaurar todas
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Docs with action plans */}
       {docsComAcoes.map(({ doc, acoes }) => {
         const isExpanded = expandedDocs.has(doc.id);
+        const ativasCount = acoes.filter(a => !descartadas.has(makeKey(a))).length;
+        const descartadasCount = acoes.length - ativasCount;
+
         return (
           <Card key={doc.id}>
             <CardHeader className="pb-3 cursor-pointer" onClick={() => toggleDoc(doc.id)}>
@@ -296,9 +379,7 @@ export function SSTAcoesTab({ documentos }: Props) {
                   <div>
                     <CardTitle className="text-base flex items-center gap-2">
                       {doc.tipo}
-                      <Badge variant="secondary" className="text-[10px] font-normal">
-                        Origem
-                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] font-normal">Origem</Badge>
                     </CardTitle>
                     <CardDescription className="text-xs">
                       {doc.empresa_emissora || doc.profissional_responsavel || doc.arquivo_nome}
@@ -307,8 +388,13 @@ export function SSTAcoesTab({ documentos }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
-                    {acoes.length} ação{acoes.length > 1 ? "ões" : ""}
+                    {ativasCount} ativa{ativasCount !== 1 ? "s" : ""}
                   </Badge>
+                  {descartadasCount > 0 && (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      {descartadasCount} descartada{descartadasCount !== 1 ? "s" : ""}
+                    </Badge>
+                  )}
                   {isExpanded ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground" />
                   ) : (
@@ -323,15 +409,23 @@ export function SSTAcoesTab({ documentos }: Props) {
                 <Separator />
                 <CardContent className="pt-4 space-y-3">
                   {acoes.map((acao, i) => {
-                    const key = `${acao.docId}::${acao.descricao.substring(0, 20)}`;
-                    const loading = importando.has(key);
+                    const key = makeKey(acao);
+                    const importKey = `${acao.docId}::imp::${acao.descricao.substring(0, 20)}`;
+                    const isDescartada = descartadas.has(key);
+                    const loading = importando.has(importKey);
+
+                    // Hide discarded unless "show" toggle is on
+                    if (isDescartada && !mostrarDescartadas) return null;
+
                     return (
                       <div
                         key={i}
-                        className="flex items-start gap-3 p-3 rounded-lg border bg-background"
+                        className={`flex items-start gap-3 p-3 rounded-lg border transition-opacity ${
+                          isDescartada ? "opacity-40 bg-muted/30" : "bg-background"
+                        }`}
                       >
                         <div className="mt-0.5 flex-shrink-0">
-                          <Sparkles className="w-4 h-4 text-primary/60" />
+                          <Sparkles className={`w-4 h-4 ${isDescartada ? "text-muted-foreground" : "text-primary/60"}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -340,28 +434,56 @@ export function SSTAcoesTab({ documentos }: Props) {
                             </Badge>
                             {acao.prazo && (
                               <Badge variant="outline" className="text-[10px] gap-1">
-                                <CalendarClock className="w-3 h-3" />
-                                {acao.prazo}
+                                <CalendarClock className="w-3 h-3" />{acao.prazo}
                               </Badge>
                             )}
                             {acao.responsavel && (
-                              <Badge variant="outline" className="text-[10px]">
-                                {acao.responsavel}
+                              <Badge variant="outline" className="text-[10px]">{acao.responsavel}</Badge>
+                            )}
+                            {isDescartada && (
+                              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                                <EyeOff className="w-3 h-3 mr-1" />Descartada
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm leading-snug">{acao.descricao}</p>
+                          <p className={`text-sm leading-snug ${isDescartada ? "line-through text-muted-foreground" : ""}`}>
+                            {acao.descricao}
+                          </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1 flex-shrink-0"
-                          disabled={loading}
-                          onClick={() => handleImportar(acao, doc)}
-                        >
-                          <Import className="w-3 h-3" />
-                          {loading ? "Importando…" : "Importar"}
-                        </Button>
+
+                        <div className="flex flex-col gap-1 flex-shrink-0">
+                          {isDescartada ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => handleRestaurar(acao)}
+                            >
+                              <RotateCcw className="w-3 h-3" />Restaurar
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 gap-1"
+                                disabled={loading}
+                                onClick={() => handleImportar(acao, doc)}
+                              >
+                                <Import className="w-3 h-3" />
+                                {loading ? "Importando…" : "Importar"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 gap-1 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleDescartar(acao)}
+                              >
+                                <X className="w-3 h-3" />Descartar
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -369,7 +491,7 @@ export function SSTAcoesTab({ documentos }: Props) {
               </>
             )}
 
-            {!isExpanded && (
+            {!isExpanded && ativasCount > 0 && (
               <CardContent className="pt-0 pb-3">
                 <Button
                   variant="ghost"
@@ -378,7 +500,7 @@ export function SSTAcoesTab({ documentos }: Props) {
                   onClick={() => toggleDoc(doc.id)}
                 >
                   <ChevronDown className="w-4 h-4 mr-1" />
-                  Ver {acoes.length} ação{acoes.length > 1 ? "ões" : ""} identificada{acoes.length > 1 ? "s" : ""}
+                  Ver {ativasCount} ação{ativasCount !== 1 ? "ões" : ""} identificada{ativasCount !== 1 ? "s" : ""}
                 </Button>
               </CardContent>
             )}
@@ -399,8 +521,7 @@ export function SSTAcoesTab({ documentos }: Props) {
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate("/plano-acao")}>
-            <ArrowRight className="w-4 h-4 mr-1" />
-            Plano de Ação
+            <ArrowRight className="w-4 h-4 mr-1" />Plano de Ação
           </Button>
         </CardContent>
       </Card>
