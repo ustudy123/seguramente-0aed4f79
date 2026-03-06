@@ -11,6 +11,102 @@ export type CampanhaPeriodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anu
 export type EventoGatilhoTipo = 'acidente' | 'denuncia' | 'reestruturacao' | 'conflito' | 'ia_sugestao' | 'solicitacao_colaborador';
 export type ConvitePsicossocialStatus = 'pendente' | 'iniciado' | 'concluido' | 'expirado';
 export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
+export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'customizado';
+export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
+
+// IPS - Índice Psicossocial Seguramente (0-100)
+export type IPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
+
+export function calcularIPSClassificacao(score: number): IPSClassificacao {
+  if (score >= 80) return 'saudavel';
+  if (score >= 65) return 'estavel';
+  if (score >= 50) return 'atencao';
+  if (score >= 35) return 'risco';
+  return 'critico';
+}
+
+export function getIPSColor(classificacao: IPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'text-emerald-600';
+    case 'estavel': return 'text-blue-600';
+    case 'atencao': return 'text-amber-600';
+    case 'risco': return 'text-orange-600';
+    case 'critico': return 'text-red-600';
+  }
+}
+
+export function getIPSBgColor(classificacao: IPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'bg-emerald-100';
+    case 'estavel': return 'bg-blue-100';
+    case 'atencao': return 'bg-amber-100';
+    case 'risco': return 'bg-orange-100';
+    case 'critico': return 'bg-red-100';
+  }
+}
+
+export function getIPSLabel(classificacao: IPSClassificacao): string {
+  switch (classificacao) {
+    case 'saudavel': return 'Ambiente Saudável';
+    case 'estavel': return 'Ambiente Estável';
+    case 'atencao': return 'Atenção';
+    case 'risco': return 'Risco Psicossocial';
+    case 'critico': return 'Risco Crítico';
+  }
+}
+
+// Radar data
+export interface RadarDimensao {
+  subject: string;
+  value: number;
+  fullMark: number;
+}
+
+// Dimension result
+export interface DimensaoResultado {
+  dimensao: string;
+  codigo?: string;
+  score: number;
+  nivel: 'otimo' | 'bom' | 'atencao' | 'critico';
+  categoria: string;
+}
+
+// Instrumento config
+export interface InstrumentoConfig {
+  id: InstrumentoPsicossocial;
+  nome: string;
+  descricao: string;
+  uso: string;
+  totalPerguntas: number;
+  dimensoes: string[];
+}
+
+export const INSTRUMENTOS: InstrumentoConfig[] = [
+  {
+    id: 'copsoq',
+    nome: 'COPSOQ',
+    descricao: 'Copenhagen Psychosocial Questionnaire',
+    uso: 'Diagnóstico geral de riscos psicossociais',
+    totalPerguntas: 40,
+    dimensoes: ['Demanda de Trabalho', 'Controle e Autonomia', 'Relações Sociais', 'Justiça Organizacional', 'Segurança Psicológica', 'Sentido do Trabalho', 'Monotonia', 'Equilíbrio Trabalho-Vida'],
+  },
+  {
+    id: 'hse',
+    nome: 'HSE Management Standards',
+    descricao: 'Health and Safety Executive (UK)',
+    uso: 'Avaliação focada em gestão organizacional',
+    totalPerguntas: 35,
+    dimensoes: ['Demanda', 'Controle', 'Suporte do Gestor', 'Suporte dos Pares', 'Relacionamentos', 'Função', 'Gestão de Mudanças'],
+  },
+  {
+    id: 'proart',
+    nome: 'PROART',
+    descricao: 'Protocolo de Avaliação dos Riscos Psicossociais',
+    uso: 'Diagnóstico aprofundado em cenários críticos',
+    totalPerguntas: 50,
+    dimensoes: ['Organização do Trabalho', 'Estilo de Gestão', 'Laços Sociais', 'Sofrimento Patogênico', 'Danos Relacionados ao Trabalho'],
+  },
+];
 
 // Escala padrão de respostas (0 a 4)
 export const ESCALA_RESPOSTAS = [
@@ -49,24 +145,31 @@ export interface CampanhaPsicossocial {
   nome: string;
   descricao?: string;
   status: CampanhaPsicossocialStatus;
-  tipo: CampanhaPsicossocialTipo; // regular ou extraordinária
-  periodicidade?: CampanhaPeriodicidade; // Para campanhas regulares
+  tipo: CampanhaPsicossocialTipo;
+  instrumento?: InstrumentoPsicossocial;
+  escopo?: EscopoCampanha;
+  escopo_valores?: string[];
+  periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;
   anonimo: boolean;
-  permite_identificacao_voluntaria: boolean; // Permite que colaborador opte por se identificar
-  mensagem_institucional?: string; // Mensagem personalizada sobre uso dos dados
-  politica_uso_dados?: string; // Política de uso dos dados para LGPD
+  permite_identificacao_voluntaria?: boolean;
+  mensagem_institucional?: string;
+  politica_uso_dados?: string;
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];
-  // Campos para reaplicação controlada
-  motivo_extraordinaria?: string; // Motivo da reaplicação
-  evento_gatilho_tipo?: EventoGatilhoTipo; // Tipo do evento que disparou
-  evento_gatilho_id?: string; // ID do evento relacionado
-  campanha_anterior_id?: string; // Referência para comparação
+  motivo_extraordinaria?: string;
+  evento_gatilho_tipo?: EventoGatilhoTipo;
+  evento_gatilho_id?: string;
+  campanha_anterior_id?: string;
   criado_por?: string;
   criado_por_nome?: string;
+  // Resultados calculados
+  ips_score?: number;
+  ips_classificacao?: IPSClassificacao;
+  total_respostas?: number;
+  radar_data?: RadarDimensao[];
   created_at: string;
   updated_at: string;
 }
@@ -90,7 +193,6 @@ export interface ConvitePsicossocial {
   lembrete_enviado?: boolean;
   created_at: string;
   updated_at: string;
-  // Relacionamentos
   campanha?: CampanhaPsicossocial;
 }
 
@@ -101,9 +203,9 @@ export interface RespostaPsicossocial {
   campanha_id: string;
   convite_id: string;
   colaborador_id?: string;
-  respostas: Record<string, number>; // { pergunta_id: valor }
+  respostas: Record<string, number>;
   indicadores?: IndicadoresPsicossociais;
-  identificacao_voluntaria: boolean; // Se colaborador optou por se identificar
+  identificacao_voluntaria: boolean;
   tempo_resposta_segundos?: number;
   ip_address?: string;
   user_agent?: string;
@@ -113,17 +215,21 @@ export interface RespostaPsicossocial {
 
 // Indicadores calculados
 export interface IndicadoresPsicossociais {
-  IRP_S: number; // Índice Risco Psicossocial (geral)
-  IBO_S: number; // Índice Burnout
-  IBD_S: number; // Índice Boreout
-  IREC_S: number; // Índice Recuperação
-  ICOP_S: number; // Índice Clareza Organizacional
-  INOT_S?: number; // Índice de Risco do Trabalho Noturno (quando aplicável)
+  IPS?: number;
+  IPS_classificacao?: IPSClassificacao;
+  IRP_S: number;
+  IBO_S: number;
+  IBD_S: number;
+  IREC_S: number;
+  ICOP_S: number;
+  INOT_S?: number;
   detalhes: {
     bloco: string;
     media: number;
     nivel: 'baixo' | 'moderado' | 'alto' | 'critico';
   }[];
+  dimensoes?: DimensaoResultado[];
+  radar?: RadarDimensao[];
 }
 
 // Estatísticas de campanha
@@ -134,6 +240,10 @@ export interface EstatisticasCampanha {
   concluidos: number;
   expirados: number;
   taxa_participacao: number;
+  anonimato_garantido: boolean;
+  ips?: number;
+  ips_classificacao?: IPSClassificacao;
+  radar?: RadarDimensao[];
   media_IRP_S?: number;
   media_IBO_S?: number;
   media_IBD_S?: number;
