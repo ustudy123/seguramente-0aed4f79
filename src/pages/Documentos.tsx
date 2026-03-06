@@ -123,6 +123,15 @@ const Documentos = () => {
     }
   }, [needsSync, syncing, syncColaboradores]);
 
+  // Auto-abrir wizard quando não há estrutura de pastas (primeira vez)
+  useEffect(() => {
+    if (!loading && pastas.length === 0 && !showWizard && !initializing) {
+      // Pequeno delay para aguardar animação da página
+      const timer = setTimeout(() => setShowWizard(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, pastas.length, initializing]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
     setShowUploadForm(true);
@@ -462,26 +471,32 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center h-full bg-card rounded-xl border border-border p-12"
+              className="flex flex-col items-center justify-center h-full bg-card rounded-xl border border-border border-dashed p-12"
             >
-              <Building2 className="w-16 h-16 text-muted-foreground/50 mb-6" />
-              <h3 className="text-xl font-semibold mb-2">Estrutura de Pastas</h3>
+              <div className="relative mb-6">
+                <Building2 className="w-16 h-16 text-muted-foreground/30" />
+                <div className="absolute -top-1 -right-1 bg-primary rounded-full p-1">
+                  <Sparkles className="w-4 h-4 text-primary-foreground" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Preparando sua estrutura…</h3>
               <p className="text-muted-foreground text-center max-w-md mb-6">
-                Gere automaticamente a estrutura completa de pastas baseada no perfil da sua empresa — 
-                governança, SST, processos, pessoas e muito mais.
+                O assistente está abrindo para configurar automaticamente suas pastas com base no perfil da empresa.
+                Revise os dados e confirme para gerar a estrutura completa.
               </p>
               <Button
                 size="lg"
                 onClick={() => setShowWizard(true)}
                 disabled={initializing}
-                className="gradient-primary shadow-glow gap-2"
+                variant="outline"
+                className="gap-2"
               >
                 {initializing ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 text-primary" />
                 )}
-                Gerar Estrutura Padrão
+                Abrir assistente de estrutura
               </Button>
               <p className="text-xs text-muted-foreground mt-4">
                 8 categorias: Governança, Processos, Riscos, SST, Pessoas, Incidentes, Auditorias e mais

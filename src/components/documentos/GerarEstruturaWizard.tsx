@@ -351,10 +351,12 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Gerar Estrutura Padrão de Documentos
+            {jaTemEstrutura ? "Gerar Estrutura Padrão de Documentos" : "Configurar estrutura de documentos"}
           </DialogTitle>
           <DialogDescription>
-            Configure os parâmetros da empresa para gerar a estrutura ideal de pastas
+            {jaTemEstrutura
+              ? "Configure os parâmetros da empresa para gerar a estrutura ideal de pastas"
+              : "Detectamos que sua empresa ainda não tem pastas de documentos. Confirme os dados abaixo — já pré-preenchidos com o perfil da empresa — e gere a estrutura completa em segundos."}
           </DialogDescription>
         </DialogHeader>
 
