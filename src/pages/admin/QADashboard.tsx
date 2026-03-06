@@ -558,113 +558,76 @@ export default function QADashboard() {
               </>
             )}
 
-            {/* ═══ LIVE VIEW: IFRAME + LOG ═══ */}
+            {/* ═══ LIVE LOG ═══ */}
             {isAgentActive && (
-              <div className={`grid gap-4 ${iframeExpanded ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-[1fr_380px]"}`}>
-                {/* LEFT: Iframe showing the real app */}
-                <Card className="overflow-hidden border-primary/30">
-                  <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Monitor className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-medium">{currentFlowLabel || "Navegando..."}</span>
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0">
-                        <Globe className="w-2.5 h-2.5 mr-1" />
-                        {iframeUrl}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {agentRunning && (
-                        <div className="flex items-center gap-1 mr-2">
-                          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                          <span className="text-[10px] text-red-500 font-medium">AO VIVO</span>
-                        </div>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setIframeExpanded(!iframeExpanded)}
-                      >
-                        {iframeExpanded ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <div className={`bg-background ${iframeExpanded ? "h-[70vh]" : "h-[500px]"}`}>
-                    <iframe
-                      ref={iframeRef}
-                      src={`${baseUrl}${iframeUrl}`}
-                      className="w-full h-full border-0"
-                      title="QA Agent — Tela ao Vivo"
-                    />
-                  </div>
-                </Card>
-
-                {/* RIGHT: Step log */}
-                {!iframeExpanded && (
-                  <Card className="overflow-hidden border-muted">
-                    <CardHeader className="py-2 px-3 bg-muted/30">
-                      <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-primary animate-pulse" />
-                        <span className="text-xs font-medium">Log de Execução</span>
-                        {liveMessage && (
-                          <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">
-                            {liveMessage}
-                          </span>
-                        )}
+              <Card className="overflow-hidden border-muted">
+                <CardHeader className="py-2 px-3 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary animate-pulse" />
+                    <span className="text-xs font-medium">Log de Execução</span>
+                    {agentRunning && (
+                      <div className="flex items-center gap-1 ml-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-[10px] text-red-500 font-medium">EXECUTANDO</span>
                       </div>
-                    </CardHeader>
-                    <div
-                      ref={liveContainerRef}
-                      className="h-[500px] overflow-y-auto p-3 space-y-1 bg-card"
-                    >
-                      {liveFlows.map((liveFlow) => (
-                        <div key={liveFlow.flow} className="mb-3">
-                          <div className="flex items-center gap-2 font-semibold text-xs mb-1.5 text-primary">
-                            {liveFlow.status === "running" ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    )}
+                    {liveMessage && (
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[300px] ml-auto">
+                        {liveMessage}
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <div
+                  ref={liveContainerRef}
+                  className="h-[500px] overflow-y-auto p-3 space-y-1 bg-card"
+                >
+                  {liveFlows.map((liveFlow) => (
+                    <div key={liveFlow.flow} className="mb-3">
+                      <div className="flex items-center gap-2 font-semibold text-xs mb-1.5 text-primary">
+                        {liveFlow.status === "running" ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        )}
+                        <span>{liveFlow.label}</span>
+                      </div>
+                      {liveFlow.steps.map((step, i) => (
+                        <div key={i} className="flex items-start gap-2 pl-4 py-0.5">
+                          {step.status === "running" ? (
+                            <Loader2 className="w-3 h-3 animate-spin text-primary mt-0.5 shrink-0" />
+                          ) : step.status === "success" ? (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
+                          ) : step.status === "fail" ? (
+                            <XCircle className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[11px] font-medium text-foreground">{step.step}</span>
+                            {step.duration_ms !== undefined && (
+                              <span className="text-[9px] text-muted-foreground ml-1">{step.duration_ms}ms</span>
                             )}
-                            <span>{liveFlow.label}</span>
-                          </div>
-                          {liveFlow.steps.map((step, i) => (
-                            <div key={i} className="flex items-start gap-2 pl-4 py-0.5">
-                              {step.status === "running" ? (
-                                <Loader2 className="w-3 h-3 animate-spin text-primary mt-0.5 shrink-0" />
-                              ) : step.status === "success" ? (
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
-                              ) : step.status === "fail" ? (
-                                <XCircle className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
-                              ) : (
-                                <AlertCircle className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <span className="text-[11px] font-medium text-foreground">{step.step}</span>
-                                {step.duration_ms !== undefined && (
-                                  <span className="text-[9px] text-muted-foreground ml-1">{step.duration_ms}ms</span>
-                                )}
-                                {step.details && (
-                                  <div className={`text-[9px] mt-0 leading-tight ${
-                                    step.status === "fail" ? "text-destructive" : "text-muted-foreground"
-                                  }`}>
-                                    {step.details.slice(0, 100)}
-                                  </div>
-                                )}
+                            {step.details && (
+                              <div className={`text-[9px] mt-0 leading-tight ${
+                                step.status === "fail" ? "text-destructive" : "text-muted-foreground"
+                              }`}>
+                                {step.details.slice(0, 150)}
                               </div>
-                            </div>
-                          ))}
+                            )}
+                          </div>
                         </div>
                       ))}
-                      {isGeneratingReport && (
-                        <div className="flex items-center gap-2 text-primary pt-2">
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span className="text-xs">Gerando relatório com IA...</span>
-                        </div>
-                      )}
                     </div>
-                  </Card>
-                )}
-              </div>
+                  ))}
+                  {isGeneratingReport && (
+                    <div className="flex items-center gap-2 text-primary pt-2">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span className="text-xs">Gerando relatório com IA...</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
             )}
 
             {/* Agent Results */}
