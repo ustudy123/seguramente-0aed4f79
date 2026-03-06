@@ -70,8 +70,8 @@ serve(async (req) => {
     }
 
     const encoder = new TextEncoder();
-    const STEP_DELAY = 2000; // 2 seconds between steps for visual feedback
-    const NAV_DELAY = 1500; // 1.5s after navigation for iframe to load
+    const STEP_DELAY = 2500; // 2.5 seconds between steps for visual feedback
+    const NAV_DELAY = 2000; // 2s after navigation for visual effect
 
     const body = new ReadableStream({
       async start(controller) {
