@@ -23,6 +23,7 @@ import {
 import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTUploadModal } from "@/components/sst/SSTUploadModal";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
+import { SSTAlertasTab } from "@/components/sst/SSTAlertasTab";
 import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
