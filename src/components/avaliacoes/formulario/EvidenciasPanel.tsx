@@ -157,7 +157,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
     setIsLoading(true);
     try {
       // Verificar se já está atribuída
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase as any)
         .from("trilha_atribuicoes")
         .select("id")
         .eq("tenant_id", tenantId)
@@ -171,7 +171,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
         return;
       }
 
-      const { error } = await supabase.from("trilha_atribuicoes").insert({
+      const { error } = await (supabase as any).from("trilha_atribuicoes").insert({
         tenant_id: tenantId,
         trilha_id: selected,
         colaborador_id: colaboradorId,
