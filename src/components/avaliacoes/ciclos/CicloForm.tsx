@@ -40,6 +40,7 @@ const formSchema = z.object({
   gestor: z.boolean().default(true),
   pares: z.number().min(0).max(5).default(0),
   subordinados: z.boolean().default(false),
+  cliente_interno: z.boolean().default(false),
   justificativa_extremas: z.boolean().default(true),
 });
 

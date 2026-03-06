@@ -76,6 +76,7 @@ export interface Config360 {
   gestor: boolean;
   pares: number;
   subordinados: boolean;
+  cliente_interno: boolean;
 }
 
 export interface AvaliacaoCiclo {
