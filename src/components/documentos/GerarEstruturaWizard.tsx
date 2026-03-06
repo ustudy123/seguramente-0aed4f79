@@ -282,6 +282,67 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     setStep(0);
   };
 
+  const importarRiscosDoPGR = async () => {
+    if (!empresaAtiva) {
+      toast({ title: "Nenhuma empresa selecionada", variant: "destructive" });
+      return;
+    }
+    setImportandoPGR(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", session?.user?.id)
+        .single();
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-pgr-riscos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            empresa_id: empresaAtiva.id,
+            tenant_id: profile?.tenant_id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.found) {
+        toast({
+          title: "PGR não encontrado",
+          description: "Nenhum PGR cadastrado no Compliance SST para esta empresa. Selecione os riscos manualmente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (result.riscos?.length > 0) {
+        setParams(p => ({ ...p, riscos: result.riscos }));
+        setPgrInfo({ nome: result.pgr_nome || "PGR", data: result.pgr_data || "" });
+        toast({
+          title: "Riscos importados do PGR! ✅",
+          description: `${result.riscos.length} categoria(s) identificada(s) em "${result.pgr_nome}".${result.from_cache ? " (cache)" : " (IA)"}`,
+        });
+      } else {
+        toast({
+          title: "PGR encontrado, mas sem riscos mapeados",
+          description: "Não foi possível identificar riscos automaticamente. Complete manualmente.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Erro ao importar riscos", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setImportandoPGR(false);
+    }
+  };
+
   const preview = getPreviewEstrutura({ ...params, grauRisco: grauRiscoFinal });
 
   return (
