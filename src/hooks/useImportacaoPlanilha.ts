@@ -9,22 +9,40 @@ export interface DadosPlanilha {
   cpf: string;
   sexo: string;
   dataNascimento: string;
+  estadoCivil: string;
+  naturalidade: string;
+  nacionalidade: string;
+  nomeMae: string;
+  nomePai: string;
+  rg: string;
+  pis: string;
+  email: string;
+  telefone: string;
+  celular: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
   situacao: string;
   filial: string;
   cargo: string;
   departamento: string;
   nivel: string;
+  tipoContrato: string;
+  dataAdmissao: string;
+  salario: string;
+  centroCusto: string;
+  gestorImediato: string;
+  banco: string;
+  agencia: string;
+  conta: string;
+  tipoConta: string;
+  chavePix: string;
   linha: number;
   erros: string[];
-}
-
-export interface ResultadoImportacao {
-  total: number;
-  departamentosCriados: number;
-  cargosCriados: number;
-  colaboradoresInseridos: number;
-  colaboradoresAtualizados: number;
-  erros: { linha: number; mensagem: string }[];
 }
 
 // Mapeamento de colunas possíveis
@@ -33,11 +51,38 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
   dataNascimento: ["data nascimento", "data_nascimento", "datanascimento", "nascimento", "dt nasc", "dt. nasc", "data de nascimento"],
+  estadoCivil: ["estado civil", "estado_civil", "estadocivil", "civil"],
+  naturalidade: ["naturalidade", "cidade natal", "cidade_natal"],
+  nacionalidade: ["nacionalidade", "pais", "país"],
+  nomeMae: ["nome mae", "nome_mae", "mae", "mãe", "nome da mãe"],
+  nomePai: ["nome pai", "nome_pai", "pai", "nome do pai"],
+  rg: ["rg", "identidade", "registro geral", "registro_geral"],
+  pis: ["pis", "pasep", "pis/pasep", "nis", "nit"],
+  email: ["email", "e-mail", "e mail", "correio eletronico", "correio eletrônico"],
+  telefone: ["telefone", "fone", "tel", "telefone fixo", "telefone_fixo"],
+  celular: ["celular", "whatsapp", "mobile", "cel"],
+  cep: ["cep", "codigo postal", "código postal"],
+  endereco: ["endereco", "endereço", "logradouro", "rua", "avenida"],
+  numero: ["numero", "número", "num", "nº"],
+  complemento: ["complemento", "comp", "apto", "sala"],
+  bairro: ["bairro", "distrito"],
+  cidade: ["cidade", "municipio", "município"],
+  estado: ["estado", "uf", "estado uf"],
   situacao: ["situacao", "situação", "status", "ativo", "situaçao"],
-  filial: ["br/pdh", "filial", "unidade", "br", "pdh", "br pdh", "br_pdh"],
+  filial: ["filial", "unidade", "estabelecimento"],
   cargo: ["cargo", "nome cargo", "nome_cargo", "funcao", "função", "ocupacao", "ocupação"],
   departamento: ["departamento", "depto", "dept", "setor", "area", "área"],
   nivel: ["nivel", "nível", "senioridade", "level"],
+  tipoContrato: ["tipo contrato", "tipo_contrato", "vinculo", "vínculo", "tipo vinculo", "regime"],
+  dataAdmissao: ["data admissao", "data_admissao", "dataadmissao", "admissao", "admissão", "data de admissao", "data de admissão"],
+  salario: ["salario", "salário", "remuneracao", "remuneração", "salario base", "salário base"],
+  centroCusto: ["centro custo", "centro_custo", "centrocusto", "cc", "cost center"],
+  gestorImediato: ["gestor", "gestor imediato", "gestor_imediato", "supervisor", "lider", "líder"],
+  banco: ["banco", "banco codigo", "código banco"],
+  agencia: ["agencia", "agência", "ag", "ag."],
+  conta: ["conta", "numero conta", "número conta", "conta corrente", "conta_corrente"],
+  tipoConta: ["tipo conta", "tipo_conta", "tipoconta"],
+  chavePix: ["chave pix", "chave_pix", "pix", "chavepix"],
 };
 
 // Níveis válidos para mapear
