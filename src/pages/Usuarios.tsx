@@ -211,7 +211,7 @@ export default function Usuarios() {
                         <div className="flex items-center gap-1.5">
                           <p className="font-medium text-sm truncate">{u.nome_completo}</p>
                           {u.alerta_duplicidade && (
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" title="Possível duplicidade" />
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
