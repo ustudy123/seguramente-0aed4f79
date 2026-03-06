@@ -13395,6 +13395,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      atualizar_cliente_por_onboarding_token: {
+        Args: {
+          p_cnpj?: string
+          p_nome_empresa?: string
+          p_quantidade_colaboradores?: number
+          p_segmento?: string
+          p_token: string
+        }
+        Returns: undefined
+      }
       atualizar_convite_por_token: {
         Args: { p_status: string; p_token: string }
         Returns: undefined
