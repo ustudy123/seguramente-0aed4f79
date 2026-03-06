@@ -51,7 +51,7 @@ export function CargoComboboxField({ value, onChange, disabled }: CargoComboboxF
     }
     setIsSaving(true);
     try {
-      await createCargo.mutateAsync({ nome: novoNome.trim(), ativo: true });
+      await createCargo.mutateAsync({ nome: novoNome.trim(), ativo: true, descricao: null, departamento_id: null, nivel: null, faixa_salarial_min: null, faixa_salarial_max: null, periodicidade_exame_meses: null, exames_obrigatorios: null });
       onChange(novoNome.trim());
       setShowNovoCargo(false);
       setNovoNome("");
