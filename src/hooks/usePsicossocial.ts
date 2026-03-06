@@ -25,12 +25,52 @@ function gerarToken(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
 }
 
-// Calcular indicadores a partir das respostas (escala 0-4)
+/**
+ * Calcular indicadores IPS a partir das respostas usando instrumento COPSOQ/HSE.
+ * Retorna IPS 0-100 + detalhes por dimensão.
+ */
 export function calcularIndicadores(
   respostas: Record<string, number>,
-  blocosDinamicos?: string[]
+  instrumento: InstrumentoPsicossocial = 'copsoq'
 ): IndicadoresPsicossociais {
-  const blocos = BLOCOS_PSICOSSOCIAL;
+  const instrumentoKey = instrumento === 'proart' || instrumento === 'customizado'
+    ? 'copsoq' as const
+    : instrumento as 'copsoq' | 'hse';
+  const dimensoes = getDimensoesByInstrumento(instrumentoKey);
+  const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
+  const classificacao = calcularIPSClassificacao(ips);
+
+  const nivelMap: Record<string, 'baixo' | 'moderado' | 'alto' | 'critico'> = {
+    otimo: 'baixo',
+    bom: 'moderado',
+    atencao: 'alto',
+    critico: 'critico',
+  };
+
+  const detalhes = dimensoes.map(dim => ({
+    bloco: dim.nome,
+    media: porDimensao[dim.id]?.score ?? 50,
+    nivel: nivelMap[porDimensao[dim.id]?.nivel ?? 'moderado'] ?? 'moderado' as 'baixo' | 'moderado' | 'alto' | 'critico',
+  }));
+
+  const radar: RadarDimensao[] = dimensoes.map(dim => ({
+    subject: dim.nome.split(' ').slice(0, 2).join(' '),
+    value: porDimensao[dim.id]?.score ?? 50,
+    fullMark: 100,
+  }));
+
+  return {
+    IPS: ips,
+    IPS_classificacao: classificacao,
+    IRP_S: ips,
+    IBO_S: ips,
+    IBD_S: ips,
+    IREC_S: ips,
+    ICOP_S: ips,
+    detalhes,
+    radar,
+  };
+}
   const blocosDinamicosConfig = BLOCOS_DINAMICOS;
   
   // Calcular média por bloco (escala 0-4)
