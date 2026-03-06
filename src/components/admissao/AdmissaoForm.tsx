@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useDepartamentos, useFiliais } from '@/hooks/useCadastros';
+import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
+import { GestorComboboxField } from '@/components/colaboradores/GestorComboboxField';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -159,6 +162,17 @@ interface AdmissaoFormProps {
 
 export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const { departamentos } = useDepartamentos();
+  const { filiais } = useFiliais();
+  const { empresaAtivaId } = useEmpresaAtiva();
+
+  const departamentosOptions = departamentos.filter(
+    (d) => typeof d?.nome === 'string' && d.nome.trim().length > 0,
+  );
+  const estabelecimentosOptions = filiais.filter(
+    (f) => typeof f?.nome === 'string' && f.nome.trim().length > 0 &&
+      (!empresaAtivaId || f.empresa_id === empresaAtivaId),
+  );
   const [documentos, setDocumentos] = useState<DocumentoAdmissao[]>(
     DOCUMENTOS_OBRIGATORIOS.map((doc, index) => ({
       ...doc,
@@ -684,18 +698,34 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
             className="space-y-6"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Estabelecimento / Obra */}
               <div>
-                <Label htmlFor="cargo">Função *</Label>
-                <Input 
-                  id="cargo"
-                  {...formProfissionais.register('cargo')}
-                  placeholder="Ex: Analista de RH"
-                />
-                {formProfissionais.formState.errors.cargo && (
-                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.cargo.message}</p>
+                <Label htmlFor="filial">Estabelecimento / Obra *</Label>
+                <Select 
+                  value={formProfissionais.watch('filial')}
+                  onValueChange={(value) => formProfissionais.setValue('filial', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {estabelecimentosOptions.length > 0 ? (
+                      estabelecimentosOptions.map((est) => (
+                        <SelectItem key={est.id} value={est.nome.trim()}>
+                          {est.nome}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="_none" disabled>Nenhum estabelecimento cadastrado</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                {formProfissionais.formState.errors.filial && (
+                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.filial.message}</p>
                 )}
               </div>
 
+              {/* Departamento — do banco */}
               <div>
                 <Label htmlFor="departamento">Departamento *</Label>
                 <Select 
@@ -706,14 +736,15 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Recursos Humanos">Recursos Humanos</SelectItem>
-                    <SelectItem value="Tecnologia">Tecnologia</SelectItem>
-                    <SelectItem value="Comercial">Comercial</SelectItem>
-                    <SelectItem value="Financeiro">Financeiro</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Operações">Operações</SelectItem>
-                    <SelectItem value="Jurídico">Jurídico</SelectItem>
-                    <SelectItem value="Administrativo">Administrativo</SelectItem>
+                    {departamentosOptions.length > 0 ? (
+                      departamentosOptions.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.nome.trim()}>
+                          {dept.nome}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="_none" disabled>Nenhum departamento cadastrado</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {formProfissionais.formState.errors.departamento && (
@@ -721,27 +752,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="filial">Filial *</Label>
-                <Select 
-                  value={formProfissionais.watch('filial')}
-                  onValueChange={(value) => formProfissionais.setValue('filial', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Matriz">Matriz</SelectItem>
-                    <SelectItem value="Filial SP">Filial SP</SelectItem>
-                    <SelectItem value="Filial RJ">Filial RJ</SelectItem>
-                    <SelectItem value="Filial BH">Filial BH</SelectItem>
-                  </SelectContent>
-                </Select>
-                {formProfissionais.formState.errors.filial && (
-                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.filial.message}</p>
-                )}
-              </div>
-
+              {/* Data de Admissão | Tipo de Vínculo */}
               <div>
                 <Label htmlFor="dataAdmissao">Data de Admissão *</Label>
                 <Input 
@@ -755,7 +766,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
               </div>
 
               <div>
-                <Label htmlFor="tipoContrato">Tipo de Contrato *</Label>
+                <Label htmlFor="tipoContrato">Tipo de Vínculo *</Label>
                 <Select 
                   value={formProfissionais.watch('tipoContrato')}
                   onValueChange={(value) => formProfissionais.setValue('tipoContrato', value)}
@@ -764,11 +775,12 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CLT">CLT</SelectItem>
-                    <SelectItem value="PJ">PJ</SelectItem>
-                    <SelectItem value="Estágio">Estágio</SelectItem>
-                    <SelectItem value="Temporário">Temporário</SelectItem>
-                    <SelectItem value="Trainee">Trainee</SelectItem>
+                    <SelectItem value="clt">CLT</SelectItem>
+                    <SelectItem value="prolabore">Pró-labore (Sócio)</SelectItem>
+                    <SelectItem value="pj">Pessoa Jurídica (PJ)</SelectItem>
+                    <SelectItem value="estagiario">Estagiário</SelectItem>
+                    <SelectItem value="temporario">Temporário</SelectItem>
+                    <SelectItem value="autonomo">Autônomo</SelectItem>
                   </SelectContent>
                 </Select>
                 {formProfissionais.formState.errors.tipoContrato && (
@@ -776,6 +788,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                 )}
               </div>
 
+              {/* Jornada | Salário */}
               <div>
                 <Label htmlFor="jornadaTrabalho">Jornada de Trabalho *</Label>
                 <Select 
@@ -810,18 +823,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="gestorImediato">Gestor Imediato *</Label>
-                <Input 
-                  id="gestorImediato"
-                  {...formProfissionais.register('gestorImediato')}
-                  placeholder="Nome do gestor"
-                />
-                {formProfissionais.formState.errors.gestorImediato && (
-                  <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.gestorImediato.message}</p>
-                )}
-              </div>
-
+              {/* Centro de Custo */}
               <div>
                 <Label htmlFor="centroCusto">Centro de Custo</Label>
                 <Input 
@@ -830,6 +832,31 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                   placeholder="Ex: RH-001 (opcional)"
                 />
               </div>
+            </div>
+
+            {/* Função — linha inteira */}
+            <div>
+              <Label htmlFor="cargo">Função *</Label>
+              <Input 
+                id="cargo"
+                {...formProfissionais.register('cargo')}
+                placeholder="Ex: Analista de RH"
+              />
+              {formProfissionais.formState.errors.cargo && (
+                <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.cargo.message}</p>
+              )}
+            </div>
+
+            {/* Gestor Imediato — linha inteira, combobox com busca */}
+            <div>
+              <Label>Gestor Imediato *</Label>
+              <GestorComboboxField
+                value={formProfissionais.watch('gestorImediato') || ''}
+                onChange={(val) => formProfissionais.setValue('gestorImediato', val, { shouldValidate: true })}
+              />
+              {formProfissionais.formState.errors.gestorImediato && (
+                <p className="text-xs text-destructive mt-1">{formProfissionais.formState.errors.gestorImediato.message}</p>
+              )}
             </div>
           </motion.div>
         );
