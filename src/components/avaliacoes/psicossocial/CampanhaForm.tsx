@@ -72,9 +72,10 @@ interface CampanhaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campanhaAnterior?: CampanhaPsicossocial;
+  instrumentoSugerido?: string;
 }
 
-export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaFormProps) {
+export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumentoSugerido }: CampanhaFormProps) {
   const { criarCampanha, campanhas } = usePsicossocial();
 
   const isReaplicacao = !!campanhaAnterior;
@@ -85,6 +86,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior }: CampanhaF
       nome: isReaplicacao ? `Reaplicação - ${campanhaAnterior.nome}` : "",
       descricao: "",
       tipo: isReaplicacao ? 'extraordinaria' : 'regular',
+      instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
       periodicidade: 'trimestral',
       data_inicio: format(new Date(), "yyyy-MM-dd"),
       data_fim: format(addDays(new Date(), 30), "yyyy-MM-dd"),
