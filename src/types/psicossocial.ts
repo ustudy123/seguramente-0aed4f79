@@ -11,7 +11,7 @@ export type CampanhaPeriodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anu
 export type EventoGatilhoTipo = 'acidente' | 'denuncia' | 'reestruturacao' | 'conflito' | 'ia_sugestao' | 'solicitacao_colaborador';
 export type ConvitePsicossocialStatus = 'pendente' | 'iniciado' | 'concluido' | 'expirado';
 export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
-export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'customizado';
+export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'sipro' | 'customizado';
 export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
 
 // IPS - Índice Psicossocial Seguramente (0-100)
@@ -82,6 +82,14 @@ export interface InstrumentoConfig {
 }
 
 export const INSTRUMENTOS: InstrumentoConfig[] = [
+  {
+    id: 'sipro',
+    nome: 'SIPRO',
+    descricao: 'Índice Seguramente de Risco Psicossocial Organizacional',
+    uso: 'Instrumento autoral do Seguramente — 12 dimensões adaptadas à NR-01 com dimensão cronobiológica inovadora',
+    totalPerguntas: 52,
+    dimensoes: ['Demanda Quantitativa', 'Demanda Cognitiva', 'Demanda Emocional', 'Autonomia e Controle', 'Clareza de Papéis', 'Justiça Organizacional', 'Suporte da Liderança', 'Suporte Social', 'Qualidade das Relações', 'Segurança Psicológica', 'Reconhecimento e Sentido', 'Ritmo Biológico e Recuperação'],
+  },
   {
     id: 'copsoq',
     nome: 'COPSOQ III',
