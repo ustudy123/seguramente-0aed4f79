@@ -458,7 +458,11 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                   <FormItem>
                     <FormLabel>Gestor Imediato</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do gestor" {...field} />
+                      <GestorComboboxField
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
