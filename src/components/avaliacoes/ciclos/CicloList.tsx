@@ -234,6 +234,15 @@ export function CicloList() {
           <CicloForm onSuccess={() => setShowForm(false)} />
         </DialogContent>
       </Dialog>
+
+      {iniciarCiclo && (
+        <IniciarCicloDialog
+          ciclo={iniciarCiclo}
+          open={!!iniciarCiclo}
+          onOpenChange={(open) => { if (!open) setIniciarCiclo(null); }}
+          onSuccess={() => setIniciarCiclo(null)}
+        />
+      )}
     </div>
   );
 }
