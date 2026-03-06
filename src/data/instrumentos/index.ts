@@ -1,21 +1,18 @@
 export * from './copsoq';
 export * from './hse';
 export * from './proart';
+export * from './sipro';
 
 import { COPSOQ_DIMENSOES, COPSOQ_TOTAL_PERGUNTAS } from './copsoq';
 import { HSE_DIMENSOES, HSE_TOTAL_PERGUNTAS } from './hse';
 import { PROART_DIMENSOES, PROART_TOTAL_PERGUNTAS } from './proart';
+import { SIPRO_DIMENSOES, SIPRO_TOTAL_PERGUNTAS } from './sipro';
 import type { DimensaoInstrumento } from './copsoq';
 
 export type { DimensaoInstrumento };
 
 /**
  * Calcular IPS (0-100) a partir das respostas de um instrumento
- * 
- * Lógica:
- * - Dimensões de RISCO: quanto maior a resposta, pior → inverte para cálculo
- * - Dimensões PROTETORAS: quanto maior a resposta, melhor → usa direto (já marcadas invertida=true no nível da pergunta)
- * - Escala raw 0-4 → normalizada 0-100
  */
 export function calcularIPSInstrumento(
   respostas: Record<string, number>,
@@ -31,21 +28,16 @@ export function calcularIPSInstrumento(
     const valoresDim: number[] = [];
 
     for (const p of dim.perguntas) {
-      const raw = respostas[p.id] ?? 2; // Default neutro
+      const raw = respostas[p.id] ?? 2;
       const peso = p.peso ?? 1;
 
-      // Se a pergunta é protetora (invertida), não inverte (maior = melhor já na escala)
-      // Se é de risco, inverte (4 - valor) para que 0=melhor
       let valorNormalizado: number;
       if (p.invertida) {
-        // Protetor: 4 = melhor → mantém
         valorNormalizado = raw;
       } else {
-        // Risco: 0 = melhor, 4 = pior → inverte
         valorNormalizado = 4 - raw;
       }
 
-      // Aplicar peso
       for (let i = 0; i < peso; i++) {
         valoresDim.push(valorNormalizado);
       }
@@ -55,7 +47,6 @@ export function calcularIPSInstrumento(
       ? valoresDim.reduce((a, b) => a + b, 0) / valoresDim.length
       : 2;
 
-    // Converter para 0-100
     const score100 = Math.round((mediaDim / 4) * 100);
     scores.push(score100);
 
@@ -75,16 +66,18 @@ export function calcularIPSInstrumento(
   return { ips, porDimensao };
 }
 
-export function getDimensoesByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'ambos'): DimensaoInstrumento[] {
+export function getDimensoesByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'sipro' | 'ambos'): DimensaoInstrumento[] {
   if (instrumento === 'copsoq') return COPSOQ_DIMENSOES;
   if (instrumento === 'hse') return HSE_DIMENSOES;
   if (instrumento === 'proart') return PROART_DIMENSOES;
-  return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES, ...PROART_DIMENSOES];
+  if (instrumento === 'sipro') return SIPRO_DIMENSOES;
+  return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES, ...PROART_DIMENSOES, ...SIPRO_DIMENSOES];
 }
 
-export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'ambos'): number {
+export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | 'proart' | 'sipro' | 'ambos'): number {
   if (instrumento === 'copsoq') return COPSOQ_TOTAL_PERGUNTAS;
   if (instrumento === 'hse') return HSE_TOTAL_PERGUNTAS;
   if (instrumento === 'proart') return PROART_TOTAL_PERGUNTAS;
-  return COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS;
+  if (instrumento === 'sipro') return SIPRO_TOTAL_PERGUNTAS;
+  return COPSOQ_TOTAL_PERGUNTAS + HSE_TOTAL_PERGUNTAS + PROART_TOTAL_PERGUNTAS + SIPRO_TOTAL_PERGUNTAS;
 }
