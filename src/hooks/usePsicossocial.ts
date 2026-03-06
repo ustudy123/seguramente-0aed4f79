@@ -39,10 +39,15 @@ export function calcularIndicadores(
   type ValidKey = typeof validKeys[number];
   const instrumentoKey: ValidKey = validKeys.includes(instrumento as ValidKey)
     ? instrumento as ValidKey
-    : 'copsoq';
+    : 'sipro';
   const dimensoes = getDimensoesByInstrumento(instrumentoKey);
   const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
-  const classificacao = calcularIPSClassificacao(ips);
+
+  // Para SIPRO: IRP-S é o índice de RISCO (alto = pior), invertido do IPS
+  const irps = instrumento === 'sipro' ? ipsParaIrps(ips) : ips;
+  const classificacao = instrumento === 'sipro'
+    ? calcularIRPSClassificacao(irps) as unknown as ReturnType<typeof calcularIPSClassificacao>
+    : calcularIPSClassificacao(ips);
 
   const nivelMap: Record<string, 'baixo' | 'moderado' | 'alto' | 'critico'> = {
     otimo: 'baixo',
