@@ -316,7 +316,7 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
           </div>
         )}
 
-        <ScrollArea className="flex-1 pr-2">
+        <ScrollArea className="flex-1 min-h-0 pr-2">
           <AnimatePresence mode="wait">
 
             {/* STEP 0 — Empresa */}
