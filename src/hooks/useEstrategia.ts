@@ -3,35 +3,43 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
+import type { EstrategiaEscopo } from "@/components/estrategia/EstrategiaEscopoSelector";
 import type {
-  EstrategiaSwot,
-  SwotItem,
-  SwotTipo,
-  SwotClassificacao,
-  SwotImpacto,
-  EstrategiaOceanoAzul,
-  OceanoItem,
-  OceanoQuadrante,
-  EstrategiaCultura,
-  EstrategiaOrganograma,
+  EstrategiaSwot, SwotItem, SwotTipo, SwotClassificacao, SwotImpacto,
+  EstrategiaOceanoAzul, OceanoItem, OceanoQuadrante,
+  EstrategiaCultura, EstrategiaOrganograma,
 } from "@/types/estrategia";
 
-export function useEstrategia() {
+export function useEstrategia(escopo?: EstrategiaEscopo) {
   const { tenantId, user } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
+  const isGrupo = escopo?.tipo === "grupo";
+  const grupoId = isGrupo ? escopo.grupoId : null;
+
+  // Helper: apply scope filter to a query
+  function applyScope(q: any) {
+    if (isGrupo && grupoId) return q.eq("grupo_economico_id", grupoId);
+    if (empresaAtivaId) return q.eq("empresa_id", empresaAtivaId);
+    return q;
+  }
+
+  // Helper: scope payload for insert/upsert
+  function scopePayload() {
+    if (isGrupo && grupoId) return { grupo_economico_id: grupoId, empresa_id: null };
+    return { empresa_id: empresaAtivaId || null, grupo_economico_id: null };
+  }
+
+  const scopeKey = isGrupo ? grupoId : empresaAtivaId;
+
   // ─── SWOT ───
   const { data: swots = [], isLoading: loadingSwots } = useQuery({
-    queryKey: ["estrategia_swot", tenantId, empresaAtivaId],
+    queryKey: ["estrategia_swot", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase
-        .from("estrategia_swot" as never)
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
-      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      let q = supabase.from("estrategia_swot" as never).select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+      q = applyScope(q);
       const { data, error } = await q as { data: EstrategiaSwot[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaSwot[];
@@ -43,9 +51,8 @@ export function useEstrategia() {
     mutationFn: async (input: { titulo: string; descricao?: string; escopo?: string; unidade?: string; periodo?: string; projeto?: string }) => {
       const { data, error } = await supabase
         .from("estrategia_swot" as never)
-        .insert({ ...input, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
-        .select()
-        .single() as { data: EstrategiaSwot | null; error: Error | null };
+        .insert({ ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+        .select().single() as { data: EstrategiaSwot | null; error: Error | null };
       if (error) throw error;
       return data;
     },
@@ -68,10 +75,7 @@ export function useEstrategia() {
       queryFn: async () => {
         if (!swotId) return [];
         const { data, error } = await supabase
-          .from("estrategia_swot_itens" as never)
-          .select("*")
-          .eq("swot_id", swotId)
-          .order("ordem") as { data: SwotItem[] | null; error: Error | null };
+          .from("estrategia_swot_itens" as never).select("*").eq("swot_id", swotId).order("ordem") as { data: SwotItem[] | null; error: Error | null };
         if (error) throw error;
         return (data || []) as SwotItem[];
       },
@@ -80,9 +84,7 @@ export function useEstrategia() {
 
   const createSwotItem = useMutation({
     mutationFn: async (input: { swot_id: string; tipo: SwotTipo; descricao: string; classificacao?: SwotClassificacao; impacto?: SwotImpacto }) => {
-      const { error } = await supabase
-        .from("estrategia_swot_itens" as never)
-        .insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
+      const { error } = await supabase.from("estrategia_swot_itens" as never).insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_swot_itens"] }); },
@@ -98,15 +100,11 @@ export function useEstrategia() {
 
   // ─── Oceano Azul ───
   const { data: oceanos = [], isLoading: loadingOceanos } = useQuery({
-    queryKey: ["estrategia_oceano_azul", tenantId, empresaAtivaId],
+    queryKey: ["estrategia_oceano_azul", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase
-        .from("estrategia_oceano_azul" as never)
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
-      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      let q = supabase.from("estrategia_oceano_azul" as never).select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+      q = applyScope(q);
       const { data, error } = await q as { data: EstrategiaOceanoAzul[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaOceanoAzul[];
@@ -118,9 +116,8 @@ export function useEstrategia() {
     mutationFn: async (input: { titulo: string; descricao?: string; swot_id?: string }) => {
       const { data, error } = await supabase
         .from("estrategia_oceano_azul" as never)
-        .insert({ ...input, tenant_id: tenantId, empresa_id: empresaAtivaId || null, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
-        .select()
-        .single() as { data: EstrategiaOceanoAzul | null; error: Error | null };
+        .insert({ ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+        .select().single() as { data: EstrategiaOceanoAzul | null; error: Error | null };
       if (error) throw error;
       return data;
     },
@@ -141,10 +138,7 @@ export function useEstrategia() {
       queryFn: async () => {
         if (!oceanoId) return [];
         const { data, error } = await supabase
-          .from("estrategia_oceano_itens" as never)
-          .select("*")
-          .eq("oceano_id", oceanoId)
-          .order("ordem") as { data: OceanoItem[] | null; error: Error | null };
+          .from("estrategia_oceano_itens" as never).select("*").eq("oceano_id", oceanoId).order("ordem") as { data: OceanoItem[] | null; error: Error | null };
         if (error) throw error;
         return (data || []) as OceanoItem[];
       },
@@ -153,9 +147,7 @@ export function useEstrategia() {
 
   const createOceanoItem = useMutation({
     mutationFn: async (input: { oceano_id: string; quadrante: OceanoQuadrante; descricao: string; swot_item_id?: string }) => {
-      const { error } = await supabase
-        .from("estrategia_oceano_itens" as never)
-        .insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
+      const { error } = await supabase.from("estrategia_oceano_itens" as never).insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_oceano_itens"] }); },
@@ -171,14 +163,12 @@ export function useEstrategia() {
 
   // ─── Cultura ───
   const { data: cultura, isLoading: loadingCultura } = useQuery({
-    queryKey: ["estrategia_cultura", tenantId],
+    queryKey: ["estrategia_cultura", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return null;
-      const { data, error } = await supabase
-        .from("estrategia_cultura" as never)
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .maybeSingle() as { data: EstrategiaCultura | null; error: Error | null };
+      let q = supabase.from("estrategia_cultura" as never).select("*").eq("tenant_id", tenantId);
+      q = applyScope(q);
+      const { data, error } = await (q as any).maybeSingle() as { data: EstrategiaCultura | null; error: Error | null };
       if (error) throw error;
       return data as EstrategiaCultura | null;
     },
@@ -187,11 +177,20 @@ export function useEstrategia() {
 
   const upsertCultura = useMutation({
     mutationFn: async (input: Partial<EstrategiaCultura>) => {
-      const payload = { ...input, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email };
-      const { error } = await supabase
-        .from("estrategia_cultura" as never)
-        .upsert(payload as never, { onConflict: "tenant_id" }) as { error: Error | null };
-      if (error) throw error;
+      const payload = { ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email };
+      // For grupo scope we can't use tenant_id as the conflict key — use id if exists, else insert
+      if (isGrupo) {
+        if (cultura?.id) {
+          const { error } = await supabase.from("estrategia_cultura" as never).update(payload as never).eq("id", cultura.id) as { error: Error | null };
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("estrategia_cultura" as never).insert(payload as never) as { error: Error | null };
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase.from("estrategia_cultura" as never).upsert(payload as never, { onConflict: "tenant_id" }) as { error: Error | null };
+        if (error) throw error;
+      }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_cultura"] }); toast.success("Cultura salva"); },
     onError: () => toast.error("Erro ao salvar cultura"),
@@ -199,14 +198,12 @@ export function useEstrategia() {
 
   // ─── Organograma ───
   const { data: organograma = [], isLoading: loadingOrganograma } = useQuery({
-    queryKey: ["estrategia_organograma", tenantId],
+    queryKey: ["estrategia_organograma", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("estrategia_organograma" as never)
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("ordem") as { data: EstrategiaOrganograma[] | null; error: Error | null };
+      let q = supabase.from("estrategia_organograma" as never).select("*").eq("tenant_id", tenantId).order("ordem");
+      q = applyScope(q);
+      const { data, error } = await q as { data: EstrategiaOrganograma[] | null; error: Error | null };
       if (error) throw error;
       return (data || []) as EstrategiaOrganograma[];
     },
@@ -215,9 +212,7 @@ export function useEstrategia() {
 
   const createOrgNode = useMutation({
     mutationFn: async (input: { titulo: string; parent_id?: string; cargo_id?: string; departamento_id?: string; nome_ocupante?: string; tipo?: string }) => {
-      const { error } = await supabase
-        .from("estrategia_organograma" as never)
-        .insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
+      const { error } = await supabase.from("estrategia_organograma" as never).insert({ ...input, tenant_id: tenantId, ...scopePayload() } as never) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_organograma"] }); toast.success("Posição adicionada"); },
@@ -225,10 +220,7 @@ export function useEstrategia() {
 
   const updateOrgNode = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<EstrategiaOrganograma>) => {
-      const { error } = await supabase
-        .from("estrategia_organograma" as never)
-        .update(updates as never)
-        .eq("id", id) as { error: Error | null };
+      const { error } = await supabase.from("estrategia_organograma" as never).update(updates as never).eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_organograma"] }); },
@@ -243,13 +235,9 @@ export function useEstrategia() {
   });
 
   return {
-    // SWOT
     swots, loadingSwots, createSwot, deleteSwot, useSwotItens, createSwotItem, deleteSwotItem,
-    // Oceano
     oceanos, loadingOceanos, createOceano, deleteOceano, useOceanoItens, createOceanoItem, deleteOceanoItem,
-    // Cultura
     cultura, loadingCultura, upsertCultura,
-    // Organograma
     organograma, loadingOrganograma, createOrgNode, updateOrgNode, deleteOrgNode,
   };
 }

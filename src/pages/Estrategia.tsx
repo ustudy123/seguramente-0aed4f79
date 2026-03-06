@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Compass, Target, Waves, Heart, Users, BarChart3 } from "lucide-react";
+import { Compass, Target, Waves, Heart, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SwotSection } from "@/components/estrategia/SwotSection";
 import { OceanoAzulSection } from "@/components/estrategia/OceanoAzulSection";
 import { CulturaSection } from "@/components/estrategia/CulturaSection";
 import { OrganogramaSection } from "@/components/estrategia/OrganogramaSection";
+import { EstrategiaEscopoSelector, type EstrategiaEscopo } from "@/components/estrategia/EstrategiaEscopoSelector";
 
 export default function Estrategia() {
   const [tab, setTab] = useState("swot");
+  const [escopo, setEscopo] = useState<EstrategiaEscopo>({ tipo: "empresa", grupoId: null });
 
   return (
     <motion.div
@@ -16,14 +18,17 @@ export default function Estrategia() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Compass className="w-7 h-7 text-primary" />
-          Estratégia & Governança
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Planejamento estratégico, cultura organizacional e estrutura que viram ação
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Compass className="w-7 h-7 text-primary" />
+            Estratégia & Governança
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Planejamento estratégico, cultura organizacional e estrutura que viram ação
+          </p>
+        </div>
+        <EstrategiaEscopoSelector escopo={escopo} onChange={setEscopo} />
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -43,19 +48,19 @@ export default function Estrategia() {
         </TabsList>
 
         <TabsContent value="swot" className="mt-4">
-          <SwotSection />
+          <SwotSection escopo={escopo} />
         </TabsContent>
 
         <TabsContent value="oceano" className="mt-4">
-          <OceanoAzulSection />
+          <OceanoAzulSection escopo={escopo} />
         </TabsContent>
 
         <TabsContent value="cultura" className="mt-4">
-          <CulturaSection />
+          <CulturaSection escopo={escopo} />
         </TabsContent>
 
         <TabsContent value="organograma" className="mt-4">
-          <OrganogramaSection />
+          <OrganogramaSection escopo={escopo} />
         </TabsContent>
       </Tabs>
     </motion.div>

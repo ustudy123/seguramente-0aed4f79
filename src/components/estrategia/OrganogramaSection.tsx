@@ -14,8 +14,11 @@ import { useCargos } from "@/hooks/useCadastros";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { OrgCanvas } from "./organograma/OrgCanvas";
 import { OrgTree } from "./organograma/OrgTree";
+
+
 
 function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
   const map = new Map<string, EstrategiaOrganograma>();
@@ -34,8 +37,8 @@ function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
 
 const INITIAL_FORM = { titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] };
 
-export function OrganogramaSection() {
-  const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia();
+export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
+  const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia(escopo);
   const { cargos, createCargo } = useCargos();
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);

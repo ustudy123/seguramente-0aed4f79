@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { OceanoItemAcaoModal } from "./OceanoItemAcaoModal";
 import type { EstrategiaOceanoAzul, OceanoQuadrante } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { OCEANO_QUADRANTE_LABELS } from "@/types/estrategia";
 
 const QUADRANT_CONFIG: Record<OceanoQuadrante, { icon: React.ElementType; bg: string; border: string; text: string; description: string }> = {
@@ -21,8 +22,8 @@ const QUADRANT_CONFIG: Record<OceanoQuadrante, { icon: React.ElementType; bg: st
   criar: { icon: Sparkles, bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-700", description: "O que devemos começar a fazer?" },
 };
 
-export function OceanoAzulSection() {
-  const { oceanos, loadingOceanos, createOceano, deleteOceano, useOceanoItens, createOceanoItem, deleteOceanoItem, swots } = useEstrategia();
+export function OceanoAzulSection({ escopo }: { escopo: EstrategiaEscopo }) {
+  const { oceanos, loadingOceanos, createOceano, deleteOceano, useOceanoItens, createOceanoItem, deleteOceanoItem, swots } = useEstrategia(escopo);
   const [selectedOceano, setSelectedOceano] = useState<EstrategiaOceanoAzul | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", swot_id: "" });

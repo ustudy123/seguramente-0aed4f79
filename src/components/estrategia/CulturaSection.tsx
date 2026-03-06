@@ -8,14 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useAuth } from "@/hooks/useAuth";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ManualCulturaModal } from "./ManualCulturaModal";
 
 type ListField = "valores" | "principios" | "comportamentos_esperados" | "comportamentos_nao_tolerados";
 
-export function CulturaSection() {
-  const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia();
+export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
+  const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia(escopo);
   const { profile } = useAuth();
   const [form, setForm] = useState({
     missao: "",
