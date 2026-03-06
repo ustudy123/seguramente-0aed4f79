@@ -106,7 +106,7 @@ const dadosContatoSchema = z.object({
 const dadosProfissionaisSchema = z.object({
   cargo: z.string().min(2, 'Cargo obrigatório'),
   departamento: z.string().min(2, 'Departamento obrigatório'),
-  filial: z.string().min(2, 'Filial obrigatória'),
+  filial: z.string().optional(),
   dataAdmissao: z.string().min(1, 'Data de admissão obrigatória'),
   tipoContrato: z.string().min(1, 'Tipo de contrato obrigatório'),
   jornadaTrabalho: z.string().min(1, 'Jornada de trabalho obrigatória'),
