@@ -153,7 +153,7 @@ export function usePsicossocial() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as CampanhaPsicossocial[];
+      return (data || []).map(c => ({ ...c, radar_data: c.radar_data as unknown as RadarDimensao[] | undefined })) as CampanhaPsicossocial[];
     },
     enabled: !!tenantId,
   });
@@ -192,7 +192,7 @@ export function usePsicossocial() {
         .single();
 
       if (error) throw error;
-      return data as CampanhaPsicossocial;
+      return { ...data, radar_data: (data as any).radar_data as unknown as RadarDimensao[] | undefined } as CampanhaPsicossocial;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["psicossocial-campanhas"] });
@@ -349,6 +349,9 @@ export function usePsicossocial() {
       }
     }
 
+    const MINIMO_ANONIMATO = 5;
+    const anonimato_garantido = concluidos >= MINIMO_ANONIMATO;
+
     return {
       total_convites: total,
       pendentes,
@@ -356,12 +359,13 @@ export function usePsicossocial() {
       concluidos,
       expirados,
       taxa_participacao: total > 0 ? (concluidos / total) * 100 : 0,
-      media_IRP_S: media_IRP_S ? Number(media_IRP_S.toFixed(2)) : undefined,
-      media_IBO_S: media_IBO_S ? Number(media_IBO_S.toFixed(2)) : undefined,
-      media_IBD_S: media_IBD_S ? Number(media_IBD_S.toFixed(2)) : undefined,
-      media_IREC_S: media_IREC_S ? Number(media_IREC_S.toFixed(2)) : undefined,
-      media_ICOP_S: media_ICOP_S ? Number(media_ICOP_S.toFixed(2)) : undefined,
-      media_INOT_S: media_INOT_S ? Number(media_INOT_S.toFixed(2)) : undefined,
+      anonimato_garantido,
+      media_IRP_S: anonimato_garantido && media_IRP_S ? Number(media_IRP_S.toFixed(2)) : undefined,
+      media_IBO_S: anonimato_garantido && media_IBO_S ? Number(media_IBO_S.toFixed(2)) : undefined,
+      media_IBD_S: anonimato_garantido && media_IBD_S ? Number(media_IBD_S.toFixed(2)) : undefined,
+      media_IREC_S: anonimato_garantido && media_IREC_S ? Number(media_IREC_S.toFixed(2)) : undefined,
+      media_ICOP_S: anonimato_garantido && media_ICOP_S ? Number(media_ICOP_S.toFixed(2)) : undefined,
+      media_INOT_S: anonimato_garantido && media_INOT_S ? Number(media_INOT_S.toFixed(2)) : undefined,
     };
   };
 
