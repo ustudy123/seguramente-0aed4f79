@@ -315,11 +315,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2 text-red-600">
                             <AlertTriangle className="h-4 w-4" />
-                            Dimensões Críticas
+                            {isSipro ? 'Maiores Riscos (IRP-S)' : 'Dimensões Críticas'}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                          {dimensoesAgregadas.filter(d => d.media < 65).slice(0, 4).map(d => {
+                          {dimensoesAgregadas.filter(d => isCritico(d.media)).slice(0, 4).map(d => {
                             const nivel = getNivelScore(d.media);
                             return (
                               <div key={d.bloco} className="flex items-center justify-between">
@@ -331,8 +331,10 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                               </div>
                             );
                           })}
-                          {dimensoesAgregadas.filter(d => d.media < 65).length === 0 && (
-                            <p className="text-sm text-muted-foreground">Nenhuma dimensão crítica 🎉</p>
+                          {dimensoesAgregadas.filter(d => isCritico(d.media)).length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              {isSipro ? 'Nenhuma dimensão em risco 🎉' : 'Nenhuma dimensão crítica 🎉'}
+                            </p>
                           )}
                         </CardContent>
                       </Card>
@@ -341,11 +343,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2 text-emerald-600">
                             <CheckCircle2 className="h-4 w-4" />
-                            Pontos Fortes
+                            {isSipro ? 'Condições Favoráveis (IRP-S)' : 'Pontos Fortes'}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                          {[...dimensoesAgregadas].reverse().filter(d => d.media >= 65).slice(0, 4).map(d => {
+                          {[...dimensoesAgregadas].reverse().filter(d => isForte(d.media)).slice(0, 4).map(d => {
                             const nivel = getNivelScore(d.media);
                             return (
                               <div key={d.bloco} className="flex items-center justify-between">
@@ -357,8 +359,10 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                               </div>
                             );
                           })}
-                          {[...dimensoesAgregadas].reverse().filter(d => d.media >= 65).length === 0 && (
-                            <p className="text-sm text-muted-foreground">Sem dimensões saudáveis ainda</p>
+                          {[...dimensoesAgregadas].reverse().filter(d => isForte(d.media)).length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              {isSipro ? 'Sem dimensões favoráveis ainda' : 'Sem dimensões saudáveis ainda'}
+                            </p>
                           )}
                         </CardContent>
                       </Card>
