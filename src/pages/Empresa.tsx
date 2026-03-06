@@ -135,6 +135,20 @@ export default function Empresa() {
     );
   }
 
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'importar'];
+  const [activeTab, setActiveTab] = useState('dados');
+
+  const currentTabIndex = TABS.indexOf(activeTab);
+  const isFirstTab = currentTabIndex === 0;
+  const isLastTab = currentTabIndex === TABS.length - 1;
+
+  const handleNextTab = () => {
+    if (!isLastTab) setActiveTab(TABS[currentTabIndex + 1]);
+  };
+  const handlePrevTab = () => {
+    if (!isFirstTab) setActiveTab(TABS[currentTabIndex - 1]);
+  };
+
   // EDIT/NEW VIEW
   const isFormLoading = viewMode === 'edit' && isLoading;
 
