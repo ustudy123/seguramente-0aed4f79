@@ -61,6 +61,7 @@ import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
 import AnaliseJornada from "./pages/AnaliseJornada";
+import Usuarios from "./pages/Usuarios";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -181,6 +182,7 @@ const App = () => (
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/hub-contabil" element={<HubContabil />} />
               <Route path="/analise-jornada" element={<AnaliseJornada />} />
+              <Route path="/usuarios" element={<Usuarios />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />
