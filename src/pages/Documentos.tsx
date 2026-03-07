@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
+import { useAuth } from "@/hooks/useAuth";
 import { useDocumentos } from "@/hooks/useDocumentos";
 import { PastaTreeView } from "@/components/documentos/PastaTreeView";
 import { PastaDocumentosList } from "@/components/documentos/PastaDocumentosList";
