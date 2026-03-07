@@ -324,7 +324,14 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   {/* Linha 5: Tipo de Usuário (full width) */}
                   <div className="sm:col-span-2 space-y-1.5">
                     <Label>Tipo de Usuário</Label>
-                    <Select defaultValue="gestor" onValueChange={v => setValue("tipo_usuario", v)}>
+                    <Select
+                      defaultValue="gestor"
+                      onValueChange={v => {
+                        setValue("tipo_usuario", v);
+                        // sincroniza tipo_vinculo automaticamente
+                        setValue("tipo_vinculo", v);
+                      }}
+                    >
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
@@ -332,6 +339,9 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Classificação global desta pessoa no sistema Seguramente.
+                    </p>
                   </div>
 
                   {/* Linha 6: Observações (full width) */}
