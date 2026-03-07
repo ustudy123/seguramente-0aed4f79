@@ -48,7 +48,7 @@ export default function Configuracoes() {
         <TabsContent value="equipe" className="mt-6">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             {isAdmin ? (
-              <EquipeTab hideAddButton />
+              <EquipeTab />
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
