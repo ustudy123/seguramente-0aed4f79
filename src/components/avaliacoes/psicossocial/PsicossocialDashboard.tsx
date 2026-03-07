@@ -3,20 +3,14 @@ import { motion } from "framer-motion";
 import {
   Brain,
   Users,
-  Send,
   BarChart3,
   Plus,
-  QrCode,
-  Link as LinkIcon,
-  AlertTriangle,
   TrendingUp,
   ShieldCheck,
   FileText,
   Activity,
-  Sparkles,
   Lock,
   Flame,
-  Battery,
   ClipboardList,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
