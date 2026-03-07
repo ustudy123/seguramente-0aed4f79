@@ -386,7 +386,55 @@ export function usePsicossocial() {
   // ==================== FUNÇÕES PÚBLICAS (SEM AUTH) ====================
   // Usam supabasePublic para evitar conflito de RLS com usuário logado
 
-  // Buscar convite por token (público) - via security definer function
+  // Buscar campanha por token_publico (link geral anônimo) - SECURITY DEFINER
+  const buscarCampanhaPorTokenPublico = async (token: string): Promise<CampanhaPsicossocial | null> => {
+    const { data, error } = await supabasePublic
+      .rpc('buscar_campanha_por_token_publico', { p_token: token });
+
+    if (error || !data || (data as any[]).length === 0) return null;
+    const row = (data as any[])[0];
+    return {
+      id: row.campanha_id,
+      tenant_id: row.tenant_id,
+      nome: row.campanha_nome,
+      descricao: row.campanha_descricao,
+      status: row.campanha_status,
+      tipo: 'regular',
+      instrumento: (row.campanha_instrumento || 'sipro') as InstrumentoPsicossocial,
+      data_inicio: row.campanha_data_inicio,
+      data_fim: row.campanha_data_fim,
+      anonimo: row.campanha_anonimo,
+      mensagem_institucional: row.campanha_mensagem_institucional,
+      politica_uso_dados: row.campanha_politica_uso_dados,
+      blocos_dinamicos: row.campanha_blocos_dinamicos,
+      created_at: '',
+      updated_at: '',
+    } as CampanhaPsicossocial;
+  };
+
+  // Salvar resposta anônima via token_publico da campanha - SECURITY DEFINER
+  const salvarRespostaAnonimaCampanha = async (
+    tokenPublico: string,
+    campanha: CampanhaPsicossocial,
+    respostas: Record<string, number>,
+    tempoSegundos: number,
+  ): Promise<void> => {
+    const instrumento = (campanha.instrumento || 'sipro') as InstrumentoPsicossocial;
+    const indicadores = calcularIndicadores(respostas, instrumento);
+
+    const { error } = await supabasePublic
+      .rpc('salvar_resposta_anonima_campanha', {
+        p_token_publico: tokenPublico,
+        p_respostas: JSON.parse(JSON.stringify(respostas)),
+        p_indicadores: JSON.parse(JSON.stringify(indicadores)),
+        p_tempo_segundos: tempoSegundos,
+        p_user_agent: navigator.userAgent,
+      });
+
+    if (error) throw error;
+  };
+
+  // Buscar convite por token (público) - via security definer function (legado - convites individuais)
   const buscarConvitePorToken = async (token: string): Promise<ConvitePsicossocial & { campanha: CampanhaPsicossocial } | null> => {
     const { data, error } = await supabasePublic
       .rpc('buscar_convite_por_token', { p_token: token });
