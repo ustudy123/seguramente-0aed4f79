@@ -135,8 +135,6 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
     toast.success(`${enviadas} ação(ões) importada(s) para o Plano de Ação!`);
   };
 
-  const score = dados.score_qualidade;
-
   const updateDadosGerais = (campo: string, valor: string) => {
     setDados(prev => ({
       ...prev,
