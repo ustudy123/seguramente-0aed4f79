@@ -348,6 +348,41 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
   }, [watchPessoais, watchContato, watchProfissionais, watchBancarios, watchExame, scheduleAutoSave]);
 
+  // ── CPF lookup: busca usuário existente ──────────────────────────────────────
+  const buscarUsuarioPorCpf = useCallback(async (cpf: string) => {
+    if (!tenantId || cpf.length !== 11) return;
+    setBuscandoCpf(true);
+    try {
+      const { data } = await (supabase as any)
+        .from('usuarios_base')
+        .select('id, nome_completo, email_principal, cpf, telefone_principal, cargo_funcao, data_nascimento')
+        .eq('tenant_id', tenantId)
+        .eq('cpf', cpf)
+        .maybeSingle();
+      if (data) {
+        setUsuarioEncontrado(data as UsuarioEncontrado);
+      } else {
+        setUsuarioEncontrado(null);
+        setDadosReaproveitados(false);
+      }
+    } catch {
+      // silencioso
+    } finally {
+      setBuscandoCpf(false);
+    }
+  }, [tenantId]);
+
+  const aplicarDadosUsuario = useCallback(() => {
+    if (!usuarioEncontrado) return;
+    if (usuarioEncontrado.nome_completo) formPessoais.setValue('nomeCompleto', usuarioEncontrado.nome_completo);
+    if (usuarioEncontrado.data_nascimento) formPessoais.setValue('dataNascimento', usuarioEncontrado.data_nascimento);
+    if (usuarioEncontrado.email_principal) formContato.setValue('email', usuarioEncontrado.email_principal);
+    if (usuarioEncontrado.telefone_principal) formContato.setValue('celular', usuarioEncontrado.telefone_principal);
+    if (usuarioEncontrado.cargo_funcao) formProfissionais.setValue('cargo', usuarioEncontrado.cargo_funcao);
+    setDadosReaproveitados(true);
+    toast.success('Dados do usuário aplicados ao cadastro!');
+  }, [usuarioEncontrado, formPessoais, formContato, formProfissionais]);
+
   const validateCurrentStep = async (): Promise<boolean> => {
     switch (currentStep) {
       case 1:
