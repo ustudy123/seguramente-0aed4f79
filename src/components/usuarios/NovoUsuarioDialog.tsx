@@ -157,10 +157,12 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       try {
         const usuario = await createUsuario.mutateAsync({
           nome_completo: data.nome_completo,
+          nome_social: data.nome_social || undefined,
           email_principal: data.email_principal,
           cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
           telefone_principal: data.telefone_principal,
           cargo_funcao: data.cargo_funcao,
+          matricula: data.matricula || undefined,
           data_nascimento: data.data_nascimento || undefined,
           tipo_usuario: data.tipo_usuario as UsuarioTipo,
           observacoes: data.observacoes,
