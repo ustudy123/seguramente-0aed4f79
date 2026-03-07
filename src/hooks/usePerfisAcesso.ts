@@ -34,6 +34,8 @@ export interface PerfilAcesso {
   ativo: boolean;
   permite_acumulo: boolean;
   expira_em?: string;
+  nivel_risco?: "normal" | "elevado" | "critico";
+  is_perfil_assistido?: boolean;
   total_usuarios: number;
   criado_por?: string;
   criado_por_nome?: string;
@@ -52,8 +54,27 @@ export interface PerfilPermissao {
   acao: string;
   escopo: string;
   ativo: boolean;
+  is_sensivel: boolean;
   requer_2fa: boolean;
   observacao?: string;
+  created_at: string;
+}
+
+export interface PerfilExcecao {
+  id: string;
+  tenant_id: string;
+  usuario_id: string;
+  empresa_id?: string;
+  tipo: "adicionar" | "revogar";
+  modulo: string;
+  recurso?: string;
+  acao: string;
+  escopo: string;
+  ativo: boolean;
+  justificativa?: string;
+  expira_em?: string;
+  criado_por?: string;
+  criado_por_nome?: string;
   created_at: string;
 }
 
@@ -64,6 +85,7 @@ export interface UsuarioPerfilVinculo {
   empresa_id?: string;
   perfil_id: string;
   ativo: boolean;
+  is_perfil_principal?: boolean;
   atribuido_por?: string;
   atribuido_por_nome?: string;
   expira_em?: string;
@@ -74,14 +96,28 @@ export interface UsuarioPerfilVinculo {
   usuario?: { nome_completo: string; email_principal: string; foto_url?: string };
 }
 
+export interface PerfilAuditLog {
+  id: string;
+  tenant_id: string;
+  perfil_id?: string;
+  acao: string;
+  descricao?: string;
+  dados_anteriores?: unknown;
+  dados_novos?: unknown;
+  realizado_por?: string;
+  realizado_por_nome?: string;
+  created_at: string;
+}
+
 export const MODULOS_SISTEMA = [
   { id: "colaboradores", label: "Colaboradores", grupo: "Pessoas" },
   { id: "admissoes", label: "Admissões", grupo: "Pessoas" },
   { id: "usuarios", label: "Usuários do Sistema", grupo: "Pessoas" },
   { id: "perfis_acesso", label: "Perfis & Acessos", grupo: "Pessoas" },
   { id: "ferias", label: "Férias", grupo: "Pessoas" },
-  { id: "atestados", label: "Atestados", grupo: "Saúde" },
   { id: "ponto", label: "Ponto", grupo: "Pessoas" },
+  { id: "atestados", label: "Atestados", grupo: "Saúde" },
+  { id: "afastamentos", label: "Afastamentos", grupo: "Saúde" },
   { id: "sst", label: "Compliance SST", grupo: "Saúde & Segurança" },
   { id: "incidentes", label: "Incidentes & Acidentes", grupo: "Saúde & Segurança" },
   { id: "epi", label: "EPIs", grupo: "Saúde & Segurança" },
@@ -105,6 +141,7 @@ export const MODULOS_SISTEMA = [
   { id: "terceiros", label: "Terceiros & SST", grupo: "Documentos" },
   { id: "marketplace", label: "Rede de Parceiros", grupo: "Outros" },
   { id: "configuracoes", label: "Configurações", grupo: "Outros" },
+  { id: "auditoria", label: "Auditoria do Sistema", grupo: "Outros" },
 ];
 
 export const ACOES_DISPONIVEIS = [
@@ -120,10 +157,10 @@ export const ACOES_DISPONIVEIS = [
   { id: "compartilhar", label: "Compartilhar", sensivel: false },
   { id: "parametrizar", label: "Parametrizar", sensivel: false },
   { id: "administrar", label: "Administrar", sensivel: true },
-  { id: "acessar_sensivel", label: "Acessar Dados Sensíveis", sensivel: true },
-  { id: "acessar_anonimizado", label: "Acessar Dados Anonimizados", sensivel: false },
-  { id: "ver_indicadores", label: "Ver Indicadores Agregados", sensivel: false },
-  { id: "ver_individual", label: "Ver Dados Individualizados", sensivel: true },
+  { id: "acessar_sensivel", label: "Dados Sensíveis", sensivel: true },
+  { id: "acessar_anonimizado", label: "Dados Anonimizados", sensivel: false },
+  { id: "ver_indicadores", label: "Indicadores Agregados", sensivel: false },
+  { id: "ver_individual", label: "Dados Individualizados", sensivel: true },
 ];
 
 export const ESCOPOS_DISPONIVEIS = [
@@ -132,12 +169,35 @@ export const ESCOPOS_DISPONIVEIS = [
   { id: "equipe_direta_indireta", label: "Equipe direta e indireta" },
   { id: "setor", label: "Setor" },
   { id: "unidade", label: "Unidade" },
+  { id: "estabelecimento", label: "Estabelecimento/Obra" },
   { id: "empresa_inteira", label: "Empresa inteira" },
   { id: "grupo_economico", label: "Grupo econômico" },
   { id: "multiplas_empresas", label: "Múltiplas empresas" },
   { id: "carteira_clientes", label: "Carteira de clientes" },
   { id: "customizado", label: "Customizado" },
 ];
+
+// Combos que geram alerta de risco
+export const COMBOS_RISCO = [
+  { modulos: ["auditoria", "financeiro", "administrar"], label: "Acúmulo crítico: auditoria + financeiro + administrar" },
+  { modulos: ["psicossocial", "ver_individual", "exportar"], label: "Dados psicossociais individuais com exportação" },
+  { modulos: ["ouvidoria", "ver_individual"], label: "Visualização individual de ouvidoria" },
+];
+
+export function calcularNivelRisco(permissoes: Partial<PerfilPermissao>[]): "normal" | "elevado" | "critico" {
+  const acoesAtivas = new Set(permissoes.filter((p) => p.ativo !== false).map((p) => p.acao));
+  const modulosAtivos = new Set(permissoes.filter((p) => p.ativo !== false).map((p) => p.modulo));
+  const hasSensivel = ACOES_DISPONIVEIS.filter((a) => a.sensivel).some((a) => acoesAtivas.has(a.id));
+  const hasAdm = acoesAtivas.has("administrar");
+  const hasFinanceiro = modulosAtivos.has("financeiro");
+  const hasPsico = modulosAtivos.has("psicossocial");
+  const hasOuvidoria = modulosAtivos.has("ouvidoria");
+  const hasAuditoria = modulosAtivos.has("auditoria");
+
+  if (hasSensivel && (hasFinanceiro || hasPsico || hasOuvidoria) && hasAdm) return "critico";
+  if (hasSensivel || hasAuditoria || (hasAdm && (hasFinanceiro || hasPsico))) return "elevado";
+  return "normal";
+}
 
 async function logAuditPerfil(
   tenantId: string,
@@ -206,7 +266,7 @@ export function usePerfisAcesso() {
       if (!tenantId) return [];
       const { data, error } = await (supabase as any)
         .from("usuario_perfil_vinculos")
-        .select("*, perfil:perfil_id(id,nome,cor,icone), usuario:usuario_id(nome_completo,email_principal,foto_url)")
+        .select("*, perfil:perfil_id(id,nome,cor,icone,nivel_risco), usuario:usuario_id(nome_completo,email_principal,foto_url)")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
         .order("created_at", { ascending: false });
@@ -216,9 +276,27 @@ export function usePerfisAcesso() {
     enabled: !!tenantId,
   });
 
+  // Logs de auditoria de perfis
+  const { data: auditLogs = [], isLoading: loadingAuditLogs } = useQuery({
+    queryKey: ["perfil_audit_log", tenantId],
+    queryFn: async (): Promise<PerfilAuditLog[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await (supabase as any)
+        .from("perfil_audit_log")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []) as PerfilAuditLog[];
+    },
+    enabled: !!tenantId,
+  });
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["perfis_acesso"] });
     qc.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
+    qc.invalidateQueries({ queryKey: ["perfil_audit_log"] });
   };
 
   // CRUD Perfis
@@ -226,13 +304,19 @@ export function usePerfisAcesso() {
     mutationFn: async (payload: Partial<PerfilAcesso> & { permissoes?: Partial<PerfilPermissao>[] }) => {
       if (!tenantId) throw new Error("Sem tenant");
       const { permissoes, ...perfilData } = payload;
+      const nivelRisco = calcularNivelRisco(permissoes || []);
       const { data, error } = await (supabase as any)
         .from("perfis_acesso")
-        .insert({ ...perfilData, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
+        .insert({ ...perfilData, nivel_risco: nivelRisco, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
         .select().single();
       if (error) throw error;
       if (permissoes?.length) {
-        const perms = permissoes.map((p) => ({ ...p, perfil_id: data.id, tenant_id: tenantId }));
+        const perms = permissoes.map((p) => ({
+          ...p,
+          perfil_id: data.id,
+          tenant_id: tenantId,
+          is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
+        }));
         await (supabase as any).from("perfil_permissoes").insert(perms);
       }
       await logAuditPerfil(tenantId, data.id, "criacao", `Perfil "${data.nome}" criado`, null, perfilData, profile?.nome_completo);
@@ -245,17 +329,24 @@ export function usePerfisAcesso() {
   const updatePerfil = useMutation({
     mutationFn: async ({ id, permissoes, ...payload }: Partial<PerfilAcesso> & { id: string; permissoes?: Partial<PerfilPermissao>[] }) => {
       const { data: before } = await (supabase as any).from("perfis_acesso").select("*").eq("id", id).single();
-      const { error } = await (supabase as any).from("perfis_acesso").update(payload).eq("id", id);
+      const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
+      const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
+      const { error } = await (supabase as any).from("perfis_acesso").update(updatePayload).eq("id", id);
       if (error) throw error;
       if (permissoes !== undefined) {
         await (supabase as any).from("perfil_permissoes").delete().eq("perfil_id", id);
         if (permissoes.length) {
           await (supabase as any).from("perfil_permissoes").insert(
-            permissoes.map((p) => ({ ...p, perfil_id: id, tenant_id: tenantId }))
+            permissoes.map((p) => ({
+              ...p,
+              perfil_id: id,
+              tenant_id: tenantId,
+              is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
+            }))
           );
         }
       }
-      await logAuditPerfil(tenantId!, id, "edicao", `Perfil "${before?.nome}" editado`, before, payload, profile?.nome_completo);
+      await logAuditPerfil(tenantId!, id, "edicao", `Perfil "${before?.nome}" editado`, before, updatePayload, profile?.nome_completo);
     },
     onSuccess: () => { invalidate(); toast.success("Perfil atualizado!"); },
     onError: (e: any) => toast.error("Erro: " + e.message),
@@ -289,7 +380,6 @@ export function usePerfisAcesso() {
         })
         .select().single();
       if (error) throw error;
-      // Criar permissões a partir dos modulos_padrao
       if (template.modulos_padrao?.length) {
         const perms = template.modulos_padrao.flatMap((m) =>
           m.acoes.map((acao) => ({
@@ -299,6 +389,7 @@ export function usePerfisAcesso() {
             recurso: m.recurso || null,
             acao,
             escopo: m.escopo,
+            is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === acao)?.sensivel || false,
           }))
         );
         await (supabase as any).from("perfil_permissoes").insert(perms);
@@ -312,13 +403,21 @@ export function usePerfisAcesso() {
 
   // Vínculos
   const vincularPerfil = useMutation({
-    mutationFn: async (payload: { usuario_id: string; perfil_id: string; empresa_id?: string; observacao?: string }) => {
+    mutationFn: async (payload: {
+      usuario_id: string;
+      perfil_id: string;
+      empresa_id?: string;
+      observacao?: string;
+      expira_em?: string;
+      is_perfil_principal?: boolean;
+    }) => {
       if (!tenantId) throw new Error("Sem tenant");
       const { data, error } = await (supabase as any)
         .from("usuario_perfil_vinculos")
         .insert({ ...payload, tenant_id: tenantId, atribuido_por: user?.id, atribuido_por_nome: profile?.nome_completo })
         .select().single();
       if (error) throw error;
+      await logAuditPerfil(tenantId, payload.perfil_id, "vinculacao", `Perfil vinculado ao usuário`, null, payload, profile?.nome_completo);
       return data;
     },
     onSuccess: () => { invalidate(); toast.success("Perfil vinculado ao usuário!"); },
@@ -329,6 +428,7 @@ export function usePerfisAcesso() {
     mutationFn: async (vinculoId: string) => {
       const { error } = await (supabase as any).from("usuario_perfil_vinculos").update({ ativo: false }).eq("id", vinculoId);
       if (error) throw error;
+      await logAuditPerfil(tenantId!, null, "desvinculacao", `Vínculo de perfil removido`, null, { vinculo_id: vinculoId }, profile?.nome_completo);
     },
     onSuccess: () => { invalidate(); toast.success("Vínculo removido!"); },
     onError: (e: any) => toast.error("Erro: " + e.message),
@@ -338,6 +438,7 @@ export function usePerfisAcesso() {
     templates, loadingTemplates,
     perfis, loadingPerfis,
     vinculos, loadingVinculos,
+    auditLogs, loadingAuditLogs,
     createPerfil, updatePerfil, togglePerfilStatus, clonarTemplate,
     vincularPerfil, desvincularPerfil,
   };
