@@ -82,8 +82,7 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
     if (!linkGeral) return;
     QRCode.toDataURL(linkGeral, { 
       width: 240,
-      margin: 2,
-      color: { dark: '#000000', light: '#ffffff' }
+      margin: 2
     })
       .then(setQrCodeUrl)
       .catch(console.error);
