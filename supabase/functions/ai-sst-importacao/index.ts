@@ -403,7 +403,7 @@ Retorne JSON:
   }
 }
 
-function buildPlanoAcaoPrompt(tipo: string): string {
+function buildPlanoAcaoPrompt(tipo: string, isComplementar = false): string {
   // Frases geradoras de ação conforme a especificação
   const frasesAcao = `recomenda-se, deverá ser implantado, sugere-se, torna-se necessário,
 é indispensável, deve ser providenciado, recomenda-se adequação, requer revisão,
