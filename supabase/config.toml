@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.ai-qa-agent]
 verify_jwt = false
+
+[functions.ai-sst-importacao]
+verify_jwt = false
