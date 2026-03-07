@@ -64,6 +64,7 @@ const formSchema = z.object({
   centro_custo: z.string().optional(),
   gestor_imediato: z.string().optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
+  matricula_esocial: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
