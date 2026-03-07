@@ -122,12 +122,12 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         // Enums corretos
         prioridade: (prioridadeMap[acao.prioridade] || "medio") as any,
         status: "pendente" as any,
+        tipo: "preventiva" as any, // valor válido: corretiva | preventiva | melhoria
         // Rastreabilidade
-        origem_modulo: "Compliance SST",
+        origem_modulo: "epi" as any, // usando valor válido do enum; rastreado via origem_descricao
         origem_descricao: `Importado de: ${state.arquivo?.name || "documento SST"} (${state.tipoDetectado || "PGR"})`,
         criado_por: session.user.id,
         criado_por_nome: session.user.email,
-        tipo: "acao",
         progresso: 0,
       }]);
       if (error) throw error;
