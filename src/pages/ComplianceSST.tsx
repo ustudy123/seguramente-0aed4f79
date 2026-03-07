@@ -171,56 +171,63 @@ const ComplianceSST = () => {
               </CardContent>
             </Card>
 
-            {/* Documentos gerenciáveis */}
+            {/* Calendário de Vencimentos */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Gestão de Documentos</CardTitle>
-                <CardDescription>Gerencie documentos importados</CardDescription>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  Calendário de Vencimentos
+                </CardTitle>
+                <CardDescription>Documentos ordenados por prazo de validade</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {isLoading ? (
                   <div className="flex justify-center py-4"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-                ) : documentos.length === 0 ? (
+                ) : documentos.filter(d => d.data_vigencia).length === 0 ? (
                   <div className="text-center py-6 text-muted-foreground text-sm">
-                    <Shield className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>Nenhum documento cadastrado.</p>
-                    <Button variant="link" size="sm" className="mt-1" onClick={() => setActiveTab("importacao")}>
-                      Usar Importação IA →
-                    </Button>
+                    <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50 text-primary" />
+                    <p>Nenhum vencimento registrado.</p>
+                    <p className="text-xs mt-1">Importe documentos com data de vigência para monitorar aqui.</p>
                   </div>
                 ) : (
-                  documentos.map((doc) => {
-                    const st = getStatusDisplay(doc);
-                    return (
-                      <div key={doc.id} className="flex items-center justify-between p-2.5 rounded-lg border bg-muted/20">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-medium text-sm truncate">{doc.tipo}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {doc.data_emissao ? format(new Date(doc.data_emissao), "dd/MM/yyyy") : "—"}
-                            </p>
+                  [...documentos]
+                    .filter(d => d.data_vigencia)
+                    .sort((a, b) => new Date(a.data_vigencia!).getTime() - new Date(b.data_vigencia!).getTime())
+                    .slice(0, 6)
+                    .map((doc) => {
+                      const vigDate = new Date(doc.data_vigencia!);
+                      const hoje = new Date();
+                      const diffDays = Math.ceil((vigDate.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+                      const isVencido = diffDays < 0;
+                      const isProximo = diffDays >= 0 && diffDays <= 60;
+                      return (
+                        <div key={doc.id} className="flex items-center justify-between p-2.5 rounded-lg border bg-muted/20">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isVencido ? "bg-destructive" : isProximo ? "bg-amber-500" : "bg-primary"}`} />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{doc.tipo}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Vigência: {format(vigDate, "dd/MM/yyyy")}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 text-right">
+                            {isVencido ? (
+                              <Badge variant="destructive" className="text-xs">Vencido</Badge>
+                            ) : (
+                              <Badge variant={isProximo ? "outline" : "secondary"} className={`text-xs ${isProximo ? "border-amber-500 text-amber-600" : ""}`}>
+                                {diffDays === 0 ? "Hoje" : `${diffDays}d`}
+                              </Badge>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <Badge variant={st.variant} className="text-xs">{st.label}</Badge>
-                          <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => setAnaliseDoc(doc)}>
-                            <Brain className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-destructive hover:text-destructive"
-                            onClick={() => {
-                              if (confirm("Excluir este documento?")) deleteDocumento.mutate(doc);
-                            }}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })
+                )}
+                {documentos.filter(d => d.data_vigencia).length > 6 && (
+                  <Button variant="ghost" size="sm" className="w-full mt-1 text-xs" onClick={() => setActiveTab("alertas")}>
+                    Ver todos os alertas <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
                 )}
               </CardContent>
             </Card>
