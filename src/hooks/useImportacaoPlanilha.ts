@@ -37,6 +37,7 @@ export interface DadosPlanilha {
   salario: string;
   centroCusto: string;
   gestorImediato: string;
+  matriculaEsocial: string;
   banco: string;
   agencia: string;
   conta: string;
@@ -79,6 +80,7 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   salario: ["salario", "salário", "remuneracao", "remuneração", "salario base", "salário base"],
   centroCusto: ["centro custo", "centro_custo", "centrocusto", "cc", "cost center"],
   gestorImediato: ["gestor", "gestor imediato", "gestor_imediato", "supervisor", "lider", "líder"],
+  matriculaEsocial: ["matricula esocial", "matrícula esocial", "matricula_esocial", "esocial", "e-social", "mat esocial"],
   banco: ["banco", "banco codigo", "código banco"],
   agencia: ["agencia", "agência", "ag", "ag."],
   conta: ["conta", "numero conta", "número conta", "conta corrente", "conta_corrente"],
@@ -276,6 +278,7 @@ export function useImportacaoPlanilha() {
             salario: encontrarColuna(headers, "salario"),
             centroCusto: encontrarColuna(headers, "centroCusto"),
             gestorImediato: encontrarColuna(headers, "gestorImediato"),
+            matriculaEsocial: encontrarColuna(headers, "matriculaEsocial"),
             banco: encontrarColuna(headers, "banco"),
             agencia: encontrarColuna(headers, "agencia"),
             conta: encontrarColuna(headers, "conta"),
@@ -337,6 +340,7 @@ export function useImportacaoPlanilha() {
               salario: g(idx.salario),
               centroCusto: g(idx.centroCusto),
               gestorImediato: g(idx.gestorImediato),
+              matriculaEsocial: g(idx.matriculaEsocial),
               banco: g(idx.banco),
               agencia: g(idx.agencia),
               conta: g(idx.conta),
@@ -529,6 +533,7 @@ export function useImportacaoPlanilha() {
           salario: dado.salario ? parseFloat(dado.salario.replace(/[^\d,\.]/g, "").replace(",", ".")) || null : null,
           centro_custo: dado.centroCusto || null,
           gestor_imediato: dado.gestorImediato || null,
+          matricula_esocial: dado.matriculaEsocial || null,
           banco: dado.banco || null,
           agencia: dado.agencia || null,
           conta: dado.conta || null,
