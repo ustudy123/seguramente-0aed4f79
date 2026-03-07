@@ -458,20 +458,35 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 )}
               />
 
-              {/* Centro de Custo */}
-              <FormField
-                control={form.control}
-                name="centro_custo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Centro de Custo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: CC-001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Centro de Custo | Matrícula eSocial */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="centro_custo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Centro de Custo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: CC-001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="matricula_esocial"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Matrícula eSocial</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: 00123456789" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
             </div>
 
