@@ -213,6 +213,7 @@ export function ImportPlanilhaModal({
       ["Salário", "NÃO", "Salário base bruto", "Número (use . ou , como decimal)", "5000,00"],
       ["Centro de Custo", "NÃO", "Centro de custo", "Texto livre", "RH-01"],
       ["Gestor Imediato", "NÃO", "Nome do gestor direto", "Texto livre", "Carlos Souza"],
+      ["Matrícula eSocial", "NÃO", "Matrícula do colaborador no eSocial", "Texto livre (até 30 caracteres)", "00123456789"],
       ["Banco", "NÃO", "Código ou nome do banco", "Texto livre", "341 ou Itaú"],
       ["Agência", "NÃO", "Número da agência", "Texto livre", "0001"],
       ["Conta", "NÃO", "Número da conta", "Texto livre", "12345-6"],
