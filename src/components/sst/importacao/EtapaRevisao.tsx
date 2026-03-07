@@ -369,27 +369,67 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
             {/* Plano de Ação */}
             <TabsContent value="plano_acao" className="mt-4">
-              <ScrollArea className="h-72">
+              {dados.plano_acao?.length > 0 && (
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-muted-foreground">
+                    {acoesSalvas.size}/{dados.plano_acao.length} ação(ões) enviada(s) ao Plano de Ação
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={enviarTodasAcoes}
+                    disabled={importandoTodas || acoesSalvas.size === dados.plano_acao.length}
+                    className="gap-1.5 text-xs"
+                  >
+                    {importandoTodas ? (
+                      <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Importando...</>
+                    ) : acoesSalvas.size === dados.plano_acao.length ? (
+                      <><CheckCheck className="w-3.5 h-3.5 text-green-600" />Todas importadas</>
+                    ) : (
+                      <><ArrowUpRight className="w-3.5 h-3.5" />Importar todas para o Plano de Ação</>
+                    )}
+                  </Button>
+                </div>
+              )}
+              <ScrollArea className="h-64">
                 <div className="space-y-3 pr-2">
                   {dados.plano_acao?.length > 0 ? (
                     dados.plano_acao.map((a, i) => (
-                      <div key={i} className="p-3 rounded-lg border">
+                      <div key={i} className={`p-3 rounded-lg border transition-colors ${acoesSalvas.has(i) ? "border-green-200 bg-green-50/40 dark:bg-green-950/10" : ""}`}>
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex items-start gap-2">
                             <Target className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                             <span className="text-sm">{a.recomendacao}</span>
                           </div>
-                          <div className="flex gap-1 flex-shrink-0">
+                          <div className="flex gap-1 flex-shrink-0 items-center">
                             <Badge variant={a.prioridade === "alta" ? "destructive" : a.prioridade === "media" ? "secondary" : "outline"} className="text-[10px]">
                               {a.prioridade}
                             </Badge>
                             <ConfiancaBadge confianca={a.confianca} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-x-4 text-xs text-muted-foreground">
-                          {a.responsavel && <span><strong>Responsável:</strong> {a.responsavel}</span>}
-                          {a.prazo && <span><strong>Prazo:</strong> {a.prazo}</span>}
-                          {a.setor && <span><strong>Setor:</strong> {a.setor}</span>}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="grid grid-cols-2 gap-x-4 text-xs text-muted-foreground flex-1">
+                            {a.responsavel && <span><strong>Responsável:</strong> {a.responsavel}</span>}
+                            {a.prazo && <span><strong>Prazo:</strong> {a.prazo}</span>}
+                            {a.setor && <span><strong>Setor:</strong> {a.setor}</span>}
+                          </div>
+                          {acoesSalvas.has(i) ? (
+                            <div className="flex items-center gap-1 text-xs text-green-600 flex-shrink-0">
+                              <CheckCheck className="w-3.5 h-3.5" />
+                              <span>Enviada</span>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="flex-shrink-0 h-7 text-xs gap-1 text-primary hover:bg-primary/10"
+                              onClick={() => enviarAcaoPlano(a, i)}
+                            >
+                              <ArrowUpRight className="w-3 h-3" />
+                              Enviar ao Plano
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))
