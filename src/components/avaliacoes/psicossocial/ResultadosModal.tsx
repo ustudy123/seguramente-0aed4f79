@@ -4,7 +4,6 @@ import {
   Brain,
   TrendingUp,
   Users,
-  Download,
   ShieldCheck,
   Lock,
   Sparkles,
@@ -12,7 +11,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   GitCompare,
+  Wrench,
 } from "lucide-react";
+import { ExportarRelatorio } from "./ExportarRelatorio";
+import { IntegracaoErgonomiaAEP } from "./IntegracaoErgonomiaAEP";
 import { ContaprovaOrganizacional } from "./ContaprovaOrganizacional";
 import {
   Dialog,
@@ -237,16 +239,20 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
           </div>
         ) : (
           <Tabs defaultValue="visao_geral" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="visao_geral">Visão Geral</TabsTrigger>
               <TabsTrigger value="dimensoes">Por Dimensão</TabsTrigger>
               <TabsTrigger value="ia">
                 <Sparkles className="h-3.5 w-3.5 mr-1 text-purple-500" />
-                Análise IA
+                IA
               </TabsTrigger>
               <TabsTrigger value="contraprova">
                 <GitCompare className="h-3.5 w-3.5 mr-1" />
                 Contraprova
+              </TabsTrigger>
+              <TabsTrigger value="ergonomia">
+                <Wrench className="h-3.5 w-3.5 mr-1" />
+                Ergonomia
               </TabsTrigger>
               <TabsTrigger value="participacao">Participação</TabsTrigger>
             </TabsList>
@@ -501,6 +507,15 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
               <ContaprovaOrganizacional campanha={campanha} ips={ips} />
             </TabsContent>
 
+            {/* ── Tab: Ergonomia / AEP ── */}
+            <TabsContent value="ergonomia" className="mt-4 space-y-3">
+              <IntegracaoErgonomiaAEP
+                campanha={campanha}
+                ips={ips}
+                dimensoesCriticas={dimensoesAgregadas.filter(d => isCritico(d.media)).map(d => d.bloco)}
+              />
+            </TabsContent>
+
             {/* ── Tab: Participação ── */}
             <TabsContent value="participacao" className="mt-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-4">
@@ -559,12 +574,12 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
-          {stats && stats.concluidos > 0 && stats.anonimato_garantido && (
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Exportar Relatório
-            </Button>
-          )}
+          <ExportarRelatorio
+            campanha={campanha}
+            stats={stats}
+            dimensoes={dimensoesAgregadas}
+            analiseIA={analiseIA}
+          />
         </div>
       </DialogContent>
     </Dialog>
