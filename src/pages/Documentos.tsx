@@ -391,6 +391,10 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
   const handleInitialize = async (params: WizardParams) => {
     try {
       await initializeDefaultStructure(params);
+      // Mark wizard as permanently dismissed for this tenant
+      if (wizardDismissedKey) {
+        localStorage.setItem(wizardDismissedKey, "1");
+      }
     } catch (error) {
       // Error handled in hook
     }
