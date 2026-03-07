@@ -34,9 +34,43 @@ serve(async (req) => {
       critico: "Risco Crítico (0-34)",
     };
 
+    const tipo_radar = contexto.tipo_radar; // 'burnout' | 'boreout' | undefined
+    const score_risco = contexto.score_risco;
+
     if (modo === "plano_acao") {
       // Gerar sugestão 5W2H para plano de ação
-      const prompt = `
+      let prompt = "";
+
+      if (tipo_radar === "burnout") {
+        prompt = `
+Você é um especialista em saúde ocupacional, bem-estar no trabalho e prevenção de burnout (ISO 45003, NR-01, NR-17).
+
+Diagnóstico de Burnout da organização:
+- Score de risco de Burnout: ${score_risco}% (quanto maior = maior risco)
+- Classificação: ${classificacaoLabels[classificacao] || classificacao}
+- Fatores críticos (≥70%): ${dimensoes_criticas.join(", ") || "nenhum"}
+- Fatores de atenção (45-69%): ${(contexto.dimensoes_atencao || []).join(", ") || "nenhum"}
+
+Gere uma ação preventiva 5W2H ESPECÍFICA para combater o Burnout neste contexto.
+Responda em JSON com os campos: titulo, descricao, porque, onde, como.
+O título deve mencionar "Prevenção de Burnout". Seja objetivo e prático. Máximo 2 linhas por campo.
+`;
+      } else if (tipo_radar === "boreout") {
+        prompt = `
+Você é um especialista em saúde ocupacional, engajamento e prevenção de boreout (ISO 45003, NR-01).
+
+Diagnóstico de Boreout (desengajamento/subcarga) da organização:
+- Score de risco de Boreout: ${score_risco}% (quanto maior = maior desengajamento)
+- Classificação: ${classificacaoLabels[classificacao] || classificacao}
+- Fatores críticos (≥70%): ${dimensoes_criticas.join(", ") || "nenhum"}
+- Fatores de atenção (45-69%): ${(contexto.dimensoes_atencao || []).join(", ") || "nenhum"}
+
+Gere uma ação preventiva 5W2H ESPECÍFICA para combater o Boreout e aumentar o engajamento neste contexto.
+Responda em JSON com os campos: titulo, descricao, porque, onde, como.
+O título deve mencionar "Engajamento" ou "Prevenção de Boreout". Seja objetivo e prático. Máximo 2 linhas por campo.
+`;
+      } else {
+        prompt = `
 Você é um especialista em saúde ocupacional e gestão de riscos psicossociais (ISO 45003, NR-01).
 
 Diagnóstico da campanha "${campanha}" (instrumento: ${instrumento?.toUpperCase()}):
@@ -47,6 +81,7 @@ Gere uma ação preventiva 5W2H estruturada para este diagnóstico.
 Responda em JSON com os campos: titulo, descricao, porque, onde, como.
 Seja objetivo e prático. Máximo 2 linhas por campo.
 `;
+      }
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",

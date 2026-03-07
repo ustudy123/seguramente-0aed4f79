@@ -26,6 +26,7 @@ import { CampanhaForm } from "./CampanhaForm";
 import { IPSGauge } from "./IPSGauge";
 import { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
 import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
+import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
