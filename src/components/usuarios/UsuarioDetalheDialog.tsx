@@ -451,10 +451,12 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                           <SelectContent>
                             {empresas.map((e: any) => (
                               <SelectItem key={e.id} value={e.id}>
-                                <div className="flex flex-col">
-                                  <span>{e.nome_fantasia || e.razao_social}</span>
+                                <div className="flex flex-col gap-0.5 py-0.5">
+                                  <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
                                   {e.cnpj && (
-                                    <span className="text-xs text-muted-foreground">CNPJ: {e.cnpj}</span>
+                                    <span className="text-xs text-muted-foreground font-normal leading-tight">
+                                      CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
+                                    </span>
                                   )}
                                 </div>
                               </SelectItem>
