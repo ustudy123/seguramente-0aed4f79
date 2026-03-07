@@ -36,8 +36,9 @@ import {
   Search,
   X,
   Brain,
-  BarChart3 } from
-"lucide-react";
+  BarChart3,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 
