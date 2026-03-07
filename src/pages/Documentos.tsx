@@ -67,6 +67,7 @@ const Documentos = () => {
   const [searchParams] = useSearchParams();
   const colaboradorIdFromUrl = searchParams.get("colaborador");
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
@@ -82,8 +83,12 @@ const Documentos = () => {
   const [renameValue, setRenameValue] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
-  // Key to prevent wizard from auto-opening again after structure is created
-  const wizardDismissedKey = tenantId ? `wizard_estrutura_dismissed_${tenantId}` : null;
+  // Key is per-empresa to correctly detect when a company has no structure yet
+  const wizardDismissedKey = tenantId && empresaAtivaId
+    ? `wizard_estrutura_dismissed_${tenantId}_${empresaAtivaId}`
+    : tenantId
+    ? `wizard_estrutura_dismissed_${tenantId}`
+    : null;
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
     documentoNome: string;
