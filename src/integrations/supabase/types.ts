@@ -3628,6 +3628,102 @@ export type Database = {
           },
         ]
       }
+      ergonomia_analises: {
+        Row: {
+          atividade: string | null
+          cargo: string
+          classificacao_risco: string | null
+          conformidade_estimada: number | null
+          contexto_adicional: string | null
+          created_at: string
+          data_analise: string
+          empresa_id: string | null
+          evidencias_urls: Json | null
+          id: string
+          lacunas_normativas: Json | null
+          num_trabalhadores: number | null
+          realizado_por: string | null
+          realizado_por_id: string | null
+          recomendacoes: Json | null
+          resumo_geral: string | null
+          riscos_identificados: Json | null
+          setor: string
+          status: string | null
+          tenant_id: string
+          tipo_analise: string
+          transcricao_audio: string | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          atividade?: string | null
+          cargo: string
+          classificacao_risco?: string | null
+          conformidade_estimada?: number | null
+          contexto_adicional?: string | null
+          created_at?: string
+          data_analise?: string
+          empresa_id?: string | null
+          evidencias_urls?: Json | null
+          id?: string
+          lacunas_normativas?: Json | null
+          num_trabalhadores?: number | null
+          realizado_por?: string | null
+          realizado_por_id?: string | null
+          recomendacoes?: Json | null
+          resumo_geral?: string | null
+          riscos_identificados?: Json | null
+          setor: string
+          status?: string | null
+          tenant_id: string
+          tipo_analise?: string
+          transcricao_audio?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          atividade?: string | null
+          cargo?: string
+          classificacao_risco?: string | null
+          conformidade_estimada?: number | null
+          contexto_adicional?: string | null
+          created_at?: string
+          data_analise?: string
+          empresa_id?: string | null
+          evidencias_urls?: Json | null
+          id?: string
+          lacunas_normativas?: Json | null
+          num_trabalhadores?: number | null
+          realizado_por?: string | null
+          realizado_por_id?: string | null
+          recomendacoes?: Json | null
+          resumo_geral?: string | null
+          riscos_identificados?: Json | null
+          setor?: string
+          status?: string | null
+          tenant_id?: string
+          tipo_analise?: string
+          transcricao_audio?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ergonomia_analises_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ergonomia_analises_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ergonomia_evidencias: {
         Row: {
           arquivo_nome: string | null
@@ -3803,7 +3899,9 @@ export type Database = {
       }
       ergonomia_riscos: {
         Row: {
+          analise_id: string | null
           ativo: boolean
+          cargo: string | null
           created_at: string
           departamento: string | null
           descricao: string | null
@@ -3820,10 +3918,13 @@ export type Database = {
           severidade: Database["public"]["Enums"]["risco_severidade"]
           tenant_id: string
           titulo: string
+          unidade: string | null
           updated_at: string
         }
         Insert: {
+          analise_id?: string | null
           ativo?: boolean
+          cargo?: string | null
           created_at?: string
           departamento?: string | null
           descricao?: string | null
@@ -3840,10 +3941,13 @@ export type Database = {
           severidade?: Database["public"]["Enums"]["risco_severidade"]
           tenant_id: string
           titulo: string
+          unidade?: string | null
           updated_at?: string
         }
         Update: {
+          analise_id?: string | null
           ativo?: boolean
+          cargo?: string | null
           created_at?: string
           departamento?: string | null
           descricao?: string | null
@@ -3860,9 +3964,17 @@ export type Database = {
           severidade?: Database["public"]["Enums"]["risco_severidade"]
           tenant_id?: string
           titulo?: string
+          unidade?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ergonomia_riscos_analise_id_fkey"
+            columns: ["analise_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_analises"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ergonomia_riscos_empresa_id_fkey"
             columns: ["empresa_id"]
