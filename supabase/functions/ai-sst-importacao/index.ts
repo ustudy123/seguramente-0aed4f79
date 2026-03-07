@@ -563,7 +563,21 @@ Responda SOMENTE em JSON:
 
       funcoesAtividades = funcoesAtividades.filter((f: any) => f && f.cargo && f.cargo !== "null" && f.cargo !== "");
 
-      const planoAcaoExtraido = resultPlano?.plano_acao || [];
+      // Merge de ações dos dois chunks + deduplicação por texto
+      const acoesParte1 = resultPlano?.plano_acao || [];
+      const acoesParte2 = resultPlanoCompl?.plano_acao || [];
+      const todasAcoes = [...acoesParte1, ...acoesParte2];
+
+      // Deduplicar por similaridade do campo "recomendacao" (primeiros 80 chars)
+      const acoesUnicas = todasAcoes.filter((acao: any, idx: number) => {
+        const key = (acao.what || acao.recomendacao || "").substring(0, 80).toLowerCase().trim();
+        if (!key) return false;
+        return todasAcoes.findIndex((a: any) =>
+          (a.what || a.recomendacao || "").substring(0, 80).toLowerCase().trim() === key
+        ) === idx;
+      });
+
+      const planoAcaoExtraido = acoesUnicas;
 
       console.log(`Conteúdo extraído: ${inventarioRiscos.length} riscos, ${matrizExames.length} exames, ${planoAcaoExtraido.length} ações`);
 
