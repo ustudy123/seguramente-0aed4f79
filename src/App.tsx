@@ -63,6 +63,7 @@ import AtivarConta from "./pages/AtivarConta";
 import AnaliseJornada from "./pages/AnaliseJornada";
 import Usuarios from "./pages/Usuarios";
 import PerfisAcesso from "./pages/PerfisAcesso";
+import MeuPerfil from "./pages/MeuPerfil";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
