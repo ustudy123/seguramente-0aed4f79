@@ -200,7 +200,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
             <div className="flex gap-2 shrink-0">
               {convitePendente && (
                 <>
-                  <Button size="sm" variant="outline" className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              <Button size="sm" variant="outline" className="text-primary border-primary/30 hover:bg-primary/10"
                     onClick={handleEnviarConvite} disabled={updateStatus.isPending}>
                     <Send className="w-3 h-3 mr-1" />
                     {usuario.status === "convite_enviado" ? "Reenviar" : "Enviar convite"}
@@ -244,7 +244,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
 
           {/* Alerta convite pendente */}
           {usuario.status === "pendente_convite" && (
-            <div className="mt-3 flex gap-2 items-center p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+            <div className="mt-3 flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
               <Mail className="w-4 h-4 shrink-0" />
               <span>Este usuário ainda não recebeu o convite de ativação.</span>
             </div>
