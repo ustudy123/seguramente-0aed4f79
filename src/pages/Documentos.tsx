@@ -723,6 +723,34 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rename Pasta Dialog */}
+      <Dialog open={!!pastaToRename} onOpenChange={(o) => { if (!o) setPastaToRename(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4" />
+              Renomear Pasta
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Novo nome</Label>
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && confirmRenamePasta()}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPastaToRename(null)}>Cancelar</Button>
+            <Button onClick={confirmRenamePasta} disabled={renaming || !renameValue.trim()}>
+              {renaming ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
