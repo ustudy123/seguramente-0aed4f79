@@ -149,7 +149,7 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
               title="Copiar link"
             >
               {copied
-                ? <CheckCircle2 className="h-4 w-4 text-green-500" />
+                ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 : <Copy className="h-4 w-4" />
               }
             </Button>
@@ -207,7 +207,7 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
         </div>
 
         {campanha.status !== 'ativa' && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+          <p className="text-xs text-destructive/80 text-center">
             ⚠️ Ative a campanha para que os colaboradores possam acessar o questionário.
           </p>
         )}
