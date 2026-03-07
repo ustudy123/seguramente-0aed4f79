@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Radar,
   RefreshCw,
+  Pencil,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -66,6 +75,9 @@ const Documentos = () => {
   const [createPastaParentId, setCreatePastaParentId] = useState<string | null>(null);
   const [createPastaParentNome, setCreatePastaParentNome] = useState<string | null>(null);
   const [pastaToDelete, setPastaToDelete] = useState<string | null>(null);
+  const [pastaToRename, setPastaToRename] = useState<DocumentoPastaNode | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
@@ -81,6 +93,7 @@ const Documentos = () => {
     loading,
     loadingAudit,
     createPasta,
+    updatePasta,
     deletePasta,
     moveDocumento,
     movingDoc,
@@ -153,9 +166,25 @@ const Documentos = () => {
   }, [tree]);
 
   const handleRenamePasta = useCallback((pasta: DocumentoPastaNode) => {
-    // Para renomear, vamos abrir o modal de criação com dados pré-preenchidos
-    toast.info("Função de renomear em desenvolvimento");
+    setPastaToRename(pasta);
+    setRenameValue(pasta.nome);
   }, []);
+
+  const confirmRenamePasta = async () => {
+    if (!pastaToRename || !renameValue.trim()) return;
+    setRenaming(true);
+    try {
+      await updatePasta({ id: pastaToRename.id, nome: renameValue.trim() });
+      toast.success("Pasta renomeada com sucesso!");
+      if (selectedPasta?.id === pastaToRename.id) {
+        setSelectedPasta(prev => prev ? { ...prev, nome: renameValue.trim() } : prev);
+      }
+    } catch {
+      // Error handled in hook
+    }
+    setRenaming(false);
+    setPastaToRename(null);
+  };
 
   const handleDeletePasta = useCallback((pastaId: string) => {
     setPastaToDelete(pastaId);
@@ -694,6 +723,34 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rename Pasta Dialog */}
+      <Dialog open={!!pastaToRename} onOpenChange={(o) => { if (!o) setPastaToRename(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4" />
+              Renomear Pasta
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Novo nome</Label>
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && confirmRenamePasta()}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPastaToRename(null)}>Cancelar</Button>
+            <Button onClick={confirmRenamePasta} disabled={renaming || !renameValue.trim()}>
+              {renaming ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
