@@ -82,6 +82,7 @@ export interface ColaboradorEditData {
   centro_custo: string | null;
   gestor_imediato: string | null;
   data_admissao: string | null;
+  matricula_esocial?: string | null;
 }
 
 interface ColaboradorFormProps {
