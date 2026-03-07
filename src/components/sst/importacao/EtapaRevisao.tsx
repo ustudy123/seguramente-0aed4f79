@@ -93,7 +93,7 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
       const prioridadeMap: Record<string, string> = { alta: "alta", media: "media", baixa: "baixa" };
       const prazoDate = parsePrazo(acao.prazo);
 
-      const { error } = await supabase.from("plano_acoes").insert({
+      const { error } = await supabase.from("plano_acoes").insert([{
         tenant_id: profile.tenant_id,
         titulo: acao.recomendacao,
         descricao: acao.recomendacao,
@@ -110,7 +110,7 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         criado_por_nome: session.user.email,
         tipo: "acao",
         progresso: 0,
-      });
+      }]);
 
       if (error) throw error;
       setAcoesSalvas(prev => new Set([...prev, index]));
