@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 interface Props {
   state: ImportacaoState;
   resetar: () => void;
+  onVerDocumentos?: () => void;
 }
 
 export function EtapaConsolidacao({ state, resetar }: Props) {
