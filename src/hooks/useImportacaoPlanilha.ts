@@ -340,6 +340,7 @@ export function useImportacaoPlanilha() {
               salario: g(idx.salario),
               centroCusto: g(idx.centroCusto),
               gestorImediato: g(idx.gestorImediato),
+              matriculaEsocial: g(idx.matriculaEsocial),
               banco: g(idx.banco),
               agencia: g(idx.agencia),
               conta: g(idx.conta),
