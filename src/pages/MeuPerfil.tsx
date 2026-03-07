@@ -115,8 +115,8 @@ export default function MeuPerfil() {
                 {profile?.cargo || "Colaborador"}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Building2 className="h-3.5 w-3.5" />
-                {tenant?.nome_fantasia || tenant?.razao_social || "—"}
+              <Building2 className="h-3.5 w-3.5" />
+                {tenant?.nome || "—"}
               </div>
               {isSuperAdmin && (
                 <Badge className="mt-1 gap-1 bg-primary/10 text-primary border-primary/20">
@@ -152,7 +152,7 @@ export default function MeuPerfil() {
             <Label>E-mail</Label>
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
               <Mail className="h-4 w-4 shrink-0" />
-              {profile?.email || "—"}
+              {(profile as any)?.email || "—"}
             </div>
             <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado por aqui. Contate o administrador.</p>
           </div>
@@ -167,7 +167,7 @@ export default function MeuPerfil() {
             <div className="space-y-2">
               <Label>Departamento</Label>
               <div className="px-3 py-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
-                {profile?.departamento || "—"}
+                {(profile as any)?.departamento || "—"}
               </div>
             </div>
           </div>
