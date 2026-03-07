@@ -31,10 +31,10 @@ type ErgonomiaEixo = "cognitivo" | "fisico" | "organizacional";
 type RiscoSeveridade = "baixa" | "moderada" | "alta";
 
 export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }: IntegracaoErgonomiaAEPProps) {
+  // All hooks at top level - before any conditional returns
   const { tenantId } = useTenant();
   const { empresaAtivaId } = useEmpresaAtiva();
   const navigate = useNavigate();
-
   const [gerando, setGerando] = useState(false);
   const [gerado, setGerado] = useState(false);
 
@@ -73,7 +73,8 @@ export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }
       const probabilidade: RiscoSeveridade = cls === "critico" ? "alta" : cls === "risco" ? "moderada" : "baixa";
       const eixo: ErgonomiaEixo = "organizacional";
 
-      const { error } = await supabase
+      // Use supabase as any to bypass strict type for insert
+      const { error } = await (supabase as any)
         .from("ergonomia_riscos")
         .insert({
           tenant_id: tenantId,
@@ -106,23 +107,23 @@ export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }
     }
   };
 
-  const prioridadeCor = {
-    critico: "border-red-200 bg-red-50/30",
-    risco: "border-orange-200 bg-orange-50/30",
-    atencao: "border-amber-200 bg-amber-50/30",
-  }[cls as "critico" | "risco" | "atencao"] || "";
+  const prioridadeCor = cls === "critico"
+    ? "border-red-200 bg-red-50/30"
+    : cls === "risco"
+    ? "border-orange-200 bg-orange-50/30"
+    : "border-amber-200 bg-amber-50/30";
 
-  const prioridadeLabel = {
-    critico: "Risco Crítico — AEP Necessária",
-    risco: "Risco Alto — AEP Recomendada",
-    atencao: "Atenção — AEP Sugerida",
-  }[cls as "critico" | "risco" | "atencao"] || "";
+  const prioridadeLabel = cls === "critico"
+    ? "Risco Crítico — AEP Necessária"
+    : cls === "risco"
+    ? "Risco Alto — AEP Recomendada"
+    : "Atenção — AEP Sugerida";
 
-  const iconCor = {
-    critico: "text-red-600",
-    risco: "text-orange-600",
-    atencao: "text-amber-600",
-  }[cls as "critico" | "risco" | "atencao"] || "";
+  const iconCor = cls === "critico"
+    ? "text-red-600"
+    : cls === "risco"
+    ? "text-orange-600"
+    : "text-amber-600";
 
   return (
     <Card className={cn("border", prioridadeCor)}>
@@ -149,7 +150,7 @@ export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }
         </div>
 
         {gerado ? (
-          <div className="flex items-center gap-2 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-emerald-200 bg-emerald-50">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-medium text-emerald-800">AEP gerada com sucesso!</p>
@@ -158,7 +159,7 @@ export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }
             <Button
               variant="outline"
               size="sm"
-              className="gap-1 text-xs border-emerald-300"
+              className="gap-1 text-xs"
               onClick={() => navigate("/ergonomia")}
             >
               <ExternalLink className="h-3 w-3" />
