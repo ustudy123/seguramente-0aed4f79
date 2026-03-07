@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { motion } from "framer-motion";
 import { 
   FileText, 
@@ -66,6 +67,7 @@ const Documentos = () => {
   const [searchParams] = useSearchParams();
   const colaboradorIdFromUrl = searchParams.get("colaborador");
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,8 +83,12 @@ const Documentos = () => {
   const [renameValue, setRenameValue] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
-  // Key to prevent wizard from auto-opening again after structure is created
-  const wizardDismissedKey = tenantId ? `wizard_estrutura_dismissed_${tenantId}` : null;
+  // Key is per-empresa to correctly detect when a company has no structure yet
+  const wizardDismissedKey = tenantId && empresaAtivaId
+    ? `wizard_estrutura_dismissed_${tenantId}_${empresaAtivaId}`
+    : tenantId
+    ? `wizard_estrutura_dismissed_${tenantId}`
+    : null;
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
     documentoNome: string;
@@ -140,19 +146,25 @@ const Documentos = () => {
     }
   }, [needsSync, syncing, syncColaboradores]);
 
-  // Auto-abrir wizard quando não há estrutura de pastas (primeira vez)
+  // Reset wizard state when empresa changes so check runs fresh
   useEffect(() => {
-    if (!loading && pastas.length === 0 && !showWizard && !initializing) {
-      // Só mostra se nunca foi dispensado antes para este tenant
+    setShowWizard(false);
+  }, [empresaAtivaId]);
+
+  // Auto-abrir wizard quando não há estrutura de pastas para esta empresa
+  useEffect(() => {
+    if (loading || initializing) return;
+    if (pastas.length === 0) {
+      // Só mostra se nunca foi dispensado para esta empresa
       if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
       const timer = setTimeout(() => setShowWizard(true), 600);
       return () => clearTimeout(timer);
     }
-    // Se já tem estrutura, marcar como dispensado para nunca mais abrir automaticamente
-    if (!loading && pastas.length > 0 && wizardDismissedKey) {
+    // Se já tem estrutura, marcar como dispensado para esta empresa
+    if (pastas.length > 0 && wizardDismissedKey) {
       localStorage.setItem(wizardDismissedKey, "1");
     }
-  }, [loading, pastas.length, initializing, wizardDismissedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, pastas.length, initializing, wizardDismissedKey, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
