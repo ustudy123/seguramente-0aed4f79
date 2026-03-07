@@ -185,6 +185,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             centro_custo: data.centro_custo || null,
             gestor_imediato: data.gestor_imediato || null,
             data_admissao: data.data_admissao,
+            matricula_esocial: data.matricula_esocial || null,
           })
           .eq("id", colaborador.id)
           .eq("tenant_id", tenantId);
@@ -215,6 +216,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           empresa_id: empresaAtivaId || null,
           status: "concluido",
           criado_por: user?.id,
+          matricula_esocial: data.matricula_esocial || null,
         });
 
         if (error) {
