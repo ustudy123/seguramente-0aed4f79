@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Users, Plus, Search, Filter, User, Building2, Link2,
+  Users, Plus, Search, User, Building2, Link2,
   Clock, Sparkles, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { useUsuarios, TIPO_USUARIO_LABELS, STATUS_LABELS, UsuarioStatus, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
@@ -15,6 +15,9 @@ import { NovoUsuarioDialog } from "@/components/usuarios/NovoUsuarioDialog";
 import { UsuarioDetalheDialog } from "@/components/usuarios/UsuarioDetalheDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "todos", label: "Todos os status" },
@@ -27,12 +30,28 @@ const TIPO_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function Usuarios() {
+  const { tenantId } = useAuth();
   const { usuarios, isLoading } = useUsuarios();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterTipo, setFilterTipo] = useState("todos");
+  const [filterEmpresa, setFilterEmpresa] = useState("todos");
   const [showNovo, setShowNovo] = useState(false);
   const [selecionado, setSelecionado] = useState<any>(null);
+
+  const { data: empresas = [] } = useQuery({
+    queryKey: ["empresas-lista", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await (supabase as any)
+        .from("empresa_cadastro")
+        .select("id, razao_social, nome_fantasia")
+        .eq("tenant_id", tenantId)
+        .order("razao_social");
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
 
   const filtered = useMemo(() => {
     return usuarios.filter(u => {
@@ -44,20 +63,31 @@ export default function Usuarios() {
         (u.telefone_principal || "").includes(q);
       const matchStatus = filterStatus === "todos" || u.status === filterStatus;
       const matchTipo = filterTipo === "todos" || u.tipo_usuario === filterTipo;
-      return matchQ && matchStatus && matchTipo;
+      const matchEmpresa = filterEmpresa === "todos" ||
+        ((u as any).vinculos || []).some((v: any) => v.empresa_id === filterEmpresa && v.status === "ativo");
+      return matchQ && matchStatus && matchTipo && matchEmpresa;
     });
-  }, [usuarios, search, filterStatus, filterTipo]);
+  }, [usuarios, search, filterStatus, filterTipo, filterEmpresa]);
 
-  // Resumo de métricas
+  // Métricas
   const ativos = usuarios.filter(u => u.status === "ativo").length;
   const convites = usuarios.filter(u => ["convite_enviado", "aguardando_ativacao", "pendente_convite"].includes(u.status)).length;
   const duplicidades = usuarios.filter(u => u.alerta_duplicidade).length;
   const multiempresa = usuarios.filter(u => ((u as any).vinculos || []).filter((v: any) => v.status === "ativo").length > 1).length;
 
+  const hasFilters = search || filterStatus !== "todos" || filterTipo !== "todos" || filterEmpresa !== "todos";
+
   function fmt(d?: string) {
     if (!d) return null;
     try { return format(new Date(d), "dd/MM/yy", { locale: ptBR }); }
     catch { return null; }
+  }
+
+  function getEmpresaPrincipal(u: any) {
+    const vinculos: any[] = u.vinculos || [];
+    const ativo = vinculos.find(v => v.status === "ativo");
+    if (!ativo) return null;
+    return ativo.empresa?.nome_fantasia || ativo.empresa?.razao_social || null;
   }
 
   return (
@@ -111,6 +141,17 @@ export default function Usuarios() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+        <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
+          <SelectTrigger className="w-52">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as empresas</SelectItem>
+            {empresas.map((e: any) => (
+              <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-44">
             <SelectValue />
@@ -127,8 +168,10 @@ export default function Usuarios() {
             {TIPO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        {(search || filterStatus !== "todos" || filterTipo !== "todos") && (
-          <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setFilterStatus("todos"); setFilterTipo("todos"); }}>
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={() => {
+            setSearch(""); setFilterStatus("todos"); setFilterTipo("todos"); setFilterEmpresa("todos");
+          }}>
             <RefreshCw className="w-3.5 h-3.5 mr-1" /> Limpar
           </Button>
         )}
@@ -142,8 +185,8 @@ export default function Usuarios() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">{search ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}</p>
-          {!search && (
+          <p className="font-medium">{hasFilters ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}</p>
+          {!hasFilters && (
             <Button className="mt-4" onClick={() => setShowNovo(true)}>
               <Plus className="w-4 h-4 mr-2" /> Cadastrar primeiro usuário
             </Button>
@@ -154,7 +197,7 @@ export default function Usuarios() {
           {/* Header da lista */}
           <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
             <span>Usuário</span>
-            <span>E-mail</span>
+            <span>Empresa / E-mail</span>
             <span>Tipo</span>
             <span>Vínculos</span>
             <span>Qualidade</span>
@@ -165,6 +208,7 @@ export default function Usuarios() {
             const vinculos: any[] = (u as any).vinculos || [];
             const ativos = vinculos.filter(v => v.status === "ativo");
             const { score, pct } = calcularQualidade(u, vinculos);
+            const empresaPrincipal = getEmpresaPrincipal(u);
 
             return (
               <Card
@@ -191,9 +235,11 @@ export default function Usuarios() {
                       <Badge variant="secondary" className="text-xs">
                         {TIPO_USUARIO_LABELS[u.tipo_usuario] || u.tipo_usuario}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        <Link2 className="w-3 h-3 inline mr-0.5" />{ativos.length} vínculo(s)
-                      </span>
+                      {empresaPrincipal && (
+                        <span className="text-xs text-muted-foreground">
+                          <Building2 className="w-3 h-3 inline mr-0.5" />{empresaPrincipal}
+                        </span>
+                      )}
                     </div>
                     <QualidadeScoreIndicator score={score} pct={pct} />
                   </div>
@@ -215,12 +261,24 @@ export default function Usuarios() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {u.cpf || (u.ultimo_acesso_em ? `Último acesso: ${fmt(u.ultimo_acesso_em)}` : "Nunca acessou")}
+                          {u.cpf || (u.ultimo_acesso_em ? `Acesso: ${fmt(u.ultimo_acesso_em)}` : "Nunca acessou")}
                         </p>
                       </div>
                     </div>
 
-                    <p className="text-sm text-muted-foreground truncate">{u.email_principal}</p>
+                    <div className="min-w-0">
+                      {empresaPrincipal ? (
+                        <>
+                          <p className="text-sm font-medium truncate flex items-center gap-1">
+                            <Building2 className="w-3 h-3 text-muted-foreground shrink-0" />
+                            {empresaPrincipal}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">{u.email_principal}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground truncate">{u.email_principal}</p>
+                      )}
+                    </div>
 
                     <Badge variant="secondary" className="text-xs truncate">
                       {TIPO_USUARIO_LABELS[u.tipo_usuario] || u.tipo_usuario}
