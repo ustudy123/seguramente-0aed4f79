@@ -26,17 +26,50 @@ export interface SSTDocumento {
   updated_at: string;
 }
 
-async function findSSTFolder(tenantId: string): Promise<string | null> {
-  // Find the "SST da Empresa" folder under "Documentos Administrativos"
-  const { data } = await supabase
+async function findOrCreateSSTFolder(tenantId: string): Promise<string | null> {
+  // 1. Look for existing "SST da Empresa" folder (any tipo)
+  const { data: existing } = await supabase
     .from("documento_pastas")
     .select("id")
     .eq("tenant_id", tenantId)
     .eq("nome", "SST da Empresa")
-    .eq("tipo", "categoria")
     .maybeSingle();
 
-  return data?.id || null;
+  if (existing?.id) return existing.id;
+
+  // 2. Find or create parent "SST" / "Compliance SST" / "Gestão de Riscos - SST" folder
+  let pastaPaiId: string | null = null;
+  const parentCandidates = ["SST", "Compliance SST", "Gestão de Riscos - SST", "SST e Saúde Ocupacional", "Segurança e Saúde no Trabalho"];
+
+  for (const candidateName of parentCandidates) {
+    const { data: parent } = await supabase
+      .from("documento_pastas")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("nome", candidateName)
+      .maybeSingle();
+    if (parent?.id) { pastaPaiId = parent.id; break; }
+  }
+
+  // 3. If no SST parent exists, create a root "SST da Empresa" folder directly
+  const { data: created, error } = await supabase
+    .from("documento_pastas")
+    .insert({
+      tenant_id: tenantId,
+      nome: "SST da Empresa",
+      tipo: "categoria",
+      icone: "Shield",
+      pasta_pai_id: pastaPaiId,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.warn("Aviso: não foi possível criar pasta SST da Empresa:", error.message);
+    return null;
+  }
+
+  return created?.id || null;
 }
 
 export function useSSTDocumentos() {
@@ -111,7 +144,7 @@ export function useSSTDocumentos() {
       }
 
       // 2. Also insert into "documentos" table (Documentos module) linked to "SST da Empresa" folder
-      const pastaId = await findSSTFolder(tenantId);
+      const pastaId = await findOrCreateSSTFolder(tenantId);
 
       const docStatus = status === "vencido" ? "vencido" : "valido";
       const { error: docError } = await supabase
