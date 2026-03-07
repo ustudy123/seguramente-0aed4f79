@@ -246,6 +246,7 @@ export type Database = {
           gestor_imediato: string | null
           id: string
           jornada_trabalho: string | null
+          matricula_esocial: string | null
           medico_exame_demissional: string | null
           motivo_desligamento: string | null
           multa_fgts: boolean | null
@@ -314,6 +315,7 @@ export type Database = {
           gestor_imediato?: string | null
           id?: string
           jornada_trabalho?: string | null
+          matricula_esocial?: string | null
           medico_exame_demissional?: string | null
           motivo_desligamento?: string | null
           multa_fgts?: boolean | null
@@ -382,6 +384,7 @@ export type Database = {
           gestor_imediato?: string | null
           id?: string
           jornada_trabalho?: string | null
+          matricula_esocial?: string | null
           medico_exame_demissional?: string | null
           motivo_desligamento?: string | null
           multa_fgts?: boolean | null

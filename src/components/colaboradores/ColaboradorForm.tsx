@@ -64,6 +64,7 @@ const formSchema = z.object({
   centro_custo: z.string().optional(),
   gestor_imediato: z.string().optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
+  matricula_esocial: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -81,6 +82,7 @@ export interface ColaboradorEditData {
   centro_custo: string | null;
   gestor_imediato: string | null;
   data_admissao: string | null;
+  matricula_esocial?: string | null;
 }
 
 interface ColaboradorFormProps {
@@ -123,6 +125,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       centro_custo: "",
       gestor_imediato: "",
       data_admissao: new Date().toISOString().split("T")[0],
+      matricula_esocial: "",
     },
   });
 
@@ -140,6 +143,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         centro_custo: colaborador.centro_custo || "",
         gestor_imediato: colaborador.gestor_imediato || "",
         data_admissao: colaborador.data_admissao || "",
+        matricula_esocial: colaborador.matricula_esocial || "",
       });
     } else if (open && !colaborador) {
       form.reset({
@@ -154,6 +158,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         centro_custo: "",
         gestor_imediato: "",
         data_admissao: new Date().toISOString().split("T")[0],
+        matricula_esocial: "",
       });
     }
   }, [open, colaborador, form]);
@@ -180,6 +185,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             centro_custo: data.centro_custo || null,
             gestor_imediato: data.gestor_imediato || null,
             data_admissao: data.data_admissao,
+            matricula_esocial: data.matricula_esocial || null,
           })
           .eq("id", colaborador.id)
           .eq("tenant_id", tenantId);
@@ -210,6 +216,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           empresa_id: empresaAtivaId || null,
           status: "concluido",
           criado_por: user?.id,
+          matricula_esocial: data.matricula_esocial || null,
         });
 
         if (error) {
@@ -451,20 +458,35 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 )}
               />
 
-              {/* Centro de Custo */}
-              <FormField
-                control={form.control}
-                name="centro_custo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Centro de Custo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: CC-001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Centro de Custo | Matrícula eSocial */}
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="centro_custo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Centro de Custo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: CC-001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="matricula_esocial"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Matrícula eSocial</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: 00123456789" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
             </div>
 
