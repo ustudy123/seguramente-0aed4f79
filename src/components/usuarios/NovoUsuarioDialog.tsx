@@ -272,22 +272,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-                  {/* Linha 1: Nome Completo (full width) */}
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label>Nome Completo *</Label>
-                    <Input {...register("nome_completo")} placeholder="Maria da Silva Santos" />
-                    {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo.message}</p>}
-                  </div>
-
-                  {/* Linha 2: E-mail (full width) */}
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label>E-mail *</Label>
-                    <Input {...register("email_principal")} type="email" placeholder="maria@empresa.com"
-                      onBlur={e => verificarDuplicidade(e.target.value, watchedValues.cpf)} />
-                    {errors.email_principal && <p className="text-xs text-destructive">{errors.email_principal.message}</p>}
-                  </div>
-
-                  {/* Linha 3: CPF + Telefone */}
+                  {/* Linha 1: CPF primeiro — dispara lookup ao preencher */}
                   <div className="space-y-1.5">
                     <Label className="flex items-center gap-1.5">
                       CPF
@@ -310,6 +295,21 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     <Input {...register("telefone_principal")} placeholder="(11) 99000-0000" />
                   </div>
 
+                  {/* Linha 2: Nome Completo (full width) */}
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label>Nome Completo *</Label>
+                    <Input {...register("nome_completo")} placeholder="Maria da Silva Santos" />
+                    {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo.message}</p>}
+                  </div>
+
+                  {/* Linha 3: E-mail (full width) */}
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label>E-mail *</Label>
+                    <Input {...register("email_principal")} type="email" placeholder="maria@empresa.com"
+                      onBlur={e => verificarDuplicidade(e.target.value, watchedValues.cpf)} />
+                    {errors.email_principal && <p className="text-xs text-destructive">{errors.email_principal.message}</p>}
+                  </div>
+
                   {/* Linha 4: Data de Nascimento + Cargo/Função */}
                   <div className="space-y-1.5">
                     <Label>Data de Nascimento</Label>
@@ -328,7 +328,6 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                       defaultValue="gestor"
                       onValueChange={v => {
                         setValue("tipo_usuario", v);
-                        // sincroniza tipo_vinculo automaticamente
                         setValue("tipo_vinculo", v);
                       }}
                     >
