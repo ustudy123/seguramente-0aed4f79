@@ -478,7 +478,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
               </div>
             )}
             {dadosReaproveitados && (
-              <div className="flex gap-2 items-center p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 mb-2">
+              <div className="flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-xs text-primary mb-2">
                 ✓ Dados do usuário aplicados. Complete os campos específicos de colaborador.
               </div>
             )}
