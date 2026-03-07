@@ -218,23 +218,25 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
           )}
 
           {step === "resultado" && (
-            <div className="flex flex-col gap-4 min-h-0 flex-1">
+            <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-hidden">
               {transcricao && (
-                <div className="bg-muted/50 rounded-lg p-3 text-sm max-h-24 overflow-y-auto">
+                <div className="bg-muted/50 rounded-lg p-3 text-sm flex-shrink-0">
                   <p className="font-medium text-xs text-muted-foreground mb-1">Transcrição:</p>
-                  <p className="text-foreground">{transcricao}</p>
+                  <ScrollArea className="max-h-20">
+                    <p className="text-foreground">{transcricao}</p>
+                  </ScrollArea>
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-shrink-0">
                 <p className="text-sm font-medium">{atividades.length} atividade(s) identificada(s)</p>
                 <Button variant="ghost" size="sm" onClick={toggleTodas}>
                   {atividades.every(a => a.selecionada) ? "Desmarcar todas" : "Selecionar todas"}
                 </Button>
               </div>
 
-              <ScrollArea className="flex-1 max-h-[300px]">
-                <div className="space-y-2 pr-2">
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="space-y-2 pr-3">
                   {atividades.map((at, i) => (
                     <div
                       key={i}
@@ -246,7 +248,7 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm">{at.nome}</p>
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{at.descricao}</p>
-                          <div className="flex gap-1.5 mt-2">
+                          <div className="flex gap-1.5 mt-2 flex-wrap">
                             <Badge variant="outline" className="text-xs">{FREQ_LABELS[at.frequencia] || at.frequencia}</Badge>
                             <Badge className={`text-xs ${complColor[at.complexidade] || ""}`}>{COMPL_LABELS[at.complexidade] || at.complexidade}</Badge>
                             <Badge className="text-xs bg-blue-100 text-blue-800">{CLASS_LABELS[at.classificacao] || at.classificacao}</Badge>
@@ -258,7 +260,7 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
                 </div>
               </ScrollArea>
 
-              <div className="flex items-center justify-between pt-2 border-t">
+              <div className="flex items-center justify-between pt-2 border-t flex-shrink-0">
                 <Button variant="ghost" onClick={handleClose}>Cancelar</Button>
                 <Button className="gap-2" onClick={handleImportar} disabled={importando || selecionadasCount === 0}>
                   {importando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
