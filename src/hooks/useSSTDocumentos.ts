@@ -100,6 +100,7 @@ export function useSSTDocumentos() {
       profissional_responsavel?: string;
       empresa_emissora?: string;
       observacoes?: string;
+      analise_ia?: any;          // dados estruturados extraídos pela IA
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
