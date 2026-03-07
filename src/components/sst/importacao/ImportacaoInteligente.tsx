@@ -74,7 +74,7 @@ const etapaAtualDescricao: Record<number, string> = {
   5: "Documento importado com sucesso",
 };
 
-export function ImportacaoInteligente() {
+export function ImportacaoInteligente({ onImportado }: { onImportado?: () => void }) {
   const [state, setState] = useState<ImportacaoState>({
     etapa: 0,
     arquivo: null,
