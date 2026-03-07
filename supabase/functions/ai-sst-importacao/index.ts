@@ -231,8 +231,11 @@ Retorne JSON:
 
       // Executar as 3 chamadas em paralelo para economizar tempo
       console.log(`Iniciando 3 chamadas paralelas à OpenAI...`);
+      // Para encontrar funções/cargos, precisamos de cabeçalho + início do inventário
+      const contextoDadosGerais = `${cabecalho}\n\n--- SEÇÃO DE INVENTÁRIO/RISCOS (para extração de funções e setores) ---\n${inventario.substring(0, 8000)}`;
+
       const [resultDados, resultInventario, resultPlano] = await Promise.all([
-        callOpenAI(promptDadosGerais, `Documento SST (${tipo}) — Cabeçalho e estrutura:\n\n${cabecalho}`),
+        callOpenAI(promptDadosGerais, `Documento SST (${tipo}) — Cabeçalho, estrutura organizacional e inventário:\n\n${contextoDadosGerais}`),
         callOpenAI(promptInventario, `Documento SST (${tipo}) — Seção de inventário/riscos. Extraia TODOS os riscos, linha por linha:\n\n${inventario}`),
         callOpenAI(promptPlano, `Documento SST (${tipo}) — Seção de plano de ação e recomendações:\n\n${planoAcao}`),
       ]);
