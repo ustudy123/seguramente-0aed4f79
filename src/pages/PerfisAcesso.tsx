@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ShieldCheck, Plus, Search, LayoutGrid, RefreshCw,
+  ShieldCheck, Plus, Search, LayoutGrid, RefreshCw, History,
 } from "lucide-react";
 import { usePerfisAcesso, type PerfilAcesso, type PerfilPermissao } from "@/hooks/usePerfisAcesso";
 import { PerfilCard } from "@/components/perfis/PerfilCard";
 import { TemplateCard } from "@/components/perfis/TemplateCard";
 import { PerfilFormDialog } from "@/components/perfis/PerfilFormDialog";
 import { VinculosPerfilDialog } from "@/components/perfis/VinculosPerfilDialog";
+import { SimularAcessoDialog } from "@/components/perfis/SimularAcessoDialog";
+import { AuditLogPerfil } from "@/components/perfis/AuditLogPerfil";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +24,7 @@ export default function PerfisAcesso() {
     templates, loadingTemplates,
     perfis, loadingPerfis,
     vinculos, loadingVinculos,
+    auditLogs, loadingAuditLogs,
     createPerfil, updatePerfil, togglePerfilStatus,
     clonarTemplate, vincularPerfil, desvincularPerfil,
   } = usePerfisAcesso();
@@ -32,6 +35,7 @@ export default function PerfisAcesso() {
   const [perfilFormOpen, setPerfilFormOpen] = useState(false);
   const [perfilEditando, setPerfilEditando] = useState<PerfilAcesso | undefined>();
   const [perfilVinculos, setPerfilVinculos] = useState<PerfilAcesso | undefined>();
+  const [perfilSimulacao, setPerfilSimulacao] = useState<PerfilAcesso | undefined>();
   const [submitting, setSubmitting] = useState(false);
 
   // Buscar usuários do tenant para vinculação
@@ -92,6 +96,9 @@ export default function PerfisAcesso() {
 
   const loading = loadingTemplates || loadingPerfis;
 
+  const perfisRiscoCritico = perfis.filter((p) => p.nivel_risco === "critico").length;
+  const perfisRiscoElevado = perfis.filter((p) => p.nivel_risco === "elevado").length;
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -131,6 +138,24 @@ export default function PerfisAcesso() {
         ))}
       </div>
 
+      {/* Alertas de risco */}
+      {(perfisRiscoCritico > 0 || perfisRiscoElevado > 0) && (
+        <div className="flex flex-wrap gap-2">
+          {perfisRiscoCritico > 0 && (
+            <div className="flex items-center gap-2 text-[12px] text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span><strong>{perfisRiscoCritico}</strong> perfil{perfisRiscoCritico > 1 ? "is" : ""} com risco crítico — revise as permissões</span>
+            </div>
+          )}
+          {perfisRiscoElevado > 0 && (
+            <div className="flex items-center gap-2 text-[12px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span><strong>{perfisRiscoElevado}</strong> perfil{perfisRiscoElevado > 1 ? "is" : ""} com risco elevado</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center justify-between gap-3">
           <TabsList>
@@ -141,6 +166,10 @@ export default function PerfisAcesso() {
             <TabsTrigger value="templates">
               Templates do Sistema
               {templates.length > 0 && <Badge variant="secondary" className="ml-1.5 h-4 text-[10px]">{templates.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="auditoria">
+              <History className="w-3.5 h-3.5 mr-1.5" />
+              Auditoria
             </TabsTrigger>
           </TabsList>
           <div className="relative">
@@ -190,6 +219,7 @@ export default function PerfisAcesso() {
                           onClone={handleClonar}
                           onToggleStatus={(id, ativo) => togglePerfilStatus.mutate({ id, ativo })}
                           onVerVinculos={setPerfilVinculos}
+                          onSimular={setPerfilSimulacao}
                         />
                       </motion.div>
                     ))}
@@ -210,6 +240,7 @@ export default function PerfisAcesso() {
                           onClone={handleClonar}
                           onToggleStatus={(id, ativo) => togglePerfilStatus.mutate({ id, ativo })}
                           onVerVinculos={setPerfilVinculos}
+                          onSimular={setPerfilSimulacao}
                         />
                       </motion.div>
                     ))}
@@ -247,6 +278,17 @@ export default function PerfisAcesso() {
             </div>
           )}
         </TabsContent>
+
+        {/* Auditoria */}
+        <TabsContent value="auditoria" className="mt-4">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-[13px] font-semibold text-foreground mb-1">Trilha de Auditoria — Perfis & Acessos</p>
+            <p className="text-[12px] text-muted-foreground mb-4">
+              Registro imutável de todas as alterações críticas de perfis, permissões e vínculos
+            </p>
+            <AuditLogPerfil logs={auditLogs} loading={loadingAuditLogs} />
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
@@ -265,8 +307,16 @@ export default function PerfisAcesso() {
           perfil={perfilVinculos}
           vinculos={vinculos}
           usuarios={usuarios}
-          onVincular={(usuarioId) => vincularPerfil.mutate({ usuario_id: usuarioId, perfil_id: perfilVinculos.id })}
+          onVincular={(payload) => vincularPerfil.mutate(payload)}
           onDesvincular={(vinculoId) => desvincularPerfil.mutate(vinculoId)}
+        />
+      )}
+
+      {perfilSimulacao && (
+        <SimularAcessoDialog
+          open={!!perfilSimulacao}
+          onClose={() => setPerfilSimulacao(undefined)}
+          perfil={perfilSimulacao}
         />
       )}
     </div>
