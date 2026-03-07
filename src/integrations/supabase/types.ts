@@ -12485,7 +12485,7 @@ export type Database = {
           campanha_id: string
           colaborador_id: string | null
           concluido_em: string | null
-          convite_id: string
+          convite_id: string | null
           created_at: string
           id: string
           identificacao_voluntaria: boolean
@@ -12500,7 +12500,7 @@ export type Database = {
           campanha_id: string
           colaborador_id?: string | null
           concluido_em?: string | null
-          convite_id: string
+          convite_id?: string | null
           created_at?: string
           id?: string
           identificacao_voluntaria?: boolean
@@ -12515,7 +12515,7 @@ export type Database = {
           campanha_id?: string
           colaborador_id?: string | null
           concluido_em?: string | null
-          convite_id?: string
+          convite_id?: string | null
           created_at?: string
           id?: string
           identificacao_voluntaria?: boolean
@@ -14102,6 +14102,23 @@ export type Database = {
       }
       auto_abrir_competencia_mensal: { Args: never; Returns: undefined }
       bloquear_profissionais_expirados: { Args: never; Returns: undefined }
+      buscar_campanha_por_token_publico: {
+        Args: { p_token: string }
+        Returns: {
+          campanha_anonimo: boolean
+          campanha_blocos_dinamicos: Json
+          campanha_data_fim: string
+          campanha_data_inicio: string
+          campanha_descricao: string
+          campanha_id: string
+          campanha_instrumento: string
+          campanha_mensagem_institucional: string
+          campanha_nome: string
+          campanha_politica_uso_dados: string
+          campanha_status: string
+          tenant_id: string
+        }[]
+      }
       buscar_cliente_por_activation_token: {
         Args: { p_token: string }
         Returns: {
@@ -14269,6 +14286,16 @@ export type Database = {
       recalcular_status_trabalhador: {
         Args: { p_trabalhador_id: string }
         Returns: undefined
+      }
+      salvar_resposta_anonima_campanha: {
+        Args: {
+          p_indicadores: Json
+          p_respostas: Json
+          p_tempo_segundos?: number
+          p_token_publico: string
+          p_user_agent?: string
+        }
+        Returns: Json
       }
       salvar_resposta_psicossocial: {
         Args: {

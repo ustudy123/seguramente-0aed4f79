@@ -18,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
 import {
-  type ConvitePsicossocial,
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
 } from "@/types/psicossocial";
@@ -55,16 +54,15 @@ export default function QuestionarioPsicossocial() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [convite, setConvite] = useState<ConvitePsicossocial | null>(null);
   const [campanha, setCampanha] = useState<CampanhaPsicossocial | null>(null);
   const [etapa, setEtapa] = useState<EtapaQuestionario>('consentimento');
   const [respostas, setRespostas] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const { buscarConvitePorToken, atualizarConvitePublico, salvarRespostaPublica } = usePsicossocial();
+  const { buscarCampanhaPorTokenPublico, salvarRespostaAnonimaCampanha } = usePsicossocial();
 
   useEffect(() => {
-    const loadConvite = async () => {
+    const loadCampanha = async () => {
       if (!token) {
         setError("Token não fornecido");
         setLoading(false);
@@ -72,7 +70,7 @@ export default function QuestionarioPsicossocial() {
       }
 
       try {
-        const data = await buscarConvitePorToken(token);
+        const data = await buscarCampanhaPorTokenPublico(token);
 
         if (!data) {
           setError("Link inválido ou expirado");
@@ -80,31 +78,13 @@ export default function QuestionarioPsicossocial() {
           return;
         }
 
-        if (data.status === 'concluido') {
-          setEtapa('concluido');
-          setLoading(false);
-          return;
-        }
-
-        if (data.status === 'expirado') {
-          setError("Este questionário expirou");
-          setLoading(false);
-          return;
-        }
-
-        if (data.campanha.status !== 'ativa') {
+        if (data.status !== 'ativa') {
           setError("Esta campanha não está mais ativa");
           setLoading(false);
           return;
         }
 
-        setConvite(data);
-        setCampanha(data.campanha);
-
-        if (data.status === 'pendente') {
-          await atualizarConvitePublico(token, 'iniciado');
-        }
-
+        setCampanha(data);
         setLoading(false);
       } catch (err) {
         console.error("Erro ao carregar questionário:", err);
@@ -113,10 +93,10 @@ export default function QuestionarioPsicossocial() {
       }
     };
 
-    loadConvite();
+    loadCampanha();
   }, [token]);
 
-  const instrumento = (campanha?.instrumento || 'copsoq') as InstrumentoPsicossocial;
+  const instrumento = (campanha?.instrumento || 'sipro') as InstrumentoPsicossocial;
   const totalPerguntas = getTotalPerguntas(instrumento);
   const tempoEstimado = Math.ceil(totalPerguntas * 0.4);
 
@@ -125,7 +105,7 @@ export default function QuestionarioPsicossocial() {
   };
 
   const handleSubmit = async () => {
-    if (!convite || !campanha) {
+    if (!campanha || !token) {
       toast.error("Erro interno. Tente recarregar a página.");
       return;
     }
@@ -133,9 +113,7 @@ export default function QuestionarioPsicossocial() {
     setSubmitting(true);
     try {
       const tempoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-      const conviteCompleto = { ...convite, campanha };
-      // Sempre anônimo — identificacaoVoluntaria sempre false
-      await salvarRespostaPublica(conviteCompleto, respostas, tempoSegundos, false);
+      await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos);
       setEtapa('concluido');
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
@@ -284,7 +262,7 @@ export default function QuestionarioPsicossocial() {
                 <span>Respostas anônimas registradas com sucesso</span>
               </div>
 
-              {/* Separador com mensagem sobre Ouvidoria */}
+              {/* Mensagem sobre Ouvidoria */}
               <div className="border rounded-xl p-4 bg-blue-50/60 border-blue-200 text-left space-y-2">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-blue-600 shrink-0" />
