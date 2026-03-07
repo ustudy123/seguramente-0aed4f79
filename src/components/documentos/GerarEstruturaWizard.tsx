@@ -134,17 +134,26 @@ function getPreviewEstrutura(params: Partial<WizardParams>) {
     {
       nome: "Governança e Administração",
       icone: "⚖️",
-      subs: ["Estrutura Organizacional", "Direcionamento Estratégico", "Licenças e Autorizações", "Certidões", "Registros em Conselhos"],
+      subs: ["Contrato Social e Estatuto", "Políticas e Diretrizes", "Licenças e Autorizações", "Certidões", "Registros em Conselhos"],
     },
     {
-      nome: "Processos Organizacionais",
+      nome: "Sistema de Gestão",
       icone: "📋",
-      subs: ["Mapeamento de Processos", "Procedimentos Operacionais (POPs)", "Gestão da Qualidade", "Gestão de Documentos"],
+      subs: [
+        "Procedimentos e Instruções de Trabalho (POPs, ITs)",
+        "Registros da Qualidade",
+        ...(gr >= 3 ? ["Gestão de Mudanças (MOC)"] : []),
+      ],
     },
     {
       nome: "Gestão de Riscos",
       icone: "🎯",
-      subs: ["Inventário de Riscos", "Matriz de Riscos", ...(gr >= 3 ? ["Análise de Processos Críticos"] : []), ...(gr >= 3 ? ["Gestão de Mudanças (MOC)"] : [])],
+      subs: [
+        "Inventário de Riscos",
+        "Análise de Riscos (APR / HAZOP)",
+        "Planos de Emergência",
+        ...(gr >= 3 ? ["Análise de Processos Críticos"] : []),
+      ],
     },
     {
       nome: "SST",
@@ -152,19 +161,19 @@ function getPreviewEstrutura(params: Partial<WizardParams>) {
       subs: [
         "Programas Legais (PGR, PCMSO, LTCAT)",
         ...(riscos.includes("ergonomico") ? ["Ergonomia (AEP, AET)"] : []),
-        ...(riscos.includes("psicossocial") ? ["Riscos Psicossociais"] : []),
-        "Treinamentos (NR-01, NR-05, NR-06)",
-        ...(riscos.includes("eletrico") ? ["NR-10 — Elétrico"] : []),
-        ...(riscos.includes("maquinas") ? ["NR-12 — Máquinas"] : []),
-        ...(riscos.includes("espaco_confinado") ? ["NR-33 — Espaço Confinado"] : []),
-        ...(riscos.includes("altura") ? ["NR-35 — Trabalho em Altura"] : []),
-        "Registros (CAT, Investigação de Acidentes)",
+        ...(riscos.includes("psicossocial") ? ["Riscos Psicossociais (NR-01)"] : []),
+        "Treinamentos (NR-01, NR-05, NR-06" +
+          (riscos.includes("eletrico") ? ", NR-10" : "") +
+          (riscos.includes("maquinas") ? ", NR-12" : "") +
+          ((gr >= 3 || riscos.includes("espaco_confinado")) ? ", NR-33" : "") +
+          ((gr >= 3 || riscos.includes("altura")) ? ", NR-35" : "") + ")",
+        "Registros e Evidências (CAT, Inspeções)",
       ],
     },
     ...(riscos.includes("ambiental") ? [{
       nome: "Gestão Ambiental",
       icone: "🌿",
-      subs: ["Licenciamento Ambiental", "Controle Ambiental", "Planos Ambientais (PGRS)"],
+      subs: ["Licenciamento Ambiental", "Monitoramento e Controle", "PGRS — Gerenciamento de Resíduos"],
     }] : []),
     {
       nome: "Gestão de Pessoas",
@@ -174,12 +183,12 @@ function getPreviewEstrutura(params: Partial<WizardParams>) {
     {
       nome: "Investigação de Incidentes",
       icone: "🔍",
-      subs: ["Acidentes", "Quase acidentes", "Falhas operacionais", "Não conformidades"],
+      subs: ["Acidentes de Trabalho", "Quase Acidentes", "Não Conformidades"],
     },
     {
       nome: "Auditorias e Melhoria Contínua",
       icone: "✅",
-      subs: ["Auditorias Internas", "Auditorias Externas", "Planos de Ação"],
+      subs: ["Auditorias Internas", "Auditorias Externas e Certificações", "Ações Corretivas e Preventivas"],
     },
   ];
 
