@@ -450,7 +450,14 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                           <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
                           <SelectContent>
                             {empresas.map((e: any) => (
-                              <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>
+                              <SelectItem key={e.id} value={e.id}>
+                                <div className="flex flex-col">
+                                  <span>{e.nome_fantasia || e.razao_social}</span>
+                                  {e.cnpj && (
+                                    <span className="text-xs text-muted-foreground">CNPJ: {e.cnpj}</span>
+                                  )}
+                                </div>
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
