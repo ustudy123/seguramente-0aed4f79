@@ -145,12 +145,12 @@ export function EtapaUpload({ state, updateState }: Props) {
       </Card>
 
       {/* Formatos e avisos */}
-      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+      <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
         <CardContent className="py-3 px-4 flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-amber-800 dark:text-amber-200">
-            <strong>Melhor resultado com PDFs nativos (texto selecionável).</strong> PDFs digitalizados (imagens) 
-            têm extração limitada — nesses casos, o sistema usará o nome e metadados do arquivo para auxiliar na classificação.
+            <strong>Melhor resultado com PDFs nativos (texto selecionável).</strong> A extração agora é feita 
+            server-side com suporte a múltiplos formatos. PDFs digitalizados (imagens) podem ter qualidade reduzida.
           </p>
         </CardContent>
       </Card>
@@ -162,9 +162,9 @@ export function EtapaUpload({ state, updateState }: Props) {
           size="lg"
         >
           {processando ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Lendo arquivo...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Extraindo texto...</>
           ) : (
-            <>Avançar — Classificar</>
+            <><CheckCircle2 className="w-4 h-4 mr-2" />Avançar — Classificar</>
           )}
         </Button>
       </div>
