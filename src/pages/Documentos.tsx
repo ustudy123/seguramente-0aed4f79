@@ -65,6 +65,7 @@ import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 const Documentos = () => {
   const [searchParams] = useSearchParams();
   const colaboradorIdFromUrl = searchParams.get("colaborador");
+  const { tenantId } = useAuth();
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
@@ -80,6 +81,8 @@ const Documentos = () => {
   const [renameValue, setRenameValue] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  // Key to prevent wizard from auto-opening again after structure is created
+  const wizardDismissedKey = tenantId ? `wizard_estrutura_dismissed_${tenantId}` : null;
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
     documentoNome: string;
