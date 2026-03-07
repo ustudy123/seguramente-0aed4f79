@@ -73,8 +73,13 @@ Responda SOMENTE em JSON com o seguinte formato:
 
     // ── Ação: extrair dados estruturados ─────────────────────────────────────
     if (action === "extrair") {
-      const texto = (documento_texto || "").substring(0, 15000);
+      // Para PGR usamos mais texto pois o inventário tende a ser extenso
+      const maxChars = (documento_tipo || "").includes("PGR") ? 28000 : 18000;
+      const texto = (documento_texto || "").substring(0, maxChars);
       const tipo = documento_tipo || "DOCUMENTO_SST";
+
+      // Prompt especializado por tipo de documento
+      const systemPrompt = buildExtractionPrompt(tipo);
 
       const resp = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -87,86 +92,10 @@ Responda SOMENTE em JSON com o seguinte formato:
           temperature: 0.1,
           response_format: { type: "json_object" },
           messages: [
-            {
-              role: "system",
-              content: `Você é um especialista em extração de dados de documentos SST brasileiros.
-Analise o documento do tipo ${tipo} e extraia as informações de forma estruturada e conservadora.
-
-REGRAS FUNDAMENTAIS:
-1. NUNCA invente dados. Se não encontrar, use null.
-2. NÃO faça suposições. Apenas extraia o que está escrito.
-3. Classifique cada campo com score de confiança: "alta", "media" ou "baixa".
-4. Para ações, identifique apenas frases com verbos no infinitivo que descrevam uma tarefa concreta.
-5. Seja preciso com CNPJ, datas e registros profissionais.
-
-Retorne JSON com esta estrutura EXATA:
-{
-  "dados_gerais": {
-    "empresa": {"valor": "...", "confianca": "alta|media|baixa"},
-    "cnpj": {"valor": "...", "confianca": "alta|media|baixa"},
-    "cnae": {"valor": "...", "confianca": "alta|media|baixa"},
-    "grau_risco": {"valor": "...", "confianca": "alta|media|baixa"},
-    "data_emissao": {"valor": "...", "confianca": "alta|media|baixa"},
-    "data_vigencia": {"valor": "...", "confianca": "alta|media|baixa"},
-    "versao": {"valor": "...", "confianca": "alta|media|baixa"}
-  },
-  "estrutura_organizacional": {
-    "unidades": [{"nome": "...", "endereco": "..."}],
-    "setores": ["..."],
-    "departamentos": ["..."]
-  },
-  "funcoes_atividades": [
-    {"cargo": "...", "atividades": ["..."], "setor": "..."}
-  ],
-  "inventario_riscos": [
-    {
-      "setor": "...",
-      "funcao": "...",
-      "risco": "...",
-      "tipo_risco": "fisico|quimico|biologico|ergonomico|acidente|psicossocial",
-      "fonte_geradora": "...",
-      "intensidade": "...",
-      "tempo_exposicao": "...",
-      "metodologia": "...",
-      "danos": "...",
-      "controles_existentes": ["..."],
-      "confianca": "alta|media|baixa"
-    }
-  ],
-  "plano_acao": [
-    {
-      "recomendacao": "...",
-      "prioridade": "alta|media|baixa",
-      "prazo": "...",
-      "responsavel": "...",
-      "setor": "...",
-      "confianca": "alta|media|baixa"
-    }
-  ],
-  "responsaveis_tecnicos": [
-    {
-      "nome": "...",
-      "formacao": "...",
-      "registro": "...",
-      "conselho": "...",
-      "funcao_no_doc": "..."
-    }
-  ],
-  "pendencias": [
-    {"campo": "...", "motivo": "...", "severidade": "critica|media|baixa"}
-  ],
-  "score_qualidade": {
-    "geral": 0,
-    "dados_gerais": 0,
-    "inventario": 0,
-    "plano_acao": 0,
-    "responsaveis": 0
-  }
-}`,
-            },
+            { role: "system", content: systemPrompt },
             {
               role: "user",
-              content: `Extraia os dados deste documento SST (${tipo}):\n\n${texto}`,
+              content: `Extraia TODOS os dados deste documento SST do tipo ${tipo}. Seja exaustivo no inventário de riscos — extraia CADA LINHA da tabela de riscos encontrada:\n\n${texto}`,
             },
           ],
         }),
@@ -216,3 +145,96 @@ Retorne JSON com esta estrutura EXATA:
     });
   }
 });
+
+// ── Prompt especializado por tipo de documento ──────────────────────────────
+function buildExtractionPrompt(tipo: string): string {
+  const base = `Você é um especialista sênior em SST (Saúde e Segurança do Trabalho) brasileiro com domínio em NR-01, NR-09, NR-15, NR-17, eSocial e legislação previdenciária.
+
+REGRAS FUNDAMENTAIS (CRÍTICAS):
+1. NUNCA invente dados. Se não encontrar claramente no texto, use null.
+2. Extraia EXATAMENTE o que está escrito, sem parafrasear ou generalizar.
+3. Classifique confiança: "alta" = dado explícito e claro | "media" = inferido com segurança | "baixa" = incerto/parcial.
+4. Seja EXAUSTIVO — não pule nenhum item de tabelas e listas.
+
+Retorne JSON com esta estrutura EXATA (todos os campos obrigatórios, use [] para listas vazias, null para campos não encontrados):
+{
+  "dados_gerais": {
+    "empresa": {"valor": null, "confianca": "baixa"},
+    "cnpj": {"valor": null, "confianca": "baixa"},
+    "cnae": {"valor": null, "confianca": "baixa"},
+    "grau_risco": {"valor": null, "confianca": "baixa"},
+    "data_emissao": {"valor": null, "confianca": "baixa"},
+    "data_vigencia": {"valor": null, "confianca": "baixa"},
+    "versao": {"valor": null, "confianca": "baixa"}
+  },
+  "estrutura_organizacional": {
+    "unidades": [],
+    "setores": [],
+    "departamentos": []
+  },
+  "funcoes_atividades": [],
+  "inventario_riscos": [],
+  "plano_acao": [],
+  "responsaveis_tecnicos": [],
+  "pendencias": [],
+  "score_qualidade": {"geral": 0, "dados_gerais": 0, "inventario": 0, "plano_acao": 0, "responsaveis": 0}
+}`;
+
+  if (tipo === "PGR") {
+    return base + `
+
+INSTRUÇÕES ESPECÍFICAS PARA PGR (Programa de Gerenciamento de Riscos - NR-01):
+
+## INVENTÁRIO DE RISCOS — PRIORIDADE MÁXIMA
+O inventário de riscos é a seção mais importante do PGR. Procure por:
+- Tabelas com colunas como: Setor, Função/Cargo, Agente de Risco, Fonte Geradora, Tipo de Risco, GHO (Grupo Homogêneo de Exposição), Intensidade, Frequência, Probabilidade, Severidade, Nível de Ação, Medidas de Controle, Responsável
+- Seções nomeadas como: "Inventário de Riscos", "Identificação de Perigos e Riscos", "Avaliação de Riscos", "Matriz de Riscos", "Quadro de Riscos", "GHO"
+
+Para CADA risco encontrado, preencha:
+- "setor": nome do setor/área (ex: "Produção", "Administrativo", "Almoxarifado")
+- "funcao": cargo ou função exposta (ex: "Operador de Máquinas", "Auxiliar Administrativo")
+- "risco": nome completo do agente de risco (ex: "Ruído", "Calor", "Poeira de Sílica", "Esforço Repetitivo")
+- "tipo_risco": classifique como "fisico", "quimico", "biologico", "ergonomico", "acidente" ou "psicossocial"
+- "fonte_geradora": origem do risco (ex: "Compressor de ar", "Forno industrial", "Trabalho repetitivo com mouse")
+- "intensidade": nível ou valor medido (ex: "85 dB(A)", "Alta", "Acima do LE")
+- "tempo_exposicao": duração (ex: "8h/dia", "Intermitente", "4h diárias")
+- "metodologia": método de avaliação (ex: "NHO-01", "ACGIH", "Matriz 5x5", "NR-09")
+- "danos": possíveis danos à saúde (ex: "Perda auditiva induzida por ruído (PAIR)", "LER/DORT")
+- "controles_existentes": lista de medidas já adotadas (ex: ["Protetor auricular", "Ventilação forçada"])
+- "confianca": nível de confiança da extração
+
+TIPOS DE RISCO — mapeamento obrigatório:
+- Físicos: Ruído, Calor, Frio, Vibração, Radiação, Iluminação, Pressão
+- Químicos: Poeiras, Fumos, Névoas, Gases, Vapores, Substâncias químicas
+- Biológicos: Vírus, Bactérias, Fungos, Parasitas
+- Ergonômicos: Postura, Esforço físico, Repetitividade, Trabalho noturno, Monotonia
+- Acidentes: Máquinas sem proteção, Eletricidade, Incêndio, Queda, Corte
+
+Extraia TODOS os riscos — não limite. Se houver 50 riscos na tabela, retorne todos os 50.`;
+  }
+
+  if (tipo === "PCMSO") {
+    return base + `
+
+INSTRUÇÕES ESPECÍFICAS PARA PCMSO:
+- Extraia todos os exames médicos por cargo/função
+- Identifique periodicidade dos exames (admissional, periódico, retorno, demissional)
+- Registre os exames complementares obrigatórios por agente de risco
+- Identifique o Médico Coordenador (nome, CRM, UF) como responsável técnico principal`;
+  }
+
+  if (tipo === "LTCAT") {
+    return base + `
+
+INSTRUÇÕES ESPECÍFICAS PARA LTCAT:
+- Foco em agentes nocivos que ensejam aposentadoria especial (NR-15, Decreto 3048/99)
+- Extraia concentrações/intensidades com valores numéricos precisos
+- Identifique metodologias de medição (laudos de medição referenciados)
+- Classifique cada agente em relação aos limites de tolerância (acima/abaixo/igual ao LT)`;
+  }
+
+  return base + `
+
+Para este tipo de documento (${tipo}), extraia todas as informações disponíveis seguindo a estrutura padrão.`;
+}
+
