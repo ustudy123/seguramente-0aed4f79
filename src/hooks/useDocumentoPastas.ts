@@ -488,10 +488,7 @@ export function useDocumentoPastas() {
       ["Certidão Federal", "Certidão Estadual", "Certidão Municipal", "Certidão FGTS", "Certidão INSS", "Certidão Trabalhista"].forEach((n, i) => {
         pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Certidões"]));
       });
-      // Subpastas Conselhos
-      ["CREA", "CRM", "COREN", "CRQ", "CRP", "Outros Conselhos"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Registros em Conselhos"]));
-      });
+      // Sem subpastas automáticas para Registros em Conselhos
 
       // ─── 2. PROCESSOS ORGANIZACIONAIS ────────────────────────────────────
       const procId = crypto.randomUUID();
