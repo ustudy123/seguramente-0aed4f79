@@ -3,39 +3,53 @@ import { motion } from "framer-motion";
 import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
-  Meh, TrendingDown, MessageSquareWarning, Zap, ExternalLink
+  Meh, TrendingDown, MessageSquareWarning, Zap, ExternalLink,
+  ChevronDown, ChevronUp, Plus, Info, Minus, RefreshCw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { FatorActionForm } from "@/components/ergonomia/radar/FatorActionForm";
+import type { AcaoPrioridade } from "@/types/ergonomia";
 
 // ────────── tipos ──────────
 type NivelRisco = 'baixo' | 'moderado' | 'alto' | 'critico';
 
-interface FatorRisco {
+interface SugestaoAcao {
+  titulo: string;
+  porque: string;
+}
+
+interface FatorConfig {
   key: string;
   label: string;
   valor: number;
   descricao: string;
+  detailedAnalysis: string;
+  dataSource: readonly string[];
   icon: React.ElementType;
+  sugestoes: readonly SugestaoAcao[];
 }
 
 // ────────── configuração de nível ──────────
-const NIVEL_CONFIG: Record<NivelRisco, { color: string; bgColor: string; borderColor: string; label: string; icon: string; badgeClass: string }> = {
-  baixo:    { color: 'text-success',       bgColor: 'bg-success/10',       borderColor: 'border-success/40',       label: 'Baixo Risco',    icon: '✓',  badgeClass: 'bg-success/10 text-success border-success/30' },
-  moderado: { color: 'text-warning',       bgColor: 'bg-warning/10',       borderColor: 'border-warning/40',       label: 'Atenção',        icon: '⚠',  badgeClass: 'bg-warning/10 text-warning border-warning/30' },
-  alto:     { color: 'text-orange-500',    bgColor: 'bg-orange-500/10',    borderColor: 'border-orange-500/40',    label: 'Alto Risco',     icon: '🔥', badgeClass: 'bg-orange-500/10 text-orange-500 border-orange-500/30' },
-  critico:  { color: 'text-destructive',   bgColor: 'bg-destructive/10',   borderColor: 'border-destructive/40',   label: 'Crítico',        icon: '🚨', badgeClass: 'bg-destructive/10 text-destructive border-destructive/30' },
+const NIVEL_CONFIG: Record<NivelRisco, {
+  color: string; bgColor: string; borderColor: string;
+  label: string; icon: string; badgeClass: string
+}> = {
+  baixo:    { color: 'text-success',    bgColor: 'bg-success/10',    borderColor: 'border-success/40',    label: 'Baixo Risco', icon: '✓',  badgeClass: 'bg-success/10 text-success border-success/30' },
+  moderado: { color: 'text-warning',    bgColor: 'bg-warning/10',    borderColor: 'border-warning/40',    label: 'Atenção',     icon: '⚠',  badgeClass: 'bg-warning/10 text-warning border-warning/30' },
+  alto:     { color: 'text-orange-500', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500/40', label: 'Alto Risco',  icon: '🔥', badgeClass: 'bg-orange-500/10 text-orange-500 border-orange-500/30' },
+  critico:  { color: 'text-destructive',bgColor: 'bg-destructive/10',borderColor: 'border-destructive/40',label: 'Crítico',     icon: '🚨', badgeClass: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
-// ────────── calcular nível a partir do score ──────────
 function calcularNivel(score: number): NivelRisco {
   if (score < 25) return 'baixo';
   if (score < 50) return 'moderado';
@@ -43,80 +57,301 @@ function calcularNivel(score: number): NivelRisco {
   return 'critico';
 }
 
-// ────────── dados de BURNOUT ──────────
-const FATORES_BURNOUT: FatorRisco[] = [
-  { key: 'sobrecargaCognitiva', label: 'Sobrecarga Cognitiva',    valor: 62, descricao: 'Excesso de tarefas e demandas mentais intensas',                    icon: Brain },
-  { key: 'ritmoTrabalho',       label: 'Ritmo de Trabalho',       valor: 71, descricao: 'Pressão por velocidade e volume de produção',                         icon: Clock },
-  { key: 'faltaPausas',         label: 'Falta de Pausas',         valor: 55, descricao: 'Ausência de intervalos adequados para recuperação',                   icon: AlertTriangle },
-  { key: 'humorNegativo',       label: 'Humor Negativo',          valor: 44, descricao: 'Irritabilidade, negatividade e desgaste emocional',                   icon: TrendingDown },
-  { key: 'denuncias',           label: 'Denúncias/Ocorrências',   valor: 30, descricao: 'Relatos de conflitos, pressão indevida ou ambiente hostil',            icon: MessageSquareWarning },
-  { key: 'exigenciasEmocionais',label: 'Exigências Emocionais',   valor: 68, descricao: 'Necessidade de suprimir emoções no exercício das funções',            icon: Heart },
+// ────────── fatores BURNOUT ──────────
+const FATORES_BURNOUT: FatorConfig[] = [
+  {
+    key: 'sobrecargaCognitiva', label: 'Sobrecarga Cognitiva', valor: 62, icon: Brain,
+    descricao: 'Excesso de tarefas e demandas mentais intensas',
+    detailedAnalysis: 'Analisamos a quantidade e complexidade dos riscos cognitivos no ambiente de trabalho, incluindo demandas de atenção, memória e processamento de informações.',
+    dataSource: ['Inventário de Riscos Cognitivos', 'Análise de Carga Mental'],
+    sugestoes: [
+      { titulo: 'Implementar rodízio de tarefas complexas', porque: 'Reduzir a sobrecarga mental causada pela exposição prolongada a tarefas de alta complexidade cognitiva' },
+      { titulo: 'Criar pausas programadas para recuperação mental', porque: 'Permitir recuperação cognitiva adequada e prevenir fadiga mental acumulada' },
+      { titulo: 'Simplificar processos e procedimentos', porque: 'Diminuir a carga cognitiva exigida para execução das atividades rotineiras' },
+      { titulo: 'Implementar ferramentas de apoio cognitivo', porque: 'Oferecer suporte tecnológico que reduza a demanda de memória e processamento mental' },
+    ],
+  },
+  {
+    key: 'ritmoTrabalho', label: 'Ritmo de Trabalho', valor: 71, icon: Clock,
+    descricao: 'Pressão por velocidade e volume de produção',
+    detailedAnalysis: 'Avaliamos os riscos organizacionais relacionados ao ritmo, pressão por prazos e metas, intensidade das demandas e controle sobre o próprio trabalho.',
+    dataSource: ['Riscos Organizacionais', 'Análise de Jornada'],
+    sugestoes: [
+      { titulo: 'Revisar metas e prazos irrealistas', porque: 'Adequar as expectativas de entrega à capacidade real da equipe, evitando sobrecarga' },
+      { titulo: 'Balancear carga de trabalho entre equipes', porque: 'Distribuir demandas de forma equitativa para evitar sobrecarga em indivíduos específicos' },
+      { titulo: 'Implementar gestão de prioridades', porque: 'Permitir foco nas atividades mais importantes e reduzir sensação de urgência constante' },
+      { titulo: 'Avaliar necessidade de contratações', porque: 'Dimensionar adequadamente a equipe para atender às demandas sem sobrecarga' },
+    ],
+  },
+  {
+    key: 'faltaPausas', label: 'Falta de Pausas', valor: 55, icon: AlertTriangle,
+    descricao: 'Ausência de intervalos adequados para recuperação',
+    detailedAnalysis: 'Consideramos as ações pendentes relacionadas a pausas e recuperação, assim como a existência de políticas e práticas de descanso durante a jornada.',
+    dataSource: ['Ações Pendentes', 'Política de Pausas'],
+    sugestoes: [
+      { titulo: 'Implementar pausas ativas obrigatórias', porque: 'Garantir momentos de recuperação física e mental durante a jornada de trabalho' },
+      { titulo: 'Criar espaços de descanso adequados', porque: 'Oferecer ambientes propícios para recuperação e descompressão dos colaboradores' },
+      { titulo: 'Estabelecer política formal de pausas', porque: 'Institucionalizar a cultura de pausas e garantir que todos tenham direito ao descanso' },
+      { titulo: 'Monitorar intervalos por sistema', porque: 'Acompanhar o cumprimento das pausas e identificar colaboradores em risco de fadiga' },
+    ],
+  },
+  {
+    key: 'humorNegativo', label: 'Humor Negativo', valor: 44, icon: TrendingDown,
+    descricao: 'Irritabilidade, negatividade e desgaste emocional',
+    detailedAnalysis: 'Monitoramos os registros de humor diário dos colaboradores, identificando padrões de estresse, cansaço, ansiedade e desânimo nos últimos 7 dias.',
+    dataSource: ['Humor Diário', 'Registros dos últimos 7 dias'],
+    sugestoes: [
+      { titulo: 'Realizar escuta ativa com gestores', porque: 'Identificar causas específicas do humor negativo através de conversas individuais' },
+      { titulo: 'Oferecer apoio psicológico', porque: 'Disponibilizar suporte profissional para colaboradores em sofrimento emocional' },
+      { titulo: 'Investigar causas de insatisfação', porque: 'Compreender os fatores organizacionais que contribuem para o humor negativo' },
+      { titulo: 'Promover ações de bem-estar', porque: 'Criar iniciativas que melhorem o clima organizacional e a satisfação no trabalho' },
+    ],
+  },
+  {
+    key: 'denuncias', label: 'Denúncias/Ocorrências', valor: 30, icon: MessageSquareWarning,
+    descricao: 'Relatos de conflitos, pressão indevida ou ambiente hostil',
+    detailedAnalysis: 'Analisamos as manifestações recebidas pela ouvidoria, incluindo denúncias, reclamações e sugestões relacionadas ao ambiente de trabalho e relações interpessoais.',
+    dataSource: ['Ouvidoria', 'Ocorrências em aberto'],
+    sugestoes: [
+      { titulo: 'Investigar denúncias pendentes', porque: 'Resolver situações reportadas que podem estar causando sofrimento aos colaboradores' },
+      { titulo: 'Implementar ações corretivas', porque: 'Tratar as causas raiz das denúncias e prevenir novas ocorrências similares' },
+      { titulo: 'Reforçar canais de comunicação', porque: 'Garantir que colaboradores tenham meios seguros para reportar problemas' },
+      { titulo: 'Capacitar lideranças', porque: 'Preparar gestores para lidar adequadamente com conflitos e situações sensíveis' },
+    ],
+  },
+  {
+    key: 'exigenciasEmocionais', label: 'Exigências Emocionais', valor: 68, icon: Heart,
+    descricao: 'Necessidade de suprimir emoções no exercício das funções',
+    detailedAnalysis: 'Combinamos indicadores de humor negativo com riscos cognitivos para avaliar a carga emocional exigida nas atividades laborais.',
+    dataSource: ['Humor Diário', 'Riscos Cognitivos'],
+    sugestoes: [
+      { titulo: 'Oferecer treinamento de inteligência emocional', porque: 'Desenvolver habilidades para lidar com demandas emocionais do trabalho' },
+      { titulo: 'Criar grupos de apoio entre pares', porque: 'Estabelecer rede de suporte entre colegas para compartilhar experiências e estratégias' },
+      { titulo: 'Revisar atribuições de funções de alto contato', porque: 'Adequar a exposição emocional às características e limites de cada colaborador' },
+      { titulo: 'Implementar supervisão técnica', porque: 'Oferecer acompanhamento profissional para funções com alta demanda emocional' },
+    ],
+  },
 ];
 
-// ────────── dados de BOREOUT ──────────
-const FATORES_BOREOUT: FatorRisco[] = [
-  { key: 'baixoDesafio',   label: 'Baixo Desafio',          valor: 75, descricao: 'Tarefas excessivamente simples e sem estímulo intelectual',              icon: Target },
-  { key: 'repetitividade', label: 'Repetitividade',         valor: 80, descricao: 'Ciclos repetitivos e monotonia nas atividades diárias',                  icon: RotateCcw },
-  { key: 'faltaSentido',   label: 'Falta de Sentido',       valor: 60, descricao: 'Percepção de que o trabalho não tem propósito ou impacto',               icon: HelpCircle },
-  { key: 'apatia',         label: 'Apatia Emocional',       valor: 55, descricao: 'Perda de entusiasmo, envolvimento e motivação com o trabalho',           icon: Meh },
-  { key: 'desconexao',     label: 'Desconexão com Equipe',  valor: 48, descricao: 'Isolamento e falta de pertencimento ao grupo',                           icon: Users },
+// ────────── fatores BOREOUT ──────────
+const FATORES_BOREOUT: FatorConfig[] = [
+  {
+    key: 'baixoDesafio', label: 'Baixo Desafio', valor: 75, icon: Target,
+    descricao: 'Tarefas excessivamente simples e sem estímulo intelectual',
+    detailedAnalysis: 'Avaliamos se há subutilização das competências dos colaboradores, analisando a relação entre capacidades identificadas e complexidade das tarefas atribuídas.',
+    dataSource: ['Inventário de Riscos', 'Ações Cadastradas'],
+    sugestoes: [
+      { titulo: 'Mapear competências e realocá-las', porque: 'Aproveitar melhor o potencial dos colaboradores e reduzir a subutilização de habilidades' },
+      { titulo: 'Criar projetos especiais desafiadores', porque: 'Estimular o engajamento através de desafios que correspondam às capacidades do colaborador' },
+      { titulo: 'Implementar job enrichment', porque: 'Enriquecer as funções com responsabilidades que aumentem o senso de realização' },
+      { titulo: 'Oferecer oportunidades de desenvolvimento', porque: 'Proporcionar crescimento profissional e novos desafios de aprendizagem' },
+    ],
+  },
+  {
+    key: 'repetitividade', label: 'Repetitividade', valor: 80, icon: RotateCcw,
+    descricao: 'Ciclos repetitivos e monotonia nas atividades diárias',
+    detailedAnalysis: 'Analisamos riscos cognitivos relacionados à monotonia, avaliando a diversidade de tarefas e estímulos no ambiente de trabalho.',
+    dataSource: ['Riscos Cognitivos', 'Análise de Tarefas'],
+    sugestoes: [
+      { titulo: 'Implementar rodízio de atividades', porque: 'Quebrar a monotonia através da alternância entre diferentes tipos de tarefas' },
+      { titulo: 'Automatizar tarefas repetitivas', porque: 'Liberar colaboradores para atividades mais estimulantes e de maior valor agregado' },
+      { titulo: 'Criar variação nas rotinas', porque: 'Introduzir elementos de novidade que mantenham o interesse e a atenção' },
+      { titulo: 'Enriquecer postos de trabalho', porque: 'Adicionar responsabilidades e atividades diversificadas às funções existentes' },
+    ],
+  },
+  {
+    key: 'faltaSentido', label: 'Falta de Sentido', valor: 60, icon: Minus,
+    descricao: 'Percepção de que o trabalho não tem propósito ou impacto',
+    detailedAnalysis: 'Correlacionamos indicadores de humor com a percepção de propósito, avaliando se os colaboradores compreendem a importância de suas contribuições.',
+    dataSource: ['Humor Diário', 'Clima Organizacional'],
+    sugestoes: [
+      { titulo: 'Comunicar propósito e impacto do trabalho', porque: 'Conectar as atividades diárias aos resultados e benefícios gerados pela empresa' },
+      { titulo: 'Conectar tarefas aos objetivos maiores', porque: 'Demonstrar como cada função contribui para o sucesso organizacional' },
+      { titulo: 'Promover reconhecimento', porque: 'Valorizar contribuições individuais e reforçar a importância de cada colaborador' },
+      { titulo: 'Envolver em decisões', porque: 'Aumentar o senso de pertencimento e responsabilidade sobre os resultados' },
+    ],
+  },
+  {
+    key: 'apatia', label: 'Apatia Emocional', valor: 55, icon: Meh,
+    descricao: 'Perda de entusiasmo, envolvimento e motivação com o trabalho',
+    detailedAnalysis: 'Monitoramos a frequência de registros de humor neutro ou indiferente, que podem indicar desconexão emocional com o trabalho.',
+    dataSource: ['Humor Diário', 'Taxa de Neutralidade'],
+    sugestoes: [
+      { titulo: 'Realizar conversas individuais', porque: 'Identificar causas pessoais ou profissionais da apatia através de escuta ativa' },
+      { titulo: 'Investigar causas da apatia', porque: 'Compreender fatores organizacionais que levam ao desinteresse e desengajamento' },
+      { titulo: 'Criar momentos de celebração', porque: 'Estimular emoções positivas e reconexão com aspectos prazerosos do trabalho' },
+      { titulo: 'Promover conexões interpessoais', porque: 'Fortalecer vínculos sociais que aumentam o engajamento e a satisfação' },
+    ],
+  },
+  {
+    key: 'desconexao', label: 'Desconexão com Equipe', valor: 48, icon: Users,
+    descricao: 'Isolamento e falta de pertencimento ao grupo',
+    detailedAnalysis: 'Avaliamos indicadores de integração social, analisando a participação em atividades coletivas e a percepção de pertencimento ao grupo.',
+    dataSource: ['Humor Positivo', 'Engajamento Social'],
+    sugestoes: [
+      { titulo: 'Promover team building', porque: 'Fortalecer vínculos entre membros da equipe através de atividades conjuntas' },
+      { titulo: 'Criar rituais de integração', porque: 'Estabelecer momentos regulares de conexão e fortalecimento do grupo' },
+      { titulo: 'Facilitar colaboração entre áreas', porque: 'Ampliar a rede de relacionamentos e reduzir o isolamento departamental' },
+      { titulo: 'Estabelecer mentoria entre pares', porque: 'Criar conexões significativas através do compartilhamento de conhecimento' },
+    ],
+  },
 ];
 
 const SCORE_BURNOUT = Math.round(FATORES_BURNOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BURNOUT.length);
 const SCORE_BOREOUT = Math.round(FATORES_BOREOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BOREOUT.length);
 
-// ────────── componente de barra de fator ──────────
-function FatorBar({ fator }: { fator: FatorRisco }) {
+// ────────── cartão de fator individual ──────────
+interface FatorCardProps {
+  fator: FatorConfig;
+  radarType: 'burnout' | 'boreout';
+  existingActions: { titulo: string; status: string }[];
+  onCreateAction: (acao: {
+    titulo: string; descricao: string;
+    tipo: 'corretiva' | 'preventiva' | 'melhoria';
+    prioridade: AcaoPrioridade;
+    fator_radar: string; radar_type: string;
+    responsavel_nome: string; prazo: string; onde: string;
+    porque: string; como: string; custo_estimado: string;
+  }) => Promise<void>;
+  isCreatingAction?: boolean;
+}
+
+function FatorCard({ fator, radarType, existingActions, onCreateAction, isCreatingAction }: FatorCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showActionForm, setShowActionForm] = useState(false);
   const { valor } = fator;
   const Icon = fator.icon;
+
+  const colorClass = valor >= 70
+    ? { text: 'text-destructive', progress: '[&>div]:bg-destructive' }
+    : valor >= 45
+    ? { text: 'text-warning', progress: '[&>div]:bg-warning' }
+    : { text: 'text-success', progress: '[&>div]:bg-success' };
+
+  const handleSubmit = async (acao: Parameters<typeof onCreateAction>[0]) => {
+    await onCreateAction(acao);
+    setShowActionForm(false);
+  };
+
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-2">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <div>
-            <span className="font-medium text-foreground">{fator.label}</span>
-            <p className="text-xs text-muted-foreground leading-tight">{fator.descricao}</p>
+    <div className="border rounded-lg bg-card overflow-hidden">
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        {/* Header */}
+        <div className="p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 flex-1">
+              <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="font-medium text-sm">{fator.label}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={cn("font-bold text-sm", colorClass.text)}>{valor}%</span>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground mb-2">{fator.descricao}</p>
+          <Progress value={valor} className={cn("h-1.5", colorClass.progress)} />
         </div>
-        <span className={cn(
-          "text-sm font-bold shrink-0 ml-3",
-          valor >= 70 ? "text-destructive" : valor >= 45 ? "text-warning" : "text-success"
-        )}>
-          {valor}%
-        </span>
-      </div>
-      <Progress
-        value={valor}
-        className={cn(
-          "h-2",
-          valor >= 70 ? "[&>div]:bg-destructive" :
-          valor >= 45 ? "[&>div]:bg-warning" :
-          "[&>div]:bg-success"
-        )}
-      />
+
+        {/* Expanded */}
+        <CollapsibleContent>
+          <div className="px-3 pb-3 space-y-3 border-t pt-3 bg-muted/20">
+            {/* O que analisamos */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <Info className="h-3.5 w-3.5 text-primary" />
+                O que analisamos
+              </div>
+              <p className="text-xs text-muted-foreground">{fator.detailedAnalysis}</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {fator.dataSource.map((src, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs py-0">{src}</Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Ações existentes */}
+            {existingActions.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                  Ações vinculadas ({existingActions.length})
+                </div>
+                {existingActions.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs p-2 bg-card rounded border">
+                    <span className="flex-1">{a.titulo}</span>
+                    <Badge variant="outline" className="text-xs py-0">{a.status}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Form ou botão */}
+            {showActionForm ? (
+              <FatorActionForm
+                fatorKey={fator.key}
+                fatorLabel={fator.label}
+                radarType={radarType}
+                sugestoes={fator.sugestoes}
+                onSubmit={handleSubmit}
+                onCancel={() => setShowActionForm(false)}
+                isLoading={isCreatingAction}
+              />
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs h-8 gap-1.5"
+                onClick={() => setShowActionForm(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Cadastrar Ação para este Fator
+              </Button>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
 
-// ────────── painel de radar individual ──────────
+// ────────── painel de radar ──────────
 interface RadarPanelProps {
   tipo: 'burnout' | 'boreout';
   score: number;
   nivel: NivelRisco;
-  fatores: FatorRisco[];
-  onGerarAcao: (tipo: 'burnout' | 'boreout', fatores: FatorRisco[], score: number, nivel: NivelRisco) => void;
-  gerando: boolean;
+  fatores: FatorConfig[];
+  existingActionsByFator: Record<string, { titulo: string; status: string }[]>;
+  onCreateAction: (
+    fatorKey: string,
+    radarType: 'burnout' | 'boreout',
+    acao: {
+      titulo: string; descricao: string;
+      tipo: 'corretiva' | 'preventiva' | 'melhoria';
+      prioridade: AcaoPrioridade;
+      fator_radar: string; radar_type: string;
+      responsavel_nome: string; prazo: string; onde: string;
+      porque: string; como: string; custo_estimado: string;
+    }
+  ) => Promise<void>;
+  onGerarAcaoGlobal: (tipo: 'burnout' | 'boreout', fatores: FatorConfig[], score: number, nivel: NivelRisco) => void;
+  gerandoGlobal: boolean;
+  creatingActionFor: string | null;
 }
 
-function RadarPanel({ tipo, score, nivel, fatores, onGerarAcao, gerando }: RadarPanelProps) {
+function RadarPanel({
+  tipo, score, nivel, fatores,
+  existingActionsByFator, onCreateAction, onGerarAcaoGlobal, gerandoGlobal, creatingActionFor,
+}: RadarPanelProps) {
   const config = NIVEL_CONFIG[nivel];
   const isBurnout = tipo === 'burnout';
   const TipoIcon = isBurnout ? Flame : Battery;
   const titulo = isBurnout ? 'Radar de Burnout' : 'Radar de Boreout';
-  const subtitulo = isBurnout
-    ? 'Índice de Risco de Esgotamento Profissional'
-    : 'Índice de Subcarga / Desengajamento';
+  const subtitulo = isBurnout ? 'Índice de Risco de Esgotamento Profissional' : 'Índice de Subcarga / Desengajamento';
+
   const dica: Record<NivelRisco, string> = isBurnout ? {
     critico:  'Ação imediata necessária. Revise carga, pausas e suporte emocional.',
     alto:     'Fatores de risco elevados. Intervenção recomendada a curto prazo.',
@@ -147,8 +382,8 @@ function RadarPanel({ tipo, score, nivel, fatores, onGerarAcao, gerando }: Radar
         <CardDescription>{subtitulo}</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-5 flex-1">
-        {/* Score circular */}
+      <CardContent className="space-y-4 flex-1">
+        {/* Score */}
         <div className="flex items-center gap-4">
           <motion.div
             initial={{ scale: 0 }}
@@ -166,7 +401,7 @@ function RadarPanel({ tipo, score, nivel, fatores, onGerarAcao, gerando }: Radar
             {fatoresCriticos.length > 0 && (
               <div className="flex items-center gap-1.5 text-xs text-destructive">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                <span><strong>{fatoresCriticos.length}</strong> fator(es) crítico(s) detectado(s)</span>
+                <span><strong>{fatoresCriticos.length}</strong> fator(es) crítico(s)</span>
               </div>
             )}
             {fatoresAtencao.length > 0 && (
@@ -186,40 +421,52 @@ function RadarPanel({ tipo, score, nivel, fatores, onGerarAcao, gerando }: Radar
 
         <Separator />
 
-        {/* Fatores */}
-        <div className="space-y-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Fatores Avaliados ({fatores.length} critérios)
-          </p>
+        {/* Dica */}
+        <div className={cn("p-3 rounded-lg text-sm flex items-start gap-2", config.bgColor)}>
+          <TipoIcon className={cn("h-4 w-4 shrink-0 mt-0.5", config.color)} />
+          <p className={cn("font-medium leading-relaxed text-xs", config.color)}>{dica[nivel]}</p>
+        </div>
+
+        <Separator />
+
+        {/* Fatores com ação por fator */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Fatores Avaliados ({fatores.length} critérios)
+            </p>
+            <p className="text-xs text-muted-foreground">Expanda para criar ações por fator</p>
+          </div>
           {fatores.map(fator => (
-            <FatorBar key={fator.key} fator={fator} />
+            <FatorCard
+              key={fator.key}
+              fator={fator}
+              radarType={tipo}
+              existingActions={existingActionsByFator[fator.key] || []}
+              onCreateAction={(acao) => onCreateAction(fator.key, tipo, acao)}
+              isCreatingAction={creatingActionFor === fator.key}
+            />
           ))}
         </div>
 
         <Separator />
 
-        {/* Dica de nível */}
-        <div className={cn("p-3 rounded-lg text-sm flex items-start gap-2", config.bgColor)}>
-          <TipoIcon className={cn("h-4 w-4 shrink-0 mt-0.5", config.color)} />
-          <p className={cn("font-medium leading-relaxed", config.color)}>{dica[nivel]}</p>
-        </div>
-
-        {/* Botão gerar ação IA */}
+        {/* Botão ação global IA */}
         <Button
           className="w-full gap-2"
           variant={nivel === 'baixo' ? 'outline' : 'default'}
-          disabled={gerando}
-          onClick={() => onGerarAcao(tipo, fatores, score, nivel)}
+          disabled={gerandoGlobal}
+          onClick={() => onGerarAcaoGlobal(tipo, fatores, score, nivel)}
         >
-          {gerando ? (
+          {gerandoGlobal ? (
             <>
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              Gerando ação com IA…
+              Gerando plano com IA…
             </>
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              Gerar Ação Preventiva com IA
+              Gerar Ação Global com IA
             </>
           )}
         </Button>
@@ -235,20 +482,86 @@ export function RadaresPsicossocialSection() {
   const [gerandoBurnout, setGerandoBurnout] = useState(false);
   const [gerandoBoreout, setGerandoBoreout] = useState(false);
   const [acoesCriadas, setAcoesCriadas] = useState<string[]>([]);
+  const [creatingActionFor, setCreatingActionFor] = useState<string | null>(null);
+
+  // Ações existentes por fator (estado local — em produção viria do Supabase)
+  const [existingActionsByFator, setExistingActionsByFator] = useState<
+    Record<string, { titulo: string; status: string }[]>
+  >({});
 
   const nivelBurnout = calcularNivel(SCORE_BURNOUT);
   const nivelBoreout = calcularNivel(SCORE_BOREOUT);
 
-  const handleGerarAcao = async (
+  // Criar ação por fator individual
+  const handleCreateAction = async (
+    fatorKey: string,
+    radarType: 'burnout' | 'boreout',
+    acao: {
+      titulo: string; descricao: string;
+      tipo: 'corretiva' | 'preventiva' | 'melhoria';
+      prioridade: AcaoPrioridade;
+      fator_radar: string; radar_type: string;
+      responsavel_nome: string; prazo: string; onde: string;
+      porque: string; como: string; custo_estimado: string;
+    }
+  ) => {
+    if (!tenantId) return;
+    setCreatingActionFor(fatorKey);
+    try {
+      const { data, error } = await supabase.from('plano_acoes').insert({
+        tenant_id: tenantId,
+        titulo: acao.titulo,
+        descricao: acao.descricao || undefined,
+        porque: acao.porque || undefined,
+        onde: acao.onde || undefined,
+        como: acao.como || undefined,
+        responsavel_nome: acao.responsavel_nome || undefined,
+        prazo: acao.prazo || undefined,
+        custo_estimado: acao.custo_estimado ? parseFloat(acao.custo_estimado) : undefined,
+        tipo: acao.tipo,
+        prioridade: (acao.prioridade === 'baixa' ? 'baixo' : acao.prioridade === 'media' ? 'medio' : acao.prioridade === 'urgente' ? 'urgente' : 'imediato') as any,
+        origem_modulo: 'manual' as const,
+        origem_descricao: `Radar ${radarType === 'burnout' ? 'Burnout' : 'Boreout'} — Fator: ${fatorKey} — Psicossocial NR-01`,
+        criado_por: user?.id,
+        criado_por_nome: profile?.nome_completo || 'Sistema',
+        exige_evidencia: false,
+        codigo: '',
+        progresso: 0,
+        status: 'pendente' as const,
+        tempo_gasto_minutos: 0,
+      }).select('id').single();
+
+      if (error) throw error;
+
+      if (data?.id) {
+        setAcoesCriadas(prev => [...prev, data.id]);
+        setExistingActionsByFator(prev => ({
+          ...prev,
+          [fatorKey]: [...(prev[fatorKey] || []), { titulo: acao.titulo, status: 'Pendente' }],
+        }));
+      }
+
+      toast.success(`Ação criada no Plano de Ação! 🎯`, {
+        action: { label: 'Ver ações', onClick: () => navigate('/plano-acao') },
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Erro ao criar ação: ${err.message || 'Erro desconhecido'}`);
+    } finally {
+      setCreatingActionFor(null);
+    }
+  };
+
+  // Gerar ação global via IA
+  const handleGerarAcaoGlobal = async (
     tipo: 'burnout' | 'boreout',
-    fatores: FatorRisco[],
+    fatores: FatorConfig[],
     score: number,
     nivel: NivelRisco
   ) => {
     if (!tenantId) return;
     const setGerando = tipo === 'burnout' ? setGerandoBurnout : setGerandoBoreout;
     setGerando(true);
-
     try {
       const fatoresCriticos = fatores.filter(f => f.valor >= 70).map(f => f.label);
       const fatoresAtencao = fatores.filter(f => f.valor >= 45 && f.valor < 70).map(f => f.label);
@@ -257,7 +570,7 @@ export function RadaresPsicossocialSection() {
         body: {
           contexto: {
             campanha: `Diagnóstico Psicossocial — ${tipo === 'burnout' ? 'Burnout' : 'Boreout'}`,
-            instrumento: tipo === 'burnout' ? 'burnout' : 'boreout',
+            instrumento: tipo,
             ips: 100 - score,
             classificacao: nivel === 'baixo' ? 'saudavel' : nivel === 'moderado' ? 'atencao' : nivel === 'alto' ? 'risco' : 'critico',
             dimensoes_criticas: fatoresCriticos,
@@ -270,23 +583,20 @@ export function RadaresPsicossocialSection() {
       });
 
       if (error) throw error;
-
       const sugestao = data?.sugestao_acao;
-
       const prioridade = score >= 75 ? 'imediato' : score >= 50 ? 'urgente' : score >= 25 ? 'medio' : 'baixo';
-      const tipoAcao = tipo === 'burnout' ? 'preventiva' : 'melhoria';
 
       const { data: acaoCreated, error: errAcao } = await supabase.from('plano_acoes').insert({
         tenant_id: tenantId,
-        titulo: sugestao?.titulo || `Ação ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} — Score ${score}%`,
-        descricao: sugestao?.descricao || `Ação gerada a partir do diagnóstico de ${tipo} com score de risco ${score}%.`,
-        porque: sugestao?.porque || `Score de ${tipo} em ${score}% — Nível: ${nivel}. Fatores críticos: ${fatoresCriticos.join(', ') || 'nenhum'}.`,
+        titulo: sugestao?.titulo || `Ação ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} Global — Score ${score}%`,
+        descricao: sugestao?.descricao || `Ação gerada por IA a partir do diagnóstico de ${tipo}.`,
+        porque: sugestao?.porque || `Score de ${tipo} em ${score}% — Fatores críticos: ${fatoresCriticos.join(', ') || 'nenhum'}.`,
         onde: sugestao?.onde || 'Organização / Setores identificados',
         como: sugestao?.como || `Implementar ações específicas para reduzir os fatores de risco de ${tipo}.`,
-        tipo: tipoAcao as any,
+        tipo: tipo === 'burnout' ? 'preventiva' : 'melhoria',
         prioridade: prioridade as any,
         origem_modulo: 'manual' as const,
-        origem_descricao: `Radar ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} — Psicossocial NR-01`,
+        origem_descricao: `Radar ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} (IA) — Psicossocial NR-01`,
         criado_por: user?.id,
         criado_por_nome: profile?.nome_completo || 'Sistema',
         exige_evidencia: false,
@@ -297,16 +607,10 @@ export function RadaresPsicossocialSection() {
       }).select('id').single();
 
       if (errAcao) throw errAcao;
+      if (acaoCreated?.id) setAcoesCriadas(prev => [...prev, acaoCreated.id]);
 
-      if (acaoCreated?.id) {
-        setAcoesCriadas(prev => [...prev, acaoCreated.id]);
-      }
-
-      toast.success(`Ação de ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} criada no Plano de Ação! 🎯`, {
-        action: {
-          label: 'Ver ações',
-          onClick: () => navigate('/plano-acao'),
-        },
+      toast.success(`Ação global de ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} criada com IA! 🎯`, {
+        action: { label: 'Ver ações', onClick: () => navigate('/plano-acao') },
       });
     } catch (err: any) {
       console.error(err);
@@ -318,19 +622,19 @@ export function RadaresPsicossocialSection() {
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho informativo */}
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50/40 to-background">
+      {/* Cabeçalho */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
         <CardContent className="pt-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-full bg-purple-100 shrink-0">
-              <Brain className="h-5 w-5 text-purple-600" />
+            <div className="p-2 rounded-full bg-primary/10 shrink-0">
+              <Brain className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Radares calculados a partir das respostas da campanha psicossocial mais recente.
-                Os fatores abaixo são os critérios avaliados em cada dimensão.
-                Use a IA para gerar ações preventivas integradas ao Plano de Ação.
+                Radares calculados a partir das respostas da campanha psicossocial.
+                Expanda cada fator para ver a análise detalhada e criar ações específicas,
+                ou use a IA para gerar um plano preventivo completo.
               </p>
             </div>
             {acoesCriadas.length > 0 && (
@@ -348,14 +652,14 @@ export function RadaresPsicossocialSection() {
         </CardContent>
       </Card>
 
-      {/* Legenda de cores */}
+      {/* Legenda */}
       <div className="flex flex-wrap gap-3">
-        {[
-          { nivel: 'baixo' as NivelRisco,    range: '0–24%',   label: 'Saudável' },
-          { nivel: 'moderado' as NivelRisco, range: '25–49%',  label: 'Atenção' },
-          { nivel: 'alto' as NivelRisco,     range: '50–74%',  label: 'Alto Risco' },
-          { nivel: 'critico' as NivelRisco,  range: '75–100%', label: 'Crítico' },
-        ].map(({ nivel, range, label }) => {
+        {([
+          { nivel: 'baixo' as NivelRisco, range: '0–24%', label: 'Saudável' },
+          { nivel: 'moderado' as NivelRisco, range: '25–49%', label: 'Atenção' },
+          { nivel: 'alto' as NivelRisco, range: '50–74%', label: 'Alto Risco' },
+          { nivel: 'critico' as NivelRisco, range: '75–100%', label: 'Crítico' },
+        ]).map(({ nivel, range, label }) => {
           const c = NIVEL_CONFIG[nivel];
           return (
             <div key={nivel} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border", c.badgeClass)}>
@@ -366,23 +670,29 @@ export function RadaresPsicossocialSection() {
         })}
       </div>
 
-      {/* Grid de radares */}
+      {/* Radares */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RadarPanel
           tipo="burnout"
           score={SCORE_BURNOUT}
           nivel={nivelBurnout}
           fatores={FATORES_BURNOUT}
-          onGerarAcao={handleGerarAcao}
-          gerando={gerandoBurnout}
+          existingActionsByFator={existingActionsByFator}
+          onCreateAction={handleCreateAction}
+          onGerarAcaoGlobal={handleGerarAcaoGlobal}
+          gerandoGlobal={gerandoBurnout}
+          creatingActionFor={creatingActionFor}
         />
         <RadarPanel
           tipo="boreout"
           score={SCORE_BOREOUT}
           nivel={nivelBoreout}
           fatores={FATORES_BOREOUT}
-          onGerarAcao={handleGerarAcao}
-          gerando={gerandoBoreout}
+          existingActionsByFator={existingActionsByFator}
+          onCreateAction={handleCreateAction}
+          onGerarAcaoGlobal={handleGerarAcaoGlobal}
+          gerandoGlobal={gerandoBoreout}
+          creatingActionFor={creatingActionFor}
         />
       </div>
 
@@ -393,6 +703,7 @@ export function RadaresPsicossocialSection() {
             <strong>Metodologia:</strong> Os scores de Burnout e Boreout são derivados das dimensões IBO-S e IBD-S do instrumento SIPRO
             (Índice Seguramente de Risco Psicossocial Organizacional). Os critérios avaliados incluem fatores ocupacionais,
             organizacionais e individuais conforme ISO 45003, NR-01 e NR-17. Disponível quando houver mínimo de 5 respostas na campanha.
+            Clique em cada fator para ver a análise detalhada e criar ações corretivas/preventivas vinculadas ao Plano de Ação.
           </p>
         </CardContent>
       </Card>
