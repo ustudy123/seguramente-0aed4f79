@@ -399,9 +399,19 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     </Select>
                     {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Tipo de Vínculo</Label>
-                    <Select defaultValue="gestor" onValueChange={v => setValue("tipo_vinculo", v)}>
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label className="flex items-center justify-between">
+                      <span>Papel nesta Empresa</span>
+                      {watchedValues.tipo_vinculo === watchedValues.tipo_usuario && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          herdado do tipo de usuário
+                        </span>
+                      )}
+                    </Label>
+                    <Select
+                      value={watchedValues.tipo_vinculo || "gestor"}
+                      onValueChange={v => setValue("tipo_vinculo", v)}
+                    >
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
@@ -409,6 +419,9 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Como esta pessoa atua especificamente nesta empresa. Pode ser diferente do perfil global.
+                    </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Contexto Operacional</Label>
