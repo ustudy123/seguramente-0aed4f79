@@ -473,15 +473,15 @@ Retorne JSON:
 
   return `Você é especialista sênior em SST brasileiro e gestão de riscos.
 
-DOCUMENTO TIPO: ${tipo}
+DOCUMENTO TIPO: ${tipo}${parteLabel}
 
-MISSÃO: Extrair TODAS as ações, recomendações e medidas do texto.
-NUNCA invente dados. Extraia apenas o que está escrito explicitamente.
-
-FRASES GERADORAS DE AÇÃO (sempre que encontrar, gere uma ação):
-${frasesAcao}
+MISSÃO CRÍTICA: Extrair TODAS as ações e recomendações presentes neste trecho.
+- Se houver uma TABELA de plano de ação, CADA LINHA é uma ação separada.
+- NUNCA invente dados. Só extraia o que está escrito explicitamente.
 
 ${contexto}
+
+Retorne JSON com plano_acao conforme estrutura já definida.`;
 
 Para cada ação, preencha o modelo 5W2H:
 - what: o que deve ser feito (extraído do texto)
