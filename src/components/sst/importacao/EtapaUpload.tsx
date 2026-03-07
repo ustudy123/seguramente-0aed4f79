@@ -68,18 +68,22 @@ export function EtapaUpload({ state, updateState }: Props) {
     disabled: processando,
   });
 
+  const [qualidadeExtracao, setQualidadeExtracao] = useState<string | null>(null);
+
   const handleAvancar = async () => {
     if (!state.arquivo) return;
     setProcessando(true);
     updateState({ processando: true, erro: null });
     
     try {
-      toast.info("Lendo arquivo...");
-      const texto = await extractTextFromFile(state.arquivo);
-      updateState({ textoExtraido: texto, etapa: 2, processando: false });
+      toast.info("Enviando arquivo para extração inteligente...");
+      const result = await extractTextViaEdgeFunction(state.arquivo);
+      setQualidadeExtracao(result.qualidade);
+      toast.success(`Texto extraído: ${result.palavras.toLocaleString("pt-BR")} palavras`);
+      updateState({ textoExtraido: result.texto, etapa: 2, processando: false });
     } catch (err: any) {
       updateState({ erro: err.message, processando: false });
-      toast.error("Erro ao ler arquivo: " + err.message);
+      toast.error("Erro ao extrair arquivo: " + err.message);
     } finally {
       setProcessando(false);
     }
