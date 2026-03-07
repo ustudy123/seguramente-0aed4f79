@@ -172,10 +172,14 @@ export function PsicossocialDashboard() {
 
       {/* Tabs principais */}
       <Tabs defaultValue="campanhas">
-        <TabsList className="w-full sm:w-auto">
+        <TabsList className="w-full sm:w-auto flex-wrap h-auto">
           <TabsTrigger value="campanhas" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Campanhas
+          </TabsTrigger>
+          <TabsTrigger value="burnout-boreout" className="gap-2">
+            <Flame className="h-4 w-4" />
+            Burnout & Boreout
           </TabsTrigger>
           <TabsTrigger value="instrumentos" className="gap-2">
             <FileText className="h-4 w-4" />
@@ -193,7 +197,12 @@ export function PsicossocialDashboard() {
 
         {/* Tab: Campanhas */}
         <TabsContent value="campanhas" className="mt-4">
-        <CampanhaList campanhas={campanhas} onNovaCampanha={handleNovaCampanha} />
+          <CampanhaList campanhas={campanhas} onNovaCampanha={handleNovaCampanha} />
+        </TabsContent>
+
+        {/* Tab: Burnout & Boreout */}
+        <TabsContent value="burnout-boreout" className="mt-4">
+          <RadaresPsicossocialSection />
         </TabsContent>
 
         {/* Tab: Instrumentos */}
