@@ -233,6 +233,8 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         profissional_responsavel: dados.responsaveis_tecnicos?.[0]?.nome || undefined,
         empresa_emissora: dados.dados_gerais?.empresa?.valor || undefined,
         observacoes: modoRascunho ? "[RASCUNHO] Importação inteligente SST" : "Importação inteligente SST",
+        // Persistir todos os dados extraídos pela IA
+        analise_ia: dados,
       });
       updateState({ dadosExtraidos: dados, etapa: 5 });
       toast.success("Documento importado com sucesso!");

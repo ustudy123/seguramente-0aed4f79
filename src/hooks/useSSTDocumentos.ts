@@ -100,6 +100,7 @@ export function useSSTDocumentos() {
       profissional_responsavel?: string;
       empresa_emissora?: string;
       observacoes?: string;
+      analise_ia?: any;          // dados estruturados extraídos pela IA
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
@@ -135,6 +136,11 @@ export function useSSTDocumentos() {
         criado_por: user.id,
         criado_por_nome: profile?.nome_completo || user.user_metadata?.nome || user.email,
         observacoes: params.observacoes || null,
+        // Persistir dados extraídos pela IA imediatamente
+        analise_ia: params.analise_ia
+          ? { ...params.analise_ia, data: new Date().toISOString() }
+          : null,
+        analise_ia_status: params.analise_ia ? "concluida" : null,
       }).select().single();
 
       if (sstError) {
