@@ -50,6 +50,50 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
   const score = dados.score_qualidade;
 
+  // Converte qualquer string de data/prazo para formato ISO (YYYY-MM-DD) ou null
+  const parseDateString = (dateStr: string | undefined): string | null => {
+    if (!dateStr) return null;
+    const s = dateStr.trim();
+    if (!s) return null;
+
+    // Já está em formato ISO ou dd/mm/yyyy
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+      const [d, m, y] = s.split("/");
+      return `${y}-${m}-${d}`;
+    }
+
+    const MESES: Record<string, string> = {
+      janeiro: "01", fevereiro: "02", março: "03", marco: "03",
+      abril: "04", maio: "05", junho: "06", julho: "07",
+      agosto: "08", setembro: "09", outubro: "10",
+      novembro: "11", dezembro: "12",
+    };
+
+    const lower = s.toLowerCase();
+
+    // "Agosto de 2024" ou "agosto/2024" ou "agosto 2024"
+    for (const [nome, num] of Object.entries(MESES)) {
+      if (lower.includes(nome)) {
+        const yearMatch = s.match(/\d{4}/);
+        if (yearMatch) return `${yearMatch[0]}-${num}-01`;
+        return null;
+      }
+    }
+
+    // Tenta parsear diretamente (ex: "2024-08" → primeiro dia do mês)
+    const yearMonthMatch = s.match(/^(\d{4})[/-](\d{2})$/);
+    if (yearMonthMatch) return `${yearMonthMatch[1]}-${yearMonthMatch[2]}-01`;
+
+    // Tenta Date.parse como último recurso, mas só aceita se resultar em data válida
+    const parsed = new Date(s);
+    if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000) {
+      return parsed.toISOString().split("T")[0];
+    }
+
+    return null;
+  };
+
   const parsePrazo = (prazoStr: string | undefined): string | null => {
     if (!prazoStr) return null;
     const hoje = new Date();
@@ -58,11 +102,11 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
       hoje.setDate(hoje.getDate() + 7);
       return hoje.toISOString().split("T")[0];
     }
-    if (lower.includes("curto") || lower.includes("30 dias") || lower.includes("1 mês")) {
+    if (lower.includes("curto") || lower.includes("30 dias") || lower.includes("1 mês") || lower.includes("1 mes")) {
       hoje.setMonth(hoje.getMonth() + 1);
       return hoje.toISOString().split("T")[0];
     }
-    if (lower.includes("médio") || lower.includes("90 dias") || lower.includes("3 meses")) {
+    if (lower.includes("médio") || lower.includes("medio") || lower.includes("90 dias") || lower.includes("3 meses")) {
       hoje.setMonth(hoje.getMonth() + 3);
       return hoje.toISOString().split("T")[0];
     }
@@ -74,7 +118,8 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
       hoje.setFullYear(hoje.getFullYear() + 1);
       return hoje.toISOString().split("T")[0];
     }
-    return null;
+    // Tenta interpretar como data real (ex: "Agosto de 2024")
+    return parseDateString(prazoStr);
   };
 
   const enviarAcaoPlano = async (acao: DadosExtraidos["plano_acao"][0], index: number) => {
