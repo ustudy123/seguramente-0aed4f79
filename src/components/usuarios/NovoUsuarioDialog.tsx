@@ -22,10 +22,12 @@ import { CpfInput } from "@/components/ui/cpf-input";
 
 const schema = z.object({
   nome_completo: z.string().min(3, "Nome obrigatório"),
+  nome_social: z.string().optional(),
   email_principal: z.string().email("E-mail inválido"),
   cpf: z.string().optional(),
   telefone_principal: z.string().optional(),
   cargo_funcao: z.string().optional(),
+  matricula: z.string().optional(),
   data_nascimento: z.string().optional(),
   tipo_usuario: z.string(),
   observacoes: z.string().optional(),
