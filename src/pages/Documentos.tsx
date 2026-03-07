@@ -158,11 +158,25 @@ const Documentos = () => {
   }, [tree]);
 
   const handleRenamePasta = useCallback((pasta: DocumentoPastaNode) => {
-    // Para renomear, vamos abrir o modal de criação com dados pré-preenchidos
-    toast.info("Função de renomear em desenvolvimento");
+    setPastaToRename(pasta);
+    setRenameValue(pasta.nome);
   }, []);
 
-  const handleDeletePasta = useCallback((pastaId: string) => {
+  const confirmRenamePasta = async () => {
+    if (!pastaToRename || !renameValue.trim()) return;
+    setRenaming(true);
+    try {
+      await updatePasta({ id: pastaToRename.id, nome: renameValue.trim() });
+      toast.success("Pasta renomeada com sucesso!");
+      if (selectedPasta?.id === pastaToRename.id) {
+        setSelectedPasta(prev => prev ? { ...prev, nome: renameValue.trim() } : prev);
+      }
+    } catch {
+      // Error handled in hook
+    }
+    setRenaming(false);
+    setPastaToRename(null);
+  };
     setPastaToDelete(pastaId);
   }, []);
 
