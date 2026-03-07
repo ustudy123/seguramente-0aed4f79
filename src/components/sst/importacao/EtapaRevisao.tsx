@@ -119,15 +119,15 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         como,
         responsavel_nome: quem,
         prazo: prazoDate,
-        // Enums corretos
+        // Enums corretos (tipo: corretiva | preventiva | melhoria)
+        tipo: (acao.prioridade === "alta" ? "corretiva" : "preventiva") as any,
         prioridade: (prioridadeMap[acao.prioridade] || "medio") as any,
         status: "pendente" as any,
         // Rastreabilidade
-        origem_modulo: "Compliance SST",
+        origem_modulo: "manual" as any,
         origem_descricao: `Importado de: ${state.arquivo?.name || "documento SST"} (${state.tipoDetectado || "PGR"})`,
         criado_por: session.user.id,
         criado_por_nome: session.user.email,
-        tipo: "acao",
         progresso: 0,
       }]);
       if (error) throw error;
