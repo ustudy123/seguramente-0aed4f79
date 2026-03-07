@@ -271,7 +271,23 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* CPF primeiro para ativar lookup */}
+
+                  {/* Linha 1: Nome Completo (full width) */}
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label>Nome Completo *</Label>
+                    <Input {...register("nome_completo")} placeholder="Maria da Silva Santos" />
+                    {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo.message}</p>}
+                  </div>
+
+                  {/* Linha 2: E-mail (full width) */}
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label>E-mail *</Label>
+                    <Input {...register("email_principal")} type="email" placeholder="maria@empresa.com"
+                      onBlur={e => verificarDuplicidade(e.target.value, watchedValues.cpf)} />
+                    {errors.email_principal && <p className="text-xs text-destructive">{errors.email_principal.message}</p>}
+                  </div>
+
+                  {/* Linha 3: CPF + Telefone */}
                   <div className="space-y-1.5">
                     <Label className="flex items-center gap-1.5">
                       CPF
@@ -294,28 +310,19 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     <Input {...register("telefone_principal")} placeholder="(11) 99000-0000" />
                   </div>
 
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label>Nome Completo *</Label>
-                    <Input {...register("nome_completo")} placeholder="Maria da Silva Santos" />
-                    {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo.message}</p>}
-                  </div>
-
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label>E-mail *</Label>
-                    <Input {...register("email_principal")} type="email" placeholder="maria@empresa.com"
-                      onBlur={e => verificarDuplicidade(e.target.value, watchedValues.cpf)} />
-                    {errors.email_principal && <p className="text-xs text-destructive">{errors.email_principal.message}</p>}
-                  </div>
-
+                  {/* Linha 4: Data de Nascimento + Cargo/Função */}
                   <div className="space-y-1.5">
                     <Label>Data de Nascimento</Label>
                     <Input {...register("data_nascimento")} type="date" />
                   </div>
+
                   <div className="space-y-1.5">
                     <Label>Cargo / Função</Label>
                     <Input {...register("cargo_funcao")} placeholder="Analista de RH" />
                   </div>
-                  <div className="space-y-1.5">
+
+                  {/* Linha 5: Tipo de Usuário (full width) */}
+                  <div className="sm:col-span-2 space-y-1.5">
                     <Label>Tipo de Usuário</Label>
                     <Select defaultValue="gestor" onValueChange={v => setValue("tipo_usuario", v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -326,7 +333,9 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
+
+                  {/* Linha 6: Observações (full width) */}
+                  <div className="sm:col-span-2 space-y-1.5">
                     <Label>Observações</Label>
                     <Textarea {...register("observacoes")} rows={2} placeholder="Informações internas…" />
                   </div>
