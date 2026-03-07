@@ -158,9 +158,21 @@ Responda SOMENTE em JSON:
       // ── CHAMADA 1: Dados gerais + estrutura organizacional + funções ──────
       const promptDadosGerais = `Você é especialista sênior em SST brasileiro (NR-01, NR-09, eSocial).
 
-EXTRAIA do trecho abaixo APENAS os dados gerais, estrutura organizacional e funções/cargos.
+EXTRAIA do trecho abaixo os dados gerais, estrutura organizacional, funções/cargos e responsáveis técnicos.
 NUNCA invente dados. Se não encontrar, use null ou [].
 Classifique confiança: "alta"=dado explícito | "media"=inferido | "baixa"=incerto.
+
+IMPORTANTE para funcoes_atividades:
+- Extraia TODOS os cargos, funções e ocupações mencionados no documento
+- Inclua funções do inventário de riscos (coluna "Função" ou "Cargo")
+- Inclua funções da estrutura organizacional, quadro de pessoal ou tabela de GHO
+- Para cada função, liste as atividades/tarefas descritas (se não houver, use [])
+- NUNCA retorne objetos vazios — todo item deve ter pelo menos o campo "cargo" preenchido
+
+IMPORTANTE para estrutura_organizacional:
+- setores: lista simples de strings com nomes dos setores/GHOs encontrados
+- departamentos: lista simples de strings com nomes dos departamentos
+- unidades: lista de objetos {nome, endereco}
 
 Retorne JSON com EXATAMENTE esta estrutura:
 {
@@ -174,12 +186,24 @@ Retorne JSON com EXATAMENTE esta estrutura:
     "versao": {"valor": null, "confianca": "baixa"}
   },
   "estrutura_organizacional": {
-    "unidades": [],
-    "setores": [],
-    "departamentos": []
+    "unidades": [{"nome": "...", "endereco": "..."}],
+    "setores": ["setor1", "setor2"],
+    "departamentos": ["depto1", "depto2"]
   },
-  "funcoes_atividades": [],
-  "responsaveis_tecnicos": []
+  "funcoes_atividades": [
+    {
+      "cargo": "nome do cargo ou função",
+      "setor": "setor onde atua (se encontrado)",
+      "atividades": ["atividade 1", "atividade 2"]
+    }
+  ],
+  "responsaveis_tecnicos": [
+    {
+      "nome": "...",
+      "registro": "CRP/CREA/CRM/etc",
+      "funcao": "Engenheiro de Segurança / Técnico SST / Médico do Trabalho / etc"
+    }
+  ]
 }`;
 
       // ── CHAMADA 2: Inventário de riscos (seção específica) ────────────────
@@ -207,8 +231,11 @@ Retorne JSON:
 
       // Executar as 3 chamadas em paralelo para economizar tempo
       console.log(`Iniciando 3 chamadas paralelas à OpenAI...`);
+      // Para encontrar funções/cargos, precisamos de cabeçalho + início do inventário
+      const contextoDadosGerais = `${cabecalho}\n\n--- SEÇÃO DE INVENTÁRIO/RISCOS (para extração de funções e setores) ---\n${inventario.substring(0, 8000)}`;
+
       const [resultDados, resultInventario, resultPlano] = await Promise.all([
-        callOpenAI(promptDadosGerais, `Documento SST (${tipo}) — Cabeçalho e estrutura:\n\n${cabecalho}`),
+        callOpenAI(promptDadosGerais, `Documento SST (${tipo}) — Cabeçalho, estrutura organizacional e inventário:\n\n${contextoDadosGerais}`),
         callOpenAI(promptInventario, `Documento SST (${tipo}) — Seção de inventário/riscos. Extraia TODOS os riscos, linha por linha:\n\n${inventario}`),
         callOpenAI(promptPlano, `Documento SST (${tipo}) — Seção de plano de ação e recomendações:\n\n${planoAcao}`),
       ]);
@@ -217,11 +244,33 @@ Retorne JSON:
       console.log(`Plano extraído: ${resultPlano?.plano_acao?.length || 0} ações`);
 
       // Mesclar resultados
+      const inventarioRiscos = resultInventario?.inventario_riscos || [];
+      let funcoesAtividades = resultDados?.funcoes_atividades || [];
+
+      // Fallback: se a IA não retornou funções, extrai cargos únicos do inventário de riscos
+      if (funcoesAtividades.length === 0 && inventarioRiscos.length > 0) {
+        console.log("Funções vazias — extraindo cargos únicos do inventário de riscos...");
+        const cargosMap = new Map<string, { cargo: string; setor: string; atividades: string[] }>();
+        for (const r of inventarioRiscos) {
+          if (r.funcao && r.funcao !== "null" && r.funcao !== "") {
+            const key = r.funcao.trim().toLowerCase();
+            if (!cargosMap.has(key)) {
+              cargosMap.set(key, { cargo: r.funcao.trim(), setor: r.setor || "", atividades: [] });
+            }
+          }
+        }
+        funcoesAtividades = Array.from(cargosMap.values());
+        console.log(`Cargos extraídos do inventário: ${funcoesAtividades.length}`);
+      }
+
+      // Filtrar funções inválidas (objetos sem cargo)
+      funcoesAtividades = funcoesAtividades.filter((f: any) => f && f.cargo && f.cargo !== "null" && f.cargo !== "");
+
       const content: any = {
         dados_gerais: resultDados?.dados_gerais || {},
         estrutura_organizacional: resultDados?.estrutura_organizacional || { unidades: [], setores: [], departamentos: [] },
-        funcoes_atividades: resultDados?.funcoes_atividades || [],
-        inventario_riscos: resultInventario?.inventario_riscos || [],
+        funcoes_atividades: funcoesAtividades,
+        inventario_riscos: inventarioRiscos,
         plano_acao: resultPlano?.plano_acao || [],
         responsaveis_tecnicos: resultDados?.responsaveis_tecnicos || [],
         pendencias: [],
