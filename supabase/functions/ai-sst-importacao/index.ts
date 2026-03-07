@@ -404,15 +404,9 @@ Retorne JSON:
 }
 
 function buildPlanoAcaoPrompt(tipo: string, isComplementar = false): string {
-  // Frases geradoras de ação conforme a especificação
-  const frasesAcao = `recomenda-se, deverá ser implantado, sugere-se, torna-se necessário,
-é indispensável, deve ser providenciado, recomenda-se adequação, requer revisão,
-necessária reavaliação, necessária correção, deve ser monitorado, deve ser renovado,
-exige treinamento, necessita atualização`;
-
   const contextoPorTipo: Record<string, string> = {
-    PGR: `Para PGR, priorize: implantação de EPC, fornecimento/revisão de EPI, treinamentos recomendados, adequações de procedimento, avaliações quantitativas pendentes, revisão de inventário.`,
-    PCMSO: `Para PCMSO, priorize: exames complementares a incluir, revisão de periodicidade, convocações de periódico pendentes, adequações de fluxo de exames, atualizações do programa médico.`,
+    PGR: `Foque em: linhas de tabela de plano de ação (cada linha = uma ação), medidas de EPC/EPI, treinamentos, avaliações quantitativas, cronograma de ações corretivas/preventivas, revisão de inventário. EXTRAIA CADA LINHA DA TABELA DE PLANO DE AÇÃO COMO UMA AÇÃO SEPARADA.`,
+    PCMSO: `Foque em: exames a incluir/revisar, convocações de periódico, adequações de fluxo de exames, atualizações do programa, regularização de exames pendentes.`,
     LTCAT: `Para LTCAT, priorize: necessidade de nova medição, atualização do laudo, inconsistências de exposição, revisão de enquadramento, adequações ambientais.`,
     AET: `Para AET, priorize: ajuste de mobiliário, adequação de posto, implantação de pausa, revisão de ritmo de trabalho, treinamento ergonômico, alteração de processo ou ferramenta.`,
     LAUDO_INSALUBRIDADE: `Para Laudo de Insalubridade, priorize: implantação de EPC, adequação de proteção, substituição de agente/processo, controle de exposição, reavaliação após adequação.`,
