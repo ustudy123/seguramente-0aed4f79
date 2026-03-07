@@ -62,6 +62,7 @@ import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
 import AnaliseJornada from "./pages/AnaliseJornada";
 import Usuarios from "./pages/Usuarios";
+import PerfisAcesso from "./pages/PerfisAcesso";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
