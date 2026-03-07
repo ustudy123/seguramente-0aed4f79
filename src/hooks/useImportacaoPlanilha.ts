@@ -533,6 +533,7 @@ export function useImportacaoPlanilha() {
           salario: dado.salario ? parseFloat(dado.salario.replace(/[^\d,\.]/g, "").replace(",", ".")) || null : null,
           centro_custo: dado.centroCusto || null,
           gestor_imediato: dado.gestorImediato || null,
+          matricula_esocial: dado.matriculaEsocial || null,
           banco: dado.banco || null,
           agencia: dado.agencia || null,
           conta: dado.conta || null,
