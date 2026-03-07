@@ -301,7 +301,18 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo.message}</p>}
                   </div>
 
-                  {/* Linha 3: E-mail (full width) */}
+                  {/* Linha 3: Nome Social + Matrícula */}
+                  <div className="space-y-1.5">
+                    <Label>Nome Social <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                    <Input {...register("nome_social")} placeholder="Como prefere ser chamado(a)" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Matrícula / Código Interno</Label>
+                    <Input {...register("matricula")} placeholder="EMP-0042" />
+                  </div>
+
+                  {/* Linha 4: E-mail (full width) */}
                   <div className="sm:col-span-2 space-y-1.5">
                     <Label>E-mail *</Label>
                     <Input {...register("email_principal")} type="email" placeholder="maria@empresa.com"
