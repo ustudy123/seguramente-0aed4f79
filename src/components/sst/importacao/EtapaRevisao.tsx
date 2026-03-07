@@ -92,10 +92,27 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
       const prioridadeMap: Record<string, string> = { alta: "alta", media: "media", baixa: "baixa" };
       const prazoDate = parsePrazo(acao.prazo);
+      const codigo = `SST-${Date.now()}-${index}`;
 
       const { error } = await supabase.from("plano_acoes").insert([{
         tenant_id: profile.tenant_id,
+        codigo,
         titulo: acao.recomendacao,
+        descricao: acao.recomendacao,
+        porque: `Recomendação extraída de documento SST (${state.tipoDetectado || "PGR"}) via Importação Inteligente`,
+        onde: acao.setor || "Geral",
+        como: acao.recomendacao,
+        responsavel_nome: acao.responsavel || "A definir",
+        prazo: prazoDate,
+        prioridade: (prioridadeMap[acao.prioridade] || "media") as any,
+        status: "nao_iniciado" as any,
+        origem_modulo: "Compliance SST",
+        origem_descricao: `Importado de ${state.arquivo?.name || "documento SST"} — ${state.tipoDetectado || "PGR"}`,
+        criado_por: session.user.id,
+        criado_por_nome: session.user.email,
+        tipo: "acao",
+        progresso: 0,
+      }]);
         descricao: acao.recomendacao,
         porque: `Recomendação extraída de documento SST (${state.tipoDetectado || "PGR"}) via Importação Inteligente`,
         onde: acao.setor || "Geral",
