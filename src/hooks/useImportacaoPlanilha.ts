@@ -278,6 +278,7 @@ export function useImportacaoPlanilha() {
             salario: encontrarColuna(headers, "salario"),
             centroCusto: encontrarColuna(headers, "centroCusto"),
             gestorImediato: encontrarColuna(headers, "gestorImediato"),
+            matriculaEsocial: encontrarColuna(headers, "matriculaEsocial"),
             banco: encontrarColuna(headers, "banco"),
             agencia: encontrarColuna(headers, "agencia"),
             conta: encontrarColuna(headers, "conta"),
