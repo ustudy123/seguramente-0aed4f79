@@ -264,7 +264,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                 )}
 
                 {dadosReaproveitados && (
-                  <div className="flex gap-2 items-center p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700">
+                  <div className="flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-xs text-primary">
                     <Sparkles className="w-3.5 h-3.5 shrink-0" />
                     Dados do colaborador aplicados. Complete os campos restantes se necessário.
                   </div>
