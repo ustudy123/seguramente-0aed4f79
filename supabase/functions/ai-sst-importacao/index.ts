@@ -73,8 +73,13 @@ Responda SOMENTE em JSON com o seguinte formato:
 
     // ── Ação: extrair dados estruturados ─────────────────────────────────────
     if (action === "extrair") {
-      const texto = (documento_texto || "").substring(0, 15000);
+      // Para PGR usamos mais texto pois o inventário tende a ser extenso
+      const maxChars = (documento_tipo || "").includes("PGR") ? 28000 : 18000;
+      const texto = (documento_texto || "").substring(0, maxChars);
       const tipo = documento_tipo || "DOCUMENTO_SST";
+
+      // Prompt especializado por tipo de documento
+      const systemPrompt = buildExtractionPrompt(tipo);
 
       const resp = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -87,86 +92,10 @@ Responda SOMENTE em JSON com o seguinte formato:
           temperature: 0.1,
           response_format: { type: "json_object" },
           messages: [
-            {
-              role: "system",
-              content: `Você é um especialista em extração de dados de documentos SST brasileiros.
-Analise o documento do tipo ${tipo} e extraia as informações de forma estruturada e conservadora.
-
-REGRAS FUNDAMENTAIS:
-1. NUNCA invente dados. Se não encontrar, use null.
-2. NÃO faça suposições. Apenas extraia o que está escrito.
-3. Classifique cada campo com score de confiança: "alta", "media" ou "baixa".
-4. Para ações, identifique apenas frases com verbos no infinitivo que descrevam uma tarefa concreta.
-5. Seja preciso com CNPJ, datas e registros profissionais.
-
-Retorne JSON com esta estrutura EXATA:
-{
-  "dados_gerais": {
-    "empresa": {"valor": "...", "confianca": "alta|media|baixa"},
-    "cnpj": {"valor": "...", "confianca": "alta|media|baixa"},
-    "cnae": {"valor": "...", "confianca": "alta|media|baixa"},
-    "grau_risco": {"valor": "...", "confianca": "alta|media|baixa"},
-    "data_emissao": {"valor": "...", "confianca": "alta|media|baixa"},
-    "data_vigencia": {"valor": "...", "confianca": "alta|media|baixa"},
-    "versao": {"valor": "...", "confianca": "alta|media|baixa"}
-  },
-  "estrutura_organizacional": {
-    "unidades": [{"nome": "...", "endereco": "..."}],
-    "setores": ["..."],
-    "departamentos": ["..."]
-  },
-  "funcoes_atividades": [
-    {"cargo": "...", "atividades": ["..."], "setor": "..."}
-  ],
-  "inventario_riscos": [
-    {
-      "setor": "...",
-      "funcao": "...",
-      "risco": "...",
-      "tipo_risco": "fisico|quimico|biologico|ergonomico|acidente|psicossocial",
-      "fonte_geradora": "...",
-      "intensidade": "...",
-      "tempo_exposicao": "...",
-      "metodologia": "...",
-      "danos": "...",
-      "controles_existentes": ["..."],
-      "confianca": "alta|media|baixa"
-    }
-  ],
-  "plano_acao": [
-    {
-      "recomendacao": "...",
-      "prioridade": "alta|media|baixa",
-      "prazo": "...",
-      "responsavel": "...",
-      "setor": "...",
-      "confianca": "alta|media|baixa"
-    }
-  ],
-  "responsaveis_tecnicos": [
-    {
-      "nome": "...",
-      "formacao": "...",
-      "registro": "...",
-      "conselho": "...",
-      "funcao_no_doc": "..."
-    }
-  ],
-  "pendencias": [
-    {"campo": "...", "motivo": "...", "severidade": "critica|media|baixa"}
-  ],
-  "score_qualidade": {
-    "geral": 0,
-    "dados_gerais": 0,
-    "inventario": 0,
-    "plano_acao": 0,
-    "responsaveis": 0
-  }
-}`,
-            },
+            { role: "system", content: systemPrompt },
             {
               role: "user",
-              content: `Extraia os dados deste documento SST (${tipo}):\n\n${texto}`,
+              content: `Extraia TODOS os dados deste documento SST do tipo ${tipo}. Seja exaustivo no inventário de riscos — extraia CADA LINHA da tabela de riscos encontrada:\n\n${texto}`,
             },
           ],
         }),
