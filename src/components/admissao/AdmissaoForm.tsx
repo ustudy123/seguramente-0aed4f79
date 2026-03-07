@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import { useDepartamentos, useFiliais } from '@/hooks/useCadastros';
 import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
 import { GestorComboboxField } from '@/components/colaboradores/GestorComboboxField';
@@ -160,11 +163,25 @@ interface AdmissaoFormProps {
   };
 }
 
+interface UsuarioEncontrado {
+  id: string;
+  nome_completo: string;
+  email_principal: string;
+  cpf?: string;
+  telefone_principal?: string;
+  cargo_funcao?: string;
+  data_nascimento?: string;
+}
+
 export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const { departamentos } = useDepartamentos();
   const { filiais } = useFiliais();
   const { empresaAtivaId } = useEmpresaAtiva();
+  const { tenantId } = useAuth();
+  const [buscandoCpf, setBuscandoCpf] = useState(false);
+  const [usuarioEncontrado, setUsuarioEncontrado] = useState<UsuarioEncontrado | null>(null);
+  const [dadosReaproveitados, setDadosReaproveitados] = useState(false);
 
   const departamentosOptions = departamentos.filter(
     (d) => typeof d?.nome === 'string' && d.nome.trim().length > 0,
@@ -331,6 +348,41 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
   }, [watchPessoais, watchContato, watchProfissionais, watchBancarios, watchExame, scheduleAutoSave]);
 
+  // ── CPF lookup: busca usuário existente ──────────────────────────────────────
+  const buscarUsuarioPorCpf = useCallback(async (cpf: string) => {
+    if (!tenantId || cpf.length !== 11) return;
+    setBuscandoCpf(true);
+    try {
+      const { data } = await (supabase as any)
+        .from('usuarios_base')
+        .select('id, nome_completo, email_principal, cpf, telefone_principal, cargo_funcao, data_nascimento')
+        .eq('tenant_id', tenantId)
+        .eq('cpf', cpf)
+        .maybeSingle();
+      if (data) {
+        setUsuarioEncontrado(data as UsuarioEncontrado);
+      } else {
+        setUsuarioEncontrado(null);
+        setDadosReaproveitados(false);
+      }
+    } catch {
+      // silencioso
+    } finally {
+      setBuscandoCpf(false);
+    }
+  }, [tenantId]);
+
+  const aplicarDadosUsuario = useCallback(() => {
+    if (!usuarioEncontrado) return;
+    if (usuarioEncontrado.nome_completo) formPessoais.setValue('nomeCompleto', usuarioEncontrado.nome_completo);
+    if (usuarioEncontrado.data_nascimento) formPessoais.setValue('dataNascimento', usuarioEncontrado.data_nascimento);
+    if (usuarioEncontrado.email_principal) formContato.setValue('email', usuarioEncontrado.email_principal);
+    if (usuarioEncontrado.telefone_principal) formContato.setValue('celular', usuarioEncontrado.telefone_principal);
+    if (usuarioEncontrado.cargo_funcao) formProfissionais.setValue('cargo', usuarioEncontrado.cargo_funcao);
+    setDadosReaproveitados(true);
+    toast.success('Dados do usuário aplicados ao cadastro!');
+  }, [usuarioEncontrado, formPessoais, formContato, formProfissionais]);
+
   const validateCurrentStep = async (): Promise<boolean> => {
     switch (currentStep) {
       case 1:
@@ -406,8 +458,55 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
+            {/* Banner: usuário encontrado */}
+            {usuarioEncontrado && !dadosReaproveitados && (
+              <div className="flex flex-col gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm mb-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-primary font-medium">👤 Usuário encontrado na base!</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {usuarioEncontrado.nome_completo}
+                  {usuarioEncontrado.cargo_funcao ? ` — ${usuarioEncontrado.cargo_funcao}` : ''}
+                </p>
+                <button
+                  type="button"
+                  onClick={aplicarDadosUsuario}
+                  className="self-start text-xs font-medium text-primary underline hover:no-underline"
+                >
+                  Reaproveitar dados deste usuário →
+                </button>
+              </div>
+            )}
+            {dadosReaproveitados && (
+              <div className="flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-xs text-primary mb-2">
+                ✓ Dados do usuário aplicados. Complete os campos específicos de colaborador.
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+              <div>
+                <Label htmlFor="cpf" className="flex items-center gap-1.5">
+                  CPF *
+                  {buscandoCpf && <span className="text-xs text-muted-foreground">(buscando…)</span>}
+                  {usuarioEncontrado && !buscandoCpf && <span className="text-xs text-primary">✓ encontrado</span>}
+                </Label>
+                <CpfInput 
+                  id="cpf"
+                  value={formPessoais.watch('cpf')}
+                  onChange={(value) => {
+                    formPessoais.setValue('cpf', value, { shouldValidate: true });
+                    if (value.length === 11) buscarUsuarioPorCpf(value);
+                  }}
+                  onValidChange={(isValid) => {
+                    if (isValid) buscarUsuarioPorCpf(formPessoais.getValues('cpf'));
+                  }}
+                />
+                {formPessoais.formState.errors.cpf && (
+                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.cpf.message}</p>
+                )}
+              </div>
+
+              <div className="md:col-span-1">
                 <Label htmlFor="nomeCompleto">Nome Completo *</Label>
                 <Input 
                   id="nomeCompleto"
@@ -416,18 +515,6 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                 />
                 {formPessoais.formState.errors.nomeCompleto && (
                   <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.nomeCompleto.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="cpf">CPF *</Label>
-                <CpfInput 
-                  id="cpf"
-                  value={formPessoais.watch('cpf')}
-                  onChange={(value) => formPessoais.setValue('cpf', value, { shouldValidate: true })}
-                />
-                {formPessoais.formState.errors.cpf && (
-                  <p className="text-xs text-destructive mt-1">{formPessoais.formState.errors.cpf.message}</p>
                 )}
               </div>
 
