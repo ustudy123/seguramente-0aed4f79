@@ -177,6 +177,8 @@ const Documentos = () => {
     setRenaming(false);
     setPastaToRename(null);
   };
+
+  const handleDeletePasta = useCallback((pastaId: string) => {
     setPastaToDelete(pastaId);
   }, []);
 
