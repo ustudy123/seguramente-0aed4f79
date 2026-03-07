@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Building2, Users, Briefcase, AlertTriangle, Target, UserCheck,
-  AlertCircle, CheckCircle2, Minus, Edit3, Info
+  AlertCircle, CheckCircle2, Minus, Edit3, Info, Sparkles, ArrowUpRight, CheckCheck
 } from "lucide-react";
 import { ImportacaoState, DadosExtraidos } from "./ImportacaoInteligente";
 import { useSSTDocumentos } from "@/hooks/useSSTDocumentos";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Props {
