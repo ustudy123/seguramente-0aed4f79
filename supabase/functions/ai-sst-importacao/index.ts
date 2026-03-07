@@ -9,82 +9,97 @@ const corsHeaders = {
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-// ── Palavras-chave que indicam seção de inventário de riscos ──────────────────
-const RISK_SECTION_KEYWORDS = [
-  "inventário de riscos", "inventario de riscos",
-  "identificação de perigos", "identificacao de perigos",
-  "avaliação de riscos", "avaliacao de riscos",
-  "matriz de riscos", "quadro de riscos",
-  "gho", "grupo homogêneo", "grupo homogeneo",
-  "agente de risco", "agentes de risco",
-  "fonte geradora", "medidas de controle",
-  "ruído", "ruido", "calor", "vibração", "vibracao",
-  "ergon", "quimico", "químico", "biologico", "biológico",
-  "insalubridade", "periculosidade",
-  "nr-09", "nr 09", "nr-15", "nr 15",
-];
+// ── Palavras-chave por tipo de documento para extração segmentada ─────────────
+const SEGMENT_KEYWORDS: Record<string, string[]> = {
+  PGR: [
+    "inventário de riscos", "inventario de riscos", "identificação de perigos",
+    "avaliação de riscos", "avaliacao de riscos", "matriz de riscos", "gho",
+    "grupo homogêneo", "fonte geradora", "medidas de controle", "nr-09", "nr 09",
+  ],
+  PCMSO: [
+    "exame", "exames", "periodicidade", "admissional", "periódico", "periodico",
+    "retorno ao trabalho", "demissional", "monitoramento", "acompanhamento médico",
+    "médico do trabalho", "medico do trabalho", "nr-07", "nr 07",
+  ],
+  LTCAT: [
+    "agente nocivo", "agentes nocivos", "concentração", "concentracao",
+    "intensidade", "habitual", "habitualidade", "permanência", "permanencia",
+    "laudo técnico", "laudo tecnico", "nr-09", "decreto 3048", "aposentadoria especial",
+  ],
+  AET: [
+    "ergonomia", "ergonômico", "posto de trabalho", "atividade real", "postura",
+    "repetitividade", "esforço", "esforco", "mobiliário", "mobiliario",
+    "organização do trabalho", "nr-17", "nr 17", "recomendação ergonômica",
+  ],
+  LAUDO_INSALUBRIDADE: [
+    "insalubridade", "insalubre", "agente insalubre", "grau de insalubridade",
+    "adicional de insalubridade", "nr-15", "nr 15", "limite de tolerância",
+  ],
+  LAUDO_PERICULOSIDADE: [
+    "periculosidade", "perigoso", "condição perigosa", "adicional de periculosidade",
+    "nr-16", "nr 16", "inflamável", "explosivo", "eletricidade",
+  ],
+};
 
-const PLAN_SECTION_KEYWORDS = [
-  "plano de ação", "plano de acao", "recomendações", "recomendacoes",
-  "medidas recomendadas", "ações corretivas", "acoes corretivas",
-  "prazo", "responsável", "responsavel", "prioridade",
+const PLAN_KEYWORDS = [
+  "recomenda-se", "recomendamos", "deverá", "devera", "sugere-se", "torna-se necessário",
+  "é indispensável", "deve ser", "plano de ação", "plano de acao", "medidas recomendadas",
+  "ações corretivas", "acoes corretivas", "prazo", "responsável", "responsavel",
+  "necessária", "necessaria", "requer", "exige", "necessita",
 ];
 
 // ── Extrair segmentos relevantes do texto completo ──────────────────────────
 function extractRelevantSegments(fullText: string, tipo: string): {
   cabecalho: string;
-  inventario: string;
+  conteudoPrincipal: string;
   planoAcao: string;
 } {
   const lower = fullText.toLowerCase();
   const total = fullText.length;
+  const keywords = SEGMENT_KEYWORDS[tipo] || SEGMENT_KEYWORDS["PGR"];
 
-  // Sempre pegar o cabeçalho (dados gerais + estrutura organizacional)
+  // Cabeçalho sempre inclui os primeiros 8000 chars
   const cabecalho = fullText.substring(0, 8000);
 
-  // Buscar início da seção de inventário/riscos
-  let riskStart = -1;
-  for (const kw of RISK_SECTION_KEYWORDS) {
+  // Buscar início do conteúdo principal (riscos/exames/agentes/etc.)
+  let mainStart = -1;
+  for (const kw of keywords) {
     const idx = lower.indexOf(kw);
-    if (idx !== -1 && (riskStart === -1 || idx < riskStart)) {
-      riskStart = Math.max(0, idx - 200); // um pouco antes para contexto
+    if (idx !== -1 && (mainStart === -1 || idx < mainStart)) {
+      mainStart = Math.max(0, idx - 200);
     }
   }
 
-  // Buscar início da seção de plano de ação
+  // Buscar início do plano de ação
   let planStart = -1;
-  for (const kw of PLAN_SECTION_KEYWORDS) {
-    const idx = lower.indexOf(kw, riskStart > 0 ? riskStart + 1000 : 0);
+  for (const kw of PLAN_KEYWORDS) {
+    const idx = lower.indexOf(kw, mainStart > 0 ? mainStart + 500 : 0);
     if (idx !== -1 && (planStart === -1 || idx > planStart)) {
       planStart = Math.max(0, idx - 200);
     }
   }
 
-  // Inventário: desde o início da seção de riscos até o início do plano (ou 40k chars)
-  let inventario = "";
-  if (riskStart !== -1) {
-    const end = planStart > riskStart ? Math.min(planStart, riskStart + 40000) : riskStart + 40000;
-    inventario = fullText.substring(riskStart, Math.min(end, total));
-    console.log(`Inventário extraído: posição ${riskStart}–${Math.min(end, total)} (${inventario.length} chars)`);
+  // Conteúdo principal
+  let conteudoPrincipal = "";
+  if (mainStart !== -1) {
+    const end = planStart > mainStart ? Math.min(planStart, mainStart + 45000) : mainStart + 45000;
+    conteudoPrincipal = fullText.substring(mainStart, Math.min(end, total));
   } else {
-    // Fallback: pegar do meio do documento onde costuma estar o inventário
-    const mid = Math.floor(total / 3);
-    inventario = fullText.substring(mid, Math.min(mid + 30000, total));
-    console.log(`Inventário (fallback mid): ${inventario.length} chars`);
+    const mid = Math.floor(total / 4);
+    conteudoPrincipal = fullText.substring(mid, Math.min(mid + 35000, total));
   }
 
-  // Plano de ação
+  // Plano/recomendações
   let planoAcao = "";
   if (planStart !== -1) {
-    planoAcao = fullText.substring(planStart, Math.min(planStart + 15000, total));
-    console.log(`Plano de ação extraído: posição ${planStart} (${planoAcao.length} chars)`);
-  } else if (riskStart !== -1) {
-    // Pegar o final do documento onde costumam estar as recomendações
-    const tailStart = Math.max(0, total - 15000);
+    planoAcao = fullText.substring(planStart, Math.min(planStart + 18000, total));
+  } else {
+    const tailStart = Math.max(0, total - 18000);
     planoAcao = fullText.substring(tailStart);
   }
 
-  return { cabecalho, inventario, planoAcao };
+  console.log(`Segmentos [${tipo}] — cabeçalho:${cabecalho.length} principal:${conteudoPrincipal.length} plano:${planoAcao.length}`);
+  return { cabecalho, conteudoPrincipal, planoAcao };
 }
 
 // ── Chamada OpenAI ────────────────────────────────────────────────────────────
@@ -117,6 +132,287 @@ async function callOpenAI(systemPrompt: string, userContent: string, model = "gp
   return JSON.parse(data.choices[0].message.content);
 }
 
+// ── Prompts especializados por tipo ──────────────────────────────────────────
+
+function buildDadosGeraisPrompt(tipo: string): string {
+  const camposEspecificos: Record<string, string> = {
+    PGR: `"grau_risco": {"valor": null, "confianca": "baixa"}, "cnae": {"valor": null, "confianca": "baixa"},`,
+    PCMSO: `"medico_coordenador": {"valor": null, "confianca": "baixa"}, "crm": {"valor": null, "confianca": "baixa"},`,
+    LTCAT: `"responsavel_tecnico": {"valor": null, "confianca": "baixa"}, "metodologia": {"valor": null, "confianca": "baixa"},`,
+    AET: `"responsavel_tecnico": {"valor": null, "confianca": "baixa"}, "setor_avaliado": {"valor": null, "confianca": "baixa"},`,
+    LAUDO_INSALUBRIDADE: `"grau_insalubridade": {"valor": null, "confianca": "baixa"}, "conclusao": {"valor": null, "confianca": "baixa"},`,
+    LAUDO_PERICULOSIDADE: `"conclusao": {"valor": null, "confianca": "baixa"}, "condicao_perigosa": {"valor": null, "confianca": "baixa"},`,
+  };
+  const extra = camposEspecificos[tipo] || "";
+
+  return `Você é especialista sênior em SST brasileiro (NR-01, NR-09, eSocial).
+
+DOCUMENTO TIPO: ${tipo}
+
+EXTRAIA os dados gerais, estrutura organizacional, funções/cargos e responsáveis técnicos.
+NUNCA invente dados. Se não encontrar, use null ou [].
+Classifique confiança: "alta"=dado explícito | "media"=inferido | "baixa"=incerto.
+
+IMPORTANTE para funcoes_atividades:
+- Extraia TODOS os cargos, funções e ocupações mencionados
+- Para cada função, liste as atividades/tarefas descritas (se não houver, use [])
+- NUNCA retorne objetos vazios
+
+IMPORTANTE para estrutura_organizacional:
+- setores: lista simples de strings
+- departamentos: lista simples de strings
+- unidades: lista de objetos {nome, endereco}
+
+Retorne JSON com EXATAMENTE esta estrutura:
+{
+  "dados_gerais": {
+    "empresa": {"valor": null, "confianca": "baixa"},
+    "cnpj": {"valor": null, "confianca": "baixa"},
+    ${extra}
+    "data_emissao": {"valor": null, "confianca": "baixa"},
+    "data_vigencia": {"valor": null, "confianca": "baixa"},
+    "versao": {"valor": null, "confianca": "baixa"}
+  },
+  "estrutura_organizacional": {
+    "unidades": [{"nome": "...", "endereco": "..."}],
+    "setores": ["setor1"],
+    "departamentos": ["depto1"]
+  },
+  "funcoes_atividades": [
+    {"cargo": "...", "setor": "...", "atividades": ["..."]}
+  ],
+  "responsaveis_tecnicos": [
+    {"nome": "...", "registro": "...", "funcao": "..."}
+  ]
+}`;
+}
+
+function buildConteudoPrincipalPrompt(tipo: string): string {
+  switch (tipo) {
+    case "PGR":
+      return `Você é especialista sênior em SST brasileiro com domínio em NR-01, NR-09, NR-15 e eSocial.
+
+MISSÃO: Extrair TODOS os riscos/perigos do inventário do PGR.
+REGRAS:
+1. Extraia CADA LINHA/REGISTRO da tabela de riscos — não pule nenhum.
+2. NUNCA invente dados. Use null para campos não encontrados.
+3. Normalize tipo_risco: "fisico" | "quimico" | "biologico" | "ergonomico" | "acidente" | "psicossocial"
+4. Procure tabelas com: Setor, Cargo/Função, Agente, Fonte, GHO, NE, NA, NR, Probabilidade, Severidade, Risco
+
+Retorne JSON:
+{
+  "inventario_riscos": [
+    {
+      "setor": "...", "funcao": "...", "risco": "...", "tipo_risco": "fisico",
+      "fonte_geradora": "...", "intensidade": "...", "tempo_exposicao": "...",
+      "metodologia": "...", "danos": "...", "controles_existentes": ["..."],
+      "confianca": "alta"
+    }
+  ]
+}`;
+
+    case "PCMSO":
+      return `Você é especialista em PCMSO e saúde ocupacional no Brasil (NR-07).
+
+MISSÃO: Extrair a matriz de exames ocupacionais do PCMSO por cargo/função.
+REGRAS:
+1. Para cada cargo ou grupo, extraia os exames previstos e periodicidade.
+2. Identifique o tipo de exame: admissional, periódico, mudança de risco, retorno, demissional.
+3. Extraia exames clínicos e complementares separadamente quando possível.
+4. NUNCA invente dados. Use null para campos não encontrados.
+
+Retorne JSON:
+{
+  "matriz_exames": [
+    {
+      "cargo": "...", "setor": "...", "risco_relacionado": "...",
+      "exames_clinicos": ["..."], "exames_complementares": ["..."],
+      "periodicidade": "...", "tipo_exame": "...",
+      "observacoes": "...", "confianca": "alta"
+    }
+  ]
+}`;
+
+    case "LTCAT":
+      return `Você é especialista em LTCAT e previdência social (Decreto 3048/99, NR-09).
+
+MISSÃO: Extrair avaliação dos agentes nocivos com foco previdenciário.
+REGRAS:
+1. Foque em agentes do Anexo I e II do Decreto 3048/99 (aposentadoria especial).
+2. Registre concentrações/intensidades com valores numéricos e limites de tolerância.
+3. Informe se cada agente está "acima" ou "abaixo" do LT/NPS.
+4. Extraia a conclusão técnica sobre exposição habitual e permanente.
+5. NUNCA invente dados.
+
+Retorne JSON:
+{
+  "inventario_riscos": [
+    {
+      "setor": "...", "funcao": "...", "risco": "...", "tipo_risco": "fisico",
+      "fonte_geradora": "...", "intensidade": "...", "tempo_exposicao": "...",
+      "metodologia": "...", "limite_tolerancia": "...", "acima_limite": true,
+      "conclusao_previdenciaria": "...", "danos": "...",
+      "controles_existentes": ["..."], "confianca": "alta"
+    }
+  ]
+}`;
+
+    case "AET":
+      return `Você é especialista em ergonomia e NR-17.
+
+MISSÃO: Extrair os fatores ergonômicos analisados e recomendações da AET.
+REGRAS:
+1. Para cada posto/função analisada, extraia todos os fatores ergonômicos.
+2. Identifique inconformidades e recomendações práticas.
+3. Classifique fatores: "biomecânico", "cognitivo", "organizacional", "ambiental".
+4. NUNCA invente dados.
+
+Retorne JSON:
+{
+  "inventario_riscos": [
+    {
+      "setor": "...", "funcao": "...", "risco": "...",
+      "tipo_risco": "ergonomico", "fator_ergonomico": "...",
+      "nivel_risco": "...", "fonte_geradora": "...",
+      "danos": "...", "controles_existentes": ["..."],
+      "confianca": "alta"
+    }
+  ],
+  "fatores_ergonomicos": [
+    {
+      "posto": "...", "cargo": "...",
+      "postura": "...", "repetitividade": "...", "esforco_fisico": "...",
+      "mobiliario": "...", "organizacao_trabalho": "...",
+      "aspectos_cognitivos": "...", "nivel_risco": "alto|medio|baixo",
+      "confianca": "alta"
+    }
+  ]
+}`;
+
+    case "LAUDO_INSALUBRIDADE":
+      return `Você é especialista em laudos de insalubridade (NR-15, CLT Art.189).
+
+MISSÃO: Extrair a caracterização de insalubridade por função/setor.
+REGRAS:
+1. Para cada função/setor avaliado, registre o agente insalubre, metodologia e conclusão.
+2. Quando caracterizado, informe o grau (mínimo 10%, médio 20%, máximo 40%).
+3. Registre se há medidas de neutralização ou eliminação.
+4. NUNCA invente dados.
+
+Retorne JSON:
+{
+  "inventario_riscos": [
+    {
+      "setor": "...", "funcao": "...", "risco": "...",
+      "tipo_risco": "fisico", "agente_insalubre": "...",
+      "intensidade": "...", "limite_tolerancia": "...",
+      "metodologia": "...", "caracterizado": true,
+      "grau_insalubridade": "maximo|medio|minimo",
+      "conclusao": "...", "danos": "...",
+      "controles_existentes": ["..."], "confianca": "alta"
+    }
+  ]
+}`;
+
+    case "LAUDO_PERICULOSIDADE":
+      return `Você é especialista em laudos de periculosidade (NR-16, CLT Art.193).
+
+MISSÃO: Extrair a caracterização de periculosidade por função/área.
+REGRAS:
+1. Para cada função/área avaliada, registre a condição perigosa, enquadramento e conclusão.
+2. Informe o tipo de condição: inflamáveis, explosivos, eletricidade, roubos/violência, motocicleta.
+3. Registre as proteções existentes e se são suficientes para descaracterizar.
+4. NUNCA invente dados.
+
+Retorne JSON:
+{
+  "inventario_riscos": [
+    {
+      "setor": "...", "funcao": "...", "risco": "...",
+      "tipo_risco": "acidente", "condicao_perigosa": "...",
+      "enquadramento_legal": "...", "habitualidade": "...",
+      "caracterizado": true, "conclusao": "...",
+      "controles_existentes": ["..."], "confianca": "alta"
+    }
+  ]
+}`;
+
+    default:
+      return `Você é especialista sênior em SST brasileiro.
+MISSÃO: Extrair os riscos, perigos e exposições identificados no documento.
+REGRAS: NUNCA invente dados. Use null para campos não encontrados.
+Normalize tipo_risco: "fisico" | "quimico" | "biologico" | "ergonomico" | "acidente" | "psicossocial"
+
+Retorne JSON:
+{
+  "inventario_riscos": [
+    {
+      "setor": "...", "funcao": "...", "risco": "...", "tipo_risco": "fisico",
+      "fonte_geradora": "...", "intensidade": "...", "tempo_exposicao": "...",
+      "danos": "...", "controles_existentes": ["..."], "confianca": "alta"
+    }
+  ]
+}`;
+  }
+}
+
+function buildPlanoAcaoPrompt(tipo: string): string {
+  // Frases geradoras de ação conforme a especificação
+  const frasesAcao = `recomenda-se, deverá ser implantado, sugere-se, torna-se necessário,
+é indispensável, deve ser providenciado, recomenda-se adequação, requer revisão,
+necessária reavaliação, necessária correção, deve ser monitorado, deve ser renovado,
+exige treinamento, necessita atualização`;
+
+  const contextoPorTipo: Record<string, string> = {
+    PGR: `Para PGR, priorize: implantação de EPC, fornecimento/revisão de EPI, treinamentos recomendados, adequações de procedimento, avaliações quantitativas pendentes, revisão de inventário.`,
+    PCMSO: `Para PCMSO, priorize: exames complementares a incluir, revisão de periodicidade, convocações de periódico pendentes, adequações de fluxo de exames, atualizações do programa médico.`,
+    LTCAT: `Para LTCAT, priorize: necessidade de nova medição, atualização do laudo, inconsistências de exposição, revisão de enquadramento, adequações ambientais.`,
+    AET: `Para AET, priorize: ajuste de mobiliário, adequação de posto, implantação de pausa, revisão de ritmo de trabalho, treinamento ergonômico, alteração de processo ou ferramenta.`,
+    LAUDO_INSALUBRIDADE: `Para Laudo de Insalubridade, priorize: implantação de EPC, adequação de proteção, substituição de agente/processo, controle de exposição, reavaliação após adequação.`,
+    LAUDO_PERICULOSIDADE: `Para Laudo de Periculosidade, priorize: adequação de área de risco, isolamento/sinalização, revisão de procedimento, controle de energia, treinamento específico.`,
+  };
+
+  const contexto = contextoPorTipo[tipo] || "Priorize ações técnicas e preventivas identificadas no documento.";
+
+  return `Você é especialista sênior em SST brasileiro e gestão de riscos.
+
+DOCUMENTO TIPO: ${tipo}
+
+MISSÃO: Extrair TODAS as ações, recomendações e medidas do texto.
+NUNCA invente dados. Extraia apenas o que está escrito explicitamente.
+
+FRASES GERADORAS DE AÇÃO (sempre que encontrar, gere uma ação):
+${frasesAcao}
+
+${contexto}
+
+Para cada ação, preencha o modelo 5W2H:
+- what: o que deve ser feito (extraído do texto)
+- why: por que deve ser feito (justificativa do documento)
+- where: onde deve ser feito (setor/área)
+- who: responsável (se mencionado)
+- when: prazo (se mencionado)
+- how: como será executado (método/procedimento)
+- how_much: custo estimado (se mencionado)
+
+Retorne JSON:
+{
+  "plano_acao": [
+    {
+      "recomendacao": "texto completo da recomendação",
+      "what": "...", "why": "...", "where": "...", "who": "...",
+      "when": "...", "how": "...", "how_much": "...",
+      "prioridade": "alta|media|baixa",
+      "prazo": "...",
+      "responsavel": "...",
+      "setor": "...",
+      "trecho_origem": "trecho exato do documento que gerou esta ação",
+      "confianca": "alta|media|baixa"
+    }
+  ]
+}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -127,15 +423,18 @@ serve(async (req) => {
 
     // ── Ação: classificar documento ──────────────────────────────────────────
     if (action === "classificar") {
-      const amostra = (documento_texto || "").substring(0, 4000);
+      const amostra = (documento_texto || "").substring(0, 5000);
       const content = await callOpenAI(
         `Você é um especialista em documentos de SST brasileiro.
-Analise o trecho e classifique o tipo de documento.
+Analise o trecho e classifique o tipo de documento baseado em:
+- título e palavras-chave recorrentes
+- estrutura textual e terminologias técnicas
+- presença de seções típicas e padrões de tabelas
 
 Tipos possíveis: PGR, PCMSO, LTCAT, PPP, APR, NR12, AEP, AET, LAUDO_INSALUBRIDADE, LAUDO_PERICULOSIDADE, AVALIACAO_AMBIENTAL, RELATORIO_MEDICOES, RELATORIO_AUDITORIA, PARECER_TECNICO, OUTROS
 
 Responda SOMENTE em JSON:
-{"tipo": "PGR", "confianca": 92, "justificativa": "..."}`,
+{"tipo": "PGR", "confianca": 92, "justificativa": "Identificado por: inventário de riscos, GHOs, NR-01..."}`,
         `Classifique este documento SST:\n\n${amostra}`,
         "gpt-4o-mini"
       );
@@ -152,104 +451,32 @@ Responda SOMENTE em JSON:
 
       console.log(`Extração iniciada. Tipo: ${tipo}, Total chars: ${totalChars}`);
 
-      // Estratégia de segmentação inteligente para documentos grandes
-      const { cabecalho, inventario, planoAcao } = extractRelevantSegments(textoCompleto, tipo);
+      const { cabecalho, conteudoPrincipal, planoAcao } = extractRelevantSegments(textoCompleto, tipo);
 
-      // ── CHAMADA 1: Dados gerais + estrutura organizacional + funções ──────
-      const promptDadosGerais = `Você é especialista sênior em SST brasileiro (NR-01, NR-09, eSocial).
+      // Contexto enriquecido para dados gerais (inclui início do conteúdo principal)
+      const contextoDadosGerais = `${cabecalho}\n\n--- CONTEÚDO PRINCIPAL (para extração de funções e setores) ---\n${conteudoPrincipal.substring(0, 6000)}`;
 
-EXTRAIA do trecho abaixo os dados gerais, estrutura organizacional, funções/cargos e responsáveis técnicos.
-NUNCA invente dados. Se não encontrar, use null ou [].
-Classifique confiança: "alta"=dado explícito | "media"=inferido | "baixa"=incerto.
+      // Prompts especializados por tipo
+      const promptDadosGerais = buildDadosGeraisPrompt(tipo);
+      const promptConteudo = buildConteudoPrincipalPrompt(tipo);
+      const promptPlano = buildPlanoAcaoPrompt(tipo);
 
-IMPORTANTE para funcoes_atividades:
-- Extraia TODOS os cargos, funções e ocupações mencionados no documento
-- Inclua funções do inventário de riscos (coluna "Função" ou "Cargo")
-- Inclua funções da estrutura organizacional, quadro de pessoal ou tabela de GHO
-- Para cada função, liste as atividades/tarefas descritas (se não houver, use [])
-- NUNCA retorne objetos vazios — todo item deve ter pelo menos o campo "cargo" preenchido
+      console.log(`Iniciando 3 chamadas paralelas à OpenAI para tipo: ${tipo}...`);
 
-IMPORTANTE para estrutura_organizacional:
-- setores: lista simples de strings com nomes dos setores/GHOs encontrados
-- departamentos: lista simples de strings com nomes dos departamentos
-- unidades: lista de objetos {nome, endereco}
-
-Retorne JSON com EXATAMENTE esta estrutura:
-{
-  "dados_gerais": {
-    "empresa": {"valor": null, "confianca": "baixa"},
-    "cnpj": {"valor": null, "confianca": "baixa"},
-    "cnae": {"valor": null, "confianca": "baixa"},
-    "grau_risco": {"valor": null, "confianca": "baixa"},
-    "data_emissao": {"valor": null, "confianca": "baixa"},
-    "data_vigencia": {"valor": null, "confianca": "baixa"},
-    "versao": {"valor": null, "confianca": "baixa"}
-  },
-  "estrutura_organizacional": {
-    "unidades": [{"nome": "...", "endereco": "..."}],
-    "setores": ["setor1", "setor2"],
-    "departamentos": ["depto1", "depto2"]
-  },
-  "funcoes_atividades": [
-    {
-      "cargo": "nome do cargo ou função",
-      "setor": "setor onde atua (se encontrado)",
-      "atividades": ["atividade 1", "atividade 2"]
-    }
-  ],
-  "responsaveis_tecnicos": [
-    {
-      "nome": "...",
-      "registro": "CRP/CREA/CRM/etc",
-      "funcao": "Engenheiro de Segurança / Técnico SST / Médico do Trabalho / etc"
-    }
-  ]
-}`;
-
-      // ── CHAMADA 2: Inventário de riscos (seção específica) ────────────────
-      const promptInventario = buildRiskExtractionPrompt(tipo);
-
-      // ── CHAMADA 3: Plano de ação ──────────────────────────────────────────
-      const promptPlano = `Você é especialista sênior em SST brasileiro.
-
-EXTRAIA todas as recomendações, medidas e ações do texto abaixo.
-NUNCA invente dados. Use apenas o que está escrito explicitamente.
-
-Retorne JSON:
-{
-  "plano_acao": [
-    {
-      "recomendacao": "...",
-      "prioridade": "alta|media|baixa",
-      "prazo": "...",
-      "responsavel": "...",
-      "setor": "...",
-      "confianca": "alta|media|baixa"
-    }
-  ]
-}`;
-
-      // Executar as 3 chamadas em paralelo para economizar tempo
-      console.log(`Iniciando 3 chamadas paralelas à OpenAI...`);
-      // Para encontrar funções/cargos, precisamos de cabeçalho + início do inventário
-      const contextoDadosGerais = `${cabecalho}\n\n--- SEÇÃO DE INVENTÁRIO/RISCOS (para extração de funções e setores) ---\n${inventario.substring(0, 8000)}`;
-
-      const [resultDados, resultInventario, resultPlano] = await Promise.all([
-        callOpenAI(promptDadosGerais, `Documento SST (${tipo}) — Cabeçalho, estrutura organizacional e inventário:\n\n${contextoDadosGerais}`),
-        callOpenAI(promptInventario, `Documento SST (${tipo}) — Seção de inventário/riscos. Extraia TODOS os riscos, linha por linha:\n\n${inventario}`),
-        callOpenAI(promptPlano, `Documento SST (${tipo}) — Seção de plano de ação e recomendações:\n\n${planoAcao}`),
+      const [resultDados, resultConteudo, resultPlano] = await Promise.all([
+        callOpenAI(promptDadosGerais, `Documento ${tipo} — Cabeçalho e estrutura:\n\n${contextoDadosGerais}`),
+        callOpenAI(promptConteudo, `Documento ${tipo} — Conteúdo principal:\n\n${conteudoPrincipal}`),
+        callOpenAI(promptPlano, `Documento ${tipo} — Recomendações e plano de ação:\n\n${planoAcao}`),
       ]);
 
-      console.log(`Inventário extraído: ${resultInventario?.inventario_riscos?.length || 0} riscos`);
-      console.log(`Plano extraído: ${resultPlano?.plano_acao?.length || 0} ações`);
+      const inventarioRiscos = resultConteudo?.inventario_riscos || [];
+      const matrizExames = resultConteudo?.matriz_exames || []; // PCMSO
+      const fatoresErgonomicos = resultConteudo?.fatores_ergonomicos || []; // AET
 
-      // Mesclar resultados
-      const inventarioRiscos = resultInventario?.inventario_riscos || [];
       let funcoesAtividades = resultDados?.funcoes_atividades || [];
 
-      // Fallback: se a IA não retornou funções, extrai cargos únicos do inventário de riscos
+      // Fallback: extrair cargos únicos do inventário de riscos
       if (funcoesAtividades.length === 0 && inventarioRiscos.length > 0) {
-        console.log("Funções vazias — extraindo cargos únicos do inventário de riscos...");
         const cargosMap = new Map<string, { cargo: string; setor: string; atividades: string[] }>();
         for (const r of inventarioRiscos) {
           if (r.funcao && r.funcao !== "null" && r.funcao !== "") {
@@ -260,23 +487,42 @@ Retorne JSON:
           }
         }
         funcoesAtividades = Array.from(cargosMap.values());
-        console.log(`Cargos extraídos do inventário: ${funcoesAtividades.length}`);
       }
 
-      // Filtrar funções inválidas (objetos sem cargo)
+      // Fallback PCMSO: extrair cargos da matriz de exames
+      if (funcoesAtividades.length === 0 && matrizExames.length > 0) {
+        const cargosMap = new Map<string, { cargo: string; setor: string; atividades: string[] }>();
+        for (const e of matrizExames) {
+          if (e.cargo) {
+            const key = e.cargo.trim().toLowerCase();
+            if (!cargosMap.has(key)) {
+              cargosMap.set(key, { cargo: e.cargo.trim(), setor: e.setor || "", atividades: [] });
+            }
+          }
+        }
+        funcoesAtividades = Array.from(cargosMap.values());
+      }
+
       funcoesAtividades = funcoesAtividades.filter((f: any) => f && f.cargo && f.cargo !== "null" && f.cargo !== "");
 
+      const planoAcaoExtraido = resultPlano?.plano_acao || [];
+
+      console.log(`Conteúdo extraído: ${inventarioRiscos.length} riscos, ${matrizExames.length} exames, ${planoAcaoExtraido.length} ações`);
+
       const content: any = {
+        tipo_documento: tipo,
         dados_gerais: resultDados?.dados_gerais || {},
         estrutura_organizacional: resultDados?.estrutura_organizacional || { unidades: [], setores: [], departamentos: [] },
         funcoes_atividades: funcoesAtividades,
         inventario_riscos: inventarioRiscos,
-        plano_acao: resultPlano?.plano_acao || [],
+        matriz_exames: matrizExames, // específico PCMSO
+        fatores_ergonomicos: fatoresErgonomicos, // específico AET
+        plano_acao: planoAcaoExtraido,
         responsaveis_tecnicos: resultDados?.responsaveis_tecnicos || [],
         pendencias: [],
       };
 
-      // Calcular score de qualidade
+      // Score de qualidade (adaptado por tipo)
       const calcScore = (obj: any): number => {
         if (!obj) return 0;
         const vals = Object.values(obj);
@@ -286,23 +532,39 @@ Retorne JSON:
 
       const dg = content.dados_gerais || {};
       const dgScore = calcScore(Object.fromEntries(Object.entries(dg).map(([k, v]: any) => [k, v?.valor])));
-      const invCount = content.inventario_riscos?.length || 0;
+      
+      // Score de inventário adaptado ao tipo
+      let invCount = inventarioRiscos.length;
+      if (tipo === "PCMSO") invCount = Math.max(invCount, matrizExames.length);
+      if (tipo === "AET") invCount = Math.max(invCount, fatoresErgonomicos.length);
+      
       const invScore = invCount > 0 ? Math.min(100, Math.round((invCount / 10) * 100)) : 0;
-      const paCount = content.plano_acao?.length || 0;
+      const paCount = planoAcaoExtraido.length;
       const paScore = paCount > 0 ? Math.min(100, Math.round((paCount / 5) * 100)) : 0;
       const respScore = (content.responsaveis_tecnicos?.length || 0) > 0 ? 100 : 0;
       const geral = Math.round((dgScore + invScore + paScore + respScore) / 4);
 
       content.score_qualidade = { geral, dados_gerais: dgScore, inventario: invScore, plano_acao: paScore, responsaveis: respScore };
 
-      // Gerar pendências automáticas
+      // Pendências automáticas por tipo
       const pendencias: any[] = [];
-      if (invCount === 0) pendencias.push({ campo: "inventario_riscos", motivo: "Nenhum risco identificado — verifique se o inventário está no PDF ou tente um PDF nativo (texto selecionável)", severidade: "critica" });
+      if (invCount === 0) {
+        const msg = tipo === "PCMSO"
+          ? "Nenhum exame/cargo identificado — verifique se a matriz de exames está no documento"
+          : "Nenhum risco/agente identificado — verifique se o inventário está no PDF ou tente um PDF nativo";
+        pendencias.push({ campo: "inventario_riscos", motivo: msg, severidade: "critica" });
+      }
       if (dgScore < 50) pendencias.push({ campo: "dados_gerais", motivo: "Menos de 50% dos dados gerais identificados", severidade: "media" });
-      if (paCount === 0) pendencias.push({ campo: "plano_acao", motivo: "Nenhuma ação/recomendação identificada", severidade: "media" });
+      if (paCount === 0) pendencias.push({ campo: "plano_acao", motivo: "Nenhuma recomendação ou ação identificada", severidade: "media" });
+      if ((content.responsaveis_tecnicos?.length || 0) === 0) {
+        pendencias.push({ campo: "responsaveis_tecnicos", motivo: "Responsável técnico não identificado no documento", severidade: "media" });
+      }
+      if (!dg.data_vigencia?.valor) {
+        pendencias.push({ campo: "data_vigencia", motivo: "Vigência não identificada — necessária para controle de vencimento", severidade: "media" });
+      }
       content.pendencias = pendencias;
 
-      console.log(`Score final: ${geral}% | DG:${dgScore}% Inv:${invScore}%(${invCount}) PA:${paScore}%(${paCount}) Resp:${respScore}%`);
+      console.log(`Score final [${tipo}]: ${geral}% | DG:${dgScore}% Inv:${invScore}%(${invCount}) PA:${paScore}%(${paCount}) Resp:${respScore}%`);
 
       return new Response(JSON.stringify(content), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -321,64 +583,3 @@ Retorne JSON:
     });
   }
 });
-
-// ── Prompt especializado de extração de riscos por tipo de documento ──────────
-function buildRiskExtractionPrompt(tipo: string): string {
-  const base = `Você é um especialista sênior em SST brasileiro com domínio em NR-01, NR-09, NR-15, NR-17 e eSocial.
-
-MISSÃO: Extrair TODOS os riscos/perigos do inventário encontrado no texto.
-
-REGRAS CRÍTICAS:
-1. Extraia CADA LINHA/REGISTRO da tabela de riscos — não pule nenhum.
-2. Se o texto contiver uma tabela com 30 linhas de riscos, retorne 30 objetos.
-3. NUNCA invente dados. Use null para campos não encontrados.
-4. Normalize o tipo_risco para: "fisico", "quimico", "biologico", "ergonomico", "acidente" ou "psicossocial".
-
-Mapeamento de tipos:
-- físico → Ruído, Calor, Frio, Vibração, Radiação, Iluminação, Pressão
-- químico → Poeiras, Fumos, Névoas, Gases, Vapores, Substâncias químicas
-- biológico → Vírus, Bactérias, Fungos, Parasitas
-- ergonômico → Postura, Repetitividade, Esforço físico, Trabalho noturno, Monotonia
-- acidente → Máquinas, Eletricidade, Incêndio, Queda, Corte, Explosão
-- psicossocial → Assédio, Estresse, Pressão, Sobrecarga
-
-Retorne JSON com EXATAMENTE esta estrutura:
-{
-  "inventario_riscos": [
-    {
-      "setor": "nome do setor ou GHO",
-      "funcao": "cargo ou função exposta",
-      "risco": "nome completo do agente de risco",
-      "tipo_risco": "fisico|quimico|biologico|ergonomico|acidente|psicossocial",
-      "fonte_geradora": "origem/equipamento gerador",
-      "intensidade": "valor medido ou nível (ex: 85 dB, Alta, Acima do LT)",
-      "tempo_exposicao": "duração diária (ex: 8h/dia, Habitual)",
-      "metodologia": "método de avaliação utilizado",
-      "danos": "danos à saúde possíveis",
-      "controles_existentes": ["medida1", "medida2"],
-      "confianca": "alta|media|baixa"
-    }
-  ]
-}`;
-
-  if (tipo === "PGR") {
-    return base + `
-
-DICAS ESPECÍFICAS PARA PGR:
-- Procure tabelas com cabeçalhos: Setor, Cargo/Função, Agente, Fonte, GHO, NE, NA, NR, Probabilidade, Severidade, Risco
-- Identifique seções: "Inventário de Riscos", "Identificação de Perigos", "Matriz de Risco"
-- Cada GHO (Grupo Homogêneo de Exposição) pode ter múltiplos agentes de risco — extraia todos
-- Considere também tabelas de "Avaliação Quantitativa" e "Avaliação Qualitativa" como fonte de riscos`;
-  }
-
-  if (tipo === "LTCAT") {
-    return base + `
-
-DICAS ESPECÍFICAS PARA LTCAT:
-- Foque em agentes nocivos que ensejam aposentadoria especial (Anexos I e II do Decreto 3048/99)
-- Extraia concentrações/intensidades com valores numéricos precisos e os limites de tolerância
-- Registre se cada agente está "acima" ou "abaixo" do LT/NPS`;
-  }
-
-  return base;
-}
