@@ -463,10 +463,6 @@ Retorne JSON:
 }`;
 }
 
-    LTCAT: `Para LTCAT, priorize: necessidade de nova medição, atualização do laudo, inconsistências de exposição, revisão de enquadramento, adequações ambientais.`,
-    AET: `Para AET, priorize: ajuste de mobiliário, adequação de posto, implantação de pausa, revisão de ritmo de trabalho, treinamento ergonômico, alteração de processo ou ferramenta.`,
-    LAUDO_INSALUBRIDADE: `Para Laudo de Insalubridade, priorize: implantação de EPC, adequação de proteção, substituição de agente/processo, controle de exposição, reavaliação após adequação.`,
-    LAUDO_PERICULOSIDADE: `Para Laudo de Periculosidade, priorize: adequação de área de risco, isolamento/sinalização, revisão de procedimento, controle de energia, treinamento específico.`,
   };
 
   const contexto = contextoPorTipo[tipo] || "Priorize ações técnicas e preventivas identificadas no documento.";
