@@ -30,6 +30,8 @@ export type DadosExtraidos = {
   plano_acao: {
     recomendacao: string; prioridade: "alta" | "media" | "baixa";
     prazo?: string; responsavel?: string; setor?: string;
+    what?: string; why?: string; where?: string; who?: string;
+    when?: string; how?: string; how_much?: string; trecho_origem?: string;
     confianca: "alta" | "media" | "baixa";
   }[];
   responsaveis_tecnicos: {
