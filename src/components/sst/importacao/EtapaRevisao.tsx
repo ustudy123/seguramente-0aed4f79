@@ -86,28 +86,45 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
         .from("profiles")
         .select("tenant_id")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.tenant_id) { toast.error("Tenant não encontrado"); return; }
 
-      const prioridadeMap: Record<string, string> = { alta: "alta", media: "media", baixa: "baixa" };
+      // Mapeamento para o enum acao_gut_prioridade: baixo | medio | urgente | imediato
+      const prioridadeMap: Record<string, string> = {
+        alta: "urgente",
+        media: "medio",
+        baixa: "baixo",
+      };
       const prazoDate = parsePrazo(acao.prazo);
-      const codigo = `SST-${Date.now()}-${index}`;
+
+      // 5W2H estruturado
+      const quem = acao.responsavel || "A definir";
+      const onde = acao.setor || "Geral";
+      const quando = acao.prazo || "A definir";
+      const porque = `Recomendação extraída de documento SST (${state.tipoDetectado || "PGR"}) via Importação Inteligente`;
+      const como = acao.recomendacao;
+      const titulo = acao.recomendacao.length > 100
+        ? acao.recomendacao.substring(0, 97) + "..."
+        : acao.recomendacao;
 
       const { error } = await supabase.from("plano_acoes").insert([{
         tenant_id: profile.tenant_id,
-        codigo,
-        titulo: acao.recomendacao,
+        codigo: `TEMP-${Date.now()}`, // será sobrescrito pelo trigger gerar_codigo_acao
+        titulo,
         descricao: acao.recomendacao,
-        porque: `Recomendação extraída de documento SST (${state.tipoDetectado || "PGR"}) via Importação Inteligente`,
-        onde: acao.setor || "Geral",
-        como: acao.recomendacao,
-        responsavel_nome: acao.responsavel || "A definir",
+        // 5W2H
+        porque,
+        onde,
+        como,
+        responsavel_nome: quem,
         prazo: prazoDate,
-        prioridade: (prioridadeMap[acao.prioridade] || "media") as any,
-        status: "nao_iniciado" as any,
+        // Enums corretos
+        prioridade: (prioridadeMap[acao.prioridade] || "medio") as any,
+        status: "pendente" as any,
+        // Rastreabilidade
         origem_modulo: "Compliance SST",
-        origem_descricao: `Importado de ${state.arquivo?.name || "documento SST"} — ${state.tipoDetectado || "PGR"}`,
+        origem_descricao: `Importado de: ${state.arquivo?.name || "documento SST"} (${state.tipoDetectado || "PGR"})`,
         criado_por: session.user.id,
         criado_por_nome: session.user.email,
         tipo: "acao",
