@@ -12393,6 +12393,84 @@ export type Database = {
           },
         ]
       }
+      psicossocial_participacoes: {
+        Row: {
+          campanha_id: string
+          cargo: string | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string | null
+          created_at: string
+          elegivel: boolean
+          enviado_em: string | null
+          enviado_via: string | null
+          id: string
+          respondido: boolean
+          respondido_em: string | null
+          setor: string | null
+          tenant_id: string
+          token: string
+          turno: string | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          campanha_id: string
+          cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          elegivel?: boolean
+          enviado_em?: string | null
+          enviado_via?: string | null
+          id?: string
+          respondido?: boolean
+          respondido_em?: string | null
+          setor?: string | null
+          tenant_id: string
+          token?: string
+          turno?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string
+          cargo?: string | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
+          created_at?: string
+          elegivel?: boolean
+          enviado_em?: string | null
+          enviado_via?: string | null
+          id?: string
+          respondido?: boolean
+          respondido_em?: string | null
+          setor?: string | null
+          tenant_id?: string
+          token?: string
+          turno?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_participacoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psicossocial_participacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questionario_psicossocial_campanhas: {
         Row: {
           anonimo: boolean
@@ -14175,7 +14253,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      psicossocial_participacao_stats: {
+        Row: {
+          campanha_id: string | null
+          taxa_participacao: number | null
+          tenant_id: string | null
+          total_elegiveis: number | null
+          total_responderam: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_participacoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psicossocial_participacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       assinar_contrato_por_token: {
@@ -14409,6 +14511,16 @@ export type Database = {
         }
         Returns: Json
       }
+      salvar_resposta_por_token_participacao: {
+        Args: {
+          p_indicadores: Json
+          p_respostas: Json
+          p_tempo_segundos?: number
+          p_token: string
+          p_user_agent?: string
+        }
+        Returns: Json
+      }
       salvar_resposta_psicossocial: {
         Args: {
           p_identificacao_voluntaria: boolean
@@ -14420,6 +14532,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      validar_token_participacao: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
       acao_gut_prioridade: "baixo" | "medio" | "urgente" | "imediato"

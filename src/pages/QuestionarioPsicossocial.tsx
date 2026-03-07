@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import logoSeguramente from "@/assets/logo-seguramente.png";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
+import { supabasePublic } from "@/lib/supabasePublic";
 
 type EtapaQuestionario = 'consentimento' | 'questionario' | 'concluido';
 
@@ -47,7 +48,11 @@ function getTotalPerguntas(instrumento?: string) {
   return dims.reduce((acc, d) => acc + d.perguntas.length, 0);
 }
 
-export default function QuestionarioPsicossocial() {
+interface Props {
+  tokenTipo?: 'publico' | 'participacao';
+}
+
+export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Props) {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const startTime = useRef(Date.now());
@@ -58,8 +63,12 @@ export default function QuestionarioPsicossocial() {
   const [etapa, setEtapa] = useState<EtapaQuestionario>('consentimento');
   const [respostas, setRespostas] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
+  // Metadados demográficos (vêm do token de participação, nunca do token público)
+  const [metaDemografico, setMetaDemografico] = useState<{
+    setor?: string; cargo?: string; unidade?: string; turno?: string;
+  }>({});
 
-  const { buscarCampanhaPorTokenPublico, salvarRespostaAnonimaCampanha } = usePsicossocial();
+  const { buscarCampanhaPorTokenPublico, salvarRespostaAnonimaCampanha, calcularIndicadores } = usePsicossocial();
 
   useEffect(() => {
     const loadCampanha = async () => {
@@ -70,21 +79,66 @@ export default function QuestionarioPsicossocial() {
       }
 
       try {
-        const data = await buscarCampanhaPorTokenPublico(token);
+        if (tokenTipo === 'participacao') {
+          // Token individual: valida via RPC específica (bloqueia reuso)
+          const { data, error: rpcError } = await supabasePublic
+            .rpc('validar_token_participacao', { p_token: token });
 
-        if (!data) {
-          setError("Link inválido ou expirado");
-          setLoading(false);
-          return;
+          if (rpcError) throw rpcError;
+
+          const result = data as {
+            valido: boolean; erro?: string;
+            campanha_id: string; campanha_nome: string; campanha_descricao: string;
+            campanha_status: string; instrumento: string;
+            data_inicio: string; data_fim: string;
+            mensagem_institucional?: string; politica_uso_dados?: string;
+            setor?: string; cargo?: string; unidade?: string; turno?: string;
+          };
+
+          if (!result?.valido) {
+            setError(result?.erro || "Link inválido");
+            setLoading(false);
+            return;
+          }
+
+          setCampanha({
+            id: result.campanha_id,
+            tenant_id: '',
+            nome: result.campanha_nome,
+            descricao: result.campanha_descricao,
+            status: result.campanha_status as CampanhaPsicossocial['status'],
+            tipo: 'regular',
+            instrumento: (result.instrumento || 'sipro') as InstrumentoPsicossocial,
+            data_inicio: result.data_inicio,
+            data_fim: result.data_fim,
+            anonimo: true,
+            mensagem_institucional: result.mensagem_institucional,
+            politica_uso_dados: result.politica_uso_dados,
+            created_at: '',
+            updated_at: '',
+          });
+
+          setMetaDemografico({
+            setor: result.setor,
+            cargo: result.cargo,
+            unidade: result.unidade,
+            turno: result.turno,
+          });
+        } else {
+          // Token público geral (link anônimo da campanha)
+          const data = await buscarCampanhaPorTokenPublico(token);
+          if (!data) {
+            setError("Link inválido ou expirado");
+            setLoading(false);
+            return;
+          }
+          if (data.status !== 'ativa') {
+            setError("Esta campanha não está mais ativa");
+            setLoading(false);
+            return;
+          }
+          setCampanha(data);
         }
-
-        if (data.status !== 'ativa') {
-          setError("Esta campanha não está mais ativa");
-          setLoading(false);
-          return;
-        }
-
-        setCampanha(data);
         setLoading(false);
       } catch (err) {
         console.error("Erro ao carregar questionário:", err);
@@ -94,7 +148,7 @@ export default function QuestionarioPsicossocial() {
     };
 
     loadCampanha();
-  }, [token]);
+  }, [token, tokenTipo]);
 
   const instrumento = (campanha?.instrumento || 'sipro') as InstrumentoPsicossocial;
   const totalPerguntas = getTotalPerguntas(instrumento);
@@ -113,7 +167,28 @@ export default function QuestionarioPsicossocial() {
     setSubmitting(true);
     try {
       const tempoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-      await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos);
+
+      if (tokenTipo === 'participacao') {
+        // Usa o token de participação individual
+        const indicadores = calcularIndicadores(respostas, instrumento);
+        const { data, error: rpcError } = await supabasePublic
+          .rpc('salvar_resposta_por_token_participacao', {
+            p_token: token,
+            p_respostas: JSON.parse(JSON.stringify(respostas)),
+            p_indicadores: JSON.parse(JSON.stringify(indicadores)),
+            p_tempo_segundos: tempoSegundos,
+            p_user_agent: navigator.userAgent,
+          });
+
+        if (rpcError) throw rpcError;
+
+        const result = data as { sucesso: boolean; erro?: string };
+        if (!result?.sucesso) throw new Error(result?.erro || 'Erro ao salvar resposta');
+      } else {
+        // Usa o token público geral
+        await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos);
+      }
+
       setEtapa('concluido');
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
@@ -187,7 +262,10 @@ export default function QuestionarioPsicossocial() {
                   <div>
                     <p className="font-semibold text-emerald-800 text-sm">Questionário 100% Anônimo</p>
                     <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
-                      Este questionário não permite identificação individual. Seu nome, CPF ou qualquer dado pessoal não serão vinculados às respostas.
+                      {tokenTipo === 'participacao'
+                        ? "Seu link garante participação única. Suas respostas são armazenadas sem qualquer vinculação ao seu nome ou CPF."
+                        : "Este questionário não permite identificação individual. Seu nome, CPF ou qualquer dado pessoal não serão vinculados às respostas."
+                      }
                     </p>
                   </div>
                 </div>
