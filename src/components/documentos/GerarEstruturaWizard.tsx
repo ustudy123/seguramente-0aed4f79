@@ -196,6 +196,32 @@ function getPreviewEstrutura(params: Partial<WizardParams>) {
   return structure;
 }
 
+// Map risk type strings from SST import to wizard risk IDs
+const SST_RISCO_MAP: Record<string, string> = {
+  fisico: "fisico", físico: "fisico",
+  quimico: "quimico", químico: "quimico",
+  biologico: "biologico", biológico: "biologico",
+  ergonomico: "ergonomico", ergonômico: "ergonomico",
+  psicossocial: "psicossocial",
+  acidente: "acidente", mecanico: "acidente", mecânico: "acidente",
+  altura: "altura",
+  espaco_confinado: "espaco_confinado", "espaço confinado": "espaco_confinado",
+  eletrico: "eletrico", elétrico: "eletrico",
+  maquinas: "maquinas", máquinas: "maquinas",
+  ambiental: "ambiental",
+};
+
+function extractRiscosFromSST(inventario: any[]): string[] {
+  const found = new Set<string>();
+  for (const item of inventario) {
+    const tipoRisco = (item.tipo_risco || item.risco || "").toLowerCase();
+    for (const [key, mapped] of Object.entries(SST_RISCO_MAP)) {
+      if (tipoRisco.includes(key)) found.add(mapped);
+    }
+  }
+  return Array.from(found);
+}
+
 export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaTemEstrutura }: GerarEstruturaWizardProps) {
   const [step, setStep] = useState(0);
   const [params, setParams] = useState<Partial<WizardParams>>({
@@ -211,6 +237,7 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
   const [pgrInfo, setPgrInfo] = useState<{ nome: string; data: string } | null>(null);
   const { empresaAtiva } = useEmpresaAtiva();
   const { toast } = useToast();
+  const { tenantId } = useAuth();
 
   // Pré-preencher com dados da empresa ativa ao abrir o wizard
   useEffect(() => {
@@ -219,7 +246,6 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     const empresa = empresaAtiva;
     if (!empresa) return;
 
-    // Determinar porte com base em total_colaboradores
     const n = empresa.total_colaboradores || 0;
     let porte = "";
     if (n <= 1) porte = "mei";
@@ -228,12 +254,10 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
     else if (n <= 99) porte = "media";
     else porte = "grande";
 
-    // Extrair primeiros 2 dígitos do CNAE
     const cnaeRaw = empresa.cnae_principal || "";
     const cnaeDigitos = cnaeRaw.replace(/\D/g, "").slice(0, 2).padStart(2, "0");
     const grauRiscoEmpresa = empresa.grau_risco || GRAU_RISCO_NR04[cnaeDigitos] || 1;
 
-    // Encontrar a descrição do setor com base no CNAE
     const divNum = parseInt(cnaeDigitos, 10);
     const grupoMatch = CNAE_GRUPOS.find(g => {
       const partes = g.divisao.split("-");
@@ -253,6 +277,52 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
 
     if (cnaeDigitos) setCnaeSearch("");
   }, [open, empresaAtiva]);
+
+  // Auto-importar riscos do PGR ao entrar no step 1 (Riscos)
+  const autoImportarRiscos = useCallback(async () => {
+    if (!tenantId || importandoPGR || pgrInfo) return;
+    setImportandoPGR(true);
+    try {
+      // Query direto na tabela sst_documentos para PGR com analise_ia
+      const { data: docs } = await supabase
+        .from("sst_documentos")
+        .select("id, arquivo_nome, tipo, data_emissao, analise_ia")
+        .eq("tenant_id", tenantId)
+        .eq("tipo", "PGR")
+        .not("analise_ia", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const pgr = docs?.[0];
+      if (!pgr?.analise_ia) {
+        // Nenhum PGR com IA — silencioso (sem toast de erro no auto)
+        return;
+      }
+
+      const analise = pgr.analise_ia as any;
+      const inventario: any[] = analise.inventario_riscos || [];
+      const riscosExtraidos = extractRiscosFromSST(inventario);
+
+      if (riscosExtraidos.length > 0) {
+        setParams(p => ({ ...p, riscos: riscosExtraidos }));
+        setPgrInfo({ nome: pgr.arquivo_nome || "PGR", data: pgr.data_emissao || "" });
+        toast({
+          title: "Riscos identificados automaticamente ✅",
+          description: `${riscosExtraidos.length} tipo(s) de risco detectado(s) no PGR importado.`,
+        });
+      }
+    } catch (err) {
+      console.error("Erro ao auto-importar riscos:", err);
+    } finally {
+      setImportandoPGR(false);
+    }
+  }, [tenantId, importandoPGR, pgrInfo, toast]);
+
+  useEffect(() => {
+    if (step === 1 && !pgrInfo) {
+      autoImportarRiscos();
+    }
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const grauRiscoAuto = calcGrauRisco(params.cnae || "");
   const grauRiscoFinal = params.grauRisco || grauRiscoAuto;
@@ -293,51 +363,42 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
   };
 
   const importarRiscosDoPGR = async () => {
-    if (!empresaAtiva) {
+    if (!empresaAtiva || !tenantId) {
       toast({ title: "Nenhuma empresa selecionada", variant: "destructive" });
       return;
     }
     setImportandoPGR(true);
+    setPgrInfo(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("tenant_id")
-        .eq("user_id", session?.user?.id)
-        .single();
+      const { data: docs } = await supabase
+        .from("sst_documentos")
+        .select("id, arquivo_nome, tipo, data_emissao, analise_ia")
+        .eq("tenant_id", tenantId)
+        .eq("tipo", "PGR")
+        .not("analise_ia", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-pgr-riscos`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            empresa_id: empresaAtiva.id,
-            tenant_id: profile?.tenant_id,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!result.found) {
+      const pgr = docs?.[0];
+      if (!pgr?.analise_ia) {
         toast({
           title: "PGR não encontrado",
-          description: "Nenhum PGR cadastrado no Compliance SST para esta empresa. Selecione os riscos manualmente.",
+          description: "Nenhum PGR com dados extraídos pela IA encontrado. Importe um PGR no Compliance SST ou selecione os riscos manualmente.",
           variant: "destructive",
         });
         return;
       }
 
-      if (result.riscos?.length > 0) {
-        setParams(p => ({ ...p, riscos: result.riscos }));
-        setPgrInfo({ nome: result.pgr_nome || "PGR", data: result.pgr_data || "" });
+      const analise = pgr.analise_ia as any;
+      const inventario: any[] = analise.inventario_riscos || [];
+      const riscosExtraidos = extractRiscosFromSST(inventario);
+
+      if (riscosExtraidos.length > 0) {
+        setParams(p => ({ ...p, riscos: riscosExtraidos }));
+        setPgrInfo({ nome: pgr.arquivo_nome || "PGR", data: pgr.data_emissao || "" });
         toast({
           title: "Riscos importados do PGR! ✅",
-          description: `${result.riscos.length} categoria(s) identificada(s) em "${result.pgr_nome}".${result.from_cache ? " (cache)" : " (IA)"}`,
+          description: `${riscosExtraidos.length} tipo(s) identificado(s) em "${pgr.arquivo_nome}".`,
         });
       } else {
         toast({
