@@ -39,7 +39,7 @@ const ComplianceSST = () => {
   const docAnalisados = documentos.filter(d => d.analise_ia_status === "concluida").length;
 
   const indicadores = [
-    { titulo: "Documentos Vigentes", valor: String(docVigentes), icone: Shield, color: "text-green-600" },
+    { titulo: "Documentos Vigentes", valor: String(docVigentes), icone: Shield, color: "text-primary" },
     { titulo: "Documentos Vencidos", valor: String(docVencidos), icone: AlertTriangle, color: "text-destructive" },
     { titulo: "Análises IA Concluídas", valor: String(docAnalisados), icone: Brain, color: "text-primary" },
     { titulo: "Total Documentos", valor: String(documentos.length), icone: FileText, color: "text-muted-foreground" },
