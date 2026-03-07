@@ -70,7 +70,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       if (!tenantId) return [];
       const { data } = await (supabase as any)
         .from("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia")
+        .select("id, razao_social, nome_fantasia, cnpj")
         .eq("tenant_id", tenantId)
         .order("razao_social");
       return data || [];
