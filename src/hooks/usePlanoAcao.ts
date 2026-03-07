@@ -195,16 +195,20 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
   // Estatísticas
   const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["plano-acoes-stats", tenantId],
+    queryKey: ["plano-acoes-stats", tenantId, empresaAtivaId],
     queryFn: async (): Promise<PlanoAcaoStats> => {
       if (!tenantId) {
         return { total: 0, pendentes: 0, em_andamento: 0, atrasadas: 0, concluidas: 0, por_origem: { manual: 0, ergonomia: 0, ouvidoria: 0, epi: 0, ponto: 0, humor: 0 }, por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 } };
       }
 
-      const { data, error } = await supabase
+      let statsQuery = supabase
         .from("plano_acoes")
         .select("status, origem_modulo, prioridade, prazo")
         .eq("tenant_id", tenantId);
+
+      if (empresaAtivaId) statsQuery = statsQuery.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await statsQuery;
 
       if (error) throw error;
       
