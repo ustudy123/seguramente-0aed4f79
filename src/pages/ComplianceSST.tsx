@@ -113,7 +113,12 @@ const ComplianceSST = () => {
 
         {/* IMPORTAÇÃO INTELIGENTE */}
         <TabsContent value="importacao" className="space-y-4">
-          <ImportacaoInteligente />
+          <ImportacaoInteligente onImportado={() => setActiveTab("documentos")} />
+        </TabsContent>
+
+        {/* DOCUMENTOS IMPORTADOS */}
+        <TabsContent value="documentos" className="space-y-4">
+          <SSTDocumentosTab />
         </TabsContent>
 
         {/* PAINEL */}
