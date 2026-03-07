@@ -200,10 +200,6 @@ export function PsicossocialDashboard() {
             <Activity className="h-4 w-4" />
             Indicadores
           </TabsTrigger>
-          <TabsTrigger value="distribuicao" className="gap-2">
-            <Send className="h-4 w-4" />
-            Distribuição
-          </TabsTrigger>
         </TabsList>
 
         {/* Tab: Burnout & Boreout */}
