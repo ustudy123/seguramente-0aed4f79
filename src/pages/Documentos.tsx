@@ -143,11 +143,16 @@ const Documentos = () => {
   // Auto-abrir wizard quando não há estrutura de pastas (primeira vez)
   useEffect(() => {
     if (!loading && pastas.length === 0 && !showWizard && !initializing) {
-      // Pequeno delay para aguardar animação da página
+      // Só mostra se nunca foi dispensado antes para este tenant
+      if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
       const timer = setTimeout(() => setShowWizard(true), 600);
       return () => clearTimeout(timer);
     }
-  }, [loading, pastas.length, initializing]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Se já tem estrutura, marcar como dispensado para nunca mais abrir automaticamente
+    if (!loading && pastas.length > 0 && wizardDismissedKey) {
+      localStorage.setItem(wizardDismissedKey, "1");
+    }
+  }, [loading, pastas.length, initializing, wizardDismissedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
