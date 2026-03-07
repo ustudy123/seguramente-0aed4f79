@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, Users, Shield, Building2, ClipboardList } from "lucide-react";
+import { Users, Shield, ClipboardList, ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EquipeTab } from "@/components/configuracoes/EquipeTab";
 import { AuditoriaTab } from "@/components/configuracoes/AuditoriaTab";
 import { useAuthContext } from "@/contexts/AuthContext";
+import UsuariosContent from "@/components/configuracoes/UsuariosContent";
+import PerfisContent from "@/components/configuracoes/PerfisContent";
 
 export default function Configuracoes() {
   const { hasMinimumRole } = useAuthContext();
@@ -14,7 +16,7 @@ export default function Configuracoes() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
-        <p className="text-muted-foreground">Gerencie sua empresa e equipe</p>
+        <p className="text-muted-foreground">Gerencie sua empresa, equipe e níveis de acesso</p>
       </div>
 
       <Tabs defaultValue="equipe">
@@ -23,6 +25,18 @@ export default function Configuracoes() {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Equipe</span>
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="usuarios" className="flex items-center gap-1.5">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Usuários</span>
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="perfis" className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Perfis & Acessos</span>
+            </TabsTrigger>
+          )}
           {isAdmin && (
             <TabsTrigger value="auditoria" className="flex items-center gap-1.5">
               <ClipboardList className="h-4 w-4" />
@@ -43,6 +57,22 @@ export default function Configuracoes() {
             )}
           </motion.div>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="usuarios" className="mt-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <UsuariosContent />
+            </motion.div>
+          </TabsContent>
+        )}
+
+        {isAdmin && (
+          <TabsContent value="perfis" className="mt-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <PerfisContent />
+            </motion.div>
+          </TabsContent>
+        )}
 
         {isAdmin && (
           <TabsContent value="auditoria" className="mt-6">
