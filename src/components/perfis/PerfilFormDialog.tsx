@@ -63,10 +63,9 @@ export function PerfilFormDialog({ open, onClose, perfilInicial, onSubmit, loadi
   });
 
   const risco = calcularNivelRisco(permissoes);
-  const temSensivel = permissoes.some((p) => {
-    const { ACOES_DISPONIVEIS } = require("@/hooks/usePerfisAcesso");
-    return ACOES_DISPONIVEIS.find((a: any) => a.id === p.acao)?.sensivel;
-  });
+  const temSensivel = permissoes.some((p) =>
+    ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel
+  );
 
   const handleSubmit = async (data: FormData) => {
     await onSubmit({ ...data, permissoes });
