@@ -195,16 +195,20 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
   // Estatísticas
   const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["plano-acoes-stats", tenantId],
+    queryKey: ["plano-acoes-stats", tenantId, empresaAtivaId],
     queryFn: async (): Promise<PlanoAcaoStats> => {
       if (!tenantId) {
         return { total: 0, pendentes: 0, em_andamento: 0, atrasadas: 0, concluidas: 0, por_origem: { manual: 0, ergonomia: 0, ouvidoria: 0, epi: 0, ponto: 0, humor: 0 }, por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 } };
       }
 
-      const { data, error } = await supabase
+      let statsQuery = supabase
         .from("plano_acoes")
         .select("status, origem_modulo, prioridade, prazo")
         .eq("tenant_id", tenantId);
+
+      if (empresaAtivaId) statsQuery = statsQuery.eq("empresa_id", empresaAtivaId);
+
+      const { data, error } = await statsQuery;
 
       if (error) throw error;
       
@@ -236,18 +240,22 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
   // Minhas ações (inbox)
   const { data: minhasAcoes = [], isLoading: isLoadingMinhasAcoes } = useQuery({
-    queryKey: ["plano-minhas-acoes", tenantId, user?.id],
+    queryKey: ["plano-minhas-acoes", tenantId, user?.id, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId || !user?.id) return [];
 
       // Ações onde sou responsável
-      const { data: responsavel, error: errResp } = await supabase
+      let respQuery = supabase
         .from("plano_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("responsavel_id", user.id)
         .neq("status", "concluida")
         .order("pontuacao_gut", { ascending: false });
+
+      if (empresaAtivaId) respQuery = respQuery.eq("empresa_id", empresaAtivaId);
+
+      const { data: responsavel, error: errResp } = await respQuery;
 
       if (errResp) throw errResp;
 
@@ -263,11 +271,15 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       const participanteIds = participante?.map((p) => p.acao_id) || [];
 
       if (participanteIds.length > 0) {
-        const { data: acoesParticipante, error: errAcoes } = await supabase
+        let partQuery = supabase
           .from("plano_acoes")
           .select("*")
           .in("id", participanteIds)
           .neq("status", "concluida");
+
+        if (empresaAtivaId) partQuery = partQuery.eq("empresa_id", empresaAtivaId);
+
+        const { data: acoesParticipante, error: errAcoes } = await partQuery;
 
         if (errAcoes) throw errAcoes;
 
