@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PermissoesEditor } from "./PermissoesEditor";
 import type { PerfilAcesso, PerfilPermissao } from "@/hooks/usePerfisAcesso";
-import { calcularNivelRisco } from "@/hooks/usePerfisAcesso";
+import { calcularNivelRisco, ACOES_DISPONIVEIS } from "@/hooks/usePerfisAcesso";
 import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
