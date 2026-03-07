@@ -537,6 +537,8 @@ export function usePsicossocial() {
     buscarConvitePorToken,
     atualizarConvitePublico,
     salvarRespostaPublica,
+    buscarCampanhaPorTokenPublico,
+    salvarRespostaAnonimaCampanha,
     calcularIndicadores,
   };
 }
