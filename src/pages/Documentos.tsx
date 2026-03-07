@@ -146,19 +146,25 @@ const Documentos = () => {
     }
   }, [needsSync, syncing, syncColaboradores]);
 
-  // Auto-abrir wizard quando não há estrutura de pastas (primeira vez)
+  // Reset wizard state when empresa changes so check runs fresh
   useEffect(() => {
-    if (!loading && pastas.length === 0 && !showWizard && !initializing) {
-      // Só mostra se nunca foi dispensado antes para este tenant
+    setShowWizard(false);
+  }, [empresaAtivaId]);
+
+  // Auto-abrir wizard quando não há estrutura de pastas para esta empresa
+  useEffect(() => {
+    if (loading || initializing) return;
+    if (pastas.length === 0) {
+      // Só mostra se nunca foi dispensado para esta empresa
       if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
       const timer = setTimeout(() => setShowWizard(true), 600);
       return () => clearTimeout(timer);
     }
-    // Se já tem estrutura, marcar como dispensado para nunca mais abrir automaticamente
-    if (!loading && pastas.length > 0 && wizardDismissedKey) {
+    // Se já tem estrutura, marcar como dispensado para esta empresa
+    if (pastas.length > 0 && wizardDismissedKey) {
       localStorage.setItem(wizardDismissedKey, "1");
     }
-  }, [loading, pastas.length, initializing, wizardDismissedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, pastas.length, initializing, wizardDismissedKey, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
