@@ -180,6 +180,9 @@ export function usePsicossocial() {
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
           status: 'rascunho',
+          token_publico: Array.from(crypto.getRandomValues(new Uint8Array(12)))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join(''),
         })
         .select()
         .single();

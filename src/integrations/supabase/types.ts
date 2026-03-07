@@ -12312,6 +12312,7 @@ export type Database = {
           status: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo: string
+          token_publico: string | null
           total_respostas: number | null
           updated_at: string
         }
@@ -12345,6 +12346,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo?: string
+          token_publico?: string | null
           total_respostas?: number | null
           updated_at?: string
         }
@@ -12378,6 +12380,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id?: string
           tipo?: string
+          token_publico?: string | null
           total_respostas?: number | null
           updated_at?: string
         }

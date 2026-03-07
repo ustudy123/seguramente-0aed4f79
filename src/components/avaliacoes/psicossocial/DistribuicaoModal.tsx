@@ -4,32 +4,26 @@ import {
   QrCode, 
   Copy, 
   Download, 
-  Users, 
   CheckCircle2,
   ExternalLink,
-  Plus,
-  Trash2
+  Shield,
+  RefreshCw
 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { useColaboradores } from "@/hooks/useColaboradores";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import QRCode from "qrcode";
-import type { CampanhaPsicossocial, ConvitePsicossocial } from "@/types/psicossocial";
+import type { CampanhaPsicossocial } from "@/types/psicossocial";
 
 interface DistribuicaoModalProps {
   open: boolean;
@@ -38,298 +32,185 @@ interface DistribuicaoModalProps {
 }
 
 export function DistribuicaoModal({ open, onOpenChange, campanha }: DistribuicaoModalProps) {
-  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
-  const [selectedColaboradores, setSelectedColaboradores] = useState<string[]>([]);
-  
-  const { useConvitesCampanha, gerarConvites } = usePsicossocial();
-  const { data: convites = [], refetch: refetchConvites } = useConvitesCampanha(campanha.id);
-  const { colaboradores } = useColaboradores();
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [tokenPublico, setTokenPublico] = useState<string | null>(null);
+  const [loadingToken, setLoadingToken] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const baseUrl = window.location.origin;
+  const linkGeral = tokenPublico ? `${baseUrl}/questionario/${tokenPublico}` : null;
 
-  // Gerar QR codes para convites existentes
+  // Busca ou gera o token público da campanha
+  const carregarToken = async () => {
+    setLoadingToken(true);
+    try {
+      const { data, error } = await supabase
+        .from("questionario_psicossocial_campanhas" as never)
+        .select("id, token_publico")
+        .eq("id", campanha.id)
+        .single() as { data: { id: string; token_publico: string | null } | null; error: any };
+
+      if (error) throw error;
+
+      let token = data?.token_publico;
+
+      if (!token) {
+        // Gera token único para a campanha
+        token = Array.from(crypto.getRandomValues(new Uint8Array(12)))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        const { error: updateError } = await supabase
+          .from("questionario_psicossocial_campanhas" as never)
+          .update({ token_publico: token } as never)
+          .eq("id", campanha.id);
+
+        if (updateError) throw updateError;
+      }
+
+      setTokenPublico(token);
+    } catch (err: any) {
+      toast.error("Erro ao carregar link da campanha");
+      console.error(err);
+    } finally {
+      setLoadingToken(false);
+    }
+  };
+
+  // Gera QR Code a partir do link geral
   useEffect(() => {
-    const generateQRCodes = async () => {
-      const codes: Record<string, string> = {};
-      for (const convite of convites) {
-        const url = `${baseUrl}/questionario/${convite.token}`;
-        try {
-          codes[convite.id] = await QRCode.toDataURL(url, { width: 200 });
-        } catch (err) {
-          console.error("Erro ao gerar QR Code:", err);
-        }
-      }
-      setQrCodes(codes);
-    };
-    
-    if (convites.length > 0) {
-      generateQRCodes();
+    if (!linkGeral) return;
+    QRCode.toDataURL(linkGeral, { 
+      width: 240,
+      margin: 2
+    })
+      .then(setQrCodeUrl)
+      .catch(console.error);
+  }, [linkGeral]);
+
+  useEffect(() => {
+    if (open) {
+      carregarToken();
     }
-  }, [convites, baseUrl]);
+  }, [open, campanha.id]);
 
-  const handleGerarConvites = async () => {
-    if (selectedColaboradores.length === 0) {
-      toast.error("Selecione pelo menos um colaborador");
-      return;
-    }
-
-    const colabsParaConvidar = colaboradores
-      .filter(c => selectedColaboradores.includes(c.id))
-      .map(c => ({
-        id: c.id,
-        nome: c.nome_completo,
-        cpf: c.cpf,
-        cargo: c.cargo,
-        departamento: c.departamento || undefined,
-      }));
-
-    await gerarConvites.mutateAsync({
-      campanha_id: campanha.id,
-      colaboradores: colabsParaConvidar,
-      enviado_via: 'link',
-    });
-
-    setSelectedColaboradores([]);
-    refetchConvites();
-  };
-
-  const copyLink = (token: string) => {
-    const url = `${baseUrl}/questionario/${token}`;
-    navigator.clipboard.writeText(url);
+  const handleCopy = () => {
+    if (!linkGeral) return;
+    navigator.clipboard.writeText(linkGeral);
+    setCopied(true);
     toast.success("Link copiado!");
+    setTimeout(() => setCopied(false), 2500);
   };
 
-  const copyAllLinks = () => {
-    const links = convites
-      .map(c => `${c.colaborador_nome}: ${baseUrl}/questionario/${c.token}`)
-      .join("\n");
-    navigator.clipboard.writeText(links);
-    toast.success("Todos os links copiados!");
+  const handleDownloadQR = () => {
+    if (!qrCodeUrl) return;
+    const a = document.createElement("a");
+    a.download = `qrcode-${campanha.nome.replace(/\s+/g, "-").toLowerCase()}.png`;
+    a.href = qrCodeUrl;
+    a.click();
+    toast.success("QR Code baixado!");
   };
-
-  const downloadQR = (convite: ConvitePsicossocial) => {
-    const qr = qrCodes[convite.id];
-    if (!qr) return;
-    
-    const link = document.createElement("a");
-    link.download = `qr-${convite.colaborador_nome.replace(/\s+/g, "-")}.png`;
-    link.href = qr;
-    link.click();
-  };
-
-  const downloadAllQRs = async () => {
-    for (const convite of convites) {
-      const qr = qrCodes[convite.id];
-      if (qr) {
-        const link = document.createElement("a");
-        link.download = `qr-${convite.colaborador_nome.replace(/\s+/g, "-")}.png`;
-        link.href = qr;
-        link.click();
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-    toast.success("QR Codes baixados!");
-  };
-
-  const getStatusBadge = (status: ConvitePsicossocial['status']) => {
-    switch (status) {
-      case 'pendente':
-        return <Badge variant="secondary">Pendente</Badge>;
-      case 'iniciado':
-        return <Badge className="bg-amber-500">Em andamento</Badge>;
-      case 'concluido':
-        return <Badge className="bg-emerald-500">Concluído</Badge>;
-      case 'expirado':
-        return <Badge variant="destructive">Expirado</Badge>;
-    }
-  };
-
-  // Colaboradores que ainda não têm convite
-  const colaboradoresSemConvite = colaboradores.filter(
-    c => !convites.some(conv => conv.colaborador_cpf === c.cpf)
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <LinkIcon className="h-5 w-5 text-blue-600" />
+            <LinkIcon className="h-5 w-5 text-primary" />
             Distribuir Questionário
           </DialogTitle>
           <DialogDescription>
-            Gere links e QR codes para enviar aos colaboradores - Campanha: {campanha.nome}
+            Link único de acesso anônimo — Campanha: <strong>{campanha.nome}</strong>
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="convites" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="convites">
-              Convites Enviados ({convites.length})
-            </TabsTrigger>
-            <TabsTrigger value="adicionar">
-              Adicionar Colaboradores
-            </TabsTrigger>
-          </TabsList>
+        {/* Aviso de anonimato */}
+        <Alert className="border-primary/30 bg-primary/5">
+          <Shield className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-sm">
+            <strong>Anonimato garantido.</strong> Este é um link único para toda a campanha. 
+            Não é possível identificar quem respondeu. Compartilhe com todos os colaboradores.
+          </AlertDescription>
+        </Alert>
 
-          <TabsContent value="convites" className="space-y-4">
-            {convites.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum convite gerado ainda</p>
-                <p className="text-sm">Adicione colaboradores na aba ao lado</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={copyAllLinks}>
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copiar Todos
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={downloadAllQRs}>
-                    <Download className="h-4 w-4 mr-1" />
-                    Baixar QR Codes
-                  </Button>
-                </div>
-                
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {convites.map((convite) => (
-                      <div 
-                        key={convite.id}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          {qrCodes[convite.id] && (
-                            <img 
-                              src={qrCodes[convite.id]} 
-                              alt="QR Code" 
-                              className="h-12 w-12 rounded"
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium">{convite.colaborador_nome}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {convite.colaborador_cargo} • {convite.colaborador_departamento}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(convite.status)}
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => copyLink(convite.token)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => downloadQR(convite)}
-                          >
-                            <QrCode className="h-4 w-4" />
-                          </Button>
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => window.open(`${baseUrl}/questionario/${convite.token}`, '_blank')}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </>
-            )}
-          </TabsContent>
+        {/* Link geral */}
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              value={linkGeral || (loadingToken ? "Carregando..." : "—")}
+              readOnly
+              className="font-mono text-xs bg-muted"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCopy}
+              disabled={!linkGeral}
+              title="Copiar link"
+            >
+              {copied
+                ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                : <Copy className="h-4 w-4" />
+              }
+            </Button>
+          </div>
 
-          <TabsContent value="adicionar" className="space-y-4">
-            {colaboradoresSemConvite.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-emerald-500" />
-                <p>Todos os colaboradores já foram convidados!</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedColaboradores.length} selecionado(s) de {colaboradoresSemConvite.length}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setSelectedColaboradores(colaboradoresSemConvite.map(c => c.id))}
-                    >
-                      Selecionar Todos
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setSelectedColaboradores([])}
-                    >
-                      Limpar
-                    </Button>
-                  </div>
-                </div>
-                
-                <ScrollArea className="h-[350px]">
-                  <div className="space-y-2">
-                    {colaboradoresSemConvite.map((colab) => (
-                      <div 
-                        key={colab.id}
-                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                          selectedColaboradores.includes(colab.id) 
-                            ? 'border-primary bg-primary/5' 
-                            : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => {
-                          if (selectedColaboradores.includes(colab.id)) {
-                            setSelectedColaboradores(prev => prev.filter(id => id !== colab.id));
-                          } else {
-                            setSelectedColaboradores(prev => [...prev, colab.id]);
-                          }
-                        }}
-                      >
-                        <div>
-                          <p className="font-medium">{colab.nome_completo}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {colab.cargo} • {colab.departamento}
-                          </p>
-                        </div>
-                        <input 
-                          type="checkbox" 
-                          checked={selectedColaboradores.includes(colab.id)}
-                          onChange={() => {}}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
+          {/* Ações */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleDownloadQR}
+              disabled={!qrCodeUrl}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Baixar QR Code
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => linkGeral && window.open(linkGeral, "_blank")}
+              disabled={!linkGeral}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Abrir link
+            </Button>
+          </div>
+        </div>
 
-                <Button 
-                  className="w-full"
-                  onClick={handleGerarConvites}
-                  disabled={selectedColaboradores.length === 0 || gerarConvites.isPending}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {gerarConvites.isPending 
-                    ? "Gerando..." 
-                    : `Gerar ${selectedColaboradores.length} Convite(s)`
-                  }
-                </Button>
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+        {/* QR Code */}
+        {qrCodeUrl ? (
+          <div className="flex flex-col items-center gap-3 py-4">
+            <img
+              src={qrCodeUrl}
+              alt="QR Code da campanha"
+              className="rounded-xl border p-2 bg-white w-44 h-44"
+            />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <QrCode className="h-3.5 w-3.5" />
+              <span>Qualquer colaborador pode escanear e responder anonimamente</span>
+            </div>
+          </div>
+        ) : loadingToken ? (
+          <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
+            <RefreshCw className="h-5 w-5 animate-spin" />
+            <span className="text-sm">Gerando link...</span>
+          </div>
+        ) : null}
+
+        {/* Status da campanha */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <span className="text-xs text-muted-foreground">Status da campanha</span>
+          <Badge variant={campanha.status === 'ativa' ? 'default' : 'secondary'}>
+            {campanha.status === 'ativa' ? 'Ativa' : campanha.status === 'rascunho' ? 'Rascunho' : 'Encerrada'}
+          </Badge>
+        </div>
+
+        {campanha.status !== 'ativa' && (
+          <p className="text-xs text-destructive/80 text-center">
+            ⚠️ Ative a campanha para que os colaboradores possam acessar o questionário.
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );
