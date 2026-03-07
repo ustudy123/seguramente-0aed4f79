@@ -111,7 +111,7 @@ export const Header = () => {
               {profile?.nome_completo || "Minha Conta"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/meu-perfil")}>
               <User className="w-4 h-4 mr-2" />
               Perfil
             </DropdownMenuItem>
