@@ -70,7 +70,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       if (!tenantId) return [];
       const { data } = await (supabase as any)
         .from("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia")
+        .select("id, razao_social, nome_fantasia, cnpj")
         .eq("tenant_id", tenantId)
         .order("razao_social");
       return data || [];
@@ -406,10 +406,15 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                       </SelectTrigger>
                       <SelectContent>
                         {empresas.map((e: any) => (
-                          <SelectItem key={e.id} value={e.id}>
-                            {e.nome_fantasia || e.razao_social}
-                          </SelectItem>
-                        ))}
+                           <SelectItem key={e.id} value={e.id}>
+                             <div className="flex flex-col">
+                               <span>{e.nome_fantasia || e.razao_social}</span>
+                               {e.cnpj && (
+                                 <span className="text-xs text-muted-foreground">CNPJ: {e.cnpj}</span>
+                               )}
+                             </div>
+                           </SelectItem>
+                         ))}
                       </SelectContent>
                     </Select>
                     {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
