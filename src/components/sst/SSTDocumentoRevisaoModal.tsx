@@ -59,9 +59,22 @@ export function SSTDocumentoRevisaoModal({ open, onOpenChange, documento }: Prop
   const [acoesSalvas, setAcoesSalvas] = useState<Set<number>>(new Set());
   const [importandoTodas, setImportandoTodas] = useState(false);
 
-  if (!documento) return null;
-  const dados = documento.analise_ia as any;
-  if (!dados) return null;
+  const dados = documento?.analise_ia as any;
+
+  if (!documento || !dados) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dados não disponíveis</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-4 text-center">
+            Este documento não possui dados extraídos pela IA.
+          </p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const tipo = dados.tipo_documento || documento.tipo || "SST";
   const isMedico = tipo === "PCMSO";
