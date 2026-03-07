@@ -7,16 +7,15 @@ import {
   Play, 
   Pause, 
   BarChart3,
-  QrCode,
   Link as LinkIcon,
-  Copy,
-  ExternalLink,
-  CheckCircle2
+  CheckCircle2,
+  UserPlus,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +26,7 @@ import {
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
+import { ParticipacaoManager } from "./ParticipacaoManager";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -41,19 +41,9 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
   const [selectedCampanha, setSelectedCampanha] = useState<CampanhaPsicossocial | null>(null);
   const [showDistribuicao, setShowDistribuicao] = useState(false);
   const [showResultados, setShowResultados] = useState(false);
+  const [expandedCampanha, setExpandedCampanha] = useState<string | null>(null);
   
-  const { atualizarStatusCampanha, useEstatisticasCampanha } = usePsicossocial();
-
-  const getStatusBadge = (status: CampanhaPsicossocial['status']) => {
-    switch (status) {
-      case 'rascunho':
-        return <Badge variant="secondary">Rascunho</Badge>;
-      case 'ativa':
-        return <Badge className="bg-emerald-500">Ativa</Badge>;
-      case 'encerrada':
-        return <Badge variant="outline">Encerrada</Badge>;
-    }
-  };
+  const { atualizarStatusCampanha } = usePsicossocial();
 
   const handleAtivar = (campanha: CampanhaPsicossocial) => {
     atualizarStatusCampanha.mutate({ id: campanha.id, status: 'ativa' });
@@ -71,6 +61,10 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
   const handleVerResultados = (campanha: CampanhaPsicossocial) => {
     setSelectedCampanha(campanha);
     setShowResultados(true);
+  };
+
+  const handleGerenciarParticipacao = (campanha: CampanhaPsicossocial) => {
+    setExpandedCampanha(prev => prev === campanha.id ? null : campanha.id);
   };
 
   if (campanhas.length === 0) {
@@ -101,19 +95,39 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {campanhas.map((campanha) => (
-            <CampanhaCard 
-              key={campanha.id} 
-              campanha={campanha}
-              onAtivar={() => handleAtivar(campanha)}
-              onEncerrar={() => handleEncerrar(campanha)}
-              onDistribuir={() => handleDistribuir(campanha)}
-              onVerResultados={() => handleVerResultados(campanha)}
-            />
+            <div key={campanha.id} className="border rounded-lg overflow-hidden">
+              <CampanhaCard 
+                campanha={campanha}
+                onAtivar={() => handleAtivar(campanha)}
+                onEncerrar={() => handleEncerrar(campanha)}
+                onDistribuir={() => handleDistribuir(campanha)}
+                onVerResultados={() => handleVerResultados(campanha)}
+                onGerenciarParticipacao={() => handleGerenciarParticipacao(campanha)}
+                isExpanded={expandedCampanha === campanha.id}
+              />
+              
+              {/* Painel de Participação expandido */}
+              {expandedCampanha === campanha.id && (
+                <div className="border-t bg-muted/20 p-4">
+                  <Tabs defaultValue="participacao">
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="participacao" className="gap-1.5 text-xs">
+                        <Users className="h-3.5 w-3.5" />
+                        Controle de Participação
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="participacao">
+                      <ParticipacaoManager campanha={campanha} />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              )}
+            </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Modal de Distribuição */}
+      {/* Modal de Distribuição (Link Público Geral) */}
       {selectedCampanha && (
         <DistribuicaoModal
           open={showDistribuicao}
@@ -140,9 +154,11 @@ interface CampanhaCardProps {
   onEncerrar: () => void;
   onDistribuir: () => void;
   onVerResultados: () => void;
+  onGerenciarParticipacao: () => void;
+  isExpanded: boolean;
 }
 
-function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados }: CampanhaCardProps) {
+function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, isExpanded }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
 
@@ -158,9 +174,9 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
       <div className="flex-1 space-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-semibold">{campanha.nome}</h4>
           {getStatusBadge(campanha.status)}
           {campanha.anonimo && (
@@ -172,7 +188,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
           <p className="text-sm text-muted-foreground">{campanha.descricao}</p>
         )}
         
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
             {format(new Date(campanha.data_inicio), "dd/MM/yyyy", { locale: ptBR })} - {format(new Date(campanha.data_fim), "dd/MM/yyyy", { locale: ptBR })}
@@ -180,25 +196,37 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
           {stats && (
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {stats.concluidos}/{stats.total_convites} respostas
+              {stats.concluidos}/{stats.total_convites > 0 ? stats.total_convites : stats.concluidos} respostas
+              {stats.taxa_participacao > 0 && (
+                <span className="font-medium text-foreground">
+                  ({stats.taxa_participacao.toFixed(0)}%)
+                </span>
+              )}
             </span>
           )}
         </div>
 
         {stats && stats.total_convites > 0 && (
           <div className="flex items-center gap-2">
-            <Progress value={stats.taxa_participacao} className="h-2 flex-1 max-w-xs" />
-            <span className="text-sm font-medium">{stats.taxa_participacao.toFixed(0)}%</span>
+            <Progress value={stats.taxa_participacao} className="h-1.5 flex-1 max-w-xs" />
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {campanha.status === 'ativa' && (
           <>
+            <Button
+              variant={isExpanded ? "default" : "outline"}
+              size="sm"
+              onClick={onGerenciarParticipacao}
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              Participação
+            </Button>
             <Button variant="outline" size="sm" onClick={onDistribuir}>
               <LinkIcon className="h-4 w-4 mr-1" />
-              Distribuir
+              Link Geral
             </Button>
             <Button variant="outline" size="sm" onClick={onVerResultados}>
               <BarChart3 className="h-4 w-4 mr-1" />
@@ -208,10 +236,16 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
         )}
         
         {campanha.status === 'encerrada' && (
-          <Button variant="outline" size="sm" onClick={onVerResultados}>
-            <BarChart3 className="h-4 w-4 mr-1" />
-            Ver Resultados
-          </Button>
+          <>
+            <Button variant="outline" size="sm" onClick={onGerenciarParticipacao}>
+              <Users className="h-4 w-4 mr-1" />
+              Participação
+            </Button>
+            <Button variant="outline" size="sm" onClick={onVerResultados}>
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Ver Resultados
+            </Button>
+          </>
         )}
 
         <DropdownMenu>
@@ -229,9 +263,13 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
             )}
             {campanha.status === 'ativa' && (
               <>
+                <DropdownMenuItem onClick={onGerenciarParticipacao}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Controle de Participação
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={onDistribuir}>
                   <LinkIcon className="h-4 w-4 mr-2" />
-                  Distribuir Links
+                  Link Geral Anônimo
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onVerResultados}>
                   <BarChart3 className="h-4 w-4 mr-2" />
