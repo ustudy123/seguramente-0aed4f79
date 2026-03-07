@@ -405,8 +405,64 @@ Retorne JSON:
 
 function buildPlanoAcaoPrompt(tipo: string, isComplementar = false): string {
   const contextoPorTipo: Record<string, string> = {
-    PGR: `Foque em: linhas de tabela de plano de ação (cada linha = uma ação), medidas de EPC/EPI, treinamentos, avaliações quantitativas, cronograma de ações corretivas/preventivas, revisão de inventário. EXTRAIA CADA LINHA DA TABELA DE PLANO DE AÇÃO COMO UMA AÇÃO SEPARADA.`,
-    PCMSO: `Foque em: exames a incluir/revisar, convocações de periódico, adequações de fluxo de exames, atualizações do programa, regularização de exames pendentes.`,
+    PGR: `PRIORIDADE MÁXIMA: Extraia CADA LINHA da tabela de Plano de Ação do PGR como uma ação separada.
+Colunas típicas: Ação/Medida | Setor | Responsável | Prazo | EPI/EPC | Tipo.
+Também extraia: implantação de EPC, fornecimento/revisão de EPI, treinamentos recomendados, adequações de procedimento, avaliações quantitativas pendentes, revisão de cronograma.`,
+    PCMSO: `Extraia: exames a incluir/revisar, convocações de periódico pendentes, adequações de fluxo de exames, atualizações do programa médico, regularização de exames.`,
+    LTCAT: `Extraia: necessidade de nova medição, atualização do laudo, revisão de enquadramento, adequações ambientais, complementações técnicas.`,
+    AET: `Extraia: ajuste de mobiliário, adequação de posto, implantação de pausa, revisão de ritmo de trabalho, treinamento ergonômico, alteração de processo ou ferramenta, cada recomendação do relatório.`,
+    LAUDO_INSALUBRIDADE: `Extraia: implantação de EPC, adequação de proteção, substituição de agente/processo, controle de exposição, reavaliação técnica.`,
+    LAUDO_PERICULOSIDADE: `Extraia: adequação de área de risco, isolamento/sinalização, revisão de procedimento, controle de energia, treinamento específico.`,
+  };
+
+  const contexto = contextoPorTipo[tipo] || "Extraia todas as ações, recomendações e medidas do documento.";
+  const parteLabel = isComplementar ? " (PARTE 2 — CONTINUAÇÃO do plano de ação)" : " (PARTE 1)";
+
+  return `Você é especialista sênior em SST brasileiro, gestão de riscos e conformidade NR.
+
+DOCUMENTO TIPO: ${tipo}${parteLabel}
+
+MISSÃO CRÍTICA: Extrair TODAS as ações e recomendações presentes neste trecho.
+- Se houver uma TABELA de plano de ação, CADA LINHA é uma ação separada — não agrupe!
+- Se houver uma LISTA de recomendações, CADA ITEM é uma ação separada.
+- NUNCA invente dados. Só extraia o que está escrito explicitamente.
+- Classifique "prioridade": alta (imediato/urgente), media (curto prazo), baixa (longo prazo).
+
+${contexto}
+
+GATILHOS DE AÇÃO — ao encontrar qualquer uma dessas expressões, gere uma ação:
+recomenda-se | deverá | devera | sugere-se | torna-se necessário | é indispensável |
+deve ser | plano de ação | medida de controle | ação corretiva | ação preventiva |
+necessária correção | necessária adequação | requer revisão | exige treinamento |
+necessita atualização | deve ser monitorado | deve ser renovado | implantar | realizar
+
+Para cada ação, preencha o modelo 5W2H com os dados do documento:
+- what: o que deve ser feito
+- why: por que (justificativa do documento)
+- where: onde (setor/área, se mencionado)
+- who: responsável (se mencionado)
+- when: prazo (se mencionado)
+- how: como será executado
+- how_much: custo (se mencionado)
+
+Retorne JSON:
+{
+  "plano_acao": [
+    {
+      "recomendacao": "texto completo e fiel da recomendação/ação",
+      "what": "...", "why": "...", "where": "...", "who": "...",
+      "when": "...", "how": "...", "how_much": "...",
+      "prioridade": "alta",
+      "prazo": "...",
+      "responsavel": "...",
+      "setor": "...",
+      "trecho_origem": "frase exata do documento que originou esta ação",
+      "confianca": "alta"
+    }
+  ]
+}`;
+}
+
     LTCAT: `Para LTCAT, priorize: necessidade de nova medição, atualização do laudo, inconsistências de exposição, revisão de enquadramento, adequações ambientais.`,
     AET: `Para AET, priorize: ajuste de mobiliário, adequação de posto, implantação de pausa, revisão de ritmo de trabalho, treinamento ergonômico, alteração de processo ou ferramenta.`,
     LAUDO_INSALUBRIDADE: `Para Laudo de Insalubridade, priorize: implantação de EPC, adequação de proteção, substituição de agente/processo, controle de exposição, reavaliação após adequação.`,
