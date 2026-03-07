@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import { useDepartamentos, useFiliais } from '@/hooks/useCadastros';
 import { useEmpresaAtiva } from '@/contexts/EmpresaAtivaContext';
 import { GestorComboboxField } from '@/components/colaboradores/GestorComboboxField';
