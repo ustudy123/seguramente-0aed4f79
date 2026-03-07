@@ -507,6 +507,15 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
               <ContaprovaOrganizacional campanha={campanha} ips={ips} />
             </TabsContent>
 
+            {/* ── Tab: Ergonomia / AEP ── */}
+            <TabsContent value="ergonomia" className="mt-4 space-y-3">
+              <IntegracaoErgonomiaAEP
+                campanha={campanha}
+                ips={ips}
+                dimensoesCriticas={dimensoesAgregadas.filter(d => isCritico(d.media)).map(d => d.bloco)}
+              />
+            </TabsContent>
+
             {/* ── Tab: Participação ── */}
             <TabsContent value="participacao" className="mt-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-4">
