@@ -101,3 +101,6 @@ verify_jwt = false
 
 [functions.ai-sst-importacao]
 verify_jwt = false
+
+[functions.sst-pdf-extract]
+verify_jwt = false

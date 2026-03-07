@@ -3,78 +3,38 @@ import { useDropzone } from "react-dropzone";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, X, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, X, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { ImportacaoState } from "./ImportacaoInteligente";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const MAX_SIZE_MB = 20;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
-// Simple PDF text extractor using browser's PDF.js if available, else just use filename as hint
-async function extractTextFromFile(file: File): Promise<string> {
-  // For PDF: read as ArrayBuffer and try to extract text via basic parsing
-  if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-    try {
-      // Try to read the PDF and extract readable text (basic approach for text-based PDFs)
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      let text = "";
-      
-      // Extract ASCII strings from PDF content (basic text extraction)
-      const decoder = new TextDecoder("latin1");
-      const rawText = decoder.decode(uint8Array);
-      
-      // Extract text between BT and ET markers (PDF text blocks)
-      const btEtRegex = /BT\s*([\s\S]*?)\s*ET/g;
-      const tjRegex = /\(([^)]{3,})\)\s*T[jJ]/g;
-      const tdRegex = /\[([^\]]{10,})\]\s*TJ/g;
-      
-      let match;
-      while ((match = btEtRegex.exec(rawText)) !== null) {
-        const block = match[1];
-        let tjMatch;
-        while ((tjMatch = tjRegex.exec(block)) !== null) {
-          const extracted = tjMatch[1].replace(/\\(\d{3})/g, (_, oct) =>
-            String.fromCharCode(parseInt(oct, 8))
-          ).replace(/\\\\/g, "\\").replace(/\\n/g, "\n").replace(/\\r/g, "");
-          if (extracted.trim().length > 0) text += extracted + " ";
-        }
-      }
-      
-      // Fallback: extract readable strings >= 4 chars
-      if (text.trim().length < 100) {
-        const readable = rawText.match(/[A-Za-zÀ-ÿ0-9\s.,;:()[\]{}!?@#$%&*+=\-_/\\'"]{4,}/g) || [];
-        text = readable
-          .filter(s => s.trim().length >= 4 && /[A-Za-zÀ-ÿ]/.test(s))
-          .join(" ")
-          .substring(0, 25000);
-      } else {
-        text = text.substring(0, 25000);
-      }
-      
-      return text || `[Arquivo PDF: ${file.name}]`;
-    } catch {
-      return `[Arquivo PDF: ${file.name}]`;
+/** Envia o arquivo para a edge function sst-pdf-extract e retorna o texto extraído */
+async function extractTextViaEdgeFunction(file: File): Promise<{ texto: string; chars: number; palavras: number; qualidade: string }> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const resp = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sst-pdf-extract`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: formData,
     }
+  );
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || `Erro ${resp.status} na extração do arquivo`);
   }
 
-  // For DOCX/DOC: try reading as text
-  if (file.name.endsWith(".docx") || file.name.endsWith(".doc")) {
-    try {
-      const text = await file.text();
-      return text.substring(0, 25000);
-    } catch {
-      return `[Arquivo Word: ${file.name}]`;
-    }
-  }
-
-  // Fallback: try reading as plain text
-  try {
-    const text = await file.text();
-    return text.substring(0, 25000);
-  } catch {
-    return `[Arquivo: ${file.name}]`;
-  }
+  return resp.json();
 }
 
 interface Props {
@@ -108,18 +68,22 @@ export function EtapaUpload({ state, updateState }: Props) {
     disabled: processando,
   });
 
+  const [qualidadeExtracao, setQualidadeExtracao] = useState<string | null>(null);
+
   const handleAvancar = async () => {
     if (!state.arquivo) return;
     setProcessando(true);
     updateState({ processando: true, erro: null });
     
     try {
-      toast.info("Lendo arquivo...");
-      const texto = await extractTextFromFile(state.arquivo);
-      updateState({ textoExtraido: texto, etapa: 2, processando: false });
+      toast.info("Enviando arquivo para extração inteligente...");
+      const result = await extractTextViaEdgeFunction(state.arquivo);
+      setQualidadeExtracao(result.qualidade);
+      toast.success(`Texto extraído: ${result.palavras.toLocaleString("pt-BR")} palavras`);
+      updateState({ textoExtraido: result.texto, etapa: 2, processando: false });
     } catch (err: any) {
       updateState({ erro: err.message, processando: false });
-      toast.error("Erro ao ler arquivo: " + err.message);
+      toast.error("Erro ao extrair arquivo: " + err.message);
     } finally {
       setProcessando(false);
     }
@@ -181,12 +145,12 @@ export function EtapaUpload({ state, updateState }: Props) {
       </Card>
 
       {/* Formatos e avisos */}
-      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+      <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
         <CardContent className="py-3 px-4 flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-amber-800 dark:text-amber-200">
-            <strong>Melhor resultado com PDFs nativos (texto selecionável).</strong> PDFs digitalizados (imagens) 
-            têm extração limitada — nesses casos, o sistema usará o nome e metadados do arquivo para auxiliar na classificação.
+            <strong>Melhor resultado com PDFs nativos (texto selecionável).</strong> A extração agora é feita 
+            server-side com suporte a múltiplos formatos. PDFs digitalizados (imagens) podem ter qualidade reduzida.
           </p>
         </CardContent>
       </Card>
@@ -198,9 +162,9 @@ export function EtapaUpload({ state, updateState }: Props) {
           size="lg"
         >
           {processando ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Lendo arquivo...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Extraindo texto...</>
           ) : (
-            <>Avançar — Classificar</>
+            <><CheckCircle2 className="w-4 h-4 mr-2" />Avançar — Classificar</>
           )}
         </Button>
       </div>
