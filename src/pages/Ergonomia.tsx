@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   Activity,
   RefreshCw,
-  FileDown,
   Plus,
   AlertTriangle,
   ClipboardCheck,
@@ -11,11 +10,14 @@ import {
   Building2,
   Sparkles,
   BookOpen,
-  Zap,
   FileText,
   ShieldCheck,
   ChevronRight,
   Dumbbell,
+  Database,
+  Map,
+  BarChart3,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErgonomia } from "@/hooks/useErgonomia";
 import { useErgonomiaInteligente } from "@/hooks/useErgonomiaInteligente";
+import { useErgonomiaAnalises } from "@/hooks/useErgonomiaAnalises";
 import { ErgonomiaStats } from "@/components/ergonomia/ErgonomiaStats";
 import { CategoriaCard } from "@/components/ergonomia/CategoriaCard";
 import { ItemDetailModal } from "@/components/ergonomia/ItemDetailModal";
@@ -34,10 +37,12 @@ import { RiscoForm } from "@/components/ergonomia/RiscoForm";
 import { RiscosList } from "@/components/ergonomia/RiscosList";
 import { AcaoForm } from "@/components/ergonomia/AcaoForm";
 import { AcoesList } from "@/components/ergonomia/AcoesList";
-import { RadaresSection } from "@/components/ergonomia/RadaresSection";
 import { HubServicos } from "@/components/ergonomia/HubServicos";
 import { AnaliseIASection } from "@/components/ergonomia/AnaliseIASection";
-import { IntegracaoCognitiva } from "@/components/ergonomia/IntegracaoCognitiva";
+import { RegistrosErgonomicos } from "@/components/ergonomia/RegistrosErgonomicos";
+import { MapaRiscoErgonomico } from "@/components/ergonomia/MapaRiscoErgonomico";
+import { InventarioRiscos } from "@/components/ergonomia/InventarioRiscos";
+import { AnaliseLERDORT } from "@/components/ergonomia/AnaliseLERDORT";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import {
@@ -91,11 +96,8 @@ export default function Ergonomia() {
     refetchItens,
   } = useErgonomia();
 
-  const {
-    radares,
-    dadosCognitivos,
-    isLoading: isLoadingInteligente,
-  } = useErgonomiaInteligente();
+  const { analises, isLoading: isLoadingAnalises, stats, mapaRiscos, analiseLERDORT, arquivarAnalise } =
+    useErgonomiaAnalises();
 
   const handleViewItem = (item: ItemNR17) => {
     setSelectedItem(item);
@@ -138,7 +140,6 @@ export default function Ergonomia() {
     );
   }
 
-  // Categorias por eixo
   const categoriasEixo: Record<string, ErgonomiaCategoria[]> = {
     todos: CATEGORIAS_ORDENADAS,
     fisico: ["mobiliario", "equipamentos", "levantamento_cargas", "condicoes_ambientais"],
@@ -160,7 +161,7 @@ export default function Ergonomia() {
             Ergonomia Inteligente
           </h1>
           <p className="text-muted-foreground mt-0.5 text-sm">
-            Governança ergonômica integrada — física, cognitiva e organizacional
+            Análise ergonômica integrada — identificação, registro e gestão de riscos
           </p>
         </div>
 
@@ -168,10 +169,6 @@ export default function Ergonomia() {
           <Button variant="outline" size="sm" onClick={() => refetchItens()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
-          </Button>
-          <Button variant="outline" size="sm">
-            <FileDown className="h-4 w-4 mr-2" />
-            Exportar
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowRiscoForm(true)}>
             <AlertTriangle className="h-4 w-4 mr-2" />
@@ -184,11 +181,59 @@ export default function Ergonomia() {
         </div>
       </motion.div>
 
+      {/* ── Indicadores da Base Ergonômica ── */}
+      {stats.totalAnalises > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="border-border/50">
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Database className="h-4 w-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">Análises Realizadas</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.totalAnalises}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">Postos Avaliados</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.postosAvaliados}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <span className="text-xs text-muted-foreground">Riscos Identificados</span>
+                </div>
+                <p className="text-2xl font-bold text-destructive">{stats.totalRiscosIdentificados}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">Conformidade Média</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.conformidadeMedia}%</p>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+      )}
+
       {itensNR17.length === 0 ? (
         <EmptyState onInitialize={handleInitialize} isInitializing={isInitializing} />
       ) : (
         <>
-          {/* ── Card de Conformidade NR-17 (compacto, abre sheet) ── */}
+          {/* ── Card de Conformidade NR-17 ── */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card
               className="border-border/50 cursor-pointer hover:shadow-md transition-all group"
@@ -196,7 +241,6 @@ export default function Ergonomia() {
             >
               <CardContent className="py-4 px-5">
                 <div className="flex items-center justify-between gap-4">
-                  {/* Conformidade % */}
                   <div className="flex items-center gap-4 min-w-0 flex-1">
                     <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
                       <ShieldCheck className="h-5 w-5 text-primary" />
@@ -204,9 +248,7 @@ export default function Ergonomia() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-semibold text-sm text-foreground">Conformidade NR-17</span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${MATURIDADE_COLORS[nivelMaturidade]}`}
-                        >
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${MATURIDADE_COLORS[nivelMaturidade]}`}>
                           {MATURIDADE_LABELS[nivelMaturidade]}
                         </span>
                       </div>
@@ -217,7 +259,6 @@ export default function Ergonomia() {
                     </div>
                   </div>
 
-                  {/* Mini stats */}
                   <div className="hidden md:flex items-center gap-6 text-sm shrink-0">
                     <div className="text-center">
                       <p className="font-bold text-success">{estatisticas.atendidos}</p>
@@ -231,37 +272,24 @@ export default function Ergonomia() {
                       <p className="font-bold text-destructive">{estatisticas.naoAtendidos}</p>
                       <p className="text-[11px] text-muted-foreground">Não Atend.</p>
                     </div>
-                    <div className="text-center">
-                      <p className="font-bold text-muted-foreground">{estatisticas.naoAplicaveis}</p>
-                      <p className="text-[11px] text-muted-foreground">N/A</p>
-                    </div>
                   </div>
 
-                  {/* CTA */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-1.5 text-primary shrink-0 group-hover:bg-primary/10 transition-colors"
+                    className="gap-1.5 text-primary shrink-0 group-hover:bg-primary/10"
                     onClick={(e) => { e.stopPropagation(); openConformidade("todos"); }}
                   >
-                    Ver itens
-                    <ChevronRight className="h-4 w-4" />
+                    Ver itens <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
-                {/* Alertas inline */}
                 {(estatisticas.riscosCriticos > 0 || estatisticas.acoesPendentes > 0) && (
                   <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50 flex-wrap">
                     {estatisticas.riscosCriticos > 0 && (
                       <div className="flex items-center gap-1.5 text-xs text-destructive">
                         <AlertTriangle className="h-3.5 w-3.5" />
                         {estatisticas.riscosCriticos} risco(s) crítico(s)
-                      </div>
-                    )}
-                    {estatisticas.riscosAltos > 0 && (
-                      <div className="flex items-center gap-1.5 text-xs text-warning">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        {estatisticas.riscosAltos} risco(s) alto(s)
                       </div>
                     )}
                     {estatisticas.acoesPendentes > 0 && (
@@ -276,39 +304,49 @@ export default function Ergonomia() {
             </Card>
           </motion.div>
 
-          {/* ── Radares Preditivos ── */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="h-5 w-5 text-primary" />
-              <h2 className="text-base font-semibold">Radares Preditivos</h2>
-            </div>
-            <RadaresSection radares={radares} isLoading={isLoadingInteligente} />
-          </motion.div>
-
-          {/* ── Tabs: Riscos · Ações · AEP · IA · Hub ── */}
-          <Tabs defaultValue="riscos" className="space-y-4">
+          {/* ── Tabs Principais ── */}
+          <Tabs defaultValue="analise_ia" className="space-y-4">
             <TabsList className="flex-wrap h-auto gap-1">
-              <TabsTrigger value="riscos" className="gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Riscos
-                {riscos.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{riscos.length}</Badge>
+              <TabsTrigger value="analise_ia" className="gap-2">
+                <Brain className="h-4 w-4" />
+                Análise por IA
+              </TabsTrigger>
+              <TabsTrigger value="registros" className="gap-2">
+                <Database className="h-4 w-4" />
+                Base Ergonômica
+                {stats.totalAnalises > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{stats.totalAnalises}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="acoes" className="gap-2">
+              <TabsTrigger value="mapa" className="gap-2">
+                <Map className="h-4 w-4" />
+                Mapa de Risco
+              </TabsTrigger>
+              <TabsTrigger value="inventario" className="gap-2">
                 <ClipboardCheck className="h-4 w-4" />
-                Plano de Ação
-                {acoes.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{acoes.length}</Badge>
-                )}
+                Inventário de Riscos
+              </TabsTrigger>
+              <TabsTrigger value="ler_dort" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                LER/DORT
               </TabsTrigger>
               <TabsTrigger value="aep" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Gerar AEP
               </TabsTrigger>
-              <TabsTrigger value="inteligencia" className="gap-2">
-                <Sparkles className="h-4 w-4" />
-                IA & Análise
+              <TabsTrigger value="riscos" className="gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Riscos NR-17
+                {riscos.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{riscos.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="acoes" className="gap-2">
+                <Zap className="h-4 w-4" />
+                Plano de Ação
+                {acoes.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{acoes.length}</Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="hub" className="gap-2">
                 <BookOpen className="h-4 w-4" />
@@ -316,22 +354,32 @@ export default function Ergonomia() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Riscos */}
-            <TabsContent value="riscos" className="space-y-4">
-              {isLoadingRiscos ? (
-                <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
-              ) : (
-                <RiscosList riscos={riscos} />
-              )}
+            {/* Análise por IA */}
+            <TabsContent value="analise_ia">
+              <AnaliseIASection />
             </TabsContent>
 
-            {/* Plano de Ação */}
-            <TabsContent value="acoes" className="space-y-4">
-              {isLoadingAcoes ? (
-                <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
-              ) : (
-                <AcoesList acoes={acoes} onUpdateStatus={handleUpdateAcaoStatus} />
-              )}
+            {/* Base Ergonômica - Registros */}
+            <TabsContent value="registros">
+              <RegistrosErgonomicos
+                analises={analises}
+                onArquivar={arquivarAnalise}
+              />
+            </TabsContent>
+
+            {/* Mapa de Risco Ergonômico */}
+            <TabsContent value="mapa">
+              <MapaRiscoErgonomico mapaRiscos={mapaRiscos} />
+            </TabsContent>
+
+            {/* Inventário de Riscos */}
+            <TabsContent value="inventario">
+              <InventarioRiscos analises={analises} />
+            </TabsContent>
+
+            {/* LER/DORT */}
+            <TabsContent value="ler_dort">
+              <AnaliseLERDORT analiseLERDORT={analiseLERDORT} />
             </TabsContent>
 
             {/* Gerar AEP */}
@@ -360,16 +408,26 @@ export default function Ergonomia() {
               {aepMode === "simples" ? <AEPGenerator /> : <AEPGeneratorMulti />}
             </TabsContent>
 
-            {/* IA & Análise */}
-            <TabsContent value="inteligencia" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <AnaliseIASection />
-                <IntegracaoCognitiva dados={dadosCognitivos} />
-              </div>
+            {/* Riscos NR-17 */}
+            <TabsContent value="riscos" className="space-y-4">
+              {isLoadingRiscos ? (
+                <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
+              ) : (
+                <RiscosList riscos={riscos} />
+              )}
+            </TabsContent>
+
+            {/* Plano de Ação */}
+            <TabsContent value="acoes" className="space-y-4">
+              {isLoadingAcoes ? (
+                <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
+              ) : (
+                <AcoesList acoes={acoes} onUpdateStatus={handleUpdateAcaoStatus} />
+              )}
             </TabsContent>
 
             {/* Hub de Serviços */}
-            <TabsContent value="hub" className="space-y-4">
+            <TabsContent value="hub">
               <HubServicos />
             </TabsContent>
           </Tabs>
@@ -387,7 +445,6 @@ export default function Ergonomia() {
             <SheetDescription>
               Itens normativos avaliados — {percentualConformidade}% de conformidade
             </SheetDescription>
-            {/* Mini tabs de eixo dentro do sheet */}
             <Tabs
               value={conformidadeEixo}
               onValueChange={(v) => setConformidadeEixo(v as typeof conformidadeEixo)}
@@ -395,20 +452,16 @@ export default function Ergonomia() {
             >
               <TabsList className="w-full">
                 <TabsTrigger value="todos" className="flex-1 gap-1.5 text-xs">
-                  <Activity className="h-3.5 w-3.5" />
-                  Todos
+                  <Activity className="h-3.5 w-3.5" /> Todos
                 </TabsTrigger>
                 <TabsTrigger value="fisico" className="flex-1 gap-1.5 text-xs">
-                  <Dumbbell className="h-3.5 w-3.5" />
-                  Físico
+                  <Dumbbell className="h-3.5 w-3.5" /> Físico
                 </TabsTrigger>
                 <TabsTrigger value="cognitivo" className="flex-1 gap-1.5 text-xs">
-                  <Brain className="h-3.5 w-3.5" />
-                  Cognitivo
+                  <Brain className="h-3.5 w-3.5" /> Cognitivo
                 </TabsTrigger>
                 <TabsTrigger value="organizacional" className="flex-1 gap-1.5 text-xs">
-                  <Building2 className="h-3.5 w-3.5" />
-                  Organizacional
+                  <Building2 className="h-3.5 w-3.5" /> Organizacional
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -438,21 +491,23 @@ export default function Ergonomia() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
         onSave={handleSaveItem}
-        isSaving={isUpdatingStatus}
       />
       <RiscoForm
         open={showRiscoForm}
         onOpenChange={setShowRiscoForm}
-        onSubmit={createRisco}
-        itensNR17={itensNR17}
+        onSubmit={async (data) => {
+          await createRisco(data);
+          setShowRiscoForm(false);
+        }}
         isLoading={isCreatingRisco}
       />
       <AcaoForm
         open={showAcaoForm}
         onOpenChange={setShowAcaoForm}
-        onSubmit={createAcao}
-        riscos={riscos}
-        itensNR17={itensNR17}
+        onSubmit={async (data) => {
+          await createAcao(data);
+          setShowAcaoForm(false);
+        }}
         isLoading={isCreatingAcao}
       />
     </div>
