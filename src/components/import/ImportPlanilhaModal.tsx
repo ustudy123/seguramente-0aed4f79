@@ -131,6 +131,7 @@ export function ImportPlanilhaModal({
     "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado",
     "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo", "Departamento", "Nível",
     "Tipo Contrato", "Data Admissão", "Salário", "Centro de Custo", "Gestor Imediato",
+    "Matrícula eSocial",
     "Banco", "Agência", "Conta", "Tipo Conta", "Chave PIX",
   ];
 
@@ -143,6 +144,7 @@ export function ImportPlanilhaModal({
       "01310-100", "Av. Paulista", "1000", "Sala 10", "Bela Vista", "São Paulo", "SP",
       "1", "Sede", "Analista de RH", "Recursos Humanos", "Pleno",
       "CLT", "01/03/2024", "5000,00", "RH-01", "Carlos Souza",
+      "00123456789",
       "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
     ],
     [
@@ -152,6 +154,7 @@ export function ImportPlanilhaModal({
       "", "", "", "", "", "", "",
       "1", "Filial SP", "Gerente Financeiro", "Financeiro", "Gerente",
       "CLT", "15/06/2020", "12000,00", "FIN-01", "",
+      "",
       "", "", "", "", "",
     ],
   ];
