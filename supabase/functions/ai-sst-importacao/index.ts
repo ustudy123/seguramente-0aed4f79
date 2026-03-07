@@ -244,11 +244,33 @@ Retorne JSON:
       console.log(`Plano extraído: ${resultPlano?.plano_acao?.length || 0} ações`);
 
       // Mesclar resultados
+      const inventarioRiscos = resultInventario?.inventario_riscos || [];
+      let funcoesAtividades = resultDados?.funcoes_atividades || [];
+
+      // Fallback: se a IA não retornou funções, extrai cargos únicos do inventário de riscos
+      if (funcoesAtividades.length === 0 && inventarioRiscos.length > 0) {
+        console.log("Funções vazias — extraindo cargos únicos do inventário de riscos...");
+        const cargosMap = new Map<string, { cargo: string; setor: string; atividades: string[] }>();
+        for (const r of inventarioRiscos) {
+          if (r.funcao && r.funcao !== "null" && r.funcao !== "") {
+            const key = r.funcao.trim().toLowerCase();
+            if (!cargosMap.has(key)) {
+              cargosMap.set(key, { cargo: r.funcao.trim(), setor: r.setor || "", atividades: [] });
+            }
+          }
+        }
+        funcoesAtividades = Array.from(cargosMap.values());
+        console.log(`Cargos extraídos do inventário: ${funcoesAtividades.length}`);
+      }
+
+      // Filtrar funções inválidas (objetos sem cargo)
+      funcoesAtividades = funcoesAtividades.filter((f: any) => f && f.cargo && f.cargo !== "null" && f.cargo !== "");
+
       const content: any = {
         dados_gerais: resultDados?.dados_gerais || {},
         estrutura_organizacional: resultDados?.estrutura_organizacional || { unidades: [], setores: [], departamentos: [] },
-        funcoes_atividades: resultDados?.funcoes_atividades || [],
-        inventario_riscos: resultInventario?.inventario_riscos || [],
+        funcoes_atividades: funcoesAtividades,
+        inventario_riscos: inventarioRiscos,
         plano_acao: resultPlano?.plano_acao || [],
         responsaveis_tecnicos: resultDados?.responsaveis_tecnicos || [],
         pendencias: [],
