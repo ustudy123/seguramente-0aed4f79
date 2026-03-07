@@ -41,11 +41,20 @@ const SEGMENT_KEYWORDS: Record<string, string[]> = {
   ],
 };
 
-const PLAN_KEYWORDS = [
-  "recomenda-se", "recomendamos", "deverá", "devera", "sugere-se", "torna-se necessário",
-  "é indispensável", "deve ser", "plano de ação", "plano de acao", "medidas recomendadas",
-  "ações corretivas", "acoes corretivas", "prazo", "responsável", "responsavel",
-  "necessária", "necessaria", "requer", "exige", "necessita",
+// Âncoras primárias para localizar a seção do plano de ação
+const PLAN_SECTION_ANCHORS = [
+  "plano de ação", "plano de acao", "programa de ação", "programa de acao",
+  "medidas de controle", "medidas recomendadas", "ações recomendadas", "acoes recomendadas",
+  "cronograma de ações", "cronograma de acoes", "plano de adequação", "plano de adequacao",
+  "ações corretivas", "acoes corretivas", "ações preventivas", "acoes preventivas",
+];
+
+// Frases geradoras de ação (para varredura complementar no texto inteiro)
+const PLAN_ACTION_PHRASES = [
+  "recomenda-se", "recomendamos", "deverá ser", "devera ser", "sugere-se",
+  "torna-se necessário", "é indispensável", "deve ser providenciado",
+  "necessária adequação", "necessaria adequacao", "requer revisão", "requer revisao",
+  "necessita atualização", "necessita atualizacao", "exige treinamento",
 ];
 
 // ── Extrair segmentos relevantes do texto completo ──────────────────────────
@@ -53,6 +62,7 @@ function extractRelevantSegments(fullText: string, tipo: string): {
   cabecalho: string;
   conteudoPrincipal: string;
   planoAcao: string;
+  planoAcaoComplementar: string; // segunda metade do plano para documentos grandes
 } {
   const lower = fullText.toLowerCase();
   const total = fullText.length;
@@ -61,7 +71,7 @@ function extractRelevantSegments(fullText: string, tipo: string): {
   // Cabeçalho sempre inclui os primeiros 8000 chars
   const cabecalho = fullText.substring(0, 8000);
 
-  // Buscar início do conteúdo principal (riscos/exames/agentes/etc.)
+  // Buscar início do conteúdo principal (PRIMEIRA ocorrência da keyword)
   let mainStart = -1;
   for (const kw of keywords) {
     const idx = lower.indexOf(kw);
@@ -70,36 +80,73 @@ function extractRelevantSegments(fullText: string, tipo: string): {
     }
   }
 
-  // Buscar início do plano de ação
+  // ── ESTRATÉGIA CORRIGIDA para localizar o plano de ação ──
+  // 1. Busca âncoras de seção específicas (PRIMEIRA ocorrência mais relevante)
   let planStart = -1;
-  for (const kw of PLAN_KEYWORDS) {
-    const idx = lower.indexOf(kw, mainStart > 0 ? mainStart + 500 : 0);
-    if (idx !== -1 && (planStart === -1 || idx > planStart)) {
-      planStart = Math.max(0, idx - 200);
+  for (const anchor of PLAN_SECTION_ANCHORS) {
+    // Procura todas as ocorrências e pega aquela que parece ser a seção principal
+    let searchFrom = 0;
+    while (searchFrom < total) {
+      const idx = lower.indexOf(anchor, searchFrom);
+      if (idx === -1) break;
+      // Heurística: seção de plano costuma aparecer no segundo terço do documento
+      const relPos = idx / total;
+      if (relPos > 0.3) {
+        // Usa a PRIMEIRA ocorrência relevante (não a última)
+        if (planStart === -1 || idx < planStart) {
+          planStart = Math.max(0, idx - 300);
+        }
+        break;
+      }
+      searchFrom = idx + anchor.length;
     }
   }
 
-  // Conteúdo principal
+  // 2. Fallback: busca frases de ação após o meio do documento
+  if (planStart === -1) {
+    const midPoint = Math.floor(total * 0.4);
+    for (const phrase of PLAN_ACTION_PHRASES) {
+      const idx = lower.indexOf(phrase, midPoint);
+      if (idx !== -1 && (planStart === -1 || idx < planStart)) {
+        planStart = Math.max(0, idx - 300);
+      }
+    }
+  }
+
+  // 3. Fallback final: último quarto do documento
+  if (planStart === -1) {
+    planStart = Math.max(0, total - 35000);
+  }
+
+  // Conteúdo principal (inventário de riscos)
   let conteudoPrincipal = "";
   if (mainStart !== -1) {
-    const end = planStart > mainStart ? Math.min(planStart, mainStart + 45000) : mainStart + 45000;
+    // Vai até o início do plano ou 50k chars, o que vier primeiro
+    const end = (planStart > mainStart + 2000)
+      ? Math.min(planStart, mainStart + 50000)
+      : mainStart + 50000;
     conteudoPrincipal = fullText.substring(mainStart, Math.min(end, total));
   } else {
     const mid = Math.floor(total / 4);
-    conteudoPrincipal = fullText.substring(mid, Math.min(mid + 35000, total));
+    conteudoPrincipal = fullText.substring(mid, Math.min(mid + 40000, total));
   }
 
-  // Plano/recomendações
-  let planoAcao = "";
-  if (planStart !== -1) {
-    planoAcao = fullText.substring(planStart, Math.min(planStart + 18000, total));
-  } else {
-    const tailStart = Math.max(0, total - 18000);
-    planoAcao = fullText.substring(tailStart);
-  }
+  // Plano de ação — agora com 40k chars (dobro do anterior)
+  const PLAN_CHUNK = 40000;
+  const planoAcao = fullText.substring(planStart, Math.min(planStart + PLAN_CHUNK, total));
 
-  console.log(`Segmentos [${tipo}] — cabeçalho:${cabecalho.length} principal:${conteudoPrincipal.length} plano:${planoAcao.length}`);
-  return { cabecalho, conteudoPrincipal, planoAcao };
+  // Complemento: próximos 30k chars após o primeiro chunk (para documentos extensos)
+  const complementStart = planStart + PLAN_CHUNK;
+  const planoAcaoComplementar = complementStart < total
+    ? fullText.substring(complementStart, Math.min(complementStart + 30000, total))
+    : "";
+
+  console.log(
+    `Segmentos [${tipo}] — cabeçalho:${cabecalho.length} ` +
+    `principal:${conteudoPrincipal.length} plano:${planoAcao.length} ` +
+    `planoCompl:${planoAcaoComplementar.length} | planStart@${planStart}/${total} (${Math.round(planStart/total*100)}%)`
+  );
+  return { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar };
 }
 
 // ── Chamada OpenAI ────────────────────────────────────────────────────────────
