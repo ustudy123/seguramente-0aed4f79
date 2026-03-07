@@ -14,7 +14,7 @@ interface Props {
   onVerDocumentos?: () => void;
 }
 
-export function EtapaConsolidacao({ state, resetar }: Props) {
+export function EtapaConsolidacao({ state, resetar, onVerDocumentos }: Props) {
   const navigate = useNavigate();
   const dados = state.dadosExtraidos;
 
