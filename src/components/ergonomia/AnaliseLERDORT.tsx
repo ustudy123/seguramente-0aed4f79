@@ -92,7 +92,7 @@ export function AnaliseLERDORT({ analiseLERDORT }: AnaliseLERDORTProps) {
           porque: `Análise preditiva identificou probabilidade ${probabilidade} de LER/DORT para o cargo ${cargo}`,
           origem_modulo: "ergonomia",
           origem_descricao: "Análise de Probabilidade LER/DORT",
-          prioridade: probabilidade === "alta" ? "alto" : probabilidade === "moderada" ? "medio" : "baixo",
+          prioridade: probabilidade === "alta" ? "urgente" : probabilidade === "moderada" ? "medio" : "baixo",
           tipo: "preventiva",
           exige_evidencia: false,
         });

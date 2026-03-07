@@ -84,9 +84,11 @@ export function InventarioRiscos({ analises }: InventarioRiscosProps) {
         origem_modulo: "ergonomia",
         origem_descricao: "Inventário de Riscos Ergonômicos",
         prioridade:
-          item.risco.severidade === "critico" || item.risco.severidade === "alto"
-            ? "alto"
-            : "medio",
+          item.risco.severidade === "critico"
+            ? "urgente"
+            : item.risco.severidade === "alto"
+            ? "medio"
+            : "baixo",
         tipo: "corretiva",
         exige_evidencia: true,
       });

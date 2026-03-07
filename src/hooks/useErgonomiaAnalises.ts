@@ -78,7 +78,8 @@ export function useErgonomiaAnalises() {
         .order("data_analise", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as ErgonomiaAnalise[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return ((data || []) as unknown as ErgonomiaAnalise[]);
     },
   });
 
