@@ -45,6 +45,94 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
   const [dados, setDados] = useState<DadosExtraidos>(state.dadosExtraidos!);
   const [salvando, setSalvando] = useState(false);
   const [modoRascunho, setModoRascunho] = useState(false);
+  const [acoesSalvas, setAcoesSalvas] = useState<Set<number>>(new Set());
+  const [importandoTodas, setImportandoTodas] = useState(false);
+
+  const score = dados.score_qualidade;
+
+  const parsePrazo = (prazoStr: string | undefined): string | null => {
+    if (!prazoStr) return null;
+    const hoje = new Date();
+    const lower = prazoStr.toLowerCase();
+    if (lower.includes("imediato") || lower.includes("urgente")) {
+      hoje.setDate(hoje.getDate() + 7);
+      return hoje.toISOString().split("T")[0];
+    }
+    if (lower.includes("curto") || lower.includes("30 dias") || lower.includes("1 mês")) {
+      hoje.setMonth(hoje.getMonth() + 1);
+      return hoje.toISOString().split("T")[0];
+    }
+    if (lower.includes("médio") || lower.includes("90 dias") || lower.includes("3 meses")) {
+      hoje.setMonth(hoje.getMonth() + 3);
+      return hoje.toISOString().split("T")[0];
+    }
+    if (lower.includes("longo") || lower.includes("6 meses") || lower.includes("1 ano")) {
+      hoje.setMonth(hoje.getMonth() + 6);
+      return hoje.toISOString().split("T")[0];
+    }
+    if (lower.includes("contínu") || lower.includes("continu")) {
+      hoje.setFullYear(hoje.getFullYear() + 1);
+      return hoje.toISOString().split("T")[0];
+    }
+    return null;
+  };
+
+  const enviarAcaoPlano = async (acao: DadosExtraidos["plano_acao"][0], index: number) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Sessão expirada"); return; }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (!profile?.tenant_id) { toast.error("Tenant não encontrado"); return; }
+
+      const prioridadeMap: Record<string, string> = { alta: "alta", media: "media", baixa: "baixa" };
+      const prazoDate = parsePrazo(acao.prazo);
+
+      const { error } = await supabase.from("plano_acoes").insert({
+        tenant_id: profile.tenant_id,
+        titulo: acao.recomendacao,
+        descricao: acao.recomendacao,
+        porque: `Recomendação extraída de documento SST (${state.tipoDetectado || "PGR"}) via Importação Inteligente`,
+        onde: acao.setor || "Geral",
+        como: acao.recomendacao,
+        responsavel_nome: acao.responsavel || "A definir",
+        prazo: prazoDate,
+        prioridade: (prioridadeMap[acao.prioridade] || "media") as any,
+        status: "nao_iniciado" as any,
+        origem_modulo: "Compliance SST",
+        origem_descricao: `Importado de ${state.arquivo?.name || "documento SST"} — ${state.tipoDetectado || "PGR"}`,
+        criado_por: session.user.id,
+        criado_por_nome: session.user.email,
+        tipo: "acao",
+        progresso: 0,
+      });
+
+      if (error) throw error;
+      setAcoesSalvas(prev => new Set([...prev, index]));
+      toast.success("Ação enviada para o Plano de Ação!");
+    } catch (err: any) {
+      toast.error("Erro ao enviar ação: " + err.message);
+    }
+  };
+
+  const enviarTodasAcoes = async () => {
+    if (!dados.plano_acao?.length) return;
+    setImportandoTodas(true);
+    let enviadas = 0;
+    for (let i = 0; i < dados.plano_acao.length; i++) {
+      if (!acoesSalvas.has(i)) {
+        await enviarAcaoPlano(dados.plano_acao[i], i);
+        enviadas++;
+      }
+    }
+    setImportandoTodas(false);
+    toast.success(`${enviadas} ação(ões) importada(s) para o Plano de Ação!`);
+  };
 
   const score = dados.score_qualidade;
 
