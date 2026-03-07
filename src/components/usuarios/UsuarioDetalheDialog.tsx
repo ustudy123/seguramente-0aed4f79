@@ -252,7 +252,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
 
           {/* Alerta duplicidade */}
           {usuario.alerta_duplicidade && (
-            <div className="mt-3 flex gap-2 items-center p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+            <div className="mt-3 flex gap-2 items-center p-2.5 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>Possível duplicidade detectada: <strong>{usuario.duplicidade_nivel}</strong></span>
             </div>
