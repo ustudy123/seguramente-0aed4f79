@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
+import { useAuth } from "@/hooks/useAuth";
 import { useDocumentos } from "@/hooks/useDocumentos";
 import { PastaTreeView } from "@/components/documentos/PastaTreeView";
 import { PastaDocumentosList } from "@/components/documentos/PastaDocumentosList";
@@ -64,6 +65,7 @@ import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 const Documentos = () => {
   const [searchParams] = useSearchParams();
   const colaboradorIdFromUrl = searchParams.get("colaborador");
+  const { tenantId } = useAuth();
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,6 +81,8 @@ const Documentos = () => {
   const [renameValue, setRenameValue] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  // Key to prevent wizard from auto-opening again after structure is created
+  const wizardDismissedKey = tenantId ? `wizard_estrutura_dismissed_${tenantId}` : null;
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
     documentoNome: string;
@@ -139,11 +143,16 @@ const Documentos = () => {
   // Auto-abrir wizard quando não há estrutura de pastas (primeira vez)
   useEffect(() => {
     if (!loading && pastas.length === 0 && !showWizard && !initializing) {
-      // Pequeno delay para aguardar animação da página
+      // Só mostra se nunca foi dispensado antes para este tenant
+      if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
       const timer = setTimeout(() => setShowWizard(true), 600);
       return () => clearTimeout(timer);
     }
-  }, [loading, pastas.length, initializing]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Se já tem estrutura, marcar como dispensado para nunca mais abrir automaticamente
+    if (!loading && pastas.length > 0 && wizardDismissedKey) {
+      localStorage.setItem(wizardDismissedKey, "1");
+    }
+  }, [loading, pastas.length, initializing, wizardDismissedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
@@ -382,6 +391,10 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
   const handleInitialize = async (params: WizardParams) => {
     try {
       await initializeDefaultStructure(params);
+      // Mark wizard as permanently dismissed for this tenant
+      if (wizardDismissedKey) {
+        localStorage.setItem(wizardDismissedKey, "1");
+      }
     } catch (error) {
       // Error handled in hook
     }
