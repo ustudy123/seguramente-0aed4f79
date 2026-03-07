@@ -85,6 +85,7 @@ const Documentos = () => {
     loading,
     loadingAudit,
     createPasta,
+    updatePasta,
     deletePasta,
     moveDocumento,
     movingDoc,
