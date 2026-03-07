@@ -623,11 +623,11 @@ export function RadaresPsicossocialSection() {
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50/40 to-background">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
         <CardContent className="pt-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-full bg-purple-100 shrink-0">
-              <Brain className="h-5 w-5 text-purple-600" />
+            <div className="p-2 rounded-full bg-primary/10 shrink-0">
+              <Brain className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
