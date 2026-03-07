@@ -498,7 +498,7 @@ Responda SOMENTE em JSON:
 
       console.log(`Extração iniciada. Tipo: ${tipo}, Total chars: ${totalChars}`);
 
-      const { cabecalho, conteudoPrincipal, planoAcao } = extractRelevantSegments(textoCompleto, tipo);
+      const { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar } = extractRelevantSegments(textoCompleto, tipo);
 
       // Contexto enriquecido para dados gerais (inclui início do conteúdo principal)
       const contextoDadosGerais = `${cabecalho}\n\n--- CONTEÚDO PRINCIPAL (para extração de funções e setores) ---\n${conteudoPrincipal.substring(0, 6000)}`;
@@ -506,15 +506,26 @@ Responda SOMENTE em JSON:
       // Prompts especializados por tipo
       const promptDadosGerais = buildDadosGeraisPrompt(tipo);
       const promptConteudo = buildConteudoPrincipalPrompt(tipo);
-      const promptPlano = buildPlanoAcaoPrompt(tipo);
+      const promptPlano = buildPlanoAcaoPrompt(tipo, false);
+      const promptPlanoCompl = buildPlanoAcaoPrompt(tipo, true);
 
-      console.log(`Iniciando 3 chamadas paralelas à OpenAI para tipo: ${tipo}...`);
+      console.log(`Iniciando ${planoAcaoComplementar ? "4" : "3"} chamadas paralelas à OpenAI para tipo: ${tipo}...`);
 
-      const [resultDados, resultConteudo, resultPlano] = await Promise.all([
+      // 4 chamadas paralelas quando há conteúdo complementar no plano de ação
+      const promises: Promise<any>[] = [
         callOpenAI(promptDadosGerais, `Documento ${tipo} — Cabeçalho e estrutura:\n\n${contextoDadosGerais}`),
         callOpenAI(promptConteudo, `Documento ${tipo} — Conteúdo principal:\n\n${conteudoPrincipal}`),
-        callOpenAI(promptPlano, `Documento ${tipo} — Recomendações e plano de ação:\n\n${planoAcao}`),
-      ]);
+        callOpenAI(promptPlano, `Documento ${tipo} — Plano de ação (parte 1):\n\n${planoAcao}`),
+      ];
+
+      if (planoAcaoComplementar.length > 500) {
+        promises.push(
+          callOpenAI(promptPlanoCompl, `Documento ${tipo} — Plano de ação (parte 2 - continuação):\n\n${planoAcaoComplementar}`)
+        );
+      }
+
+      const results = await Promise.all(promises);
+      const [resultDados, resultConteudo, resultPlano, resultPlanoCompl] = results;
 
       const inventarioRiscos = resultConteudo?.inventario_riscos || [];
       const matrizExames = resultConteudo?.matriz_exames || []; // PCMSO
