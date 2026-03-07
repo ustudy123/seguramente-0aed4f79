@@ -454,138 +454,93 @@ export function useDocumentoPastas() {
 
       const pastasToCreate: PastaInsert[] = [];
 
-      // ─── 1. GOVERNANÇA E ADMINISTRAÇÃO ───────────────────────────────────
+      // ─── 1. GOVERNANÇA E ADMINISTRAÇÃO (ISO 9001 §4, §5) ─────────────────
       const govId = crypto.randomUUID();
       pastasToCreate.push(mk(govId, "Governança e Administração", "root", 0, "Scale", null));
-
       const govSubs: [string, string][] = [
-        ["Estrutura Organizacional", "Building2"],
-        ["Direcionamento Estratégico", "Target"],
-        ["Licenças e Autorizações", "FileCheck"],
-        ["Certidões", "Award"],
-        ["Registros em Conselhos", "Shield"],
+        ["Contrato Social e Estatuto", "Building2"],
+        ["Políticas e Diretrizes", "Target"],       // ISO 9001 §5.2 — Política da Qualidade, SST, Ambiental
+        ["Licenças e Autorizações", "FileCheck"],   // Alvará, ANVISA, Bombeiros
+        ["Certidões", "Award"],                     // CND Federal, Estadual, Municipal, FGTS, Trabalhista
+        ["Registros em Conselhos", "Shield"],        // CREA, CRM, etc. (sem subpastas fixas)
       ];
-      const govSubIds: Record<string, string> = {};
       govSubs.forEach(([nome, icone], i) => {
-        const id = crypto.randomUUID();
-        govSubIds[nome] = id;
-        pastasToCreate.push(mk(id, nome, "categoria", i, icone, govId));
+        pastasToCreate.push(mk(crypto.randomUUID(), nome, "categoria", i, icone, govId));
       });
 
-      // Subpastas de Estrutura Organizacional
-      ["Contrato Social", "Estatuto", "Alterações Contratuais", "Acordo de Sócios", "Organograma", "Estrutura de Cargos"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Estrutura Organizacional"]));
-      });
-      // Subpastas de Direcionamento Estratégico
-      ["Missão, Visão e Valores", "Política da Qualidade", "Política de SST", "Política Ambiental", "Código de Conduta"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Direcionamento Estratégico"]));
-      });
-      // Subpastas de Licenças
-      ["Alvará de Funcionamento", "Licença Vigilância Sanitária", "Licença Corpo de Bombeiros", "Licenças Regulatórias"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Licenças e Autorizações"]));
-      });
-      // Subpastas de Certidões
-      ["Certidão Federal", "Certidão Estadual", "Certidão Municipal", "Certidão FGTS", "Certidão INSS", "Certidão Trabalhista"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, govSubIds["Certidões"]));
-      });
-      // Sem subpastas automáticas para Registros em Conselhos
-
-      // ─── 2. PROCESSOS ORGANIZACIONAIS ────────────────────────────────────
-      const procId = crypto.randomUUID();
-      pastasToCreate.push(mk(procId, "Processos Organizacionais", "root", 1, "BookOpen", null));
-
-      const procSubs: [string, string][] = [
-        ["Mapeamento de Processos", "GitBranch"],
-        ["Procedimentos Operacionais", "FileText"],
-        ["Gestão da Qualidade", "CheckSquare"],
-        ["Gestão de Documentos", "FolderSearch"],
+      // ─── 2. SISTEMA DE GESTÃO (ISO 9001 §6, §7) ──────────────────────────
+      const sgId = crypto.randomUUID();
+      pastasToCreate.push(mk(sgId, "Sistema de Gestão", "root", 1, "BookOpen", null));
+      const sgSubs: [string, string][] = [
+        ["Procedimentos e Instruções de Trabalho", "FileText"],   // ISO 9001 §7.5 — POPs, ITs
+        ["Registros da Qualidade", "CheckSquare"],                 // ISO 9001 §9 — evidências
+        ...(grauRisco >= 3 ? [["Gestão de Mudanças (MOC)", "RefreshCw"] as [string, string]] : []), // PSM §11
       ];
-      const procSubIds: Record<string, string> = {};
-      procSubs.forEach(([nome, icone], i) => {
-        const id = crypto.randomUUID();
-        procSubIds[nome] = id;
-        pastasToCreate.push(mk(id, nome, "categoria", i, icone, procId));
-      });
-      ["Fluxogramas", "Mapas de Processos", "Cadeia de Valor"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Mapeamento de Processos"]));
-      });
-      ["POPs", "Instruções de Trabalho", "Manuais Técnicos"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Procedimentos Operacionais"]));
-      });
-      ["Procedimentos de Qualidade", "Registros de Controle", "Indicadores de Desempenho"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Gestão da Qualidade"]));
-      });
-      ["Controle de Versões", "Histórico de Revisões", "Aprovações"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, procSubIds["Gestão de Documentos"]));
+      sgSubs.forEach(([nome, icone], i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), nome, "categoria", i, icone, sgId));
       });
 
-      // ─── 3. GESTÃO DE RISCOS ─────────────────────────────────────────────
+      // ─── 3. GESTÃO DE RISCOS (PSM + ISO 9001 §6.1) ───────────────────────
       const riscosId = crypto.randomUUID();
       pastasToCreate.push(mk(riscosId, "Gestão de Riscos", "root", 2, "AlertTriangle", null));
-
       const riscoSubs: [string, string][] = [
-        ["Inventário de Riscos", "List"],
-        ["Matriz de Riscos", "Grid"],
-        ...(grauRisco >= 3 ? [["Análise de Processos Críticos", "Search"] as [string, string]] : []),
-        ...(grauRisco >= 3 ? [["Gestão de Mudanças (MOC)", "RefreshCw"] as [string, string]] : []),
+        ["Inventário de Riscos", "List"],      // PSM §4 — Process Safety Information
+        ["Análise de Riscos (APR / HAZOP)", "Search"], // PSM §5 — Process Hazard Analysis
+        ["Planos de Emergência", "ShieldAlert"], // PSM §13 — Emergency Planning
+        ...(grauRisco >= 3 ? [["Análise de Processos Críticos", "Cpu"] as [string, string]] : []),
       ];
-      const riscoSubIds: Record<string, string> = {};
       riscoSubs.forEach(([nome, icone], i) => {
-        const id = crypto.randomUUID();
-        riscoSubIds[nome] = id;
-        pastasToCreate.push(mk(id, nome, "categoria", i, icone, riscosId));
-      });
-      ["Riscos Operacionais", "Riscos de SST", "Riscos Psicossociais", "Riscos Ambientais", "Riscos de Processo"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, riscoSubIds["Inventário de Riscos"]));
-      });
-      ["Classificação de Risco", "Probabilidade", "Severidade", "Nível de Risco"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, riscoSubIds["Matriz de Riscos"]));
+        pastasToCreate.push(mk(crypto.randomUUID(), nome, "categoria", i, icone, riscosId));
       });
 
-      // ─── 4. SST ──────────────────────────────────────────────────────────
+      // ─── 4. SST — Saúde e Segurança (NRs + PSM) ─────────────────────────
       const sstId = crypto.randomUUID();
       pastasToCreate.push(mk(sstId, "SST", "root", 3, "Shield", null));
 
+      // 4a. Programas Legais
       const sstProgramasId = crypto.randomUUID();
       pastasToCreate.push(mk(sstProgramasId, "Programas Legais", "categoria", 0, "FileCheck", sstId));
-      ["PGR", "PCMSO", "LTCAT", "Inventário de Riscos Ocupacionais"].forEach((n, i) => {
+      ["PGR", "PCMSO", "LTCAT"].forEach((n, i) => {
         pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, sstProgramasId));
       });
 
+      // 4b. Riscos especiais (somente se selecionados)
+      let sstSubIdx = 1;
       if (riscos.includes("ergonomico")) {
         const ergoId = crypto.randomUUID();
-        pastasToCreate.push(mk(ergoId, "Ergonomia", "categoria", 1, "Activity", sstId));
+        pastasToCreate.push(mk(ergoId, "Ergonomia", "categoria", sstSubIdx++, "Activity", sstId));
         ["AEP — Avaliação Ergonômica Preliminar", "AET — Análise Ergonômica do Trabalho"].forEach((n, i) => {
           pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, ergoId));
         });
       }
-
       if (riscos.includes("psicossocial")) {
         const psId = crypto.randomUUID();
-        pastasToCreate.push(mk(psId, "Riscos Psicossociais", "categoria", 2, "Brain", sstId));
-        ["Diagnóstico Psicossocial", "Inventário Psicossocial", "Relatórios", "Plano de Ação"].forEach((n, i) => {
+        pastasToCreate.push(mk(psId, "Riscos Psicossociais (NR-01)", "categoria", sstSubIdx++, "Brain", sstId));
+        ["Diagnóstico Psicossocial", "Plano de Ação"].forEach((n, i) => {
           pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, psId));
         });
       }
 
-      // Treinamentos por NR
+      // 4c. Treinamentos NR (pasta única com subpastas por NR obrigatória + contextuais)
       const treiId = crypto.randomUUID();
-      pastasToCreate.push(mk(treiId, "Treinamentos", "categoria", 3, "GraduationCap", sstId));
-      const nrsBasicas = ["NR-01 — Disposições Gerais", "NR-05 — CIPA", "NR-06 — EPIs"];
-      const nrsEspecificas: string[] = [
+      pastasToCreate.push(mk(treiId, "Treinamentos", "categoria", sstSubIdx++, "GraduationCap", sstId));
+      const nrsTreino = [
+        "NR-01 — Disposições Gerais e Gerenciamento de Riscos",
+        "NR-05 — CIPA",
+        "NR-06 — EPIs",
         ...(riscos.includes("eletrico") ? ["NR-10 — Segurança em Eletricidade"] : []),
         ...(riscos.includes("maquinas") ? ["NR-12 — Segurança em Máquinas"] : []),
         ...((grauRisco >= 3 || riscos.includes("espaco_confinado")) ? ["NR-33 — Espaço Confinado"] : []),
         ...((grauRisco >= 3 || riscos.includes("altura")) ? ["NR-35 — Trabalho em Altura"] : []),
       ];
-      [...nrsBasicas, ...nrsEspecificas].forEach((n, i) => {
+      nrsTreino.forEach((n, i) => {
         pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, treiId));
       });
 
-      // Registros SST
+      // 4d. Registros SST (PSM §8 — Incident Investigation)
       const regSSTId = crypto.randomUUID();
-      pastasToCreate.push(mk(regSSTId, "Registros", "categoria", 4, "ClipboardList", sstId));
-      ["CAT — Comunicação de Acidente", "Investigação de Acidentes", "APR — Análise Preliminar de Risco", "Inspeções de Segurança"].forEach((n, i) => {
+      pastasToCreate.push(mk(regSSTId, "Registros e Evidências", "categoria", sstSubIdx++, "ClipboardList", sstId));
+      ["CAT — Comunicação de Acidente", "Inspeções de Segurança", "Permissões de Trabalho"].forEach((n, i) => {
         pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, regSSTId));
       });
 
@@ -593,23 +548,13 @@ export function useDocumentoPastas() {
       if (riscos.includes("ambiental")) {
         const ambId = crypto.randomUUID();
         pastasToCreate.push(mk(ambId, "Gestão Ambiental", "root", 4, "Leaf", null));
-
-        const licAmb = crypto.randomUUID();
-        pastasToCreate.push(mk(licAmb, "Licenciamento Ambiental", "categoria", 0, "FileCheck", ambId));
-        ["Licença Prévia", "Licença de Instalação", "Licença de Operação"].forEach((n, i) => {
-          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, licAmb));
-        });
-
-        const ctrlAmb = crypto.randomUUID();
-        pastasToCreate.push(mk(ctrlAmb, "Controle Ambiental", "categoria", 1, "Activity", ambId));
-        ["Monitoramento de Emissões", "Controle de Efluentes", "Controle de Resíduos"].forEach((n, i) => {
-          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, ctrlAmb));
-        });
-
-        const planosAmb = crypto.randomUUID();
-        pastasToCreate.push(mk(planosAmb, "Planos Ambientais", "categoria", 2, "Map", ambId));
-        ["PGRS — Plano de Gerenciamento de Resíduos", "Plano de Emergência Ambiental"].forEach((n, i) => {
-          pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, planosAmb));
+        const ambSubs: [string, string][] = [
+          ["Licenciamento Ambiental", "FileCheck"],        // LP, LI, LO
+          ["Monitoramento e Controle", "Activity"],        // Emissões, efluentes, resíduos
+          ["PGRS — Gerenciamento de Resíduos", "Trash2"],
+        ];
+        ambSubs.forEach(([nome, icone], i) => {
+          pastasToCreate.push(mk(crypto.randomUUID(), nome, "categoria", i, icone, ambId));
         });
       }
 
@@ -617,7 +562,6 @@ export function useDocumentoPastas() {
       const pessoasId = crypto.randomUUID();
       pastasToCreate.push(mk(pessoasId, "Gestão de Pessoas", "root", 5, "Users", null));
 
-      // Pastas por unidade/filial
       const filiaisList = filiais.length > 0 ? filiais : [{ id: null, nome: "Matriz" }];
       filiaisList.forEach((filial: { id: string | null; nome: string }, idx: number) => {
         const unidadeId = crypto.randomUUID();
@@ -638,46 +582,31 @@ export function useDocumentoPastas() {
             colaborador_cpf: colab.cpf,
             colaborador_nome: colab.nome_completo,
           });
-
-          // Subpastas do colaborador
-          const colabSubs = ["Admissão", "Vida Funcional", "Saúde Ocupacional", "Banco de Horas", "Termos", "Desligamento"];
-          colabSubs.forEach((sub, subIdx) => {
+          // Subpastas do colaborador (enxutas)
+          ["Admissão", "Vida Funcional", "Saúde Ocupacional", "Desligamento"].forEach((sub, subIdx) => {
             pastasToCreate.push(mk(crypto.randomUUID(), sub, "categoria", subIdx, null, colabPastaId));
           });
         });
       });
 
-      // ─── 7. INVESTIGAÇÃO DE INCIDENTES ───────────────────────────────────
+      // ─── 7. INVESTIGAÇÃO DE INCIDENTES (PSM §8, ISO 9001 §10.2) ─────────
       const incId = crypto.randomUUID();
       pastasToCreate.push(mk(incId, "Investigação de Incidentes", "root", 6, "SearchX", null));
-      ["Acidentes", "Quase Acidentes", "Falhas Operacionais", "Não Conformidades"].forEach((n, i) => {
-        const subId = crypto.randomUUID();
-        pastasToCreate.push(mk(subId, n, "categoria", i, null, incId));
-        ["Análise de Causa", "Plano de Ação", "Registro de Aprendizado"].forEach((sub, j) => {
-          pastasToCreate.push(mk(crypto.randomUUID(), sub, "custom", j, null, subId));
-        });
+      // Uma pasta por tipo — documentos vão diretamente dentro
+      ["Acidentes de Trabalho", "Quase Acidentes", "Não Conformidades"].forEach((n, i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), n, "categoria", i, null, incId));
       });
 
-      // ─── 8. AUDITORIAS E MELHORIA CONTÍNUA ───────────────────────────────
+      // ─── 8. AUDITORIAS E MELHORIA CONTÍNUA (ISO 9001 §9, §10) ────────────
       const audId = crypto.randomUUID();
       pastasToCreate.push(mk(audId, "Auditorias e Melhoria Contínua", "root", 7, "CheckSquare", null));
-
-      const audInternaId = crypto.randomUUID();
-      pastasToCreate.push(mk(audInternaId, "Auditorias Internas", "categoria", 0, null, audId));
-      ["Relatórios", "Checklists", "Evidências"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, audInternaId));
-      });
-
-      const audExternaId = crypto.randomUUID();
-      pastasToCreate.push(mk(audExternaId, "Auditorias Externas", "categoria", 1, null, audId));
-      ["Certificações", "Fiscalizações"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, audExternaId));
-      });
-
-      const planosAudId = crypto.randomUUID();
-      pastasToCreate.push(mk(planosAudId, "Planos de Ação", "categoria", 2, null, audId));
-      ["Ações Corretivas", "Ações Preventivas", "Acompanhamento"].forEach((n, i) => {
-        pastasToCreate.push(mk(crypto.randomUUID(), n, "custom", i, null, planosAudId));
+      const audSubs: [string, string][] = [
+        ["Auditorias Internas", "ClipboardCheck"],
+        ["Auditorias Externas e Certificações", "Award"],
+        ["Ações Corretivas e Preventivas", "RefreshCw"],  // ISO 9001 §10.2 — NC e AC
+      ];
+      audSubs.forEach(([nome, icone], i) => {
+        pastasToCreate.push(mk(crypto.randomUUID(), nome, "categoria", i, icone, audId));
       });
 
       // ─── INSERT — apenas pastas faltantes ────────────────────────────────
