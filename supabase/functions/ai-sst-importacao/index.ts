@@ -158,9 +158,21 @@ Responda SOMENTE em JSON:
       // ── CHAMADA 1: Dados gerais + estrutura organizacional + funções ──────
       const promptDadosGerais = `Você é especialista sênior em SST brasileiro (NR-01, NR-09, eSocial).
 
-EXTRAIA do trecho abaixo APENAS os dados gerais, estrutura organizacional e funções/cargos.
+EXTRAIA do trecho abaixo os dados gerais, estrutura organizacional, funções/cargos e responsáveis técnicos.
 NUNCA invente dados. Se não encontrar, use null ou [].
 Classifique confiança: "alta"=dado explícito | "media"=inferido | "baixa"=incerto.
+
+IMPORTANTE para funcoes_atividades:
+- Extraia TODOS os cargos, funções e ocupações mencionados no documento
+- Inclua funções do inventário de riscos (coluna "Função" ou "Cargo")
+- Inclua funções da estrutura organizacional, quadro de pessoal ou tabela de GHO
+- Para cada função, liste as atividades/tarefas descritas (se não houver, use [])
+- NUNCA retorne objetos vazios — todo item deve ter pelo menos o campo "cargo" preenchido
+
+IMPORTANTE para estrutura_organizacional:
+- setores: lista simples de strings com nomes dos setores/GHOs encontrados
+- departamentos: lista simples de strings com nomes dos departamentos
+- unidades: lista de objetos {nome, endereco}
 
 Retorne JSON com EXATAMENTE esta estrutura:
 {
@@ -174,12 +186,24 @@ Retorne JSON com EXATAMENTE esta estrutura:
     "versao": {"valor": null, "confianca": "baixa"}
   },
   "estrutura_organizacional": {
-    "unidades": [],
-    "setores": [],
-    "departamentos": []
+    "unidades": [{"nome": "...", "endereco": "..."}],
+    "setores": ["setor1", "setor2"],
+    "departamentos": ["depto1", "depto2"]
   },
-  "funcoes_atividades": [],
-  "responsaveis_tecnicos": []
+  "funcoes_atividades": [
+    {
+      "cargo": "nome do cargo ou função",
+      "setor": "setor onde atua (se encontrado)",
+      "atividades": ["atividade 1", "atividade 2"]
+    }
+  ],
+  "responsaveis_tecnicos": [
+    {
+      "nome": "...",
+      "registro": "CRP/CREA/CRM/etc",
+      "funcao": "Engenheiro de Segurança / Técnico SST / Médico do Trabalho / etc"
+    }
+  ]
 }`;
 
       // ── CHAMADA 2: Inventário de riscos (seção específica) ────────────────
