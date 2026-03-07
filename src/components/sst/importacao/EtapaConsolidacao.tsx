@@ -128,6 +128,12 @@ export function EtapaConsolidacao({ state, resetar, onVerDocumentos }: Props) {
           <RotateCcw className="w-4 h-4 mr-2" />
           Importar Outro Documento
         </Button>
+        {onVerDocumentos && (
+          <Button variant="secondary" onClick={onVerDocumentos}>
+            <FileText className="w-4 h-4 mr-2" />
+            Ver Documentos Importados
+          </Button>
+        )}
         <Button onClick={() => navigate("/plano-acao")}>
           Ver Plano de Ação
           <ArrowRight className="w-4 h-4 ml-2" />
