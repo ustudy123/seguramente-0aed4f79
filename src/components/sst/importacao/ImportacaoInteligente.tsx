@@ -225,7 +225,7 @@ export function ImportacaoInteligente({ onImportado }: { onImportado?: () => voi
         <EtapaRevisao state={state} updateState={updateState} resetar={resetar} />
       )}
       {state.etapa === 5 && (
-        <EtapaConsolidacao state={state} resetar={resetar} />
+        <EtapaConsolidacao state={state} resetar={resetar} onVerDocumentos={onImportado} />
       )}
     </div>
   );
