@@ -163,11 +163,25 @@ interface AdmissaoFormProps {
   };
 }
 
+interface UsuarioEncontrado {
+  id: string;
+  nome_completo: string;
+  email_principal: string;
+  cpf?: string;
+  telefone_principal?: string;
+  cargo_funcao?: string;
+  data_nascimento?: string;
+}
+
 export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const { departamentos } = useDepartamentos();
   const { filiais } = useFiliais();
   const { empresaAtivaId } = useEmpresaAtiva();
+  const { tenantId } = useAuth();
+  const [buscandoCpf, setBuscandoCpf] = useState(false);
+  const [usuarioEncontrado, setUsuarioEncontrado] = useState<UsuarioEncontrado | null>(null);
+  const [dadosReaproveitados, setDadosReaproveitados] = useState(false);
 
   const departamentosOptions = departamentos.filter(
     (d) => typeof d?.nome === 'string' && d.nome.trim().length > 0,
