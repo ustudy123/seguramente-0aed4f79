@@ -12485,7 +12485,7 @@ export type Database = {
           campanha_id: string
           colaborador_id: string | null
           concluido_em: string | null
-          convite_id: string
+          convite_id: string | null
           created_at: string
           id: string
           identificacao_voluntaria: boolean
@@ -12500,7 +12500,7 @@ export type Database = {
           campanha_id: string
           colaborador_id?: string | null
           concluido_em?: string | null
-          convite_id: string
+          convite_id?: string | null
           created_at?: string
           id?: string
           identificacao_voluntaria?: boolean
@@ -12515,7 +12515,7 @@ export type Database = {
           campanha_id?: string
           colaborador_id?: string | null
           concluido_em?: string | null
-          convite_id?: string
+          convite_id?: string | null
           created_at?: string
           id?: string
           identificacao_voluntaria?: boolean
