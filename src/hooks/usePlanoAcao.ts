@@ -240,18 +240,22 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
   // Minhas ações (inbox)
   const { data: minhasAcoes = [], isLoading: isLoadingMinhasAcoes } = useQuery({
-    queryKey: ["plano-minhas-acoes", tenantId, user?.id],
+    queryKey: ["plano-minhas-acoes", tenantId, user?.id, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId || !user?.id) return [];
 
       // Ações onde sou responsável
-      const { data: responsavel, error: errResp } = await supabase
+      let respQuery = supabase
         .from("plano_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("responsavel_id", user.id)
         .neq("status", "concluida")
         .order("pontuacao_gut", { ascending: false });
+
+      if (empresaAtivaId) respQuery = respQuery.eq("empresa_id", empresaAtivaId);
+
+      const { data: responsavel, error: errResp } = await respQuery;
 
       if (errResp) throw errResp;
 
@@ -267,11 +271,15 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       const participanteIds = participante?.map((p) => p.acao_id) || [];
 
       if (participanteIds.length > 0) {
-        const { data: acoesParticipante, error: errAcoes } = await supabase
+        let partQuery = supabase
           .from("plano_acoes")
           .select("*")
           .in("id", participanteIds)
           .neq("status", "concluida");
+
+        if (empresaAtivaId) partQuery = partQuery.eq("empresa_id", empresaAtivaId);
+
+        const { data: acoesParticipante, error: errAcoes } = await partQuery;
 
         if (errAcoes) throw errAcoes;
 
