@@ -24,6 +24,7 @@ import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
 import { SSTAlertasTab } from "@/components/sst/SSTAlertasTab";
 import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
+import { SSTDocumentosTab } from "@/components/sst/SSTDocumentosTab";
 import { ImportacaoInteligente } from "@/components/sst/importacao/ImportacaoInteligente";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -80,10 +81,17 @@ const ComplianceSST = () => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
           <TabsTrigger value="importacao" className="text-xs md:text-sm">
             <Sparkles className="w-4 h-4 mr-1.5" />
             Importação IA
+          </TabsTrigger>
+          <TabsTrigger value="documentos" className="text-xs md:text-sm">
+            <FileText className="w-4 h-4 mr-1.5" />
+            Documentos
+            {documentos.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 h-4">{documentos.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="painel" className="text-xs md:text-sm">
             <BarChart3 className="w-4 h-4 mr-1.5" />
@@ -105,7 +113,12 @@ const ComplianceSST = () => {
 
         {/* IMPORTAÇÃO INTELIGENTE */}
         <TabsContent value="importacao" className="space-y-4">
-          <ImportacaoInteligente />
+          <ImportacaoInteligente onImportado={() => setActiveTab("documentos")} />
+        </TabsContent>
+
+        {/* DOCUMENTOS IMPORTADOS */}
+        <TabsContent value="documentos" className="space-y-4">
+          <SSTDocumentosTab />
         </TabsContent>
 
         {/* PAINEL */}

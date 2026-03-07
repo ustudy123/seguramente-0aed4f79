@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 interface Props {
   state: ImportacaoState;
   resetar: () => void;
+  onVerDocumentos?: () => void;
 }
 
-export function EtapaConsolidacao({ state, resetar }: Props) {
+export function EtapaConsolidacao({ state, resetar, onVerDocumentos }: Props) {
   const navigate = useNavigate();
   const dados = state.dadosExtraidos;
 
@@ -127,6 +128,12 @@ export function EtapaConsolidacao({ state, resetar }: Props) {
           <RotateCcw className="w-4 h-4 mr-2" />
           Importar Outro Documento
         </Button>
+        {onVerDocumentos && (
+          <Button variant="secondary" onClick={onVerDocumentos}>
+            <FileText className="w-4 h-4 mr-2" />
+            Ver Documentos Importados
+          </Button>
+        )}
         <Button onClick={() => navigate("/plano-acao")}>
           Ver Plano de Ação
           <ArrowRight className="w-4 h-4 ml-2" />
