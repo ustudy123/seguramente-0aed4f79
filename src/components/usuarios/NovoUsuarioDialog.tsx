@@ -22,10 +22,12 @@ import { CpfInput } from "@/components/ui/cpf-input";
 
 const schema = z.object({
   nome_completo: z.string().min(3, "Nome obrigatório"),
+  nome_social: z.string().optional(),
   email_principal: z.string().email("E-mail inválido"),
   cpf: z.string().optional(),
   telefone_principal: z.string().optional(),
   cargo_funcao: z.string().optional(),
+  matricula: z.string().optional(),
   data_nascimento: z.string().optional(),
   tipo_usuario: z.string(),
   observacoes: z.string().optional(),
@@ -155,10 +157,12 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       try {
         const usuario = await createUsuario.mutateAsync({
           nome_completo: data.nome_completo,
+          nome_social: data.nome_social || undefined,
           email_principal: data.email_principal,
           cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
           telefone_principal: data.telefone_principal,
           cargo_funcao: data.cargo_funcao,
+          matricula: data.matricula || undefined,
           data_nascimento: data.data_nascimento || undefined,
           tipo_usuario: data.tipo_usuario as UsuarioTipo,
           observacoes: data.observacoes,
@@ -297,7 +301,18 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo.message}</p>}
                   </div>
 
-                  {/* Linha 3: E-mail (full width) */}
+                  {/* Linha 3: Nome Social + Matrícula */}
+                  <div className="space-y-1.5">
+                    <Label>Nome Social <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                    <Input {...register("nome_social")} placeholder="Como prefere ser chamado(a)" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Matrícula / Código Interno</Label>
+                    <Input {...register("matricula")} placeholder="EMP-0042" />
+                  </div>
+
+                  {/* Linha 4: E-mail (full width) */}
                   <div className="sm:col-span-2 space-y-1.5">
                     <Label>E-mail *</Label>
                     <Input {...register("email_principal")} type="email" placeholder="maria@empresa.com"
