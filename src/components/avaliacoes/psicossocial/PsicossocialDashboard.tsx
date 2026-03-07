@@ -184,6 +184,14 @@ export function PsicossocialDashboard() {
             <BarChart3 className="h-4 w-4" />
             Campanhas
           </TabsTrigger>
+          <TabsTrigger value="historico" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Histórico IPS
+          </TabsTrigger>
+          <TabsTrigger value="pgr" className="gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Inventário PGR
+          </TabsTrigger>
           <TabsTrigger value="instrumentos" className="gap-2">
             <FileText className="h-4 w-4" />
             Instrumentos
@@ -206,6 +214,16 @@ export function PsicossocialDashboard() {
         {/* Tab: Campanhas */}
         <TabsContent value="campanhas" className="mt-4">
           <CampanhaList campanhas={campanhas} onNovaCampanha={handleNovaCampanha} />
+        </TabsContent>
+
+        {/* Tab: Histórico IPS */}
+        <TabsContent value="historico" className="mt-4 space-y-4">
+          <IPSHistoricoChart campanhas={campanhas} />
+        </TabsContent>
+
+        {/* Tab: Inventário PGR */}
+        <TabsContent value="pgr" className="mt-4 space-y-4">
+          <InventarioPGR campanhas={campanhas} />
         </TabsContent>
 
         {/* Tab: Instrumentos */}
