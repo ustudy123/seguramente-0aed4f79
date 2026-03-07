@@ -177,6 +177,7 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
       const { error } = await supabase.from("plano_acoes").insert([{
         tenant_id: profile.tenant_id,
+        codigo: `SST-${Date.now()}`, // será sobrescrito pelo trigger gerar_codigo_acao
         titulo,
         descricao,
         porque,
