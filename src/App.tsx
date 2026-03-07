@@ -185,9 +185,7 @@ const App = () => (
               <Route path="/hub-contabil" element={<HubContabil />} />
               <Route path="/analise-jornada" element={<AnaliseJornada />} />
               <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/perfis-acesso" element={<PerfisAcesso />} />
-              <Route path="/configuracoes" element={<Configuracoes />} />
-              {/* Catch-all inside protected layout */}
+              <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
