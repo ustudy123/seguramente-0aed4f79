@@ -17,6 +17,7 @@ import {
   Lock,
   Flame,
   Battery,
+  ClipboardList,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ import { IPSGauge } from "./IPSGauge";
 import { InstrumentosVisualizacao } from "./InstrumentosVisualizacao";
 import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
+import { IPSHistoricoChart } from "./IPSHistoricoChart";
+import { InventarioPGR } from "./InventarioPGR";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
