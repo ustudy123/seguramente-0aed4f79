@@ -272,8 +272,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-                  {/* Linha 1: CPF primeiro — dispara lookup ao preencher */}
-                  <div className="space-y-1.5">
+                  {/* Linha 1: CPF (full width) — dispara lookup ao preencher */}
+                  <div className="sm:col-span-2 space-y-1.5">
                     <Label className="flex items-center gap-1.5">
                       CPF
                       {buscandoCpf && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
@@ -288,11 +288,6 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                       onBlur={() => verificarDuplicidade(watchedValues.email_principal, watchedValues.cpf)}
                       placeholder="000.000.000-00"
                     />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label>Telefone / WhatsApp</Label>
-                    <Input {...register("telefone_principal")} placeholder="(11) 99000-0000" />
                   </div>
 
                   {/* Linha 2: Nome Completo (full width) */}
@@ -319,6 +314,12 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   <div className="space-y-1.5">
                     <Label>Cargo / Função</Label>
                     <Input {...register("cargo_funcao")} placeholder="Analista de RH" />
+                  </div>
+
+                  {/* Linha 5: Telefone */}
+                  <div className="space-y-1.5">
+                    <Label>Telefone / WhatsApp</Label>
+                    <Input {...register("telefone_principal")} placeholder="(11) 99000-0000" />
                   </div>
 
                   {/* Linha 5: Tipo de Usuário (full width) */}
