@@ -318,17 +318,29 @@ export function usePsicossocial() {
 
   // Calcular estatísticas de uma campanha
   const calcularEstatisticas = async (campanhaId: string): Promise<EstatisticasCampanha> => {
-    const convites = await buscarConvites(campanhaId);
-    const respostas = await buscarRespostas(campanhaId);
+    const [convites, respostas] = await Promise.all([
+      buscarConvites(campanhaId),
+      buscarRespostas(campanhaId),
+    ]);
 
-    const total = convites.length;
+    // Convites individuais (campanhas com distribuição nominal)
+    const totalConvites = convites.length;
     const pendentes = convites.filter(c => c.status === 'pendente').length;
     const iniciados = convites.filter(c => c.status === 'iniciado').length;
-    const concluidos = convites.filter(c => c.status === 'concluido').length;
+    const concluidosConvites = convites.filter(c => c.status === 'concluido').length;
     const expirados = convites.filter(c => c.status === 'expirado').length;
 
+    // Para campanhas anônimas via link público, respostas não têm convite vinculado.
+    // Usamos a contagem de respostas como fonte de verdade para "concluídas".
+    // Se há convites, usamos a contagem de convites concluídos (para mostrar % de adesão).
+    // Se não há convites (campanha anônima por link), usamos a contagem de respostas diretamente.
+    const totalRespostas = respostas.length;
+    const concluidos = totalConvites > 0 ? concluidosConvites : totalRespostas;
+    const total = totalConvites > 0 ? totalConvites : totalRespostas;
+
     const MINIMO_ANONIMATO = 5;
-    const anonimato_garantido = concluidos >= MINIMO_ANONIMATO;
+    // Anonimato é garantido pelo número total de respostas recebidas (não de convites)
+    const anonimato_garantido = totalRespostas >= MINIMO_ANONIMATO;
 
     // IPS médio agregado (só exibido com anonimato garantido)
     const respostasComIPS = respostas.filter(r => r.indicadores?.IPS !== undefined);
@@ -366,7 +378,7 @@ export function usePsicossocial() {
       iniciados,
       concluidos,
       expirados,
-      taxa_participacao: total > 0 ? (concluidos / total) * 100 : 0,
+      taxa_participacao: total > 0 ? (totalRespostas / total) * 100 : 0,
       anonimato_garantido,
       ips,
       ips_classificacao: ips !== undefined ? calcularIPSClassificacao(ips) : undefined,
