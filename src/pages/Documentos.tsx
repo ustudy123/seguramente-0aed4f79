@@ -67,6 +67,9 @@ const Documentos = () => {
   const [createPastaParentId, setCreatePastaParentId] = useState<string | null>(null);
   const [createPastaParentNome, setCreatePastaParentNome] = useState<string | null>(null);
   const [pastaToDelete, setPastaToDelete] = useState<string | null>(null);
+  const [pastaToRename, setPastaToRename] = useState<DocumentoPastaNode | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
