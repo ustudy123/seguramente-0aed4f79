@@ -1,0 +1,1 @@
+ALTER TABLE public.admissoes ADD COLUMN IF NOT EXISTS matricula_esocial TEXT;
