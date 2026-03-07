@@ -37,6 +37,7 @@ export interface DadosPlanilha {
   salario: string;
   centroCusto: string;
   gestorImediato: string;
+  matriculaEsocial: string;
   banco: string;
   agencia: string;
   conta: string;
@@ -79,6 +80,7 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   salario: ["salario", "salário", "remuneracao", "remuneração", "salario base", "salário base"],
   centroCusto: ["centro custo", "centro_custo", "centrocusto", "cc", "cost center"],
   gestorImediato: ["gestor", "gestor imediato", "gestor_imediato", "supervisor", "lider", "líder"],
+  matriculaEsocial: ["matricula esocial", "matrícula esocial", "matricula_esocial", "esocial", "e-social", "mat esocial"],
   banco: ["banco", "banco codigo", "código banco"],
   agencia: ["agencia", "agência", "ag", "ag."],
   conta: ["conta", "numero conta", "número conta", "conta corrente", "conta_corrente"],
