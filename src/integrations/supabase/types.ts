@@ -9400,6 +9400,297 @@ export type Database = {
           },
         ]
       }
+      perfil_audit_log: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          descricao: string | null
+          id: string
+          perfil_id: string | null
+          realizado_por: string | null
+          realizado_por_nome: string | null
+          tenant_id: string
+          usuario_alvo_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          id?: string
+          perfil_id?: string | null
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id: string
+          usuario_alvo_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          id?: string
+          perfil_id?: string | null
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id?: string
+          usuario_alvo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_audit_log_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_acesso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfil_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfil_excecoes: {
+        Row: {
+          acao: Database["public"]["Enums"]["perfil_acao"]
+          ativo: boolean
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          empresa_id: string | null
+          escopo: Database["public"]["Enums"]["perfil_escopo_tipo"]
+          expira_em: string | null
+          id: string
+          justificativa: string | null
+          modulo: string
+          recurso: string | null
+          tenant_id: string
+          tipo: string
+          usuario_id: string
+        }
+        Insert: {
+          acao: Database["public"]["Enums"]["perfil_acao"]
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          empresa_id?: string | null
+          escopo?: Database["public"]["Enums"]["perfil_escopo_tipo"]
+          expira_em?: string | null
+          id?: string
+          justificativa?: string | null
+          modulo: string
+          recurso?: string | null
+          tenant_id: string
+          tipo?: string
+          usuario_id: string
+        }
+        Update: {
+          acao?: Database["public"]["Enums"]["perfil_acao"]
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          empresa_id?: string | null
+          escopo?: Database["public"]["Enums"]["perfil_escopo_tipo"]
+          expira_em?: string | null
+          id?: string
+          justificativa?: string | null
+          modulo?: string
+          recurso?: string | null
+          tenant_id?: string
+          tipo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_excecoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfil_excecoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfil_permissoes: {
+        Row: {
+          acao: Database["public"]["Enums"]["perfil_acao"]
+          ativo: boolean
+          created_at: string
+          escopo: Database["public"]["Enums"]["perfil_escopo_tipo"]
+          id: string
+          modulo: string
+          observacao: string | null
+          perfil_id: string
+          recurso: string | null
+          requer_2fa: boolean
+          tenant_id: string
+        }
+        Insert: {
+          acao: Database["public"]["Enums"]["perfil_acao"]
+          ativo?: boolean
+          created_at?: string
+          escopo?: Database["public"]["Enums"]["perfil_escopo_tipo"]
+          id?: string
+          modulo: string
+          observacao?: string | null
+          perfil_id: string
+          recurso?: string | null
+          requer_2fa?: boolean
+          tenant_id: string
+        }
+        Update: {
+          acao?: Database["public"]["Enums"]["perfil_acao"]
+          ativo?: boolean
+          created_at?: string
+          escopo?: Database["public"]["Enums"]["perfil_escopo_tipo"]
+          id?: string
+          modulo?: string
+          observacao?: string | null
+          perfil_id?: string
+          recurso?: string | null
+          requer_2fa?: boolean
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_permissoes_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_acesso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfil_permissoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfil_templates: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          criado_em: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          modulos_padrao: Json | null
+          nome: string
+          tipo_usuario_sugerido: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          criado_em?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          modulos_padrao?: Json | null
+          nome: string
+          tipo_usuario_sugerido?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          criado_em?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          modulos_padrao?: Json | null
+          nome?: string
+          tipo_usuario_sugerido?: string | null
+        }
+        Relationships: []
+      }
+      perfis_acesso: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          expira_em: string | null
+          icone: string | null
+          id: string
+          nome: string
+          permite_acumulo: boolean
+          template_origem_id: string | null
+          tenant_id: string
+          tipo: string
+          total_usuarios: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          expira_em?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          permite_acumulo?: boolean
+          template_origem_id?: string | null
+          tenant_id: string
+          tipo?: string
+          total_usuarios?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          expira_em?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          permite_acumulo?: boolean
+          template_origem_id?: string | null
+          tenant_id?: string
+          tipo?: string
+          total_usuarios?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfis_acesso_template_origem_id_fkey"
+            columns: ["template_origem_id"]
+            isOneToOne: false
+            referencedRelation: "perfil_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfis_acesso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissao_trabalhadores: {
         Row: {
           apto: boolean
@@ -13442,6 +13733,73 @@ export type Database = {
           },
         ]
       }
+      usuario_perfil_vinculos: {
+        Row: {
+          ativo: boolean
+          atribuido_por: string | null
+          atribuido_por_nome: string | null
+          created_at: string
+          empresa_id: string | null
+          expira_em: string | null
+          id: string
+          observacao: string | null
+          perfil_id: string
+          tenant_id: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          atribuido_por?: string | null
+          atribuido_por_nome?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          expira_em?: string | null
+          id?: string
+          observacao?: string | null
+          perfil_id: string
+          tenant_id: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          ativo?: boolean
+          atribuido_por?: string | null
+          atribuido_por_nome?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          expira_em?: string | null
+          id?: string
+          observacao?: string | null
+          perfil_id?: string
+          tenant_id?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_perfil_vinculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_perfil_vinculos_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfis_acesso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_perfil_vinculos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuario_vinculos: {
         Row: {
           aprovado_por_nome: string | null
@@ -14024,6 +14382,34 @@ export type Database = {
         | "cancelada"
       pdi_periodo: "trimestral" | "semestral" | "anual" | "personalizado"
       pdi_status: "rascunho" | "ativo" | "pausado" | "concluido" | "cancelado"
+      perfil_acao:
+        | "visualizar"
+        | "criar"
+        | "editar"
+        | "excluir"
+        | "inativar"
+        | "exportar"
+        | "importar"
+        | "aprovar"
+        | "assinar"
+        | "compartilhar"
+        | "parametrizar"
+        | "administrar"
+        | "acessar_sensivel"
+        | "acessar_anonimizado"
+        | "ver_indicadores"
+        | "ver_individual"
+      perfil_escopo_tipo:
+        | "proprio_usuario"
+        | "subordinados_diretos"
+        | "equipe_direta_indireta"
+        | "setor"
+        | "unidade"
+        | "empresa_inteira"
+        | "grupo_economico"
+        | "multiplas_empresas"
+        | "carteira_clientes"
+        | "customizado"
       pt_status:
         | "rascunho"
         | "liberada"
@@ -14427,6 +14813,36 @@ export const Constants = {
       ],
       pdi_periodo: ["trimestral", "semestral", "anual", "personalizado"],
       pdi_status: ["rascunho", "ativo", "pausado", "concluido", "cancelado"],
+      perfil_acao: [
+        "visualizar",
+        "criar",
+        "editar",
+        "excluir",
+        "inativar",
+        "exportar",
+        "importar",
+        "aprovar",
+        "assinar",
+        "compartilhar",
+        "parametrizar",
+        "administrar",
+        "acessar_sensivel",
+        "acessar_anonimizado",
+        "ver_indicadores",
+        "ver_individual",
+      ],
+      perfil_escopo_tipo: [
+        "proprio_usuario",
+        "subordinados_diretos",
+        "equipe_direta_indireta",
+        "setor",
+        "unidade",
+        "empresa_inteira",
+        "grupo_economico",
+        "multiplas_empresas",
+        "carteira_clientes",
+        "customizado",
+      ],
       pt_status: [
         "rascunho",
         "liberada",

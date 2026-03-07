@@ -36,8 +36,9 @@ import {
   Search,
   X,
   Brain,
-  BarChart3 } from
-"lucide-react";
+  BarChart3,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 
@@ -94,6 +95,7 @@ const menuSections: MenuSection[] = [
   items: [
   { title: "Colaboradores", icon: Users, path: "/colaboradores" },
   { title: "Usuários do Sistema", icon: UserCog, path: "/usuarios" },
+  { title: "Perfis & Acessos", icon: ShieldCheck, path: "/perfis-acesso" },
   { title: "Onboarding", icon: UserPlus, path: "/onboarding" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
   { title: "Atestados", icon: Stethoscope, path: "/atestados" },

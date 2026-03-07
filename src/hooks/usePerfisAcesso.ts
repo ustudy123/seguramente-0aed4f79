@@ -1,0 +1,344 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+
+export interface PerfilTemplate {
+  id: string;
+  nome: string;
+  descricao?: string;
+  icone?: string;
+  cor?: string;
+  tipo_usuario_sugerido?: string;
+  modulos_padrao: ModuloPadrao[];
+  ativo: boolean;
+  criado_em: string;
+}
+
+export interface ModuloPadrao {
+  modulo: string;
+  acoes: string[];
+  escopo: string;
+  recurso?: string;
+}
+
+export interface PerfilAcesso {
+  id: string;
+  tenant_id: string;
+  nome: string;
+  descricao?: string;
+  icone?: string;
+  cor: string;
+  template_origem_id?: string;
+  tipo: "padrao_sistema" | "clonado" | "personalizado";
+  ativo: boolean;
+  permite_acumulo: boolean;
+  expira_em?: string;
+  total_usuarios: number;
+  criado_por?: string;
+  criado_por_nome?: string;
+  created_at: string;
+  updated_at: string;
+  // joined
+  permissoes?: PerfilPermissao[];
+}
+
+export interface PerfilPermissao {
+  id: string;
+  perfil_id: string;
+  tenant_id: string;
+  modulo: string;
+  recurso?: string;
+  acao: string;
+  escopo: string;
+  ativo: boolean;
+  requer_2fa: boolean;
+  observacao?: string;
+  created_at: string;
+}
+
+export interface UsuarioPerfilVinculo {
+  id: string;
+  tenant_id: string;
+  usuario_id: string;
+  empresa_id?: string;
+  perfil_id: string;
+  ativo: boolean;
+  atribuido_por?: string;
+  atribuido_por_nome?: string;
+  expira_em?: string;
+  observacao?: string;
+  created_at: string;
+  // joined
+  perfil?: PerfilAcesso;
+  usuario?: { nome_completo: string; email_principal: string; foto_url?: string };
+}
+
+export const MODULOS_SISTEMA = [
+  { id: "colaboradores", label: "Colaboradores", grupo: "Pessoas" },
+  { id: "admissoes", label: "Admissões", grupo: "Pessoas" },
+  { id: "usuarios", label: "Usuários do Sistema", grupo: "Pessoas" },
+  { id: "perfis_acesso", label: "Perfis & Acessos", grupo: "Pessoas" },
+  { id: "ferias", label: "Férias", grupo: "Pessoas" },
+  { id: "atestados", label: "Atestados", grupo: "Saúde" },
+  { id: "ponto", label: "Ponto", grupo: "Pessoas" },
+  { id: "sst", label: "Compliance SST", grupo: "Saúde & Segurança" },
+  { id: "incidentes", label: "Incidentes & Acidentes", grupo: "Saúde & Segurança" },
+  { id: "epi", label: "EPIs", grupo: "Saúde & Segurança" },
+  { id: "ergonomia", label: "Ergonomia NR-17", grupo: "Saúde & Segurança" },
+  { id: "psicossocial", label: "Psicossocial NR-01", grupo: "Saúde & Segurança" },
+  { id: "plano_acao", label: "Plano de Ação", grupo: "Estratégia" },
+  { id: "estrategia", label: "Estratégia & Governança", grupo: "Estratégia" },
+  { id: "avaliacoes", label: "Avaliações", grupo: "Desenvolvimento" },
+  { id: "pdi", label: "PDI", grupo: "Desenvolvimento" },
+  { id: "trilhas", label: "Trilhas", grupo: "Desenvolvimento" },
+  { id: "onboarding", label: "Onboarding", grupo: "Desenvolvimento" },
+  { id: "feedback", label: "Feedback & Ocorrências", grupo: "Cultura" },
+  { id: "ouvidoria", label: "Ouvidoria", grupo: "Cultura" },
+  { id: "bem_estar", label: "Bem-Estar", grupo: "Cultura" },
+  { id: "cultura", label: "Cultura & Celebrações", grupo: "Cultura" },
+  { id: "feed", label: "Mural Interno", grupo: "Cultura" },
+  { id: "financeiro", label: "Financeiro", grupo: "Financeiro" },
+  { id: "beneficios", label: "Benefícios", grupo: "Financeiro" },
+  { id: "hub_contabil", label: "Hub Contábil", grupo: "Financeiro" },
+  { id: "documentos", label: "Documentos", grupo: "Documentos" },
+  { id: "terceiros", label: "Terceiros & SST", grupo: "Documentos" },
+  { id: "marketplace", label: "Rede de Parceiros", grupo: "Outros" },
+  { id: "configuracoes", label: "Configurações", grupo: "Outros" },
+];
+
+export const ACOES_DISPONIVEIS = [
+  { id: "visualizar", label: "Visualizar", sensivel: false },
+  { id: "criar", label: "Criar", sensivel: false },
+  { id: "editar", label: "Editar", sensivel: false },
+  { id: "excluir", label: "Excluir", sensivel: false },
+  { id: "inativar", label: "Inativar/Arquivar", sensivel: false },
+  { id: "exportar", label: "Exportar", sensivel: false },
+  { id: "importar", label: "Importar", sensivel: false },
+  { id: "aprovar", label: "Aprovar", sensivel: false },
+  { id: "assinar", label: "Assinar", sensivel: false },
+  { id: "compartilhar", label: "Compartilhar", sensivel: false },
+  { id: "parametrizar", label: "Parametrizar", sensivel: false },
+  { id: "administrar", label: "Administrar", sensivel: true },
+  { id: "acessar_sensivel", label: "Acessar Dados Sensíveis", sensivel: true },
+  { id: "acessar_anonimizado", label: "Acessar Dados Anonimizados", sensivel: false },
+  { id: "ver_indicadores", label: "Ver Indicadores Agregados", sensivel: false },
+  { id: "ver_individual", label: "Ver Dados Individualizados", sensivel: true },
+];
+
+export const ESCOPOS_DISPONIVEIS = [
+  { id: "proprio_usuario", label: "Próprio usuário" },
+  { id: "subordinados_diretos", label: "Subordinados diretos" },
+  { id: "equipe_direta_indireta", label: "Equipe direta e indireta" },
+  { id: "setor", label: "Setor" },
+  { id: "unidade", label: "Unidade" },
+  { id: "empresa_inteira", label: "Empresa inteira" },
+  { id: "grupo_economico", label: "Grupo econômico" },
+  { id: "multiplas_empresas", label: "Múltiplas empresas" },
+  { id: "carteira_clientes", label: "Carteira de clientes" },
+  { id: "customizado", label: "Customizado" },
+];
+
+async function logAuditPerfil(
+  tenantId: string,
+  perfilId: string | null,
+  acao: string,
+  descricao: string,
+  dadosAnteriores?: unknown,
+  dadosNovos?: unknown,
+  realizadoPorNome?: string
+) {
+  try {
+    await (supabase as any).from("perfil_audit_log").insert({
+      tenant_id: tenantId,
+      perfil_id: perfilId,
+      acao,
+      descricao,
+      dados_anteriores: dadosAnteriores || null,
+      dados_novos: dadosNovos || null,
+      realizado_por_nome: realizadoPorNome,
+    });
+  } catch { /* non-blocking */ }
+}
+
+export function usePerfisAcesso() {
+  const { tenantId, profile, user } = useAuth();
+  const qc = useQueryClient();
+
+  // Templates do sistema
+  const { data: templates = [], isLoading: loadingTemplates } = useQuery({
+    queryKey: ["perfil_templates"],
+    queryFn: async (): Promise<PerfilTemplate[]> => {
+      const { data, error } = await (supabase as any)
+        .from("perfil_templates")
+        .select("*")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) throw error;
+      return (data || []).map((t: any) => ({
+        ...t,
+        modulos_padrao: Array.isArray(t.modulos_padrao) ? t.modulos_padrao : [],
+      }));
+    },
+    staleTime: 1000 * 60 * 30,
+  });
+
+  // Perfis do tenant
+  const { data: perfis = [], isLoading: loadingPerfis } = useQuery({
+    queryKey: ["perfis_acesso", tenantId],
+    queryFn: async (): Promise<PerfilAcesso[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await (supabase as any)
+        .from("perfis_acesso")
+        .select("*, permissoes:perfil_permissoes(*)")
+        .eq("tenant_id", tenantId)
+        .order("nome");
+      if (error) throw error;
+      return (data || []) as PerfilAcesso[];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Vínculos (usuário ↔ perfil)
+  const { data: vinculos = [], isLoading: loadingVinculos } = useQuery({
+    queryKey: ["usuario_perfil_vinculos", tenantId],
+    queryFn: async (): Promise<UsuarioPerfilVinculo[]> => {
+      if (!tenantId) return [];
+      const { data, error } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .select("*, perfil:perfil_id(id,nome,cor,icone), usuario:usuario_id(nome_completo,email_principal,foto_url)")
+        .eq("tenant_id", tenantId)
+        .eq("ativo", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as UsuarioPerfilVinculo[];
+    },
+    enabled: !!tenantId,
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["perfis_acesso"] });
+    qc.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
+  };
+
+  // CRUD Perfis
+  const createPerfil = useMutation({
+    mutationFn: async (payload: Partial<PerfilAcesso> & { permissoes?: Partial<PerfilPermissao>[] }) => {
+      if (!tenantId) throw new Error("Sem tenant");
+      const { permissoes, ...perfilData } = payload;
+      const { data, error } = await (supabase as any)
+        .from("perfis_acesso")
+        .insert({ ...perfilData, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
+        .select().single();
+      if (error) throw error;
+      if (permissoes?.length) {
+        const perms = permissoes.map((p) => ({ ...p, perfil_id: data.id, tenant_id: tenantId }));
+        await (supabase as any).from("perfil_permissoes").insert(perms);
+      }
+      await logAuditPerfil(tenantId, data.id, "criacao", `Perfil "${data.nome}" criado`, null, perfilData, profile?.nome_completo);
+      return data as PerfilAcesso;
+    },
+    onSuccess: () => { invalidate(); toast.success("Perfil criado com sucesso!"); },
+    onError: (e: any) => toast.error("Erro ao criar perfil: " + e.message),
+  });
+
+  const updatePerfil = useMutation({
+    mutationFn: async ({ id, permissoes, ...payload }: Partial<PerfilAcesso> & { id: string; permissoes?: Partial<PerfilPermissao>[] }) => {
+      const { data: before } = await (supabase as any).from("perfis_acesso").select("*").eq("id", id).single();
+      const { error } = await (supabase as any).from("perfis_acesso").update(payload).eq("id", id);
+      if (error) throw error;
+      if (permissoes !== undefined) {
+        await (supabase as any).from("perfil_permissoes").delete().eq("perfil_id", id);
+        if (permissoes.length) {
+          await (supabase as any).from("perfil_permissoes").insert(
+            permissoes.map((p) => ({ ...p, perfil_id: id, tenant_id: tenantId }))
+          );
+        }
+      }
+      await logAuditPerfil(tenantId!, id, "edicao", `Perfil "${before?.nome}" editado`, before, payload, profile?.nome_completo);
+    },
+    onSuccess: () => { invalidate(); toast.success("Perfil atualizado!"); },
+    onError: (e: any) => toast.error("Erro: " + e.message),
+  });
+
+  const togglePerfilStatus = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { error } = await (supabase as any).from("perfis_acesso").update({ ativo }).eq("id", id);
+      if (error) throw error;
+      await logAuditPerfil(tenantId!, id, ativo ? "ativacao" : "inativacao", `Perfil ${ativo ? "ativado" : "inativado"}`, null, { ativo }, profile?.nome_completo);
+    },
+    onSuccess: () => { invalidate(); toast.success("Status atualizado!"); },
+    onError: (e: any) => toast.error("Erro: " + e.message),
+  });
+
+  const clonarTemplate = useMutation({
+    mutationFn: async (template: PerfilTemplate) => {
+      if (!tenantId) throw new Error("Sem tenant");
+      const { data, error } = await (supabase as any)
+        .from("perfis_acesso")
+        .insert({
+          tenant_id: tenantId,
+          nome: template.nome,
+          descricao: template.descricao,
+          icone: template.icone,
+          cor: template.cor,
+          template_origem_id: template.id,
+          tipo: "clonado",
+          criado_por: user?.id,
+          criado_por_nome: profile?.nome_completo,
+        })
+        .select().single();
+      if (error) throw error;
+      // Criar permissões a partir dos modulos_padrao
+      if (template.modulos_padrao?.length) {
+        const perms = template.modulos_padrao.flatMap((m) =>
+          m.acoes.map((acao) => ({
+            perfil_id: data.id,
+            tenant_id: tenantId,
+            modulo: m.modulo,
+            recurso: m.recurso || null,
+            acao,
+            escopo: m.escopo,
+          }))
+        );
+        await (supabase as any).from("perfil_permissoes").insert(perms);
+      }
+      await logAuditPerfil(tenantId, data.id, "clonagem", `Template "${template.nome}" clonado como perfil`, null, { template_id: template.id }, profile?.nome_completo);
+      return data;
+    },
+    onSuccess: () => { invalidate(); toast.success("Template clonado como perfil!"); },
+    onError: (e: any) => toast.error("Erro ao clonar: " + e.message),
+  });
+
+  // Vínculos
+  const vincularPerfil = useMutation({
+    mutationFn: async (payload: { usuario_id: string; perfil_id: string; empresa_id?: string; observacao?: string }) => {
+      if (!tenantId) throw new Error("Sem tenant");
+      const { data, error } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .insert({ ...payload, tenant_id: tenantId, atribuido_por: user?.id, atribuido_por_nome: profile?.nome_completo })
+        .select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => { invalidate(); toast.success("Perfil vinculado ao usuário!"); },
+    onError: (e: any) => toast.error("Erro: " + e.message),
+  });
+
+  const desvincularPerfil = useMutation({
+    mutationFn: async (vinculoId: string) => {
+      const { error } = await (supabase as any).from("usuario_perfil_vinculos").update({ ativo: false }).eq("id", vinculoId);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("Vínculo removido!"); },
+    onError: (e: any) => toast.error("Erro: " + e.message),
+  });
+
+  return {
+    templates, loadingTemplates,
+    perfis, loadingPerfis,
+    vinculos, loadingVinculos,
+    createPerfil, updatePerfil, togglePerfilStatus, clonarTemplate,
+    vincularPerfil, desvincularPerfil,
+  };
+}

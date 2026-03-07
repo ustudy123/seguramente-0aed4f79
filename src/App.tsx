@@ -62,6 +62,7 @@ import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
 import AnaliseJornada from "./pages/AnaliseJornada";
 import Usuarios from "./pages/Usuarios";
+import PerfisAcesso from "./pages/PerfisAcesso";
 
 // Cadastros Pages
 import Departamentos from "./pages/cadastros/Departamentos";
@@ -183,6 +184,7 @@ const App = () => (
               <Route path="/hub-contabil" element={<HubContabil />} />
               <Route path="/analise-jornada" element={<AnaliseJornada />} />
               <Route path="/usuarios" element={<Usuarios />} />
+              <Route path="/perfis-acesso" element={<PerfisAcesso />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               {/* Catch-all inside protected layout */}
               <Route path="*" element={<NotFound />} />
