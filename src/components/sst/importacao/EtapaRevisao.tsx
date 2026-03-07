@@ -154,37 +154,53 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
       const { data: profile } = await supabase.from("profiles").select("tenant_id").eq("user_id", session.user.id).maybeSingle();
       if (!profile?.tenant_id) { toast.error("Tenant não encontrado"); return; }
 
-      const prioridadeMap: Record<string, string> = { alta: "urgente", media: "medio", baixa: "baixo" };
-      const prazoDate = parsePrazo(acao.when || acao.prazo);
-      const titulo = acao.what || (acao.recomendacao.length > 100 ? acao.recomendacao.substring(0, 97) + "..." : acao.recomendacao);
+      // Normalizar prioridade para o enum do banco: baixo | medio | urgente | imediato
+      const prioridadeMap: Record<string, string> = {
+        alta: "urgente", media: "medio", baixa: "baixo",
+        urgente: "urgente", imediato: "imediato", medio: "medio", baixo: "baixo",
+      };
+
+      // Texto base da ação — prioriza what (5W2H), depois recomendacao
+      const textoBase = acao.what || acao.recomendacao || "Ação extraída de documento SST";
+      const titulo = textoBase.length > 200 ? textoBase.substring(0, 197) + "..." : textoBase;
+      const descricao = acao.recomendacao || acao.what || textoBase;
       const porque = acao.why || `Recomendação extraída de documento ${tipo} via Importação Inteligente`;
-      const onde = acao.where || acao.setor || "Geral";
-      const como = acao.how || acao.recomendacao;
+      const onde = acao.where || acao.setor || "A definir";
+      const como = acao.how || descricao;
       const quem = acao.who || acao.responsavel || "A definir";
+      const prazoDate = parsePrazo(acao.when || acao.prazo);
+
+      // Mapear tipo: corretiva para prioridade alta, melhoria para baixa, preventiva para demais
+      const tipoAcao = acao.prioridade === "alta" ? "corretiva"
+        : acao.prioridade === "baixa" ? "melhoria"
+        : "preventiva";
 
       const { error } = await supabase.from("plano_acoes").insert([{
         tenant_id: profile.tenant_id,
-        codigo: `TEMP-${Date.now()}`,
         titulo,
-        descricao: acao.recomendacao,
+        descricao,
         porque,
         onde,
         como,
         responsavel_nome: quem,
-        prazo: prazoDate,
-        tipo: (acao.prioridade === "alta" ? "corretiva" : "preventiva") as any,
+        prazo: prazoDate || null,
+        tipo: tipoAcao,
         prioridade: (prioridadeMap[acao.prioridade] || "medio") as any,
         status: "pendente" as any,
-        origem_modulo: "manual" as any,
+        origem_modulo: "manual",
         origem_descricao: `Importado de: ${state.arquivo?.name || "documento SST"} (${tipo})`,
         criado_por: session.user.id,
         criado_por_nome: session.user.email,
         progresso: 0,
+        exige_evidencia: false,
+        tempo_gasto_minutos: 0,
       }]);
+
       if (error) throw error;
       setAcoesSalvas(prev => new Set([...prev, index]));
       toast.success("Ação enviada para o Plano de Ação!");
     } catch (err: any) {
+      console.error("Erro enviarAcaoPlano:", err);
       toast.error("Erro ao enviar ação: " + err.message);
     }
   };
