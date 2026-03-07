@@ -4,7 +4,6 @@ import {
   Brain,
   TrendingUp,
   Users,
-  Download,
   ShieldCheck,
   Lock,
   Sparkles,
@@ -12,7 +11,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   GitCompare,
+  Wrench,
 } from "lucide-react";
+import { ExportarRelatorio } from "./ExportarRelatorio";
+import { IntegracaoErgonomiaAEP } from "./IntegracaoErgonomiaAEP";
 import { ContaprovaOrganizacional } from "./ContaprovaOrganizacional";
 import {
   Dialog,
