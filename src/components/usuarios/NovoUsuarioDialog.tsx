@@ -338,7 +338,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
             {etapa === 2 && (
               <div className="space-y-4">
                 {alertaDuplicidade && (
-                  <div className="flex gap-2 items-start p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                  <div className="flex gap-2 items-start p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     {alertaDuplicidade}
                     <span className="font-medium">Deseja continuar mesmo assim?</span>
