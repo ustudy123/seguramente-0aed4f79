@@ -9400,6 +9400,50 @@ export type Database = {
           },
         ]
       }
+      perfil_acesso_sensivel_log: {
+        Row: {
+          acao: string
+          created_at: string
+          descricao: string | null
+          id: string
+          modulo: string
+          recurso: string | null
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          modulo: string
+          recurso?: string | null
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          modulo?: string
+          recurso?: string | null
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_acesso_sensivel_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfil_audit_log: {
         Row: {
           acao: string
@@ -9533,6 +9577,7 @@ export type Database = {
           created_at: string
           escopo: Database["public"]["Enums"]["perfil_escopo_tipo"]
           id: string
+          is_sensivel: boolean | null
           modulo: string
           observacao: string | null
           perfil_id: string
@@ -9546,6 +9591,7 @@ export type Database = {
           created_at?: string
           escopo?: Database["public"]["Enums"]["perfil_escopo_tipo"]
           id?: string
+          is_sensivel?: boolean | null
           modulo: string
           observacao?: string | null
           perfil_id: string
@@ -9559,6 +9605,7 @@ export type Database = {
           created_at?: string
           escopo?: Database["public"]["Enums"]["perfil_escopo_tipo"]
           id?: string
+          is_sensivel?: boolean | null
           modulo?: string
           observacao?: string | null
           perfil_id?: string
@@ -9630,6 +9677,8 @@ export type Database = {
           expira_em: string | null
           icone: string | null
           id: string
+          is_perfil_assistido: boolean | null
+          nivel_risco: string | null
           nome: string
           permite_acumulo: boolean
           template_origem_id: string | null
@@ -9648,6 +9697,8 @@ export type Database = {
           expira_em?: string | null
           icone?: string | null
           id?: string
+          is_perfil_assistido?: boolean | null
+          nivel_risco?: string | null
           nome: string
           permite_acumulo?: boolean
           template_origem_id?: string | null
@@ -9666,6 +9717,8 @@ export type Database = {
           expira_em?: string | null
           icone?: string | null
           id?: string
+          is_perfil_assistido?: boolean | null
+          nivel_risco?: string | null
           nome?: string
           permite_acumulo?: boolean
           template_origem_id?: string | null
@@ -13742,6 +13795,7 @@ export type Database = {
           empresa_id: string | null
           expira_em: string | null
           id: string
+          is_perfil_principal: boolean | null
           observacao: string | null
           perfil_id: string
           tenant_id: string
@@ -13756,6 +13810,7 @@ export type Database = {
           empresa_id?: string | null
           expira_em?: string | null
           id?: string
+          is_perfil_principal?: boolean | null
           observacao?: string | null
           perfil_id: string
           tenant_id: string
@@ -13770,6 +13825,7 @@ export type Database = {
           empresa_id?: string | null
           expira_em?: string | null
           id?: string
+          is_perfil_principal?: boolean | null
           observacao?: string | null
           perfil_id?: string
           tenant_id?: string
