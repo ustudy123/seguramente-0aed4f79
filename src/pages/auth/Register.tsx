@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, ArrowLeft, ArrowRight, Search, CheckCircle2, Mail, MessageCircle, Eye, EyeOff } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatCnpj, cleanCnpj, buscarCnpj, type BrasilApiCnpjResponse } from "@/lib/brasilapi";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,8 @@ export default function Register() {
   const [cnpjData, setCnpjData] = useState<BrasilApiCnpjResponse | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [aceitaTermos, setAceitaTermos] = useState(false);
+  const [aceitaPrivacidade, setAceitaPrivacidade] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -474,6 +477,36 @@ export default function Register() {
                 )}
               />
 
+              <div className="space-y-3">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={aceitaTermos}
+                    onCheckedChange={(v) => setAceitaTermos(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Li e aceito os{" "}
+                    <Link to="/termos-de-uso" target="_blank" className="text-primary font-medium hover:underline">
+                      Termos de Uso
+                    </Link>
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={aceitaPrivacidade}
+                    onCheckedChange={(v) => setAceitaPrivacidade(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Li e aceito a{" "}
+                    <Link to="/politica-de-privacidade" target="_blank" className="text-primary font-medium hover:underline">
+                      Política de Privacidade
+                    </Link>
+                  </span>
+                </label>
+              </div>
+
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -484,7 +517,7 @@ export default function Register() {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Voltar
                 </Button>
-                <Button type="submit" className="flex-1" disabled={submitting}>
+                <Button type="submit" className="flex-1" disabled={submitting || !aceitaTermos || !aceitaPrivacidade}>
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

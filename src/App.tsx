@@ -56,6 +56,8 @@ import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
 import HubContabil from "./pages/HubContabil";
 import Configuracoes from "./pages/Configuracoes";
 import LandingPage from "./pages/LandingPage";
+import TermosDeUso from "./pages/TermosDeUso";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import AssinaturaContrato from "./pages/AssinaturaContrato";
 import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
@@ -109,6 +111,8 @@ const App = () => (
             <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
             <Route path="/ativar-conta" element={<AtivarConta />} />
             <Route path="/lp" element={<LandingPage />} />
+            <Route path="/termos-de-uso" element={<TermosDeUso />} />
+            <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
 
           {/* Super Admin Routes */}
           <Route
