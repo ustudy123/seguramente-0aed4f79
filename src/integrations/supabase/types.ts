@@ -11775,6 +11775,7 @@ export type Database = {
           id: string
           nome_completo: string
           onboarding_concluido: boolean
+          onboarding_token: string | null
           telefone: string | null
           tenant_id: string
           updated_at: string
@@ -11787,6 +11788,7 @@ export type Database = {
           id?: string
           nome_completo: string
           onboarding_concluido?: boolean
+          onboarding_token?: string | null
           telefone?: string | null
           tenant_id: string
           updated_at?: string
@@ -11799,6 +11801,7 @@ export type Database = {
           id?: string
           nome_completo?: string
           onboarding_concluido?: boolean
+          onboarding_token?: string | null
           telefone?: string | null
           tenant_id?: string
           updated_at?: string
