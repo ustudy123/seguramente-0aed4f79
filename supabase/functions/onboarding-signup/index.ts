@@ -25,6 +25,8 @@ type Payload = {
   // Company pre-registration
   tipoPessoa?: string;
   documento?: string;
+  // Fallback userId for signup flow (no session)
+  userId?: string;
 };
 
 serve(async (req) => {
