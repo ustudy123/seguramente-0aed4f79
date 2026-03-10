@@ -12,6 +12,87 @@ import type { DimensaoInstrumento } from './copsoq';
 export type { DimensaoInstrumento };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Pesos por eixo — Modelo de compilação SIPRO (Total = 100%)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Pesos para cálculo do IRP-S (Índice de Risco Psicossocial) */
+export const PESOS_IRPS: Record<string, number> = {
+  sipro_demanda_quantitativa: 15,
+  sipro_demanda_cognitiva: 15,
+  sipro_demanda_emocional: 10,
+  sipro_autonomia_controle: 10,
+  sipro_clareza_papeis: 10,
+  sipro_justica_organizacional: 10,
+  sipro_suporte_lideranca: 5,
+  sipro_suporte_social: 5,
+  sipro_qualidade_relacoes: 5,
+  sipro_seguranca_psicologica: 5,
+  sipro_reconhecimento_sentido: 5,
+  sipro_ritmo_biologico: 5,
+};
+
+/** Pesos para IBO-S (Burnout) — reforço em sobrecarga + recuperação */
+export const PESOS_IBO: Record<string, number> = {
+  sipro_demanda_quantitativa: 25,
+  sipro_demanda_cognitiva: 20,
+  sipro_demanda_emocional: 20,
+  sipro_ritmo_biologico: 20,
+  sipro_reconhecimento_sentido: 5,
+  sipro_autonomia_controle: 5,
+  sipro_suporte_lideranca: 5,
+};
+
+/** Pesos para IBD-S (Boreout) — subcarga, monotonia, desengajamento */
+export const PESOS_IBD: Record<string, number> = {
+  sipro_reconhecimento_sentido: 30,
+  sipro_autonomia_controle: 25,
+  sipro_clareza_papeis: 15,
+  sipro_qualidade_relacoes: 10,
+  sipro_suporte_social: 10,
+  sipro_seguranca_psicologica: 10,
+};
+
+/** Pesos para IREC-S (Recuperação) */
+export const PESOS_IREC: Record<string, number> = {
+  sipro_ritmo_biologico: 60,
+  sipro_demanda_quantitativa: 20,
+  sipro_demanda_emocional: 10,
+  sipro_autonomia_controle: 10,
+};
+
+/** Pesos para ICOP-S (Clareza Organizacional de Papéis) */
+export const PESOS_ICOP: Record<string, number> = {
+  sipro_clareza_papeis: 40,
+  sipro_justica_organizacional: 25,
+  sipro_suporte_lideranca: 15,
+  sipro_seguranca_psicologica: 10,
+  sipro_qualidade_relacoes: 10,
+};
+
+/**
+ * Calcula um índice derivado com base em pesos e scores por dimensão.
+ * Retorna score 0-100 (ponderado).
+ */
+export function calcularIndicePonderado(
+  porDimensao: Record<string, { score: number; valida?: boolean }>,
+  pesos: Record<string, number>
+): number {
+  let somaWeighted = 0;
+  let somaWeights = 0;
+
+  for (const [dimId, peso] of Object.entries(pesos)) {
+    const dim = porDimensao[dimId];
+    if (dim && (dim.valida === undefined || dim.valida)) {
+      somaWeighted += dim.score * peso;
+      somaWeights += peso;
+    }
+  }
+
+  if (somaWeights === 0) return 0;
+  return Math.round(somaWeighted / somaWeights);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tipos do SIPRO
 // ─────────────────────────────────────────────────────────────────────────────
 

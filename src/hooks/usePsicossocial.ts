@@ -20,6 +20,12 @@ import {
   calcularIRPS,
   getDimensoesByInstrumento,
   getLabelNivelIRPS,
+  calcularIndicePonderado,
+  PESOS_IRPS,
+  PESOS_IBO,
+  PESOS_IBD,
+  PESOS_IREC,
+  PESOS_ICOP,
 } from "@/data/instrumentos";
 
 // Gerar token único
@@ -69,7 +75,12 @@ export function calcularIndicadores(
     }));
 
     // Mapear IRP-S para classificação compatível com IPS (semântica invertida para UI)
-    const irps = resultado.irps;
+    const irps = calcularIndicePonderado(resultado.porDimensao, PESOS_IRPS);
+    const iboS = calcularIndicePonderado(resultado.porDimensao, PESOS_IBO);
+    const ibdS = calcularIndicePonderado(resultado.porDimensao, PESOS_IBD);
+    const irecS = calcularIndicePonderado(resultado.porDimensao, PESOS_IREC);
+    const icopS = calcularIndicePonderado(resultado.porDimensao, PESOS_ICOP);
+
     let classificacao: ReturnType<typeof calcularIPSClassificacao>;
     if (irps <= 24) classificacao = 'saudavel';
     else if (irps <= 49) classificacao = 'estavel';
@@ -80,10 +91,10 @@ export function calcularIndicadores(
       IPS: irps,
       IPS_classificacao: classificacao,
       IRP_S: irps,
-      IBO_S: irps,
-      IBD_S: irps,
-      IREC_S: irps,
-      ICOP_S: irps,
+      IBO_S: iboS,
+      IBD_S: ibdS,
+      IREC_S: irecS,
+      ICOP_S: icopS,
       detalhes,
       radar,
     };

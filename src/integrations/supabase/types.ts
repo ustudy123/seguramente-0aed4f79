@@ -12488,10 +12488,16 @@ export type Database = {
           escopo_valores: string[] | null
           evento_gatilho_id: string | null
           evento_gatilho_tipo: string | null
+          ibd_score: number | null
+          ibo_score: number | null
+          icop_score: number | null
           id: string
+          inot_score: number | null
           instrumento: string | null
           ips_classificacao: string | null
           ips_score: number | null
+          irec_score: number | null
+          irps_score: number | null
           mensagem_institucional: string | null
           motivo_extraordinaria: string | null
           nome: string
@@ -12522,10 +12528,16 @@ export type Database = {
           escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
+          ibd_score?: number | null
+          ibo_score?: number | null
+          icop_score?: number | null
           id?: string
+          inot_score?: number | null
           instrumento?: string | null
           ips_classificacao?: string | null
           ips_score?: number | null
+          irec_score?: number | null
+          irps_score?: number | null
           mensagem_institucional?: string | null
           motivo_extraordinaria?: string | null
           nome: string
@@ -12556,10 +12568,16 @@ export type Database = {
           escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
+          ibd_score?: number | null
+          ibo_score?: number | null
+          icop_score?: number | null
           id?: string
+          inot_score?: number | null
           instrumento?: string | null
           ips_classificacao?: string | null
           ips_score?: number | null
+          irec_score?: number | null
+          irps_score?: number | null
           mensagem_institucional?: string | null
           motivo_extraordinaria?: string | null
           nome?: string
