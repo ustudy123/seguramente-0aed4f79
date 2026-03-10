@@ -63,20 +63,20 @@ function calcularNivel(score: number): NivelRisco {
 // Para SIPRO: scores altos = mais risco. Para protetores invertidos, invertemos (100 - score).
 
 const BURNOUT_DIMENSION_MAP: Record<string, string> = {
-  sobrecargaCognitiva: 'Demanda Cognitiva',
-  ritmoTrabalho: 'Demanda Quantitativa',
-  faltaPausas: 'Ritmo Biológico',
-  humorNegativo: 'Demanda Emocional',
-  denuncias: 'Qualidade das',       // Qualidade das Relações — invertido
-  exigenciasEmocionais: 'Demanda Emocional',
+  sobrecargaCognitiva: 'Demandas Cognitivas',
+  ritmoTrabalho: 'Demandas Quantitativas',
+  faltaPausas: 'Recuperação e',
+  humorNegativo: 'Demandas Emocionais',
+  denuncias: 'Relacionamentos e',    // Relacionamentos e Suporte — invertido
+  exigenciasEmocionais: 'Demandas Emocionais',
 };
 
 const BOREOUT_DIMENSION_MAP: Record<string, string> = {
   baixoDesafio: 'Autonomia e',       // Autonomia e Controle — invertido
   repetitividade: 'Clareza de',      // Clareza de Papéis — invertido
-  faltaSentido: 'Reconhecimento e',  // Reconhecimento e Sentido — invertido
-  apatia: 'Justiça Organizacional',  // invertido
-  desconexao: 'Suporte Social',     // invertido
+  faltaSentido: 'Sentido do',        // Sentido do Trabalho — invertido
+  apatia: 'Reconhecimento e',        // Reconhecimento e Justiça — invertido
+  desconexao: 'Relacionamentos e',   // Relacionamentos e Suporte — invertido
 };
 
 // Dimensões protetoras cujo score precisa ser invertido (100 - score)
