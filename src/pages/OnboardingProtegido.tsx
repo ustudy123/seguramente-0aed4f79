@@ -116,8 +116,11 @@ function gerarPrioridades(indice: number): { ordem: number; texto: string }[] {
 // ─── Step: Estrutura Organizacional ──────────────────────────────────────────
 
 function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onBack?: () => void }) {
-  const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'done'>('escolha');
+  const { profile } = useAuthContext();
+  const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'done' | 'importing' | 'result'>('escolha');
   const [dragOver, setDragOver] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownloadTemplate = useCallback(() => {
     const headers = ['Nome Completo', 'CPF', 'E-mail', 'Telefone', 'Data Nascimento', 'Cargo/Função', 'Departamento', 'Data Admissão', 'Salário', 'Centro de Custo', 'Gestor Imediato'];
