@@ -172,6 +172,9 @@ export function PsicossocialDashboard() {
       {/* Alertas Psicossociais */}
       <AlertasPsicossociaisPanel />
 
+      {/* Índices Derivados */}
+      <IndicesDerivadosDashboard campanhas={campanhas} />
+
       {/* Tabs principais */}
       <Tabs defaultValue="burnout-boreout">
         <TabsList className="w-full sm:w-auto flex-wrap h-auto">
