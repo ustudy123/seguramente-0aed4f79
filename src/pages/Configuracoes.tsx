@@ -41,7 +41,14 @@ export default function Configuracoes() {
               </p>
             </div>
           </div>
-          <Button size="sm" onClick={() => navigate("/onboarding")} className="gap-1.5 shrink-0">
+          <Button size="sm" onClick={() => {
+            const token = (profile as any)?.onboarding_token;
+            if (token) {
+              navigate(`/onboarding-cliente/${token}`);
+            } else {
+              navigate("/onboarding");
+            }
+          }} className="gap-1.5 shrink-0">
             Finalizar Configuração
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
