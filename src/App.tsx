@@ -144,6 +144,16 @@ const App = () => (
             }
           />
 
+            {/* Protected Onboarding Route (outside MainLayout so it's full-screen) */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <OnboardingProtegido />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Protected App Routes */}
             <Route
               element={
