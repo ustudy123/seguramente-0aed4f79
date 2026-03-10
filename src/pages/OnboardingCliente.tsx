@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
+import { parseSpreadsheet, importCollaborators, type ImportResult } from "@/utils/onboardingImport";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -263,8 +264,10 @@ function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcluir: ()
 // ─── Step: Colaboradores ──────────────────────────────────────────────────────
 
 function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; onConcluir: () => void; onBack?: () => void }) {
-  const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'integracao' | 'done'>('escolha');
+  const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'integracao' | 'done' | 'importing' | 'result'>('escolha');
   const [dragOver, setDragOver] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownloadTemplate = useCallback(() => {
     const headers = ['Nome Completo', 'CPF', 'E-mail', 'Telefone', 'Data Nascimento', 'Cargo/Função', 'Departamento', 'Data Admissão', 'Salário', 'Centro de Custo', 'Gestor Imediato'];
@@ -294,13 +297,114 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
     toast.success("Planilha modelo baixada!");
   }, []);
 
-  if (modo === 'done') {
+  const handleFileProcess = useCallback(async (file: File) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error("Sessão expirada"); return; }
+      const { data: profileData } = await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).maybeSingle();
+      if (!profileData?.tenant_id) { toast.error("Tenant não identificado"); return; }
+      
+      setModo('importing');
+      toast.info("Processando planilha...");
+      const rows = await parseSpreadsheet(file);
+      
+      if (rows.length === 0) {
+        toast.error("Nenhum colaborador encontrado na planilha. Verifique se as colunas 'Nome Completo' e 'CPF' estão preenchidas.");
+        setModo('importar');
+        return;
+      }
+
+      const result = await importCollaborators(rows, profileData.tenant_id);
+      setImportResult(result);
+      setModo('result');
+
+      if (result.colaboradores_criados > 0) {
+        toast.success(`${result.colaboradores_criados} colaborador(es) importado(s) com sucesso!`);
+      }
+      if (result.erros.length > 0) {
+        toast.warning(`${result.erros.length} erro(s) durante a importação.`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao processar planilha");
+      setModo('importar');
+    }
+  }, []);
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileProcess(file);
+  }, [handleFileProcess]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileProcess(file);
+  }, [handleFileProcess]);
+
+  if (modo === 'done' || (modo === 'result' && importResult && importResult.erros.length === 0)) {
     return (
       <div className="text-center py-8 space-y-3">
         <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
         <p className="text-lg font-semibold">Estrutura configurada!</p>
+        {importResult && (
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>{importResult.colaboradores_criados} colaborador(es) cadastrado(s)</p>
+            <p>{importResult.departamentos_criados} departamento(s) criado(s)</p>
+            <p>{importResult.cargos_criados} cargo(s)/função(ões) criado(s)</p>
+          </div>
+        )}
         <p className="text-sm text-muted-foreground">O sistema está preparando os indicadores iniciais.</p>
         <Button onClick={onConcluir}>Continuar <ArrowRight className="w-4 h-4 ml-2" /></Button>
+      </div>
+    );
+  }
+
+  if (modo === 'result' && importResult) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center py-4 space-y-2">
+          <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
+          <p className="text-lg font-semibold">Importação concluída</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-primary/5 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{importResult.colaboradores_criados}</p>
+            <p className="text-xs text-muted-foreground">Colaboradores</p>
+          </div>
+          <div className="bg-primary/5 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{importResult.departamentos_criados}</p>
+            <p className="text-xs text-muted-foreground">Departamentos</p>
+          </div>
+          <div className="bg-primary/5 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{importResult.cargos_criados}</p>
+            <p className="text-xs text-muted-foreground">Cargos</p>
+          </div>
+        </div>
+        {importResult.erros.length > 0 && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 space-y-1">
+            <p className="text-xs font-semibold text-destructive">Erros ({importResult.erros.length}):</p>
+            {importResult.erros.slice(0, 5).map((err, i) => (
+              <p key={i} className="text-xs text-destructive/80">• {err}</p>
+            ))}
+            {importResult.erros.length > 5 && (
+              <p className="text-xs text-destructive/60">... e mais {importResult.erros.length - 5} erro(s)</p>
+            )}
+          </div>
+        )}
+        <Button onClick={onConcluir} className="w-full">
+          Continuar <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    );
+  }
+
+  if (modo === 'importing') {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
+        <p className="text-lg font-semibold">Importando colaboradores...</p>
+        <p className="text-sm text-muted-foreground">Criando departamentos, cargos e cadastros. Aguarde...</p>
       </div>
     );
   }
@@ -324,20 +428,25 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
         <div
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); toast.success("Planilha recebida! Processando..."); setTimeout(() => setModo('done'), 1500); }}
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
+          onDrop={handleFileDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer ${
             dragOver ? 'border-primary bg-primary/5' : 'border-muted/60 hover:border-primary/50'
           }`}
         >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
           <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
           <p className="font-medium text-sm">Arraste a planilha aqui</p>
           <p className="text-xs text-muted-foreground mt-1">ou clique para selecionar o arquivo</p>
           <p className="text-xs text-muted-foreground mt-3 bg-muted/50 rounded p-2 inline-block">
-            Campos esperados: <strong>nome, CPF, função, departamento</strong>
+            Campos esperados: <strong>Nome Completo, CPF, Cargo/Função, Departamento</strong>
           </p>
-          <div className="mt-4">
-            <Button variant="outline" size="sm">Selecionar arquivo</Button>
-          </div>
         </div>
         <div className="bg-muted/30 rounded-lg p-3 space-y-1.5">
           <p className="text-xs font-semibold text-muted-foreground uppercase">O sistema irá automaticamente:</p>
