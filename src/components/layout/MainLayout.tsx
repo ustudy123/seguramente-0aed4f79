@@ -7,6 +7,7 @@ import { HumorDiarioPopup } from "@/components/humor/HumorDiarioPopup";
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 import { useIframeNavigation } from "@/hooks/useIframeNavigation";
+import { OnboardingGate } from "@/components/auth/OnboardingGate";
 
 export const MainLayout = () => {
   useIframeNavigation(); // Listen for QA Agent navigation commands
@@ -63,6 +64,9 @@ export const MainLayout = () => {
           onClose={handleHumorClose}
           isAutomatic
         />
+
+        {/* Gate de onboarding — bloqueia após 1m30s se não concluído */}
+        <OnboardingGate />
       </div>
     </EmpresaAtivaProvider>
   );

@@ -11774,6 +11774,7 @@ export type Database = {
           created_at: string
           id: string
           nome_completo: string
+          onboarding_concluido: boolean
           telefone: string | null
           tenant_id: string
           updated_at: string
@@ -11785,6 +11786,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome_completo: string
+          onboarding_concluido?: boolean
           telefone?: string | null
           tenant_id: string
           updated_at?: string
@@ -11796,6 +11798,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome_completo?: string
+          onboarding_concluido?: boolean
           telefone?: string | null
           tenant_id?: string
           updated_at?: string
