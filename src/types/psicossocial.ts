@@ -223,6 +223,13 @@ export interface CampanhaPsicossocial {
   ips_classificacao?: IPSClassificacao;
   total_respostas?: number;
   radar_data?: RadarDimensao[];
+  // Índices derivados SIPRO
+  irps_score?: number | null;
+  ibo_score?: number | null;
+  ibd_score?: number | null;
+  irec_score?: number | null;
+  icop_score?: number | null;
+  inot_score?: number | null;
   created_at: string;
   updated_at: string;
 }
