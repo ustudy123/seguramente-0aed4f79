@@ -15,58 +15,53 @@ export type { DimensaoInstrumento };
 // Pesos por eixo — Modelo de compilação SIPRO (Total = 100%)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Pesos para cálculo do IRP-S (Índice de Risco Psicossocial) */
+/** Pesos para cálculo do IRP-S (Índice de Risco Psicossocial) — Total = 100% */
 export const PESOS_IRPS: Record<string, number> = {
-  sipro_demanda_quantitativa: 15,
-  sipro_demanda_cognitiva: 15,
-  sipro_demanda_emocional: 10,
+  sipro_demandas_quantitativas: 15,
+  sipro_demandas_cognitivas: 15,
+  sipro_demandas_emocionais: 10,
   sipro_autonomia_controle: 10,
   sipro_clareza_papeis: 10,
-  sipro_justica_organizacional: 10,
-  sipro_suporte_lideranca: 5,
-  sipro_suporte_social: 5,
-  sipro_qualidade_relacoes: 5,
-  sipro_seguranca_psicologica: 5,
-  sipro_reconhecimento_sentido: 5,
-  sipro_ritmo_biologico: 5,
+  sipro_reconhecimento_justica: 10,
+  sipro_relacionamentos_suporte: 10,
+  sipro_sentido_engajamento: 5,
+  sipro_recuperacao_equilibrio: 10,
+  sipro_sinais_precoces: 5,
 };
 
-/** Pesos para IBO-S (Burnout) — reforço em sobrecarga + recuperação */
+/** Pesos para IBO-S (Burnout) — reforço em sobrecarga + recuperação + sinais */
 export const PESOS_IBO: Record<string, number> = {
-  sipro_demanda_quantitativa: 25,
-  sipro_demanda_cognitiva: 20,
-  sipro_demanda_emocional: 20,
-  sipro_ritmo_biologico: 20,
-  sipro_reconhecimento_sentido: 5,
+  sipro_demandas_quantitativas: 25,
+  sipro_demandas_cognitivas: 20,
+  sipro_demandas_emocionais: 20,
+  sipro_recuperacao_equilibrio: 20,
+  sipro_sinais_precoces: 10,
   sipro_autonomia_controle: 5,
-  sipro_suporte_lideranca: 5,
 };
 
 /** Pesos para IBD-S (Boreout) — subcarga, monotonia, desengajamento */
 export const PESOS_IBD: Record<string, number> = {
-  sipro_reconhecimento_sentido: 30,
+  sipro_sentido_engajamento: 30,
   sipro_autonomia_controle: 25,
   sipro_clareza_papeis: 15,
-  sipro_qualidade_relacoes: 10,
-  sipro_suporte_social: 10,
-  sipro_seguranca_psicologica: 10,
+  sipro_reconhecimento_justica: 15,
+  sipro_relacionamentos_suporte: 15,
 };
 
 /** Pesos para IREC-S (Recuperação) */
 export const PESOS_IREC: Record<string, number> = {
-  sipro_ritmo_biologico: 60,
-  sipro_demanda_quantitativa: 20,
-  sipro_demanda_emocional: 10,
-  sipro_autonomia_controle: 10,
+  sipro_recuperacao_equilibrio: 60,
+  sipro_demandas_quantitativas: 20,
+  sipro_demandas_emocionais: 10,
+  sipro_sinais_precoces: 10,
 };
 
 /** Pesos para ICOP-S (Clareza Organizacional de Papéis) */
 export const PESOS_ICOP: Record<string, number> = {
   sipro_clareza_papeis: 40,
-  sipro_justica_organizacional: 25,
-  sipro_suporte_lideranca: 15,
-  sipro_seguranca_psicologica: 10,
-  sipro_qualidade_relacoes: 10,
+  sipro_reconhecimento_justica: 25,
+  sipro_relacionamentos_suporte: 20,
+  sipro_autonomia_controle: 15,
 };
 
 /**

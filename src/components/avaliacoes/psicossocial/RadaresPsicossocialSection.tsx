@@ -82,9 +82,8 @@ const BOREOUT_DIMENSION_MAP: Record<string, string> = {
 // Dimensões protetoras cujo score precisa ser invertido (100 - score)
 // porque score alto do SIPRO = bom → mas para burnout/boreout precisamos score alto = ruim
 const INVERTED_DIMENSIONS = new Set([
-  'Qualidade das', 'Autonomia e', 'Clareza de',
-  'Reconhecimento e', 'Justiça Organizacional', 'Suporte Social',
-  'Suporte da', 'Segurança Psicológica',
+  'Autonomia e', 'Clareza de', 'Reconhecimento e',
+  'Relacionamentos e', 'Sentido do',
 ]);
 
 function resolveRadarScore(
