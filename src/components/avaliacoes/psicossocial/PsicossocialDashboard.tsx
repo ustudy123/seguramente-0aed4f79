@@ -267,6 +267,7 @@ export function PsicossocialDashboard() {
                   { codigo: 'IBD-S', nome: 'Boreout', desc: 'Falta de desafio e engajamento', color: 'bg-slate-100 text-slate-600', destaque: false },
                   { codigo: 'IREC-S', nome: 'Recuperação', desc: 'Capacidade de recuperação pós-trabalho', color: 'bg-blue-100 text-blue-600', destaque: false },
                   { codigo: 'ICOP-S', nome: 'Clareza Organizacional', desc: 'Clareza de papéis e direcionamento', color: 'bg-emerald-100 text-emerald-600', destaque: false },
+                  { codigo: 'INOT-S', nome: 'Trabalho Noturno', desc: 'Risco específico do trabalho noturno/3º turno', color: 'bg-indigo-100 text-indigo-600', destaque: false },
                 ].map(({ codigo, nome, desc, color, destaque }) => (
                   <div key={codigo} className={cn("p-4 rounded-lg border", destaque && "border-purple-200 bg-purple-50/30")}>
                     <div className="flex items-center gap-2 mb-2">
