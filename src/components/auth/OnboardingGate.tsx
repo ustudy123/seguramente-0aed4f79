@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const DELAY_MS = 90_000; // 1 minute 30 seconds
+const DELAY_MS = 30_000; // 30 seconds
 
 /**
  * OnboardingGate — renders a blocking full-screen modal after 90s
