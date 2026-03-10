@@ -388,6 +388,9 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
 
   return (
     <div className="space-y-4">
+      {onBack && (
+        <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">← Voltar</button>
+      )}
       <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
         <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-muted-foreground">
