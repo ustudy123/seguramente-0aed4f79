@@ -118,7 +118,7 @@ function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onB
   const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'done'>('escolha');
   const [dragOver, setDragOver] = useState(false);
 
-  const handleDownloadTemplate = useCallback(() => {
+  if (modo === 'done') {
     return (
       <div className="text-center py-8 space-y-3">
         <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
