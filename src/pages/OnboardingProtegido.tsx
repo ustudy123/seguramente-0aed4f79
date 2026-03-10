@@ -114,7 +114,7 @@ function gerarPrioridades(indice: number): { ordem: number; texto: string }[] {
 
 // ─── Step: Estrutura Organizacional ──────────────────────────────────────────
 
-function StepColaboradores({ onConcluir }: { onConcluir: () => void }) {
+function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onBack?: () => void }) {
   const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'done'>('escolha');
   const [dragOver, setDragOver] = useState(false);
 
