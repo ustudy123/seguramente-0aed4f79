@@ -34,28 +34,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // Logged in, but missing tenant/profile linkage (não é superadmin)
+  // Redireciona para /register para completar o cadastro silenciosamente
   if (!profile && !isSuperAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="max-w-md w-full px-6 text-center space-y-4">
-          <h1 className="text-2xl font-bold">Finalize seu cadastro</h1>
-          <p className="text-muted-foreground">
-            Sua conta foi autenticada, mas ainda não está vinculada a uma empresa.
-            Cadastre sua empresa ou peça um convite ao administrador.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <NavigateButton to="/register">Cadastrar empresa</NavigateButton>
-            <button
-              type="button"
-              onClick={() => signOut()}
-              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground"
-            >
-              Sair
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <Navigate to="/register" replace />;
   }
 
   if (requiredRole && !hasMinimumRole(requiredRole)) {
