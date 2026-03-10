@@ -64,6 +64,9 @@ export const MainLayout = () => {
           onClose={handleHumorClose}
           isAutomatic
         />
+
+        {/* Gate de onboarding — bloqueia após 1m30s se não concluído */}
+        <OnboardingGate />
       </div>
     </EmpresaAtivaProvider>
   );
