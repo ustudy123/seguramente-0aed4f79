@@ -163,6 +163,12 @@ export default function Register() {
         return;
       }
 
+      // Detect repeated signup (Supabase returns fake user with empty identities)
+      if (!authData.user.identities || authData.user.identities.length === 0) {
+        toast.error("Este e-mail já está cadastrado", { description: "Tente fazer login ou use outro e-mail." });
+        return;
+      }
+
       // 2. Call onboarding-signup to create tenant + profile + owner role
       const { error: fnError } = await supabase.functions.invoke("onboarding-signup", {
         body: {
