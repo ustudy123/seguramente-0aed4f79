@@ -85,6 +85,8 @@ export default function Register() {
   const [cnpjData, setCnpjData] = useState<BrasilApiCnpjResponse | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [aceitaTermos, setAceitaTermos] = useState(false);
+  const [aceitaPrivacidade, setAceitaPrivacidade] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
