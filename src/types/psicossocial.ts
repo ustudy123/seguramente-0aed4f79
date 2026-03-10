@@ -131,9 +131,9 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
     id: 'sipro',
     nome: 'SIPRO',
     descricao: 'Índice Seguramente de Risco Psicossocial Organizacional',
-    uso: 'Instrumento autoral do Seguramente — 12 dimensões adaptadas à NR-01 com dimensão cronobiológica inovadora',
-    totalPerguntas: 52,
-    dimensoes: ['Demanda Quantitativa', 'Demanda Cognitiva', 'Demanda Emocional', 'Autonomia e Controle', 'Clareza de Papéis', 'Justiça Organizacional', 'Suporte da Liderança', 'Suporte Social', 'Qualidade das Relações', 'Segurança Psicológica', 'Reconhecimento e Sentido', 'Ritmo Biológico e Recuperação'],
+    uso: 'Instrumento autoral do Seguramente — 10 eixos psicossociais adaptados à NR-01/NR-17/ISO 45003 com blocos dinâmicos CET',
+    totalPerguntas: 35,
+    dimensoes: ['Demandas Quantitativas/Ritmo', 'Demandas Cognitivas', 'Demandas Emocionais', 'Autonomia e Controle', 'Clareza de Papéis', 'Reconhecimento e Justiça', 'Relacionamentos e Suporte', 'Sentido do Trabalho', 'Recuperação e Equilíbrio', 'Sinais Precoces'],
   },
   {
     id: 'copsoq',
