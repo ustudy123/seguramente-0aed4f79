@@ -31,12 +31,21 @@ export function AlertasPsicossociaisPanel() {
       if (!tenantId) return [];
       const { data, error } = await supabase
         .from('psicossocial_alertas')
-        .select('*')
+        .select('id, campanha_id, dimensao_id, dimensao_nome, score_risco, score_ips, classificacao, acao_id, acao_criada_id, resolvido, created_at')
         .eq('tenant_id', tenantId)
         .eq('resolvido', false)
+        .not('dimensao_id', 'is', null)
         .order('score_risco', { ascending: false });
       if (error) throw error;
-      return (data || []) as AlertaPsicossocial[];
+      return (data || []).map(d => ({
+        ...d,
+        dimensao_id: d.dimensao_id || '',
+        dimensao_nome: d.dimensao_nome || '',
+        score_risco: d.score_risco || 0,
+        score_ips: d.score_ips || 50,
+        classificacao: d.classificacao || 'elevado',
+        acao_id: d.acao_id || d.acao_criada_id || null,
+      })) as AlertaPsicossocial[];
     },
     enabled: !!tenantId,
   });
