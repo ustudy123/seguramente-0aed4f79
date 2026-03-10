@@ -178,6 +178,7 @@ export default function Register() {
           tipoPessoa: data.tipoPessoa,
           documento: cleanDoc,
           userId: authData.user.id,
+          email: data.email,
         },
       });
 
