@@ -311,6 +311,16 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
         <button onClick={() => setModo('escolha')} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
           ← Voltar
         </button>
+        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-primary" />
+            <span className="text-sm text-muted-foreground">Precisa de um modelo?</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="text-xs gap-1.5">
+            <Download className="w-3 h-3" />
+            Baixar planilha modelo
+          </Button>
+        </div>
         <div
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
