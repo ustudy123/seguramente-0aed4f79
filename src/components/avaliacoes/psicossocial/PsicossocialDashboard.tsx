@@ -168,6 +168,9 @@ export function PsicossocialDashboard() {
         </Card>
       </div>
 
+      {/* Alertas Psicossociais */}
+      <AlertasPsicossociaisPanel />
+
       {/* Tabs principais */}
       <Tabs defaultValue="burnout-boreout">
         <TabsList className="w-full sm:w-auto flex-wrap h-auto">
