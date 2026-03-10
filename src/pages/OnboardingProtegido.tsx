@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
+import { parseSpreadsheet, importCollaborators, type ImportResult } from "@/utils/onboardingImport";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
