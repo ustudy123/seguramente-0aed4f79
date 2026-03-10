@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2, ChevronRight, Building2, Users, LayoutGrid,
   Upload, ArrowRight, Sparkles, Loader2, CheckCheck,
-  BarChart3, Briefcase, Shield, Rocket, Clock
+  BarChart3, Briefcase, Shield, Rocket, Clock, Download
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
