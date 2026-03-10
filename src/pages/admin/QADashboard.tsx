@@ -104,7 +104,7 @@ const FLOW_ROUTES: Record<string, string> = {
   terceiros: "/terceiros",
   marketplace: "/marketplace",
   admissao: "/colaboradores",
-  onboarding: "/onboarding",
+  onboarding: "/onboarding-rh",
   ferias: "/ferias",
   atestado: "/atestados",
   ocorrencias: "/feedback-ocorrencias",
