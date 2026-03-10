@@ -26,6 +26,7 @@ import { AssistenteSelecaoInstrumento } from "./AssistenteSelecaoInstrumento";
 import { RadaresPsicossocialSection } from "./RadaresPsicossocialSection";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
+import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
@@ -166,6 +167,9 @@ export function PsicossocialDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Alertas Psicossociais */}
+      <AlertasPsicossociaisPanel />
 
       {/* Tabs principais */}
       <Tabs defaultValue="burnout-boreout">
