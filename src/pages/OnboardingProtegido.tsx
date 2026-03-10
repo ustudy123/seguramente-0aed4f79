@@ -578,8 +578,7 @@ export default function OnboardingProtegido() {
 
                   {stepAtivo === 'colaboradores' && (
                     <motion.div key="colaboradores" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                      <button onClick={() => setStepAtivo(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">← Voltar</button>
-                      <StepColaboradores onConcluir={() => setStepAtivo(null)} />
+                      <StepColaboradores onConcluir={() => setStepAtivo(null)} onBack={() => setStepAtivo(null)} />
                     </motion.div>
                   )}
 
