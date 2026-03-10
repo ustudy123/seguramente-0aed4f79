@@ -307,12 +307,6 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
       setModo('importing');
       toast.info("Processando planilha...");
       const rows = await parseSpreadsheet(file);
-
-  const handleFileProcessWithTenant = useCallback(async (file: File, tenantId: string) => {
-    try {
-      setModo('importing');
-      toast.info("Processando planilha...");
-      const rows = await parseSpreadsheet(file);
       
       if (rows.length === 0) {
         toast.error("Nenhum colaborador encontrado na planilha. Verifique se as colunas 'Nome Completo' e 'CPF' estão preenchidas.");
@@ -320,7 +314,7 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
         return;
       }
 
-      const result = await importCollaborators(rows, tenantId);
+      const result = await importCollaborators(rows, profileData.tenant_id);
       setImportResult(result);
       setModo('result');
 
