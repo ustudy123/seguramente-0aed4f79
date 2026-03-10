@@ -308,5 +308,38 @@ serve(async (req) => {
     }
   }
 
-  return json({ ok: true, tenantId: tenant.id }, 200);
+  // 5) Create programa_validador_clientes record for onboarding portal
+  const { data: pvCliente, error: pvError } = await admin
+    .from("programa_validador_clientes")
+    .insert({
+      tenant_id: tenant.id,
+      nome_empresa: tenantNome,
+      cnpj: tipoPessoa === "pj" ? documento : null,
+      poc_nome: nomeCompleto,
+      poc_email: email || null,
+      fase: "configuracao",
+      tipo_cliente: "tester",
+      conta_ativada: true,
+      conta_ativada_em: new Date().toISOString(),
+      user_id: userId,
+    })
+    .select("onboarding_token")
+    .single();
+
+  let onboardingToken: string | null = null;
+  if (pvError) {
+    console.error("Error creating programa_validador_clientes:", pvError.message);
+  } else {
+    onboardingToken = pvCliente?.onboarding_token ?? null;
+
+    // Store onboarding_token on profile for quick access
+    if (onboardingToken) {
+      await admin
+        .from("profiles")
+        .update({ onboarding_token: onboardingToken })
+        .eq("user_id", userId);
+    }
+  }
+
+  return json({ ok: true, tenantId: tenant.id, onboardingToken }, 200);
 });
