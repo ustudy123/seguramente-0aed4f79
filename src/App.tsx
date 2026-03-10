@@ -60,6 +60,7 @@ import AssinaturaContrato from "./pages/AssinaturaContrato";
 import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
+import OnboardingProtegido from "./pages/OnboardingProtegido";
 import AnaliseJornada from "./pages/AnaliseJornada";
 import Usuarios from "./pages/Usuarios";
 import PerfisAcesso from "./pages/PerfisAcesso";
