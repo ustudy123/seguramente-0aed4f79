@@ -34,9 +34,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // Logged in, but missing tenant/profile linkage (não é superadmin)
-  // Redireciona para /register para completar o cadastro silenciosamente
+  // Redireciona para /login — o onboarding popup cuidará do restante
   if (!profile && !isSuperAdmin) {
-    return <Navigate to="/register" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (requiredRole && !hasMinimumRole(requiredRole)) {
