@@ -1,27 +1,20 @@
 /**
- * SIPRO — Índice Seguramente de Risco Psicossocial Organizacional
- * Instrumento autoral do Seguramente
+ * SIPRO — Instrumento Psicossocial Seguramente
+ * Instrumento proprietário do Seguramente
  *
- * 12 dimensões — 52 questões:
- *   Grupo 1 — Demanda e Carga de Trabalho:
- *     1. Demanda Quantitativa (4q)
- *     2. Demanda Cognitiva (4q)
- *     3. Demanda Emocional (4q)
- *   Grupo 2 — Organização do Trabalho:
- *     4. Autonomia e Controle (4q)
- *     5. Clareza de Papéis (4q)
- *     6. Justiça Organizacional (4q)
- *   Grupo 3 — Relações e Suporte:
- *     7. Suporte da Liderança (4q)
- *     8. Suporte Social (4q)
- *     9. Qualidade das Relações (4q)
- *   Grupo 4 — Segurança Psicológica:
- *     10. Segurança Psicológica (4q)
- *     11. Reconhecimento e Sentido do Trabalho (4q)
- *   Grupo 5 — Condições Especiais de Trabalho:
- *     12. Ritmo Biológico e Recuperação (4q + 2 opcionais turno)
+ * 10 eixos — 35 questões base:
+ *   1. Demandas Quantitativas e Ritmo de Trabalho (4q) — peso 15%
+ *   2. Demandas Cognitivas (4q) — peso 15%
+ *   3. Demandas Emocionais (3q) — peso 10%
+ *   4. Autonomia, Controle e Influência (4q) — peso 10%
+ *   5. Clareza de Papéis e Organização do Trabalho (4q) — peso 10%
+ *   6. Reconhecimento, Justiça e Valorização (3q) — peso 10%
+ *   7. Relacionamentos, Clima e Suporte Social (3q) — peso 10%
+ *   8. Sentido do Trabalho e Engajamento (3q) — peso 5%
+ *   9. Recuperação, Pausas e Equilíbrio Trabalho–Vida (3q) — peso 10%
+ *   10. Sinais Precoces de Sofrimento Psíquico (4q) — peso 5%
  *
- * Baseado em: COPSOQ · HSE Management Standards · PROART · ISO 45001 · ISO 45003 · NR-01
+ * Fundamentado em: JD-R · COPSOQ · ISO 45003 · NR-01 · NR-17
  * Escala: 0 = Nunca | 1 = Raramente | 2 = Às vezes | 3 = Frequentemente | 4 = Sempre
  * "invertida: true" → maior pontuação = melhor condição (fatores protetores)
  */
@@ -30,486 +23,369 @@ import type { DimensaoInstrumento } from './copsoq';
 
 export const SIPRO_DIMENSOES: DimensaoInstrumento[] = [
   // ══════════════════════════════════════════════════════════════
-  // GRUPO 1 — DEMANDA E CARGA DE TRABALHO
+  // EIXO 1 — DEMANDAS QUANTITATIVAS E RITMO DE TRABALHO (15%)
   // ══════════════════════════════════════════════════════════════
-
   {
-    id: 'sipro_demanda_quantitativa',
-    nome: 'Demanda Quantitativa',
-    descricao: 'Avalia volume de trabalho e pressão de tempo',
+    id: 'sipro_demandas_quantitativas',
+    nome: 'Demandas Quantitativas e Ritmo',
+    descricao: 'Carga de trabalho, pressão por tempo e ritmo imposto',
     tipo: 'risco',
     normas: ['NR-01', 'NR-17', 'ISO 45003'],
     grupo: 'Demanda e Carga de Trabalho',
     perguntas: [
       {
         id: 'sipro_dq1',
-        texto: 'Meu trabalho exige que eu produza muito em pouco tempo.',
-        dimensao: 'sipro_demanda_quantitativa',
-        normas: ['NR-17'],
+        texto: 'O volume de trabalho que recebo é maior do que consigo realizar no meu horário normal.',
+        dimensao: 'sipro_demandas_quantitativas',
+        normas: ['NR-01', 'NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_dq2',
-        texto: 'Preciso trabalhar em ritmo acelerado para dar conta das tarefas.',
-        dimensao: 'sipro_demanda_quantitativa',
-        normas: ['NR-17'],
+        texto: 'Preciso trabalhar muito rápido para dar conta das tarefas.',
+        dimensao: 'sipro_demandas_quantitativas',
+        normas: ['NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_dq3',
-        texto: 'Frequentemente tenho mais tarefas do que consigo realizar.',
-        dimensao: 'sipro_demanda_quantitativa',
-        normas: ['NR-01'],
+        texto: 'O ritmo do trabalho é imposto sem considerar limites físicos ou mentais.',
+        dimensao: 'sipro_demandas_quantitativas',
+        normas: ['NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_dq4',
-        texto: 'Sinto pressão constante para cumprir prazos.',
-        dimensao: 'sipro_demanda_quantitativa',
+        texto: 'Frequentemente levo trabalho para além do horário normal.',
+        dimensao: 'sipro_demandas_quantitativas',
         normas: ['NR-01', 'ISO 45003'],
       },
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 2 — DEMANDAS COGNITIVAS (15%)
+  // ══════════════════════════════════════════════════════════════
   {
-    id: 'sipro_demanda_cognitiva',
-    nome: 'Demanda Cognitiva',
-    descricao: 'Avalia exigência mental e sobrecarga informacional',
+    id: 'sipro_demandas_cognitivas',
+    nome: 'Demandas Cognitivas',
+    descricao: 'Exigência de atenção, concentração e tomada de decisão',
     tipo: 'risco',
-    normas: ['NR-01', 'NR-17', 'ISO 45003'],
+    normas: ['NR-17', 'ISO 45003'],
     grupo: 'Demanda e Carga de Trabalho',
     perguntas: [
       {
         id: 'sipro_dc1',
-        texto: 'Meu trabalho exige alta concentração por longos períodos.',
-        dimensao: 'sipro_demanda_cognitiva',
-        normas: ['NR-17'],
+        texto: 'Meu trabalho exige atenção constante durante toda a jornada.',
+        dimensao: 'sipro_demandas_cognitivas',
+        normas: ['NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_dc2',
-        texto: 'Preciso tomar decisões importantes com frequência.',
-        dimensao: 'sipro_demanda_cognitiva',
-        normas: ['NR-01'],
+        texto: 'Preciso lidar com muitas informações ao mesmo tempo.',
+        dimensao: 'sipro_demandas_cognitivas',
+        normas: ['NR-17'],
       },
       {
         id: 'sipro_dc3',
-        texto: 'Preciso lidar com muitas informações ao mesmo tempo.',
-        dimensao: 'sipro_demanda_cognitiva',
-        normas: ['ISO 45003'],
+        texto: 'Tomo decisões importantes sob pressão ou com pouco tempo.',
+        dimensao: 'sipro_demandas_cognitivas',
+        normas: ['NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_dc4',
-        texto: 'Um pequeno erro no meu trabalho pode gerar consequências relevantes.',
-        dimensao: 'sipro_demanda_cognitiva',
-        normas: ['NR-01', 'ISO 45001'],
+        texto: 'Sinto dificuldade de concentração ao longo da jornada.',
+        dimensao: 'sipro_demandas_cognitivas',
+        normas: ['NR-01', 'ISO 45003'],
       },
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 3 — DEMANDAS EMOCIONAIS (10%)
+  // ══════════════════════════════════════════════════════════════
   {
-    id: 'sipro_demanda_emocional',
-    nome: 'Demanda Emocional',
-    descricao: 'Avalia o esforço emocional exigido pelo trabalho',
+    id: 'sipro_demandas_emocionais',
+    nome: 'Demandas Emocionais',
+    descricao: 'Desgaste emocional decorrente do trabalho',
     tipo: 'risco',
     normas: ['NR-01', 'ISO 45003'],
     grupo: 'Demanda e Carga de Trabalho',
     perguntas: [
       {
         id: 'sipro_de1',
-        texto: 'Meu trabalho exige controlar minhas emoções constantemente.',
-        dimensao: 'sipro_demanda_emocional',
-        normas: ['ISO 45003'],
-      },
-      {
-        id: 'sipro_de2',
-        texto: 'Preciso lidar com situações emocionalmente difíceis.',
-        dimensao: 'sipro_demanda_emocional',
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_de3',
-        texto: 'Preciso lidar com pessoas irritadas, tristes ou agressivas.',
-        dimensao: 'sipro_demanda_emocional',
+        texto: 'Meu trabalho envolve lidar com conflitos, reclamações ou situações emocionalmente difíceis.',
+        dimensao: 'sipro_demandas_emocionais',
         normas: ['NR-01', 'ISO 45003'],
       },
       {
-        id: 'sipro_de4',
-        texto: 'Após o trabalho, sinto-me emocionalmente esgotado.',
-        dimensao: 'sipro_demanda_emocional',
-        normas: ['NR-01'],
+        id: 'sipro_de2',
+        texto: 'Preciso esconder o que realmente sinto para conseguir trabalhar.',
+        dimensao: 'sipro_demandas_emocionais',
+        normas: ['ISO 45003'],
+      },
+      {
+        id: 'sipro_de3',
+        texto: 'Saio do trabalho emocionalmente esgotado(a).',
+        dimensao: 'sipro_demandas_emocionais',
+        normas: ['NR-01', 'ISO 45003'],
       },
     ],
   },
 
   // ══════════════════════════════════════════════════════════════
-  // GRUPO 2 — ORGANIZAÇÃO DO TRABALHO
+  // EIXO 4 — AUTONOMIA, CONTROLE E INFLUÊNCIA (10%)
   // ══════════════════════════════════════════════════════════════
-
   {
     id: 'sipro_autonomia_controle',
     nome: 'Autonomia e Controle',
-    descricao: 'Avalia grau de autonomia e participação nas decisões',
+    descricao: 'Grau de controle do trabalhador sobre seu trabalho',
     tipo: 'protetor',
-    normas: ['NR-01', 'ISO 45003'],
+    normas: ['NR-17', 'ISO 45003'],
     grupo: 'Organização do Trabalho',
     perguntas: [
       {
         id: 'sipro_ac1',
-        texto: 'Tenho autonomia para organizar minhas tarefas.',
+        texto: 'Tenho autonomia para decidir como executar minhas tarefas.',
         dimensao: 'sipro_autonomia_controle',
         invertida: true,
-        normas: ['ISO 45003'],
+        normas: ['NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_ac2',
-        texto: 'Posso decidir como executar meu trabalho.',
+        texto: 'Consigo organizar meu ritmo de trabalho.',
         dimensao: 'sipro_autonomia_controle',
         invertida: true,
-        normas: ['NR-01'],
+        normas: ['NR-17'],
       },
       {
         id: 'sipro_ac3',
-        texto: 'Tenho liberdade para sugerir melhorias no trabalho.',
+        texto: 'Posso fazer pausas quando sinto necessidade.',
         dimensao: 'sipro_autonomia_controle',
         invertida: true,
-        normas: ['ISO 45003'],
+        normas: ['NR-17'],
       },
       {
         id: 'sipro_ac4',
-        texto: 'Minha opinião é considerada nas decisões que impactam meu trabalho.',
+        texto: 'Tenho espaço para opinar sobre mudanças que afetam meu trabalho.',
         dimensao: 'sipro_autonomia_controle',
         invertida: true,
-        normas: ['NR-01', 'ISO 45001'],
+        normas: ['ISO 45003'],
       },
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 5 — CLAREZA DE PAPÉIS E ORGANIZAÇÃO DO TRABALHO (10%)
+  // ══════════════════════════════════════════════════════════════
   {
     id: 'sipro_clareza_papeis',
     nome: 'Clareza de Papéis',
-    descricao: 'Avalia clareza das responsabilidades e orientações',
+    descricao: 'Clareza de função, responsabilidades e conflitos de papel',
     tipo: 'protetor',
-    normas: ['NR-01', 'ISO 45003'],
+    normas: ['NR-01', 'NR-17', 'ISO 45003'],
     grupo: 'Organização do Trabalho',
     perguntas: [
       {
         id: 'sipro_cp1',
-        texto: 'Sei exatamente quais são minhas responsabilidades.',
+        texto: 'Sei exatamente quais são minhas responsabilidades no trabalho.',
         dimensao: 'sipro_clareza_papeis',
         invertida: true,
-        normas: ['NR-01'],
+        normas: ['NR-01', 'NR-17'],
       },
       {
         id: 'sipro_cp2',
-        texto: 'Recebo orientações claras sobre o que é esperado de mim.',
+        texto: 'As expectativas sobre meu desempenho são claras.',
         dimensao: 'sipro_clareza_papeis',
         invertida: true,
         normas: ['ISO 45003'],
       },
       {
         id: 'sipro_cp3',
-        texto: 'As tarefas do meu trabalho são bem definidas.',
+        texto: 'Recebo orientações contraditórias de pessoas diferentes.',
         dimensao: 'sipro_clareza_papeis',
-        invertida: true,
-        normas: ['NR-01'],
+        normas: ['NR-17', 'ISO 45003'],
       },
       {
         id: 'sipro_cp4',
-        texto: 'Raramente recebo ordens conflitantes ou contraditórias.',
+        texto: 'O trabalho que realizo corresponde ao que foi definido para minha função.',
         dimensao: 'sipro_clareza_papeis',
         invertida: true,
-        normas: ['NR-01', 'ISO 45003'],
+        normas: ['NR-17'],
       },
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 6 — RECONHECIMENTO, JUSTIÇA E VALORIZAÇÃO (10%)
+  // ══════════════════════════════════════════════════════════════
   {
-    id: 'sipro_justica_organizacional',
-    nome: 'Justiça Organizacional',
-    descricao: 'Avalia equidade, respeito e valores organizacionais',
+    id: 'sipro_reconhecimento_justica',
+    nome: 'Reconhecimento e Justiça',
+    descricao: 'Percepção de justiça organizacional e valorização',
     tipo: 'protetor',
     normas: ['NR-01', 'ISO 45003'],
     grupo: 'Organização do Trabalho',
     perguntas: [
       {
-        id: 'sipro_jo1',
-        texto: 'As decisões da empresa são tomadas de forma justa.',
-        dimensao: 'sipro_justica_organizacional',
+        id: 'sipro_rj1',
+        texto: 'Meu esforço é reconhecido pela liderança.',
+        dimensao: 'sipro_reconhecimento_justica',
         invertida: true,
         normas: ['ISO 45003'],
       },
       {
-        id: 'sipro_jo2',
-        texto: 'Todos são tratados com respeito no ambiente de trabalho.',
-        dimensao: 'sipro_justica_organizacional',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_jo3',
-        texto: 'As regras da empresa são aplicadas de forma igual para todos.',
-        dimensao: 'sipro_justica_organizacional',
-        invertida: true,
-        normas: ['NR-01', 'ISO 45001'],
-      },
-      {
-        id: 'sipro_jo4',
-        texto: 'Sinto que a empresa valoriza seus colaboradores.',
-        dimensao: 'sipro_justica_organizacional',
-        invertida: true,
-        normas: ['ISO 45003'],
-      },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // GRUPO 3 — RELAÇÕES E SUPORTE
-  // ══════════════════════════════════════════════════════════════
-
-  {
-    id: 'sipro_suporte_lideranca',
-    nome: 'Suporte da Liderança',
-    descricao: 'Avalia apoio, disponibilidade e qualidade da liderança',
-    tipo: 'protetor',
-    normas: ['NR-01', 'ISO 45003'],
-    grupo: 'Relações e Suporte',
-    perguntas: [
-      {
-        id: 'sipro_sl1',
-        texto: 'Minha liderança está disponível quando preciso de apoio.',
-        dimensao: 'sipro_suporte_lideranca',
+        id: 'sipro_rj2',
+        texto: 'Sou tratado(a) de forma justa no trabalho.',
+        dimensao: 'sipro_reconhecimento_justica',
         invertida: true,
         normas: ['ISO 45003'],
       },
       {
-        id: 'sipro_sl2',
-        texto: 'Recebo orientação adequada da minha liderança.',
-        dimensao: 'sipro_suporte_lideranca',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_sl3',
-        texto: 'Minha liderança se preocupa com o bem-estar da equipe.',
-        dimensao: 'sipro_suporte_lideranca',
-        invertida: true,
-        normas: ['ISO 45003'],
-      },
-      {
-        id: 'sipro_sl4',
-        texto: 'Posso conversar abertamente com minha liderança.',
-        dimensao: 'sipro_suporte_lideranca',
+        id: 'sipro_rj3',
+        texto: 'Existe coerência entre esforço, responsabilidade e recompensas.',
+        dimensao: 'sipro_reconhecimento_justica',
         invertida: true,
         normas: ['NR-01', 'ISO 45003'],
       },
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 7 — RELACIONAMENTOS, CLIMA E SUPORTE SOCIAL (10%)
+  // ══════════════════════════════════════════════════════════════
   {
-    id: 'sipro_suporte_social',
-    nome: 'Suporte Social',
-    descricao: 'Avalia cooperação e apoio entre colegas',
+    id: 'sipro_relacionamentos_suporte',
+    nome: 'Relacionamentos e Suporte',
+    descricao: 'Suporte de colegas e liderança',
     tipo: 'protetor',
     normas: ['NR-01', 'ISO 45003'],
     grupo: 'Relações e Suporte',
-    perguntas: [
-      {
-        id: 'sipro_ss1',
-        texto: 'Posso contar com meus colegas quando preciso de ajuda.',
-        dimensao: 'sipro_suporte_social',
-        invertida: true,
-        normas: ['ISO 45003'],
-      },
-      {
-        id: 'sipro_ss2',
-        texto: 'Existe cooperação entre os membros da equipe.',
-        dimensao: 'sipro_suporte_social',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_ss3',
-        texto: 'O ambiente de trabalho favorece o apoio entre colegas.',
-        dimensao: 'sipro_suporte_social',
-        invertida: true,
-        normas: ['ISO 45001'],
-      },
-      {
-        id: 'sipro_ss4',
-        texto: 'Me sinto parte de uma equipe que trabalha unida.',
-        dimensao: 'sipro_suporte_social',
-        invertida: true,
-        normas: ['ISO 45003'],
-      },
-    ],
-  },
-
-  {
-    id: 'sipro_qualidade_relacoes',
-    nome: 'Qualidade das Relações',
-    descricao: 'Avalia respeito, confiança e clima interpessoal',
-    tipo: 'protetor',
-    normas: ['NR-01', 'ISO 45003'],
-    grupo: 'Relações e Suporte',
-    perguntas: [
-      {
-        id: 'sipro_qr1',
-        texto: 'As relações entre colegas são respeitosas.',
-        dimensao: 'sipro_qualidade_relacoes',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_qr2',
-        texto: 'Existe confiança entre as pessoas da equipe.',
-        dimensao: 'sipro_qualidade_relacoes',
-        invertida: true,
-        normas: ['ISO 45003'],
-      },
-      {
-        id: 'sipro_qr3',
-        texto: 'Conflitos são resolvidos de forma adequada.',
-        dimensao: 'sipro_qualidade_relacoes',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_qr4',
-        texto: 'O ambiente de trabalho é psicologicamente saudável.',
-        dimensao: 'sipro_qualidade_relacoes',
-        invertida: true,
-        normas: ['ISO 45001', 'ISO 45003'],
-      },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // GRUPO 4 — SEGURANÇA PSICOLÓGICA
-  // ══════════════════════════════════════════════════════════════
-
-  {
-    id: 'sipro_seguranca_psicologica',
-    nome: 'Segurança Psicológica',
-    descricao: 'Avalia liberdade de expressão sem medo de represálias',
-    tipo: 'protetor',
-    normas: ['NR-01', 'ISO 45003'],
-    grupo: 'Segurança Psicológica',
-    perguntas: [
-      {
-        id: 'sipro_sp1',
-        texto: 'Posso expressar opiniões sem medo de represálias.',
-        dimensao: 'sipro_seguranca_psicologica',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_sp2',
-        texto: 'Posso relatar erros sem receio de punição injusta.',
-        dimensao: 'sipro_seguranca_psicologica',
-        invertida: true,
-        normas: ['ISO 45001'],
-      },
-      {
-        id: 'sipro_sp3',
-        texto: 'Posso fazer perguntas quando tenho dúvidas sem me sentir julgado.',
-        dimensao: 'sipro_seguranca_psicologica',
-        invertida: true,
-        normas: ['ISO 45003'],
-      },
-      {
-        id: 'sipro_sp4',
-        texto: 'Me sinto seguro para falar sobre problemas no trabalho.',
-        dimensao: 'sipro_seguranca_psicologica',
-        invertida: true,
-        normas: ['NR-01', 'ISO 45003'],
-      },
-    ],
-  },
-
-  {
-    id: 'sipro_reconhecimento_sentido',
-    nome: 'Reconhecimento e Sentido do Trabalho',
-    descricao: 'Avalia valorização, propósito e significado do trabalho',
-    tipo: 'protetor',
-    normas: ['NR-01', 'ISO 45003'],
-    grupo: 'Segurança Psicológica',
     perguntas: [
       {
         id: 'sipro_rs1',
-        texto: 'Meu trabalho é valorizado pela empresa.',
-        dimensao: 'sipro_reconhecimento_sentido',
+        texto: 'Posso contar com meus colegas quando preciso de ajuda.',
+        dimensao: 'sipro_relacionamentos_suporte',
         invertida: true,
         normas: ['ISO 45003'],
       },
       {
         id: 'sipro_rs2',
-        texto: 'Recebo reconhecimento quando faço um bom trabalho.',
-        dimensao: 'sipro_reconhecimento_sentido',
-        invertida: true,
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_rs3',
-        texto: 'Meu trabalho tem significado e propósito para mim.',
-        dimensao: 'sipro_reconhecimento_sentido',
+        texto: 'Meu líder demonstra apoio quando enfrento dificuldades.',
+        dimensao: 'sipro_relacionamentos_suporte',
         invertida: true,
         normas: ['ISO 45003'],
       },
       {
-        id: 'sipro_rs4',
-        texto: 'Sinto orgulho do trabalho que realizo.',
-        dimensao: 'sipro_reconhecimento_sentido',
+        id: 'sipro_rs3',
+        texto: 'O ambiente de trabalho é respeitoso.',
+        dimensao: 'sipro_relacionamentos_suporte',
         invertida: true,
-        normas: ['NR-01'],
+        normas: ['NR-01', 'ISO 45003'],
       },
     ],
   },
 
   // ══════════════════════════════════════════════════════════════
-  // GRUPO 5 — CONDIÇÕES ESPECIAIS DE TRABALHO
+  // EIXO 8 — SENTIDO DO TRABALHO E ENGAJAMENTO (5%)
   // ══════════════════════════════════════════════════════════════
-
   {
-    id: 'sipro_ritmo_biologico',
-    nome: 'Ritmo Biológico e Recuperação',
-    descricao: 'Avalia impacto da jornada no sono, ritmo biológico e recuperação — dimensão inovadora do SIPRO',
-    tipo: 'risco',
-    normas: ['NR-01', 'NR-17', 'ISO 45003'],
-    grupo: 'Condições Especiais de Trabalho',
+    id: 'sipro_sentido_engajamento',
+    nome: 'Sentido do Trabalho',
+    descricao: 'Significado, pertencimento e motivação',
+    tipo: 'protetor',
+    normas: ['ISO 45003'],
+    grupo: 'Segurança Psicológica',
     perguntas: [
       {
-        id: 'sipro_rb1',
-        texto: 'Minha jornada de trabalho interfere na qualidade do meu sono.',
-        dimensao: 'sipro_ritmo_biologico',
-        normas: ['NR-17', 'ISO 45003'],
-      },
-      {
-        id: 'sipro_rb2',
-        texto: 'Meu horário de trabalho dificulta manter uma rotina de vida saudável.',
-        dimensao: 'sipro_ritmo_biologico',
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_rb3',
-        texto: 'Sinto cansaço persistente decorrente dos horários de trabalho.',
-        dimensao: 'sipro_ritmo_biologico',
-        normas: ['NR-17', 'ISO 45003'],
-      },
-      {
-        id: 'sipro_rb4',
-        texto: 'Minha escala de trabalho dificulta o convívio familiar e social.',
-        dimensao: 'sipro_ritmo_biologico',
-        normas: ['NR-01'],
-      },
-      {
-        id: 'sipro_rb5',
-        texto: 'Meu horário de trabalho muda com frequência, afetando minha rotina.',
-        dimensao: 'sipro_ritmo_biologico',
-        normas: ['NR-17', 'ISO 45003'],
-      },
-      {
-        id: 'sipro_rb6',
-        texto: 'Tenho tempo suficiente para descansar entre uma jornada e outra.',
-        dimensao: 'sipro_ritmo_biologico',
+        id: 'sipro_se1',
+        texto: 'Meu trabalho tem significado para mim.',
+        dimensao: 'sipro_sentido_engajamento',
         invertida: true,
-        normas: ['NR-17'],
+        normas: ['ISO 45003'],
+      },
+      {
+        id: 'sipro_se2',
+        texto: 'Sinto orgulho do que faço.',
+        dimensao: 'sipro_sentido_engajamento',
+        invertida: true,
+        normas: ['ISO 45003'],
+      },
+      {
+        id: 'sipro_se3',
+        texto: 'Sinto vontade de continuar trabalhando nesta empresa.',
+        dimensao: 'sipro_sentido_engajamento',
+        invertida: true,
+        normas: ['ISO 45003'],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 9 — RECUPERAÇÃO, PAUSAS E EQUILÍBRIO TRABALHO–VIDA (10%)
+  // ══════════════════════════════════════════════════════════════
+  {
+    id: 'sipro_recuperacao_equilibrio',
+    nome: 'Recuperação e Equilíbrio',
+    descricao: 'Descanso, recuperação e limites trabalho-vida',
+    tipo: 'risco',
+    normas: ['NR-01', 'NR-17', 'ISO 45003'],
+    grupo: 'Condições de Trabalho',
+    perguntas: [
+      {
+        id: 'sipro_re1',
+        texto: 'Consigo descansar adequadamente entre uma jornada e outra.',
+        dimensao: 'sipro_recuperacao_equilibrio',
+        invertida: true,
+        normas: ['NR-17', 'ISO 45003'],
+      },
+      {
+        id: 'sipro_re2',
+        texto: 'O trabalho interfere negativamente na minha vida pessoal.',
+        dimensao: 'sipro_recuperacao_equilibrio',
+        normas: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'sipro_re3',
+        texto: 'Chego em casa com energia para atividades pessoais.',
+        dimensao: 'sipro_recuperacao_equilibrio',
+        invertida: true,
+        normas: ['ISO 45003'],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  // EIXO 10 — SINAIS PRECOCES DE SOFRIMENTO PSÍQUICO (5%)
+  // ══════════════════════════════════════════════════════════════
+  {
+    id: 'sipro_sinais_precoces',
+    nome: 'Sinais Precoces',
+    descricao: 'Alertas iniciais de sofrimento psíquico (não diagnóstico)',
+    tipo: 'risco',
+    normas: ['NR-01', 'ISO 45003'],
+    grupo: 'Monitoramento',
+    perguntas: [
+      {
+        id: 'sipro_sp1',
+        texto: 'Tenho tido dificuldades para dormir.',
+        dimensao: 'sipro_sinais_precoces',
+        normas: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'sipro_sp2',
+        texto: 'Tenho me sentido mais irritado(a) ou tenso(a).',
+        dimensao: 'sipro_sinais_precoces',
+        normas: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'sipro_sp3',
+        texto: 'Tenho me sentido desmotivado(a) com o trabalho.',
+        dimensao: 'sipro_sinais_precoces',
+        normas: ['NR-01', 'ISO 45003'],
+      },
+      {
+        id: 'sipro_sp4',
+        texto: 'Tenho dificuldade para relaxar, mesmo fora do trabalho.',
+        dimensao: 'sipro_sinais_precoces',
+        normas: ['ISO 45003'],
       },
     ],
   },
