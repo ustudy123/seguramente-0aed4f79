@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const DELAY_MS = 30_000; // 30 seconds
+const DELAY_MS = 20_000; // 20 seconds
+const ONBOARDING_SHOWN_KEY = "onboarding_gate_shown";
 
 /**
- * OnboardingGate — renders a blocking full-screen modal after 90s
+ * OnboardingGate — renders a blocking full-screen modal after 20s
  * if the authenticated user hasn't completed onboarding yet.
+ * If the user reloads/returns without completing, the modal shows immediately.
  * Redirects to the full onboarding portal (/onboarding-cliente/:token).
  */
 export function OnboardingGate() {
@@ -26,11 +28,20 @@ export function OnboardingGate() {
   useEffect(() => {
     if (!needsOnboarding) {
       setShowModal(false);
+      localStorage.removeItem(ONBOARDING_SHOWN_KEY);
       if (timerRef.current) clearTimeout(timerRef.current);
       return;
     }
 
+    // If modal was already shown before (reload/return), show immediately
+    const alreadyShown = localStorage.getItem(ONBOARDING_SHOWN_KEY);
+    if (alreadyShown) {
+      setShowModal(true);
+      return;
+    }
+
     timerRef.current = setTimeout(() => {
+      localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
       setShowModal(true);
     }, DELAY_MS);
 
