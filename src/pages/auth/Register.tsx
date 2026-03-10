@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Loader2, ArrowLeft, ArrowRight, Search, CheckCircle2, Mail, MessageCircle, Eye, EyeOff } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { formatCnpj, cleanCnpj, buscarCnpj, type BrasilApiCnpjResponse } from "@/lib/brasilapi";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
