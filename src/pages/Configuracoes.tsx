@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Shield, ClipboardList, ShieldCheck } from "lucide-react";
+import { Users, Shield, ClipboardList, ShieldCheck, Rocket, ArrowRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EquipeTab } from "@/components/configuracoes/EquipeTab";
 import { AuditoriaTab } from "@/components/configuracoes/AuditoriaTab";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import UsuariosContent from "@/components/configuracoes/UsuariosContent";
 import PerfisContent from "@/components/configuracoes/PerfisContent";
 
 export default function Configuracoes() {
-  const { hasMinimumRole } = useAuthContext();
+  const { hasMinimumRole, profile, isSuperAdmin } = useAuthContext();
   const isAdmin = hasMinimumRole("admin");
+  const navigate = useNavigate();
+
+  const needsOnboarding = !!profile && !(profile as any).onboarding_concluido && !isSuperAdmin;
 
   return (
     <div className="space-y-6">
@@ -18,6 +23,30 @@ export default function Configuracoes() {
         <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
         <p className="text-muted-foreground">Gerencie sua empresa, equipe e níveis de acesso</p>
       </div>
+
+      {needsOnboarding && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between gap-4 p-4 bg-primary/5 border border-primary/15 rounded-xl"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Rocket className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Configuração inicial pendente</p>
+              <p className="text-xs text-muted-foreground">
+                Finalize o onboarding para liberar todos os recursos do sistema.
+              </p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => navigate("/onboarding")} className="gap-1.5 shrink-0">
+            Finalizar Configuração
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </motion.div>
+      )}
 
       <Tabs defaultValue="equipe">
         <TabsList>
