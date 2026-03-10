@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Activity,
   ShieldAlert,
+  Moon,
   Flame,
   Battery,
   Eye,
