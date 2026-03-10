@@ -20,6 +20,12 @@ import {
   calcularIRPS,
   getDimensoesByInstrumento,
   getLabelNivelIRPS,
+  calcularIndicePonderado,
+  PESOS_IRPS,
+  PESOS_IBO,
+  PESOS_IBD,
+  PESOS_IREC,
+  PESOS_ICOP,
 } from "@/data/instrumentos";
 
 // Gerar token único
