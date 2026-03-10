@@ -12177,14 +12177,20 @@ export type Database = {
       psicossocial_alertas: {
         Row: {
           acao_criada_id: string | null
+          acao_id: string | null
           campanha_id: string | null
+          classificacao: string | null
           created_at: string
           descricao: string | null
+          dimensao_id: string | null
+          dimensao_nome: string | null
           funcao: string | null
           id: string
           metadados: Json | null
           resolvido: boolean | null
           resolvido_em: string | null
+          score_ips: number | null
+          score_risco: number | null
           setor: string | null
           severidade: string
           tenant_id: string
@@ -12194,14 +12200,20 @@ export type Database = {
         }
         Insert: {
           acao_criada_id?: string | null
+          acao_id?: string | null
           campanha_id?: string | null
+          classificacao?: string | null
           created_at?: string
           descricao?: string | null
+          dimensao_id?: string | null
+          dimensao_nome?: string | null
           funcao?: string | null
           id?: string
           metadados?: Json | null
           resolvido?: boolean | null
           resolvido_em?: string | null
+          score_ips?: number | null
+          score_risco?: number | null
           setor?: string | null
           severidade?: string
           tenant_id: string
@@ -12211,14 +12223,20 @@ export type Database = {
         }
         Update: {
           acao_criada_id?: string | null
+          acao_id?: string | null
           campanha_id?: string | null
+          classificacao?: string | null
           created_at?: string
           descricao?: string | null
+          dimensao_id?: string | null
+          dimensao_nome?: string | null
           funcao?: string | null
           id?: string
           metadados?: Json | null
           resolvido?: boolean | null
           resolvido_em?: string | null
+          score_ips?: number | null
+          score_risco?: number | null
           setor?: string | null
           severidade?: string
           tenant_id?: string
@@ -12227,6 +12245,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "psicossocial_alertas_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "psicossocial_alertas_campanha_id_fkey"
             columns: ["campanha_id"]
