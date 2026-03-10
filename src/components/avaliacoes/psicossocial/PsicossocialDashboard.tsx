@@ -198,7 +198,7 @@ export function PsicossocialDashboard() {
 
         {/* Tab: Burnout & Boreout */}
         <TabsContent value="burnout-boreout" className="mt-4">
-          <RadaresPsicossocialSection />
+          <RadaresPsicossocialSection campanhas={campanhas} />
         </TabsContent>
 
         {/* Tab: Campanhas */}

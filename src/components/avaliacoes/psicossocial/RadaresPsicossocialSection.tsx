@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
@@ -57,10 +58,62 @@ function calcularNivel(score: number): NivelRisco {
   return 'critico';
 }
 
-// ────────── fatores BURNOUT ──────────
-const FATORES_BURNOUT: FatorConfig[] = [
+// ────────── mapeamento dimensões SIPRO → fatores ──────────
+// Radar `subject` usa as 2 primeiras palavras do nome da dimensão.
+// Para SIPRO: scores altos = mais risco. Para protetores invertidos, invertemos (100 - score).
+
+const BURNOUT_DIMENSION_MAP: Record<string, string> = {
+  sobrecargaCognitiva: 'Demanda Cognitiva',
+  ritmoTrabalho: 'Demanda Quantitativa',
+  faltaPausas: 'Ritmo Biológico',
+  humorNegativo: 'Demanda Emocional',
+  denuncias: 'Qualidade das',       // Qualidade das Relações — invertido
+  exigenciasEmocionais: 'Demanda Emocional',
+};
+
+const BOREOUT_DIMENSION_MAP: Record<string, string> = {
+  baixoDesafio: 'Autonomia e',       // Autonomia e Controle — invertido
+  repetitividade: 'Clareza de',      // Clareza de Papéis — invertido
+  faltaSentido: 'Reconhecimento e',  // Reconhecimento e Sentido — invertido
+  apatia: 'Justiça Organizacional',  // invertido
+  desconexao: 'Suporte Social',     // invertido
+};
+
+// Dimensões protetoras cujo score precisa ser invertido (100 - score)
+// porque score alto do SIPRO = bom → mas para burnout/boreout precisamos score alto = ruim
+const INVERTED_DIMENSIONS = new Set([
+  'Qualidade das', 'Autonomia e', 'Clareza de',
+  'Reconhecimento e', 'Justiça Organizacional', 'Suporte Social',
+  'Suporte da', 'Segurança Psicológica',
+]);
+
+function resolveRadarScore(
+  radarData: RadarDimensao[] | undefined,
+  subjectPrefix: string,
+  fallback: number
+): number {
+  if (!radarData || radarData.length === 0) return fallback;
+  const match = radarData.find(d => d.subject === subjectPrefix);
+  if (!match) return fallback;
+  const raw = match.value;
+  return INVERTED_DIMENSIONS.has(subjectPrefix) ? Math.max(0, 100 - raw) : raw;
+}
+
+// ────────── templates de fatores (sem valor fixo) ──────────
+interface FatorTemplate {
+  key: string;
+  label: string;
+  fallback: number;
+  descricao: string;
+  detailedAnalysis: string;
+  dataSource: readonly string[];
+  icon: React.ElementType;
+  sugestoes: readonly SugestaoAcao[];
+}
+
+const BURNOUT_TEMPLATES: FatorTemplate[] = [
   {
-    key: 'sobrecargaCognitiva', label: 'Sobrecarga Cognitiva', valor: 62, icon: Brain,
+    key: 'sobrecargaCognitiva', label: 'Sobrecarga Cognitiva', fallback: 62, icon: Brain,
     descricao: 'Excesso de tarefas e demandas mentais intensas',
     detailedAnalysis: 'Analisamos a quantidade e complexidade dos riscos cognitivos no ambiente de trabalho, incluindo demandas de atenção, memória e processamento de informações.',
     dataSource: ['Inventário de Riscos Cognitivos', 'Análise de Carga Mental'],
@@ -72,7 +125,7 @@ const FATORES_BURNOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'ritmoTrabalho', label: 'Ritmo de Trabalho', valor: 71, icon: Clock,
+    key: 'ritmoTrabalho', label: 'Ritmo de Trabalho', fallback: 71, icon: Clock,
     descricao: 'Pressão por velocidade e volume de produção',
     detailedAnalysis: 'Avaliamos os riscos organizacionais relacionados ao ritmo, pressão por prazos e metas, intensidade das demandas e controle sobre o próprio trabalho.',
     dataSource: ['Riscos Organizacionais', 'Análise de Jornada'],
@@ -84,7 +137,7 @@ const FATORES_BURNOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'faltaPausas', label: 'Falta de Pausas', valor: 55, icon: AlertTriangle,
+    key: 'faltaPausas', label: 'Falta de Pausas', fallback: 55, icon: AlertTriangle,
     descricao: 'Ausência de intervalos adequados para recuperação',
     detailedAnalysis: 'Consideramos as ações pendentes relacionadas a pausas e recuperação, assim como a existência de políticas e práticas de descanso durante a jornada.',
     dataSource: ['Ações Pendentes', 'Política de Pausas'],
@@ -96,7 +149,7 @@ const FATORES_BURNOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'humorNegativo', label: 'Humor Negativo', valor: 44, icon: TrendingDown,
+    key: 'humorNegativo', label: 'Humor Negativo', fallback: 44, icon: TrendingDown,
     descricao: 'Irritabilidade, negatividade e desgaste emocional',
     detailedAnalysis: 'Monitoramos os registros de humor diário dos colaboradores, identificando padrões de estresse, cansaço, ansiedade e desânimo nos últimos 7 dias.',
     dataSource: ['Humor Diário', 'Registros dos últimos 7 dias'],
@@ -108,7 +161,7 @@ const FATORES_BURNOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'denuncias', label: 'Denúncias/Ocorrências', valor: 30, icon: MessageSquareWarning,
+    key: 'denuncias', label: 'Denúncias/Ocorrências', fallback: 30, icon: MessageSquareWarning,
     descricao: 'Relatos de conflitos, pressão indevida ou ambiente hostil',
     detailedAnalysis: 'Analisamos as manifestações recebidas pela ouvidoria, incluindo denúncias, reclamações e sugestões relacionadas ao ambiente de trabalho e relações interpessoais.',
     dataSource: ['Ouvidoria', 'Ocorrências em aberto'],
@@ -120,7 +173,7 @@ const FATORES_BURNOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'exigenciasEmocionais', label: 'Exigências Emocionais', valor: 68, icon: Heart,
+    key: 'exigenciasEmocionais', label: 'Exigências Emocionais', fallback: 68, icon: Heart,
     descricao: 'Necessidade de suprimir emoções no exercício das funções',
     detailedAnalysis: 'Combinamos indicadores de humor negativo com riscos cognitivos para avaliar a carga emocional exigida nas atividades laborais.',
     dataSource: ['Humor Diário', 'Riscos Cognitivos'],
@@ -133,10 +186,9 @@ const FATORES_BURNOUT: FatorConfig[] = [
   },
 ];
 
-// ────────── fatores BOREOUT ──────────
-const FATORES_BOREOUT: FatorConfig[] = [
+const BOREOUT_TEMPLATES: FatorTemplate[] = [
   {
-    key: 'baixoDesafio', label: 'Baixo Desafio', valor: 75, icon: Target,
+    key: 'baixoDesafio', label: 'Baixo Desafio', fallback: 75, icon: Target,
     descricao: 'Tarefas excessivamente simples e sem estímulo intelectual',
     detailedAnalysis: 'Avaliamos se há subutilização das competências dos colaboradores, analisando a relação entre capacidades identificadas e complexidade das tarefas atribuídas.',
     dataSource: ['Inventário de Riscos', 'Ações Cadastradas'],
@@ -148,7 +200,7 @@ const FATORES_BOREOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'repetitividade', label: 'Repetitividade', valor: 80, icon: RotateCcw,
+    key: 'repetitividade', label: 'Repetitividade', fallback: 80, icon: RotateCcw,
     descricao: 'Ciclos repetitivos e monotonia nas atividades diárias',
     detailedAnalysis: 'Analisamos riscos cognitivos relacionados à monotonia, avaliando a diversidade de tarefas e estímulos no ambiente de trabalho.',
     dataSource: ['Riscos Cognitivos', 'Análise de Tarefas'],
@@ -160,7 +212,7 @@ const FATORES_BOREOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'faltaSentido', label: 'Falta de Sentido', valor: 60, icon: Minus,
+    key: 'faltaSentido', label: 'Falta de Sentido', fallback: 60, icon: Minus,
     descricao: 'Percepção de que o trabalho não tem propósito ou impacto',
     detailedAnalysis: 'Correlacionamos indicadores de humor com a percepção de propósito, avaliando se os colaboradores compreendem a importância de suas contribuições.',
     dataSource: ['Humor Diário', 'Clima Organizacional'],
@@ -172,7 +224,7 @@ const FATORES_BOREOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'apatia', label: 'Apatia Emocional', valor: 55, icon: Meh,
+    key: 'apatia', label: 'Apatia Emocional', fallback: 55, icon: Meh,
     descricao: 'Perda de entusiasmo, envolvimento e motivação com o trabalho',
     detailedAnalysis: 'Monitoramos a frequência de registros de humor neutro ou indiferente, que podem indicar desconexão emocional com o trabalho.',
     dataSource: ['Humor Diário', 'Taxa de Neutralidade'],
@@ -184,7 +236,7 @@ const FATORES_BOREOUT: FatorConfig[] = [
     ],
   },
   {
-    key: 'desconexao', label: 'Desconexão com Equipe', valor: 48, icon: Users,
+    key: 'desconexao', label: 'Desconexão com Equipe', fallback: 48, icon: Users,
     descricao: 'Isolamento e falta de pertencimento ao grupo',
     detailedAnalysis: 'Avaliamos indicadores de integração social, analisando a participação em atividades coletivas e a percepção de pertencimento ao grupo.',
     dataSource: ['Humor Positivo', 'Engajamento Social'],
@@ -197,8 +249,16 @@ const FATORES_BOREOUT: FatorConfig[] = [
   },
 ];
 
-const SCORE_BURNOUT = Math.round(FATORES_BURNOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BURNOUT.length);
-const SCORE_BOREOUT = Math.round(FATORES_BOREOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BOREOUT.length);
+function buildFatores(
+  templates: FatorTemplate[],
+  dimensionMap: Record<string, string>,
+  radarData: RadarDimensao[] | undefined,
+): FatorConfig[] {
+  return templates.map(t => ({
+    ...t,
+    valor: resolveRadarScore(radarData, dimensionMap[t.key] || '', t.fallback),
+  }));
+}
 
 // ────────── cartão de fator individual ──────────
 interface FatorCardProps {
@@ -476,7 +536,13 @@ function RadarPanel({
 }
 
 // ────────── componente principal ──────────
-export function RadaresPsicossocialSection() {
+const MINIMO_ANONIMATO = 5;
+
+interface RadaresPsicossocialSectionProps {
+  campanhas?: CampanhaPsicossocial[];
+}
+
+export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossocialSectionProps) {
   const { tenantId, user, profile } = useAuth();
   const navigate = useNavigate();
   const [gerandoBurnout, setGerandoBurnout] = useState(false);
@@ -488,6 +554,33 @@ export function RadaresPsicossocialSection() {
   const [existingActionsByFator, setExistingActionsByFator] = useState<
     Record<string, { titulo: string; status: string }[]>
   >({});
+
+  // Agregar radar_data das campanhas com dados suficientes
+  const radarAgregado = useMemo<RadarDimensao[] | undefined>(() => {
+    const campanhasComDados = campanhas.filter(
+      c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
+        && (c.total_respostas || 0) >= MINIMO_ANONIMATO
+    );
+    if (campanhasComDados.length === 0) return undefined;
+
+    // Usar a campanha mais recente com dados
+    const maisRecente = campanhasComDados[0]; // já vem ordenado por created_at desc
+    return maisRecente.radar_data;
+  }, [campanhas]);
+
+  const temDadosReais = !!radarAgregado;
+
+  const FATORES_BURNOUT = useMemo(
+    () => buildFatores(BURNOUT_TEMPLATES, BURNOUT_DIMENSION_MAP, radarAgregado),
+    [radarAgregado]
+  );
+  const FATORES_BOREOUT = useMemo(
+    () => buildFatores(BOREOUT_TEMPLATES, BOREOUT_DIMENSION_MAP, radarAgregado),
+    [radarAgregado]
+  );
+
+  const SCORE_BURNOUT = Math.round(FATORES_BURNOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BURNOUT.length);
+  const SCORE_BOREOUT = Math.round(FATORES_BOREOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BOREOUT.length);
 
   const nivelBurnout = calcularNivel(SCORE_BURNOUT);
   const nivelBoreout = calcularNivel(SCORE_BOREOUT);
@@ -630,10 +723,24 @@ export function RadaresPsicossocialSection() {
               <Brain className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
+                {temDadosReais ? (
+                  <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">
+                    Dados Reais
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
+                    Estimativa
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Radares calculados a partir das respostas da campanha psicossocial.
-                Expanda cada fator para ver a análise detalhada e criar ações específicas,
+                {temDadosReais
+                  ? 'Radares calculados a partir das respostas reais da campanha psicossocial mais recente.'
+                  : 'Valores estimados — crie e aplique uma campanha psicossocial para obter dados reais.'
+                }
+                {' '}Expanda cada fator para ver a análise detalhada e criar ações específicas,
                 ou use a IA para gerar um plano preventivo completo.
               </p>
             </div>
