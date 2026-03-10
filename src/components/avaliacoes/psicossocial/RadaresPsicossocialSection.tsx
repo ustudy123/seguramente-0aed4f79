@@ -723,10 +723,24 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
               <Brain className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
+                {temDadosReais ? (
+                  <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">
+                    Dados Reais
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
+                    Estimativa
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Radares calculados a partir das respostas da campanha psicossocial.
-                Expanda cada fator para ver a análise detalhada e criar ações específicas,
+                {temDadosReais
+                  ? 'Radares calculados a partir das respostas reais da campanha psicossocial mais recente.'
+                  : 'Valores estimados — crie e aplique uma campanha psicossocial para obter dados reais.'
+                }
+                {' '}Expanda cada fator para ver a análise detalhada e criar ações específicas,
                 ou use a IA para gerar um plano preventivo completo.
               </p>
             </div>
