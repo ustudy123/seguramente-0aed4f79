@@ -7,6 +7,7 @@ import { HumorDiarioPopup } from "@/components/humor/HumorDiarioPopup";
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 import { useIframeNavigation } from "@/hooks/useIframeNavigation";
+import { OnboardingGate } from "@/components/auth/OnboardingGate";
 
 export const MainLayout = () => {
   useIframeNavigation(); // Listen for QA Agent navigation commands

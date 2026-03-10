@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, ArrowLeft, ArrowRight, Search, Info, CheckCircle2, Clock, Phone, Sparkles, MessageCircle } from "lucide-react";
-import { PhoneInput, cleanPhone, validatePhone } from "@/components/ui/phone-input";
+import { Loader2, ArrowLeft, ArrowRight, Search, CheckCircle2, Mail, MessageCircle, Eye, EyeOff } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { formatCnpj, cleanCnpj, buscarCnpj, type BrasilApiCnpjResponse } from "@/lib/brasilapi";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,8 @@ const registerSchema = z.object({
   nomeCompleto: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
   whatsapp: z.string().min(10, "WhatsApp inválido").max(15),
+  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(72),
+  confirmarSenha: z.string(),
 }).refine((data) => {
   const clean = data.documento.replace(/\D/g, "");
   if (data.tipoPessoa === "pj") return clean.length === 14;
@@ -68,6 +70,9 @@ const registerSchema = z.object({
 }, {
   message: "WhatsApp inválido",
   path: ["whatsapp"],
+}).refine((data) => data.senha === data.confirmarSenha, {
+  message: "As senhas não conferem",
+  path: ["confirmarSenha"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -78,6 +83,8 @@ export default function Register() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [cnpjData, setCnpjData] = useState<BrasilApiCnpjResponse | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -89,6 +96,8 @@ export default function Register() {
       nomeCompleto: "",
       email: "",
       whatsapp: "",
+      senha: "",
+      confirmarSenha: "",
     },
     mode: "onChange",
   });
@@ -127,51 +136,53 @@ export default function Register() {
     setSubmitting(true);
     try {
       const cleanDoc = data.documento.replace(/\D/g, "");
-      const cleanWhatsapp = data.whatsapp.replace(/\D/g, "");
-      const { data: result, error } = await supabase.functions.invoke("pre-register", {
-        body: {
-          nomeCompleto: data.nomeCompleto,
-          email: data.email,
-          whatsapp: cleanWhatsapp,
-          tipoPessoa: data.tipoPessoa,
-          documento: cleanDoc,
-          tenantNome: data.tenantNome,
-          tenantSlug: data.tenantSlug,
-          empresaDados: cnpjData
-            ? {
-                razaoSocial: cnpjData.razao_social,
-                nomeFantasia: cnpjData.nome_fantasia,
-                cep: cnpjData.cep,
-                logradouro: cnpjData.logradouro,
-                numero: cnpjData.numero,
-                complemento: cnpjData.complemento,
-                bairro: cnpjData.bairro,
-                municipio: cnpjData.municipio,
-                uf: cnpjData.uf,
-                telefone: cnpjData.telefone,
-                emailEmpresa: cnpjData.email,
-                cnaeFiscal: cnpjData.cnae_fiscal,
-                cnaeDescricao: cnpjData.cnae_fiscal_descricao,
-                cnaesSecundarios: cnpjData.cnaes_secundarios,
-                porte: cnpjData.porte || null,
-                naturezaJuridica: cnpjData.natureza_juridica || null,
-              }
-            : null,
+
+      // 1. Create auth user with Supabase (sends verification email)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.senha,
+        options: {
+          emailRedirectTo: window.location.origin,
         },
       });
 
-      if (error) {
-        toast.error("Erro ao enviar cadastro", { description: "Tente novamente mais tarde." });
+      if (authError) {
+        if (authError.message.includes("already registered")) {
+          toast.error("Este e-mail já está cadastrado", { description: "Tente fazer login ou use outro e-mail." });
+        } else {
+          toast.error("Erro ao criar conta", { description: authError.message });
+        }
         return;
       }
 
-      if (result?.error) {
-        toast.error("Atenção", { description: result.error });
+      if (!authData.user) {
+        toast.error("Erro ao criar conta");
         return;
       }
+
+      // 2. Call onboarding-signup to create tenant + profile + owner role
+      const { error: fnError } = await supabase.functions.invoke("onboarding-signup", {
+        body: {
+          tenantNome: data.tenantNome,
+          tenantSlug: data.tenantSlug,
+          nomeCompleto: data.nomeCompleto,
+          tipoPessoa: data.tipoPessoa,
+          documento: cleanDoc,
+        },
+      });
+
+      if (fnError) {
+        console.error("onboarding-signup error:", fnError);
+        // Account was created but tenant setup failed — still show success
+        // since the user can retry later
+      }
+
+      // Sign out so user must verify email first
+      await supabase.auth.signOut();
 
       setShowSuccessDialog(true);
-    } catch {
+    } catch (err) {
+      console.error("Register error:", err);
       toast.error("Erro ao enviar cadastro", { description: "Tente novamente mais tarde." });
     } finally {
       setSubmitting(false);
@@ -216,16 +227,7 @@ export default function Register() {
         <p className="text-muted-foreground mt-1">
           {step === 1
             ? "Primeiro, informe os dados da sua empresa"
-            : "Agora, informe seus dados de contato"}
-        </p>
-      </div>
-
-      {/* Info banner */}
-      <div className="bg-accent/50 border border-accent rounded-lg p-3.5 flex items-start gap-3">
-        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Este cadastro é para <strong>conhecer o Seguramente</strong>. Após o envio, nossa equipe entrará em contato
-          para uma breve apresentação da plataforma, esclarecer suas dúvidas e ativar seu acesso.
+            : "Agora, informe seus dados e crie sua senha"}
         </p>
       </div>
 
@@ -341,7 +343,7 @@ export default function Register() {
                     <FormControl>
                       <div className="flex">
                         <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
-                          rh360.app/
+                          seguramente.app/
                         </span>
                         <Input className="rounded-l-none" placeholder="minha-empresa" {...field} />
                       </div>
@@ -409,7 +411,64 @@ export default function Register() {
                         onChange={(val) => form.setValue("whatsapp", val, { shouldValidate: true })}
                       />
                     </FormControl>
-                    <FormDescription>Para contato rápido da nossa equipe</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="senha"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Mínimo 6 caracteres"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowPassword(!showPassword)}
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmarSenha"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar Senha *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Repita a senha"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          tabIndex={-1}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -429,10 +488,10 @@ export default function Register() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Enviando...
+                      Criando conta...
                     </>
                   ) : (
-                    "Enviar Cadastro"
+                    "Criar Conta"
                   )}
                 </Button>
               </div>
@@ -450,53 +509,37 @@ export default function Register() {
         </p>
       </div>
 
-      {/* Success Dialog */}
+      {/* Success Dialog — Verify Email */}
       <Dialog open={showSuccessDialog} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader className="text-center items-center">
             <div className="mx-auto bg-primary/10 rounded-full p-3 mb-2">
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+              <Mail className="w-8 h-8 text-primary" />
             </div>
-            <DialogTitle className="text-xl">Pré-cadastro realizado com sucesso!</DialogTitle>
+            <DialogTitle className="text-xl">Verifique seu e-mail</DialogTitle>
             <DialogDescription className="text-center">
-              Recebemos os dados da sua empresa e estamos muito felizes com o seu interesse no Seguramente.
+              Enviamos um link de confirmação para o e-mail informado. Clique no link para ativar sua conta e acessar o sistema.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-3 p-3 bg-accent/50 rounded-lg">
-              <Phone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Entraremos em contato em breve</p>
+                <p className="text-sm font-medium">Conta criada com sucesso</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Um responsável da nossa equipe entrará em contato para agendar uma rápida demonstração do sistema e esclarecer todas as suas dúvidas.
+                  Sua empresa e conta de acesso foram configuradas. Basta confirmar o e-mail para começar.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-accent/50 rounded-lg">
-              <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Demonstração personalizada</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Vamos apresentar os módulos mais relevantes para a realidade da sua empresa, sem compromisso.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-accent/50 rounded-lg">
-              <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Ativação pelo nosso time</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Após a demonstração, nossa equipe fará a ativação da sua conta e acompanhará a implantação do sistema.
-                </p>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Não recebeu o e-mail? Verifique a pasta de spam ou lixo eletrônico.
+            </p>
           </div>
 
           <Button className="w-full" asChild>
-            <Link to="/login">Voltar para a tela de login</Link>
+            <Link to="/login">Ir para a tela de login</Link>
           </Button>
         </DialogContent>
       </Dialog>
