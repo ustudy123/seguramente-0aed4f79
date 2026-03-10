@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2, ChevronRight, Building2, Users, LayoutGrid,
   Upload, ArrowRight, Sparkles, Loader2, CheckCheck,
-  BarChart3, Briefcase, Shield, Rocket, Clock
+  BarChart3, Briefcase, Shield, Rocket, Clock, Download
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -113,9 +114,37 @@ function gerarPrioridades(indice: number): { ordem: number; texto: string }[] {
 
 // ─── Step: Estrutura Organizacional ──────────────────────────────────────────
 
-function StepColaboradores({ onConcluir }: { onConcluir: () => void }) {
+function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onBack?: () => void }) {
   const [modo, setModo] = useState<'escolha' | 'importar' | 'manual' | 'done'>('escolha');
   const [dragOver, setDragOver] = useState(false);
+
+  const handleDownloadTemplate = useCallback(() => {
+    const headers = ['Nome Completo', 'CPF', 'E-mail', 'Telefone', 'Data Nascimento', 'Cargo/Função', 'Departamento', 'Data Admissão', 'Salário', 'Centro de Custo', 'Gestor Imediato'];
+    const exemplo = ['Maria Silva', '123.456.789-00', 'maria@empresa.com', '(11) 99999-0000', '15/03/1990', 'Analista de RH', 'Recursos Humanos', '01/02/2024', '5000', 'RH-001', 'João Santos'];
+    const ws = XLSX.utils.aoa_to_sheet([headers, exemplo]);
+    ws['!cols'] = headers.map(() => ({ wch: 20 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Colaboradores');
+    const wsInstrucoes = XLSX.utils.aoa_to_sheet([
+      ['INSTRUÇÕES DE PREENCHIMENTO'], [''],
+      ['Campo', 'Obrigatório', 'Formato', 'Exemplo'],
+      ['Nome Completo', 'Sim', 'Texto', 'Maria Silva'],
+      ['CPF', 'Sim', '000.000.000-00', '123.456.789-00'],
+      ['E-mail', 'Não', 'email@dominio.com', 'maria@empresa.com'],
+      ['Telefone', 'Não', '(00) 00000-0000', '(11) 99999-0000'],
+      ['Data Nascimento', 'Não', 'DD/MM/AAAA', '15/03/1990'],
+      ['Cargo/Função', 'Sim', 'Texto', 'Analista de RH'],
+      ['Departamento', 'Sim', 'Texto', 'Recursos Humanos'],
+      ['Data Admissão', 'Não', 'DD/MM/AAAA', '01/02/2024'],
+      ['Salário', 'Não', 'Número', '5000'],
+      ['Centro de Custo', 'Não', 'Texto', 'RH-001'],
+      ['Gestor Imediato', 'Não', 'Texto', 'João Santos'],
+    ]);
+    wsInstrucoes['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 22 }, { wch: 22 }];
+    XLSX.utils.book_append_sheet(wb, wsInstrucoes, 'Instruções');
+    XLSX.writeFile(wb, 'modelo_colaboradores.xlsx');
+    toast.success("Planilha modelo baixada!");
+  }, []);
 
   if (modo === 'done') {
     return (
@@ -132,6 +161,16 @@ function StepColaboradores({ onConcluir }: { onConcluir: () => void }) {
     return (
       <div className="space-y-4">
         <button onClick={() => setModo('escolha')} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">← Voltar</button>
+        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/10">
+          <div className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-primary" />
+            <span className="text-sm text-muted-foreground">Precisa de um modelo?</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="text-xs gap-1.5">
+            <Download className="w-3 h-3" />
+            Baixar planilha modelo
+          </Button>
+        </div>
         <div
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -182,6 +221,9 @@ function StepColaboradores({ onConcluir }: { onConcluir: () => void }) {
 
   return (
     <div className="space-y-4">
+      {onBack && (
+        <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">← Voltar</button>
+      )}
       <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
         <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-muted-foreground">Como deseja configurar a estrutura de colaboradores?</p>
@@ -535,8 +577,7 @@ export default function OnboardingProtegido() {
 
                   {stepAtivo === 'colaboradores' && (
                     <motion.div key="colaboradores" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                      <button onClick={() => setStepAtivo(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">← Voltar</button>
-                      <StepColaboradores onConcluir={() => setStepAtivo(null)} />
+                      <StepColaboradores onConcluir={() => setStepAtivo(null)} onBack={() => setStepAtivo(null)} />
                     </motion.div>
                   )}
 
