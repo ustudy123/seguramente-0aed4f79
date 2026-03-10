@@ -536,7 +536,13 @@ function RadarPanel({
 }
 
 // ────────── componente principal ──────────
-export function RadaresPsicossocialSection() {
+const MINIMO_ANONIMATO = 5;
+
+interface RadaresPsicossocialSectionProps {
+  campanhas?: CampanhaPsicossocial[];
+}
+
+export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossocialSectionProps) {
   const { tenantId, user, profile } = useAuth();
   const navigate = useNavigate();
   const [gerandoBurnout, setGerandoBurnout] = useState(false);
@@ -548,6 +554,33 @@ export function RadaresPsicossocialSection() {
   const [existingActionsByFator, setExistingActionsByFator] = useState<
     Record<string, { titulo: string; status: string }[]>
   >({});
+
+  // Agregar radar_data das campanhas com dados suficientes
+  const radarAgregado = useMemo<RadarDimensao[] | undefined>(() => {
+    const campanhasComDados = campanhas.filter(
+      c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
+        && (c.total_respostas || 0) >= MINIMO_ANONIMATO
+    );
+    if (campanhasComDados.length === 0) return undefined;
+
+    // Usar a campanha mais recente com dados
+    const maisRecente = campanhasComDados[0]; // já vem ordenado por created_at desc
+    return maisRecente.radar_data;
+  }, [campanhas]);
+
+  const temDadosReais = !!radarAgregado;
+
+  const FATORES_BURNOUT = useMemo(
+    () => buildFatores(BURNOUT_TEMPLATES, BURNOUT_DIMENSION_MAP, radarAgregado),
+    [radarAgregado]
+  );
+  const FATORES_BOREOUT = useMemo(
+    () => buildFatores(BOREOUT_TEMPLATES, BOREOUT_DIMENSION_MAP, radarAgregado),
+    [radarAgregado]
+  );
+
+  const SCORE_BURNOUT = Math.round(FATORES_BURNOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BURNOUT.length);
+  const SCORE_BOREOUT = Math.round(FATORES_BOREOUT.reduce((s, f) => s + f.valor, 0) / FATORES_BOREOUT.length);
 
   const nivelBurnout = calcularNivel(SCORE_BURNOUT);
   const nivelBoreout = calcularNivel(SCORE_BOREOUT);
