@@ -62,21 +62,32 @@ serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Validate user from JWT
-  const { data: userData, error: userError } = await admin.auth.getUser(jwt);
-  console.log("JWT validation result:", userError ? userError.message : "OK", "userId:", userData?.user?.id);
-  if (userError || !userData?.user) {
-    return json({ error: "Invalid token" }, 401);
-  }
-
-  const userId = userData.user.id;
-
   let payload: Payload;
   try {
     payload = await req.json();
     console.log("Payload received:", JSON.stringify(payload));
   } catch {
     return json({ error: "Invalid JSON" }, 400);
+  }
+
+  // Validate user from JWT — or fall back to userId in payload (signup flow where no session exists yet)
+  let userId: string;
+  const { data: userData, error: userError } = await admin.auth.getUser(jwt);
+  console.log("JWT validation result:", userError ? userError.message : "OK", "userId:", userData?.user?.id);
+
+  if (!userError && userData?.user) {
+    userId = userData.user.id;
+  } else if (payload.userId) {
+    // Verify the user actually exists via admin
+    const { data: fallbackUser, error: fallbackError } = await admin.auth.admin.getUserById(payload.userId);
+    if (fallbackError || !fallbackUser?.user) {
+      console.log("Fallback userId invalid:", payload.userId);
+      return json({ error: "Invalid token" }, 401);
+    }
+    userId = fallbackUser.user.id;
+    console.log("Using fallback userId from payload:", userId);
+  } else {
+    return json({ error: "Invalid token" }, 401);
   }
 
   const tenantNome = (payload.tenantNome ?? "").trim();
