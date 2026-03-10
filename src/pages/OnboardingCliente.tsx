@@ -298,17 +298,15 @@ function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cliente; 
   }, []);
 
   const handleFileProcess = useCallback(async (file: File) => {
-    const tenantId = cliente.tenant_id || (cliente as any).tenant_id;
-    if (!tenantId) {
-      // Try to get tenant from the logged-in user
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error("Sessão expirada"); return; }
       const { data: profileData } = await supabase.from('profiles').select('tenant_id').eq('user_id', user.id).maybeSingle();
       if (!profileData?.tenant_id) { toast.error("Tenant não identificado"); return; }
-      return handleFileProcessWithTenant(file, profileData.tenant_id);
-    }
-    return handleFileProcessWithTenant(file, tenantId);
-  }, [cliente]);
+      
+      setModo('importing');
+      toast.info("Processando planilha...");
+      const rows = await parseSpreadsheet(file);
 
   const handleFileProcessWithTenant = useCallback(async (file: File, tenantId: string) => {
     try {
