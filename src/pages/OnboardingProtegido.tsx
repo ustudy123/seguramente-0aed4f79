@@ -156,34 +156,6 @@ function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onB
       </div>
     );
   }
-  const handleDownloadTemplate = useCallback(() => {
-    const headers = ['Nome Completo', 'CPF', 'E-mail', 'Telefone', 'Data Nascimento', 'Cargo/Função', 'Departamento', 'Data Admissão', 'Salário', 'Centro de Custo', 'Gestor Imediato'];
-    const exemplo = ['Maria Silva', '123.456.789-00', 'maria@empresa.com', '(11) 99999-0000', '15/03/1990', 'Analista de RH', 'Recursos Humanos', '01/02/2024', '5000', 'RH-001', 'João Santos'];
-    const ws = XLSX.utils.aoa_to_sheet([headers, exemplo]);
-    ws['!cols'] = headers.map(() => ({ wch: 20 }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Colaboradores');
-    const wsInstrucoes = XLSX.utils.aoa_to_sheet([
-      ['INSTRUÇÕES DE PREENCHIMENTO'],
-      [''],
-      ['Campo', 'Obrigatório', 'Formato', 'Exemplo'],
-      ['Nome Completo', 'Sim', 'Texto', 'Maria Silva'],
-      ['CPF', 'Sim', '000.000.000-00', '123.456.789-00'],
-      ['E-mail', 'Não', 'email@dominio.com', 'maria@empresa.com'],
-      ['Telefone', 'Não', '(00) 00000-0000', '(11) 99999-0000'],
-      ['Data Nascimento', 'Não', 'DD/MM/AAAA', '15/03/1990'],
-      ['Cargo/Função', 'Sim', 'Texto', 'Analista de RH'],
-      ['Departamento', 'Sim', 'Texto', 'Recursos Humanos'],
-      ['Data Admissão', 'Não', 'DD/MM/AAAA', '01/02/2024'],
-      ['Salário', 'Não', 'Número', '5000'],
-      ['Centro de Custo', 'Não', 'Texto', 'RH-001'],
-      ['Gestor Imediato', 'Não', 'Texto', 'João Santos'],
-    ]);
-    wsInstrucoes['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 22 }, { wch: 22 }];
-    XLSX.utils.book_append_sheet(wb, wsInstrucoes, 'Instruções');
-    XLSX.writeFile(wb, 'modelo_colaboradores.xlsx');
-    toast.success("Planilha modelo baixada!");
-  }, []);
 
   if (modo === 'importar') {
     return (
