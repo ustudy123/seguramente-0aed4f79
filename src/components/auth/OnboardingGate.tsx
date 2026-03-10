@@ -10,7 +10,7 @@ const DELAY_MS = 90_000; // 1 minute 30 seconds
 /**
  * OnboardingGate — renders a blocking full-screen modal after 90s
  * if the authenticated user hasn't completed onboarding yet.
- * Place inside MainLayout (after auth is resolved).
+ * Redirects to the full onboarding portal (/onboarding-cliente/:token).
  */
 export function OnboardingGate() {
   const { profile, isSuperAdmin } = useAuthContext();
@@ -40,7 +40,13 @@ export function OnboardingGate() {
   }, [needsOnboarding]);
 
   const handleGoToOnboarding = () => {
-    navigate("/onboarding");
+    const token = (profile as any)?.onboarding_token;
+    if (token) {
+      navigate(`/onboarding-cliente/${token}`);
+    } else {
+      // Fallback to internal onboarding if no token available
+      navigate("/onboarding");
+    }
   };
 
   return (
