@@ -72,6 +72,14 @@ const INDICES: IndiceConfig[] = [
     campo: "icop_score",
     invertido: true,
   },
+  {
+    codigo: "INOT-S",
+    nome: "Trabalho Noturno",
+    descricao: "Risco específico do trabalho noturno/3º turno",
+    icon: Moon,
+    campo: "inot_score",
+    invertido: true,
+  },
 ];
 
 type Semaforo = "saudavel" | "atencao" | "moderado" | "elevado";
