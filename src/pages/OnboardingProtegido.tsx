@@ -281,14 +281,13 @@ function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onB
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleFileDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer ${dragOver ? 'border-primary bg-primary/5' : 'border-muted/60 hover:border-primary/50'}`}
+          className={`relative border-2 border-dashed rounded-xl p-10 text-center transition-all ${dragOver ? 'border-primary bg-primary/5' : 'border-muted/60'}`}
         >
           <input
             ref={fileInputRef}
             type="file"
             accept=".xlsx,.xls,.csv"
-            className="hidden"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             onChange={handleFileSelect}
           />
           <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
