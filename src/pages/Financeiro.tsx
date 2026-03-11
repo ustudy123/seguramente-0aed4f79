@@ -19,6 +19,12 @@ import {
   Package,
   Pencil,
   Trash2,
+  FileCode,
+  Sun,
+  Gift,
+  PiggyBank,
+  Calculator,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
