@@ -368,7 +368,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
   // Auto-open sections that contain the active route
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    menuSections.forEach((section) => {
+    filteredSections.forEach((section) => {
       const hasActive = section.items.some(
         (item) =>
         item.path === location.pathname ||
