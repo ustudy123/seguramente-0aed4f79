@@ -4,46 +4,25 @@ import { FeriasCalendario } from "@/components/ferias/FeriasCalendario";
 import { FeriasSaldos } from "@/components/ferias/FeriasSaldos";
 import { FeriasInteligencia } from "@/components/ferias/FeriasInteligencia";
 import { FeriasCultura } from "@/components/ferias/FeriasCultura";
+import { FeriasRelatorios } from "@/components/ferias/FeriasRelatorios";
+import { FeriasGovernanca } from "@/components/ferias/FeriasGovernanca";
 import { useINR } from "@/hooks/useINR";
+import { useFerias, type FeriasSolicitacao } from "@/hooks/useFerias";
 import { calcularPeriodoFerias } from "@/lib/feriasPeriodo";
-import { 
-  Calendar, 
-  Plus, 
-  Filter,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Sun,
-  Plane,
-  ChevronsUpDown,
-  Check,
-  DollarSign,
-  Info,
-  Banknote,
-  AlertTriangle,
-  FileText,
-  Send,
-  TrendingUp,
-  Brain,
-  Heart,
+import {
+  Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
+  ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
+  FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +41,8 @@ import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF } from "@/lib/feriasDocumento
 import { supabase } from "@/integrations/supabase/client";
 import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 
-interface FeriasItem {
+// ========== Adapter types for legacy components ==========
+interface FeriasItemLegacy {
   id: number;
   colaborador: string;
   departamento: string;
@@ -77,41 +57,47 @@ interface FeriasItem {
   salarioBase?: number;
 }
 
-const initialFerias: FeriasItem[] = [];
+function toLegacy(s: FeriasSolicitacao): FeriasItemLegacy {
+  return {
+    id: s.id as any,
+    colaborador: s.colaborador_nome,
+    departamento: s.departamento || "N/A",
+    dataInicio: s.data_inicio,
+    dataFim: s.data_fim,
+    diasSolicitados: s.dias_solicitados,
+    saldoDias: s.saldo_dias,
+    status: (s.status === "em_gozo" || s.status === "concluido" ? "aprovado" : s.status === "cancelado" ? "recusado" : s.status) as any,
+    dataSolicitacao: s.created_at?.split("T")[0] || "",
+    abonoPecuniario: s.abono_pecuniario,
+    diasAbono: s.dias_abono,
+    salarioBase: s.salario_base,
+  };
+}
 
 const statusConfig = {
-  pendente: {
-    label: "Pendente",
-    icon: Clock,
-    style: "bg-warning/10 text-warning border-warning/20",
-  },
-  aprovado: {
-    label: "Aprovado",
-    icon: CheckCircle,
-    style: "bg-success/10 text-success border-success/20",
-  },
-  recusado: {
-    label: "Recusado",
-    icon: XCircle,
-    style: "bg-destructive/10 text-destructive border-destructive/20",
-  },
+  pendente: { label: "Pendente", icon: Clock, style: "bg-warning/10 text-warning border-warning/20" },
+  aprovado: { label: "Aprovado", icon: CheckCircle, style: "bg-success/10 text-success border-success/20" },
+  em_gozo: { label: "Em Gozo", icon: Plane, style: "bg-info/10 text-info border-info/20" },
+  concluido: { label: "Concluído", icon: CheckCircle, style: "bg-primary/10 text-primary border-primary/20" },
+  recusado: { label: "Recusado", icon: XCircle, style: "bg-destructive/10 text-destructive border-destructive/20" },
+  cancelado: { label: "Cancelado", icon: XCircle, style: "bg-muted text-muted-foreground border-muted" },
 };
 
 interface FeriasCardProps {
-  item: FeriasItem;
+  item: FeriasSolicitacao;
   index: number;
-  onAprovar: (id: number) => void;
-  onRecusar: (id: number) => void;
-  onGerarAviso: (item: FeriasItem) => void;
-  onGerarRecibo: (item: FeriasItem) => void;
-  onGerarFinanceiro: (item: FeriasItem) => void;
-  onLinkAssinatura: (item: FeriasItem) => void;
+  onAprovar: (id: string) => void;
+  onRecusar: (id: string) => void;
+  onGerarAviso: (item: FeriasSolicitacao) => void;
+  onGerarRecibo: (item: FeriasSolicitacao) => void;
+  onGerarFinanceiro: (item: FeriasSolicitacao) => void;
+  onLinkAssinatura: (item: FeriasSolicitacao) => void;
 }
 
 const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura }: FeriasCardProps) => {
-  const config = statusConfig[item.status];
-  const startDate = new Date(item.dataInicio).toLocaleDateString("pt-BR");
-  const endDate = new Date(item.dataFim).toLocaleDateString("pt-BR");
+  const config = statusConfig[item.status] || statusConfig.pendente;
+  const startDate = new Date(item.data_inicio + "T12:00:00").toLocaleDateString("pt-BR");
+  const endDate = new Date(item.data_fim + "T12:00:00").toLocaleDateString("pt-BR");
 
   return (
     <motion.div
@@ -124,18 +110,28 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-              {item.colaborador.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              {item.colaborador_nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-semibold text-foreground">{item.colaborador}</h3>
+            <h3 className="font-semibold text-foreground">{item.colaborador_nome}</h3>
             <p className="text-sm text-muted-foreground">{item.departamento}</p>
           </div>
         </div>
-        <Badge className={cn("text-xs", config.style)}>
-          <config.icon className="w-3 h-3 mr-1" />
-          {config.label}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {item.acao_preventiva && (
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge className="bg-info/10 text-info border-info/20 text-[10px]">INR™</Badge>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">Férias preventivas — geradas pelo INR™</TooltipContent>
+            </Tooltip>
+          )}
+          <Badge className={cn("text-xs", config.style)}>
+            <config.icon className="w-3 h-3 mr-1" />
+            {config.label}
+          </Badge>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -143,74 +139,74 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
           <Calendar className="w-4 h-4 text-primary" />
           <div>
             <p className="text-sm font-medium">{startDate} - {endDate}</p>
-            <p className="text-xs text-muted-foreground">{item.diasSolicitados} dias solicitados</p>
+            <p className="text-xs text-muted-foreground">{item.dias_solicitados} dias solicitados</p>
           </div>
         </div>
 
-        {item.abonoPecuniario && (
-          <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-            <Banknote className="w-4 h-4 text-emerald-600" />
+        {item.abono_pecuniario && (
+          <div className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-lg">
+            <Banknote className="w-4 h-4 text-success" />
             <div>
-              <p className="text-sm font-medium text-emerald-700">Abono Pecuniário</p>
-              <p className="text-xs text-emerald-600/80">{item.diasAbono} dias vendidos</p>
+              <p className="text-sm font-medium text-success">Abono Pecuniário</p>
+              <p className="text-xs text-success/80">{item.dias_abono} dias vendidos</p>
             </div>
           </div>
         )}
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Saldo disponível:</span>
-          <span className="font-medium text-foreground">{item.saldoDias} dias</span>
-        </div>
+        {item.valor_total_bruto && item.valor_total_bruto > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Valor bruto:</span>
+            <span className="font-medium text-foreground">
+              R$ {Number(item.valor_total_bruto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+        )}
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Solicitado em:</span>
-          <span className="font-medium text-foreground">
-            {new Date(item.dataSolicitacao).toLocaleDateString("pt-BR")}
-          </span>
-        </div>
+        {item.inr_score_momento != null && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">INR™ no momento:</span>
+            <Badge variant="outline" className={cn("text-[10px]",
+              item.inr_nivel_momento === "critico" && "bg-destructive/10 text-destructive",
+              item.inr_nivel_momento === "alto" && "bg-warning/10 text-warning",
+              item.inr_nivel_momento === "moderado" && "bg-info/10 text-info",
+              item.inr_nivel_momento === "baixo" && "bg-success/10 text-success",
+            )}>
+              {item.inr_score_momento}pts
+            </Badge>
+          </div>
+        )}
       </div>
 
       {item.status === "pendente" && (
         <div className="mt-4 pt-4 border-t border-border flex gap-2">
-          <Button 
-            size="sm" 
-            className="flex-1 gradient-primary"
-            onClick={() => onAprovar(item.id)}
-          >
-            <CheckCircle className="w-4 h-4 mr-1" />
-            Aprovar
+          <Button size="sm" className="flex-1 gradient-primary" onClick={() => onAprovar(item.id)}>
+            <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="flex-1"
-            onClick={() => onRecusar(item.id)}
-          >
-            <XCircle className="w-4 h-4 mr-1" />
-            Recusar
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => onRecusar(item.id)}>
+            <XCircle className="w-4 h-4 mr-1" /> Recusar
           </Button>
         </div>
       )}
 
-      {item.status === "aprovado" && (
+      {(item.status === "aprovado" || item.status === "em_gozo") && (
         <div className="mt-4 pt-4 border-t border-border space-y-2">
           <p className="text-xs font-medium text-muted-foreground mb-2">Ações pós-aprovação:</p>
           <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarAviso(item)}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarAviso(item)}
+              disabled={item.aviso_gerado}>
               <FileText className="w-3.5 h-3.5 mr-1" />
-              Gerar Aviso
+              {item.aviso_gerado ? "✓ Aviso" : "Gerar Aviso"}
             </Button>
-            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarRecibo(item)}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarRecibo(item)}
+              disabled={item.recibo_gerado}>
               <Banknote className="w-3.5 h-3.5 mr-1" />
-              Gerar Recibo
+              {item.recibo_gerado ? "✓ Recibo" : "Gerar Recibo"}
             </Button>
             <Button size="sm" variant="outline" className="text-xs" onClick={() => onGerarFinanceiro(item)}>
-              <DollarSign className="w-3.5 h-3.5 mr-1" />
-              Reg. Financeiro
+              <DollarSign className="w-3.5 h-3.5 mr-1" /> Reg. Financeiro
             </Button>
             <Button size="sm" variant="outline" className="text-xs" onClick={() => onLinkAssinatura(item)}>
-              <Send className="w-3.5 h-3.5 mr-1" />
-              Link Assinatura
+              <Send className="w-3.5 h-3.5 mr-1" /> Link Assinatura
             </Button>
           </div>
         </div>
@@ -220,34 +216,29 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
 };
 
 const Ferias = () => {
-  const [ferias, setFerias] = useState<FeriasItem[]>(initialFerias);
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("solicitacoes");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
   const [newSolicitacao, setNewSolicitacao] = useState({
-    colaborador: "",
-    departamento: "",
-    dataInicio: "",
-    dataFim: "",
-    abonoPecuniario: false,
-    diasAbono: 10,
-    salarioBase: 0,
+    colaborador: "", departamento: "", dataInicio: "", dataFim: "",
+    abonoPecuniario: false, diasAbono: 10, salarioBase: 0,
   });
   const [linkAssinaturaDialog, setLinkAssinaturaDialog] = useState<{ url: string; colaborador: string } | null>(null);
-  const { colaboradores, isLoading: loadingColabs } = useColaboradores();
 
+  const { colaboradores, isLoading: loadingColabs } = useColaboradores();
+  const { solicitacoes, isLoading: loadingFerias, criarSolicitacao, aprovar, recusar, atualizarCampo, stats } = useFerias();
   const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
   const { data: periodos } = useFolhaPeriodos();
   const { tenantId, user, profile } = useAuth();
   const { enviarParaHub } = useEnviarParaHub();
 
+  // Legacy adapter for components that still need FeriasItemLegacy
+  const feriasLegacy = useMemo(() => solicitacoes.map(toLegacy), [solicitacoes]);
+
   // ========== INR™ ==========
   const { ranking: inrRanking, criticos: inrCriticos, altos: inrAltos } = useINR(
-    colaboradores,
-    ferias,
-    [], // humores — populated when real data is available
-    []  // acoes — populated when real data is available
+    colaboradores, feriasLegacy, [], []
   );
 
   const colaboradoresPorSetor = useMemo(() => {
@@ -256,450 +247,254 @@ const Ferias = () => {
       const dept = c.departamento || "Sem Departamento";
       if (!map[dept]) map[dept] = { total: 0, vencidos: 0, alerta: 0 };
       map[dept].total++;
-      const diasUsados = ferias
-        .filter((f) => f.colaborador === c.nome_completo && f.status === "aprovado")
-        .reduce((sum, f) => sum + f.diasSolicitados, 0);
+      const diasUsados = solicitacoes
+        .filter((f) => f.colaborador_nome === c.nome_completo && ["aprovado", "em_gozo", "concluido"].includes(f.status))
+        .reduce((sum, f) => sum + f.dias_solicitados, 0);
       const periodo = calcularPeriodoFerias(c.data_admissao || null, diasUsados);
       if (periodo?.statusVencimento === "vencido") map[dept].vencidos++;
       else if (periodo?.statusVencimento === "alerta") map[dept].alerta++;
     });
     return map;
-  }, [colaboradores, ferias]);
+  }, [colaboradores, solicitacoes]);
 
   const handleCriarAcaoPreventiva = (colab: any) => {
-    toast.success(
-      `Ação preventiva criada: "Antecipar férias — ${colab.nome}" no Plano de Ação`,
-      { duration: 5000 }
-    );
+    toast.success(`Ação preventiva criada: "Antecipar férias — ${colab.nome}" no Plano de Ação`, { duration: 5000 });
   };
 
   // ========== PROVISÃO FINANCEIRA ==========
   const provisaoTotal = useMemo(() => {
     return colaboradores.reduce((sum, c) => {
-      // Each active employee accrues 30 days + 1/3 per year
-      // Simplified: assume full 30-day provision per employee
-      const salario = ferias.find(f => f.colaborador === c.nome_completo)?.salarioBase || 0;
-      return sum + salario + (salario / 3);
+      const sal = (c as any).salario || 0;
+      return sum + sal + (sal / 3);
     }, 0);
-  }, [colaboradores, ferias]);
+  }, [colaboradores]);
 
   // ========== SOBREPOSIÇÃO ==========
-  const verificarSobreposicao = (item: FeriasItem): string[] => {
-    const inicio = new Date(item.dataInicio);
-    const fim = new Date(item.dataFim);
-    const sobrepostos = ferias.filter(f => 
-      f.id !== item.id &&
-      f.departamento === item.departamento &&
-      f.status === "aprovado" &&
-      new Date(f.dataInicio) <= fim &&
-      new Date(f.dataFim) >= inicio
-    );
-    return sobrepostos.map(f => f.colaborador);
+  const verificarSobreposicao = (item: FeriasSolicitacao): string[] => {
+    const inicio = new Date(item.data_inicio);
+    const fim = new Date(item.data_fim);
+    return solicitacoes.filter(f =>
+      f.id !== item.id && f.departamento === item.departamento &&
+      ["aprovado", "em_gozo"].includes(f.status) &&
+      new Date(f.data_inicio) <= fim && new Date(f.data_fim) >= inicio
+    ).map(f => f.colaborador_nome);
   };
 
-  // Calcula 2 dias úteis antes de uma data
   const calcularVencimento2DiasUteis = (dataInicio: string): string => {
     const date = new Date(dataInicio + "T12:00:00");
     let diasUteis = 0;
-    while (diasUteis < 2) {
-      date.setDate(date.getDate() - 1);
-      const dow = date.getDay();
-      if (dow !== 0 && dow !== 6) diasUteis++;
-    }
+    while (diasUteis < 2) { date.setDate(date.getDate() - 1); if (date.getDay() !== 0 && date.getDay() !== 6) diasUteis++; }
     return date.toISOString().split("T")[0];
   };
 
+  // ========== APROVAR ==========
+  const handleAprovar = async (id: string) => {
+    const item = solicitacoes.find(f => f.id === id);
+    if (!item) return;
+    const sobrepostos = verificarSobreposicao(item);
+    if (sobrepostos.length > 0) {
+      toast.warning(`⚠ Sobreposição no setor "${item.departamento}": ${sobrepostos.join(", ")}`, { duration: 6000 });
+    }
+    aprovar.mutate(id);
+  };
+
+  // ========== GERAR AVISO PDF ==========
+  const handleGerarAviso = async (item: FeriasSolicitacao) => {
+    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
+    try {
+      const docData = {
+        colaboradorNome: item.colaborador_nome, colaboradorCpf: item.colaborador_cpf || undefined,
+        departamento: item.departamento || "", dataInicio: item.data_inicio,
+        dataFim: item.data_fim, diasSolicitados: item.dias_solicitados,
+        abonoPecuniario: item.abono_pecuniario, diasAbono: item.dias_abono,
+        salarioBase: item.salario_base || 0,
+      };
+      const avisoPdf = gerarAvisoFeriasPDF(docData);
+      avisoPdf.save(`Aviso_Ferias_${item.colaborador_nome.replace(/\s/g, "_")}.pdf`);
+      atualizarCampo.mutate({ id: item.id, campo: "aviso_gerado", valor: true });
+      await enviarParaHub({
+        tipo: "recibo_ferias", competencia: item.data_inicio.slice(0, 7),
+        descricao: `Aviso de Férias — ${item.dias_solicitados} dias`, colaborador_nome: item.colaborador_nome,
+      });
+      toast.success("Aviso de Férias gerado e registrado!");
+    } catch (err) { console.error(err); toast.error("Erro ao gerar aviso de férias"); }
+  };
+
+  // ========== GERAR RECIBO PDF ==========
+  const handleGerarRecibo = async (item: FeriasSolicitacao) => {
+    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
+    try {
+      const docData = {
+        colaboradorNome: item.colaborador_nome, colaboradorCpf: item.colaborador_cpf || undefined,
+        departamento: item.departamento || "", dataInicio: item.data_inicio,
+        dataFim: item.data_fim, diasSolicitados: item.dias_solicitados,
+        abonoPecuniario: item.abono_pecuniario, diasAbono: item.dias_abono,
+        salarioBase: item.salario_base || 0,
+      };
+      const reciboPdf = gerarReciboFeriasPDF(docData);
+      reciboPdf.save(`Recibo_Ferias_${item.colaborador_nome.replace(/\s/g, "_")}.pdf`);
+      atualizarCampo.mutate({ id: item.id, campo: "recibo_gerado", valor: true });
+      await enviarParaHub({
+        tipo: "recibo_ferias", competencia: item.data_inicio.slice(0, 7),
+        descricao: `Recibo de Férias — ${item.dias_solicitados} dias`, colaborador_nome: item.colaborador_nome,
+      });
+      toast.success("Recibo de Férias gerado e registrado!");
+    } catch (err) { console.error(err); toast.error("Erro ao gerar recibo de férias"); }
+  };
 
   // ========== REGISTRO FINANCEIRO ==========
-  const gerarRegistroFinanceiro = async (item: FeriasItem) => {
+  const handleGerarFinanceiro = async (item: FeriasSolicitacao) => {
     if (!tenantId) return;
     try {
-      const competencia = item.dataInicio.slice(0, 7);
+      const competencia = item.data_inicio.slice(0, 7);
       let periodoId: string | undefined;
       const periodoExistente = periodos?.find(p => p.competencia === competencia);
-      if (periodoExistente) {
-        periodoId = periodoExistente.id;
-      } else {
+      if (periodoExistente) { periodoId = periodoExistente.id; }
+      else {
         const novoPeriodo = await criarPeriodo({ competencia, observacoes: "Criado automaticamente - férias" });
         periodoId = (novoPeriodo as any)?.id;
       }
       if (!periodoId) return;
-
-      const salarioBase = item.salarioBase || 0;
-      const salarioDia = salarioBase / 30;
-      const valorFerias = salarioDia * item.diasSolicitados;
-      const tercoConstitucional = valorFerias / 3;
-      const valorAbono = item.abonoPecuniario ? salarioDia * item.diasAbono : 0;
-      const totalBruto = valorFerias + tercoConstitucional + valorAbono;
-      const vencimento = calcularVencimento2DiasUteis(item.dataInicio);
-
+      const vencimento = calcularVencimento2DiasUteis(item.data_inicio);
       await criarFolhaItem({
-        periodo_id: periodoId,
-        colaborador_id: item.id.toString(),
-        colaborador_nome: item.colaborador,
-        colaborador_cpf: null,
-        cargo: null,
-        departamento: item.departamento,
-        salario_base: salarioBase,
-        total_proventos: totalBruto,
-        total_descontos: 0,
-        total_liquido: totalBruto,
-        status: "pendente",
-        observacoes: `Férias ${item.diasSolicitados}d (${new Date(item.dataInicio).toLocaleDateString("pt-BR")} a ${new Date(item.dataFim).toLocaleDateString("pt-BR")})${item.abonoPecuniario ? ` + Abono ${item.diasAbono}d` : ""} | Vencimento: ${new Date(vencimento + "T12:00:00").toLocaleDateString("pt-BR")}`,
+        periodo_id: periodoId, colaborador_id: item.id, colaborador_nome: item.colaborador_nome,
+        colaborador_cpf: item.colaborador_cpf, cargo: item.cargo, departamento: item.departamento,
+        salario_base: item.salario_base, total_proventos: item.valor_total_bruto || 0,
+        total_descontos: 0, total_liquido: item.valor_total_bruto || 0, status: "pendente",
+        observacoes: `Férias ${item.dias_solicitados}d | Venc: ${new Date(vencimento + "T12:00:00").toLocaleDateString("pt-BR")}`,
       });
-
-      toast.success(`Registro financeiro gerado — vencimento ${new Date(vencimento + "T12:00:00").toLocaleDateString("pt-BR")}`);
-    } catch (err) {
-      console.error("Erro ao gerar registro financeiro:", err);
-      toast.error("Erro ao gerar registro financeiro");
-    }
+      atualizarCampo.mutate({ id: item.id, campo: "registro_financeiro_id", valor: periodoId });
+      toast.success("Registro financeiro gerado!");
+    } catch (err) { console.error(err); toast.error("Erro ao gerar registro financeiro"); }
   };
 
-  // ========== APROVAR (apenas muda status) ==========
-  const handleAprovar = async (id: number) => {
-    const item = ferias.find(f => f.id === id);
-    if (!item) return;
-
-    // Verificar sobreposição
-    const sobrepostos = verificarSobreposicao(item);
-    if (sobrepostos.length > 0) {
-      toast.warning(
-        `⚠ Sobreposição no setor "${item.departamento}": ${sobrepostos.join(", ")} já está(ão) de férias no mesmo período.`,
-        { duration: 6000 }
-      );
-    }
-
-    setFerias(prev => prev.map(f => 
-      f.id === id ? { ...f, status: "aprovado" as const } : f
-    ));
-    toast.success(`Férias aprovadas para ${item.colaborador}. Use os botões no card para gerar documentos.`);
-  };
-
-  // ========== GERAR AVISO PDF ==========
-  const handleGerarAviso = async (item: FeriasItem) => {
-    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
-    try {
-      const docData = {
-        colaboradorNome: item.colaborador, colaboradorCpf: undefined,
-        departamento: item.departamento, dataInicio: item.dataInicio,
-        dataFim: item.dataFim, diasSolicitados: item.diasSolicitados,
-        abonoPecuniario: item.abonoPecuniario, diasAbono: item.diasAbono,
-        salarioBase: item.salarioBase || 0,
-      };
-      const avisoPdf = gerarAvisoFeriasPDF(docData);
-      avisoPdf.save(`Aviso_Ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`);
-      await enviarParaHub({
-        tipo: "recibo_ferias",
-        competencia: item.dataInicio.slice(0, 7),
-        descricao: `Aviso de Férias — ${item.diasSolicitados} dias (${item.dataInicio} a ${item.dataFim})`,
-        colaborador_nome: item.colaborador,
-      });
-      toast.success("Aviso de Férias gerado e registrado no Hub Contábil!");
-    } catch (err) {
-      console.error("Erro ao gerar aviso:", err);
-      toast.error("Erro ao gerar aviso de férias");
-    }
-  };
-
-  // ========== GERAR RECIBO PDF ==========
-  const handleGerarRecibo = async (item: FeriasItem) => {
-    if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
-    try {
-      const docData = {
-        colaboradorNome: item.colaborador, colaboradorCpf: undefined,
-        departamento: item.departamento, dataInicio: item.dataInicio,
-        dataFim: item.dataFim, diasSolicitados: item.diasSolicitados,
-        abonoPecuniario: item.abonoPecuniario, diasAbono: item.diasAbono,
-        salarioBase: item.salarioBase || 0,
-      };
-      const reciboPdf = gerarReciboFeriasPDF(docData);
-      reciboPdf.save(`Recibo_Ferias_${item.colaborador.replace(/\s/g, "_")}.pdf`);
-      await enviarParaHub({
-        tipo: "recibo_ferias",
-        competencia: item.dataInicio.slice(0, 7),
-        descricao: `Recibo de Férias — ${item.diasSolicitados} dias`,
-        colaborador_nome: item.colaborador,
-      });
-      toast.success("Recibo de Férias gerado e registrado no Hub Contábil!");
-    } catch (err) {
-      console.error("Erro ao gerar recibo:", err);
-      toast.error("Erro ao gerar recibo de férias");
-    }
-  };
-
-  // ========== GERAR REGISTRO FINANCEIRO (separado) ==========
-  const handleGerarFinanceiro = async (item: FeriasItem) => {
-    await gerarRegistroFinanceiro({ ...item, status: "aprovado" });
-  };
-
-  // ========== LINK ASSINATURA (com dialog para copiar/WhatsApp) ==========
-  const handleLinkAssinatura = async (item: FeriasItem) => {
+  // ========== LINK ASSINATURA ==========
+  const handleLinkAssinatura = async (item: FeriasSolicitacao) => {
     if (!tenantId) { toast.error("Tenant não encontrado"); return; }
     try {
       const { data, error } = await supabase
         .from("ferias_assinatura_links" as never)
         .insert({
-          tenant_id: tenantId,
-          colaborador_nome: item.colaborador,
-          departamento: item.departamento,
-          data_inicio_ferias: item.dataInicio,
-          data_fim_ferias: item.dataFim,
-          dias_ferias: item.diasSolicitados,
-          abono_pecuniario: item.abonoPecuniario,
-          dias_abono: item.diasAbono,
-          salario_base: item.salarioBase || 0,
-          documento_storage_path: null,
-        } as never)
-        .select("token")
-        .single();
-
+          tenant_id: tenantId, colaborador_nome: item.colaborador_nome,
+          departamento: item.departamento, data_inicio_ferias: item.data_inicio,
+          data_fim_ferias: item.data_fim, dias_ferias: item.dias_solicitados,
+          abono_pecuniario: item.abono_pecuniario, dias_abono: item.dias_abono,
+          salario_base: item.salario_base || 0, documento_storage_path: null,
+        } as never).select("token").single();
       if (error) throw error;
-
       const token = (data as any)?.token;
       if (token) {
         const url = `${window.location.origin}/ferias-assinatura/${token}`;
-        setLinkAssinaturaDialog({ url, colaborador: item.colaborador });
-      } else {
-        toast.error("Não foi possível gerar o link.");
+        setLinkAssinaturaDialog({ url, colaborador: item.colaborador_nome });
+        atualizarCampo.mutate({ id: item.id, campo: "assinatura_link_id", valor: token });
       }
-    } catch (err) {
-      console.error("Erro ao criar link de assinatura:", err);
-      toast.error("Erro ao gerar link de assinatura. Verifique se a tabela existe.");
-    }
+    } catch (err) { console.error(err); toast.error("Erro ao gerar link de assinatura"); }
   };
 
-  const handleRecusar = (id: number) => {
-    setFerias(prev => prev.map(f => 
-      f.id === id ? { ...f, status: "recusado" as const } : f
-    ));
-    const item = ferias.find(f => f.id === id);
-    toast.error(`Férias recusadas para ${item?.colaborador}`);
-  };
-
+  // ========== NOVA SOLICITAÇÃO ==========
   const handleNovaSolicitacao = () => {
     if (!newSolicitacao.colaborador || !newSolicitacao.dataInicio || !newSolicitacao.dataFim) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
+      toast.error("Preencha todos os campos obrigatórios"); return;
     }
-
     if (newSolicitacao.abonoPecuniario && newSolicitacao.diasAbono > 10) {
-      toast.error("O abono pecuniário não pode exceder 10 dias (1/3 das férias)");
-      return;
+      toast.error("O abono pecuniário não pode exceder 10 dias (1/3 das férias)"); return;
     }
-
     const dataInicio = new Date(newSolicitacao.dataInicio);
     const dataFim = new Date(newSolicitacao.dataFim);
     const diasSolicitados = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    // Validação de fracionamento CLT
-    const fracionamentosAnteriores = ferias
-      .filter((f) => f.colaborador === newSolicitacao.colaborador && f.status !== "recusado")
-      .map((f) => f.diasSolicitados);
-
+    const fracionamentosAnteriores = solicitacoes
+      .filter((f) => f.colaborador_nome === newSolicitacao.colaborador && f.status !== "recusado" && f.status !== "cancelado")
+      .map((f) => f.dias_solicitados);
     const validacao = validarFracionamentoCLT(diasSolicitados, fracionamentosAnteriores);
-    if (!validacao.valido) {
-      toast.error(validacao.erro || "Fracionamento inválido");
-      return;
-    }
+    if (!validacao.valido) { toast.error(validacao.erro || "Fracionamento inválido"); return; }
 
-    const novaSolicitacao: FeriasItem = {
-      id: Math.max(...ferias.map(f => f.id)) + 1,
-      colaborador: newSolicitacao.colaborador,
-      departamento: newSolicitacao.departamento || "Não informado",
-      dataInicio: newSolicitacao.dataInicio,
-      dataFim: newSolicitacao.dataFim,
-      diasSolicitados,
-      saldoDias: 30,
-      status: "pendente",
-      dataSolicitacao: new Date().toISOString().split("T")[0],
-      abonoPecuniario: newSolicitacao.abonoPecuniario,
-      diasAbono: newSolicitacao.abonoPecuniario ? newSolicitacao.diasAbono : 0,
-      salarioBase: newSolicitacao.salarioBase,
-    };
+    // Capture INR at creation
+    const inrColab = inrRanking.find(r => r.nome === newSolicitacao.colaborador);
 
-    setFerias(prev => [novaSolicitacao, ...prev]);
+    criarSolicitacao.mutate({
+      colaborador_nome: newSolicitacao.colaborador,
+      departamento: newSolicitacao.departamento,
+      data_inicio: newSolicitacao.dataInicio,
+      data_fim: newSolicitacao.dataFim,
+      dias_solicitados: diasSolicitados,
+      abono_pecuniario: newSolicitacao.abonoPecuniario,
+      dias_abono: newSolicitacao.abonoPecuniario ? newSolicitacao.diasAbono : 0,
+      salario_base: newSolicitacao.salarioBase,
+      inr_score_momento: inrColab?.score,
+      inr_nivel_momento: inrColab?.nivel,
+    });
     setNewSolicitacao({ colaborador: "", departamento: "", dataInicio: "", dataFim: "", abonoPecuniario: false, diasAbono: 10, salarioBase: 0 });
     setIsModalOpen(false);
-    toast.success(
-      newSolicitacao.abonoPecuniario
-        ? `Solicitação com abono pecuniário de ${newSolicitacao.diasAbono} dias criada!`
-        : "Solicitação de férias criada com sucesso!"
-    );
   };
 
-  const filteredFerias = ferias.filter(
+  const filteredSolicitacoes = solicitacoes.filter(
     (f) => statusFilter === "all" || f.status === statusFilter
   );
-
-  const [statsDetail, setStatsDetail] = useState<{ title: string; items: FeriasItem[] } | null>(null);
-
-  const stats = {
-    pendentes: ferias.filter((f) => f.status === "pendente").length,
-    aprovados: ferias.filter((f) => f.status === "aprovado").length,
-    emFerias: ferias.filter((f) => {
-      if (f.status !== "aprovado") return false;
-      const hoje = new Date();
-      return new Date(f.dataInicio) <= hoje && new Date(f.dataFim) >= hoje;
-    }).length,
-    comAbono: ferias.filter((f) => f.abonoPecuniario && f.status !== "recusado").length,
-  };
-
-  const handleStatClick = (type: string) => {
-    let title = "";
-    let items: FeriasItem[] = [];
-    switch (type) {
-      case "pendentes":
-        title = "Solicitações Pendentes";
-        items = ferias.filter((f) => f.status === "pendente");
-        break;
-      case "aprovados":
-        title = "Férias Aprovadas";
-        items = ferias.filter((f) => f.status === "aprovado");
-        break;
-      case "emFerias":
-        title = "Colaboradores em Férias";
-        items = ferias.filter((f) => {
-          if (f.status !== "aprovado") return false;
-          const hoje = new Date();
-          return new Date(f.dataInicio) <= hoje && new Date(f.dataFim) >= hoje;
-        });
-        break;
-      case "comAbono":
-        title = "Férias com Abono Pecuniário";
-        items = ferias.filter((f) => f.abonoPecuniario && f.status !== "recusado");
-        break;
-      case "provisao":
-        title = "Provisão Estimada por Colaborador";
-        items = ferias.filter((f) => f.salarioBase && f.salarioBase > 0);
-        break;
-    }
-    setStatsDetail({ title, items });
-  };
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestão de Férias</h1>
-          <p className="text-muted-foreground">Solicitações e aprovações</p>
+          <p className="text-muted-foreground text-sm">
+            Ferramenta de organização do trabalho e recuperação humana
+          </p>
         </div>
         <Button className="gradient-primary shadow-glow" onClick={() => setIsModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Solicitação
+          <Plus className="w-4 h-4 mr-2" /> Nova Solicitação
         </Button>
       </motion.div>
 
       {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-5 gap-4"
-      >
-        <div
-          onClick={() => handleStatClick("pendentes")}
-          className="bg-warning/5 border border-warning/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-warning/40 transition-all"
-        >
-          <div className="p-3 rounded-xl bg-warning/10">
-            <Clock className="w-6 h-6 text-warning" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{stats.pendentes}</p>
-            <p className="text-sm text-muted-foreground">Pendentes</p>
-          </div>
-        </div>
-        <div
-          onClick={() => handleStatClick("aprovados")}
-          className="bg-success/5 border border-success/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-success/40 transition-all"
-        >
-          <div className="p-3 rounded-xl bg-success/10">
-            <CheckCircle className="w-6 h-6 text-success" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{stats.aprovados}</p>
-            <p className="text-sm text-muted-foreground">Aprovados</p>
-          </div>
-        </div>
-        <div
-          onClick={() => handleStatClick("emFerias")}
-          className="bg-info/5 border border-info/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-info/40 transition-all"
-        >
-          <div className="p-3 rounded-xl bg-info/10">
-            <Plane className="w-6 h-6 text-info" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{stats.emFerias}</p>
-            <p className="text-sm text-muted-foreground">Em Férias</p>
-          </div>
-        </div>
-        <div
-          onClick={() => handleStatClick("comAbono")}
-          className="bg-accent/50 border border-accent rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
-        >
-          <div className="p-3 rounded-xl bg-primary/10">
-            <Banknote className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{stats.comAbono}</p>
-            <p className="text-sm text-muted-foreground">Com Abono</p>
-          </div>
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              onClick={() => handleStatClick("provisao")}
-              className="bg-destructive/5 border border-destructive/20 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-destructive/40 transition-all"
-            >
-              <div className="p-3 rounded-xl bg-destructive/10">
-                <TrendingUp className="w-6 h-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-foreground">
-                  {provisaoTotal > 0 ? `R$ ${(provisaoTotal / 1000).toFixed(0)}k` : "—"}
-                </p>
-                <p className="text-xs text-muted-foreground">Provisão Estimada</p>
-              </div>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        {[
+          { label: "Pendentes", value: stats.pendentes, icon: Clock, color: "warning" },
+          { label: "Aprovadas", value: stats.aprovados, icon: CheckCircle, color: "success" },
+          { label: "Em Gozo", value: stats.emGozo, icon: Plane, color: "info" },
+          { label: "Concluídas", value: stats.concluidos, icon: CheckCircle, color: "primary" },
+          { label: "Com Abono", value: stats.comAbono, icon: Banknote, color: "primary" },
+          { label: "Preventivas", value: stats.acoesPreventivas, icon: Brain, color: "info" },
+          { label: "Provisão", value: provisaoTotal > 0 ? `R$ ${(provisaoTotal / 1000).toFixed(0)}k` : "—", icon: TrendingUp, color: "destructive" },
+        ].map((s) => (
+          <div key={s.label} className={cn(
+            "rounded-xl border p-4 flex items-center gap-3",
+            `bg-${s.color}/5 border-${s.color}/20`
+          )}>
+            <div className={cn("p-2 rounded-lg", `bg-${s.color}/10`)}>
+              <s.icon className={cn("w-5 h-5", `text-${s.color}`)} />
             </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs max-w-[200px]">
-            Passivo total estimado de férias (salários + 1/3 constitucional) de todos os colaboradores ativos.
-          </TooltipContent>
-        </Tooltip>
+            <div>
+              <p className="text-lg font-bold text-foreground">{s.value}</p>
+              <p className="text-[11px] text-muted-foreground">{s.label}</p>
+            </div>
+          </div>
+        ))}
       </motion.div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-        >
-          <TabsList className="bg-muted/50">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <TabsList className="bg-muted/50 flex-wrap">
             <TabsTrigger value="solicitacoes">Solicitações</TabsTrigger>
             <TabsTrigger value="calendario">Calendário</TabsTrigger>
             <TabsTrigger value="saldos">Saldos</TabsTrigger>
             <TabsTrigger value="inteligencia" className="flex items-center gap-1.5">
-              <Brain className="w-3.5 h-3.5" />
-              Inteligência
+              <Brain className="w-3.5 h-3.5" /> INR™
               {inrCriticos.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-destructive text-destructive-foreground rounded-full">
                   {inrCriticos.length}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="cultura" className="flex items-center gap-1.5">
-              <Heart className="w-3.5 h-3.5" />
-              Cultura
-            </TabsTrigger>
+            <TabsTrigger value="cultura"><Heart className="w-3.5 h-3.5 mr-1" /> Cultura</TabsTrigger>
+            <TabsTrigger value="relatorios"><BarChart3 className="w-3.5 h-3.5 mr-1" /> Relatórios</TabsTrigger>
+            <TabsTrigger value="governanca"><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Governança</TabsTrigger>
           </TabsList>
-
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filtrar status" />
@@ -708,29 +503,32 @@ const Ferias = () => {
               <SelectItem value="all">Todos Status</SelectItem>
               <SelectItem value="pendente">Pendente</SelectItem>
               <SelectItem value="aprovado">Aprovado</SelectItem>
+              <SelectItem value="em_gozo">Em Gozo</SelectItem>
+              <SelectItem value="concluido">Concluído</SelectItem>
               <SelectItem value="recusado">Recusado</SelectItem>
             </SelectContent>
           </Select>
         </motion.div>
 
         <TabsContent value="solicitacoes" className="mt-0">
-          {filteredFerias.length === 0 ? (
+          {loadingFerias ? (
             <div className="bg-card rounded-xl border border-border p-10 text-center">
-              <p className="text-sm text-muted-foreground">Nenhuma solicitação de férias cadastrada.</p>
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary mb-2" />
+              <p className="text-sm text-muted-foreground">Carregando solicitações...</p>
+            </div>
+          ) : filteredSolicitacoes.length === 0 ? (
+            <div className="bg-card rounded-xl border border-border p-10 text-center">
+              <Sun className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Nenhuma solicitação de férias encontrada.</p>
+              <p className="text-xs text-muted-foreground mt-1">No Seguramente, férias não são ausência — são parte da organização do trabalho.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredFerias.map((item, index) => (
-                <FeriasCard 
-                  key={item.id} 
-                  item={item} 
-                  index={index}
-                  onAprovar={handleAprovar}
-                  onRecusar={handleRecusar}
-                  onGerarAviso={handleGerarAviso}
-                  onGerarRecibo={handleGerarRecibo}
-                  onGerarFinanceiro={handleGerarFinanceiro}
-                  onLinkAssinatura={handleLinkAssinatura}
+              {filteredSolicitacoes.map((item, index) => (
+                <FeriasCard key={item.id} item={item} index={index}
+                  onAprovar={handleAprovar} onRecusar={(id) => recusar.mutate({ id })}
+                  onGerarAviso={handleGerarAviso} onGerarRecibo={handleGerarRecibo}
+                  onGerarFinanceiro={handleGerarFinanceiro} onLinkAssinatura={handleLinkAssinatura}
                 />
               ))}
             </div>
@@ -738,30 +536,31 @@ const Ferias = () => {
         </TabsContent>
 
         <TabsContent value="calendario">
-          <FeriasCalendario
-            ferias={ferias}
-            onNewSolicitacao={(date) => {
-              setNewSolicitacao((prev) => ({ ...prev, dataInicio: date }));
-              setIsModalOpen(true);
-            }}
-          />
+          <FeriasCalendario ferias={feriasLegacy} onNewSolicitacao={(date) => {
+            setNewSolicitacao((prev) => ({ ...prev, dataInicio: date }));
+            setIsModalOpen(true);
+          }} />
         </TabsContent>
 
         <TabsContent value="saldos">
-          <FeriasSaldos ferias={ferias} />
+          <FeriasSaldos ferias={feriasLegacy} />
         </TabsContent>
 
         <TabsContent value="inteligencia">
-          <FeriasInteligencia
-            ranking={inrRanking}
-            criticos={inrCriticos}
-            altos={inrAltos}
-            onCriarAcaoPreventiva={handleCriarAcaoPreventiva}
-            colaboradoresPorSetor={colaboradoresPorSetor}
-          />
+          <FeriasInteligencia ranking={inrRanking} criticos={inrCriticos} altos={inrAltos}
+            onCriarAcaoPreventiva={handleCriarAcaoPreventiva} colaboradoresPorSetor={colaboradoresPorSetor} />
         </TabsContent>
+
         <TabsContent value="cultura">
-          <FeriasCultura ferias={ferias} />
+          <FeriasCultura ferias={feriasLegacy} />
+        </TabsContent>
+
+        <TabsContent value="relatorios">
+          <FeriasRelatorios solicitacoes={solicitacoes} colaboradores={colaboradores} />
+        </TabsContent>
+
+        <TabsContent value="governanca">
+          <FeriasGovernanca solicitacoes={solicitacoes} colaboradores={colaboradores} />
         </TabsContent>
       </Tabs>
 
@@ -770,22 +569,14 @@ const Ferias = () => {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova Solicitação de Férias</DialogTitle>
-            <DialogDescription>
-              Preencha os dados para solicitar férias
-            </DialogDescription>
+            <DialogDescription>Preencha os dados — o sistema valida conformidade CLT automaticamente</DialogDescription>
           </DialogHeader>
-          
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Colaborador *</Label>
               <Popover open={comboOpen} onOpenChange={setComboOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={comboOpen}
-                    className="w-full justify-between font-normal"
-                  >
+                  <Button variant="outline" role="combobox" aria-expanded={comboOpen} className="w-full justify-between font-normal">
                     {newSolicitacao.colaborador || "Selecione o colaborador..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -797,20 +588,13 @@ const Ferias = () => {
                       <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
                       <CommandGroup>
                         {colaboradores.map((c) => (
-                          <CommandItem
-                            key={c.id}
-                            value={c.nome_completo}
-                            onSelect={() => {
-                              const admissao = c as any;
-                              setNewSolicitacao(prev => ({
-                                ...prev,
-                                colaborador: c.nome_completo,
-                                departamento: c.departamento || "",
-                                salarioBase: admissao.salario || 0,
-                              }));
-                              setComboOpen(false);
-                            }}
-                          >
+                          <CommandItem key={c.id} value={c.nome_completo} onSelect={() => {
+                            setNewSolicitacao(prev => ({
+                              ...prev, colaborador: c.nome_completo,
+                              departamento: c.departamento || "", salarioBase: (c as any).salario || 0,
+                            }));
+                            setComboOpen(false);
+                          }}>
                             <Check className={cn("mr-2 h-4 w-4", newSolicitacao.colaborador === c.nome_completo ? "opacity-100" : "opacity-0")} />
                             <div>
                               <p className="text-sm">{c.nome_completo}</p>
@@ -824,258 +608,83 @@ const Ferias = () => {
                 </PopoverContent>
               </Popover>
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="departamento">Departamento</Label>
-              <Input
-                id="departamento"
-                placeholder="Preenchido automaticamente"
-                value={newSolicitacao.departamento}
-                readOnly
-                className="bg-muted/50"
-              />
+              <Label>Departamento</Label>
+              <Input placeholder="Preenchido automaticamente" value={newSolicitacao.departamento} readOnly className="bg-muted/50" />
             </div>
-            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dataInicio">Data Início *</Label>
-                <Input
-                  id="dataInicio"
-                  type="date"
-                  value={newSolicitacao.dataInicio}
-                  onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataInicio: e.target.value }))}
-                />
+                <Label>Data Início *</Label>
+                <Input type="date" value={newSolicitacao.dataInicio} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataInicio: e.target.value }))} />
               </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="dataFim">Data Fim *</Label>
-                <Input
-                  id="dataFim"
-                  type="date"
-                  value={newSolicitacao.dataFim}
-                  onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataFim: e.target.value }))}
-                />
+                <Label>Data Fim *</Label>
+                <Input type="date" value={newSolicitacao.dataFim} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, dataFim: e.target.value }))} />
               </div>
             </div>
-
-            {/* Salário Base */}
             <div className="space-y-2">
-              <Label htmlFor="salarioBase">Salário Base (R$)</Label>
-              <Input
-                id="salarioBase"
-                type="number"
-                min={0}
-                step={100}
-                placeholder="Preenchido ao selecionar colaborador"
-                value={newSolicitacao.salarioBase || ""}
-                onChange={(e) => setNewSolicitacao(prev => ({ ...prev, salarioBase: parseFloat(e.target.value) || 0 }))}
-              />
+              <Label>Salário Base (R$)</Label>
+              <Input type="number" min={0} step={100} placeholder="Preenchido ao selecionar colaborador"
+                value={newSolicitacao.salarioBase || ""} onChange={(e) => setNewSolicitacao(prev => ({ ...prev, salarioBase: parseFloat(e.target.value) || 0 }))} />
             </div>
 
-            {/* Abono Pecuniário Section */}
+            {/* Abono Pecuniário */}
             <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Banknote className="w-4 h-4 text-emerald-600" />
-                  <Label htmlFor="abono" className="text-sm font-medium cursor-pointer">
-                    Abono Pecuniário (Venda de Férias)
-                  </Label>
+                  <Banknote className="w-4 h-4 text-success" />
+                  <Label className="text-sm font-medium cursor-pointer">Abono Pecuniário</Label>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </TooltipTrigger>
+                    <TooltipTrigger><Info className="w-3.5 h-3.5 text-muted-foreground" /></TooltipTrigger>
                     <TooltipContent side="top" className="max-w-[280px] text-xs">
                       <p className="font-semibold mb-1">Art. 143, CLT</p>
-                      <p>O empregado pode converter até 1/3 do período de férias (10 dias) em abono pecuniário. O pedido deve ser feito até 15 dias antes do término do período aquisitivo.</p>
+                      <p>Até 1/3 do período de férias (10 dias) pode ser convertido em abono pecuniário.</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <Switch
-                  id="abono"
-                  checked={newSolicitacao.abonoPecuniario}
-                  onCheckedChange={(checked) => setNewSolicitacao(prev => ({ ...prev, abonoPecuniario: checked }))}
-                />
+                <Switch checked={newSolicitacao.abonoPecuniario}
+                  onCheckedChange={(checked) => setNewSolicitacao(prev => ({ ...prev, abonoPecuniario: checked }))} />
               </div>
-
               {newSolicitacao.abonoPecuniario && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-3 pt-2"
-                >
+                <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="diasAbono" className="text-xs">Dias a vender (máx. 10)</Label>
-                      <Input
-                        id="diasAbono"
-                        type="number"
-                        min={1}
-                        max={10}
-                        value={newSolicitacao.diasAbono}
-                        onChange={(e) => setNewSolicitacao(prev => ({
-                          ...prev,
-                          diasAbono: Math.min(10, Math.max(1, parseInt(e.target.value) || 0))
-                        }))}
-                      />
+                      <Label className="text-xs">Dias a vender (máx. 10)</Label>
+                      <Input type="number" min={1} max={10} value={newSolicitacao.diasAbono}
+                        onChange={(e) => setNewSolicitacao(prev => ({ ...prev, diasAbono: Math.min(10, Math.max(1, parseInt(e.target.value) || 0)) }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="salarioBaseAbono" className="text-xs">Salário Base (R$)</Label>
-                      <Input
-                        id="salarioBaseAbono"
-                        type="number"
-                        min={0}
-                        step={100}
-                        value={newSolicitacao.salarioBase || ""}
-                        readOnly
-                        className="bg-muted/50"
-                      />
+                      <Label className="text-xs">Salário Base (R$)</Label>
+                      <Input type="number" value={newSolicitacao.salarioBase || ""} readOnly className="bg-muted/50" />
                     </div>
                   </div>
-
-                  {/* Financial simulation */}
-                  {newSolicitacao.salarioBase > 0 && (
-                    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 space-y-2">
-                      <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
-                        <DollarSign className="w-3.5 h-3.5" />
-                        Simulação Financeira
-                      </p>
-                      {(() => {
-                        const salarioDia = newSolicitacao.salarioBase / 30;
-                        const valorFerias = newSolicitacao.salarioBase;
-                        const tercoConstitucional = valorFerias / 3;
-                        const valorAbono = salarioDia * newSolicitacao.diasAbono;
-                        const total = valorFerias + tercoConstitucional + valorAbono;
-                        return (
-                          <div className="space-y-1 text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Férias (30 dias)</span>
-                              <span className="font-medium">R$ {valorFerias.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">1/3 Constitucional</span>
-                              <span className="font-medium">R$ {tercoConstitucional.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between text-emerald-700">
-                              <span>Abono ({newSolicitacao.diasAbono} dias)</span>
-                              <span className="font-semibold">R$ {valorAbono.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="border-t border-emerald-500/20 pt-1 flex justify-between font-bold text-foreground">
-                              <span>Total Bruto</span>
-                              <span>R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              ⚠ O abono pecuniário não integra salário para fins de FGTS e INSS.
-                            </p>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  <div className="text-[11px] text-muted-foreground space-y-0.5">
-                    <p>• Direito do empregado (Art. 143, CLT)</p>
-                    <p>• Máximo 1/3 das férias (10 dias)</p>
-                    <p>• Solicitar até 15 dias antes do fim do período aquisitivo</p>
-                    <p>• Pagamento junto com as férias (até 2 dias antes)</p>
-                  </div>
-                </motion.div>
+                  {newSolicitacao.salarioBase > 0 && (() => {
+                    const salarioDia = newSolicitacao.salarioBase / 30;
+                    const valorFerias = newSolicitacao.salarioBase;
+                    const tercoConstitucional = valorFerias / 3;
+                    const valorAbono = salarioDia * newSolicitacao.diasAbono;
+                    const total = valorFerias + tercoConstitucional + valorAbono;
+                    return (
+                      <div className="bg-success/5 border border-success/20 rounded-lg p-3 space-y-1 text-xs">
+                        <p className="font-semibold text-success flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Simulação</p>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Férias</span><span>R$ {valorFerias.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">1/3 Constitucional</span><span>R$ {tercoConstitucional.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                        <div className="flex justify-between text-success"><span>Abono ({newSolicitacao.diasAbono}d)</span><span className="font-semibold">R$ {valorAbono.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                        <div className="border-t border-success/20 pt-1 flex justify-between font-bold text-foreground"><span>Total Bruto</span><span>R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+                      </div>
+                    );
+                  })()}
+                </div>
               )}
             </div>
           </div>
-          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleNovaSolicitacao} className="gradient-primary">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleNovaSolicitacao} className="gradient-primary" disabled={criarSolicitacao.isPending}>
+              {criarSolicitacao.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
               Criar Solicitação
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Stats Detail Dialog */}
-      <Dialog open={!!statsDetail} onOpenChange={(open) => !open && setStatsDetail(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{statsDetail?.title}</DialogTitle>
-            <DialogDescription>
-              {statsDetail?.items.length === 0
-                ? "Nenhum registro encontrado nesta categoria."
-                : `${statsDetail?.items.length} registro(s)`}
-            </DialogDescription>
-          </DialogHeader>
-
-          {statsDetail?.title === "Provisão Estimada por Colaborador" ? (
-            <div className="space-y-2">
-              {colaboradores.map((c) => {
-                const sal = ferias.find((f) => f.colaborador === c.nome_completo)?.salarioBase || 0;
-                if (!sal) return null;
-                const prov = sal + sal / 3;
-                return (
-                  <div key={c.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                          {c.nome_completo.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{c.nome_completo}</p>
-                        <p className="text-xs text-muted-foreground">{c.departamento || "—"}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-foreground">R$ {prov.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                      <p className="text-[10px] text-muted-foreground">Base: R$ {sal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="border-t border-border pt-3 flex justify-between items-center">
-                <span className="text-sm font-semibold text-foreground">Total Provisão</span>
-                <span className="text-lg font-bold text-foreground">
-                  R$ {provisaoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {statsDetail?.items.map((item) => {
-                const config = statusConfig[item.status];
-                return (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                          {item.colaborador.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{item.colaborador}</p>
-                        <p className="text-xs text-muted-foreground">{item.departamento}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <Badge className={cn("text-[10px]", config.style)}>
-                        <config.icon className="w-3 h-3 mr-1" />
-                        {config.label}
-                      </Badge>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(item.dataInicio).toLocaleDateString("pt-BR")} — {new Date(item.dataFim).toLocaleDateString("pt-BR")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{item.diasSolicitados} dias</p>
-                      {item.abonoPecuniario && (
-                        <p className="text-[10px] text-success">+ Abono {item.diasAbono}d</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </DialogContent>
       </Dialog>
 
@@ -1084,44 +693,23 @@ const Ferias = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Link de Assinatura</DialogTitle>
-            <DialogDescription>
-              Link gerado para {linkAssinaturaDialog?.colaborador}. Copie ou envie via WhatsApp.
-            </DialogDescription>
+            <DialogDescription>Link gerado para {linkAssinaturaDialog?.colaborador}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={linkAssinaturaDialog?.url || ""}
-                className="text-xs flex-1"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  if (linkAssinaturaDialog?.url) {
-                    navigator.clipboard.writeText(linkAssinaturaDialog.url);
-                    toast.success("Link copiado!");
-                  }
-                }}
-              >
-                Copiar
-              </Button>
+              <Input readOnly value={linkAssinaturaDialog?.url || ""} className="text-xs flex-1"
+                onClick={(e) => (e.target as HTMLInputElement).select()} />
+              <Button size="sm" variant="outline" onClick={() => {
+                if (linkAssinaturaDialog?.url) { navigator.clipboard.writeText(linkAssinaturaDialog.url); toast.success("Link copiado!"); }
+              }}>Copiar</Button>
             </div>
-            <Button
-              className="w-full bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white"
-              onClick={() => {
-                if (linkAssinaturaDialog) {
-                  const msg = encodeURIComponent(
-                    `Olá ${linkAssinaturaDialog.colaborador}, segue o link para assinatura das suas férias:\n\n${linkAssinaturaDialog.url}`
-                  );
-                  window.open(`https://wa.me/?text=${msg}`, "_blank");
-                }
-              }}
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Enviar via WhatsApp
+            <Button className="w-full bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/90 text-white" onClick={() => {
+              if (linkAssinaturaDialog) {
+                const msg = encodeURIComponent(`Olá ${linkAssinaturaDialog.colaborador}, segue o link para assinatura das suas férias:\n\n${linkAssinaturaDialog.url}`);
+                window.open(`https://wa.me/?text=${msg}`, "_blank");
+              }
+            }}>
+              <Send className="w-4 h-4 mr-2" /> Enviar via WhatsApp
             </Button>
           </div>
         </DialogContent>
