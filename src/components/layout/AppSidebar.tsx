@@ -451,7 +451,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
           }
           </div> :
 
-        menuSections.map((section) =>
+        filteredSections.map((section) =>
         <CollapsibleSection
           key={section.label}
           section={section}
