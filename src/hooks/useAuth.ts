@@ -155,11 +155,13 @@ export function useAuth() {
 
     try {
       // Sign up user
+      // Use the published URL for email redirects to avoid localhost issues
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: appUrl,
         },
       });
 
