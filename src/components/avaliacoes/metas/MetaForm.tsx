@@ -95,7 +95,13 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
       peso: data.peso,
     };
 
-    await createMeta(metaData);
+    await createMeta({
+      ...metaData,
+      categoria_meta: data.categoria_meta,
+      origem_meta: data.origem_meta,
+      premiacao_tipo: data.premiacao_tipo,
+      premiacao_descricao: data.premiacao_descricao,
+    } as any);
     onSuccess();
   };
 
