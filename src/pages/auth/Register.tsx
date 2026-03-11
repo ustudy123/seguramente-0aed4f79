@@ -141,11 +141,13 @@ export default function Register() {
       const cleanDoc = data.documento.replace(/\D/g, "");
 
       // 1. Create auth user with Supabase (sends verification email)
+      // Use published app URL to avoid localhost links in confirmation emails
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.senha,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: appUrl,
         },
       });
 
