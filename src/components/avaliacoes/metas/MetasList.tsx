@@ -1,57 +1,36 @@
 import { useState } from "react";
 import { 
-  Plus, 
-  Target, 
-  TrendingUp,
-  MoreVertical,
-  Trash2,
-  Edit,
-  ChevronDown,
-  ChevronRight,
-  CheckCircle2,
-  Clock,
-  AlertCircle
+  Plus, Target, TrendingUp, MoreVertical, Trash2, Edit,
+  ChevronDown, ChevronRight, CheckCircle2, Clock, AlertCircle,
+  Shield, Eye, ListChecks
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useMetas } from "@/hooks/useMetas";
 import { 
-  STATUS_META_LABELS, 
-  PERIODO_LABELS,
-  OKR_TIPO_LABELS,
-  type MetaStatus 
+  STATUS_META_LABELS, PERIODO_LABELS, OKR_TIPO_LABELS,
+  type MetaStatus, type Meta
 } from "@/types/avaliacao";
+import { IERM_CONFIG, CATEGORIA_META_LABELS, type IermNivel, type CategoriaMetaMEA } from "@/types/mea";
 import { MetaForm } from "./MetaForm";
+import { IermBadge } from "./IermBadge";
+import { MetaDetailDialog } from "./MetaDetailDialog";
 
 const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = {
   nao_iniciada: { color: "bg-slate-100 text-slate-700", icon: Clock },
@@ -70,15 +49,12 @@ export function MetasList() {
   const [checkinValor, setCheckinValor] = useState("");
   const [checkinObs, setCheckinObs] = useState("");
   const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
+  const [detailMeta, setDetailMeta] = useState<(Meta & { categoria_meta?: string; ierm_score?: number; ierm_nivel?: string }) | null>(null);
 
   const toggleExpanded = (id: string) => {
     setExpandedMetas(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
@@ -142,9 +118,12 @@ export function MetasList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Metas & OKRs</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Metas Ergonomicamente Alinhadas (MEA)
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Gerencie objetivos e resultados-chave
+            Metas com análise ergonômica integrada, ações e rastreabilidade completa
           </p>
         </div>
         <Button onClick={() => setShowForm(true)} className="gap-2">
@@ -152,6 +131,25 @@ export function MetasList() {
           Nova Meta
         </Button>
       </div>
+
+      {/* Stats */}
+      {metas.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Total", value: metas.length, color: "text-foreground" },
+            { label: "Em Andamento", value: metas.filter(m => m.status === "em_andamento").length, color: "text-blue-600" },
+            { label: "Concluídas", value: metas.filter(m => m.status === "concluida").length, color: "text-green-600" },
+            { label: "Com Risco Ergonômico", value: metas.filter(m => (m as any).ierm_nivel === "risco").length, color: "text-red-600" },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardContent className="p-3 text-center">
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {metas.length === 0 ? (
         <Card>
@@ -163,7 +161,7 @@ export function MetasList() {
               <div>
                 <h3 className="font-semibold text-lg">Nenhuma meta cadastrada</h3>
                 <p className="text-muted-foreground">
-                  Crie sua primeira meta para começar a acompanhar objetivos.
+                  Crie sua primeira meta ergonomicamente alinhada.
                 </p>
               </div>
               <Button onClick={() => setShowForm(true)} className="gap-2">
@@ -176,6 +174,7 @@ export function MetasList() {
       ) : (
         <div className="grid gap-4">
           {metas.map((meta) => {
+            const extMeta = meta as Meta & { categoria_meta?: string; ierm_score?: number; ierm_nivel?: string };
             const StatusIcon = statusConfig[meta.status]?.icon || Clock;
             const statusColor = statusConfig[meta.status]?.color || "bg-slate-100";
             const isExpanded = expandedMetas.has(meta.id);
@@ -197,17 +196,21 @@ export function MetasList() {
                             {meta.trimestre && ` Q${meta.trimestre}`}
                           </Badge>
                           <Badge variant="secondary">
-                            {meta.tipo === "individual" ? "Individual" : 
-                             meta.tipo === "equipe" ? "Equipe" : "Departamento"}
+                            {CATEGORIA_META_LABELS[(extMeta.categoria_meta as CategoriaMetaMEA) || "operacional"]}
                           </Badge>
+                          {extMeta.ierm_score !== undefined && extMeta.ierm_score > 0 && (
+                            <IermBadge 
+                              score={extMeta.ierm_score} 
+                              nivel={(extMeta.ierm_nivel as IermNivel) || "segura"} 
+                              compact 
+                            />
+                          )}
                         </div>
 
                         <div>
                           <h3 className="font-semibold text-lg">{meta.titulo}</h3>
                           {meta.descricao && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {meta.descricao}
-                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{meta.descricao}</p>
                           )}
                         </div>
 
@@ -225,18 +228,25 @@ export function MetasList() {
                           <Progress value={meta.progresso} className="h-2" />
                         </div>
 
-                        {hasOkrs && (
-                          <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="gap-2 p-0 h-auto">
-                              {isExpanded ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
-                              {meta.okrs?.length} Resultado(s)-Chave
-                            </Button>
-                          </CollapsibleTrigger>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {hasOkrs && (
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="sm" className="gap-2 p-0 h-auto">
+                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                {meta.okrs?.length} OKR(s)
+                              </Button>
+                            </CollapsibleTrigger>
+                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="gap-1.5 h-7 text-xs"
+                            onClick={() => setDetailMeta(extMeta)}
+                          >
+                            <Eye className="h-3 w-3" />
+                            Detalhar
+                          </Button>
+                        </div>
                       </div>
 
                       <DropdownMenu>
@@ -246,6 +256,10 @@ export function MetasList() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem className="gap-2" onClick={() => setDetailMeta(extMeta)}>
+                            <ListChecks className="h-4 w-4" />
+                            Ações & AEM
+                          </DropdownMenuItem>
                           <DropdownMenuItem className="gap-2" onClick={() => setOkrMetaId(meta.id)}>
                             <Plus className="h-4 w-4" />
                             Adicionar OKR
@@ -254,10 +268,7 @@ export function MetasList() {
                             <Edit className="h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteMeta(meta.id)}
-                            className="gap-2 text-destructive"
-                          >
+                          <DropdownMenuItem onClick={() => handleDeleteMeta(meta.id)} className="gap-2 text-destructive">
                             <Trash2 className="h-4 w-4" />
                             Excluir
                           </DropdownMenuItem>
@@ -270,77 +281,48 @@ export function MetasList() {
                         {meta.okrs?.map((okr) => {
                           const OkrStatusIcon = statusConfig[okr.status]?.icon || Clock;
                           const okrStatusColor = statusConfig[okr.status]?.color || "bg-slate-100";
-
                           return (
-                            <div 
-                              key={okr.id} 
-                              className="p-3 bg-muted/50 rounded-lg space-y-2"
-                            >
+                            <div key={okr.id} className="p-3 bg-muted/50 rounded-lg space-y-2">
                               <div className="flex items-start justify-between">
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-xs">
-                                      {OKR_TIPO_LABELS[okr.tipo]}
-                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">{OKR_TIPO_LABELS[okr.tipo]}</Badge>
                                     <Badge className={`${okrStatusColor} text-xs`}>
                                       <OkrStatusIcon className="h-3 w-3 mr-1" />
                                       {STATUS_META_LABELS[okr.status]}
                                     </Badge>
                                   </div>
                                   <p className="font-medium">{okr.key_result}</p>
-                                  {okr.responsavel_nome && (
-                                    <p className="text-xs text-muted-foreground">
-                                      Responsável: {okr.responsavel_nome}
-                                    </p>
-                                  )}
                                 </div>
                                 <div className="flex gap-1">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 text-xs gap-1"
+                                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1"
                                     onClick={() => {
                                       setCheckinOkrId(checkinOkrId === okr.id ? null : okr.id);
                                       setCheckinValor(String(okr.valor_atual || 0));
                                       setCheckinObs("");
-                                    }}
-                                  >
+                                    }}>
                                     <TrendingUp className="h-3 w-3" />
                                     Check-in
                                   </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => handleDeleteOkr(okr.id)}
-                                  >
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteOkr(okr.id)}>
                                     <Trash2 className="h-3 w-3 text-muted-foreground" />
                                   </Button>
                                 </div>
                               </div>
-
                               <div className="space-y-1">
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="text-muted-foreground">
-                                    {okr.valor_atual} / {okr.valor_alvo} {okr.unidade}
-                                  </span>
+                                  <span className="text-muted-foreground">{okr.valor_atual} / {okr.valor_alvo} {okr.unidade}</span>
                                   <span className="font-medium">{okr.progresso}%</span>
                                 </div>
                                 <Progress value={okr.progresso} className="h-1.5" />
                               </div>
-
                               {checkinOkrId === okr.id && (
                                 <div className="mt-2 p-3 bg-background border rounded-lg space-y-3">
                                   <p className="text-sm font-medium">Atualizar progresso</p>
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
                                       <Label className="text-xs">Valor atual</Label>
-                                      <Input
-                                        type="number"
-                                        value={checkinValor}
-                                        onChange={(e) => setCheckinValor(e.target.value)}
-                                        placeholder="Novo valor"
-                                      />
+                                      <Input type="number" value={checkinValor} onChange={(e) => setCheckinValor(e.target.value)} />
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs">Alvo</Label>
@@ -348,24 +330,12 @@ export function MetasList() {
                                     </div>
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-xs">Observação (opcional)</Label>
-                                    <Input
-                                      value={checkinObs}
-                                      onChange={(e) => setCheckinObs(e.target.value)}
-                                      placeholder="O que mudou?"
-                                    />
+                                    <Label className="text-xs">Observação</Label>
+                                    <Input value={checkinObs} onChange={(e) => setCheckinObs(e.target.value)} placeholder="O que mudou?" />
                                   </div>
                                   <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => setCheckinOkrId(null)}>
-                                      Cancelar
-                                    </Button>
-                                    <Button 
-                                      size="sm" 
-                                      onClick={() => handleCheckin(okr.id, okr.valor_atual || 0)}
-                                      disabled={isCreatingCheckin}
-                                    >
-                                      Salvar
-                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setCheckinOkrId(null)}>Cancelar</Button>
+                                    <Button size="sm" onClick={() => handleCheckin(okr.id, okr.valor_atual || 0)} disabled={isCreatingCheckin}>Salvar</Button>
                                   </div>
                                 </div>
                               )}
@@ -382,12 +352,13 @@ export function MetasList() {
         </div>
       )}
 
+      {/* New Meta Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
-            <DialogTitle>Nova Meta</DialogTitle>
+            <DialogTitle>Nova Meta Ergonomicamente Alinhada</DialogTitle>
             <DialogDescription>
-              Defina um objetivo e seus resultados-chave (OKRs)
+              Defina a meta e sua análise ergonômica integrada
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -396,66 +367,57 @@ export function MetasList() {
         </DialogContent>
       </Dialog>
 
+      {/* OKR Dialog */}
       <Dialog open={!!okrMetaId} onOpenChange={(open) => !open && setOkrMetaId(null)}>
         <DialogContent className="w-full max-w-md max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle>Novo Resultado-Chave</DialogTitle>
-            <DialogDescription>Adicione um resultado-chave à meta</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label>Resultado-Chave *</Label>
-              <Input
-                placeholder="Ex: Aumentar vendas em 20%"
-                value={okrForm.key_result}
-                onChange={(e) => setOkrForm(f => ({ ...f, key_result: e.target.value }))}
-              />
+              <Input placeholder="Ex: Aumentar vendas em 20%" value={okrForm.key_result}
+                onChange={(e) => setOkrForm(f => ({ ...f, key_result: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Textarea
-                placeholder="Detalhe o resultado esperado"
-                value={okrForm.descricao}
-                onChange={(e) => setOkrForm(f => ({ ...f, descricao: e.target.value }))}
-              />
+              <Label>Tipo de Medição</Label>
+              <Select value={okrForm.tipo} onValueChange={(v) => setOkrForm(f => ({ ...f, tipo: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(OKR_TIPO_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={okrForm.tipo} onValueChange={(v) => setOkrForm(f => ({ ...f, tipo: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="percentual">Percentual</SelectItem>
-                    <SelectItem value="quantidade">Quantidade</SelectItem>
-                    <SelectItem value="binario">Binário</SelectItem>
-                    <SelectItem value="monetario">Monetário</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Valor Alvo</Label>
-                <Input
-                  type="number"
-                  value={okrForm.valor_alvo}
-                  onChange={(e) => setOkrForm(f => ({ ...f, valor_alvo: Number(e.target.value) }))}
-                />
+                <Input type="number" value={okrForm.valor_alvo}
+                  onChange={(e) => setOkrForm(f => ({ ...f, valor_alvo: Number(e.target.value) }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Unidade</Label>
+                <Input placeholder="Ex: %, unid, R$" value={okrForm.unidade}
+                  onChange={(e) => setOkrForm(f => ({ ...f, unidade: e.target.value }))} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Unidade</Label>
-              <Input
-                placeholder="Ex: %, R$, unidades"
-                value={okrForm.unidade}
-                onChange={(e) => setOkrForm(f => ({ ...f, unidade: e.target.value }))}
-              />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setOkrMetaId(null)}>Cancelar</Button>
+              <Button onClick={handleAddOkr}>Adicionar</Button>
             </div>
-          </div>
-          <div className="flex justify-end gap-2 px-6 py-4 border-t shrink-0">
-            <Button variant="outline" onClick={() => setOkrMetaId(null)}>Cancelar</Button>
-            <Button onClick={handleAddOkr} disabled={!okrForm.key_result}>Adicionar</Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Meta Detail Dialog */}
+      {detailMeta && (
+        <MetaDetailDialog 
+          meta={detailMeta} 
+          open={!!detailMeta} 
+          onOpenChange={(open) => !open && setDetailMeta(null)} 
+        />
+      )}
     </div>
   );
 }
