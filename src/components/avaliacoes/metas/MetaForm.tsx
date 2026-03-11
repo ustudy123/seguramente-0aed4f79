@@ -63,6 +63,8 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
       titulo: "",
       descricao: "",
       tipo: "individual",
+      categoria_meta: "operacional",
+      origem_meta: "gestor",
       periodo: "trimestral",
       ano: currentYear,
       trimestre: currentQuarter,
