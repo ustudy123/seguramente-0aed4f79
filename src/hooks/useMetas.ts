@@ -58,9 +58,7 @@ export function useMetas() {
     mutationFn: async (data: MetaInsert) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
       
-      const { data: newMeta, error } = await supabase
-        .from("metas")
-        .insert({
+      const insertData: Record<string, unknown> = {
           colaborador_id: data.colaborador_id,
           colaborador_nome: data.colaborador_nome,
           departamento_id: data.departamento_id,
@@ -78,7 +76,19 @@ export function useMetas() {
           tenant_id: tenantId,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo,
-        })
+        };
+
+      // MEA fields
+      const meaFields = ['categoria_meta', 'origem_meta', 'premiacao_tipo', 'premiacao_descricao', 'premiacao_valor'];
+      for (const f of meaFields) {
+        if ((data as any)[f] !== undefined) {
+          insertData[f] = (data as any)[f];
+        }
+      }
+
+      const { data: newMeta, error } = await supabase
+        .from("metas")
+        .insert(insertData as any)
         .select()
         .single();
       
