@@ -215,6 +215,9 @@ export function usePonto() {
       tipoMarcacao,
       latitude,
       longitude,
+      enderecoGeolocalizacao,
+      selfieUrl,
+      selfieNome,
     }: {
       colaboradorId: string;
       colaboradorNome: string;
@@ -222,6 +225,9 @@ export function usePonto() {
       tipoMarcacao: "entrada" | "saida_almoco" | "retorno_almoco" | "saida";
       latitude?: number;
       longitude?: number;
+      enderecoGeolocalizacao?: string;
+      selfieUrl?: string;
+      selfieNome?: string;
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
@@ -244,6 +250,9 @@ export function usePonto() {
           dispositivo,
           latitude,
           longitude,
+          endereco_geolocalizacao: enderecoGeolocalizacao,
+          selfie_url: selfieUrl,
+          selfie_nome: selfieNome,
           created_by: user.id,
           hash_marcacao: "placeholder",
         } as never)
