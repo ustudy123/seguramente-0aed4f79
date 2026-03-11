@@ -334,6 +334,12 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const { isSuperAdmin } = useAuthContext();
+
+  const filteredSections = useMemo(() => {
+    if (isSuperAdmin) return menuSections;
+    return menuSections.filter(s => s.label !== "Academia");
+  }, [isSuperAdmin]);
 
   // Flatten all navigable items for search
   const allItems = useMemo(() => {
