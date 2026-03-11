@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useAuthContext } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
