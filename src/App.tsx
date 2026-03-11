@@ -40,6 +40,7 @@ import Atestados from "./pages/Atestados";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import Pdi from "./pages/Pdi";
 import Financeiro from "./pages/Financeiro";
+import Academia from "./pages/Academia";
 import Empresa from "./pages/Empresa";
 import Marketplace from "./pages/Marketplace";
 import Terceiros from "./pages/Terceiros";
