@@ -29,6 +29,8 @@ const formSchema = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
   tipo: z.string().default("individual"),
+  categoria_meta: z.string().default("operacional"),
+  origem_meta: z.string().default("gestor"),
   periodo: z.enum(["mensal", "trimestral", "semestral", "anual"]).default("trimestral"),
   ano: z.number().min(2024).max(2030),
   trimestre: z.number().min(1).max(4).optional(),
@@ -37,6 +39,8 @@ const formSchema = z.object({
   data_inicio: z.string().optional(),
   data_fim: z.string().optional(),
   peso: z.number().min(0.1).max(10).default(1),
+  premiacao_tipo: z.string().optional(),
+  premiacao_descricao: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
