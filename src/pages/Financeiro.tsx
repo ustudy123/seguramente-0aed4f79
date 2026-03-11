@@ -62,6 +62,12 @@ import {
 } from "@/hooks/useFinanceiro";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { HoleriteDetail } from "@/components/financeiro/HoleriteDetail";
+import { RubricasTab } from "@/components/financeiro/RubricasTab";
+import { FeriasTab } from "@/components/financeiro/FeriasTab";
+import { DecimoTerceiroTab } from "@/components/financeiro/DecimoTerceiroTab";
+import { RescisaoTab } from "@/components/financeiro/RescisaoTab";
+import { ProvisoesTab } from "@/components/financeiro/ProvisoesTab";
+import { TabelasLegaisTab } from "@/components/financeiro/TabelasLegaisTab";
 import type { FolhaItem } from "@/hooks/useFinanceiro";
 
 // ==========================================
