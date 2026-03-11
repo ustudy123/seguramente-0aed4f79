@@ -5463,6 +5463,203 @@ export type Database = {
           },
         ]
       }
+      ferias_historico: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          descricao: string | null
+          id: string
+          solicitacao_id: string
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          id?: string
+          solicitacao_id: string
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          id?: string
+          solicitacao_id?: string
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferias_historico_solicitacao_id_fkey"
+            columns: ["solicitacao_id"]
+            isOneToOne: false
+            referencedRelation: "ferias_solicitacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ferias_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ferias_solicitacoes: {
+        Row: {
+          abono_pecuniario: boolean | null
+          acao_preventiva: boolean | null
+          acao_preventiva_id: string | null
+          aprovado_por: string | null
+          aprovado_por_nome: string | null
+          assinatura_link_id: string | null
+          assinatura_status: string | null
+          aviso_gerado: boolean | null
+          cargo: string | null
+          checkin_retorno_enviado: boolean | null
+          checkin_retorno_respondido: boolean | null
+          checkin_retorno_respostas: Json | null
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_nome: string
+          created_at: string
+          data_aprovacao: string | null
+          data_fim: string
+          data_inicio: string
+          departamento: string | null
+          dias_abono: number | null
+          dias_solicitados: number
+          id: string
+          inr_nivel_momento: string | null
+          inr_score_momento: number | null
+          mensagem_pre_ferias: string | null
+          mensagem_pre_ferias_enviada: boolean | null
+          motivo_recusa: string | null
+          observacoes: string | null
+          periodo_aquisitivo_fim: string | null
+          periodo_aquisitivo_inicio: string | null
+          recibo_gerado: boolean | null
+          registro_financeiro_id: string | null
+          salario_base: number | null
+          saldo_dias: number
+          status: string
+          tenant_id: string
+          updated_at: string
+          valor_abono: number | null
+          valor_ferias: number | null
+          valor_terco: number | null
+          valor_total_bruto: number | null
+        }
+        Insert: {
+          abono_pecuniario?: boolean | null
+          acao_preventiva?: boolean | null
+          acao_preventiva_id?: string | null
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          assinatura_link_id?: string | null
+          assinatura_status?: string | null
+          aviso_gerado?: boolean | null
+          cargo?: string | null
+          checkin_retorno_enviado?: boolean | null
+          checkin_retorno_respondido?: boolean | null
+          checkin_retorno_respostas?: Json | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome: string
+          created_at?: string
+          data_aprovacao?: string | null
+          data_fim: string
+          data_inicio: string
+          departamento?: string | null
+          dias_abono?: number | null
+          dias_solicitados: number
+          id?: string
+          inr_nivel_momento?: string | null
+          inr_score_momento?: number | null
+          mensagem_pre_ferias?: string | null
+          mensagem_pre_ferias_enviada?: boolean | null
+          motivo_recusa?: string | null
+          observacoes?: string | null
+          periodo_aquisitivo_fim?: string | null
+          periodo_aquisitivo_inicio?: string | null
+          recibo_gerado?: boolean | null
+          registro_financeiro_id?: string | null
+          salario_base?: number | null
+          saldo_dias?: number
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          valor_abono?: number | null
+          valor_ferias?: number | null
+          valor_terco?: number | null
+          valor_total_bruto?: number | null
+        }
+        Update: {
+          abono_pecuniario?: boolean | null
+          acao_preventiva?: boolean | null
+          acao_preventiva_id?: string | null
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          assinatura_link_id?: string | null
+          assinatura_status?: string | null
+          aviso_gerado?: boolean | null
+          cargo?: string | null
+          checkin_retorno_enviado?: boolean | null
+          checkin_retorno_respondido?: boolean | null
+          checkin_retorno_respostas?: Json | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_nome?: string
+          created_at?: string
+          data_aprovacao?: string | null
+          data_fim?: string
+          data_inicio?: string
+          departamento?: string | null
+          dias_abono?: number | null
+          dias_solicitados?: number
+          id?: string
+          inr_nivel_momento?: string | null
+          inr_score_momento?: number | null
+          mensagem_pre_ferias?: string | null
+          mensagem_pre_ferias_enviada?: boolean | null
+          motivo_recusa?: string | null
+          observacoes?: string | null
+          periodo_aquisitivo_fim?: string | null
+          periodo_aquisitivo_inicio?: string | null
+          recibo_gerado?: boolean | null
+          registro_financeiro_id?: string | null
+          salario_base?: number | null
+          saldo_dias?: number
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          valor_abono?: number | null
+          valor_ferias?: number | null
+          valor_terco?: number | null
+          valor_total_bruto?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferias_solicitacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filiais: {
         Row: {
           ativo: boolean
@@ -16010,6 +16207,30 @@ export type Database = {
       }
     }
     Views: {
+      ferias_relatorio_setor: {
+        Row: {
+          acoes_preventivas: number | null
+          aprovadas: number | null
+          concluidas: number | null
+          custo_total: number | null
+          em_gozo: number | null
+          media_inr: number | null
+          pendentes: number | null
+          setor: string | null
+          tenant_id: string | null
+          total_dias_concedidos: number | null
+          total_solicitacoes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferias_solicitacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psicossocial_participacao_stats: {
         Row: {
           campanha_id: string | null
@@ -16071,6 +16292,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      atualizar_status_ferias_automatico: { Args: never; Returns: undefined }
       auto_abrir_competencia_mensal: { Args: never; Returns: undefined }
       bloquear_profissionais_expirados: { Args: never; Returns: undefined }
       buscar_campanha_por_token_publico: {
