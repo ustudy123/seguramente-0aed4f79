@@ -347,6 +347,43 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
           />
         )}
 
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="premiacao_tipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Premiação</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Sem premiação" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="sem_premiacao">Sem Premiação</SelectItem>
+                    <SelectItem value="financeira">Financeira</SelectItem>
+                    <SelectItem value="nao_financeira">Não Financeira</SelectItem>
+                    <SelectItem value="hibrida">Híbrida</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="premiacao_descricao"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição da Premiação</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ex: Bônus de R$ 500" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="peso"
