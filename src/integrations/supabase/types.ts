@@ -9430,6 +9430,295 @@ export type Database = {
           },
         ]
       }
+      meta_acao_tempo: {
+        Row: {
+          acao_id: string
+          created_at: string | null
+          id: string
+          meta_id: string
+          observacao: string | null
+          registrado_por: string | null
+          registrado_por_nome: string | null
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          acao_id: string
+          created_at?: string | null
+          id?: string
+          meta_id: string
+          observacao?: string | null
+          registrado_por?: string | null
+          registrado_por_nome?: string | null
+          tenant_id: string
+          tipo: string
+        }
+        Update: {
+          acao_id?: string
+          created_at?: string | null
+          id?: string
+          meta_id?: string
+          observacao?: string | null
+          registrado_por?: string | null
+          registrado_por_nome?: string | null
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_acao_tempo_acao_id_fkey"
+            columns: ["acao_id"]
+            isOneToOne: false
+            referencedRelation: "meta_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_acao_tempo_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_acao_tempo_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_acoes: {
+        Row: {
+          created_at: string | null
+          descricao: string
+          evidencia_esperada: string | null
+          id: string
+          meta_id: string
+          ordem: number | null
+          prazo: string | null
+          prioridade: string | null
+          progresso: number | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: string | null
+          tenant_id: string
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao: string
+          evidencia_esperada?: string | null
+          id?: string
+          meta_id: string
+          ordem?: number | null
+          prazo?: string | null
+          prioridade?: string | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          tenant_id: string
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string
+          evidencia_esperada?: string | null
+          id?: string
+          meta_id?: string
+          ordem?: number | null
+          prazo?: string | null
+          prioridade?: string | null
+          progresso?: number | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string | null
+          tenant_id?: string
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_acoes_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_acoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_aem: {
+        Row: {
+          colaborador_observacao: string | null
+          colaborador_sinaliza_dificuldade: boolean | null
+          colaborador_validou: boolean | null
+          colaborador_validou_em: string | null
+          compativel_competencias: string | null
+          compativel_funcao: string | null
+          created_at: string | null
+          exige_atencao_continua: boolean | null
+          exige_horas_extras: string | null
+          exigencia_cognitiva: string | null
+          exigencia_emocional: string | null
+          exigencia_fisica: string | null
+          grau_autonomia: string | null
+          id: string
+          ierm_nivel: string | null
+          ierm_score: number | null
+          impacta_jornada: boolean | null
+          meta_id: string
+          possibilidade_ajuste_metodo: string | null
+          preenchido_por: string | null
+          preenchido_por_nome: string | null
+          pressao_prazo: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          revisado_por_nome: string | null
+          ritmo_imposto: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          colaborador_observacao?: string | null
+          colaborador_sinaliza_dificuldade?: boolean | null
+          colaborador_validou?: boolean | null
+          colaborador_validou_em?: string | null
+          compativel_competencias?: string | null
+          compativel_funcao?: string | null
+          created_at?: string | null
+          exige_atencao_continua?: boolean | null
+          exige_horas_extras?: string | null
+          exigencia_cognitiva?: string | null
+          exigencia_emocional?: string | null
+          exigencia_fisica?: string | null
+          grau_autonomia?: string | null
+          id?: string
+          ierm_nivel?: string | null
+          ierm_score?: number | null
+          impacta_jornada?: boolean | null
+          meta_id: string
+          possibilidade_ajuste_metodo?: string | null
+          preenchido_por?: string | null
+          preenchido_por_nome?: string | null
+          pressao_prazo?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          revisado_por_nome?: string | null
+          ritmo_imposto?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          colaborador_observacao?: string | null
+          colaborador_sinaliza_dificuldade?: boolean | null
+          colaborador_validou?: boolean | null
+          colaborador_validou_em?: string | null
+          compativel_competencias?: string | null
+          compativel_funcao?: string | null
+          created_at?: string | null
+          exige_atencao_continua?: boolean | null
+          exige_horas_extras?: string | null
+          exigencia_cognitiva?: string | null
+          exigencia_emocional?: string | null
+          exigencia_fisica?: string | null
+          grau_autonomia?: string | null
+          id?: string
+          ierm_nivel?: string | null
+          ierm_score?: number | null
+          impacta_jornada?: boolean | null
+          meta_id?: string
+          possibilidade_ajuste_metodo?: string | null
+          preenchido_por?: string | null
+          preenchido_por_nome?: string | null
+          pressao_prazo?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          revisado_por_nome?: string | null
+          ritmo_imposto?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_aem_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_aem_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_historico: {
+        Row: {
+          created_at: string | null
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          descricao: string | null
+          id: string
+          meta_id: string
+          tenant_id: string
+          tipo: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          id?: string
+          meta_id: string
+          tenant_id: string
+          tipo: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          id?: string
+          meta_id?: string
+          tenant_id?: string
+          tipo?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_historico_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meta_okrs: {
         Row: {
           created_at: string
@@ -9505,6 +9794,7 @@ export type Database = {
       metas: {
         Row: {
           ano: number
+          categoria_meta: string | null
           colaborador_id: string | null
           colaborador_nome: string | null
           created_at: string
@@ -9516,8 +9806,17 @@ export type Database = {
           departamento_nome: string | null
           descricao: string | null
           id: string
+          ierm_calculado_em: string | null
+          ierm_nivel: string | null
+          ierm_score: number | null
+          origem_meta: string | null
+          origem_referencia_id: string | null
           periodo: Database["public"]["Enums"]["meta_periodo"]
           peso: number | null
+          premiacao_atingida: boolean | null
+          premiacao_descricao: string | null
+          premiacao_tipo: string | null
+          premiacao_valor: number | null
           progresso: number
           status: Database["public"]["Enums"]["meta_status"]
           tenant_id: string
@@ -9529,6 +9828,7 @@ export type Database = {
         }
         Insert: {
           ano: number
+          categoria_meta?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string | null
           created_at?: string
@@ -9540,8 +9840,17 @@ export type Database = {
           departamento_nome?: string | null
           descricao?: string | null
           id?: string
+          ierm_calculado_em?: string | null
+          ierm_nivel?: string | null
+          ierm_score?: number | null
+          origem_meta?: string | null
+          origem_referencia_id?: string | null
           periodo?: Database["public"]["Enums"]["meta_periodo"]
           peso?: number | null
+          premiacao_atingida?: boolean | null
+          premiacao_descricao?: string | null
+          premiacao_tipo?: string | null
+          premiacao_valor?: number | null
           progresso?: number
           status?: Database["public"]["Enums"]["meta_status"]
           tenant_id: string
@@ -9553,6 +9862,7 @@ export type Database = {
         }
         Update: {
           ano?: number
+          categoria_meta?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string | null
           created_at?: string
@@ -9564,8 +9874,17 @@ export type Database = {
           departamento_nome?: string | null
           descricao?: string | null
           id?: string
+          ierm_calculado_em?: string | null
+          ierm_nivel?: string | null
+          ierm_score?: number | null
+          origem_meta?: string | null
+          origem_referencia_id?: string | null
           periodo?: Database["public"]["Enums"]["meta_periodo"]
           peso?: number | null
+          premiacao_atingida?: boolean | null
+          premiacao_descricao?: string | null
+          premiacao_tipo?: string | null
+          premiacao_valor?: number | null
           progresso?: number
           status?: Database["public"]["Enums"]["meta_status"]
           tenant_id?: string
