@@ -154,17 +154,18 @@ const Documentos = () => {
   // Auto-abrir wizard quando não há estrutura de pastas para esta empresa
   useEffect(() => {
     if (loading || initializing) return;
-    if (pastas.length === 0) {
-      // Só mostra se nunca foi dispensado para esta empresa
-      if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
-      const timer = setTimeout(() => setShowWizard(true), 600);
-      return () => clearTimeout(timer);
+    // Se já tem estrutura, marcar como dispensado e nunca mostrar automaticamente
+    if (pastas.length > 0 || tree.length > 0) {
+      if (wizardDismissedKey) {
+        localStorage.setItem(wizardDismissedKey, "1");
+      }
+      return;
     }
-    // Se já tem estrutura, marcar como dispensado para esta empresa
-    if (pastas.length > 0 && wizardDismissedKey) {
-      localStorage.setItem(wizardDismissedKey, "1");
-    }
-  }, [loading, pastas.length, initializing, wizardDismissedKey, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Só mostra se nunca foi dispensado para esta empresa
+    if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
+    const timer = setTimeout(() => setShowWizard(true), 600);
+    return () => clearTimeout(timer);
+  }, [loading, pastas.length, tree.length, initializing, wizardDismissedKey, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
