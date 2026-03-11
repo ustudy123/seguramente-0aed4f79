@@ -13318,6 +13318,7 @@ export type Database = {
           data_marcacao: string
           dispositivo: string | null
           empresa_id: string | null
+          endereco_geolocalizacao: string | null
           hash_marcacao: string
           hora_marcacao: string
           id: string
@@ -13325,6 +13326,8 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           marcacao_original: boolean
+          selfie_nome: string | null
+          selfie_url: string | null
           tenant_id: string
           tipo_marcacao: string
           user_agent: string | null
@@ -13339,6 +13342,7 @@ export type Database = {
           data_marcacao?: string
           dispositivo?: string | null
           empresa_id?: string | null
+          endereco_geolocalizacao?: string | null
           hash_marcacao: string
           hora_marcacao?: string
           id?: string
@@ -13346,6 +13350,8 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           marcacao_original?: boolean
+          selfie_nome?: string | null
+          selfie_url?: string | null
           tenant_id: string
           tipo_marcacao: string
           user_agent?: string | null
@@ -13360,6 +13366,7 @@ export type Database = {
           data_marcacao?: string
           dispositivo?: string | null
           empresa_id?: string | null
+          endereco_geolocalizacao?: string | null
           hash_marcacao?: string
           hora_marcacao?: string
           id?: string
@@ -13367,6 +13374,8 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           marcacao_original?: boolean
+          selfie_nome?: string | null
+          selfie_url?: string | null
           tenant_id?: string
           tipo_marcacao?: string
           user_agent?: string | null
