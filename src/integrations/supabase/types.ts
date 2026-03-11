@@ -14,6 +14,437 @@ export type Database = {
   }
   public: {
     Tables: {
+      academia_aulas: {
+        Row: {
+          conteudo_texto: string | null
+          created_at: string | null
+          descricao: string | null
+          duracao: string | null
+          id: string
+          link_externo: string | null
+          material_complementar: Json | null
+          modulo_id: string
+          obrigatoria: boolean | null
+          ordem: number | null
+          tenant_id: string
+          thumbnail: string | null
+          tipo: string | null
+          titulo: string
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          conteudo_texto?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          duracao?: string | null
+          id?: string
+          link_externo?: string | null
+          material_complementar?: Json | null
+          modulo_id: string
+          obrigatoria?: boolean | null
+          ordem?: number | null
+          tenant_id: string
+          thumbnail?: string | null
+          tipo?: string | null
+          titulo: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          conteudo_texto?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          duracao?: string | null
+          id?: string
+          link_externo?: string | null
+          material_complementar?: Json | null
+          modulo_id?: string
+          obrigatoria?: boolean | null
+          ordem?: number | null
+          tenant_id?: string
+          thumbnail?: string | null
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_aulas_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "academia_modulos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_aulas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_badges: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          treinamento_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          tenant_id: string
+          treinamento_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          treinamento_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_badges_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_badges_treinamento_id_fkey"
+            columns: ["treinamento_id"]
+            isOneToOne: false
+            referencedRelation: "academia_treinamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_categorias: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_categorias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_favoritos: {
+        Row: {
+          created_at: string | null
+          id: string
+          tenant_id: string
+          treinamento_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tenant_id: string
+          treinamento_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tenant_id?: string
+          treinamento_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_favoritos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_favoritos_treinamento_id_fkey"
+            columns: ["treinamento_id"]
+            isOneToOne: false
+            referencedRelation: "academia_treinamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_modulos: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          tenant_id: string
+          treinamento_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          tenant_id: string
+          treinamento_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          tenant_id?: string
+          treinamento_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_modulos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_modulos_treinamento_id_fkey"
+            columns: ["treinamento_id"]
+            isOneToOne: false
+            referencedRelation: "academia_treinamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_progresso: {
+        Row: {
+          aula_id: string
+          concluida: boolean | null
+          concluida_em: string | null
+          created_at: string | null
+          id: string
+          tenant_id: string
+          treinamento_id: string
+          user_id: string
+        }
+        Insert: {
+          aula_id: string
+          concluida?: boolean | null
+          concluida_em?: string | null
+          created_at?: string | null
+          id?: string
+          tenant_id: string
+          treinamento_id: string
+          user_id: string
+        }
+        Update: {
+          aula_id?: string
+          concluida?: boolean | null
+          concluida_em?: string | null
+          created_at?: string | null
+          id?: string
+          tenant_id?: string
+          treinamento_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_progresso_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "academia_aulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_progresso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_progresso_treinamento_id_fkey"
+            columns: ["treinamento_id"]
+            isOneToOne: false
+            referencedRelation: "academia_treinamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_treinamentos: {
+        Row: {
+          banner: string | null
+          categoria_id: string | null
+          created_at: string | null
+          descricao_completa: string | null
+          descricao_curta: string | null
+          destaque: boolean | null
+          duracao_estimada: string | null
+          id: string
+          imagem_capa: string | null
+          instrutor: string | null
+          nivel: string | null
+          ordem: number | null
+          slug: string
+          status: string | null
+          subtitulo: string | null
+          tags: string[] | null
+          tenant_id: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          banner?: string | null
+          categoria_id?: string | null
+          created_at?: string | null
+          descricao_completa?: string | null
+          descricao_curta?: string | null
+          destaque?: boolean | null
+          duracao_estimada?: string | null
+          id?: string
+          imagem_capa?: string | null
+          instrutor?: string | null
+          nivel?: string | null
+          ordem?: number | null
+          slug: string
+          status?: string | null
+          subtitulo?: string | null
+          tags?: string[] | null
+          tenant_id: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          banner?: string | null
+          categoria_id?: string | null
+          created_at?: string | null
+          descricao_completa?: string | null
+          descricao_curta?: string | null
+          destaque?: boolean | null
+          duracao_estimada?: string | null
+          id?: string
+          imagem_capa?: string | null
+          instrutor?: string | null
+          nivel?: string | null
+          ordem?: number | null
+          slug?: string
+          status?: string | null
+          subtitulo?: string | null
+          tags?: string[] | null
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_treinamentos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "academia_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academia_treinamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academia_xp: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          pontos: number | null
+          referencia_id: string | null
+          tenant_id: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          pontos?: number | null
+          referencia_id?: string | null
+          tenant_id: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          pontos?: number | null
+          referencia_id?: string | null
+          tenant_id?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academia_xp_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admissao_documentos: {
         Row: {
           admissao_id: string

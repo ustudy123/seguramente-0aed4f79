@@ -40,6 +40,7 @@ import Atestados from "./pages/Atestados";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import Pdi from "./pages/Pdi";
 import Financeiro from "./pages/Financeiro";
+import Academia from "./pages/Academia";
 import Empresa from "./pages/Empresa";
 import Marketplace from "./pages/Marketplace";
 import Terceiros from "./pages/Terceiros";
@@ -200,6 +201,7 @@ const App = () => (
               <Route path="/cultura-celebracoes" element={<CulturaCelebracoes />} />
               <Route path="/onboarding-rh" element={<Onboarding />} />
               <Route path="/hub-contabil" element={<HubContabil />} />
+              <Route path="/academia" element={<Academia />} />
               <Route path="/analise-jornada" element={<AnaliseJornada />} />
               <Route path="/usuarios" element={<Usuarios />} />
               <Route path="/configuracoes" element={<Configuracoes />} />

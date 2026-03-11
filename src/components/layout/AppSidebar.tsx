@@ -144,6 +144,14 @@ const menuSections: MenuSection[] = [
     { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
     { title: "Hub Contábil", icon: FileText, path: "/hub-contabil" },
   ]
+},
+{
+  label: "Academia",
+  color: "text-indigo-400",
+  sectionIcon: BookOpen,
+  items: [
+    { title: "Academia", icon: BookOpen, path: "/academia" },
+  ]
 }];
 
 
