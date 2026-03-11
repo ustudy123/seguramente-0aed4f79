@@ -19,6 +19,12 @@ import {
   Package,
   Pencil,
   Trash2,
+  FileCode,
+  Sun,
+  Gift,
+  PiggyBank,
+  Calculator,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +62,12 @@ import {
 } from "@/hooks/useFinanceiro";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { HoleriteDetail } from "@/components/financeiro/HoleriteDetail";
+import { RubricasTab } from "@/components/financeiro/RubricasTab";
+import { FeriasTab } from "@/components/financeiro/FeriasTab";
+import { DecimoTerceiroTab } from "@/components/financeiro/DecimoTerceiroTab";
+import { RescisaoTab } from "@/components/financeiro/RescisaoTab";
+import { ProvisoesTab } from "@/components/financeiro/ProvisoesTab";
+import { TabelasLegaisTab } from "@/components/financeiro/TabelasLegaisTab";
 import type { FolhaItem } from "@/hooks/useFinanceiro";
 
 // ==========================================
@@ -760,22 +772,46 @@ const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <TabsList className="bg-muted/50">
+          <TabsList className="bg-muted/50 flex-wrap h-auto gap-1">
             <TabsTrigger value="dashboard">
               <TrendingUp className="w-4 h-4 mr-2" />Painel
+            </TabsTrigger>
+            <TabsTrigger value="folha">
+              <FileText className="w-4 h-4 mr-2" />Folha
+            </TabsTrigger>
+            <TabsTrigger value="rubricas">
+              <FileCode className="w-4 h-4 mr-2" />Rubricas
+            </TabsTrigger>
+            <TabsTrigger value="ferias">
+              <Sun className="w-4 h-4 mr-2" />Férias
+            </TabsTrigger>
+            <TabsTrigger value="13salario">
+              <Gift className="w-4 h-4 mr-2" />13º
+            </TabsTrigger>
+            <TabsTrigger value="rescisao">
+              <Calculator className="w-4 h-4 mr-2" />Rescisão
+            </TabsTrigger>
+            <TabsTrigger value="provisoes">
+              <PiggyBank className="w-4 h-4 mr-2" />Provisões
             </TabsTrigger>
             <TabsTrigger value="beneficios">
               <Heart className="w-4 h-4 mr-2" />Benefícios
             </TabsTrigger>
-            <TabsTrigger value="folha">
-              <FileText className="w-4 h-4 mr-2" />Folha de Pagamento
+            <TabsTrigger value="tabelas">
+              <Settings2 className="w-4 h-4 mr-2" />Tabelas
             </TabsTrigger>
           </TabsList>
         </motion.div>
 
         <TabsContent value="dashboard"><DashboardTab /></TabsContent>
-        <TabsContent value="beneficios"><BeneficiosTab /></TabsContent>
         <TabsContent value="folha"><FolhaTab /></TabsContent>
+        <TabsContent value="rubricas"><RubricasTab /></TabsContent>
+        <TabsContent value="ferias"><FeriasTab /></TabsContent>
+        <TabsContent value="13salario"><DecimoTerceiroTab /></TabsContent>
+        <TabsContent value="rescisao"><RescisaoTab /></TabsContent>
+        <TabsContent value="provisoes"><ProvisoesTab /></TabsContent>
+        <TabsContent value="beneficios"><BeneficiosTab /></TabsContent>
+        <TabsContent value="tabelas"><TabelasLegaisTab /></TabsContent>
       </Tabs>
     </div>
   );

@@ -644,6 +644,7 @@ export type Database = {
           chave_conectividade: string | null
           chave_pix: string | null
           cidade: string | null
+          classificacao_interna: string | null
           complemento: string | null
           conta: string | null
           cpf: string
@@ -657,6 +658,7 @@ export type Database = {
           data_homologacao: string | null
           data_nascimento: string | null
           departamento: string | null
+          dependentes_irrf: number | null
           desligado_por: string | null
           desligado_por_nome: string | null
           dias_aviso_previo: number | null
@@ -699,6 +701,7 @@ export type Database = {
           tipo_aviso_previo: string | null
           tipo_conta: string | null
           tipo_contrato: string | null
+          tipo_vinculo: string | null
           updated_at: string
         }
         Insert: {
@@ -713,6 +716,7 @@ export type Database = {
           chave_conectividade?: string | null
           chave_pix?: string | null
           cidade?: string | null
+          classificacao_interna?: string | null
           complemento?: string | null
           conta?: string | null
           cpf: string
@@ -726,6 +730,7 @@ export type Database = {
           data_homologacao?: string | null
           data_nascimento?: string | null
           departamento?: string | null
+          dependentes_irrf?: number | null
           desligado_por?: string | null
           desligado_por_nome?: string | null
           dias_aviso_previo?: number | null
@@ -768,6 +773,7 @@ export type Database = {
           tipo_aviso_previo?: string | null
           tipo_conta?: string | null
           tipo_contrato?: string | null
+          tipo_vinculo?: string | null
           updated_at?: string
         }
         Update: {
@@ -782,6 +788,7 @@ export type Database = {
           chave_conectividade?: string | null
           chave_pix?: string | null
           cidade?: string | null
+          classificacao_interna?: string | null
           complemento?: string | null
           conta?: string | null
           cpf?: string
@@ -795,6 +802,7 @@ export type Database = {
           data_homologacao?: string | null
           data_nascimento?: string | null
           departamento?: string | null
+          dependentes_irrf?: number | null
           desligado_por?: string | null
           desligado_por_nome?: string | null
           dias_aviso_previo?: number | null
@@ -837,6 +845,7 @@ export type Database = {
           tipo_aviso_previo?: string | null
           tipo_conta?: string | null
           tipo_contrato?: string | null
+          tipo_vinculo?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5529,6 +5538,98 @@ export type Database = {
           },
         ]
       }
+      folha_13_calculo: {
+        Row: {
+          ano: number
+          base_fgts: number | null
+          base_inss: number | null
+          base_irrf: number | null
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          id: string
+          media_variaveis: number | null
+          memoria_calculo: Json | null
+          meses_trabalhados: number
+          parcela: number
+          remuneracao_base: number
+          status: string
+          tenant_id: string
+          tipo_vinculo: string | null
+          total_descontos: number | null
+          total_liquido: number
+          updated_at: string
+          valor_bruto: number
+          valor_fgts: number | null
+          valor_inss: number | null
+          valor_irrf: number | null
+          valor_primeira_parcela: number | null
+        }
+        Insert: {
+          ano: number
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          id?: string
+          media_variaveis?: number | null
+          memoria_calculo?: Json | null
+          meses_trabalhados?: number
+          parcela?: number
+          remuneracao_base?: number
+          status?: string
+          tenant_id: string
+          tipo_vinculo?: string | null
+          total_descontos?: number | null
+          total_liquido?: number
+          updated_at?: string
+          valor_bruto?: number
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+          valor_primeira_parcela?: number | null
+        }
+        Update: {
+          ano?: number
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          id?: string
+          media_variaveis?: number | null
+          memoria_calculo?: Json | null
+          meses_trabalhados?: number
+          parcela?: number
+          remuneracao_base?: number
+          status?: string
+          tenant_id?: string
+          tipo_vinculo?: string | null
+          total_descontos?: number | null
+          total_liquido?: number
+          updated_at?: string
+          valor_bruto?: number
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+          valor_primeira_parcela?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_13_calculo_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folha_eventos: {
         Row: {
           codigo: string | null
@@ -5579,6 +5680,185 @@ export type Database = {
           },
           {
             foreignKeyName: "folha_eventos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_ferias_calculo: {
+        Row: {
+          base_fgts: number | null
+          base_inss: number | null
+          base_irrf: number | null
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_fim_gozo: string
+          data_inicio_gozo: string
+          data_pagamento: string | null
+          dias_abono: number | null
+          dias_gozo: number
+          em_dobro: boolean | null
+          id: string
+          media_variaveis: number | null
+          memoria_calculo: Json | null
+          periodo_aquisitivo_fim: string
+          periodo_aquisitivo_inicio: string
+          prazo_legal: string | null
+          remuneracao_base: number
+          status: string
+          tenant_id: string
+          tipo_vinculo: string | null
+          total_bruto: number
+          total_descontos: number | null
+          total_liquido: number
+          updated_at: string
+          valor_abono: number | null
+          valor_abono_terco: number | null
+          valor_ferias: number
+          valor_fgts: number | null
+          valor_inss: number | null
+          valor_irrf: number | null
+          valor_terco: number
+        }
+        Insert: {
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_fim_gozo: string
+          data_inicio_gozo: string
+          data_pagamento?: string | null
+          dias_abono?: number | null
+          dias_gozo?: number
+          em_dobro?: boolean | null
+          id?: string
+          media_variaveis?: number | null
+          memoria_calculo?: Json | null
+          periodo_aquisitivo_fim: string
+          periodo_aquisitivo_inicio: string
+          prazo_legal?: string | null
+          remuneracao_base?: number
+          status?: string
+          tenant_id: string
+          tipo_vinculo?: string | null
+          total_bruto?: number
+          total_descontos?: number | null
+          total_liquido?: number
+          updated_at?: string
+          valor_abono?: number | null
+          valor_abono_terco?: number | null
+          valor_ferias?: number
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+          valor_terco?: number
+        }
+        Update: {
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_fim_gozo?: string
+          data_inicio_gozo?: string
+          data_pagamento?: string | null
+          dias_abono?: number | null
+          dias_gozo?: number
+          em_dobro?: boolean | null
+          id?: string
+          media_variaveis?: number | null
+          memoria_calculo?: Json | null
+          periodo_aquisitivo_fim?: string
+          periodo_aquisitivo_inicio?: string
+          prazo_legal?: string | null
+          remuneracao_base?: number
+          status?: string
+          tenant_id?: string
+          tipo_vinculo?: string | null
+          total_bruto?: number
+          total_descontos?: number | null
+          total_liquido?: number
+          updated_at?: string
+          valor_abono?: number | null
+          valor_abono_terco?: number | null
+          valor_ferias?: number
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+          valor_terco?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_ferias_calculo_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_historico: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          descricao: string | null
+          entidade: string | null
+          entidade_id: string | null
+          id: string
+          periodo_id: string | null
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          entidade?: string | null
+          entidade_id?: string | null
+          id?: string
+          periodo_id?: string | null
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          descricao?: string | null
+          entidade?: string | null
+          entidade_id?: string | null
+          id?: string
+          periodo_id?: string | null
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_historico_periodo_id_fkey"
+            columns: ["periodo_id"]
+            isOneToOne: false
+            referencedRelation: "folha_periodos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_historico_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -5658,12 +5938,255 @@ export type Database = {
           },
         ]
       }
+      folha_lancamentos: {
+        Row: {
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          id: string
+          lote_id: string | null
+          origem: string
+          periodo_id: string
+          referencia: string | null
+          rubrica_codigo: string | null
+          rubrica_descricao: string
+          rubrica_id: string | null
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["rubrica_tipo"]
+          valor: number
+        }
+        Insert: {
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          id?: string
+          lote_id?: string | null
+          origem?: string
+          periodo_id: string
+          referencia?: string | null
+          rubrica_codigo?: string | null
+          rubrica_descricao: string
+          rubrica_id?: string | null
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["rubrica_tipo"]
+          valor?: number
+        }
+        Update: {
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          id?: string
+          lote_id?: string | null
+          origem?: string
+          periodo_id?: string
+          referencia?: string | null
+          rubrica_codigo?: string | null
+          rubrica_descricao?: string
+          rubrica_id?: string | null
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["rubrica_tipo"]
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_lancamentos_periodo_id_fkey"
+            columns: ["periodo_id"]
+            isOneToOne: false
+            referencedRelation: "folha_periodos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_lancamentos_rubrica_id_fkey"
+            columns: ["rubrica_id"]
+            isOneToOne: false
+            referencedRelation: "folha_rubricas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_lancamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_lotes: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string
+          filtros: Json | null
+          id: string
+          percentual: number | null
+          periodo_id: string | null
+          rubrica_id: string | null
+          status: string
+          tenant_id: string
+          tipo_aplicacao: string
+          total_colaboradores: number | null
+          total_valor: number | null
+          valor: number | null
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+          vigencia_tipo: string | null
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao: string
+          filtros?: Json | null
+          id?: string
+          percentual?: number | null
+          periodo_id?: string | null
+          rubrica_id?: string | null
+          status?: string
+          tenant_id: string
+          tipo_aplicacao?: string
+          total_colaboradores?: number | null
+          total_valor?: number | null
+          valor?: number | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+          vigencia_tipo?: string | null
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string
+          filtros?: Json | null
+          id?: string
+          percentual?: number | null
+          periodo_id?: string | null
+          rubrica_id?: string | null
+          status?: string
+          tenant_id?: string
+          tipo_aplicacao?: string
+          total_colaboradores?: number | null
+          total_valor?: number | null
+          valor?: number | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+          vigencia_tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_lotes_periodo_id_fkey"
+            columns: ["periodo_id"]
+            isOneToOne: false
+            referencedRelation: "folha_periodos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_lotes_rubrica_id_fkey"
+            columns: ["rubrica_id"]
+            isOneToOne: false
+            referencedRelation: "folha_rubricas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_lotes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_memoria_calculo: {
+        Row: {
+          base_fgts: number | null
+          base_inss: number | null
+          base_irrf: number | null
+          colaborador_id: string
+          created_at: string
+          deducao_dependentes: number | null
+          dependentes_irrf: number | null
+          detalhes: Json | null
+          id: string
+          periodo_id: string
+          tabela_inss_id: string | null
+          tabela_irrf_id: string | null
+          tenant_id: string
+          teto_inss_aplicado: number | null
+          tipo: string
+          tipo_vinculo: string | null
+          valor_fgts: number | null
+          valor_inss: number | null
+          valor_irrf: number | null
+        }
+        Insert: {
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_id: string
+          created_at?: string
+          deducao_dependentes?: number | null
+          dependentes_irrf?: number | null
+          detalhes?: Json | null
+          id?: string
+          periodo_id: string
+          tabela_inss_id?: string | null
+          tabela_irrf_id?: string | null
+          tenant_id: string
+          teto_inss_aplicado?: number | null
+          tipo?: string
+          tipo_vinculo?: string | null
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+        }
+        Update: {
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_id?: string
+          created_at?: string
+          deducao_dependentes?: number | null
+          dependentes_irrf?: number | null
+          detalhes?: Json | null
+          id?: string
+          periodo_id?: string
+          tabela_inss_id?: string | null
+          tabela_irrf_id?: string | null
+          tenant_id?: string
+          teto_inss_aplicado?: number | null
+          tipo?: string
+          tipo_vinculo?: string | null
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_memoria_calculo_periodo_id_fkey"
+            columns: ["periodo_id"]
+            isOneToOne: false
+            referencedRelation: "folha_periodos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folha_memoria_calculo_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folha_periodos: {
         Row: {
           competencia: string
           created_at: string
           data_abertura: string | null
           data_fechamento: string | null
+          empresa_id: string | null
           fechado_por: string | null
           fechado_por_nome: string | null
           id: string
@@ -5681,6 +6204,7 @@ export type Database = {
           created_at?: string
           data_abertura?: string | null
           data_fechamento?: string | null
+          empresa_id?: string | null
           fechado_por?: string | null
           fechado_por_nome?: string | null
           id?: string
@@ -5698,6 +6222,7 @@ export type Database = {
           created_at?: string
           data_abertura?: string | null
           data_fechamento?: string | null
+          empresa_id?: string | null
           fechado_por?: string | null
           fechado_por_nome?: string | null
           id?: string
@@ -5712,7 +6237,431 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "folha_periodos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "folha_periodos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_provisoes: {
+        Row: {
+          colaborador_id: string
+          colaborador_nome: string
+          competencia: string
+          created_at: string
+          data_reversao: string | null
+          encargos_fgts: number | null
+          encargos_inss: number | null
+          id: string
+          revertida: boolean | null
+          tenant_id: string
+          tipo: string
+          valor_provisao: number
+          valor_terco: number | null
+          valor_total: number
+        }
+        Insert: {
+          colaborador_id: string
+          colaborador_nome: string
+          competencia: string
+          created_at?: string
+          data_reversao?: string | null
+          encargos_fgts?: number | null
+          encargos_inss?: number | null
+          id?: string
+          revertida?: boolean | null
+          tenant_id: string
+          tipo: string
+          valor_provisao?: number
+          valor_terco?: number | null
+          valor_total?: number
+        }
+        Update: {
+          colaborador_id?: string
+          colaborador_nome?: string
+          competencia?: string
+          created_at?: string
+          data_reversao?: string | null
+          encargos_fgts?: number | null
+          encargos_inss?: number | null
+          id?: string
+          revertida?: boolean | null
+          tenant_id?: string
+          tipo?: string
+          valor_provisao?: number
+          valor_terco?: number | null
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_provisoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_rescisoes: {
+        Row: {
+          admissao_id: string | null
+          aliquota_multa_fgts: number | null
+          aprovado_em: string | null
+          aprovado_por: string | null
+          aprovado_por_nome: string | null
+          aviso_previo_valor: number | null
+          aviso_tipo: string | null
+          base_fgts: number | null
+          base_inss: number | null
+          base_irrf: number | null
+          colaborador_cpf: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_aviso: string | null
+          data_desligamento: string
+          data_pagamento: string | null
+          decimo_terceiro_proporcional: number | null
+          descricao_outros_descontos: string | null
+          dias_aviso: number | null
+          dias_saldo: number | null
+          ferias_proporcionais: number | null
+          ferias_vencidas: number | null
+          id: string
+          indenizacao_art479: number | null
+          media_variaveis: number | null
+          memoria_calculo: Json | null
+          motivo: string | null
+          multa_fgts: number | null
+          outros_descontos: number | null
+          prazo_legal: string | null
+          saldo_salario: number | null
+          status: Database["public"]["Enums"]["rescisao_status"]
+          tenant_id: string
+          terco_ferias: number | null
+          tipo_rescisao: Database["public"]["Enums"]["rescisao_tipo"]
+          tipo_vinculo: string | null
+          total_bruto: number
+          total_descontos: number | null
+          total_liquido: number
+          updated_at: string
+          valor_fgts: number | null
+          valor_inss: number | null
+          valor_irrf: number | null
+        }
+        Insert: {
+          admissao_id?: string | null
+          aliquota_multa_fgts?: number | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          aviso_previo_valor?: number | null
+          aviso_tipo?: string | null
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_aviso?: string | null
+          data_desligamento: string
+          data_pagamento?: string | null
+          decimo_terceiro_proporcional?: number | null
+          descricao_outros_descontos?: string | null
+          dias_aviso?: number | null
+          dias_saldo?: number | null
+          ferias_proporcionais?: number | null
+          ferias_vencidas?: number | null
+          id?: string
+          indenizacao_art479?: number | null
+          media_variaveis?: number | null
+          memoria_calculo?: Json | null
+          motivo?: string | null
+          multa_fgts?: number | null
+          outros_descontos?: number | null
+          prazo_legal?: string | null
+          saldo_salario?: number | null
+          status?: Database["public"]["Enums"]["rescisao_status"]
+          tenant_id: string
+          terco_ferias?: number | null
+          tipo_rescisao: Database["public"]["Enums"]["rescisao_tipo"]
+          tipo_vinculo?: string | null
+          total_bruto?: number
+          total_descontos?: number | null
+          total_liquido?: number
+          updated_at?: string
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+        }
+        Update: {
+          admissao_id?: string | null
+          aliquota_multa_fgts?: number | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          aprovado_por_nome?: string | null
+          aviso_previo_valor?: number | null
+          aviso_tipo?: string | null
+          base_fgts?: number | null
+          base_inss?: number | null
+          base_irrf?: number | null
+          colaborador_cpf?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_aviso?: string | null
+          data_desligamento?: string
+          data_pagamento?: string | null
+          decimo_terceiro_proporcional?: number | null
+          descricao_outros_descontos?: string | null
+          dias_aviso?: number | null
+          dias_saldo?: number | null
+          ferias_proporcionais?: number | null
+          ferias_vencidas?: number | null
+          id?: string
+          indenizacao_art479?: number | null
+          media_variaveis?: number | null
+          memoria_calculo?: Json | null
+          motivo?: string | null
+          multa_fgts?: number | null
+          outros_descontos?: number | null
+          prazo_legal?: string | null
+          saldo_salario?: number | null
+          status?: Database["public"]["Enums"]["rescisao_status"]
+          tenant_id?: string
+          terco_ferias?: number | null
+          tipo_rescisao?: Database["public"]["Enums"]["rescisao_tipo"]
+          tipo_vinculo?: string | null
+          total_bruto?: number
+          total_descontos?: number | null
+          total_liquido?: number
+          updated_at?: string
+          valor_fgts?: number | null
+          valor_inss?: number | null
+          valor_irrf?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_rescisoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_rubricas: {
+        Row: {
+          ativa: boolean
+          classificacao_esocial: string | null
+          codigo_interno: string
+          created_at: string
+          descricao: string
+          forma_calculo: Database["public"]["Enums"]["forma_calculo"]
+          id: string
+          incide_13: boolean
+          incide_ferias: boolean
+          incide_fgts: boolean
+          incide_inss: boolean
+          incide_irrf: boolean
+          incide_rescisao: boolean
+          natureza: Database["public"]["Enums"]["rubrica_natureza"]
+          natureza_contabil: string | null
+          permitido_para_vinculos: string[] | null
+          prioridade_calculo: number
+          protegida: boolean
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["rubrica_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          classificacao_esocial?: string | null
+          codigo_interno: string
+          created_at?: string
+          descricao: string
+          forma_calculo?: Database["public"]["Enums"]["forma_calculo"]
+          id?: string
+          incide_13?: boolean
+          incide_ferias?: boolean
+          incide_fgts?: boolean
+          incide_inss?: boolean
+          incide_irrf?: boolean
+          incide_rescisao?: boolean
+          natureza?: Database["public"]["Enums"]["rubrica_natureza"]
+          natureza_contabil?: string | null
+          permitido_para_vinculos?: string[] | null
+          prioridade_calculo?: number
+          protegida?: boolean
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["rubrica_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          classificacao_esocial?: string | null
+          codigo_interno?: string
+          created_at?: string
+          descricao?: string
+          forma_calculo?: Database["public"]["Enums"]["forma_calculo"]
+          id?: string
+          incide_13?: boolean
+          incide_ferias?: boolean
+          incide_fgts?: boolean
+          incide_inss?: boolean
+          incide_irrf?: boolean
+          incide_rescisao?: boolean
+          natureza?: Database["public"]["Enums"]["rubrica_natureza"]
+          natureza_contabil?: string | null
+          permitido_para_vinculos?: string[] | null
+          prioridade_calculo?: number
+          protegida?: boolean
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["rubrica_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_rubricas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_tabelas_inss: {
+        Row: {
+          created_at: string
+          faixas: Json
+          id: string
+          tenant_id: string
+          teto: number
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          created_at?: string
+          faixas?: Json
+          id?: string
+          tenant_id: string
+          teto?: number
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          created_at?: string
+          faixas?: Json
+          id?: string
+          tenant_id?: string
+          teto?: number
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_tabelas_inss_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_tabelas_irrf: {
+        Row: {
+          created_at: string
+          deducao_por_dependente: number
+          faixas: Json
+          id: string
+          tenant_id: string
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          created_at?: string
+          deducao_por_dependente?: number
+          faixas?: Json
+          id?: string
+          tenant_id: string
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          created_at?: string
+          deducao_por_dependente?: number
+          faixas?: Json
+          id?: string
+          tenant_id?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_tabelas_irrf_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_vinculos_config: {
+        Row: {
+          aliquota_fgts: number
+          created_at: string
+          direito_13: boolean
+          direito_aviso_previo: boolean
+          direito_ferias: boolean
+          fgts: boolean
+          id: string
+          inss_empregado: boolean
+          multa_fgts_dispensa: number
+          observacoes: string | null
+          tenant_id: string
+          tipo_vinculo: string
+        }
+        Insert: {
+          aliquota_fgts?: number
+          created_at?: string
+          direito_13?: boolean
+          direito_aviso_previo?: boolean
+          direito_ferias?: boolean
+          fgts?: boolean
+          id?: string
+          inss_empregado?: boolean
+          multa_fgts_dispensa?: number
+          observacoes?: string | null
+          tenant_id: string
+          tipo_vinculo: string
+        }
+        Update: {
+          aliquota_fgts?: number
+          created_at?: string
+          direito_13?: boolean
+          direito_aviso_previo?: boolean
+          direito_ferias?: boolean
+          fgts?: boolean
+          id?: string
+          inss_empregado?: boolean
+          multa_fgts_dispensa?: number
+          observacoes?: string | null
+          tenant_id?: string
+          tipo_vinculo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_vinculos_config_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -15062,6 +16011,12 @@ export type Database = {
       campanha_psicossocial_status: "rascunho" | "ativa" | "encerrada"
       cat_tipo: "inicial" | "reabertura" | "comunicacao_obito"
       classificacao_atividade: "rotineira" | "critica" | "excepcional"
+      classificacao_interna:
+        | "TRAINEE"
+        | "PCD"
+        | "TELETRABALHO"
+        | "EFETIVO"
+        | "OUTROS"
       complexidade_atividade: "baixa" | "media" | "alta"
       convite_enviado_via: "link" | "qrcode" | "whatsapp" | "email"
       convite_psicossocial_status:
@@ -15098,6 +16053,12 @@ export type Database = {
         | "concluido"
       evento_sst_tipo: "incidente" | "acidente"
       feedback_categoria: "reconhecimento" | "alinhamento" | "desenvolvimento"
+      forma_calculo:
+        | "VALOR_FIXO"
+        | "PERCENTUAL_SALARIO"
+        | "PERCENTUAL_BASE_ESPECIFICA"
+        | "QUANTIDADE_X_VALOR"
+        | "IMPORTADA_EXTERNA"
       frequencia_atividade: "diaria" | "semanal" | "mensal" | "eventual"
       grupo_clinico:
         | "mental"
@@ -15212,8 +16173,27 @@ export type Database = {
         | "suficiente"
         | "incompleto"
         | "inconsistente"
+      rescisao_status:
+        | "em_calculo"
+        | "em_conferencia"
+        | "aprovada"
+        | "paga"
+        | "reaberta"
+      rescisao_tipo:
+        | "PEDIDO_DEMISSAO"
+        | "DISPENSA_SEM_JUSTA_CAUSA"
+        | "DISPENSA_COM_JUSTA_CAUSA"
+        | "TERMINO_EXPERIENCIA"
+        | "RESCISAO_INDIRETA"
+        | "ACORDO_484A"
+        | "FALECIMENTO"
+        | "TERMINO_TEMPORARIO"
+        | "TERMINO_APRENDIZ"
+        | "ENCERRAMENTO_ESTAGIO"
       resposta_status: "pendente" | "em_andamento" | "concluida"
       risco_severidade: "baixo" | "medio" | "alto" | "critico"
+      rubrica_natureza: "REMUNERATORIA" | "INDENIZATORIA" | "OUTRA"
+      rubrica_tipo: "PROVENTO" | "DESCONTO" | "INFORMATIVA"
       swot_classificacao:
         | "estrategico"
         | "operacional"
@@ -15243,6 +16223,15 @@ export type Database = {
         | "documento"
         | "link"
       tipo_ferramenta: "sistema" | "software" | "planilha" | "equipamento"
+      tipo_vinculo:
+        | "CLT_PRAZO_INDETERMINADO"
+        | "CLT_EXPERIENCIA"
+        | "CLT_INTERMITENTE"
+        | "CLT_TEMPO_PARCIAL"
+        | "APRENDIZ"
+        | "ESTAGIO"
+        | "TEMPORARIO_LEI6019"
+        | "PJ"
       trilha_modulo_ordem_tipo: "sequencial" | "livre"
       trilha_modulo_tipo:
         | "video"
@@ -15479,6 +16468,13 @@ export const Constants = {
       campanha_psicossocial_status: ["rascunho", "ativa", "encerrada"],
       cat_tipo: ["inicial", "reabertura", "comunicacao_obito"],
       classificacao_atividade: ["rotineira", "critica", "excepcional"],
+      classificacao_interna: [
+        "TRAINEE",
+        "PCD",
+        "TELETRABALHO",
+        "EFETIVO",
+        "OUTROS",
+      ],
       complexidade_atividade: ["baixa", "media", "alta"],
       convite_enviado_via: ["link", "qrcode", "whatsapp", "email"],
       convite_psicossocial_status: [
@@ -15520,6 +16516,13 @@ export const Constants = {
       ],
       evento_sst_tipo: ["incidente", "acidente"],
       feedback_categoria: ["reconhecimento", "alinhamento", "desenvolvimento"],
+      forma_calculo: [
+        "VALOR_FIXO",
+        "PERCENTUAL_SALARIO",
+        "PERCENTUAL_BASE_ESPECIFICA",
+        "QUANTIDADE_X_VALOR",
+        "IMPORTADA_EXTERNA",
+      ],
       frequencia_atividade: ["diaria", "semanal", "mensal", "eventual"],
       grupo_clinico: [
         "mental",
@@ -15647,8 +16650,29 @@ export const Constants = {
         "incompleto",
         "inconsistente",
       ],
+      rescisao_status: [
+        "em_calculo",
+        "em_conferencia",
+        "aprovada",
+        "paga",
+        "reaberta",
+      ],
+      rescisao_tipo: [
+        "PEDIDO_DEMISSAO",
+        "DISPENSA_SEM_JUSTA_CAUSA",
+        "DISPENSA_COM_JUSTA_CAUSA",
+        "TERMINO_EXPERIENCIA",
+        "RESCISAO_INDIRETA",
+        "ACORDO_484A",
+        "FALECIMENTO",
+        "TERMINO_TEMPORARIO",
+        "TERMINO_APRENDIZ",
+        "ENCERRAMENTO_ESTAGIO",
+      ],
       resposta_status: ["pendente", "em_andamento", "concluida"],
       risco_severidade: ["baixo", "medio", "alto", "critico"],
+      rubrica_natureza: ["REMUNERATORIA", "INDENIZATORIA", "OUTRA"],
+      rubrica_tipo: ["PROVENTO", "DESCONTO", "INFORMATIVA"],
       swot_classificacao: [
         "estrategico",
         "operacional",
@@ -15681,6 +16705,16 @@ export const Constants = {
         "link",
       ],
       tipo_ferramenta: ["sistema", "software", "planilha", "equipamento"],
+      tipo_vinculo: [
+        "CLT_PRAZO_INDETERMINADO",
+        "CLT_EXPERIENCIA",
+        "CLT_INTERMITENTE",
+        "CLT_TEMPO_PARCIAL",
+        "APRENDIZ",
+        "ESTAGIO",
+        "TEMPORARIO_LEI6019",
+        "PJ",
+      ],
       trilha_modulo_ordem_tipo: ["sequencial", "livre"],
       trilha_modulo_tipo: [
         "video",
