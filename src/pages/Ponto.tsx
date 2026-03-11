@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format, addDays, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, LogIn, LogOut, Coffee, Utensils,
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
+  MapPin, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,9 @@ import { cn } from "@/lib/utils";
 import { usePonto, TIPO_MARCACAO_LABELS, STATUS_PONTO_CONFIG, type PontoDiario, type PontoAjuste } from "@/hooks/usePonto";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
+import { supabase } from "@/integrations/supabase/client";
 
 // New tab components
 import { PontoDashboardTab } from "@/components/ponto/PontoDashboardTab";
@@ -45,6 +49,8 @@ const Ponto = () => {
     processarAjuste, processandoAjuste,
   } = usePonto();
 
+  const geo = useGeolocation();
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -55,6 +61,10 @@ const Ponto = () => {
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida">("entrada");
   
+  // Selfie state
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+
   // Ajuste form
   const [ajusteColaborador, setAjusteColaborador] = useState<string>("");
   const [ajusteData, setAjusteData] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -68,6 +78,18 @@ const Ponto = () => {
   const { data: marcacoesHoje = [] } = useMarcacoesHoje();
   const { data: ajustesPendentes = [] } = useAjustesPendentes();
 
+  // Auto-capture geolocation when modal opens
+  useEffect(() => {
+    if (showRegistrarModal) {
+      geo.capturarLocalizacao();
+    } else {
+      geo.limpar();
+      setSelfieFile(null);
+      setSelfiePreview(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showRegistrarModal]);
+
   const handlePrevDay = () => setSelectedDate(subDays(selectedDate, 1));
   const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const handleToday = () => setSelectedDate(new Date());
@@ -79,11 +101,31 @@ const Ponto = () => {
   const handleRegistrarPonto = async () => {
     if (!selectedColaborador) return;
     try {
+      // Upload selfie if captured
+      let selfieUrl: string | null = null;
+      let selfieNome: string | null = null;
+      if (selfieFile) {
+        const fileName = `${selectedColaborador.cpf}/${format(new Date(), "yyyy-MM-dd")}_${tipoMarcacao}_${Date.now()}.jpg`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("ponto-selfies")
+          .upload(fileName, selfieFile, { contentType: "image/jpeg" });
+        if (!uploadError && uploadData) {
+          const { data: urlData } = supabase.storage.from("ponto-selfies").getPublicUrl(uploadData.path);
+          selfieUrl = urlData.publicUrl;
+          selfieNome = selfieFile.name;
+        }
+      }
+
       await registrarPonto({
         colaboradorId: selectedColaborador.id,
         colaboradorNome: selectedColaborador.nome_completo,
         colaboradorCpf: selectedColaborador.cpf,
         tipoMarcacao,
+        latitude: geo.latitude ?? undefined,
+        longitude: geo.longitude ?? undefined,
+        enderecoGeolocalizacao: geo.endereco ?? undefined,
+        selfieUrl: selfieUrl ?? undefined,
+        selfieNome: selfieNome ?? undefined,
       });
       setShowRegistrarModal(false);
       setSelectedColaborador(null);
@@ -350,10 +392,10 @@ const Ponto = () => {
 
       {/* Modal: Registrar Ponto */}
       <Dialog open={showRegistrarModal} onOpenChange={setShowRegistrarModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Registrar Ponto</DialogTitle>
-            <DialogDescription>Selecione o colaborador e o tipo de marcação.</DialogDescription>
+            <DialogDescription>Selecione o colaborador, tipo de marcação, e capture selfie e localização.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -383,6 +425,51 @@ const Ponto = () => {
                 ))}
               </div>
             </div>
+
+            {/* Geolocalização */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" /> Localização
+                </Label>
+                {geo.loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+              </div>
+              {geo.error && (
+                <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 p-2 rounded-md">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {geo.error}
+                  <Button type="button" variant="ghost" size="sm" className="ml-auto text-xs h-6 px-2" onClick={() => geo.capturarLocalizacao()}>
+                    Tentar novamente
+                  </Button>
+                </div>
+              )}
+              {geo.latitude && geo.longitude && (
+                <div className="p-2 bg-muted rounded-lg text-xs space-y-1">
+                  <p className="flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                    <strong>Coordenadas:</strong> {geo.latitude.toFixed(6)}, {geo.longitude.toFixed(6)}
+                  </p>
+                  {geo.endereco && (
+                    <p className="text-muted-foreground truncate" title={geo.endereco}>
+                      📍 {geo.endereco}
+                    </p>
+                  )}
+                </div>
+              )}
+              {!geo.latitude && !geo.loading && !geo.error && (
+                <Button type="button" variant="outline" size="sm" className="w-full text-xs" onClick={() => geo.capturarLocalizacao()}>
+                  <MapPin className="w-3.5 h-3.5 mr-1.5" /> Capturar localização
+                </Button>
+              )}
+            </div>
+
+            {/* Selfie */}
+            <PontoSelfieCapture
+              selfieFile={selfieFile}
+              selfiePreview={selfiePreview}
+              onChange={(file, preview) => { setSelfieFile(file); setSelfiePreview(preview); }}
+            />
+
             <div className="p-3 bg-muted rounded-lg text-sm">
               <p><strong>Data:</strong> {format(new Date(), "dd/MM/yyyy")}</p>
               <p><strong>Hora:</strong> {format(new Date(), "HH:mm:ss")}</p>
