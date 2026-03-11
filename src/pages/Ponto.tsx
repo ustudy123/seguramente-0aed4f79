@@ -49,6 +49,8 @@ const Ponto = () => {
     processarAjuste, processandoAjuste,
   } = usePonto();
 
+  const geo = useGeolocation();
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -59,6 +61,10 @@ const Ponto = () => {
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida">("entrada");
   
+  // Selfie state
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+
   // Ajuste form
   const [ajusteColaborador, setAjusteColaborador] = useState<string>("");
   const [ajusteData, setAjusteData] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -72,6 +78,18 @@ const Ponto = () => {
   const { data: marcacoesHoje = [] } = useMarcacoesHoje();
   const { data: ajustesPendentes = [] } = useAjustesPendentes();
 
+  // Auto-capture geolocation when modal opens
+  useEffect(() => {
+    if (showRegistrarModal) {
+      geo.capturarLocalizacao();
+    } else {
+      geo.limpar();
+      setSelfieFile(null);
+      setSelfiePreview(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showRegistrarModal]);
+
   const handlePrevDay = () => setSelectedDate(subDays(selectedDate, 1));
   const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const handleToday = () => setSelectedDate(new Date());
@@ -83,11 +101,31 @@ const Ponto = () => {
   const handleRegistrarPonto = async () => {
     if (!selectedColaborador) return;
     try {
+      // Upload selfie if captured
+      let selfieUrl: string | null = null;
+      let selfieNome: string | null = null;
+      if (selfieFile) {
+        const fileName = `${selectedColaborador.cpf}/${format(new Date(), "yyyy-MM-dd")}_${tipoMarcacao}_${Date.now()}.jpg`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("ponto-selfies")
+          .upload(fileName, selfieFile, { contentType: "image/jpeg" });
+        if (!uploadError && uploadData) {
+          const { data: urlData } = supabase.storage.from("ponto-selfies").getPublicUrl(uploadData.path);
+          selfieUrl = urlData.publicUrl;
+          selfieNome = selfieFile.name;
+        }
+      }
+
       await registrarPonto({
         colaboradorId: selectedColaborador.id,
         colaboradorNome: selectedColaborador.nome_completo,
         colaboradorCpf: selectedColaborador.cpf,
         tipoMarcacao,
+        latitude: geo.latitude ?? undefined,
+        longitude: geo.longitude ?? undefined,
+        enderecoGeolocalizacao: geo.endereco ?? undefined,
+        selfieUrl: selfieUrl ?? undefined,
+        selfieNome: selfieNome ?? undefined,
       });
       setShowRegistrarModal(false);
       setSelectedColaborador(null);
