@@ -344,7 +344,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
   // Flatten all navigable items for search
   const allItems = useMemo(() => {
     const items: {title: string;path: string;icon: React.ElementType;sectionLabel: string;}[] = [];
-    menuSections.forEach((section) => {
+    filteredSections.forEach((section) => {
       section.items.forEach((item) => {
         if (item.path) items.push({ title: item.title, path: item.path, icon: item.icon, sectionLabel: section.label });
         item.children?.forEach((child) => {
