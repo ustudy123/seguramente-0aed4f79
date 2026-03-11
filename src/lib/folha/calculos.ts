@@ -424,7 +424,7 @@ export function calcularRescisao(params: {
   diasAvisoPrevio?: number;
   feriasPeriodosVencidos?: number;
   dependentesIRRF?: number;
-}): Record<string, number> & { detalhes: Record<string, any> } {
+}): { [key: string]: any } {
   const {
     salarioBase, dataAdmissao, dataDesligamento, tipoRescisao,
     vinculoConfig, avisoTipo = "indenizado", diasAvisoPrevio = 30,
