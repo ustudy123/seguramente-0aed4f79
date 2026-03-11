@@ -142,6 +142,50 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
+            name="categoria_meta"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Categoria</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="operacional">Operacional</SelectItem>
+                    <SelectItem value="estrategica">Estratégica</SelectItem>
+                    <SelectItem value="desenvolvimento">Desenvolvimento</SelectItem>
+                    <SelectItem value="compliance">Compliance / Legal</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="origem_meta"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Origem</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="gestor">Gestor</SelectItem>
+                    <SelectItem value="rh">RH</SelectItem>
+                    <SelectItem value="pdi">PDI</SelectItem>
+                    <SelectItem value="modelo_funcao">Modelo da Função</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+          <FormField
+            control={form.control}
             name="tipo"
             render={({ field }) => (
               <FormItem>
