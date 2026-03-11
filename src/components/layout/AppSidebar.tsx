@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -333,11 +334,17 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const { isSuperAdmin } = useAuthContext();
+
+  const filteredSections = useMemo(() => {
+    if (isSuperAdmin) return menuSections;
+    return menuSections.filter(s => s.label !== "Academia");
+  }, [isSuperAdmin]);
 
   // Flatten all navigable items for search
   const allItems = useMemo(() => {
     const items: {title: string;path: string;icon: React.ElementType;sectionLabel: string;}[] = [];
-    menuSections.forEach((section) => {
+    filteredSections.forEach((section) => {
       section.items.forEach((item) => {
         if (item.path) items.push({ title: item.title, path: item.path, icon: item.icon, sectionLabel: section.label });
         item.children?.forEach((child) => {
@@ -361,7 +368,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
   // Auto-open sections that contain the active route
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    menuSections.forEach((section) => {
+    filteredSections.forEach((section) => {
       const hasActive = section.items.some(
         (item) =>
         item.path === location.pathname ||
@@ -444,7 +451,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
           }
           </div> :
 
-        menuSections.map((section) =>
+        filteredSections.map((section) =>
         <CollapsibleSection
           key={section.label}
           section={section}
