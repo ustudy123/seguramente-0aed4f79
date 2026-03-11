@@ -148,7 +148,7 @@ export function useFerias() {
         .from("ferias_solicitacoes" as any)
         .update({
           status: "aprovado",
-          aprovado_por_nome: profile?.full_name || "Gestor",
+          aprovado_por_nome: profile?.nome_completo || "Gestor",
           data_aprovacao: new Date().toISOString(),
         } as any)
         .eq("id", id);
