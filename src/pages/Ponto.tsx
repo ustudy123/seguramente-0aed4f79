@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format, addDays, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, LogIn, LogOut, Coffee, Utensils,
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
+  MapPin, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,9 @@ import { cn } from "@/lib/utils";
 import { usePonto, TIPO_MARCACAO_LABELS, STATUS_PONTO_CONFIG, type PontoDiario, type PontoAjuste } from "@/hooks/usePonto";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
 import { useAuth } from "@/hooks/useAuth";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
+import { supabase } from "@/integrations/supabase/client";
 
 // New tab components
 import { PontoDashboardTab } from "@/components/ponto/PontoDashboardTab";
