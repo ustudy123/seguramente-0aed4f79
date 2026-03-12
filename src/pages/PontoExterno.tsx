@@ -1,0 +1,255 @@
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, MapPin, Camera, LogIn, LogOut, Coffee, Utensils, CheckCircle2, AlertCircle, Loader2, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { supabasePublic } from "@/lib/supabasePublic";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface ColaboradorData {
+  colaborador_nome: string;
+  colaborador_cpf_parcial: string;
+  tenant_id: string;
+  colaborador_id: string;
+  colaborador_cpf: string;
+}
+
+interface RegistroResult {
+  success: boolean;
+  colaborador_nome: string;
+  tipo_marcacao: string;
+  hora: string;
+  data: string;
+}
+
+const TIPO_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  entrada: { label: "Entrada", icon: <LogIn className="w-5 h-5" />, color: "bg-emerald-500 hover:bg-emerald-600" },
+  saida_almoco: { label: "Saída Almoço", icon: <Utensils className="w-5 h-5" />, color: "bg-amber-500 hover:bg-amber-600" },
+  retorno_almoco: { label: "Retorno Almoço", icon: <Coffee className="w-5 h-5" />, color: "bg-sky-500 hover:bg-sky-600" },
+  saida: { label: "Saída", icon: <LogOut className="w-5 h-5" />, color: "bg-rose-500 hover:bg-rose-600" },
+};
+
+const PontoExterno = () => {
+  const { token } = useParams<{ token: string }>();
+  const geo = useGeolocation();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [colaborador, setColaborador] = useState<ColaboradorData | null>(null);
+  const [registrando, setRegistrando] = useState(false);
+  const [resultado, setResultado] = useState<RegistroResult | null>(null);
+
+  // Selfie
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+
+  // Clock
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load collaborator data
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabasePublic.rpc("buscar_ponto_link_por_token", { p_token: token });
+      if (error || !data) {
+        setError("Link inválido ou expirado.");
+        setLoading(false);
+        return;
+      }
+      const result = data as any;
+      if (result.error) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+      setColaborador(result);
+      setLoading(false);
+    })();
+  }, [token]);
+
+  // Auto-capture geolocation
+  useEffect(() => {
+    if (colaborador) geo.capturarLocalizacao();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [colaborador]);
+
+  const handleRegistrar = useCallback(async (tipo: string) => {
+    if (!token || !colaborador) return;
+    setRegistrando(true);
+    try {
+      const { data, error } = await supabasePublic.rpc("registrar_ponto_externo", {
+        p_token: token,
+        p_tipo_marcacao: tipo,
+        p_latitude: geo.latitude,
+        p_longitude: geo.longitude,
+        p_endereco: geo.endereco,
+        p_selfie_base64: null,
+      });
+      if (error) {
+        setError(error.message);
+        setRegistrando(false);
+        return;
+      }
+      const result = data as any;
+      if (result.error) {
+        setError(result.error);
+        setRegistrando(false);
+        return;
+      }
+      setResultado(result);
+    } catch (e: any) {
+      setError(e.message || "Erro ao registrar ponto");
+    }
+    setRegistrando(false);
+  }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error && !colaborador) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center space-y-4">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+            <h2 className="text-xl font-bold">Link Inválido</h2>
+            <p className="text-muted-foreground">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (resultado) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6 text-center space-y-4">
+              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
+              <h2 className="text-xl font-bold">Ponto Registrado!</h2>
+              <div className="space-y-2 text-sm">
+                <p><span className="text-muted-foreground">Colaborador:</span> <strong>{resultado.colaborador_nome}</strong></p>
+                <p><span className="text-muted-foreground">Tipo:</span> <Badge>{TIPO_LABELS[resultado.tipo_marcacao]?.label || resultado.tipo_marcacao}</Badge></p>
+                <p><span className="text-muted-foreground">Hora:</span> <strong className="font-mono text-lg">{resultado.hora?.substring(0, 5)}</strong></p>
+                <p><span className="text-muted-foreground">Data:</span> {resultado.data}</p>
+              </div>
+              {geo.endereco && (
+                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                  <MapPin className="w-3 h-3" /> {geo.endereco}
+                </p>
+              )}
+              <div className="pt-2">
+                <Badge variant="outline" className="text-xs">
+                  <Shield className="w-3 h-3 mr-1" /> Registro auditável • Link externo
+                </Badge>
+              </div>
+              <Button variant="outline" onClick={() => { setResultado(null); setError(null); }} className="w-full mt-4">
+                Registrar outra marcação
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 flex flex-col items-center justify-start pt-8 gap-6">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+          <Clock className="w-6 h-6 text-primary" /> Registro de Ponto
+        </h1>
+        <p className="text-slate-400 text-sm">Registre sua marcação de forma segura</p>
+      </motion.div>
+
+      {/* Clock */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+        className="text-center">
+        <div className="text-5xl font-mono font-bold text-white tracking-wider">
+          {format(currentTime, "HH:mm:ss")}
+        </div>
+        <p className="text-slate-400 text-sm mt-1">
+          {format(currentTime, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+        </p>
+      </motion.div>
+
+      {/* Collaborator Card */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="w-full max-w-md">
+        <Card>
+          <CardContent className="pt-4 space-y-3">
+            <div className="text-center">
+              <h3 className="font-semibold text-lg">{colaborador?.colaborador_nome}</h3>
+              <p className="text-xs text-muted-foreground font-mono">{colaborador?.colaborador_cpf_parcial}</p>
+            </div>
+
+            {/* Geolocation */}
+            <div className="flex items-center gap-2 text-xs">
+              {geo.loading ? (
+                <><Loader2 className="w-3 h-3 animate-spin" /> <span className="text-muted-foreground">Capturando localização...</span></>
+              ) : geo.endereco ? (
+                <><MapPin className="w-3 h-3 text-emerald-500 shrink-0" /> <span className="text-muted-foreground truncate">{geo.endereco}</span></>
+              ) : geo.error ? (
+                <><AlertCircle className="w-3 h-3 text-destructive shrink-0" /> <span className="text-destructive">{geo.error}</span></>
+              ) : null}
+            </div>
+
+            {/* Selfie */}
+            <PontoSelfieCapture
+              selfieFile={selfieFile}
+              selfiePreview={selfiePreview}
+              onChange={(file, preview) => { setSelfieFile(file); setSelfiePreview(preview); }}
+            />
+
+            {/* Error */}
+            {error && (
+              <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 p-2 rounded-md">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {error}
+                <Button variant="ghost" size="sm" className="ml-auto text-xs h-6" onClick={() => setError(null)}>OK</Button>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              {Object.entries(TIPO_LABELS).map(([tipo, config]) => (
+                <Button
+                  key={tipo}
+                  className={`${config.color} text-white h-14 flex flex-col gap-0.5`}
+                  disabled={registrando}
+                  onClick={() => handleRegistrar(tipo)}
+                >
+                  {registrando ? <Loader2 className="w-5 h-5 animate-spin" /> : config.icon}
+                  <span className="text-xs font-medium">{config.label}</span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <p className="text-slate-500 text-[10px] text-center max-w-xs">
+        Registro via link externo • Geolocalização e horário capturados automaticamente • Dados protegidos
+      </p>
+    </div>
+  );
+};
+
+export default PontoExterno;
