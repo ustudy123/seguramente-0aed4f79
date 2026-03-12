@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, LogIn, LogOut, Coffee, Utensils,
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
-  MapPin, Loader2,
+  MapPin, Loader2, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
