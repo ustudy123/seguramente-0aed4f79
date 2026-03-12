@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { parseSpreadsheet, importCollaborators, type ImportResult } from "@/utils/onboardingImport";
 import { useNavigate } from "react-router-dom";
