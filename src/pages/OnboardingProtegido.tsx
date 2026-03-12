@@ -584,6 +584,16 @@ export default function OnboardingProtegido() {
     }
   };
 
+  // Auto-concluir quando ambos os passos forem finalizados
+  const allSteps = ['colaboradores', 'diagnostico'];
+  const todosCompletos = allSteps.every(s => stepsCompletos.has(s));
+
+  useEffect(() => {
+    if (todosCompletos && !salvando) {
+      handleConcluirOnboarding();
+    }
+  }, [todosCompletos]);
+
   // Already completed
   if (profileData?.onboarding_concluido) {
     navigate('/');
