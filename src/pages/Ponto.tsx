@@ -189,7 +189,7 @@ const Ponto = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-11 h-auto">
+        <TabsList className="grid w-full grid-cols-12 h-auto">
           <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs py-2">
             <BarChart3 className="h-3.5 w-3.5" /> Dashboard
           </TabsTrigger>
@@ -215,6 +215,9 @@ const Ponto = () => {
           </TabsTrigger>
           <TabsTrigger value="alertas" className="flex items-center gap-1.5 text-xs py-2">
             <Bell className="h-3.5 w-3.5" /> Alertas
+          </TabsTrigger>
+          <TabsTrigger value="links" className="flex items-center gap-1.5 text-xs py-2">
+            <Link2 className="h-3.5 w-3.5" /> Links
           </TabsTrigger>
           <TabsTrigger value="repc" className="flex items-center gap-1.5 text-xs py-2">
             <HardDrive className="h-3.5 w-3.5" /> REP-C
