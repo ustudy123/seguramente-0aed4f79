@@ -30,6 +30,29 @@ export function AuthLayout() {
           className="flex-1 text-center lg:text-left hidden lg:block"
         >
           <div className="bg-[hsl(262,40%,10%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
+            {/* NR-1 Psicossociais - Destaque */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="relative overflow-hidden rounded-xl border border-[hsl(24,90%,54%/0.5)] bg-gradient-to-r from-[hsl(24,90%,54%/0.2)] to-[hsl(24,80%,45%/0.15)] p-4"
+            >
+              <div className="absolute top-0 right-0 bg-[hsl(24,90%,54%)] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg">
+                Novidade
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[hsl(24,90%,54%/0.3)] flex items-center justify-center">
+                  <span className="text-lg">🧠</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-base">NR-1 — Riscos Psicossociais</h3>
+                  <p className="text-white/80 text-sm mt-0.5">
+                    Sua empresa está pronta para a nova exigência? Avalie, monitore e previna riscos psicossociais com nossa plataforma completa.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
             <div className="space-y-3">
               <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight drop-shadow-lg">
                 Gestão de Pessoas
