@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { parseSpreadsheet, importCollaborators, type ImportResult } from "@/utils/onboardingImport";
 import { useNavigate } from "react-router-dom";
@@ -366,7 +366,7 @@ function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onB
 
 // ─── Step: Diagnóstico ────────────────────────────────────────────────────────
 
-function StepDiagnostico({ onConcluir }: { onConcluir: () => void }) {
+function StepDiagnostico({ onConcluir, onBack }: { onConcluir: () => void; onBack?: () => void }) {
   const [fase, setFase] = useState<'intro' | 'blocos' | 'resultado'>('intro');
   const [blocoAtual, setBlocoAtual] = useState(0);
   const [respostas, setRespostas] = useState<BlocoRespostas>({});
@@ -435,7 +435,7 @@ function StepDiagnostico({ onConcluir }: { onConcluir: () => void }) {
         <Button onClick={() => setFase('blocos')} className="w-full">
           <Rocket className="w-4 h-4 mr-2" /> Iniciar Diagnóstico
         </Button>
-        <Button variant="outline" onClick={onConcluir} className="w-full text-muted-foreground">Fazer isso depois</Button>
+        {onBack && <Button variant="outline" onClick={onBack} className="w-full text-muted-foreground">Fazer isso depois</Button>}
       </div>
     );
   }
@@ -548,9 +548,19 @@ export default function OnboardingProtegido() {
   const navigate = useNavigate();
   const [stepAtivo, setStepAtivo] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [stepsCompletos, setStepsCompletos] = useState<Set<string>>(new Set());
 
   const profileData = profile as any;
   const nomeUsuario = profileData?.nome_completo?.split(' ')[0] || '';
+
+  const marcarStepCompleto = (stepId: string) => {
+    setStepsCompletos(prev => {
+      const next = new Set(prev);
+      next.add(stepId);
+      return next;
+    });
+    setStepAtivo(null);
+  };
 
   const handleConcluirOnboarding = async () => {
     if (!user) return;
@@ -574,11 +584,22 @@ export default function OnboardingProtegido() {
     }
   };
 
+  // Auto-concluir quando ambos os passos forem finalizados
+  const allSteps = ['colaboradores', 'diagnostico'];
+  const todosCompletos = allSteps.every(s => stepsCompletos.has(s));
+
+  useEffect(() => {
+    if (todosCompletos && !salvando) {
+      handleConcluirOnboarding();
+    }
+  }, [todosCompletos]);
+
   // Already completed
-  if (profileData?.onboarding_concluido) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (profileData?.onboarding_concluido) {
+      navigate('/');
+    }
+  }, [profileData?.onboarding_concluido, navigate]);
 
   const steps = [
     { id: 'colaboradores', label: 'Estrutura Organizacional', sublabel: 'Departamentos, funções e colaboradores', icon: <Users className="w-5 h-5" /> },
@@ -632,36 +653,41 @@ export default function OnboardingProtegido() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {steps.map(step => (
-                  <div
-                    key={step.id}
-                    onClick={() => setStepAtivo(step.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
-                      stepAtivo === step.id ? 'bg-primary/5 border-primary/20' : 'bg-muted/30 border-transparent hover:border-muted-foreground/20'
-                    }`}
-                  >
-                    <div className="shrink-0 text-muted-foreground">{step.icon}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{step.label}</p>
-                      <p className="text-xs text-muted-foreground">{step.sublabel}</p>
+                {steps.map(step => {
+                  const completo = stepsCompletos.has(step.id);
+                  return (
+                    <div
+                      key={step.id}
+                      onClick={() => !completo && setStepAtivo(step.id)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                        completo
+                          ? 'bg-green-500/5 border-green-500/20 cursor-default'
+                          : stepAtivo === step.id
+                            ? 'bg-primary/5 border-primary/20 cursor-pointer'
+                            : 'bg-muted/30 border-transparent hover:border-muted-foreground/20 cursor-pointer'
+                      }`}
+                    >
+                      <div className={`shrink-0 ${completo ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {completo ? <CheckCircle2 className="w-5 h-5" /> : step.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{step.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {completo ? 'Concluído ✓' : step.sublabel}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {salvando && (
+                  <div className="pt-3 border-t border-border text-center">
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Finalizando...
                     </div>
                   </div>
-                ))}
-
-                <div className="pt-3 border-t border-border">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleConcluirOnboarding}
-                    disabled={salvando}
-                  >
-                    {salvando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                    Concluir e acessar o sistema
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                    Você pode concluir os passos depois, se preferir.
-                  </p>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -689,14 +715,14 @@ export default function OnboardingProtegido() {
 
                   {stepAtivo === 'colaboradores' && (
                     <motion.div key="colaboradores" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                      <StepColaboradores onConcluir={() => setStepAtivo(null)} onBack={() => setStepAtivo(null)} />
+                      <StepColaboradores onConcluir={() => marcarStepCompleto('colaboradores')} onBack={() => setStepAtivo(null)} />
                     </motion.div>
                   )}
 
                   {stepAtivo === 'diagnostico' && (
                     <motion.div key="diagnostico" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                       <button onClick={() => setStepAtivo(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">← Voltar</button>
-                      <StepDiagnostico onConcluir={handleConcluirOnboarding} />
+                      <StepDiagnostico onConcluir={() => marcarStepCompleto('diagnostico')} onBack={() => setStepAtivo(null)} />
                     </motion.div>
                   )}
                 </AnimatePresence>
