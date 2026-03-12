@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         cep: "01310-100",
         telefone: "(11) 3000-0000",
         email: "contato@seguramente.com",
-        ativa: true,
+        ativo: true,
       }).select().single();
       if (empErr) {
         // Might be duplicate cnpj, try to fetch
