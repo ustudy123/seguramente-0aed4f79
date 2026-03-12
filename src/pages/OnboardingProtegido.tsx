@@ -652,36 +652,41 @@ export default function OnboardingProtegido() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {steps.map(step => (
-                  <div
-                    key={step.id}
-                    onClick={() => setStepAtivo(step.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
-                      stepAtivo === step.id ? 'bg-primary/5 border-primary/20' : 'bg-muted/30 border-transparent hover:border-muted-foreground/20'
-                    }`}
-                  >
-                    <div className="shrink-0 text-muted-foreground">{step.icon}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{step.label}</p>
-                      <p className="text-xs text-muted-foreground">{step.sublabel}</p>
+                {steps.map(step => {
+                  const completo = stepsCompletos.has(step.id);
+                  return (
+                    <div
+                      key={step.id}
+                      onClick={() => !completo && setStepAtivo(step.id)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                        completo
+                          ? 'bg-green-500/5 border-green-500/20 cursor-default'
+                          : stepAtivo === step.id
+                            ? 'bg-primary/5 border-primary/20 cursor-pointer'
+                            : 'bg-muted/30 border-transparent hover:border-muted-foreground/20 cursor-pointer'
+                      }`}
+                    >
+                      <div className={`shrink-0 ${completo ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {completo ? <CheckCircle2 className="w-5 h-5" /> : step.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{step.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {completo ? 'Concluído ✓' : step.sublabel}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {salvando && (
+                  <div className="pt-3 border-t border-border text-center">
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Finalizando...
                     </div>
                   </div>
-                ))}
-
-                <div className="pt-3 border-t border-border">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleConcluirOnboarding}
-                    disabled={salvando}
-                  >
-                    {salvando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                    Concluir e acessar o sistema
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                    Você pode concluir os passos depois, se preferir.
-                  </p>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
