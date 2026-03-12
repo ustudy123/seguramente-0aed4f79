@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, LogIn, LogOut, Coffee, Utensils,
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
-  MapPin, Loader2,
+  MapPin, Loader2, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ import { PontoRelatoriosTab } from "@/components/ponto/PontoRelatoriosTab";
 import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
+import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
 
 const Ponto = () => {
   const { profile } = useAuth();
@@ -188,7 +189,7 @@ const Ponto = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-11 h-auto">
+        <TabsList className="grid w-full grid-cols-12 h-auto">
           <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs py-2">
             <BarChart3 className="h-3.5 w-3.5" /> Dashboard
           </TabsTrigger>
@@ -214,6 +215,9 @@ const Ponto = () => {
           </TabsTrigger>
           <TabsTrigger value="alertas" className="flex items-center gap-1.5 text-xs py-2">
             <Bell className="h-3.5 w-3.5" /> Alertas
+          </TabsTrigger>
+          <TabsTrigger value="links" className="flex items-center gap-1.5 text-xs py-2">
+            <Link2 className="h-3.5 w-3.5" /> Links
           </TabsTrigger>
           <TabsTrigger value="repc" className="flex items-center gap-1.5 text-xs py-2">
             <HardDrive className="h-3.5 w-3.5" /> REP-C
@@ -376,6 +380,9 @@ const Ponto = () => {
 
         {/* Alertas */}
         <TabsContent value="alertas"><PontoAlertasTab /></TabsContent>
+
+        {/* Links WhatsApp */}
+        <TabsContent value="links"><PontoLinksTab /></TabsContent>
 
         {/* REP-C */}
         <TabsContent value="repc"><PontoRepCTab /></TabsContent>

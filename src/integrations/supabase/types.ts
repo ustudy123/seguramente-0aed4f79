@@ -13504,6 +13504,53 @@ export type Database = {
           },
         ]
       }
+      ponto_links: {
+        Row: {
+          ativo: boolean
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_expiracao: string | null
+          id: string
+          tenant_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          colaborador_cpf: string
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_expiracao?: string | null
+          id?: string
+          tenant_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          colaborador_cpf?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_expiracao?: string | null
+          id?: string
+          tenant_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_marcacoes: {
         Row: {
           colaborador_cpf: string
@@ -16424,6 +16471,7 @@ export type Database = {
           token: string
         }[]
       }
+      buscar_ponto_link_por_token: { Args: { p_token: string }; Returns: Json }
       buscar_profissionais_proximos: {
         Args: { p_lat: number; p_lon: number; p_raio_km?: number }
         Returns: {
@@ -16479,6 +16527,17 @@ export type Database = {
       recalcular_status_trabalhador: {
         Args: { p_trabalhador_id: string }
         Returns: undefined
+      }
+      registrar_ponto_externo: {
+        Args: {
+          p_endereco?: string
+          p_latitude?: number
+          p_longitude?: number
+          p_selfie_base64?: string
+          p_tipo_marcacao: string
+          p_token: string
+        }
+        Returns: Json
       }
       salvar_resposta_anonima_campanha: {
         Args: {

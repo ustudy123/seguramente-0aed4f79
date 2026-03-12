@@ -50,6 +50,7 @@ import NotFound from "./pages/NotFound";
 import BemEstar from "./pages/BemEstar";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
+import PontoExterno from "./pages/PontoExterno";
 import FeriasAssinatura from "./pages/FeriasAssinatura";
 import TrilhaTerceiroPublica from "./pages/TrilhaTerceiroPublica";
 import Onboarding from "./pages/Onboarding";
@@ -107,6 +108,7 @@ const App = () => (
             <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
             <Route path="/ferias-assinatura/:token" element={<FeriasAssinatura />} />
             <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
+            <Route path="/ponto-externo/:token" element={<PontoExterno />} />
             <Route path="/contrato-assinatura/:token" element={<AssinaturaContrato />} />
             <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
             <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
