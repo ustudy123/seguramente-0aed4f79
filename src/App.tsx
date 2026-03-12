@@ -108,6 +108,7 @@ const App = () => (
             <Route path="/pdi-assinatura/:token" element={<PdiAssinatura />} />
             <Route path="/ferias-assinatura/:token" element={<FeriasAssinatura />} />
             <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
+            <Route path="/ponto-externo/:token" element={<PontoExterno />} />
             <Route path="/contrato-assinatura/:token" element={<AssinaturaContrato />} />
             <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
             <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />

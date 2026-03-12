@@ -381,6 +381,9 @@ const Ponto = () => {
         {/* Alertas */}
         <TabsContent value="alertas"><PontoAlertasTab /></TabsContent>
 
+        {/* Links WhatsApp */}
+        <TabsContent value="links"><PontoLinksTab /></TabsContent>
+
         {/* REP-C */}
         <TabsContent value="repc"><PontoRepCTab /></TabsContent>
 
