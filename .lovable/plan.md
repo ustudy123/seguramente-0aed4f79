@@ -1,65 +1,64 @@
 
-## Seletor Global de Empresa Ativa
 
-### Problema
-Hoje o sistema mostra apenas o nome do tenant no header ("Empresa SudomedS"), mas quando o usuario trabalha com varias empresas do mesmo grupo, precisa de uma forma rapida de trocar a empresa ativa para filtrar dados em todos os modulos.
+## Link Individual de Ponto via WhatsApp
 
-### Solucao Proposta
-Criar um **seletor de empresa** no header que substitui o indicador estático do tenant. O seletor tera:
-- Dropdown clicavel mostrando a empresa ativa atual
-- Campo de busca para filtrar empresas por razao social, nome fantasia ou CNPJ
-- Lista das empresas ativas do tenant
-- Opcao "Todas as empresas" para visao consolidada
-- Persistencia da selecao no localStorage
+### Recomendacao
 
-### Componentes
+A melhor abordagem e criar um **token unico por colaborador** vinculado ao tenant, gerando uma pagina publica (`/ponto-externo/:token`) onde o colaborador se identifica apenas confirmando seus dados (nome + CPF parcial), e registra o ponto com selfie + geolocalizacao — sem precisar de conta no sistema.
 
-1. **Context Global (`EmpresaAtivaContext`)** - Novo contexto React que armazena a empresa selecionada e disponibiliza para toda a aplicacao
-   - Estado: `empresaAtiva` (empresa selecionada ou null para "todas")
-   - Lista de empresas do tenant via `useEmpresaCadastro`
-   - Persistencia no `localStorage` por usuario
+Isso segue o mesmo padrao ja usado no projeto para trilhas de terceiros e questionario psicossocial (RPCs SECURITY DEFINER + pagina publica).
 
-2. **Componente Seletor (`EmpresaSelector`)** - Dropdown no header com:
-   - Icone de empresa + nome da empresa ativa (ou "Todas as empresas")
-   - Popover com campo de busca e lista scrollavel
-   - Busca por razao social, nome fantasia e CNPJ
-   - Indicador visual da empresa selecionada
+### Arquitetura
 
-3. **Integracao no Header** - Substituir o bloco estatico "Empresa / SudomedS" pelo novo componente `EmpresaSelector`
-
-4. **Hook `useEmpresaAtiva`** - Hook para consumir o contexto em qualquer modulo que precise filtrar por empresa
-
-### Detalhes Tecnicos
-
-**Arquivos a criar:**
-- `src/contexts/EmpresaAtivaContext.tsx` - Context + Provider + hook
-- `src/components/layout/EmpresaSelector.tsx` - Componente UI do seletor
-
-**Arquivos a editar:**
-- `src/components/layout/Header.tsx` - Trocar indicador estatico pelo seletor
-- `src/components/layout/MainLayout.tsx` ou `src/App.tsx` - Envolver com `EmpresaAtivaProvider`
-
-**Estrutura do Context:**
-```typescript
-interface EmpresaAtivaContextType {
-  empresaAtiva: EmpresaCadastro | null; // null = todas
-  empresaAtivaId: string | null;
-  setEmpresaAtiva: (empresa: EmpresaCadastro | null) => void;
-  empresas: EmpresaCadastro[];
-  isLoading: boolean;
-}
+```text
+┌─────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│ RH gera     │────>│ ponto_links      │────>│ /ponto-externo/  │
+│ link por    │     │ (token + colab)  │     │ :token           │
+│ colaborador │     └──────────────────┘     │ (pagina publica) │
+└─────────────┘                              │ selfie + geo +   │
+                                             │ registro via RPC │
+                                             └──────────────────┘
 ```
 
-**UI do Seletor:**
-- Usa Popover do Radix com Command (cmdk) para busca
-- Mostra razao social + CNPJ formatado
-- Badge "Matriz"/"Filial" em cada item
-- Largura fixa de ~300px no dropdown
+### Mudancas
 
-**Persistencia:**
-- Salva `empresaAtivaId` no `localStorage` com chave por tenant (`empresa_ativa_{tenantId}`)
-- Ao carregar, busca o ID salvo e seleciona automaticamente
-- Se a empresa salva nao existir mais, volta para "Todas"
+**1. Migration SQL**
+- Tabela `ponto_links`: `id`, `tenant_id`, `colaborador_id`, `colaborador_nome`, `colaborador_cpf`, `token` (unique), `ativo`, `data_expiracao` (opcional), `created_at`
+- RPC `buscar_ponto_link_por_token(p_token)`: retorna dados do colaborador se token valido e ativo (SECURITY DEFINER, grant anon)
+- RPC `registrar_ponto_externo(p_token, p_tipo_marcacao, p_latitude, p_longitude, p_endereco, p_selfie_base64)`: valida token, insere em `ponto_marcacoes`, retorna confirmacao (SECURITY DEFINER, grant anon)
+- RLS: tabela `ponto_links` com select/insert/update para authenticated onde `tenant_id = get_user_tenant_id()`
 
-### Beneficio Futuro
-Com o contexto global de empresa ativa, qualquer modulo podera usar `useEmpresaAtiva()` para filtrar dados automaticamente pela empresa selecionada (colaboradores, documentos, acoes, etc.).
+**2. Pagina Publica — `src/pages/PontoExterno.tsx`**
+- Rota: `/ponto-externo/:token`
+- Fluxo: carrega dados via RPC → exibe nome do colaborador → captura selfie + geolocalizacao → botoes de marcacao (entrada/saida almoco/retorno/saida) → registra via RPC → exibe comprovante
+- Usa `supabasePublic` (sem sessao)
+- Design mobile-first (sera acessado pelo WhatsApp)
+
+**3. Componente de Gestao — `src/components/ponto/PontoLinksTab.tsx`**
+- Nova aba "Links" no modulo de Ponto
+- Lista colaboradores com status do link (ativo/inativo/sem link)
+- Botao "Gerar Link" por colaborador
+- Botao "Copiar" e "Enviar via WhatsApp" (abre `https://wa.me/{telefone}?text=...`)
+- Botao para gerar links em lote
+- Opcao de desativar/reativar links
+
+**4. Seguranca**
+- Token de 16 caracteres aleatorios (uuid sem hifens truncado)
+- Selfie obrigatoria na pagina publica
+- Geolocalizacao capturada automaticamente
+- RPC valida token ativo + insere com todas as camadas de rastreabilidade (IP, user_agent, dispositivo)
+- Possibilidade de expirar links por data
+- Audit trail: cada registro via link externo fica marcado com `origem = 'link_externo'`
+
+**5. Integracao WhatsApp**
+- Nao requer API do WhatsApp — usa o deep link `https://wa.me/{telefone}?text={mensagem_encodada}`
+- Mensagem padrao: "Ola {nome}! Acesse seu link de registro de ponto: {url}"
+- Botao individual e botao em lote
+
+**6. Arquivos afetados**
+- Nova migration SQL
+- `src/pages/PontoExterno.tsx` (novo)
+- `src/components/ponto/PontoLinksTab.tsx` (novo)
+- `src/pages/Ponto.tsx` (adicionar aba Links)
+- `src/App.tsx` (adicionar rota publica)
+
