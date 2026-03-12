@@ -366,7 +366,7 @@ function StepColaboradores({ onConcluir, onBack }: { onConcluir: () => void; onB
 
 // ─── Step: Diagnóstico ────────────────────────────────────────────────────────
 
-function StepDiagnostico({ onConcluir }: { onConcluir: () => void }) {
+function StepDiagnostico({ onConcluir, onBack }: { onConcluir: () => void; onBack?: () => void }) {
   const [fase, setFase] = useState<'intro' | 'blocos' | 'resultado'>('intro');
   const [blocoAtual, setBlocoAtual] = useState(0);
   const [respostas, setRespostas] = useState<BlocoRespostas>({});
