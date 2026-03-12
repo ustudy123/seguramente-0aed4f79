@@ -43,14 +43,20 @@ Deno.serve(async (req) => {
     if (existingProfile?.tenant_id) {
       tenantId = existingProfile.tenant_id;
     } else {
-      const { data: tenant, error: tenantErr } = await admin.from("tenants").insert({
-        nome: "Seguramente Demonstração Ltda",
-        slug: "demo-seguramente",
-        plano: "enterprise",
-        ativo: true,
-      }).select().single();
-      if (tenantErr) throw tenantErr;
-      tenantId = tenant.id;
+      // Try to find existing tenant by slug first
+      const { data: existingTenant } = await admin.from("tenants").select("id").eq("slug", "demo-seguramente").single();
+      if (existingTenant) {
+        tenantId = existingTenant.id;
+      } else {
+        const { data: tenant, error: tenantErr } = await admin.from("tenants").insert({
+          nome: "Seguramente Demonstração Ltda",
+          slug: "demo-seguramente",
+          plano: "enterprise",
+          ativo: true,
+        }).select().single();
+        if (tenantErr) throw tenantErr;
+        tenantId = tenant.id;
+      }
 
       // Create profile
       await admin.from("profiles").upsert({
