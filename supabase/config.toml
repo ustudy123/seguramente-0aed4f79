@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.sst-pdf-extract]
 verify_jwt = false
+
+[functions.seed-test-user]
+verify_jwt = false
