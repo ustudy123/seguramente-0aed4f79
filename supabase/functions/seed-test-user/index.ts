@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
       tenant_id: tenantId,
       nome_completo: "Usuário Demonstração",
       cargo: "Diretor de RH",
+      onboarding_concluido: true,
     }, { onConflict: "user_id" });
     if (profErr) console.error("Profile error:", profErr);
 
