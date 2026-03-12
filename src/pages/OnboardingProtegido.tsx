@@ -714,7 +714,7 @@ export default function OnboardingProtegido() {
 
                   {stepAtivo === 'colaboradores' && (
                     <motion.div key="colaboradores" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                      <StepColaboradores onConcluir={() => setStepAtivo(null)} onBack={() => setStepAtivo(null)} />
+                      <StepColaboradores onConcluir={() => marcarStepCompleto('colaboradores')} onBack={() => setStepAtivo(null)} />
                     </motion.div>
                   )}
 
