@@ -50,6 +50,7 @@ import NotFound from "./pages/NotFound";
 import BemEstar from "./pages/BemEstar";
 import QuestionarioPsicossocial from "./pages/QuestionarioPsicossocial";
 import PdiAssinatura from "./pages/PdiAssinatura";
+import PontoExterno from "./pages/PontoExterno";
 import FeriasAssinatura from "./pages/FeriasAssinatura";
 import TrilhaTerceiroPublica from "./pages/TrilhaTerceiroPublica";
 import Onboarding from "./pages/Onboarding";
