@@ -59,14 +59,13 @@ Deno.serve(async (req) => {
       }
 
       // Create profile
-      await admin.from("profiles").upsert({
+      const { error: profErr } = await admin.from("profiles").upsert({
         user_id: userId,
         tenant_id: tenantId,
         nome_completo: "Usuário Demonstração",
-        email: TEST_EMAIL,
         cargo: "Diretor de RH",
-        departamento: "Recursos Humanos",
       }, { onConflict: "user_id" });
+      if (profErr) console.error("Profile error:", profErr);
 
       // Create role
       await admin.from("user_roles").upsert({
