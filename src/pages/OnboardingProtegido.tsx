@@ -435,7 +435,7 @@ function StepDiagnostico({ onConcluir, onBack }: { onConcluir: () => void; onBac
         <Button onClick={() => setFase('blocos')} className="w-full">
           <Rocket className="w-4 h-4 mr-2" /> Iniciar Diagnóstico
         </Button>
-        <Button variant="outline" onClick={onConcluir} className="w-full text-muted-foreground">Fazer isso depois</Button>
+        {onBack && <Button variant="outline" onClick={onBack} className="w-full text-muted-foreground">Fazer isso depois</Button>}
       </div>
     );
   }
