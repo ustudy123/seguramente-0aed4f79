@@ -595,10 +595,11 @@ export default function OnboardingProtegido() {
   }, [todosCompletos]);
 
   // Already completed
-  if (profileData?.onboarding_concluido) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (profileData?.onboarding_concluido) {
+      navigate('/');
+    }
+  }, [profileData?.onboarding_concluido, navigate]);
 
   const steps = [
     { id: 'colaboradores', label: 'Estrutura Organizacional', sublabel: 'Departamentos, funções e colaboradores', icon: <Users className="w-5 h-5" /> },
