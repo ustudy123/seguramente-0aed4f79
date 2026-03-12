@@ -721,7 +721,7 @@ export default function OnboardingProtegido() {
                   {stepAtivo === 'diagnostico' && (
                     <motion.div key="diagnostico" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                       <button onClick={() => setStepAtivo(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">← Voltar</button>
-                      <StepDiagnostico onConcluir={() => marcarStepCompleto('diagnostico')} />
+                      <StepDiagnostico onConcluir={() => marcarStepCompleto('diagnostico')} onBack={() => setStepAtivo(null)} />
                     </motion.div>
                   )}
                 </AnimatePresence>
