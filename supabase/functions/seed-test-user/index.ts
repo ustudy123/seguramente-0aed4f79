@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       tenantId = existingProfile.tenant_id;
     } else {
       // Try to find existing tenant by slug first
-      const { data: existingTenant } = await admin.from("tenants").select("id").eq("slug", "demo-seguramente").single();
+      const { data: existingTenant } = await admin.from("tenants").select("id").eq("slug", "demo-seguramente").maybeSingle();
       if (existingTenant) {
         tenantId = existingTenant.id;
       } else {
@@ -57,23 +57,22 @@ Deno.serve(async (req) => {
         if (tenantErr) throw tenantErr;
         tenantId = tenant.id;
       }
-
-      // Create profile
-      await admin.from("profiles").upsert({
-        user_id: userId,
-        tenant_id: tenantId,
-        nome_completo: "Usuário Demonstração",
-        email: TEST_EMAIL,
-        cargo: "Diretor de RH",
-        departamento: "Recursos Humanos",
-      }, { onConflict: "user_id" });
-
-      // Create role
-      await admin.from("user_roles").upsert({
-        user_id: userId,
-        role: "owner",
-      }, { onConflict: "user_id,role" });
     }
+
+    // Always ensure profile exists
+    const { error: profErr } = await admin.from("profiles").upsert({
+      user_id: userId,
+      tenant_id: tenantId,
+      nome_completo: "Usuário Demonstração",
+      cargo: "Diretor de RH",
+    }, { onConflict: "user_id" });
+    if (profErr) console.error("Profile error:", profErr);
+
+    // Always ensure role exists
+    await admin.from("user_roles").upsert({
+      user_id: userId,
+      role: "owner",
+    }, { onConflict: "user_id,role" });
 
     // 3. Create empresa
     const { data: existingEmpresa } = await admin.from("empresa_cadastro").select("id").eq("tenant_id", tenantId).limit(1).maybeSingle();
