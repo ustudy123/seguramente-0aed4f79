@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     if (existingEmpresa) {
       empresaId = existingEmpresa.id;
     } else {
-      const { data: empresa } = await admin.from("empresa_cadastro").insert({
+      const { data: empresa, error: empErr } = await admin.from("empresa_cadastro").insert({
         tenant_id: tenantId,
         razao_social: "Seguramente Demonstração Ltda",
         nome_fantasia: "Seguramente Demo",
@@ -97,7 +97,17 @@ Deno.serve(async (req) => {
         email: "contato@seguramente.com",
         ativa: true,
       }).select().single();
-      empresaId = empresa!.id;
+      if (empErr) {
+        // Might be duplicate cnpj, try to fetch
+        const { data: fallback } = await admin.from("empresa_cadastro").select("id").eq("tenant_id", tenantId).limit(1).maybeSingle();
+        if (fallback) {
+          empresaId = fallback.id;
+        } else {
+          throw empErr;
+        }
+      } else {
+        empresaId = empresa.id;
+      }
     }
 
     // 4. Seed employees (admissoes) - 15 employees
