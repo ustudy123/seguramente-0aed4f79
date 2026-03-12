@@ -548,9 +548,19 @@ export default function OnboardingProtegido() {
   const navigate = useNavigate();
   const [stepAtivo, setStepAtivo] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [stepsCompletos, setStepsCompletos] = useState<Set<string>>(new Set());
 
   const profileData = profile as any;
   const nomeUsuario = profileData?.nome_completo?.split(' ')[0] || '';
+
+  const marcarStepCompleto = (stepId: string) => {
+    setStepsCompletos(prev => {
+      const next = new Set(prev);
+      next.add(stepId);
+      return next;
+    });
+    setStepAtivo(null);
+  };
 
   const handleConcluirOnboarding = async () => {
     if (!user) return;
