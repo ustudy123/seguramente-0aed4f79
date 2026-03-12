@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     }
 
     // 3. Create empresa
-    const { data: existingEmpresa } = await admin.from("empresa_cadastro").select("id").eq("tenant_id", tenantId).limit(1).single();
+    const { data: existingEmpresa } = await admin.from("empresa_cadastro").select("id").eq("tenant_id", tenantId).limit(1).maybeSingle();
     let empresaId: string;
     if (existingEmpresa) {
       empresaId = existingEmpresa.id;
