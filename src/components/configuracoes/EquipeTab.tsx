@@ -85,10 +85,16 @@ export function EquipeTab() {
         body: { action: "list" },
       });
       if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) {
+        if (data.error === "Invalid token" || data.error === "Missing Authorization") {
+          toast.error("Sessão expirada. Faça login novamente.");
+        }
+        throw new Error(data.error);
+      }
       return data?.users || [];
     },
     enabled: !!tenantId,
+    retry: false,
   });
 
   // ─── INVITE / CREATE USER ───
