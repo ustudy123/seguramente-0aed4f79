@@ -244,6 +244,7 @@ export function EquipeTab() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </CardHeader>
 
         <CardContent>
