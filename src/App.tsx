@@ -23,6 +23,7 @@ import Ponto from "./pages/Ponto";
 import Ferias from "./pages/Ferias";
 import Documentos from "./pages/Documentos";
 // Admissao route redirects to /colaboradores
+import ContratosExperiencia from "./pages/ContratosExperiencia";
 import Epis from "./pages/Epis";
 import Feed from "./pages/Feed";
 import Ouvidoria from "./pages/Ouvidoria";
@@ -172,6 +173,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/feed" element={<Feed />} />
               <Route path="/colaboradores" element={<Colaboradores />} />
+              <Route path="/contratos-experiencia" element={<ContratosExperiencia />} />
               <Route path="/cadastros/departamentos" element={<Departamentos />} />
               <Route path="/cadastros/cargos" element={<Cargos />} />
               <Route path="/cadastros/filiais" element={<Filiais />} />

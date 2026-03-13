@@ -95,6 +95,7 @@ const menuSections: MenuSection[] = [
   sectionIcon: Users,
   items: [
   { title: "Colaboradores", icon: Users, path: "/colaboradores" },
+  { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
   { title: "Onboarding", icon: UserPlus, path: "/onboarding-rh" },
   { title: "Férias", icon: Calendar, path: "/ferias" },
   { title: "Atestados", icon: Stethoscope, path: "/atestados" },

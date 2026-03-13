@@ -2366,6 +2366,214 @@ export type Database = {
           },
         ]
       }
+      contratos_experiencia: {
+        Row: {
+          admissao_id: string | null
+          alerta_15_dias_enviado: boolean
+          alerta_2_dias_enviado: boolean
+          alerta_7_dias_enviado: boolean
+          cargo: string | null
+          clausula_assecuratoria: boolean
+          colaborador_cpf: string
+          colaborador_nome: string
+          contrato_documento_id: string | null
+          created_at: string
+          data_admissao: string
+          data_efetivacao: string | null
+          data_encerramento: string | null
+          data_fim_primeiro_periodo: string
+          data_fim_prorrogacao: string | null
+          data_inicio_prorrogacao: string | null
+          data_prorrogacao_registro: string | null
+          departamento: string | null
+          duracao_primeiro_periodo: number
+          duracao_prorrogacao: number | null
+          efetivado_por: string | null
+          efetivado_por_nome: string | null
+          empresa_id: string | null
+          encerrado_por: string | null
+          encerrado_por_nome: string | null
+          filial: string | null
+          gestor_imediato: string | null
+          id: string
+          jornada_trabalho: string | null
+          motivo_encerramento: string | null
+          observacoes: string | null
+          prorrogado: boolean
+          prorrogado_por: string | null
+          prorrogado_por_nome: string | null
+          salario: number | null
+          status: string
+          tenant_id: string
+          termo_efetivacao_documento_id: string | null
+          termo_prorrogacao_documento_id: string | null
+          termo_rescisao_documento_id: string | null
+          tipo_encerramento: string | null
+          updated_at: string
+        }
+        Insert: {
+          admissao_id?: string | null
+          alerta_15_dias_enviado?: boolean
+          alerta_2_dias_enviado?: boolean
+          alerta_7_dias_enviado?: boolean
+          cargo?: string | null
+          clausula_assecuratoria?: boolean
+          colaborador_cpf: string
+          colaborador_nome: string
+          contrato_documento_id?: string | null
+          created_at?: string
+          data_admissao: string
+          data_efetivacao?: string | null
+          data_encerramento?: string | null
+          data_fim_primeiro_periodo: string
+          data_fim_prorrogacao?: string | null
+          data_inicio_prorrogacao?: string | null
+          data_prorrogacao_registro?: string | null
+          departamento?: string | null
+          duracao_primeiro_periodo?: number
+          duracao_prorrogacao?: number | null
+          efetivado_por?: string | null
+          efetivado_por_nome?: string | null
+          empresa_id?: string | null
+          encerrado_por?: string | null
+          encerrado_por_nome?: string | null
+          filial?: string | null
+          gestor_imediato?: string | null
+          id?: string
+          jornada_trabalho?: string | null
+          motivo_encerramento?: string | null
+          observacoes?: string | null
+          prorrogado?: boolean
+          prorrogado_por?: string | null
+          prorrogado_por_nome?: string | null
+          salario?: number | null
+          status?: string
+          tenant_id: string
+          termo_efetivacao_documento_id?: string | null
+          termo_prorrogacao_documento_id?: string | null
+          termo_rescisao_documento_id?: string | null
+          tipo_encerramento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admissao_id?: string | null
+          alerta_15_dias_enviado?: boolean
+          alerta_2_dias_enviado?: boolean
+          alerta_7_dias_enviado?: boolean
+          cargo?: string | null
+          clausula_assecuratoria?: boolean
+          colaborador_cpf?: string
+          colaborador_nome?: string
+          contrato_documento_id?: string | null
+          created_at?: string
+          data_admissao?: string
+          data_efetivacao?: string | null
+          data_encerramento?: string | null
+          data_fim_primeiro_periodo?: string
+          data_fim_prorrogacao?: string | null
+          data_inicio_prorrogacao?: string | null
+          data_prorrogacao_registro?: string | null
+          departamento?: string | null
+          duracao_primeiro_periodo?: number
+          duracao_prorrogacao?: number | null
+          efetivado_por?: string | null
+          efetivado_por_nome?: string | null
+          empresa_id?: string | null
+          encerrado_por?: string | null
+          encerrado_por_nome?: string | null
+          filial?: string | null
+          gestor_imediato?: string | null
+          id?: string
+          jornada_trabalho?: string | null
+          motivo_encerramento?: string | null
+          observacoes?: string | null
+          prorrogado?: boolean
+          prorrogado_por?: string | null
+          prorrogado_por_nome?: string | null
+          salario?: number | null
+          status?: string
+          tenant_id?: string
+          termo_efetivacao_documento_id?: string | null
+          termo_prorrogacao_documento_id?: string | null
+          termo_rescisao_documento_id?: string | null
+          tipo_encerramento?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_experiencia_admissao_id_fkey"
+            columns: ["admissao_id"]
+            isOneToOne: false
+            referencedRelation: "admissoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_experiencia_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_experiencia_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contratos_experiencia_historico: {
+        Row: {
+          acao: string
+          contrato_id: string
+          created_at: string
+          dados: Json | null
+          descricao: string | null
+          id: string
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          contrato_id: string
+          created_at?: string
+          dados?: Json | null
+          descricao?: string | null
+          id?: string
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          contrato_id?: string
+          created_at?: string
+          dados?: Json | null
+          descricao?: string | null
+          id?: string
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_experiencia_historico_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos_experiencia"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_experiencia_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cultura_acoes: {
         Row: {
           colaborador_id: string | null
