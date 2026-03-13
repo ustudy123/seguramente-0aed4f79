@@ -557,3 +557,7 @@ export function calcularProvisao(params: {
     valor_total: +(valorProvisao + valorTerco + encargosFGTS).toFixed(2),
   };
 }
+
+// Re-export adicionais engine
+export { calcularAdicionais, gerarProventoAdicional, SALARIO_MINIMO_2025 } from "./adicionais";
+export type { ConfigInsalubridade, ConfigPericulosidade, ConfigAposentadoriaEspecial, ResultadoAdicionais } from "./adicionais";
