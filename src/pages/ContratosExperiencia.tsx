@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExperienciaConfigForm } from "@/components/experiencia/ExperienciaConfigForm";
+import { ExperienciaDocGenerator } from "@/components/experiencia/ExperienciaDocGenerator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +57,7 @@ export default function ContratosExperiencia() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [selectedContrato, setSelectedContrato] = useState<ContratoExperiencia | null>(null);
-  const [modalAction, setModalAction] = useState<"prorrogar" | "efetivar" | "encerrar" | "detalhes" | null>(null);
+  const [modalAction, setModalAction] = useState<"prorrogar" | "efetivar" | "encerrar" | "detalhes" | "documento" | null>(null);
 
   // Prorrogação form
   const [diasProrrogacao, setDiasProrrogacao] = useState(45);
@@ -360,12 +361,25 @@ export default function ContratosExperiencia() {
                               </TooltipTrigger>
                               <TooltipContent>Encerrar</TooltipContent>
                             </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={() => openAction(contrato, "documento")}>
+                                  <FileText className="w-3.5 h-3.5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Gerar Documento</TooltipContent>
+                            </Tooltip>
                           </TooltipProvider>
                         </div>
                       ) : (
-                        <Button variant="ghost" size="sm" onClick={() => openAction(contrato, "detalhes")}>
-                          <History className="w-3.5 h-3.5 mr-1" /> Ver
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => openAction(contrato, "documento")}>
+                            <FileText className="w-3.5 h-3.5 mr-1" /> Docs
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => openAction(contrato, "detalhes")}>
+                            <History className="w-3.5 h-3.5 mr-1" /> Ver
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
@@ -571,6 +585,15 @@ export default function ContratosExperiencia() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* GERAR DOCUMENTO */}
+      {selectedContrato && (
+        <ExperienciaDocGenerator
+          contrato={selectedContrato}
+          open={modalAction === "documento"}
+          onClose={() => setModalAction(null)}
+        />
+      )}
     </div>
   );
 }
