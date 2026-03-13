@@ -60,6 +60,29 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [motivoBloqueio, setMotivoBloqueio] = useState("");
   const [showBloqueioForm, setShowBloqueioForm] = useState(false);
 
+  // Definir senha
+  const [showSenhaForm, setShowSenhaForm] = useState(false);
+  const [novaSenha, setNovaSenha] = useState("");
+  const queryClient = useQueryClient();
+
+  const setPasswordMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("manage-tenant-users", {
+        body: { action: "set_password", userId: usuario.auth_user_id, password: novaSenha },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Senha definida com sucesso! O usuário já pode fazer login.");
+      setShowSenhaForm(false);
+      setNovaSenha("");
+      queryClient.invalidateQueries({ queryKey: ["tenant-users"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
   // Novo vínculo
   const [addingVinculo, setAddingVinculo] = useState(false);
   const [novaEmpresaId, setNovaEmpresaId] = useState("");
