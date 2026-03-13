@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExperienciaConfigForm } from "@/components/experiencia/ExperienciaConfigForm";
 import { ExperienciaDocGenerator } from "@/components/experiencia/ExperienciaDocGenerator";
+import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,7 @@ export default function ContratosExperiencia() {
     efetivar, efetivando,
     encerrar, encerrando,
   } = useContratosExperiencia();
+  const { enviarParaHub } = useEnviarParaHub();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -105,6 +107,16 @@ export default function ContratosExperiencia() {
   const handleEfetivar = async () => {
     if (!selectedContrato) return;
     await efetivar({ id: selectedContrato.id });
+    // Enviar ao Hub Contábil
+    const competencia = format(new Date(), "yyyy-MM");
+    enviarParaHub({
+      tipo: "Efetivação de Contrato de Experiência",
+      competencia,
+      descricao: `Colaborador ${selectedContrato.colaborador_nome} efetivado — contrato de experiência convertido para prazo indeterminado.`,
+      colaborador_nome: selectedContrato.colaborador_nome,
+      colaborador_cpf: selectedContrato.colaborador_cpf,
+      direcao: "enviado",
+    });
     setModalAction(null);
   };
 
@@ -115,6 +127,21 @@ export default function ContratosExperiencia() {
       tipo_encerramento: tipoEncerramento,
       motivo_encerramento: motivoEncerramento || undefined,
       data_encerramento: dataEncerramento,
+    });
+    // Enviar ao Hub Contábil
+    const tiposLabel: Record<string, string> = {
+      termino_normal: "Término normal",
+      rescisao_antecipada_empregador: "Rescisão antecipada (empregador)",
+      rescisao_antecipada_empregado: "Rescisão antecipada (empregado)",
+    };
+    const competencia = format(new Date(), "yyyy-MM");
+    enviarParaHub({
+      tipo: "Encerramento de Contrato de Experiência",
+      competencia,
+      descricao: `Contrato encerrado: ${tiposLabel[tipoEncerramento] || tipoEncerramento}. Colaborador: ${selectedContrato.colaborador_nome}.${motivoEncerramento ? ` Motivo: ${motivoEncerramento}` : ""}`,
+      colaborador_nome: selectedContrato.colaborador_nome,
+      colaborador_cpf: selectedContrato.colaborador_cpf,
+      direcao: "enviado",
     });
     setModalAction(null);
   };
