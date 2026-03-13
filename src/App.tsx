@@ -23,6 +23,7 @@ import Ponto from "./pages/Ponto";
 import Ferias from "./pages/Ferias";
 import Documentos from "./pages/Documentos";
 // Admissao route redirects to /colaboradores
+import ContratosExperiencia from "./pages/ContratosExperiencia";
 import Epis from "./pages/Epis";
 import Feed from "./pages/Feed";
 import Ouvidoria from "./pages/Ouvidoria";
