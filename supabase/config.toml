@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.ai-experiencia-doc]
 verify_jwt = false
+
+[functions.experiencia-assinatura]
+verify_jwt = false

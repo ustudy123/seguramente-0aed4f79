@@ -62,6 +62,7 @@ import LandingPage from "./pages/LandingPage";
 import TermosDeUso from "./pages/TermosDeUso";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import AssinaturaContrato from "./pages/AssinaturaContrato";
+import ExperienciaAssinatura from "./pages/ExperienciaAssinatura";
 import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
@@ -111,6 +112,7 @@ const App = () => (
             <Route path="/trilha-terceiro/:token" element={<TrilhaTerceiroPublica />} />
             <Route path="/ponto-externo/:token" element={<PontoExterno />} />
             <Route path="/contrato-assinatura/:token" element={<AssinaturaContrato />} />
+            <Route path="/experiencia-assinatura/:token" element={<ExperienciaAssinatura />} />
             <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
             <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
             <Route path="/ativar-conta" element={<AtivarConta />} />
