@@ -1,115 +1,81 @@
 project_id = "diayjpsrcerycycyaxst"
 
-[functions.analyze-ergonomia]
-verify_jwt = false
-
-[functions.onboarding-signup]
-verify_jwt = false
-
-[functions.ai-plano-acao]
-verify_jwt = false
-
-[functions.ai-ouvidoria]
-verify_jwt = false
-
-[functions.ai-chat]
-verify_jwt = false
-
-[functions.ai-epi-fiscal]
-verify_jwt = false
-
-[functions.extract-atestado]
-verify_jwt = false
-
-[functions.ai-sst-analise]
-verify_jwt = false
-
-[functions.ai-feedback]
-verify_jwt = false
-
-[functions.ai-psicossocial-analise]
-verify_jwt = false
-
-[functions.advertencia-link]
-verify_jwt = false
-
-[functions.ai-cultura-manual]
-verify_jwt = false
-
-[functions.ai-cultura-sugestao]
-verify_jwt = false
-
-[functions.ai-oceano-azul]
-verify_jwt = false
-
-[functions.ai-pdi-smart]
-verify_jwt = false
-
-[functions.ai-pdi-documento]
-verify_jwt = false
-
-[functions.pdi-assinatura]
-verify_jwt = false
-
-[functions.ai-ouvidoria-acoes]
-verify_jwt = false
-
-[functions.ai-felicitacao]
-verify_jwt = false
-
-[functions.trilha-notificacoes]
-verify_jwt = false
-
-[functions.ferias-assinatura]
-verify_jwt = false
-
-[functions.ai-nf-match]
-verify_jwt = false
-
-[functions.ai-pop-generator]
-verify_jwt = false
-
-[functions.invite-tenant-user]
-verify_jwt = false
-
-[functions.manage-tenant-users]
-verify_jwt = false
-
-[functions.ai-audio-atividades]
-verify_jwt = false
-
-[functions.ai-nf-ocr]
-verify_jwt = false
-
-[functions.ai-pgr-riscos]
-verify_jwt = false
-
-[functions.ai-sst-acao-sugestao]
-verify_jwt = false
-
-[functions.ai-pdi-from-avaliacao]
-verify_jwt = false
-
-[functions.avaliacao-ia-rascunho]
-verify_jwt = false
-
-[functions.ai-qa-scan]
-verify_jwt = false
-
-[functions.ai-qa-agent]
-verify_jwt = false
-
-[functions.ai-sst-importacao]
-verify_jwt = false
-
-[functions.sst-pdf-extract]
-verify_jwt = false
-
-[functions.seed-test-user]
-verify_jwt = false
-
-[functions.ai-experiencia-doc]
-verify_jwt = false
-
-[functions.experiencia-assinatura]
-verify_jwt = false
+[functions]
+  [functions.advertencia-link]
+    verify_jwt = false
+  [functions.ai-audio-atividades]
+    verify_jwt = false
+  [functions.ai-chat]
+    verify_jwt = false
+  [functions.ai-cultura-manual]
+    verify_jwt = false
+  [functions.ai-cultura-sugestao]
+    verify_jwt = false
+  [functions.ai-epi-fiscal]
+    verify_jwt = false
+  [functions.ai-experiencia-doc]
+    verify_jwt = false
+  [functions.ai-feedback]
+    verify_jwt = false
+  [functions.ai-felicitacao]
+    verify_jwt = false
+  [functions.ai-nf-match]
+    verify_jwt = false
+  [functions.ai-nf-ocr]
+    verify_jwt = false
+  [functions.ai-oceano-azul]
+    verify_jwt = false
+  [functions.ai-ouvidoria]
+    verify_jwt = false
+  [functions.ai-ouvidoria-acoes]
+    verify_jwt = false
+  [functions.ai-pdi-documento]
+    verify_jwt = false
+  [functions.ai-pdi-from-avaliacao]
+    verify_jwt = false
+  [functions.ai-pdi-smart]
+    verify_jwt = false
+  [functions.ai-pgr-riscos]
+    verify_jwt = false
+  [functions.ai-plano-acao]
+    verify_jwt = false
+  [functions.ai-pop-generator]
+    verify_jwt = false
+  [functions.ai-psicossocial-analise]
+    verify_jwt = false
+  [functions.ai-qa-agent]
+    verify_jwt = false
+  [functions.ai-qa-scan]
+    verify_jwt = false
+  [functions.ai-sst-acao-sugestao]
+    verify_jwt = false
+  [functions.ai-sst-analise]
+    verify_jwt = false
+  [functions.ai-sst-importacao]
+    verify_jwt = false
+  [functions.analyze-ergonomia]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.avaliacao-ia-rascunho]
+    verify_jwt = false
+  [functions.experiencia-assinatura]
+    verify_jwt = false
+  [functions.extract-atestado]
+    verify_jwt = false
+  [functions.ferias-assinatura]
+    verify_jwt = false
+  [functions.invite-tenant-user]
+    verify_jwt = false
+  [functions.manage-tenant-users]
+    verify_jwt = false
+  [functions.onboarding-signup]
+    verify_jwt = false
+  [functions.pdi-assinatura]
+    verify_jwt = false
+  [functions.seed-test-user]
+    verify_jwt = false
+  [functions.sst-pdf-extract]
+    verify_jwt = false
+  [functions.trilha-notificacoes]
+    verify_jwt = false
