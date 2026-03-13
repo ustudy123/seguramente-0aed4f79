@@ -2059,6 +2059,8 @@ export type Database = {
       }
       cargos: {
         Row: {
+          aposentadoria_especial: boolean
+          aposentadoria_especial_anos: number | null
           ativo: boolean
           created_at: string
           departamento_id: string | null
@@ -2068,13 +2070,20 @@ export type Database = {
           faixa_salarial_max: number | null
           faixa_salarial_min: number | null
           id: string
+          insalubridade: boolean
+          insalubridade_agente_nocivo: string | null
+          insalubridade_grau: string | null
           nivel: string | null
           nome: string
+          periculosidade: boolean
+          periculosidade_tipo: string | null
           periodicidade_exame_meses: number | null
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          aposentadoria_especial?: boolean
+          aposentadoria_especial_anos?: number | null
           ativo?: boolean
           created_at?: string
           departamento_id?: string | null
@@ -2084,13 +2093,20 @@ export type Database = {
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
           id?: string
+          insalubridade?: boolean
+          insalubridade_agente_nocivo?: string | null
+          insalubridade_grau?: string | null
           nivel?: string | null
           nome: string
+          periculosidade?: boolean
+          periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          aposentadoria_especial?: boolean
+          aposentadoria_especial_anos?: number | null
           ativo?: boolean
           created_at?: string
           departamento_id?: string | null
@@ -2100,8 +2116,13 @@ export type Database = {
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
           id?: string
+          insalubridade?: boolean
+          insalubridade_agente_nocivo?: string | null
+          insalubridade_grau?: string | null
           nivel?: string | null
           nome?: string
+          periculosidade?: boolean
+          periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
           tenant_id?: string
           updated_at?: string
@@ -2123,6 +2144,177 @@ export type Database = {
           },
           {
             foreignKeyName: "cargos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colaborador_condicoes_especiais: {
+        Row: {
+          adicional_aplicado: string | null
+          adicional_valor_aplicado: number | null
+          alterado_por: string | null
+          alterado_por_nome: string | null
+          aposentadoria_especial: boolean
+          aposentadoria_especial_anos: number | null
+          ativo: boolean
+          cargo_id: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          data_inicio_exposicao: string | null
+          documento_referencia: string | null
+          fundamentacao_legal: string | null
+          id: string
+          insalubridade: boolean
+          insalubridade_agente_nocivo: string | null
+          insalubridade_base_calculo: string | null
+          insalubridade_grau: string | null
+          insalubridade_valor_calculado: number | null
+          justificativa_alteracao: string | null
+          origem: string | null
+          periculosidade: boolean
+          periculosidade_tipo: string | null
+          periculosidade_valor_calculado: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          adicional_aplicado?: string | null
+          adicional_valor_aplicado?: number | null
+          alterado_por?: string | null
+          alterado_por_nome?: string | null
+          aposentadoria_especial?: boolean
+          aposentadoria_especial_anos?: number | null
+          ativo?: boolean
+          cargo_id?: string | null
+          colaborador_id: string
+          colaborador_nome: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          data_inicio_exposicao?: string | null
+          documento_referencia?: string | null
+          fundamentacao_legal?: string | null
+          id?: string
+          insalubridade?: boolean
+          insalubridade_agente_nocivo?: string | null
+          insalubridade_base_calculo?: string | null
+          insalubridade_grau?: string | null
+          insalubridade_valor_calculado?: number | null
+          justificativa_alteracao?: string | null
+          origem?: string | null
+          periculosidade?: boolean
+          periculosidade_tipo?: string | null
+          periculosidade_valor_calculado?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          adicional_aplicado?: string | null
+          adicional_valor_aplicado?: number | null
+          alterado_por?: string | null
+          alterado_por_nome?: string | null
+          aposentadoria_especial?: boolean
+          aposentadoria_especial_anos?: number | null
+          ativo?: boolean
+          cargo_id?: string | null
+          colaborador_id?: string
+          colaborador_nome?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          data_inicio_exposicao?: string | null
+          documento_referencia?: string | null
+          fundamentacao_legal?: string | null
+          id?: string
+          insalubridade?: boolean
+          insalubridade_agente_nocivo?: string | null
+          insalubridade_base_calculo?: string | null
+          insalubridade_grau?: string | null
+          insalubridade_valor_calculado?: number | null
+          justificativa_alteracao?: string | null
+          origem?: string | null
+          periculosidade?: boolean
+          periculosidade_tipo?: string | null
+          periculosidade_valor_calculado?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaborador_condicoes_especiais_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "colaborador_condicoes_especiais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      condicoes_especiais_historico: {
+        Row: {
+          acao: string
+          colaborador_id: string
+          colaborador_nome: string
+          condicao_id: string | null
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          id: string
+          justificativa: string | null
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          colaborador_id: string
+          colaborador_nome: string
+          condicao_id?: string | null
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          justificativa?: string | null
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          colaborador_id?: string
+          colaborador_nome?: string
+          condicao_id?: string | null
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          justificativa?: string | null
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condicoes_especiais_historico_condicao_id_fkey"
+            columns: ["condicao_id"]
+            isOneToOne: false
+            referencedRelation: "colaborador_condicoes_especiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "condicoes_especiais_historico_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
