@@ -65,7 +65,7 @@ export function EquipeTab() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("user");
-  const [method, setMethod] = useState<"invite" | "password">("invite");
+  const [method, setMethod] = useState<"invite" | "password">("password");
   const [password, setPassword] = useState("");
 
   // Edit role dialog
