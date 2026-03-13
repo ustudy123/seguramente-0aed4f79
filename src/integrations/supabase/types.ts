@@ -5653,6 +5653,83 @@ export type Database = {
           },
         ]
       }
+      experiencia_assinatura_links: {
+        Row: {
+          assinado_em: string | null
+          assinatura_url: string | null
+          contrato_id: string
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          documento_html: string | null
+          documento_storage_path: string | null
+          expira_em: string
+          id: string
+          ip_assinatura: string | null
+          signatario_email: string | null
+          signatario_nome: string
+          signatario_papel: string
+          status: string
+          tenant_id: string
+          tipo_documento: string
+          token: string
+          updated_at: string
+          user_agent_assinatura: string | null
+        }
+        Insert: {
+          assinado_em?: string | null
+          assinatura_url?: string | null
+          contrato_id: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          documento_html?: string | null
+          documento_storage_path?: string | null
+          expira_em?: string
+          id?: string
+          ip_assinatura?: string | null
+          signatario_email?: string | null
+          signatario_nome: string
+          signatario_papel?: string
+          status?: string
+          tenant_id: string
+          tipo_documento?: string
+          token?: string
+          updated_at?: string
+          user_agent_assinatura?: string | null
+        }
+        Update: {
+          assinado_em?: string | null
+          assinatura_url?: string | null
+          contrato_id?: string
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          documento_html?: string | null
+          documento_storage_path?: string | null
+          expira_em?: string
+          id?: string
+          ip_assinatura?: string | null
+          signatario_email?: string | null
+          signatario_nome?: string
+          signatario_papel?: string
+          status?: string
+          tenant_id?: string
+          tipo_documento?: string
+          token?: string
+          updated_at?: string
+          user_agent_assinatura?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiencia_assinatura_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_comentarios: {
         Row: {
           autor_avatar: string | null
@@ -16936,6 +17013,10 @@ export type Database = {
           tipo: string
           token: string
         }[]
+      }
+      buscar_experiencia_assinatura_link: {
+        Args: { p_token: string }
+        Returns: Json
       }
       buscar_ponto_link_por_token: { Args: { p_token: string }; Returns: Json }
       buscar_profissionais_proximos: {
