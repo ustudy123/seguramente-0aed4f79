@@ -57,7 +57,7 @@ export default function ContratosExperiencia() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [selectedContrato, setSelectedContrato] = useState<ContratoExperiencia | null>(null);
-  const [modalAction, setModalAction] = useState<"prorrogar" | "efetivar" | "encerrar" | "detalhes" | null>(null);
+  const [modalAction, setModalAction] = useState<"prorrogar" | "efetivar" | "encerrar" | "detalhes" | "documento" | null>(null);
 
   // Prorrogação form
   const [diasProrrogacao, setDiasProrrogacao] = useState(45);
