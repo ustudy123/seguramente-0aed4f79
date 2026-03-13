@@ -266,11 +266,46 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
             </div>
           )}
 
-          {/* Alerta convite pendente */}
-          {usuario.status === "pendente_convite" && (
-            <div className="mt-3 flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
-              <Mail className="w-4 h-4 shrink-0" />
-              <span>Este usuário ainda não recebeu o convite de ativação.</span>
+          {/* Alerta convite pendente + opção de definir senha */}
+          {convitePendente && (
+            <div className="mt-3 space-y-2">
+              <div className="flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
+                <Mail className="w-4 h-4 shrink-0" />
+                <span className="flex-1">
+                  {usuario.status === "pendente_convite"
+                    ? "Este usuário ainda não recebeu o convite de ativação."
+                    : "Aguardando ativação pelo usuário."}
+                </span>
+                {!showSenhaForm && (
+                  <Button size="sm" variant="outline" className="shrink-0 text-xs h-7 gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={() => setShowSenhaForm(true)}>
+                    <Key className="w-3 h-3" /> Definir senha
+                  </Button>
+                )}
+              </div>
+              {showSenhaForm && (
+                <div className="p-3 border border-primary/20 rounded-lg bg-primary/5 space-y-2">
+                  <p className="text-sm font-medium">Definir senha de acesso</p>
+                  <p className="text-xs text-muted-foreground">O usuário poderá fazer login imediatamente com esta senha e alterá-la depois.</p>
+                  <Input
+                    type="password"
+                    value={novaSenha}
+                    onChange={e => setNovaSenha(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => setPasswordMutation.mutate()}
+                      disabled={setPasswordMutation.isPending || novaSenha.length < 6}>
+                      {setPasswordMutation.isPending && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+                      <Key className="w-3 h-3 mr-1" /> Confirmar senha
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setShowSenhaForm(false); setNovaSenha(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
