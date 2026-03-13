@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExperienciaConfigForm } from "@/components/experiencia/ExperienciaConfigForm";
 import { ExperienciaDocGenerator } from "@/components/experiencia/ExperienciaDocGenerator";
+import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
