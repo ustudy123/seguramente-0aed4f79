@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User, Building2, Link2, History, AlertTriangle, CheckCircle2,
   Plus, Trash2, Shield, Ban, RotateCcw, Loader2, Pencil, Save, X,
-  Mail, Send, XCircle,
+  Mail, Send, XCircle, Key,
 } from "lucide-react";
 import {
   UsuarioBase, UsuarioVinculo, TIPO_USUARIO_LABELS, VINCULO_STATUS_LABELS,
@@ -27,6 +27,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { cleanCpf, formatCpf } from "@/lib/cpf";
 
@@ -59,6 +60,29 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [motivoBloqueio, setMotivoBloqueio] = useState("");
   const [showBloqueioForm, setShowBloqueioForm] = useState(false);
 
+  // Definir senha
+  const [showSenhaForm, setShowSenhaForm] = useState(false);
+  const [novaSenha, setNovaSenha] = useState("");
+  const queryClient = useQueryClient();
+
+  const setPasswordMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("manage-tenant-users", {
+        body: { action: "set_password", userId: usuario.auth_user_id, password: novaSenha },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Senha definida com sucesso! O usuário já pode fazer login.");
+      setShowSenhaForm(false);
+      setNovaSenha("");
+      queryClient.invalidateQueries({ queryKey: ["tenant-users"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
   // Novo vínculo
   const [addingVinculo, setAddingVinculo] = useState(false);
   const [novaEmpresaId, setNovaEmpresaId] = useState("");
@@ -242,11 +266,46 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
             </div>
           )}
 
-          {/* Alerta convite pendente */}
-          {usuario.status === "pendente_convite" && (
-            <div className="mt-3 flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
-              <Mail className="w-4 h-4 shrink-0" />
-              <span>Este usuário ainda não recebeu o convite de ativação.</span>
+          {/* Alerta convite pendente + opção de definir senha */}
+          {convitePendente && (
+            <div className="mt-3 space-y-2">
+              <div className="flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
+                <Mail className="w-4 h-4 shrink-0" />
+                <span className="flex-1">
+                  {usuario.status === "pendente_convite"
+                    ? "Este usuário ainda não recebeu o convite de ativação."
+                    : "Aguardando ativação pelo usuário."}
+                </span>
+                {!showSenhaForm && (
+                  <Button size="sm" variant="outline" className="shrink-0 text-xs h-7 gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={() => setShowSenhaForm(true)}>
+                    <Key className="w-3 h-3" /> Definir senha
+                  </Button>
+                )}
+              </div>
+              {showSenhaForm && (
+                <div className="p-3 border border-primary/20 rounded-lg bg-primary/5 space-y-2">
+                  <p className="text-sm font-medium">Definir senha de acesso</p>
+                  <p className="text-xs text-muted-foreground">O usuário poderá fazer login imediatamente com esta senha e alterá-la depois.</p>
+                  <Input
+                    type="password"
+                    value={novaSenha}
+                    onChange={e => setNovaSenha(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => setPasswordMutation.mutate()}
+                      disabled={setPasswordMutation.isPending || novaSenha.length < 6}>
+                      {setPasswordMutation.isPending && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+                      <Key className="w-3 h-3 mr-1" /> Confirmar senha
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setShowSenhaForm(false); setNovaSenha(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
