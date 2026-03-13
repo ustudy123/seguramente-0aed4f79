@@ -361,12 +361,25 @@ export default function ContratosExperiencia() {
                               </TooltipTrigger>
                               <TooltipContent>Encerrar</TooltipContent>
                             </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={() => openAction(contrato, "documento")}>
+                                  <FileText className="w-3.5 h-3.5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Gerar Documento</TooltipContent>
+                            </Tooltip>
                           </TooltipProvider>
                         </div>
                       ) : (
-                        <Button variant="ghost" size="sm" onClick={() => openAction(contrato, "detalhes")}>
-                          <History className="w-3.5 h-3.5 mr-1" /> Ver
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => openAction(contrato, "documento")}>
+                            <FileText className="w-3.5 h-3.5 mr-1" /> Docs
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => openAction(contrato, "detalhes")}>
+                            <History className="w-3.5 h-3.5 mr-1" /> Ver
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
