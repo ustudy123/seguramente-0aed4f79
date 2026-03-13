@@ -42,6 +42,7 @@ import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxFi
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
+  { value: "clt_experiencia", label: "CLT – Experiência" },
   { value: "prolabore", label: "Pró-labore (Sócio)" },
   { value: "pj", label: "Pessoa Jurídica (PJ)" },
   { value: "estagiario", label: "Estagiário" },
