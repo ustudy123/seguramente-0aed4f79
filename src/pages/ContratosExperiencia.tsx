@@ -134,6 +134,18 @@ export default function ContratosExperiencia() {
         <p className="text-muted-foreground">Gestão de contratos com prazos, alertas e ações legais integradas</p>
       </motion.div>
 
+      <Tabs defaultValue="painel" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="painel" className="gap-1.5"><FileText className="w-4 h-4" /> Painel</TabsTrigger>
+          <TabsTrigger value="config" className="gap-1.5"><Settings2 className="w-4 h-4" /> Configuração da Empresa</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="config" className="space-y-0">
+          <ExperienciaConfigForm />
+        </TabsContent>
+
+        <TabsContent value="painel" className="space-y-6">
+
       {/* Explicação */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <Card className="border-primary/20 bg-primary/5">
