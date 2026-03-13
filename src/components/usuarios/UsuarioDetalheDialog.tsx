@@ -355,9 +355,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
             </div>
           )}
 
-          {/* Alerta convite pendente + opção de definir senha */}
+          {/* Alerta convite pendente */}
           {convitePendente && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3">
               <div className="flex gap-2 items-center p-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
                 <Mail className="w-4 h-4 shrink-0" />
                 <span className="flex-1">
@@ -365,14 +365,19 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                     ? "Este usuário ainda não recebeu o convite de ativação."
                     : "Aguardando ativação pelo usuário."}
                 </span>
-                {!showSenhaForm && (
-                  <Button size="sm" variant="outline" className="shrink-0 text-xs h-7 gap-1 border-primary/30 text-primary hover:bg-primary/10"
-                    onClick={() => setShowSenhaForm(true)}>
-                    <Key className="w-3 h-3" /> Definir senha
-                  </Button>
-                )}
               </div>
-              {showSenhaForm && (
+            </div>
+          )}
+
+          {/* Definir senha provisória - disponível para qualquer status */}
+          {!isBloqueado && (
+            <div className="mt-3 space-y-2">
+              {!showSenhaForm ? (
+                <Button size="sm" variant="outline" className="text-xs h-7 gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                  onClick={() => setShowSenhaForm(true)}>
+                  <Key className="w-3 h-3" /> Definir senha provisória
+                </Button>
+              ) : (
                 <div className="p-3 border border-primary/20 rounded-lg bg-primary/5 space-y-2">
                   <p className="text-sm font-medium">Definir senha de acesso</p>
                   <p className="text-xs text-muted-foreground">O usuário poderá fazer login imediatamente com esta senha e alterá-la depois.</p>
