@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.seed-test-user]
 verify_jwt = false
+
+[functions.ai-experiencia-doc]
+verify_jwt = false
