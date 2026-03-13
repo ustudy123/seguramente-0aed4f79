@@ -5,8 +5,10 @@ import { ptBR } from "date-fns/locale";
 import {
   FileText, Clock, CheckCircle2, XCircle, ArrowRightLeft,
   Search, AlertTriangle, User, Calendar, Building2, ChevronDown,
-  Shield, Loader2, History,
+  Shield, Loader2, History, Settings2,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExperienciaConfigForm } from "@/components/experiencia/ExperienciaConfigForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
