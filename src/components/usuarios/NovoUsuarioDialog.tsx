@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cleanCpf, formatCpf, validateCpf } from "@/lib/cpf";
 import { CpfInput } from "@/components/ui/cpf-input";
+import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
 
 const schema = z.object({
   nome_completo: z.string().min(3, "Nome obrigatório"),
@@ -155,6 +156,22 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
     if (etapa === 2) {
       try {
+        const appRole = mapTipoUsuarioToAppRole(data.tipo_usuario);
+        const { data: authData, error: authError } = await supabase.functions.invoke("invite-tenant-user", {
+          body: {
+            email: data.email_principal,
+            nomeCompleto: data.nome_completo,
+            role: appRole,
+            method: "invite",
+          },
+        });
+
+        if (authError) throw new Error(authError.message);
+        if ((authData as any)?.error) throw new Error((authData as any).error);
+
+        const authUserId = (authData as any)?.userId as string | undefined;
+        if (!authUserId) throw new Error("Não foi possível provisionar o acesso no sistema.");
+
         const usuario = await createUsuario.mutateAsync({
           nome_completo: data.nome_completo,
           nome_social: data.nome_social || undefined,
@@ -166,7 +183,9 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           data_nascimento: data.data_nascimento || undefined,
           tipo_usuario: data.tipo_usuario as UsuarioTipo,
           observacoes: data.observacoes,
-          status: "pendente_convite",
+          auth_user_id: authUserId,
+          status: "convite_enviado",
+          convite_enviado_em: new Date().toISOString(),
           qualidade_score: "incompleto",
           qualidade_pct: 0,
         });
@@ -183,7 +202,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         setNovoUsuarioId(usuario.id);
         setEtapa(3);
       } catch (e: any) {
-        toast.error("Erro ao cadastrar: " + e.message);
+        toast.error("Erro ao cadastrar: " + (e?.message || "falha inesperada"));
       }
       return;
     }
@@ -466,11 +485,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                 <div className="flex flex-wrap justify-center gap-2">
                   <Badge variant="secondary">Usuário criado</Badge>
                   <Badge variant="secondary">Vínculo ativo</Badge>
-                  <Badge variant="secondary">Convite pendente</Badge>
+                  <Badge variant="secondary">Acesso no Auth criado</Badge>
                   {dadosReaproveitados && <Badge variant="outline" className="text-primary border-primary/30">Dados reaproveitados</Badge>}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Acesse os detalhes do usuário para enviar o convite de ativação.
+                  O convite de acesso já foi enviado automaticamente para o e-mail informado.
                 </p>
               </div>
             )}
