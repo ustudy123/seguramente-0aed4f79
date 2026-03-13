@@ -170,12 +170,13 @@ export function EquipeTab() {
     <>
       <Card>
         <CardHeader>
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" /> Equipe
-            </CardTitle>
-            <CardDescription>Gerencie os usuários com acesso ao sistema</CardDescription>
-          </div>
+          <div className="flex items-center justify-between w-full">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" /> Equipe
+              </CardTitle>
+              <CardDescription>Gerencie os usuários com acesso ao sistema</CardDescription>
+            </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-2">
