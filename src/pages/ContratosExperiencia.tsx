@@ -376,6 +376,9 @@ export default function ContratosExperiencia() {
         </Table>
       </motion.div>
 
+        </TabsContent>
+      </Tabs>
+
       {/* ===== MODAIS ===== */}
 
       {/* PRORROGAR */}
