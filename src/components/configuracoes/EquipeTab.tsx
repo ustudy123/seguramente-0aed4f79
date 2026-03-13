@@ -177,6 +177,11 @@ export function EquipeTab() {
             <CardDescription>Gerencie os usuários com acesso ao sistema</CardDescription>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <UserPlus className="h-4 w-4" /> Adicionar Usuário
+              </Button>
+            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Usuário</DialogTitle>
