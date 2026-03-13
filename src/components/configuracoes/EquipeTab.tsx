@@ -160,7 +160,7 @@ export function EquipeTab() {
   });
 
   const resetForm = () => {
-    setNome(""); setEmail(""); setRole("user"); setMethod("invite"); setPassword(""); setOpen(false);
+    setNome(""); setEmail(""); setRole("user"); setMethod("password"); setPassword(""); setOpen(false);
   };
 
   const isSelf = (userId: string) => user?.id === userId;
