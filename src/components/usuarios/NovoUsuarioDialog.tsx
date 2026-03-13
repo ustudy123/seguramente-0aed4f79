@@ -485,11 +485,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                 <div className="flex flex-wrap justify-center gap-2">
                   <Badge variant="secondary">Usuário criado</Badge>
                   <Badge variant="secondary">Vínculo ativo</Badge>
-                  <Badge variant="secondary">Convite pendente</Badge>
+                  <Badge variant="secondary">Acesso no Auth criado</Badge>
                   {dadosReaproveitados && <Badge variant="outline" className="text-primary border-primary/30">Dados reaproveitados</Badge>}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Acesse os detalhes do usuário para enviar o convite de ativação.
+                  O convite de acesso já foi enviado automaticamente para o e-mail informado.
                 </p>
               </div>
             )}
