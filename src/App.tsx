@@ -62,6 +62,7 @@ import LandingPage from "./pages/LandingPage";
 import TermosDeUso from "./pages/TermosDeUso";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import AssinaturaContrato from "./pages/AssinaturaContrato";
+import ExperienciaAssinatura from "./pages/ExperienciaAssinatura";
 import AceiteDocumento from "./pages/AceiteDocumento";
 import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
