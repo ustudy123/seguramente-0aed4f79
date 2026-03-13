@@ -3529,6 +3529,72 @@ export type Database = {
           },
         ]
       }
+      empresa_experiencia_config: {
+        Row: {
+          alerta_15_dias: boolean
+          alerta_2_dias: boolean
+          alerta_7_dias: boolean
+          clausula_assecuratoria_padrao: boolean
+          created_at: string
+          dias_antecedencia_acao: number
+          duracao_primeiro_periodo: number
+          duracao_segundo_periodo: number | null
+          empresa_id: string
+          id: string
+          modelo_periodos: string
+          politica_interna: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          alerta_15_dias?: boolean
+          alerta_2_dias?: boolean
+          alerta_7_dias?: boolean
+          clausula_assecuratoria_padrao?: boolean
+          created_at?: string
+          dias_antecedencia_acao?: number
+          duracao_primeiro_periodo?: number
+          duracao_segundo_periodo?: number | null
+          empresa_id: string
+          id?: string
+          modelo_periodos?: string
+          politica_interna?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          alerta_15_dias?: boolean
+          alerta_2_dias?: boolean
+          alerta_7_dias?: boolean
+          clausula_assecuratoria_padrao?: boolean
+          created_at?: string
+          dias_antecedencia_acao?: number
+          duracao_primeiro_periodo?: number
+          duracao_segundo_periodo?: number | null
+          empresa_id?: string
+          id?: string
+          modelo_periodos?: string
+          politica_interna?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_experiencia_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_experiencia_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresa_obrigacoes: {
         Row: {
           acao_gerada_id: string | null

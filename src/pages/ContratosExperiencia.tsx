@@ -5,8 +5,10 @@ import { ptBR } from "date-fns/locale";
 import {
   FileText, Clock, CheckCircle2, XCircle, ArrowRightLeft,
   Search, AlertTriangle, User, Calendar, Building2, ChevronDown,
-  Shield, Loader2, History,
+  Shield, Loader2, History, Settings2,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExperienciaConfigForm } from "@/components/experiencia/ExperienciaConfigForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -131,6 +133,18 @@ export default function ContratosExperiencia() {
         <h1 className="text-2xl font-bold text-foreground">Contratos de Experiência</h1>
         <p className="text-muted-foreground">Gestão de contratos com prazos, alertas e ações legais integradas</p>
       </motion.div>
+
+      <Tabs defaultValue="painel" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="painel" className="gap-1.5"><FileText className="w-4 h-4" /> Painel</TabsTrigger>
+          <TabsTrigger value="config" className="gap-1.5"><Settings2 className="w-4 h-4" /> Configuração da Empresa</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="config" className="space-y-0">
+          <ExperienciaConfigForm />
+        </TabsContent>
+
+        <TabsContent value="painel" className="space-y-6">
 
       {/* Explicação */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
@@ -361,6 +375,9 @@ export default function ContratosExperiencia() {
           </TableBody>
         </Table>
       </motion.div>
+
+        </TabsContent>
+      </Tabs>
 
       {/* ===== MODAIS ===== */}
 
