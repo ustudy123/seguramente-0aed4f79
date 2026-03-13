@@ -585,6 +585,15 @@ export default function ContratosExperiencia() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* GERAR DOCUMENTO */}
+      {selectedContrato && (
+        <ExperienciaDocGenerator
+          contrato={selectedContrato}
+          open={modalAction === "documento"}
+          onClose={() => setModalAction(null)}
+        />
+      )}
     </div>
   );
 }
