@@ -53,6 +53,7 @@ export default function ContratosExperiencia() {
     efetivar, efetivando,
     encerrar, encerrando,
   } = useContratosExperiencia();
+  const { enviarParaHub } = useEnviarParaHub();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
