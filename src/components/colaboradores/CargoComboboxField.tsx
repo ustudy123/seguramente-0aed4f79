@@ -51,7 +51,7 @@ export function CargoComboboxField({ value, onChange, disabled }: CargoComboboxF
     }
     setIsSaving(true);
     try {
-      await createCargo.mutateAsync({ nome: novoNome.trim(), ativo: true, descricao: null, departamento_id: null, nivel: null, faixa_salarial_min: null, faixa_salarial_max: null, periodicidade_exame_meses: null, exames_obrigatorios: null });
+      await createCargo.mutateAsync({ nome: novoNome.trim(), ativo: true, descricao: null, departamento_id: null, nivel: null, faixa_salarial_min: null, faixa_salarial_max: null, periodicidade_exame_meses: null, exames_obrigatorios: null, insalubridade: false, insalubridade_grau: null, insalubridade_agente_nocivo: null, periculosidade: false, periculosidade_tipo: null, aposentadoria_especial: false, aposentadoria_especial_anos: null });
       onChange(novoNome.trim());
       setShowNovoCargo(false);
       setNovoNome("");

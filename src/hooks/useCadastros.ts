@@ -27,6 +27,14 @@ export interface Cargo {
   faixa_salarial_max: number | null;
   periodicidade_exame_meses: number | null;
   exames_obrigatorios: string[] | null;
+  // SST - Condições Especiais
+  insalubridade: boolean;
+  insalubridade_grau: string | null;
+  insalubridade_agente_nocivo: string | null;
+  periculosidade: boolean;
+  periculosidade_tipo: string | null;
+  aposentadoria_especial: boolean;
+  aposentadoria_especial_anos: number | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;
