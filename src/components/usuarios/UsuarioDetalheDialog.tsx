@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { cleanCpf, formatCpf } from "@/lib/cpf";
+import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
 
 interface Props {
   usuario: UsuarioBase;
