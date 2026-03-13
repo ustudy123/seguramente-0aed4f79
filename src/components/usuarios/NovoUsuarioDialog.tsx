@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cleanCpf, formatCpf, validateCpf } from "@/lib/cpf";
 import { CpfInput } from "@/components/ui/cpf-input";
+import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
 
 const schema = z.object({
   nome_completo: z.string().min(3, "Nome obrigatório"),
