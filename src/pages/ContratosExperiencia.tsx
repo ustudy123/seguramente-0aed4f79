@@ -132,6 +132,37 @@ export default function ContratosExperiencia() {
         <p className="text-muted-foreground">Gestão de contratos com prazos, alertas e ações legais integradas</p>
       </motion.div>
 
+      {/* Explicação */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex gap-3">
+              <div className="shrink-0 mt-0.5">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Como funciona esta tela?</p>
+                <p>
+                  Esta tela centraliza a <strong>gestão dos contratos de experiência</strong> (CLT art. 445) de todos os colaboradores.
+                  Os contratos aparecem aqui automaticamente quando um colaborador é admitido com tipo de contrato{" "}
+                  <strong>"CLT – Contrato de Experiência"</strong> no módulo de Admissão/Pessoas.
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Origem dos dados:</strong> as informações vêm do cadastro de admissão — nome, cargo, data de admissão, duração do período e cláusula assecuratória.</li>
+                  <li><strong>Duração máxima:</strong> 90 dias, podendo ser dividida em dois períodos (ex.: 45 + 45). Apenas uma prorrogação é permitida.</li>
+                  <li><strong>Alertas automáticos:</strong> o sistema notifica com 15, 7 e 2 dias de antecedência do vencimento para que a decisão (efetivar, prorrogar ou encerrar) seja tomada no prazo.</li>
+                  <li><strong>Ações disponíveis:</strong> Prorrogar (se ainda permitido), Efetivar (converte para prazo indeterminado) ou Encerrar (rescisão por término ou antecipada).</li>
+                  <li><strong>Segurança jurídica:</strong> todas as ações são registradas com histórico, data, responsável e fundamentação legal, impedindo alterações indevidas.</li>
+                </ul>
+                <p className="text-xs italic">
+                  Se nenhum contrato aparece na lista, verifique se há admissões cadastradas com tipo "CLT – Contrato de Experiência" no módulo de Admissão.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* KPI Cards */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-4 gap-4">
