@@ -68,15 +68,57 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
 
   const setPasswordMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("manage-tenant-users", {
-        body: { action: "set_password", userId: usuario.auth_user_id, password: novaSenha },
+      if (novaSenha.length < 6) {
+        throw new Error("Senha deve ter no mínimo 6 caracteres");
+      }
+
+      if (usuario.auth_user_id) {
+        const { data, error } = await supabase.functions.invoke("manage-tenant-users", {
+          body: { action: "set_password", userId: usuario.auth_user_id, password: novaSenha },
+        });
+        if (error) throw new Error(error.message);
+        if (data?.error) throw new Error(data.error);
+        return { mode: "updated" as const };
+      }
+
+      const appRole = mapTipoUsuarioToAppRole(usuario.tipo_usuario);
+      const { data: provisionData, error: provisionError } = await supabase.functions.invoke("invite-tenant-user", {
+        body: {
+          email: usuario.email_principal,
+          nomeCompleto: usuario.nome_completo,
+          role: appRole,
+          method: "password",
+          password: novaSenha,
+        },
       });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      return data;
+
+      if (provisionError) throw new Error(provisionError.message);
+      if ((provisionData as any)?.error) throw new Error((provisionData as any).error);
+
+      const createdAuthUserId = (provisionData as any)?.userId as string | undefined;
+      if (!createdAuthUserId) {
+        throw new Error("Falha ao criar acesso no sistema para este usuário.");
+      }
+
+      const { error: syncError } = await (supabase as any)
+        .from("usuarios_base")
+        .update({
+          auth_user_id: createdAuthUserId,
+          email_validado: true,
+          status: "ativo",
+          convite_aceito_em: new Date().toISOString(),
+        })
+        .eq("id", usuario.id);
+
+      if (syncError) throw new Error(syncError.message);
+      return { mode: "provisioned" as const };
     },
-    onSuccess: () => {
-      toast.success("Senha definida com sucesso! O usuário já pode fazer login.");
+    onSuccess: (result) => {
+      toast.success(
+        result.mode === "provisioned"
+          ? "Acesso criado e senha definida com sucesso!"
+          : "Senha definida com sucesso! O usuário já pode fazer login."
+      );
       setShowSenhaForm(false);
       setNovaSenha("");
       queryClient.invalidateQueries({ queryKey: ["tenant-users"] });
