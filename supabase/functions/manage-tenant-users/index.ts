@@ -234,6 +234,55 @@ serve(async (req) => {
     return json({ ok: true });
   }
 
+  // ─── SET PASSWORD (for invite-pending users) ───
+  if (action === "set_password") {
+    const { userId, password } = payload as { userId: string; password: string; action: string };
+    if (!userId || !password) return json({ error: "userId e password obrigatórios" }, 400);
+    if (password.length < 6) return json({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
+
+    // Verify target user belongs to same tenant
+    const { data: targetProfile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (!targetProfile) return json({ error: "Usuário não pertence a este tenant" }, 403);
+
+    // Cannot set password for owner (unless superadmin)
+    const { data: targetRoles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (targetRoles?.some((r) => r.role === "owner") && !superCheck) {
+      return json({ error: "Não é possível alterar senha do owner" }, 403);
+    }
+
+    // Update password and confirm email
+    const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
+      password,
+      email_confirm: true,
+    });
+    if (updateError) return json({ error: updateError.message }, 500);
+
+    // Audit log
+    const { data: targetProfileData } = await admin.from("profiles").select("nome_completo").eq("user_id", userId).single();
+    await admin.from("audit_logs").insert({
+      tenant_id: tenantId,
+      user_id: callerId,
+      user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
+      user_email: userData.user.email,
+      action: "user.password_set",
+      module: "equipe",
+      description: `Definiu senha para "${targetProfileData?.nome_completo || userId}"`,
+      target_type: "user",
+      target_id: userId,
+      target_name: targetProfileData?.nome_completo || userId,
+    });
+
+    return json({ ok: true });
+  }
+
   // ─── RESEND INVITE ───
   if (action === "resend_invite") {
     const { userId } = payload as { userId: string; action: string };
