@@ -439,6 +439,45 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 )}
               />
 
+              {/* SST Conditions Banner - inherited from cargo */}
+              {(() => {
+                const cargoSelecionado = cargos.find(c => c.nome === form.watch("cargo"));
+                if (!cargoSelecionado || (!cargoSelecionado.insalubridade && !cargoSelecionado.periculosidade && !cargoSelecionado.aposentadoria_especial)) return null;
+                return (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      Condições Especiais (herdadas da função)
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cargoSelecionado.insalubridade && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
+                          <ShieldAlert className="w-3 h-3" />
+                          Insalubridade {cargoSelecionado.insalubridade_grau === 'minimo' ? '10%' : cargoSelecionado.insalubridade_grau === 'medio' ? '20%' : '40%'}
+                        </span>
+                      )}
+                      {cargoSelecionado.periculosidade && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                          <Zap className="w-3 h-3" />
+                          Periculosidade 30%
+                        </span>
+                      )}
+                      {cargoSelecionado.aposentadoria_especial && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium">
+                          <Clock className="w-3 h-3" />
+                          Apos. Especial {cargoSelecionado.aposentadoria_especial_anos}a
+                        </span>
+                      )}
+                    </div>
+                    {cargoSelecionado.insalubridade && cargoSelecionado.periculosidade && (
+                      <p className="text-[11px] text-muted-foreground">
+                        ⚖️ Será aplicado o adicional mais vantajoso (art. 193, §2º CLT)
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Gestor Imediato — linha inteira */}
               <FormField
                 control={form.control}
