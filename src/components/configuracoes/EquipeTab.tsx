@@ -65,7 +65,7 @@ export function EquipeTab() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("user");
-  const [method, setMethod] = useState<"invite" | "password">("invite");
+  const [method, setMethod] = useState<"invite" | "password">("password");
   const [password, setPassword] = useState("");
 
   // Edit role dialog
@@ -160,7 +160,7 @@ export function EquipeTab() {
   });
 
   const resetForm = () => {
-    setNome(""); setEmail(""); setRole("user"); setMethod("invite"); setPassword(""); setOpen(false);
+    setNome(""); setEmail(""); setRole("user"); setMethod("password"); setPassword(""); setOpen(false);
   };
 
   const isSelf = (userId: string) => user?.id === userId;
@@ -170,13 +170,19 @@ export function EquipeTab() {
     <>
       <Card>
         <CardHeader>
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" /> Equipe
-            </CardTitle>
-            <CardDescription>Gerencie os usuários com acesso ao sistema</CardDescription>
-          </div>
+          <div className="flex items-center justify-between w-full">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" /> Equipe
+              </CardTitle>
+              <CardDescription>Gerencie os usuários com acesso ao sistema</CardDescription>
+            </div>
           <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <UserPlus className="h-4 w-4" /> Adicionar Usuário
+              </Button>
+            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Usuário</DialogTitle>
@@ -238,6 +244,7 @@ export function EquipeTab() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </CardHeader>
 
         <CardContent>
