@@ -101,6 +101,9 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             nome: titulo, ativo: true, descricao: null, departamento_id: null,
             nivel: null, faixa_salarial_min: null, faixa_salarial_max: null,
             periodicidade_exame_meses: null, exames_obrigatorios: null,
+            insalubridade: false, insalubridade_grau: null, insalubridade_agente_nocivo: null,
+            periculosidade: false, periculosidade_tipo: null,
+            aposentadoria_especial: false, aposentadoria_especial_anos: null,
           });
           toast.info(`Função "${titulo}" cadastrada automaticamente no módulo de Cadastros`);
         } catch { /* handled */ }
