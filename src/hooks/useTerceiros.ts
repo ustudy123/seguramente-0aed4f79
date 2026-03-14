@@ -277,6 +277,7 @@ export function useTerceiros() {
       data_realizacao?: string;
       carga_horaria?: number;
       data_validade?: string;
+      trilha_id?: string;
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
       let certUrl: string | null = null;
@@ -308,6 +309,7 @@ export function useTerceiros() {
           certificado_nome: certNome,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
+          trilha_id: params.trilha_id || null,
         } as never);
       if (error) throw error;
     },

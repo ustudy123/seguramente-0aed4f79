@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Route } from "lucide-react";
 import { TIPOS_TREINAMENTO } from "@/types/terceiros";
+import { useTrilhas } from "@/hooks/useTrilhas";
 
 interface Props {
   open: boolean;
@@ -19,6 +20,7 @@ interface Props {
     data_realizacao?: string;
     carga_horaria?: number;
     data_validade?: string;
+    trilha_id?: string;
   }) => Promise<void>;
   terceiroId: string;
   trabalhadorId: string;
@@ -32,6 +34,9 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
   const [cargaHoraria, setCargaHoraria] = useState("");
   const [dataValidade, setDataValidade] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [trilhaId, setTrilhaId] = useState("");
+  const { trilhas } = useTrilhas();
+  const trilhasAtivas = trilhas.filter((t) => t.status === "ativa");
 
   const handleSubmit = async () => {
     if (!tipo) return;
@@ -44,6 +49,7 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
       data_realizacao: dataRealizacao || undefined,
       carga_horaria: cargaHoraria ? parseInt(cargaHoraria) : undefined,
       data_validade: dataValidade || undefined,
+      trilha_id: trilhaId || undefined,
     });
     setTipo("");
     setDescricao("");
@@ -51,6 +57,7 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
     setCargaHoraria("");
     setDataValidade("");
     setFile(null);
+    setTrilhaId("");
     onOpenChange(false);
   };
 
@@ -89,6 +96,20 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
               <Label>Validade</Label>
               <Input type="date" value={dataValidade} onChange={(e) => setDataValidade(e.target.value)} />
             </div>
+          </div>
+          <div>
+            <Label className="flex items-center gap-1">
+              <Route className="w-3.5 h-3.5" /> Conectar a uma Trilha
+            </Label>
+            <Select value={trilhaId} onValueChange={setTrilhaId}>
+              <SelectTrigger><SelectValue placeholder="Nenhuma (opcional)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhuma</SelectItem>
+                {trilhasAtivas.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Certificado (anexo)</Label>
