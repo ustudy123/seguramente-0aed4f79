@@ -15673,6 +15673,7 @@ export type Database = {
           terceiro_id: string
           tipo: string
           trabalhador_id: string
+          trilha_id: string | null
           updated_at: string
         }
         Insert: {
@@ -15691,6 +15692,7 @@ export type Database = {
           terceiro_id: string
           tipo: string
           trabalhador_id: string
+          trilha_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -15709,6 +15711,7 @@ export type Database = {
           terceiro_id?: string
           tipo?: string
           trabalhador_id?: string
+          trilha_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -15731,6 +15734,13 @@ export type Database = {
             columns: ["trabalhador_id"]
             isOneToOne: false
             referencedRelation: "terceiro_trabalhadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terceiro_treinamentos_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
             referencedColumns: ["id"]
           },
         ]

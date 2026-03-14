@@ -1,0 +1,1 @@
+ALTER TABLE public.terceiro_treinamentos ADD COLUMN trilha_id uuid REFERENCES public.trilhas(id) ON DELETE SET NULL DEFAULT NULL;
