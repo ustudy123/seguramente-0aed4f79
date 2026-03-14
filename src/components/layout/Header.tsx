@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
-import { HumorSelector } from "@/components/humor/HumorSelector";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 
 export const Header = () => {
