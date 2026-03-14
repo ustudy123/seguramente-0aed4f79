@@ -3,10 +3,11 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -25,14 +26,22 @@ serve(async (req) => {
   const jwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!jwt) return json({ error: "Missing Authorization" }, 401);
 
+  // Use anon client with caller's JWT to validate via getClaims
+  const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(jwt);
+  if (claimsError || !claimsData?.claims) return json({ error: "Invalid token" }, 401);
+  const callerId = claimsData.claims.sub as string;
+
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Validate caller
-  const { data: userData, error: userError } = await admin.auth.getUser(jwt);
-  if (userError || !userData?.user) return json({ error: "Invalid token" }, 401);
-  const callerId = userData.user.id;
+  // Get full user data for audit logs
+  const { data: userData } = await admin.auth.admin.getUserById(callerId);
 
   // Get caller's tenant
   const { data: callerProfile } = await admin
