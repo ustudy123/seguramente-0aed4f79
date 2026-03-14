@@ -245,7 +245,7 @@ serve(async (req) => {
 
   // ─── SET PASSWORD (for invite-pending users) ───
   if (action === "set_password") {
-    const { userId, password } = payload as { userId: string; password: string; action: string };
+    const { userId, password, emailReal } = payload as { userId: string; password: string; emailReal?: string; action: string };
     if (!userId || !password) return json({ error: "userId e password obrigatórios" }, 400);
     if (password.length < 6) return json({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
 
@@ -267,12 +267,25 @@ serve(async (req) => {
       return json({ error: "Não é possível alterar senha do owner" }, 403);
     }
 
-    // Update password and confirm email
-    const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
-      password,
-      email_confirm: true,
-    });
+    // Check if the auth email is a temporary placeholder and update it
+    const { data: authUserData } = await admin.auth.admin.getUserById(userId);
+    const currentEmail = authUserData?.user?.email || "";
+    const isTempEmail = currentEmail.endsWith("@importado.temp") || currentEmail.includes("@importado.");
+    const targetEmail = emailReal || (isTempEmail ? null : currentEmail);
+
+    const updatePayload: Record<string, unknown> = { password, email_confirm: true };
+    if (isTempEmail && emailReal) {
+      updatePayload.email = emailReal;
+    }
+
+    // Update password (and email if needed) and confirm
+    const { error: updateError } = await admin.auth.admin.updateUserById(userId, updatePayload as Parameters<typeof admin.auth.admin.updateUserById>[1]);
     if (updateError) return json({ error: updateError.message }, 500);
+
+    // Also update email_validado in usuarios_base if email was fixed
+    if (isTempEmail && emailReal) {
+      await admin.from("usuarios_base").update({ email_validado: true, status: "ativo" }).eq("auth_user_id", userId);
+    }
 
     // Audit log
     const { data: targetProfileData } = await admin.from("profiles").select("nome_completo").eq("user_id", userId).single();
