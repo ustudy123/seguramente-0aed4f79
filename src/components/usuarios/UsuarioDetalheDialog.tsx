@@ -77,7 +77,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
 
       if (usuario.auth_user_id) {
         const { data, error } = await supabase.functions.invoke("manage-tenant-users", {
-          body: { action: "set_password", userId: usuario.auth_user_id, password: novaSenha },
+          body: { action: "set_password", userId: usuario.auth_user_id, password: novaSenha, emailReal: usuario.email_principal },
         });
         if (error) throw new Error(error.message);
         if (data?.error) throw new Error(data.error);
