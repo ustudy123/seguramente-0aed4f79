@@ -320,8 +320,8 @@ serve(async (req) => {
     await admin.from("audit_logs").insert({
       tenant_id: tenantId,
       user_id: callerId,
-      user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
-      user_email: userData.user.email,
+      user_name: userData?.user?.user_metadata?.nome_completo || userData?.user?.email,
+      user_email: userData?.user?.email,
       action: "user.invite_resent",
       module: "equipe",
       description: `Reenviou convite para "${email}"`,
