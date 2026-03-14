@@ -490,6 +490,27 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                       <Input value={editForm.nome_completo}
                         onChange={e => setEditForm(f => ({ ...f, nome_completo: e.target.value }))} />
                     </div>
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Label>E-mail *</Label>
+                      <Input type="email" value={editForm.email_principal} placeholder="email@exemplo.com"
+                        onChange={e => setEditForm(f => ({ ...f, email_principal: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>CPF</Label>
+                      <CpfInput value={editForm.cpf}
+                        onChange={v => setEditForm(f => ({ ...f, cpf: cleanCpf(v) }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Tipo de Usuário</Label>
+                      <Select value={editForm.tipo_usuario} onValueChange={v => setEditForm(f => ({ ...f, tipo_usuario: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-1.5">
                       <Label>Nome Social</Label>
                       <Input value={editForm.nome_social} placeholder="Como prefere ser chamado(a)"
