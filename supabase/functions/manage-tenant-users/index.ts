@@ -175,8 +175,8 @@ serve(async (req) => {
     await admin.from("audit_logs").insert({
       tenant_id: tenantId,
       user_id: callerId,
-      user_name: userData.user.user_metadata?.nome_completo || userData.user.email,
-      user_email: userData.user.email,
+      user_name: userData?.user?.user_metadata?.nome_completo || userData?.user?.email,
+      user_email: userData?.user?.email,
       action: "user.role_updated",
       module: "equipe",
       description: `Alterou perfil de acesso para "${newRole}"`,
