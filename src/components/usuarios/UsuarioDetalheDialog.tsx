@@ -448,11 +448,14 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                     <Button size="sm" variant="outline" onClick={() => {
                       setEditForm({
                         nome_completo: usuario.nome_completo,
+                        email_principal: usuario.email_principal || "",
+                        cpf: usuario.cpf || "",
                         nome_social: usuario.nome_social || "",
                         telefone_principal: usuario.telefone_principal || "",
                         cargo_funcao: usuario.cargo_funcao || "",
                         matricula: usuario.matricula || "",
                         data_nascimento: usuario.data_nascimento || "",
+                        tipo_usuario: usuario.tipo_usuario || "",
                         observacoes: usuario.observacoes || "",
                       });
                       setEditando(true);
