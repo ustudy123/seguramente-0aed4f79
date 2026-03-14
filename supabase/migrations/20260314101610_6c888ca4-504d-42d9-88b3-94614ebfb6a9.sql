@@ -1,0 +1,1 @@
+ALTER TABLE public.academia_treinamentos ADD COLUMN IF NOT EXISTS video_url text DEFAULT NULL;

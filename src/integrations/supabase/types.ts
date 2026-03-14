@@ -344,6 +344,7 @@ export type Database = {
           tenant_id: string
           titulo: string
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
           banner?: string | null
@@ -365,6 +366,7 @@ export type Database = {
           tenant_id: string
           titulo: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
           banner?: string | null
@@ -386,6 +388,7 @@ export type Database = {
           tenant_id?: string
           titulo?: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
