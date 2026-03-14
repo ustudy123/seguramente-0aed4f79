@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Route } from "lucide-react";
 import { TIPOS_TREINAMENTO } from "@/types/terceiros";
+import { useTrilhas } from "@/hooks/useTrilhas";
 
 interface Props {
   open: boolean;
@@ -19,6 +20,7 @@ interface Props {
     data_realizacao?: string;
     carga_horaria?: number;
     data_validade?: string;
+    trilha_id?: string;
   }) => Promise<void>;
   terceiroId: string;
   trabalhadorId: string;
