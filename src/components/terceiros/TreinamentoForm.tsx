@@ -34,6 +34,9 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
   const [cargaHoraria, setCargaHoraria] = useState("");
   const [dataValidade, setDataValidade] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [trilhaId, setTrilhaId] = useState("");
+  const { trilhas } = useTrilhas();
+  const trilhasAtivas = trilhas.filter((t) => t.status === "ativa");
 
   const handleSubmit = async () => {
     if (!tipo) return;
@@ -46,6 +49,7 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
       data_realizacao: dataRealizacao || undefined,
       carga_horaria: cargaHoraria ? parseInt(cargaHoraria) : undefined,
       data_validade: dataValidade || undefined,
+      trilha_id: trilhaId || undefined,
     });
     setTipo("");
     setDescricao("");
@@ -53,6 +57,7 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
     setCargaHoraria("");
     setDataValidade("");
     setFile(null);
+    setTrilhaId("");
     onOpenChange(false);
   };
 
