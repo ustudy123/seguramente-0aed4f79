@@ -31,13 +31,6 @@ export const MainLayout = () => {
           </main>
         </motion.div>
 
-        {/* Popup obrigatório de humor do dia — sem botão fechar quando automático */}
-        <HumorDiarioPopup 
-          open={showHumorPopup} 
-          onClose={handleHumorClose}
-          isAutomatic
-        />
-
         {/* Gate de onboarding — bloqueia após 1m30s se não concluído */}
         <OnboardingGate />
       </div>

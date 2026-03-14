@@ -64,9 +64,6 @@ export const Header = () => {
         {/* Empresa Selector */}
         <EmpresaSelector />
 
-        {/* Humor do Dia */}
-        <HumorSelector />
-
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
