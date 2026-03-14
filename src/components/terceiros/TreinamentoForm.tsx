@@ -98,6 +98,20 @@ export function TreinamentoForm({ open, onOpenChange, onSubmit, terceiroId, trab
             </div>
           </div>
           <div>
+            <Label className="flex items-center gap-1">
+              <Route className="w-3.5 h-3.5" /> Conectar a uma Trilha
+            </Label>
+            <Select value={trilhaId} onValueChange={setTrilhaId}>
+              <SelectTrigger><SelectValue placeholder="Nenhuma (opcional)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhuma</SelectItem>
+                {trilhasAtivas.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>Certificado (anexo)</Label>
             <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </div>

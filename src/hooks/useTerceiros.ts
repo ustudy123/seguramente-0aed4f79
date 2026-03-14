@@ -309,6 +309,7 @@ export function useTerceiros() {
           certificado_nome: certNome,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
+          trilha_id: params.trilha_id || null,
         } as never);
       if (error) throw error;
     },
