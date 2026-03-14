@@ -275,9 +275,8 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl w-[95vw] max-h-[92vh] overflow-hidden flex flex-col p-0">
 
-        {/* Header — scrollable if content grows */}
-        <ScrollArea className="shrink-0 border-b max-h-[55vh]">
-        <div className="px-6 pt-6 pb-4">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 shrink-0 border-b">
           <DialogHeader className="sr-only">
             <DialogTitle>Detalhes do Usuário</DialogTitle>
             <DialogDescription>Gerencie os dados, vínculos e histórico do usuário</DialogDescription>
@@ -431,7 +430,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content — scrollable */}
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
 
