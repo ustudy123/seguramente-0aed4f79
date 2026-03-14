@@ -291,9 +291,13 @@ export function AcademiaAdmin({ onBack }: Props) {
               <Label>Descrição</Label>
               <Textarea rows={4} value={treinoForm.descricao_completa || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, descricao_completa: e.target.value }))} />
             </div>
+            <div>
+              <Label>Imagem de capa (URL)</Label>
+              <Input value={treinoForm.imagem_capa || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, imagem_capa: e.target.value }))} placeholder="https://..." />
+            </div>
             <div className="sm:col-span-2">
               <Label>Link de vídeo (YouTube, Vimeo ou URL direta)</Label>
-              <Input value={treinoForm.imagem_capa || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, imagem_capa: e.target.value }))} placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..." />
+              <Input value={treinoForm.video_url || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, video_url: e.target.value }))} placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..." />
               <p className="text-xs text-muted-foreground mt-1">Suporta YouTube, Vimeo ou link direto de vídeo</p>
             </div>
             <div className="sm:col-span-2">
