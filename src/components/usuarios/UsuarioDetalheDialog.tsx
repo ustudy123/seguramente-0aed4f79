@@ -273,7 +273,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[92vh] overflow-hidden flex flex-col p-0">
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 shrink-0 border-b">
