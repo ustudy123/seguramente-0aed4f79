@@ -288,20 +288,22 @@ export function AcademiaAdmin({ onBack }: Props) {
               <Input value={treinoForm.subtitulo || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, subtitulo: e.target.value }))} />
             </div>
             <div className="sm:col-span-2">
-              <Label>Descrição curta</Label>
-              <Textarea rows={2} value={treinoForm.descricao_curta || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, descricao_curta: e.target.value }))} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label>Descrição completa</Label>
+              <Label>Descrição</Label>
               <Textarea rows={4} value={treinoForm.descricao_completa || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, descricao_completa: e.target.value }))} />
             </div>
             <div>
               <Label>Imagem de capa (URL)</Label>
               <Input value={treinoForm.imagem_capa || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, imagem_capa: e.target.value }))} placeholder="https://..." />
             </div>
-            <div>
-              <Label>Banner (URL)</Label>
-              <Input value={treinoForm.banner || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, banner: e.target.value }))} placeholder="https://..." />
+            <div className="sm:col-span-2">
+              <Label>Link de vídeo (YouTube, Vimeo ou URL direta)</Label>
+              <Input value={treinoForm.video_url || ''} onChange={e => setTreinoForm((p: any) => ({ ...p, video_url: e.target.value }))} placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..." />
+              <p className="text-xs text-muted-foreground mt-1">Suporta YouTube, Vimeo ou link direto de vídeo</p>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Ou envie um arquivo de vídeo</Label>
+              <Input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" onChange={e => setTreinoForm((p: any) => ({ ...p, video_file: e.target.files?.[0] || null }))} />
+              <p className="text-xs text-muted-foreground mt-1">Formatos aceitos: MP4, WebM, OGG, MOV</p>
             </div>
             <div>
               <Label>Categoria</Label>
