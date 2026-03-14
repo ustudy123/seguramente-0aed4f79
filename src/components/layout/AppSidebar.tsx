@@ -76,8 +76,7 @@ const menuSections: MenuSection[] = [
   { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
   { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
   { title: "Psicossocial NR-01", icon: Brain, path: "/psicossocial" },
-  { title: "EPIs", icon: Shield, path: "/epis" },
-  { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" }]
+  { title: "EPIs", icon: Shield, path: "/epis" }]
 
 },
 {
@@ -126,7 +125,8 @@ const menuSections: MenuSection[] = [
     { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" }]
 
   },
-  { title: "Rede de Parceiros", icon: Store, path: "/marketplace" }]
+  { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
+  { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" }]
 
 },
 {
