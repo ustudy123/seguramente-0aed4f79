@@ -389,13 +389,30 @@ export function useAcademia() {
   const salvarTreinamento = useMutation({
     mutationFn: async (data: any) => {
       if (!tenantId) throw new Error('No tenant');
+      let videoUrl = data.video_url || null;
+
+      // Handle video file upload
+      if (data.video_file instanceof File) {
+        const ts = Date.now();
+        const safeName = data.video_file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const path = `${tenantId}/academia/videos/${ts}_${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from('documentos')
+          .upload(path, data.video_file, { cacheControl: '3600', upsert: false });
+        if (upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from('documentos').getPublicUrl(path);
+        videoUrl = urlData.publicUrl;
+      }
+
+      const { video_file, academia_categorias, ...rest } = data;
+      const payload = { ...rest, video_url: videoUrl };
+
       if (data.id) {
-        const { id, academia_categorias, ...rest } = data;
-        const { error } = await supabase.from('academia_treinamentos').update(rest).eq('id', id);
+        const { id, ...updateData } = payload;
+        const { error } = await supabase.from('academia_treinamentos').update(updateData).eq('id', id);
         if (error) throw error;
       } else {
-        const { academia_categorias, ...rest } = data;
-        const { error } = await supabase.from('academia_treinamentos').insert({ ...rest, tenant_id: tenantId });
+        const { error } = await supabase.from('academia_treinamentos').insert({ ...payload, tenant_id: tenantId });
         if (error) throw error;
       }
     },
