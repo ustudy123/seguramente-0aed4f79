@@ -24,6 +24,7 @@ export interface AcademiaTreinamento {
   descricao_completa: string | null;
   imagem_capa: string | null;
   banner: string | null;
+  video_url: string | null;
   slug: string;
   nivel: string;
   instrutor: string | null;
