@@ -49,11 +49,14 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [editando, setEditando] = useState(false);
   const [editForm, setEditForm] = useState({
     nome_completo: usuario.nome_completo,
+    email_principal: usuario.email_principal || "",
+    cpf: usuario.cpf || "",
     nome_social: usuario.nome_social || "",
     telefone_principal: usuario.telefone_principal || "",
     cargo_funcao: usuario.cargo_funcao || "",
     matricula: usuario.matricula || "",
     data_nascimento: usuario.data_nascimento || "",
+    tipo_usuario: usuario.tipo_usuario || "",
     observacoes: usuario.observacoes || "",
   });
 
@@ -179,7 +182,12 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   }
 
   async function handleSalvarEdicao() {
-    await updateUsuario.mutateAsync({ id: usuario.id, ...editForm });
+    const { tipo_usuario, ...rest } = editForm;
+    await updateUsuario.mutateAsync({
+      id: usuario.id,
+      ...rest,
+      ...(tipo_usuario ? { tipo_usuario: tipo_usuario as import("@/hooks/useUsuarios").UsuarioTipo } : {}),
+    });
     setEditando(false);
   }
 
@@ -445,11 +453,14 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                     <Button size="sm" variant="outline" onClick={() => {
                       setEditForm({
                         nome_completo: usuario.nome_completo,
+                        email_principal: usuario.email_principal || "",
+                        cpf: usuario.cpf || "",
                         nome_social: usuario.nome_social || "",
                         telefone_principal: usuario.telefone_principal || "",
                         cargo_funcao: usuario.cargo_funcao || "",
                         matricula: usuario.matricula || "",
                         data_nascimento: usuario.data_nascimento || "",
+                        tipo_usuario: usuario.tipo_usuario || "",
                         observacoes: usuario.observacoes || "",
                       });
                       setEditando(true);
@@ -478,6 +489,27 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                       <Label>Nome Completo *</Label>
                       <Input value={editForm.nome_completo}
                         onChange={e => setEditForm(f => ({ ...f, nome_completo: e.target.value }))} />
+                    </div>
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Label>E-mail *</Label>
+                      <Input type="email" value={editForm.email_principal} placeholder="email@exemplo.com"
+                        onChange={e => setEditForm(f => ({ ...f, email_principal: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>CPF</Label>
+                      <CpfInput value={editForm.cpf}
+                        onChange={v => setEditForm(f => ({ ...f, cpf: cleanCpf(v) }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Tipo de Usuário</Label>
+                      <Select value={editForm.tipo_usuario} onValueChange={v => setEditForm(f => ({ ...f, tipo_usuario: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-1.5">
                       <Label>Nome Social</Label>
