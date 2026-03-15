@@ -279,7 +279,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto min-h-0">
+        <form onSubmit={e => e.preventDefault()} className="flex-1 overflow-y-auto min-h-0">
           <div className="p-1 space-y-4">
 
             {/* ── ETAPA 1 ── */}
