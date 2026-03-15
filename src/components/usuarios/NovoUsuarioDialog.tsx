@@ -21,7 +21,23 @@ import { cleanCpf, formatCpf, validateCpf } from "@/lib/cpf";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
 
-const schema = z.object({
+const schemaEtapa1 = z.object({
+  nome_completo: z.string().min(3, "Nome obrigatório"),
+  nome_social: z.string().optional(),
+  email_principal: z.string().email("E-mail inválido"),
+  cpf: z.string().optional(),
+  telefone_principal: z.string().optional(),
+  cargo_funcao: z.string().optional(),
+  matricula: z.string().optional(),
+  data_nascimento: z.string().optional(),
+  tipo_usuario: z.string(),
+  observacoes: z.string().optional(),
+  empresa_id: z.string().optional(),
+  tipo_vinculo: z.string(),
+  contexto_operacional: z.string().optional(),
+});
+
+const schemaEtapa2 = z.object({
   nome_completo: z.string().min(3, "Nome obrigatório"),
   nome_social: z.string().optional(),
   email_principal: z.string().email("E-mail inválido"),
@@ -36,6 +52,9 @@ const schema = z.object({
   tipo_vinculo: z.string(),
   contexto_operacional: z.string().optional(),
 });
+
+// Union type for form (uses the looser schema for typing)
+const schema = schemaEtapa1;
 
 type FormData = z.infer<typeof schema>;
 
@@ -79,8 +98,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     enabled: !!tenantId,
   });
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, watch, setValue, reset, trigger, getValues, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schemaEtapa1),
     defaultValues: { tipo_usuario: "gestor", tipo_vinculo: "gestor" },
   });
 
@@ -147,67 +166,76 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     toast.success("Dados do colaborador aplicados ao cadastro!");
   }
 
-  async function onSubmit(data: FormData) {
-    if (etapa === 1) {
-      verificarDuplicidade(data.email_principal, data.cpf);
-      setEtapa(2);
+  async function handleProximo() {
+    // Validate only etapa 1 fields
+    const valid = await trigger(["nome_completo", "email_principal"]);
+    if (!valid) return;
+    const data = getValues();
+    verificarDuplicidade(data.email_principal, data.cpf);
+    setEtapa(2);
+  }
+
+  async function handleCriarUsuario() {
+    const data = getValues();
+    // Validate etapa 2 (empresa_id required)
+    const parsed = schemaEtapa2.safeParse(data);
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0];
+      toast.error(firstError?.message || "Preencha todos os campos obrigatórios");
       return;
     }
+    try {
+      const appRole = mapTipoUsuarioToAppRole(data.tipo_usuario);
+      const { data: authData, error: authError } = await supabase.functions.invoke("invite-tenant-user", {
+        body: {
+          email: data.email_principal,
+          nomeCompleto: data.nome_completo,
+          role: appRole,
+          method: "invite",
+        },
+      });
 
-    if (etapa === 2) {
-      try {
-        const appRole = mapTipoUsuarioToAppRole(data.tipo_usuario);
-        const { data: authData, error: authError } = await supabase.functions.invoke("invite-tenant-user", {
-          body: {
-            email: data.email_principal,
-            nomeCompleto: data.nome_completo,
-            role: appRole,
-            method: "invite",
-          },
-        });
+      if (authError) throw new Error(authError.message);
+      if ((authData as any)?.error) throw new Error((authData as any).error);
 
-        if (authError) throw new Error(authError.message);
-        if ((authData as any)?.error) throw new Error((authData as any).error);
+      const authUserId = (authData as any)?.userId as string | undefined;
+      if (!authUserId) throw new Error("Não foi possível provisionar o acesso no sistema.");
 
-        const authUserId = (authData as any)?.userId as string | undefined;
-        if (!authUserId) throw new Error("Não foi possível provisionar o acesso no sistema.");
+      const usuario = await createUsuario.mutateAsync({
+        nome_completo: data.nome_completo,
+        nome_social: data.nome_social || undefined,
+        email_principal: data.email_principal,
+        cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
+        telefone_principal: data.telefone_principal,
+        cargo_funcao: data.cargo_funcao,
+        matricula: data.matricula || undefined,
+        data_nascimento: data.data_nascimento || undefined,
+        tipo_usuario: data.tipo_usuario as UsuarioTipo,
+        observacoes: data.observacoes,
+        auth_user_id: authUserId,
+        status: "convite_enviado",
+        convite_enviado_em: new Date().toISOString(),
+        qualidade_score: "incompleto",
+        qualidade_pct: 0,
+      });
 
-        const usuario = await createUsuario.mutateAsync({
-          nome_completo: data.nome_completo,
-          nome_social: data.nome_social || undefined,
-          email_principal: data.email_principal,
-          cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
-          telefone_principal: data.telefone_principal,
-          cargo_funcao: data.cargo_funcao,
-          matricula: data.matricula || undefined,
-          data_nascimento: data.data_nascimento || undefined,
-          tipo_usuario: data.tipo_usuario as UsuarioTipo,
-          observacoes: data.observacoes,
-          auth_user_id: authUserId,
-          status: "convite_enviado",
-          convite_enviado_em: new Date().toISOString(),
-          qualidade_score: "incompleto",
-          qualidade_pct: 0,
-        });
+      await createVinculo.mutateAsync({
+        usuario_id: usuario.id,
+        empresa_id: data.empresa_id!,
+        tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
+        contexto_operacional: data.contexto_operacional,
+        status: "ativo",
+        data_inicio: new Date().toISOString().split("T")[0],
+      });
 
-        await createVinculo.mutateAsync({
-          usuario_id: usuario.id,
-          empresa_id: data.empresa_id,
-          tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
-          contexto_operacional: data.contexto_operacional,
-          status: "ativo",
-          data_inicio: new Date().toISOString().split("T")[0],
-        });
-
-        setNovoUsuarioId(usuario.id);
-        setEtapa(3);
-      } catch (e: any) {
-        toast.error("Erro ao cadastrar: " + (e?.message || "falha inesperada"));
-      }
-      return;
+      setNovoUsuarioId(usuario.id);
+      setEtapa(3);
+    } catch (e: any) {
+      toast.error("Erro ao cadastrar: " + (e?.message || "falha inesperada"));
     }
+  }
 
-    // etapa 3: fechar
+  function handleFechar() {
     reset();
     setEtapa(1);
     setNovoUsuarioId(null);
@@ -251,7 +279,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto min-h-0">
+        <form onSubmit={e => e.preventDefault()} className="flex-1 overflow-y-auto min-h-0">
           <div className="p-1 space-y-4">
 
             {/* ── ETAPA 1 ── */}
@@ -507,7 +535,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
             type="button"
             className={etapa === 3 ? "w-full" : "ml-auto"}
             disabled={isLoading}
-            onClick={handleSubmit(onSubmit)}
+            onClick={etapa === 1 ? handleProximo : etapa === 2 ? handleCriarUsuario : handleFechar}
           >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {etapa === 1 && "Próximo"}
