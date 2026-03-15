@@ -535,7 +535,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
             type="button"
             className={etapa === 3 ? "w-full" : "ml-auto"}
             disabled={isLoading}
-            onClick={handleSubmit(onSubmit)}
+            onClick={etapa === 1 ? handleProximo : etapa === 2 ? handleCriarUsuario : handleFechar}
           >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {etapa === 1 && "Próximo"}
