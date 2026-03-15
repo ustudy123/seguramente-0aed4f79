@@ -98,8 +98,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     enabled: !!tenantId,
   });
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, watch, setValue, reset, trigger, getValues, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schemaEtapa1),
     defaultValues: { tipo_usuario: "gestor", tipo_vinculo: "gestor" },
   });
 
