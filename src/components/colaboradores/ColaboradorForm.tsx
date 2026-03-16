@@ -237,8 +237,9 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      console.error("Erro ao salvar colaborador:", error);
-      toast.error(isEditMode ? "Erro ao atualizar colaborador" : "Erro ao cadastrar colaborador");
+      const errMsg = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Erro ao salvar colaborador:", errMsg, error);
+      toast.error(isEditMode ? `Erro ao atualizar colaborador: ${errMsg}` : `Erro ao cadastrar colaborador: ${errMsg}`);
     } finally {
       setIsSubmitting(false);
     }
