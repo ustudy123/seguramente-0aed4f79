@@ -89,6 +89,14 @@ import { useAdmissoes } from "@/hooks/useAdmissoes";
 import { AdmissaoFormData } from "@/types/database";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
+function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return "-";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 11) return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
+  return phone;
+}
+
 interface ColaboradorExtendido {
   id: string;
   nome_completo: string;
@@ -338,7 +346,7 @@ function AtivosTab() {
                 {colab.celular && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Phone className="w-4 h-4" />
-                    <span>{colab.celular}</span>
+                    <span>{formatPhone(colab.celular)}</span>
                   </div>
                 )}
                 {colab.departamento && (
@@ -394,7 +402,7 @@ function AtivosTab() {
                   </TableCell>
                   <TableCell className="text-sm">{colab.cargo}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{colab.celular || "-"}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatPhone(colab.celular)}</TableCell>
                   <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                     {colab.data_admissao ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") : "-"}
                   </TableCell>
@@ -473,7 +481,7 @@ function AtivosTab() {
                 {selectedColaborador.celular && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Celular</p>
-                    <p className="text-sm font-medium">{selectedColaborador.celular}</p>
+                    <p className="text-sm font-medium">{formatPhone(selectedColaborador.celular)}</p>
                   </div>
                 )}
                 {selectedColaborador.departamento && (
@@ -903,7 +911,7 @@ function DesligadosTab() {
               </TableCell>
               <TableCell className="text-sm">{colab.cargo}</TableCell>
               <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
-              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{colab.celular || "-"}</TableCell>
+              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatPhone(colab.celular)}</TableCell>
               <TableCell>
                 <Badge className={cn("text-xs", statusStyles.desligado)}>Desligado</Badge>
               </TableCell>
