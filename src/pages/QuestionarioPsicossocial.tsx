@@ -313,6 +313,17 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     );
   }
 
+  // ─── Verificação por Telefone (WhatsApp OTP) ──────────────
+  if (etapa === 'verificacao_telefone') {
+    return (
+      <VerificacaoTelefone
+        campanhaId={campanha!.id}
+        campanhaNome={campanha!.nome}
+        onVerificado={() => setEtapa('questionario')}
+      />
+    );
+  }
+
   // ─── Conclusão ─────────────────────────────────────────────
   if (etapa === 'concluido') {
     return (
