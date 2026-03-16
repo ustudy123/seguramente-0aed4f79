@@ -7,12 +7,12 @@ import {
   CheckCircle2,
   ArrowRight,
   RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PhoneInput, validatePhone, cleanPhone } from "@/components/ui/phone-input";
 import { Input } from "@/components/ui/input";
-import { supabasePublic } from "@/lib/supabasePublic";
 import { toast } from "sonner";
 
 interface VerificacaoTelefoneProps {
