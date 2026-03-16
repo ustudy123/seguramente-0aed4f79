@@ -102,22 +102,32 @@ export function VerificacaoTelefone({
 
     setVerificando(true);
     try {
-      const { data, error } = await supabasePublic.functions.invoke(
-        "psicossocial-whatsapp-otp",
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 
+        (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').split('.')[0];
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`,
         {
-          body: {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": anonKey,
+            "Authorization": `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({
             action: "verificar",
             telefone: cleanPhone(telefone),
             campanha_id: campanhaId,
             codigo,
-          },
+          }),
         }
       );
 
-      if (error) throw new Error(error.message);
+      const data = await response.json();
 
-      if (data?.erro) {
-        toast.error(data.erro);
+      if (!response.ok || data?.erro) {
+        toast.error(data?.erro || "Erro ao verificar código");
         return;
       }
 
