@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Search } from "lucide-react";
+import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
+import { formatCnpj, cleanCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
 
 interface Props {
   open: boolean;
@@ -20,6 +22,7 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
     nome_fantasia: initial?.nome_fantasia || "",
@@ -47,6 +50,40 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     set("tipo_servico", arr.includes(s) ? arr.filter((x) => x !== s) : [...arr, s]);
   };
 
+  const handleCnpjChange = (value: string) => {
+    set("cnpj", formatCnpj(value));
+  };
+
+  const handleBuscarCnpj = useCallback(async () => {
+    const cnpj = form.cnpj || "";
+    if (!validateCnpj(cnpj)) {
+      toast.error("Digite um CNPJ válido com 14 dígitos.");
+      return;
+    }
+    setBuscandoCnpj(true);
+    try {
+      const result = await buscarCnpj(cnpj);
+      if (!result) {
+        toast.error("CNPJ não encontrado na base da Receita Federal.");
+        return;
+      }
+      setForm((p) => ({
+        ...p,
+        razao_social: result.razao_social || p.razao_social,
+        nome_fantasia: result.nome_fantasia || p.nome_fantasia,
+        atividade_principal: result.cnae_fiscal_descricao || p.atividade_principal,
+        cnae: result.cnae_fiscal ? String(result.cnae_fiscal) : p.cnae,
+        email: result.email || p.email,
+        telefone: result.telefone || p.telefone,
+      }));
+      toast.success("Dados do CNPJ preenchidos automaticamente!");
+    } catch {
+      toast.error("Erro ao consultar CNPJ.");
+    } finally {
+      setBuscandoCnpj(false);
+    }
+  }, [form.cnpj]);
+
   const handleSubmit = async () => {
     if (!form.razao_social || !form.cnpj) return;
     await onSubmit(form);
@@ -71,7 +108,12 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             </div>
             <div>
               <Label>CNPJ *</Label>
-              <Input value={form.cnpj || ""} onChange={(e) => set("cnpj", e.target.value)} placeholder="00.000.000/0000-00" />
+              <div className="flex gap-1">
+                <Input value={form.cnpj || ""} onChange={(e) => handleCnpjChange(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
+                <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
+                  {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
             </div>
             <div>
               <Label>CNAE</Label>
