@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRight,
@@ -56,6 +56,7 @@ interface PastaTreeViewProps {
   onRenamePasta: (pasta: DocumentoPastaNode) => void;
   onDeletePasta: (pastaId: string) => void;
   onDropDocument?: (documentoId: string, pastaDestinoId: string) => void;
+  expandAllSignal?: { expand: boolean; key: number };
 }
 
 export function PastaTreeView({
@@ -66,21 +67,23 @@ export function PastaTreeView({
   onRenamePasta,
   onDeletePasta,
   onDropDocument,
+  expandAllSignal,
 }: PastaTreeViewProps) {
   return (
     <div className="space-y-1">
       {tree.map((node) => (
         <PastaNode
-          key={node.id}
-          node={node}
-          level={0}
-          selectedPastaId={selectedPastaId}
-          onSelectPasta={onSelectPasta}
-          onCreateSubfolder={onCreateSubfolder}
-          onRenamePasta={onRenamePasta}
-          onDeletePasta={onDeletePasta}
-          onDropDocument={onDropDocument}
-        />
+            key={node.id}
+            node={node}
+            level={0}
+            selectedPastaId={selectedPastaId}
+            onSelectPasta={onSelectPasta}
+            onCreateSubfolder={onCreateSubfolder}
+            onRenamePasta={onRenamePasta}
+            onDeletePasta={onDeletePasta}
+            onDropDocument={onDropDocument}
+            expandAllSignal={expandAllSignal}
+          />
       ))}
     </div>
   );
@@ -95,6 +98,7 @@ interface PastaNodeProps {
   onRenamePasta: (pasta: DocumentoPastaNode) => void;
   onDeletePasta: (pastaId: string) => void;
   onDropDocument?: (documentoId: string, pastaDestinoId: string) => void;
+  expandAllSignal?: { expand: boolean; key: number };
 }
 
 function PastaNode({
@@ -106,8 +110,15 @@ function PastaNode({
   onRenamePasta,
   onDeletePasta,
   onDropDocument,
+  expandAllSignal,
 }: PastaNodeProps) {
   const [expanded, setExpanded] = useState(level < 2);
+
+  useEffect(() => {
+    if (expandAllSignal && expandAllSignal.key > 0) {
+      setExpanded(expandAllSignal.expand);
+    }
+  }, [expandAllSignal]);
   const [isDragOver, setIsDragOver] = useState(false);
   
   const hasChildren = node.children.length > 0;
@@ -267,6 +278,7 @@ function PastaNode({
                 onRenamePasta={onRenamePasta}
                 onDeletePasta={onDeletePasta}
                 onDropDocument={onDropDocument}
+                expandAllSignal={expandAllSignal}
               />
             ))}
           </motion.div>
