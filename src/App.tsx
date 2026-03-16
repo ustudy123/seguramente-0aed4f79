@@ -68,6 +68,7 @@ import OnboardingCliente from "./pages/OnboardingCliente";
 import AtivarConta from "./pages/AtivarConta";
 import OnboardingProtegido from "./pages/OnboardingProtegido";
 import AnaliseJornada from "./pages/AnaliseJornada";
+import Suporte from "./pages/Suporte";
 import Usuarios from "./pages/Usuarios";
 import PerfisAcesso from "./pages/PerfisAcesso";
 import MeuPerfil from "./pages/MeuPerfil";
