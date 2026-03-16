@@ -356,6 +356,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
     });
     // Add Configurações
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
+    items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
     return items;
   }, []);
 
