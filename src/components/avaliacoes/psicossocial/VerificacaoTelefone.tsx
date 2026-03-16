@@ -152,6 +152,44 @@ export function VerificacaoTelefone({
     setCodigo(nums);
   };
 
+  if (jaRespondeu) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full"
+        >
+          <Card className="shadow-xl border-0 ring-1 ring-black/5">
+            <CardContent className="pt-10 pb-10 text-center space-y-5">
+              <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+                <AlertCircle className="h-10 w-10 text-amber-500" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">Questionário já respondido</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Este questionário só pode ser preenchido <strong>uma única vez</strong> por participante. 
+                  Nossos registros indicam que este telefone já foi utilizado para responder a esta campanha.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-amber-600 text-sm bg-amber-50 rounded-lg p-3">
+                <Shield className="h-4 w-4 shrink-0" />
+                <span>Garantia de anonimato mantida</span>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => window.close()}
+                className="w-full"
+              >
+                Fechar
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
       <AnimatePresence mode="wait">
