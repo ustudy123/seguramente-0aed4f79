@@ -89,6 +89,14 @@ import { useAdmissoes } from "@/hooks/useAdmissoes";
 import { AdmissaoFormData } from "@/types/database";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
+function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return "-";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 11) return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
+  return phone;
+}
+
 interface ColaboradorExtendido {
   id: string;
   nome_completo: string;
