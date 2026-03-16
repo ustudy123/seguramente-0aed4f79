@@ -39,7 +39,13 @@ export function AEPFormIdentificacao({ data, onChange }: AEPFormIdentificacaoPro
           <Input
             id="cnpj"
             value={data.cnpj}
-            onChange={(e) => handleChange('cnpj', e.target.value)}
+            maxLength={18}
+            onChange={(e) => {
+              const cleaned = cleanCnpj(e.target.value);
+              if (cleaned.length <= 14) {
+                handleChange('cnpj', formatCnpj(cleaned));
+              }
+            }}
             placeholder="00.000.000/0000-00"
           />
         </div>
