@@ -911,7 +911,7 @@ function DesligadosTab() {
               </TableCell>
               <TableCell className="text-sm">{colab.cargo}</TableCell>
               <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{colab.departamento || "-"}</TableCell>
-              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{colab.celular || "-"}</TableCell>
+              <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatPhone(colab.celular)}</TableCell>
               <TableCell>
                 <Badge className={cn("text-xs", statusStyles.desligado)}>Desligado</Badge>
               </TableCell>
