@@ -56,6 +56,7 @@ interface PastaTreeViewProps {
   onRenamePasta: (pasta: DocumentoPastaNode) => void;
   onDeletePasta: (pastaId: string) => void;
   onDropDocument?: (documentoId: string, pastaDestinoId: string) => void;
+  expandAllSignal?: { expand: boolean; key: number };
 }
 
 export function PastaTreeView({
@@ -66,6 +67,7 @@ export function PastaTreeView({
   onRenamePasta,
   onDeletePasta,
   onDropDocument,
+  expandAllSignal,
 }: PastaTreeViewProps) {
   return (
     <div className="space-y-1">
