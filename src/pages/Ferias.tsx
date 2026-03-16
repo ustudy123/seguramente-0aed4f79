@@ -396,11 +396,14 @@ const Ferias = () => {
     if (!newSolicitacao.colaborador || !newSolicitacao.dataInicio || !newSolicitacao.dataFim) {
       toast.error("Preencha todos os campos obrigatórios"); return;
     }
+    const dataInicio = new Date(newSolicitacao.dataInicio);
+    const dataFim = new Date(newSolicitacao.dataFim);
+    if (dataInicio > dataFim) {
+      toast.error("A data de início não pode ser maior que a data fim."); return;
+    }
     if (newSolicitacao.abonoPecuniario && newSolicitacao.diasAbono > 10) {
       toast.error("O abono pecuniário não pode exceder 10 dias (1/3 das férias)"); return;
     }
-    const dataInicio = new Date(newSolicitacao.dataInicio);
-    const dataFim = new Date(newSolicitacao.dataFim);
     const diasSolicitados = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     const fracionamentosAnteriores = solicitacoes
