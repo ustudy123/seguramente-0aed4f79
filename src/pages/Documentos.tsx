@@ -17,8 +17,8 @@ import {
   Radar,
   RefreshCw,
   Pencil,
-  ChevronsUpDown,
-  ChevronsDownUp,
+  FoldVertical,
+  UnfoldVertical,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -588,7 +588,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                           className="h-7 text-xs flex-1"
                           onClick={() => setExpandAllSignal(prev => ({ expand: true, key: prev.key + 1 }))}
                         >
-                          <ChevronsUpDown className="w-3.5 h-3.5 mr-1" />
+                          <UnfoldVertical className="w-3.5 h-3.5 mr-1" />
                           Expandir
                         </Button>
                         <Button
@@ -597,7 +597,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                           className="h-7 text-xs flex-1"
                           onClick={() => setExpandAllSignal(prev => ({ expand: false, key: prev.key + 1 }))}
                         >
-                          <ChevronsDownUp className="w-3.5 h-3.5 mr-1" />
+                          <FoldVertical className="w-3.5 h-3.5 mr-1" />
                           Minimizar
                         </Button>
                       </div>
