@@ -77,7 +77,7 @@ export function DocumentoUploadForm({ open, onOpenChange, onSubmit, terceiroId, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg overflow-hidden">
         <DialogHeader>
           <DialogTitle>Upload de Documento</DialogTitle>
         </DialogHeader>
