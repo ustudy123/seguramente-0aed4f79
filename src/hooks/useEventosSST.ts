@@ -104,7 +104,6 @@ export const useEventosSST = () => {
         .insert({
           ...evt,
           tenant_id: tid!,
-          empresa_id: empresaAtivaId || null,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
         } as any)
