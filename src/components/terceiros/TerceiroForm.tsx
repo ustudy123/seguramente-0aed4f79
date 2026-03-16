@@ -108,7 +108,12 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             </div>
             <div>
               <Label>CNPJ *</Label>
-              <Input value={form.cnpj || ""} onChange={(e) => set("cnpj", e.target.value)} placeholder="00.000.000/0000-00" />
+              <div className="flex gap-1">
+                <Input value={form.cnpj || ""} onChange={(e) => handleCnpjChange(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
+                <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
+                  {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
             </div>
             <div>
               <Label>CNAE</Label>
