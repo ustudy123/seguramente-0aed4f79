@@ -7,12 +7,12 @@ import {
   CheckCircle2,
   ArrowRight,
   RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PhoneInput, validatePhone, cleanPhone } from "@/components/ui/phone-input";
 import { Input } from "@/components/ui/input";
-import { supabasePublic } from "@/lib/supabasePublic";
 import { toast } from "sonner";
 
 interface VerificacaoTelefoneProps {
@@ -34,6 +34,7 @@ export function VerificacaoTelefone({
   const [enviando, setEnviando] = useState(false);
   const [verificando, setVerificando] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [jaRespondeu, setJaRespondeu] = useState(false);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -50,21 +51,35 @@ export function VerificacaoTelefone({
 
     setEnviando(true);
     try {
-      const { data, error } = await supabasePublic.functions.invoke(
-        "psicossocial-whatsapp-otp",
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 
+        (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').split('.')[0];
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`,
         {
-          body: {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": anonKey,
+            "Authorization": `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({
             action: "enviar",
             telefone: cleanPhone(telefone),
             campanha_id: campanhaId,
-          },
+          }),
         }
       );
 
-      if (error) throw new Error(error.message);
+      const data = await response.json();
 
-      if (data?.erro) {
-        toast.error(data.erro);
+      if (!response.ok || data?.erro) {
+        if (response.status === 409) {
+          setJaRespondeu(true);
+          return;
+        }
+        toast.error(data?.erro || "Erro ao enviar código");
         return;
       }
 
@@ -87,22 +102,32 @@ export function VerificacaoTelefone({
 
     setVerificando(true);
     try {
-      const { data, error } = await supabasePublic.functions.invoke(
-        "psicossocial-whatsapp-otp",
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 
+        (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').split('.')[0];
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`,
         {
-          body: {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": anonKey,
+            "Authorization": `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({
             action: "verificar",
             telefone: cleanPhone(telefone),
             campanha_id: campanhaId,
             codigo,
-          },
+          }),
         }
       );
 
-      if (error) throw new Error(error.message);
+      const data = await response.json();
 
-      if (data?.erro) {
-        toast.error(data.erro);
+      if (!response.ok || data?.erro) {
+        toast.error(data?.erro || "Erro ao verificar código");
         return;
       }
 
@@ -126,6 +151,44 @@ export function VerificacaoTelefone({
     const nums = value.replace(/\D/g, "").slice(0, 6);
     setCodigo(nums);
   };
+
+  if (jaRespondeu) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full"
+        >
+          <Card className="shadow-xl border-0 ring-1 ring-black/5">
+            <CardContent className="pt-10 pb-10 text-center space-y-5">
+              <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+                <AlertCircle className="h-10 w-10 text-amber-500" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">Questionário já respondido</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Este questionário só pode ser preenchido <strong>uma única vez</strong> por participante. 
+                  Nossos registros indicam que este telefone já foi utilizado para responder a esta campanha.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-amber-600 text-sm bg-amber-50 rounded-lg p-3">
+                <Shield className="h-4 w-4 shrink-0" />
+                <span>Garantia de anonimato mantida</span>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => window.close()}
+                className="w-full"
+              >
+                Fechar
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
