@@ -132,13 +132,13 @@ export function DocumentoUploadForm({ open, onOpenChange, onSubmit, terceiroId, 
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="min-w-0">
               <Label>Data de Emissão</Label>
-              <Input type="date" value={dataEmissao} onChange={(e) => setDataEmissao(e.target.value)} />
+              <Input type="date" className="w-full" value={dataEmissao} onChange={(e) => setDataEmissao(e.target.value)} />
             </div>
-            <div>
+            <div className="min-w-0">
               <Label>Data de Validade</Label>
-              <Input type="date" value={dataValidade} onChange={(e) => setDataValidade(e.target.value)} />
+              <Input type="date" className="w-full" value={dataValidade} onChange={(e) => setDataValidade(e.target.value)} />
             </div>
           </div>
           <div>
