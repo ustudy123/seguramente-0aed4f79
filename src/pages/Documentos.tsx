@@ -17,8 +17,8 @@ import {
   Radar,
   RefreshCw,
   Pencil,
-  ChevronsUpDown,
-  ChevronsDownUp,
+  FoldVertical,
+  UnfoldVertical,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
