@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building2 } from "lucide-react";
 import type { AEPIdentificacao } from "@/types/aep";
+import { formatCnpj, cleanCnpj } from "@/lib/brasilapi";
 
 interface AEPFormIdentificacaoProps {
   data: AEPIdentificacao;
@@ -38,7 +39,13 @@ export function AEPFormIdentificacao({ data, onChange }: AEPFormIdentificacaoPro
           <Input
             id="cnpj"
             value={data.cnpj}
-            onChange={(e) => handleChange('cnpj', e.target.value)}
+            maxLength={18}
+            onChange={(e) => {
+              const cleaned = cleanCnpj(e.target.value);
+              if (cleaned.length <= 14) {
+                handleChange('cnpj', formatCnpj(cleaned));
+              }
+            }}
             placeholder="00.000.000/0000-00"
           />
         </div>

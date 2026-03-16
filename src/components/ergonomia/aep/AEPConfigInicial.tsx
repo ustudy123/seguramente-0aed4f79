@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, MapPin, Calendar, User, CheckSquare, X } from "lucide-react";
 import { useDepartamentos } from "@/hooks/useCadastros";
 import { AEPEmpresaInfo } from "@/types/aep-multi";
+import { formatCnpj, cleanCnpj } from "@/lib/brasilapi";
 
 interface AEPConfigInicialProps {
   empresa: AEPEmpresaInfo;
@@ -81,7 +82,13 @@ export function AEPConfigInicial({
               id="cnpj"
               placeholder="00.000.000/0000-00"
               value={empresa.cnpj}
-              onChange={e => onUpdateEmpresa({ cnpj: e.target.value })}
+              maxLength={18}
+              onChange={e => {
+                const cleaned = cleanCnpj(e.target.value);
+                if (cleaned.length <= 14) {
+                  onUpdateEmpresa({ cnpj: formatCnpj(cleaned) });
+                }
+              }}
             />
           </div>
 
