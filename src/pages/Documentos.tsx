@@ -588,7 +588,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                           className="h-7 text-xs flex-1"
                           onClick={() => setExpandAllSignal(prev => ({ expand: true, key: prev.key + 1 }))}
                         >
-                          <ChevronsUpDown className="w-3.5 h-3.5 mr-1" />
+                          <UnfoldVertical className="w-3.5 h-3.5 mr-1" />
                           Expandir
                         </Button>
                         <Button
