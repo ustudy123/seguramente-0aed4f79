@@ -295,7 +295,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                 </div>
 
                 <Button
-                  onClick={() => setEtapa('questionario')}
+                  onClick={() => setEtapa('verificacao_telefone')}
                   className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md"
                   size="lg"
                 >
