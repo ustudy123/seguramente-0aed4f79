@@ -134,17 +134,15 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    {e.tipo === "acidente" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        title="Baixar relatório CAT"
-                        onClick={(ev) => { ev.stopPropagation(); gerarRelatorioCATpdf(e); }}
-                      >
-                        <Printer className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      title="Baixar relatório"
+                      onClick={(ev) => { ev.stopPropagation(); gerarRelatorioCATpdf(e); }}
+                    >
+                      <Printer className="w-4 h-4" />
+                    </Button>
                     {onEdit && (
                       <Button
                         variant="ghost"
