@@ -209,9 +209,15 @@ export function useTerceiros() {
         usuario_id: user.id,
         usuario_nome: profile?.nome_completo || user.email,
       } as never);
+
+      // Recalculate worker status if document is for a worker
+      if (params.trabalhador_id) {
+        await recalcWorkerStatus(params.trabalhador_id, tenantId, params.terceiro_id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiro-documentos"] });
+      qc.invalidateQueries({ queryKey: ["terceiro-trabalhadores"] });
       toast.success("Documento enviado!");
     },
     onError: (e: any) => toast.error("Erro: " + e.message),
