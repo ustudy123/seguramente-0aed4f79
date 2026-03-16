@@ -22,6 +22,8 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
+  const [servicoSearch, setServicoSearch] = useState("");
+  const [customServicos, setCustomServicos] = useState<string[]>([]);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
