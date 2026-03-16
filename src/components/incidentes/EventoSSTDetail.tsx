@@ -198,11 +198,9 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
           </div>
         </div>
         <div className="flex gap-2">
-          {evento.tipo === "acidente" && (
-            <Button variant="outline" size="sm" onClick={() => gerarRelatorioCATpdf(evento)}>
-              <Printer className="w-4 h-4 mr-1" /> Baixar Relatório CAT
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={() => gerarRelatorioCATpdf(evento)}>
+            <Printer className="w-4 h-4 mr-1" /> {evento.tipo === "acidente" ? "Baixar Relatório CAT" : "Baixar Relatório"}
+          </Button>
           {evento.status !== "concluido" && (
             <Button variant="outline" size="sm" onClick={handleConcluir}>
               Concluir Evento
