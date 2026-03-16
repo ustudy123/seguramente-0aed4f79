@@ -102,9 +102,9 @@ export function DocumentoUploadForm({ open, onOpenChange, onSubmit, terceiroId, 
           <div>
             <Label>Arquivo *</Label>
             {file ? (
-              <div className="flex items-center gap-2 p-3 mt-1 rounded-lg border bg-muted/50 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-2 p-3 mt-1 rounded-lg border bg-muted/50 max-w-full">
                 <FileUp className="w-5 h-5 text-primary shrink-0" />
-                <span className="text-sm truncate min-w-0 flex-1">{file.name}</span>
+                <span className="text-sm flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">{file.name}</span>
                 <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">
                   {(file.size / 1024).toFixed(0)} KB
                 </span>
