@@ -577,8 +577,8 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
         </DialogHeader>
 
         {/* Step indicator */}
-        <div className="px-6 pb-3">
-          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
             {steps.map((s, i) => {
               const Icon = s.icon;
               const isActive = i === step;
@@ -589,7 +589,7 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
                   type="button"
                   onClick={() => setStep(i)}
                   className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap",
+                    "flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap shrink-0",
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : isDone
