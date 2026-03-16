@@ -352,9 +352,15 @@ export function useTerceiros() {
           trilha_id: params.trilha_id || null,
         } as never);
       if (error) throw error;
+
+      // Recalculate worker status
+      if (tenantId) {
+        await recalcWorkerStatus(params.trabalhador_id, tenantId, params.terceiro_id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiro-treinamentos"] });
+      qc.invalidateQueries({ queryKey: ["terceiro-trabalhadores"] });
       toast.success("Treinamento registrado!");
     },
     onError: (e: any) => toast.error("Erro: " + e.message),
