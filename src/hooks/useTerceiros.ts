@@ -347,6 +347,18 @@ export function useTerceiros() {
         certNome = params.file.name;
       }
 
+      // Calculate training status
+      const today = new Date().toISOString().split("T")[0];
+      let treinStatus = "pendente";
+      if (params.data_validade) {
+        if (params.data_validade < today) {
+          treinStatus = "vencido";
+        } else {
+          const diffDays = Math.ceil((new Date(params.data_validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          treinStatus = diffDays <= 30 ? "a_vencer" : "valido";
+        }
+      }
+
       const { error } = await supabase
         .from("terceiro_treinamentos" as never)
         .insert({
@@ -358,6 +370,7 @@ export function useTerceiros() {
           data_realizacao: params.data_realizacao || null,
           carga_horaria: params.carga_horaria || null,
           data_validade: params.data_validade || null,
+          status: treinStatus,
           certificado_url: certUrl,
           certificado_nome: certNome,
           criado_por: user.id,
