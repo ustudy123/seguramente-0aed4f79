@@ -14922,6 +14922,50 @@ export type Database = {
           },
         ]
       }
+      psicossocial_otp_verificacao: {
+        Row: {
+          campanha_id: string
+          codigo: string
+          criado_em: string
+          expira_em: string
+          id: string
+          telefone_hash: string
+          tentativas: number
+          verificado: boolean
+          verificado_em: string | null
+        }
+        Insert: {
+          campanha_id: string
+          codigo: string
+          criado_em?: string
+          expira_em?: string
+          id?: string
+          telefone_hash: string
+          tentativas?: number
+          verificado?: boolean
+          verificado_em?: string | null
+        }
+        Update: {
+          campanha_id?: string
+          codigo?: string
+          criado_em?: string
+          expira_em?: string
+          id?: string
+          telefone_hash?: string
+          tentativas?: number
+          verificado?: boolean
+          verificado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_otp_verificacao_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psicossocial_participacoes: {
         Row: {
           campanha_id: string
@@ -14996,6 +15040,35 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psicossocial_telefone_usado: {
+        Row: {
+          campanha_id: string
+          criado_em: string
+          id: string
+          telefone_hash: string
+        }
+        Insert: {
+          campanha_id: string
+          criado_em?: string
+          id?: string
+          telefone_hash: string
+        }
+        Update: {
+          campanha_id?: string
+          criado_em?: string
+          id?: string
+          telefone_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_telefone_usado_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
             referencedColumns: ["id"]
           },
         ]
