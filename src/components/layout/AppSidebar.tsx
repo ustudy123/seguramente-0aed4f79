@@ -39,6 +39,7 @@ import {
   Brain,
   BarChart3,
   ShieldCheck,
+  LifeBuoy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
@@ -355,6 +356,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
     });
     // Add Configurações
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
+    items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
     return items;
   }, []);
 
@@ -464,7 +466,20 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
         }
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-sidebar-border space-y-1">
+        <NavLink
+          to="/suporte"
+          className={({ isActive }) =>
+          cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
+            isActive ?
+            "bg-sidebar-primary text-sidebar-primary-foreground" :
+            "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+          )
+          }>
+          <LifeBuoy className="w-[18px] h-[18px]" strokeWidth={1.75} />
+          {!isCollapsed && <span className="text-[13px]">Suporte</span>}
+        </NavLink>
         <NavLink
           to="/configuracoes"
           className={({ isActive }) =>
@@ -475,7 +490,6 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
             "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
           )
           }>
-
           <Settings className="w-[18px] h-[18px]" strokeWidth={1.75} />
           {!isCollapsed && <span className="text-[13px]">Configurações</span>}
         </NavLink>

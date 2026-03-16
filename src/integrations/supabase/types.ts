@@ -15477,6 +15477,119 @@ export type Database = {
         }
         Relationships: []
       }
+      suporte_ticket_comentarios: {
+        Row: {
+          autor_id: string | null
+          autor_nome: string | null
+          conteudo: string
+          created_at: string
+          id: string
+          tenant_id: string
+          ticket_id: string
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nome?: string | null
+          conteudo: string
+          created_at?: string
+          id?: string
+          tenant_id: string
+          ticket_id: string
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nome?: string | null
+          conteudo?: string
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suporte_ticket_comentarios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suporte_ticket_comentarios_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "suporte_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suporte_tickets: {
+        Row: {
+          atribuido_a_id: string | null
+          atribuido_a_nome: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string
+          id: string
+          modulo: string | null
+          prioridade: Database["public"]["Enums"]["ticket_prioridade"]
+          resolucao: string | null
+          resolvido_em: string | null
+          screenshot_url: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["ticket_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          atribuido_a_id?: string | null
+          atribuido_a_nome?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao: string
+          id?: string
+          modulo?: string | null
+          prioridade?: Database["public"]["Enums"]["ticket_prioridade"]
+          resolucao?: string | null
+          resolvido_em?: string | null
+          screenshot_url?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["ticket_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          atribuido_a_id?: string | null
+          atribuido_a_nome?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string
+          id?: string
+          modulo?: string | null
+          prioridade?: Database["public"]["Enums"]["ticket_prioridade"]
+          resolucao?: string | null
+          resolvido_em?: string | null
+          screenshot_url?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["ticket_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suporte_tickets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_manual: {
         Row: {
           content: string
@@ -17449,6 +17562,15 @@ export type Database = {
       terceiro_acesso: "eventual" | "recorrente" | "continuo"
       terceiro_doc_status: "valido" | "a_vencer" | "vencido" | "pendente"
       terceiro_status: "liberado" | "restrito" | "bloqueado"
+      ticket_prioridade: "baixa" | "media" | "alta" | "critica"
+      ticket_status:
+        | "aberto"
+        | "em_analise"
+        | "em_andamento"
+        | "resolvido"
+        | "fechado"
+        | "cancelado"
+      ticket_tipo: "bug" | "falha" | "reclamacao" | "sugestao" | "duvida"
       tipo_avaliador:
         | "auto"
         | "gestor"
@@ -17929,6 +18051,16 @@ export const Constants = {
       terceiro_acesso: ["eventual", "recorrente", "continuo"],
       terceiro_doc_status: ["valido", "a_vencer", "vencido", "pendente"],
       terceiro_status: ["liberado", "restrito", "bloqueado"],
+      ticket_prioridade: ["baixa", "media", "alta", "critica"],
+      ticket_status: [
+        "aberto",
+        "em_analise",
+        "em_andamento",
+        "resolvido",
+        "fechado",
+        "cancelado",
+      ],
+      ticket_tipo: ["bug", "falha", "reclamacao", "sugestao", "duvida"],
       tipo_avaliador: [
         "auto",
         "gestor",
