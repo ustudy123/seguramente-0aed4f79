@@ -617,6 +617,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                           onRenamePasta={handleRenamePasta}
                           onDeletePasta={handleDeletePasta}
                           onDropDocument={handleDropDocument}
+                          expandAllSignal={expandAllSignal}
                         />
                       )}
                     </ScrollArea>
