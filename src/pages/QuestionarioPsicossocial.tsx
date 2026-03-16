@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
+import { VerificacaoTelefone } from "@/components/avaliacoes/psicossocial/VerificacaoTelefone";
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
@@ -26,7 +27,7 @@ import logoSeguramente from "@/assets/logo-seguramente.png";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
-type EtapaQuestionario = 'consentimento' | 'questionario' | 'concluido';
+type EtapaQuestionario = 'consentimento' | 'verificacao_telefone' | 'questionario' | 'concluido';
 
 const POLITICA_LGPD_OBRIGATORIA = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
 
@@ -294,7 +295,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                 </div>
 
                 <Button
-                  onClick={() => setEtapa('questionario')}
+                  onClick={() => setEtapa('verificacao_telefone')}
                   className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md"
                   size="lg"
                 >
@@ -309,6 +310,17 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
           </motion.div>
         </AnimatePresence>
       </div>
+    );
+  }
+
+  // ─── Verificação por Telefone (WhatsApp OTP) ──────────────
+  if (etapa === 'verificacao_telefone') {
+    return (
+      <VerificacaoTelefone
+        campanhaId={campanha!.id}
+        campanhaNome={campanha!.nome}
+        onVerificado={() => setEtapa('questionario')}
+      />
     );
   }
 
