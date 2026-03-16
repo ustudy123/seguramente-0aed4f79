@@ -177,6 +177,9 @@ export default function Marketplace() {
           <TabsTrigger value="servicos" className="gap-1.5">
             <ShoppingBag className="h-4 w-4" /> Serviços
           </TabsTrigger>
+          <TabsTrigger value="pacotes" className="gap-1.5">
+            <Package className="h-4 w-4" /> Pacotes
+          </TabsTrigger>
           <TabsTrigger value="profissionais" className="gap-1.5">
             <Users className="h-4 w-4" /> Profissionais
           </TabsTrigger>
@@ -188,9 +191,6 @@ export default function Marketplace() {
           </TabsTrigger>
           <TabsTrigger value="afiliados" className="gap-1.5">
             <Link2 className="h-4 w-4" /> Afiliados
-          </TabsTrigger>
-          <TabsTrigger value="pacotes" className="gap-1.5">
-            <Package className="h-4 w-4" /> Pacotes
           </TabsTrigger>
           <TabsTrigger value="denuncias" className="gap-1.5">
             <ShieldAlert className="h-4 w-4" /> Denúncias
