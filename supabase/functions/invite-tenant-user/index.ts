@@ -38,8 +38,9 @@ serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Validate caller
-  const callerClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+  // Validate caller using anon client
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -47,10 +48,6 @@ serve(async (req) => {
   const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(jwt);
   if (claimsError || !claimsData?.claims) return json({ error: "Invalid token" }, 401);
   const callerId = claimsData.claims.sub as string;
-
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
   // Get full user data for audit logs
   const { data: userData } = await admin.auth.admin.getUserById(callerId);
