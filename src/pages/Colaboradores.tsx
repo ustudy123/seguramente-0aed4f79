@@ -346,7 +346,7 @@ function AtivosTab() {
                 {colab.celular && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Phone className="w-4 h-4" />
-                    <span>{colab.celular}</span>
+                    <span>{formatPhone(colab.celular)}</span>
                   </div>
                 )}
                 {colab.departamento && (
