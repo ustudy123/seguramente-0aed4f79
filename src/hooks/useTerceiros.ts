@@ -16,6 +16,40 @@ export function useTerceiros() {
   const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
+  // Recalculate worker status based on expired docs/trainings
+  const recalcWorkerStatus = async (trabalhadorId: string, tid: string, terceiroId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    // Check documents
+    const { data: docs } = await supabase
+      .from("terceiro_documentos" as never)
+      .select("data_validade, status")
+      .eq("tenant_id", tid)
+      .eq("trabalhador_id", trabalhadorId);
+
+    // Check trainings
+    const { data: treins } = await supabase
+      .from("terceiro_treinamentos" as never)
+      .select("data_validade, status")
+      .eq("tenant_id", tid)
+      .eq("trabalhador_id", trabalhadorId);
+
+    const allItems = [...(docs || []), ...(treins || [])] as { data_validade: string | null; status: string }[];
+
+    const hasExpired = allItems.some((item) => {
+      if (item.data_validade && item.data_validade < today) return true;
+      if (item.status === "vencido") return true;
+      return false;
+    });
+
+    const newStatus = hasExpired ? "bloqueado" : "liberado";
+
+    await supabase
+      .from("terceiro_trabalhadores" as never)
+      .update({ status: newStatus } as never)
+      .eq("id", trabalhadorId);
+  };
+
   // ── Terceiros (empresas) ──
   const { data: terceiros = [], isLoading } = useQuery({
     queryKey: ["terceiros", tenantId, empresaAtivaId],
@@ -176,6 +210,18 @@ export function useTerceiros() {
         .upload(path, params.file, { cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
 
+      // Calculate document status based on validity date
+      const today = new Date().toISOString().split("T")[0];
+      let docStatus = "pendente";
+      if (params.data_validade) {
+        if (params.data_validade < today) {
+          docStatus = "vencido";
+        } else {
+          const diffDays = Math.ceil((new Date(params.data_validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          docStatus = diffDays <= 30 ? "a_vencer" : "valido";
+        }
+      }
+
       const { error } = await supabase
         .from("terceiro_documentos" as never)
         .insert({
@@ -189,6 +235,7 @@ export function useTerceiros() {
           arquivo_tamanho: params.file.size,
           data_emissao: params.data_emissao || null,
           data_validade: params.data_validade || null,
+          status: docStatus,
           observacoes: params.observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
@@ -209,9 +256,15 @@ export function useTerceiros() {
         usuario_id: user.id,
         usuario_nome: profile?.nome_completo || user.email,
       } as never);
+
+      // Recalculate worker status if document is for a worker
+      if (params.trabalhador_id) {
+        await recalcWorkerStatus(params.trabalhador_id, tenantId, params.terceiro_id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiro-documentos"] });
+      qc.invalidateQueries({ queryKey: ["terceiro-trabalhadores"] });
       toast.success("Documento enviado!");
     },
     onError: (e: any) => toast.error("Erro: " + e.message),
@@ -294,6 +347,18 @@ export function useTerceiros() {
         certNome = params.file.name;
       }
 
+      // Calculate training status
+      const today = new Date().toISOString().split("T")[0];
+      let treinStatus = "pendente";
+      if (params.data_validade) {
+        if (params.data_validade < today) {
+          treinStatus = "vencido";
+        } else {
+          const diffDays = Math.ceil((new Date(params.data_validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          treinStatus = diffDays <= 30 ? "a_vencer" : "valido";
+        }
+      }
+
       const { error } = await supabase
         .from("terceiro_treinamentos" as never)
         .insert({
@@ -305,6 +370,7 @@ export function useTerceiros() {
           data_realizacao: params.data_realizacao || null,
           carga_horaria: params.carga_horaria || null,
           data_validade: params.data_validade || null,
+          status: treinStatus,
           certificado_url: certUrl,
           certificado_nome: certNome,
           criado_por: user.id,
@@ -312,9 +378,15 @@ export function useTerceiros() {
           trilha_id: params.trilha_id || null,
         } as never);
       if (error) throw error;
+
+      // Recalculate worker status
+      if (tenantId) {
+        await recalcWorkerStatus(params.trabalhador_id, tenantId, params.terceiro_id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["terceiro-treinamentos"] });
+      qc.invalidateQueries({ queryKey: ["terceiro-trabalhadores"] });
       toast.success("Treinamento registrado!");
     },
     onError: (e: any) => toast.error("Erro: " + e.message),
