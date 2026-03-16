@@ -99,6 +99,16 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
           <DialogTitle>{initial ? "Editar Terceiro" : "Novo Terceiro"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div>
+            <Label>CNPJ *</Label>
+            <div className="flex gap-1">
+              <Input value={form.cnpj || ""} onChange={(e) => handleCnpjChange(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
+              <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
+                {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Razão Social *</Label>
@@ -107,15 +117,6 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             <div>
               <Label>Nome Fantasia</Label>
               <Input value={form.nome_fantasia || ""} onChange={(e) => set("nome_fantasia", e.target.value)} />
-            </div>
-            <div>
-              <Label>CNPJ *</Label>
-              <div className="flex gap-1">
-                <Input value={form.cnpj || ""} onChange={(e) => handleCnpjChange(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
-                <Button type="button" variant="outline" size="icon" onClick={handleBuscarCnpj} disabled={buscandoCnpj || !validateCnpj(form.cnpj || "")} title="Buscar dados na Receita Federal">
-                  {buscandoCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                </Button>
-              </div>
             </div>
             <div>
               <Label>CNAE</Label>
