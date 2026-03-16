@@ -73,16 +73,17 @@ export function PastaTreeView({
     <div className="space-y-1">
       {tree.map((node) => (
         <PastaNode
-          key={node.id}
-          node={node}
-          level={0}
-          selectedPastaId={selectedPastaId}
-          onSelectPasta={onSelectPasta}
-          onCreateSubfolder={onCreateSubfolder}
-          onRenamePasta={onRenamePasta}
-          onDeletePasta={onDeletePasta}
-          onDropDocument={onDropDocument}
-        />
+            key={node.id}
+            node={node}
+            level={0}
+            selectedPastaId={selectedPastaId}
+            onSelectPasta={onSelectPasta}
+            onCreateSubfolder={onCreateSubfolder}
+            onRenamePasta={onRenamePasta}
+            onDeletePasta={onDeletePasta}
+            onDropDocument={onDropDocument}
+            expandAllSignal={expandAllSignal}
+          />
       ))}
     </div>
   );
