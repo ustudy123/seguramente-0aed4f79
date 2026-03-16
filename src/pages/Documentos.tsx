@@ -569,8 +569,8 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                 {/* Tree Panel */}
                 <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
                   <div className="h-full flex flex-col bg-card">
-                    {/* Search */}
-                    <div className="p-3 border-b border-border">
+                    {/* Search + Expand/Collapse */}
+                    <div className="p-3 border-b border-border space-y-2">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -579,6 +579,26 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="pl-9 h-9"
                         />
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs flex-1"
+                          onClick={() => setExpandAllSignal(prev => ({ expand: true, key: prev.key + 1 }))}
+                        >
+                          <ChevronsUpDown className="w-3.5 h-3.5 mr-1" />
+                          Expandir
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs flex-1"
+                          onClick={() => setExpandAllSignal(prev => ({ expand: false, key: prev.key + 1 }))}
+                        >
+                          <ChevronsDownUp className="w-3.5 h-3.5 mr-1" />
+                          Minimizar
+                        </Button>
                       </div>
                     </div>
                     
