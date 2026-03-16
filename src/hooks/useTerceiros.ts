@@ -16,6 +16,40 @@ export function useTerceiros() {
   const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
+  // Recalculate worker status based on expired docs/trainings
+  const recalcWorkerStatus = async (trabalhadorId: string, tid: string, terceiroId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    // Check documents
+    const { data: docs } = await supabase
+      .from("terceiro_documentos" as never)
+      .select("data_validade, status")
+      .eq("tenant_id", tid)
+      .eq("trabalhador_id", trabalhadorId);
+
+    // Check trainings
+    const { data: treins } = await supabase
+      .from("terceiro_treinamentos" as never)
+      .select("data_validade, status")
+      .eq("tenant_id", tid)
+      .eq("trabalhador_id", trabalhadorId);
+
+    const allItems = [...(docs || []), ...(treins || [])] as { data_validade: string | null; status: string }[];
+
+    const hasExpired = allItems.some((item) => {
+      if (item.data_validade && item.data_validade < today) return true;
+      if (item.status === "vencido") return true;
+      return false;
+    });
+
+    const newStatus = hasExpired ? "bloqueado" : "liberado";
+
+    await supabase
+      .from("terceiro_trabalhadores" as never)
+      .update({ status: newStatus } as never)
+      .eq("id", trabalhadorId);
+  };
+
   // ── Terceiros (empresas) ──
   const { data: terceiros = [], isLoading } = useQuery({
     queryKey: ["terceiros", tenantId, empresaAtivaId],
