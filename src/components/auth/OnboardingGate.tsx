@@ -4,26 +4,67 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const DELAY_MS = 20_000; // 20 seconds
 const ONBOARDING_SHOWN_KEY = "onboarding_gate_shown";
 
 /**
  * OnboardingGate — renders a blocking full-screen modal after 20s
- * if the authenticated user hasn't completed onboarding yet.
- * If the user reloads/returns without completing, the modal shows immediately.
- * Redirects to the full onboarding portal (/onboarding-cliente/:token).
+ * if the authenticated user hasn't completed onboarding yet AND
+ * the tenant has no existing data (empresa_cadastro).
+ * Users added to already-configured tenants are NOT blocked.
  */
 export function OnboardingGate() {
   const { profile, isSuperAdmin } = useAuthContext();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [tenantHasData, setTenantHasData] = useState<boolean | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const needsOnboarding =
+  const profileOnboardingIncomplete =
     !!profile &&
     !(profile as any).onboarding_concluido &&
     !isSuperAdmin;
+
+  const tenantId = (profile as any)?.tenant_id;
+
+  // Check if the tenant already has empresa_cadastro data
+  useEffect(() => {
+    if (!profileOnboardingIncomplete || !tenantId) {
+      setTenantHasData(false);
+      return;
+    }
+
+    supabase
+      .from("empresa_cadastro")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .then(({ count, error }) => {
+        if (error) {
+          // On error, assume no data (safe default: show gate)
+          setTenantHasData(false);
+          return;
+        }
+        const hasData = (count ?? 0) > 0;
+        setTenantHasData(hasData);
+
+        // If tenant already has data, auto-mark this user's onboarding as done
+        if (hasData) {
+          supabase
+            .from("profiles")
+            .update({ onboarding_concluido: true })
+            .eq("user_id", (profile as any).user_id)
+            .then(() => {
+              localStorage.removeItem(ONBOARDING_SHOWN_KEY);
+            });
+        }
+      });
+  }, [profileOnboardingIncomplete, tenantId]);
+
+  const needsOnboarding =
+    profileOnboardingIncomplete &&
+    tenantHasData === false; // Only block if tenant truly has no data
 
   useEffect(() => {
     if (!needsOnboarding) {
@@ -55,7 +96,6 @@ export function OnboardingGate() {
     if (token) {
       navigate(`/onboarding-cliente/${token}`);
     } else {
-      // Fallback to internal onboarding if no token available
       navigate("/onboarding");
     }
   };
