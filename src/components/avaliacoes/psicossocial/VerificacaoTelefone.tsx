@@ -34,6 +34,7 @@ export function VerificacaoTelefone({
   const [enviando, setEnviando] = useState(false);
   const [verificando, setVerificando] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [jaRespondeu, setJaRespondeu] = useState(false);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
