@@ -210,6 +210,18 @@ export function useTerceiros() {
         .upload(path, params.file, { cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
 
+      // Calculate document status based on validity date
+      const today = new Date().toISOString().split("T")[0];
+      let docStatus = "pendente";
+      if (params.data_validade) {
+        if (params.data_validade < today) {
+          docStatus = "vencido";
+        } else {
+          const diffDays = Math.ceil((new Date(params.data_validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          docStatus = diffDays <= 30 ? "a_vencer" : "valido";
+        }
+      }
+
       const { error } = await supabase
         .from("terceiro_documentos" as never)
         .insert({
@@ -223,6 +235,7 @@ export function useTerceiros() {
           arquivo_tamanho: params.file.size,
           data_emissao: params.data_emissao || null,
           data_validade: params.data_validade || null,
+          status: docStatus,
           observacoes: params.observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
