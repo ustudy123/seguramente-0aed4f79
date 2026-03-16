@@ -22,18 +22,18 @@ interface Props {
   };
 }
 
-const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusMap: Record<string, {label: string;variant: "default" | "secondary" | "destructive" | "outline";}> = {
   em_aberto: { label: "Em Aberto", variant: "destructive" },
   em_analise: { label: "Em Análise", variant: "secondary" },
   acoes_andamento: { label: "Ações em Andamento", variant: "default" },
-  concluido: { label: "Concluído", variant: "outline" },
+  concluido: { label: "Concluído", variant: "outline" }
 };
 
 const lesaoMap: Record<string, string> = {
   sem_lesao: "Sem lesão",
   leve: "Leve",
   moderada: "Moderada",
-  grave: "Grave",
+  grave: "Grave"
 };
 
 export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => {
@@ -50,8 +50,8 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
         (e.codigo || "").toLowerCase().includes(s) ||
         (e.colaborador_nome || "").toLowerCase().includes(s) ||
         (e.setor || "").toLowerCase().includes(s) ||
-        (e.descricao || "").toLowerCase().includes(s)
-      );
+        (e.descricao || "").toLowerCase().includes(s));
+
     }
     return true;
   });
@@ -61,8 +61,8 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
       <div className="text-center py-12 text-muted-foreground">
         <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" />
         <p>Nenhum evento encontrado.</p>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -92,22 +92,22 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
                   {format(new Date(e.data_evento), "dd/MM/yyyy", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
-                  {e.tipo === "acidente" ? (
-                    <Badge variant="destructive" className="text-xs">
+                  {e.tipo === "acidente" ?
+                  <Badge variant="destructive" className="text-xs">
                       <AlertTriangle className="w-3 h-3 mr-1" />
                       Acidente
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-xs">
+                    </Badge> :
+
+                  <Badge variant="secondary" className="text-xs">
                       <Shield className="w-3 h-3 mr-1" />
                       Incidente
                     </Badge>
-                  )}
+                  }
                 </TableCell>
                 <TableCell className="text-sm">
-                  {e.tipo === "acidente" && e.gravidade_lesao
-                    ? lesaoMap[e.gravidade_lesao] || "-"
-                    : "-"}
+                  {e.tipo === "acidente" && e.gravidade_lesao ?
+                  lesaoMap[e.gravidade_lesao] || "-" :
+                  "-"}
                 </TableCell>
                 <TableCell className="text-sm">
                   {[e.unidade, e.setor].filter(Boolean).join(" / ") || "-"}
@@ -119,51 +119,53 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex gap-1 justify-center">
-                    {e.status === "acoes_andamento" && (
-                      <span title="Ação vinculada">
+                    {e.status === "acoes_andamento" &&
+                    <span title="Ação vinculada">
                         <CheckCircle2 className="w-4 h-4 text-primary" />
                       </span>
-                    )}
-                    {e.tipo === "acidente" && e.cat_emitida && (
-                      <span title="CAT anexada"><FileText className="w-4 h-4 text-green-600" /></span>
-                    )}
-                    {e.tipo === "acidente" && !e.cat_emitida && (
-                      <span title="CAT pendente"><FileText className="w-4 h-4 text-destructive" /></span>
-                    )}
+                    }
+                    {e.tipo === "acidente" && e.cat_emitida &&
+                    <span title="CAT anexada"><FileText className="w-4 h-4 text-green-600" /></span>
+                    }
+                    {e.tipo === "acidente" && !e.cat_emitida
+
+                    }
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
+                    {e.tipo === "acidente" &&
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-7 w-7 p-0"
-                      title="Baixar relatório"
-                      onClick={(ev) => { ev.stopPropagation(); gerarRelatorioCATpdf(e); }}
-                    >
-                      <Printer className="w-4 h-4" />
-                    </Button>
-                    {onEdit && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        title="Editar"
-                        onClick={(ev) => { ev.stopPropagation(); onEdit(e); }}
-                      >
+                      title="Baixar relatório CAT"
+                      onClick={(ev) => {ev.stopPropagation();gerarRelatorioCATpdf(e);}}>
+                      
+                        <Printer className="w-4 h-4" />
+                      </Button>
+                    }
+                    {onEdit &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      title="Editar"
+                      onClick={(ev) => {ev.stopPropagation();onEdit(e);}}>
+                      
                         <Pencil className="w-4 h-4" />
                       </Button>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Ver detalhes" onClick={(ev) => { ev.stopPropagation(); onSelect(e); }}>
+                    }
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Ver detalhes" onClick={(ev) => {ev.stopPropagation();onSelect(e);}}>
                       <Eye className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
-            );
+              </TableRow>);
+
           })}
         </TableBody>
       </Table>
-    </div>
-  );
+    </div>);
+
 };
