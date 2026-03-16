@@ -124,12 +124,6 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
                         <CheckCircle2 className="w-4 h-4 text-primary" />
                       </span>
                     }
-                    {e.tipo === "acidente" && e.cat_emitida &&
-                    <span title="CAT anexada"><FileText className="w-4 h-4 text-green-600" /></span>
-                    }
-                    {e.tipo === "acidente" && !e.cat_emitida
-
-                    }
                   </div>
                 </TableCell>
                 <TableCell>
