@@ -258,7 +258,7 @@ export function AEPEvidenciaForm({
                 <SelectValue placeholder="Qualquer colaborador" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Não especificado</SelectItem>
+                <SelectItem value="_nenhum">Não especificado</SelectItem>
                 {colaboradoresDisponiveis.map(colab => (
                   <SelectItem key={colab.id} value={colab.id}>
                     {colab.nome_completo}
