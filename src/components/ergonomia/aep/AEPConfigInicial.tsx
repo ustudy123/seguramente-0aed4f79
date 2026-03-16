@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, MapPin, Calendar, User, CheckSquare, X } from "lucide-react";
 import { useDepartamentos } from "@/hooks/useCadastros";
 import { AEPEmpresaInfo } from "@/types/aep-multi";
+import { formatCnpj, cleanCnpj } from "@/lib/brasilapi";
 
 interface AEPConfigInicialProps {
   empresa: AEPEmpresaInfo;
