@@ -102,13 +102,13 @@ export function DocumentoUploadForm({ open, onOpenChange, onSubmit, terceiroId, 
           <div>
             <Label>Arquivo *</Label>
             {file ? (
-              <div className="flex items-center gap-2 p-3 mt-1 rounded-lg border bg-muted/50">
+              <div className="flex items-center gap-2 p-3 mt-1 rounded-lg border bg-muted/50 min-w-0 overflow-hidden">
                 <FileUp className="w-5 h-5 text-primary shrink-0" />
-                <span className="text-sm truncate flex-1">{file.name}</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-sm truncate min-w-0 flex-1">{file.name}</span>
+                <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">
                   {(file.size / 1024).toFixed(0)} KB
                 </span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFile(null)}>
+                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setFile(null)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
