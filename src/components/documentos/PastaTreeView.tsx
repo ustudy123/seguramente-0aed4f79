@@ -278,6 +278,7 @@ function PastaNode({
                 onRenamePasta={onRenamePasta}
                 onDeletePasta={onDeletePasta}
                 onDropDocument={onDropDocument}
+                expandAllSignal={expandAllSignal}
               />
             ))}
           </motion.div>

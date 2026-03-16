@@ -73,6 +73,7 @@ const Documentos = () => {
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandAllSignal, setExpandAllSignal] = useState({ expand: false, key: 0 });
   const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadForPastaId, setUploadForPastaId] = useState<string | undefined>(undefined);
