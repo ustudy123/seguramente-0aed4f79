@@ -253,12 +253,12 @@ export function AEPEvidenciaForm({
               Colaborador
               <Badge variant="outline" className="ml-1 text-xs">opcional</Badge>
             </Label>
-            <Select value={colaboradorId} onValueChange={setColaboradorId} disabled={!setorId}>
+            <Select value={colaboradorId || "_nenhum"} onValueChange={(v) => setColaboradorId(v === "_nenhum" ? "" : v)} disabled={!setorId}>
               <SelectTrigger>
                 <SelectValue placeholder="Qualquer colaborador" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Não especificado</SelectItem>
+                <SelectItem value="_nenhum">Não especificado</SelectItem>
                 {colaboradoresDisponiveis.map(colab => (
                   <SelectItem key={colab.id} value={colab.id}>
                     {colab.nome_completo}
