@@ -178,7 +178,13 @@ export function VerificacaoTelefone({
               </div>
               <Button
                 variant="outline"
-                onClick={() => window.close()}
+                onClick={() => {
+                  // Tenta fechar a aba; se não conseguir, redireciona para about:blank
+                  window.close();
+                  setTimeout(() => {
+                    window.location.href = "about:blank";
+                  }, 300);
+                }}
                 className="w-full"
               >
                 Fechar
