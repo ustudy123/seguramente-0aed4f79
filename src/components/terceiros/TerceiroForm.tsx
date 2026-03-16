@@ -22,6 +22,8 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
+  const [servicoSearch, setServicoSearch] = useState("");
+  const [customServicos, setCustomServicos] = useState<string[]>([]);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
@@ -146,19 +148,71 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
 
           <div>
             <Label>Tipo de Serviço</Label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {TIPOS_SERVICO.map((s) => (
-                <Badge
-                  key={s}
-                  variant={form.tipo_servico?.includes(s) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleServico(s)}
-                >
-                  {s}
-                  {form.tipo_servico?.includes(s) && <X className="w-3 h-3 ml-1" />}
-                </Badge>
-              ))}
+            {/* Selected services */}
+            {(form.tipo_servico || []).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1 mb-2">
+                {(form.tipo_servico || []).map((s) => (
+                  <Badge key={s} variant="default" className="cursor-pointer" onClick={() => toggleServico(s)}>
+                    {s}
+                    <X className="w-3 h-3 ml-1" />
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {/* Search input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Buscar ou adicionar tipo de serviço..."
+                value={servicoSearch}
+                onChange={(e) => setServicoSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && servicoSearch.trim()) {
+                    e.preventDefault();
+                    const val = servicoSearch.trim();
+                    if (!(form.tipo_servico || []).includes(val)) {
+                      if (!TIPOS_SERVICO.includes(val) && !customServicos.includes(val)) {
+                        setCustomServicos((p) => [...p, val]);
+                      }
+                      toggleServico(val);
+                    }
+                    setServicoSearch("");
+                  }
+                }}
+              />
             </div>
+            {/* Dropdown suggestions */}
+            {servicoSearch && (
+              <div className="border rounded-md mt-1 max-h-40 overflow-y-auto bg-background shadow-sm">
+                {[...TIPOS_SERVICO, ...customServicos]
+                  .filter((s) => s.toLowerCase().includes(servicoSearch.toLowerCase()) && !(form.tipo_servico || []).includes(s))
+                  .map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      onClick={() => { toggleServico(s); setServicoSearch(""); }}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                {![...TIPOS_SERVICO, ...customServicos].some((s) => s.toLowerCase() === servicoSearch.toLowerCase().trim()) && servicoSearch.trim() && (
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-accent transition-colors font-medium"
+                    onClick={() => {
+                      const val = servicoSearch.trim();
+                      setCustomServicos((p) => [...p, val]);
+                      toggleServico(val);
+                      setServicoSearch("");
+                    }}
+                  >
+                    + Adicionar "{servicoSearch.trim()}"
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
