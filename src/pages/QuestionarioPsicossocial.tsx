@@ -27,7 +27,7 @@ import logoSeguramente from "@/assets/logo-seguramente.png";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
-type EtapaQuestionario = 'consentimento' | 'questionario' | 'concluido';
+type EtapaQuestionario = 'consentimento' | 'verificacao_telefone' | 'questionario' | 'concluido';
 
 const POLITICA_LGPD_OBRIGATORIA = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
 
