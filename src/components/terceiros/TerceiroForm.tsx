@@ -22,6 +22,7 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
     nome_fantasia: initial?.nome_fantasia || "",
@@ -48,6 +49,40 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
     const arr = form.tipo_servico || [];
     set("tipo_servico", arr.includes(s) ? arr.filter((x) => x !== s) : [...arr, s]);
   };
+
+  const handleCnpjChange = (value: string) => {
+    set("cnpj", formatCnpj(value));
+  };
+
+  const handleBuscarCnpj = useCallback(async () => {
+    const cnpj = form.cnpj || "";
+    if (!validateCnpj(cnpj)) {
+      toast.error("Digite um CNPJ válido com 14 dígitos.");
+      return;
+    }
+    setBuscandoCnpj(true);
+    try {
+      const result = await buscarCnpj(cnpj);
+      if (!result) {
+        toast.error("CNPJ não encontrado na base da Receita Federal.");
+        return;
+      }
+      setForm((p) => ({
+        ...p,
+        razao_social: result.razao_social || p.razao_social,
+        nome_fantasia: result.nome_fantasia || p.nome_fantasia,
+        atividade_principal: result.cnae_fiscal_descricao || p.atividade_principal,
+        cnae: result.cnae_fiscal ? String(result.cnae_fiscal) : p.cnae,
+        email: result.email || p.email,
+        telefone: result.telefone || p.telefone,
+      }));
+      toast.success("Dados do CNPJ preenchidos automaticamente!");
+    } catch {
+      toast.error("Erro ao consultar CNPJ.");
+    } finally {
+      setBuscandoCnpj(false);
+    }
+  }, [form.cnpj]);
 
   const handleSubmit = async () => {
     if (!form.razao_social || !form.cnpj) return;
