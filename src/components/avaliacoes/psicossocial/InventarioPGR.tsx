@@ -372,6 +372,13 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             {altos > 0 && (
               <Badge className="bg-orange-500 text-white">{altos} alto(s)</Badge>
             )}
+            {/* GAP-P2: Badge de reavaliação pendente no GRO vinculado */}
+            {pendentesReavaliacao > 0 && (
+              <Badge className="bg-violet-100 text-violet-700 border border-violet-300 gap-1">
+                <RefreshCw className="h-3 w-3" />
+                {pendentesReavaliacao} reavaliar
+              </Badge>
+            )}
             {/* GAP 4: Botão Relatório completo com metodologia */}
             <Button
               variant="outline"
