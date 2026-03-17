@@ -185,8 +185,7 @@ export const getDefaultAEPAssinaturas = (): AEPAssinatura => ({
 export const getDefaultAEPMultiState = (): AEPMultiState => ({
   step: 1,
   empresa: getDefaultAEPEmpresaInfo(),
-  avaliarTodosSetores: false,
-  setoresSelecionados: [],
+  situacoes: [],
   evidencias: [],
   avaliacoes: [],
   sinteseGeral: undefined,
