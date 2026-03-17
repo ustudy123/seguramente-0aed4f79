@@ -40,6 +40,8 @@ import { PhotoCapture } from "./PhotoCapture";
 import { SignatureCapture } from "./SignatureCapture";
 import { EpiEntregaRecibo } from "./EpiEntregaRecibo";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { useDocumentos } from "@/hooks/useDocumentos";
 import { useEpiLocais } from "@/hooks/useEpiLocais";
