@@ -114,6 +114,7 @@ interface InventarioItem {
 export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [relatorioOpen, setRelatorioOpen] = useState(false);
   const { importarDaCampanha } = useGRORiscos();
 
   // Campanhas válidas (mín. anonimato e com radar_data real)
