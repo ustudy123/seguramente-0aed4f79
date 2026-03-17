@@ -73,7 +73,7 @@ const prioridadeColors: Record<TicketPrioridade, string> = {
 export default function Suporte() {
   const { hasMinimumRole } = useAuthContext();
   const isAdmin = hasMinimumRole("admin");
-  const { tickets, isLoading, createTicket, updateTicket, fetchComentarios, addComentario } = useSuporteTickets();
+  const { tickets, isLoading, isSuperAdmin, createTicket, updateTicket, fetchComentarios, addComentario } = useSuporteTickets();
 
   const [showForm, setShowForm] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SuporteTicket | null>(null);
