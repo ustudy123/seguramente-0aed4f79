@@ -18,6 +18,11 @@ export function EstrategiaEscopoSelector({ escopo, onChange }: Props) {
   const { grupos } = useGruposEconomicos();
   const { empresaAtiva } = useEmpresaAtiva();
 
+  // Only show groups that the active company belongs to
+  const gruposVisiveis = grupos.filter(
+    (g) => g.ativo && empresaAtiva?.grupo_economico_id === g.id
+  );
+
   const handleChange = (value: string) => {
     if (value === "empresa") {
       onChange({ tipo: "empresa", grupoId: null });
@@ -26,7 +31,12 @@ export function EstrategiaEscopoSelector({ escopo, onChange }: Props) {
     }
   };
 
-  const selectedValue = escopo.tipo === "empresa" ? "empresa" : escopo.grupoId ?? "empresa";
+  // Reset to empresa scope if current group is no longer visible
+  const selectedValue = escopo.tipo === "empresa"
+    ? "empresa"
+    : gruposVisiveis.some((g) => g.id === escopo.grupoId)
+      ? escopo.grupoId!
+      : "empresa";
 
   return (
     <div className="flex items-center gap-2 bg-muted/50 border rounded-lg px-3 py-2">
