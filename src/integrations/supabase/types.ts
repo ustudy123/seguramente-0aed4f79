@@ -8245,6 +8245,33 @@ export type Database = {
           },
         ]
       }
+      gro_exportacoes_log: {
+        Row: {
+          campanha_id: string
+          exportado_em: string
+          id: string
+          riscos_gerados: number
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          campanha_id: string
+          exportado_em?: string
+          id?: string
+          riscos_gerados?: number
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          campanha_id?: string
+          exportado_em?: string
+          id?: string
+          riscos_gerados?: number
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       gro_riscos: {
         Row: {
           acao_id: string | null
@@ -8264,9 +8291,12 @@ export type Database = {
           id: string
           medidas_existentes: string[] | null
           medidas_recomendadas: string[] | null
+          necessita_reavaliacao: boolean
           nivel_risco: string
           perigo_identificado: string | null
           probabilidade: string
+          reavaliacao_motivo: string | null
+          reavaliacao_solicitada_em: string | null
           score_dimensao: number | null
           setor: string | null
           severidade: string
@@ -8296,9 +8326,12 @@ export type Database = {
           id?: string
           medidas_existentes?: string[] | null
           medidas_recomendadas?: string[] | null
+          necessita_reavaliacao?: boolean
           nivel_risco?: string
           perigo_identificado?: string | null
           probabilidade?: string
+          reavaliacao_motivo?: string | null
+          reavaliacao_solicitada_em?: string | null
           score_dimensao?: number | null
           setor?: string | null
           severidade?: string
@@ -8328,9 +8361,12 @@ export type Database = {
           id?: string
           medidas_existentes?: string[] | null
           medidas_recomendadas?: string[] | null
+          necessita_reavaliacao?: boolean
           nivel_risco?: string
           perigo_identificado?: string | null
           probabilidade?: string
+          reavaliacao_motivo?: string | null
+          reavaliacao_solicitada_em?: string | null
           score_dimensao?: number | null
           setor?: string | null
           severidade?: string
