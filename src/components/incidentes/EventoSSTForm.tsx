@@ -64,6 +64,7 @@ const STEPS_ACIDENTE = [
 
 export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending }: Props) => {
   const { colaboradores } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [tipo, setTipo] = useState<EventoSSTTipo>(initial?.tipo || "incidente");
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, any>>({});
