@@ -119,6 +119,9 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   );
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
+  // Verifica se a campanha mais recente tem situações de trabalho vinculadas
+  const campanhaAtual = campanhasValidas[0];
+  const semEscopoGRO = !campanhaAtual?.situacoes_trabalho || campanhaAtual.situacoes_trabalho.length === 0;
 
   /**
    * Agregação real das dimensões.
