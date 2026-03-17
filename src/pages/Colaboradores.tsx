@@ -411,9 +411,12 @@ function AtivosTab() {
                     {colab.data_admissao ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") : "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
-                      {statusLabels[colab.status] || "Ativo"}
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
+                        {statusLabels[colab.status] || "Ativo"}
+                      </Badge>
+                      <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} compact />
+                    </div>
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
