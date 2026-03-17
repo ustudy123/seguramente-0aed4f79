@@ -10,6 +10,8 @@ import {
   Link as LinkIcon,
   CheckCircle2,
   UserPlus,
+  Database,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,13 +26,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { useGRORiscos } from "@/hooks/useGRORiscos";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
 import { ParticipacaoManager } from "./ParticipacaoManager";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
+
+const MINIMO_ANONIMATO = 5;
 
 interface CampanhaListProps {
   campanhas: CampanhaPsicossocial[];
@@ -42,15 +49,68 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
   const [showDistribuicao, setShowDistribuicao] = useState(false);
   const [showResultados, setShowResultados] = useState(false);
   const [expandedCampanha, setExpandedCampanha] = useState<string | null>(null);
-  
+  const [exportandoGRO, setExportandoGRO] = useState<string | null>(null);
+
   const { atualizarStatusCampanha } = usePsicossocial();
+  const { importarDaCampanha } = useGRORiscos();
+  const { tenantId } = useAuth();
 
   const handleAtivar = (campanha: CampanhaPsicossocial) => {
     atualizarStatusCampanha.mutate({ id: campanha.id, status: 'ativa' });
   };
 
-  const handleEncerrar = (campanha: CampanhaPsicossocial) => {
-    atualizarStatusCampanha.mutate({ id: campanha.id, status: 'encerrada' });
+  // GAP 1: Encerrar campanha + exportar automaticamente ao GRO se tiver dimensões críticas
+  const handleEncerrar = async (campanha: CampanhaPsicossocial) => {
+    atualizarStatusCampanha.mutate(
+      { id: campanha.id, status: 'encerrada' },
+      {
+        onSuccess: async () => {
+          // Verificar se a campanha tem dados suficientes para exportar ao GRO
+          const totalRespostas = campanha.total_respostas || 0;
+          const radarData = campanha.radar_data as RadarDimensao[] | null;
+          const situacoes = campanha.situacoes_trabalho ?? [];
+
+          if (
+            totalRespostas >= MINIMO_ANONIMATO &&
+            radarData && radarData.length > 0 &&
+            situacoes.length > 0 &&
+            !campanha.gro_exportado_em
+          ) {
+            const isSipro = campanha.instrumento === 'sipro';
+            const temCriticos = radarData.some(d => {
+              const risco = isSipro ? d.value : 100 - d.value;
+              return risco >= 35;
+            });
+
+            if (temCriticos) {
+              setExportandoGRO(campanha.id);
+              try {
+                const count = await importarDaCampanha.mutateAsync({
+                  campanhaId: campanha.id,
+                  campanhaName: campanha.nome,
+                  dimensoes: radarData.map(d => ({ subject: d.subject, value: d.value })),
+                  empresaId: null,
+                  isSipro,
+                  situacoes,
+                });
+                // Registrar data da exportação para evitar duplicidade
+                if (tenantId) {
+                  await (supabase as any)
+                    .from('questionario_psicossocial_campanhas')
+                    .update({ gro_exportado_em: new Date().toISOString(), gro_riscos_count: count })
+                    .eq('id', campanha.id);
+                }
+                toast.success(`Campanha encerrada! ${count} risco(s) exportado(s) automaticamente ao GRO (NR-17).`);
+              } catch {
+                toast.info('Campanha encerrada. Exporte os riscos ao GRO manualmente no Inventário PGR.');
+              } finally {
+                setExportandoGRO(null);
+              }
+            }
+          }
+        },
+      }
+    );
   };
 
   const handleDistribuir = (campanha: CampanhaPsicossocial) => {
