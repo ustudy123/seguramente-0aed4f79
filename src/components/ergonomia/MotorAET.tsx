@@ -2,6 +2,7 @@
  * MotorAET — Motor de Recomendação de AET (NR-17)
  * Detecta riscos alto/crítico e gera alerta técnico fundamentado
  * com gatilhos NR-17 e sugestão de abertura de AET formal.
+ * GAP-E2: Inclui gatilho automático para riscos críticos importados de campanhas psicossociais.
  */
 import { useMemo, useState } from "react";
 import {
@@ -19,6 +20,7 @@ import {
   Users,
   Clock,
   Shield,
+  FlameKindling,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

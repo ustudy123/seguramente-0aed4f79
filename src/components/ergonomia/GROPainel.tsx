@@ -1,6 +1,7 @@
 /**
  * Painel de visão geral do GRO (Gestão de Riscos Ocupacionais) unificado.
  * Exibe riscos físicos e psicossociais consolidados numa única view.
+ * GAP-P2: Exibe badge "Reavaliação Pendente" nos riscos que necessitam reavaliação pós-ação.
  */
 import { useState } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   Loader2,
   TrendingUp,
   Filter,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
 import {
