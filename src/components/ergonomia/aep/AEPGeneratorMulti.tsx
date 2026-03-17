@@ -50,8 +50,10 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
     nextStep,
     prevStep,
     updateEmpresa,
-    setAvaliarTodosSetores,
-    setSetoresSelecionados,
+    addSituacao,
+    removeSituacao,
+    duplicateSituacao,
+    updateSituacao,
     addEvidencia,
     removeEvidencia,
     analyzeAllEvidencias,
@@ -71,8 +73,7 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
   const canProceed = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(state.empresa.nome && state.empresa.responsavelLevantamento && 
-          (state.avaliarTodosSetores || state.setoresSelecionados.length > 0));
+        return !!(state.empresa.nome && state.empresa.responsavelLevantamento && state.situacoes.length > 0);
       case 2:
         return state.evidencias.length > 0;
       case 3:
@@ -90,12 +91,10 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
 
   const handleNext = async () => {
     if (state.step === 2 && state.evidencias.some(e => !e.analisadaPorIA)) {
-      // Auto-analyze when leaving step 2
       await analyzeAllEvidencias();
       generateAvaliacoes();
       nextStep();
     } else if (state.step === 3) {
-      // Generate avaliacoes when leaving analysis step
       generateAvaliacoes();
       nextStep();
     } else {
@@ -134,7 +133,7 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
         heightLeft -= pageHeight;
       }
 
-      const fileName = `AEP_Multi_${state.empresa.nome || 'documento'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `AEP_${state.empresa.nome || 'documento'}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
       
       toast.success("PDF gerado com sucesso!");
@@ -153,8 +152,7 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
     try {
       const documento: AEPDocumentoMulti = {
         empresa: state.empresa,
-        setoresSelecionados: state.setoresSelecionados,
-        avaliarTodosSetores: state.avaliarTodosSetores,
+        situacoes: state.situacoes,
         avaliacoes: state.avaliacoes,
         sinteseGeral: state.sinteseGeral,
         acoesConsolidadas: state.acoesConsolidadas,
@@ -176,19 +174,19 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
         return (
           <AEPConfigInicial
             empresa={state.empresa}
-            avaliarTodosSetores={state.avaliarTodosSetores}
-            setoresSelecionados={state.setoresSelecionados}
+            situacoes={state.situacoes}
             onUpdateEmpresa={updateEmpresa}
-            onSetAvaliarTodosSetores={setAvaliarTodosSetores}
-            onSetSetoresSelecionados={setSetoresSelecionados}
+            onAddSituacao={addSituacao}
+            onRemoveSituacao={removeSituacao}
+            onDuplicateSituacao={duplicateSituacao}
+            onUpdateSituacao={updateSituacao}
           />
         );
       case 2:
         return (
           <div className="space-y-6">
             <AEPEvidenciaForm
-              setoresSelecionados={state.setoresSelecionados}
-              avaliarTodosSetores={state.avaliarTodosSetores}
+              situacoes={state.situacoes}
               onAddEvidencia={addEvidencia}
             />
             <AEPEvidenciasList
@@ -214,7 +212,7 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
                       className="max-w-md mx-auto"
                     />
                   </>
-                ) : stats.evidenciasAnalisadas === stats.totalEvidencias ? (
+                ) : stats.evidenciasAnalisadas === stats.totalEvidencias && stats.totalEvidencias > 0 ? (
                   <>
                     <Sparkles className="h-12 w-12 mx-auto text-success" />
                     <h3 className="text-xl font-semibold text-success">Análise Concluída!</h3>
@@ -222,12 +220,8 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
                       {stats.totalEvidencias} evidência(s) analisada(s) em {stats.totalFuncoes} função(ões)
                     </p>
                     <div className="flex justify-center gap-4 mt-4">
-                      <Badge variant="secondary">
-                        {stats.totalSetores} setor(es)
-                      </Badge>
-                      <Badge variant="secondary">
-                        {stats.totalFuncoes} função(ões)
-                      </Badge>
+                      <Badge variant="secondary">{stats.totalSetores} setor(es)</Badge>
+                      <Badge variant="secondary">{stats.totalFuncoes} função(ões)</Badge>
                     </div>
                   </>
                 ) : (
@@ -284,8 +278,8 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">AEP Multi-Setor</h2>
-          <Badge variant="outline">Nova</Badge>
+          <h2 className="text-lg font-semibold">AEP por Situação de Trabalho</h2>
+          <Badge variant="outline">NR-17</Badge>
         </div>
         
         <div className="flex items-center gap-2">
@@ -380,25 +374,25 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
       </div>
 
       {/* Stats bar */}
-      {state.evidencias.length > 0 && (
-        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
-          <Badge variant="outline" className="gap-1">
-            <Camera className="h-3 w-3" />
-            {stats.totalEvidencias} evidência(s)
-          </Badge>
-          <Badge variant="outline" className="gap-1">
-            <Building2 className="h-3 w-3" />
-            {stats.totalSetores} setor(es)
-          </Badge>
+      {(state.situacoes.length > 0 || state.evidencias.length > 0) && (
+        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg flex-wrap">
           <Badge variant="outline" className="gap-1">
             <ClipboardCheck className="h-3 w-3" />
-            {stats.totalFuncoes} função(ões)
+            {stats.totalSituacoes} situação(ões) de trabalho
           </Badge>
-          {stats.evidenciasAnalisadas > 0 && (
-            <Badge variant="default" className="gap-1 bg-success">
-              <Sparkles className="h-3 w-3" />
-              {stats.evidenciasAnalisadas} analisada(s)
-            </Badge>
+          {state.evidencias.length > 0 && (
+            <>
+              <Badge variant="outline" className="gap-1">
+                <Camera className="h-3 w-3" />
+                {stats.totalEvidencias} evidência(s)
+              </Badge>
+              {stats.evidenciasAnalisadas > 0 && (
+                <Badge variant="default" className="gap-1 bg-success">
+                  <Sparkles className="h-3 w-3" />
+                  {stats.evidenciasAnalisadas} analisada(s)
+                </Badge>
+              )}
+            </>
           )}
         </div>
       )}
