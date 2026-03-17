@@ -50,6 +50,11 @@ export interface GRORisco {
   status_gro: GROStatusCiclo;
   ativo: boolean;
 
+  // GAP 3: Reavaliação obrigatória pós-ação
+  necessita_reavaliacao?: boolean;
+  reavaliacao_motivo?: string | null;
+  reavaliacao_solicitada_em?: string | null;
+
   created_at: string;
   updated_at: string;
 }
