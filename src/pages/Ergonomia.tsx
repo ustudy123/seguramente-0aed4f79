@@ -307,8 +307,12 @@ export default function Ergonomia() {
           </motion.div>
 
           {/* ── Tabs Principais ── */}
-          <Tabs defaultValue="analise_ia" className="space-y-4">
+          <Tabs defaultValue="gro" className="space-y-4">
             <TabsList className="flex-wrap h-auto gap-1">
+              <TabsTrigger value="gro" className="gap-2">
+                <ShieldCheck className="h-4 w-4" />
+                GRO / Inventário
+              </TabsTrigger>
               <TabsTrigger value="analise_ia" className="gap-2">
                 <Brain className="h-4 w-4" />
                 Análise por IA
@@ -355,6 +359,11 @@ export default function Ergonomia() {
                 Hub de Serviços
               </TabsTrigger>
             </TabsList>
+
+            {/* GRO — Inventário Unificado (nova aba central) */}
+            <TabsContent value="gro">
+              <GROPainel onNovo={() => setShowRiscoForm(true)} />
+            </TabsContent>
 
             {/* Análise por IA */}
             <TabsContent value="analise_ia">
