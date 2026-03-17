@@ -28,24 +28,23 @@ import { useVideoFrameExtractor } from "@/hooks/useVideoFrameExtractor";
 import { EvidenciaAEP } from "@/types/aep-multi";
 import { toast } from "sonner";
 
+import { SituacaoTrabalho } from "@/types/aep-multi";
+
 interface AEPEvidenciaFormProps {
-  setoresSelecionados: { id: string; nome: string }[];
-  avaliarTodosSetores: boolean;
+  situacoes: SituacaoTrabalho[];
   onAddEvidencia: (evidencia: Omit<EvidenciaAEP, 'id' | 'createdAt' | 'analisadaPorIA'>) => string;
 }
 
 export function AEPEvidenciaForm({
-  setoresSelecionados,
-  avaliarTodosSetores,
+  situacoes,
   onAddEvidencia
 }: AEPEvidenciaFormProps) {
   const { departamentos } = useDepartamentos();
   const { cargos } = useCargos();
   const { colaboradores } = useColaboradores();
   
-  // Form state
-  const [setorId, setSetorId] = useState("");
-  const [funcaoId, setFuncaoId] = useState("");
+  // Form state — setor/função locked to situacoes list
+  const [situacaoId, setSituacaoId] = useState("");
   const [colaboradorId, setColaboradorId] = useState("");
   const [contextoTexto, setContextoTexto] = useState("");
   const [arquivo, setArquivo] = useState<{ base64: string; tipo: 'foto' | 'video' } | null>(null);
@@ -63,14 +62,11 @@ export function AEPEvidenciaForm({
   
   const { extractFrames } = useVideoFrameExtractor({ maxFrames: 4, framesPerSecond: 2 });
 
-  // Filtered data based on selection
-  const setoresDisponiveis = avaliarTodosSetores 
-    ? departamentos.filter(d => d.ativo)
-    : departamentos.filter(d => setoresSelecionados.some(s => s.id === d.id));
-
-  const funcoesDisponiveis = cargos.filter(c => 
-    c.ativo && c.departamento_id === setorId
-  );
+  const situacaoSelecionada = situacoes.find(s => s.id === situacaoId);
+  const setorId = situacaoSelecionada?.setorId || "";
+  const setorNome = situacaoSelecionada?.setorNome || "";
+  const funcaoId = situacaoSelecionada?.funcaoId || "";
+  const funcaoNome = situacaoSelecionada?.funcaoNome || "";
 
   const colaboradoresDisponiveis = colaboradores.filter(c => 
     c.departamento === departamentos.find(d => d.id === setorId)?.nome

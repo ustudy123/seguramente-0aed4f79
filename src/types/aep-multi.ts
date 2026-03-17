@@ -94,8 +94,7 @@ export interface AEPDocumentoMulti {
   id?: string;
   tenant_id?: string;
   empresa: AEPEmpresaInfo;
-  setoresSelecionados: { id: string; nome: string }[];
-  avaliarTodosSetores: boolean;
+  situacoes: SituacaoTrabalho[];
   avaliacoes: AEPAvaliacaoFuncao[];
   sinteseGeral?: AEPSinteseAvaliacao;
   acoesConsolidadas: AEPAcaoRecomendada[];
