@@ -8,8 +8,6 @@ import {
   ClipboardCheck,
   Brain,
   Building2,
-  Sparkles,
-  BookOpen,
   FileText,
   ShieldCheck,
   ChevronRight,
@@ -17,10 +15,13 @@ import {
   Database,
   Map,
   BarChart3,
-  Zap,
-  RotateCcw,
-  Users,
+  Search,
+  BarChart2,
+  ListChecks,
+  Wrench,
+  Eye,
   HelpCircle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,31 +31,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErgonomia } from "@/hooks/useErgonomia";
-import { useErgonomiaInteligente } from "@/hooks/useErgonomiaInteligente";
 import { useErgonomiaAnalises } from "@/hooks/useErgonomiaAnalises";
-import { ErgonomiaStats } from "@/components/ergonomia/ErgonomiaStats";
 import { CategoriaCard } from "@/components/ergonomia/CategoriaCard";
 import { ItemDetailModal } from "@/components/ergonomia/ItemDetailModal";
 import { EmptyState } from "@/components/ergonomia/EmptyState";
-import { RiscoForm } from "@/components/ergonomia/RiscoForm";
-import { RiscosList } from "@/components/ergonomia/RiscosList";
 import { AcaoForm } from "@/components/ergonomia/AcaoForm";
 import { AcoesList } from "@/components/ergonomia/AcoesList";
-import { HubServicos } from "@/components/ergonomia/HubServicos";
 import { AnaliseIASection } from "@/components/ergonomia/AnaliseIASection";
 import { RegistrosErgonomicos } from "@/components/ergonomia/RegistrosErgonomicos";
 import { MapaRiscoErgonomico } from "@/components/ergonomia/MapaRiscoErgonomico";
 import { InventarioRiscos } from "@/components/ergonomia/InventarioRiscos";
-import { AnaliseLERDORT } from "@/components/ergonomia/AnaliseLERDORT";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import { GROPainel } from "@/components/ergonomia/GROPainel";
-import { GROCicloPDCA } from "@/components/ergonomia/GROCicloPDCA";
 import { DocumentoMetodologia } from "@/components/ergonomia/DocumentoMetodologia";
 import { ComunicacaoTrabalhadores } from "@/components/ergonomia/ComunicacaoTrabalhadores";
-import { MotorAET } from "@/components/ergonomia/MotorAET";
-import { useGRORiscos } from "@/hooks/useGRORiscos";
 import { GuiaRapidoErgonomia } from "@/components/ergonomia/GuiaRapidoErgonomia";
+import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { RiscoForm } from "@/components/ergonomia/RiscoForm";
 import {
   ITENS_NR17_PADRAO,
   MATURIDADE_LABELS,
@@ -79,8 +73,8 @@ export default function Ergonomia() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [showRiscoForm, setShowRiscoForm] = useState(false);
   const [showAcaoForm, setShowAcaoForm] = useState(false);
-  const [showConformidade, setShowConformidade] = useState(false);
-  const [conformidadeEixo, setConformidadeEixo] = useState<"todos" | "fisico" | "cognitivo" | "organizacional">("todos");
+  const [showStatusGRO, setShowStatusGRO] = useState(false);
+  const [statusEixo, setStatusEixo] = useState<"todos" | "fisico" | "cognitivo" | "organizacional">("todos");
   const [aepMode, setAepMode] = useState<"simples" | "multi">("simples");
   const [showGuiaRapido, setShowGuiaRapido] = useState(false);
 
@@ -88,14 +82,12 @@ export default function Ergonomia() {
 
   const {
     itensNR17,
-    riscos,
     acoes,
     itensPorCategoria,
     estatisticas,
     percentualConformidade,
     nivelMaturidade,
     isLoadingItens,
-    isLoadingRiscos,
     isLoadingAcoes,
     initializeItens,
     updateItemStatus,
@@ -109,7 +101,7 @@ export default function Ergonomia() {
     refetchItens,
   } = useErgonomia();
 
-  const { analises, isLoading: isLoadingAnalises, stats, mapaRiscos, analiseLERDORT, arquivarAnalise } =
+  const { analises, isLoading: isLoadingAnalises, stats, mapaRiscos, arquivarAnalise } =
     useErgonomiaAnalises();
 
   const handleViewItem = (item: ItemNR17) => {
@@ -133,9 +125,9 @@ export default function Ergonomia() {
     await updateAcaoStatus({ id, status });
   };
 
-  const openConformidade = (eixo?: "todos" | "fisico" | "cognitivo" | "organizacional") => {
-    setConformidadeEixo(eixo || "todos");
-    setShowConformidade(true);
+  const openStatusGRO = (eixo?: "todos" | "fisico" | "cognitivo" | "organizacional") => {
+    setStatusEixo(eixo || "todos");
+    setShowStatusGRO(true);
   };
 
   if (isLoadingItens) {
@@ -160,6 +152,9 @@ export default function Ergonomia() {
     organizacional: ["organizacao_trabalho"],
   };
 
+  const riscosCriticosAltos = groRiscos.filter(r => ["alto", "critico"].includes(r.nivel_risco));
+  const acoesPendentes = acoes.filter(a => a.status === "pendente");
+
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
@@ -170,18 +165,18 @@ export default function Ergonomia() {
       >
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Activity className="h-7 w-7 text-primary" />
-            Ergonomia Inteligente
+            <ShieldCheck className="h-7 w-7 text-primary" />
+            Gestão de Risco Ergonômico
           </h1>
           <p className="text-muted-foreground mt-0.5 text-sm">
-            Análise ergonômica integrada — identificação, registro e gestão de riscos
+            Fluxo GRO · NR-1 · NR-17 · ISO 45003 — Identificação, avaliação, controle e monitoramento de riscos
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowGuiaRapido(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
             <HelpCircle className="h-4 w-4" />
-            Guia Rápido
+            Guia
           </Button>
           <Button variant="outline" size="sm" onClick={() => refetchItens()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -198,12 +193,98 @@ export default function Ergonomia() {
         </div>
       </motion.div>
 
+      {/* ── KPIs do Fluxo GRO ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+      >
+        {/* Status GRO Ergonômico */}
+        <Card
+          className="border-border/50 cursor-pointer hover:shadow-md transition-all group col-span-2 md:col-span-2"
+          onClick={() => openStatusGRO("todos")}
+        >
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm text-foreground">Status GRO Ergonômico</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${MATURIDADE_COLORS[nivelMaturidade]}`}>
+                      {MATURIDADE_LABELS[nivelMaturidade]}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <Progress value={percentualConformidade} className="h-1.5 w-28 md:w-44" />
+                    <span className="text-xs text-muted-foreground">{percentualConformidade}% conformidade NR-17</span>
+                  </div>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-4 text-sm shrink-0">
+                <div className="text-center">
+                  <p className="font-bold text-success">{estatisticas.atendidos}</p>
+                  <p className="text-[11px] text-muted-foreground">Atendidos</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-warning">{estatisticas.parciais}</p>
+                  <p className="text-[11px] text-muted-foreground">Parciais</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-destructive">{estatisticas.naoAtendidos}</p>
+                  <p className="text-[11px] text-muted-foreground">Pendentes</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-primary shrink-0 group-hover:bg-primary/10"
+                onClick={(e) => { e.stopPropagation(); openStatusGRO("todos"); }}
+              >
+                Ver <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Riscos Prioritários */}
+        <Card className={`border-border/50 ${riscosCriticosAltos.length > 0 ? "border-destructive/30 bg-destructive/5" : ""}`}>
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className={`h-4 w-4 ${riscosCriticosAltos.length > 0 ? "text-destructive" : "text-muted-foreground"}`} />
+              <span className="text-xs text-muted-foreground">Riscos Prioritários</span>
+            </div>
+            <p className={`text-2xl font-bold ${riscosCriticosAltos.length > 0 ? "text-destructive" : ""}`}>
+              {riscosCriticosAltos.length}
+            </p>
+            <p className="text-xs text-muted-foreground">críticos + altos</p>
+          </CardContent>
+        </Card>
+
+        {/* Ações Pendentes */}
+        <Card className={`border-border/50 ${acoesPendentes.length > 0 ? "border-warning/30 bg-warning/5" : ""}`}>
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Wrench className={`h-4 w-4 ${acoesPendentes.length > 0 ? "text-warning" : "text-muted-foreground"}`} />
+              <span className="text-xs text-muted-foreground">Ações Pendentes</span>
+            </div>
+            <p className={`text-2xl font-bold ${acoesPendentes.length > 0 ? "text-warning" : ""}`}>
+              {acoesPendentes.length}
+            </p>
+            <p className="text-xs text-muted-foreground">no plano de ação</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* ── Indicadores da Base Ergonômica ── */}
       {stats.totalAnalises > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
+          transition={{ delay: 0.08 }}
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card className="border-border/50">
@@ -250,192 +331,79 @@ export default function Ergonomia() {
         <EmptyState onInitialize={handleInitialize} isInitializing={isInitializing} />
       ) : (
         <>
-          {/* ── Card de Conformidade NR-17 ── */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card
-              className="border-border/50 cursor-pointer hover:shadow-md transition-all group"
-              onClick={() => openConformidade("todos")}
-            >
-              <CardContent className="py-4 px-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
-                      <ShieldCheck className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-semibold text-sm text-foreground">Conformidade NR-17</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${MATURIDADE_COLORS[nivelMaturidade]}`}>
-                          {MATURIDADE_LABELS[nivelMaturidade]}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <Progress value={percentualConformidade} className="h-1.5 w-36 md:w-56" />
-                        <span className="text-xs text-muted-foreground">{percentualConformidade}%</span>
-                      </div>
-                    </div>
-                  </div>
+          {/* ── Tabs — Fluxo GRO ── */}
+          <Tabs defaultValue="aep" className="space-y-4">
+            {/* Barra de navegação com fluxo de etapas */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground px-1 font-medium uppercase tracking-wide">
+                Fluxo GRO — Ciclo de Gestão de Risco
+              </p>
+              <TabsList className="flex-wrap h-auto gap-1">
+                {/* 1. Entrada */}
+                <TabsTrigger value="aep" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline">1.</span> Avaliar Riscos (AEP)
+                </TabsTrigger>
 
-                  <div className="hidden md:flex items-center gap-6 text-sm shrink-0">
-                    <div className="text-center">
-                      <p className="font-bold text-success">{estatisticas.atendidos}</p>
-                      <p className="text-[11px] text-muted-foreground">Atendidos</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-warning">{estatisticas.parciais}</p>
-                      <p className="text-[11px] text-muted-foreground">Parciais</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-destructive">{estatisticas.naoAtendidos}</p>
-                      <p className="text-[11px] text-muted-foreground">Não Atend.</p>
-                    </div>
-                  </div>
+                {/* 2. Identificação + Avaliação → Inventário GRO */}
+                <TabsTrigger value="inventario_gro" className="gap-2">
+                  <ListChecks className="h-4 w-4" />
+                  <span className="hidden sm:inline">2.</span> Inventário GRO
+                  {groRiscos.length > 0 && (
+                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{groRiscos.length}</Badge>
+                  )}
+                </TabsTrigger>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5 text-primary shrink-0 group-hover:bg-primary/10"
-                    onClick={(e) => { e.stopPropagation(); openConformidade("todos"); }}
-                  >
-                    Ver itens <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                {/* 3. Riscos Prioritários */}
+                <TabsTrigger value="prioritarios" className="gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="hidden sm:inline">3.</span> Riscos Prioritários
+                  {riscosCriticosAltos.length > 0 && (
+                    <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">{riscosCriticosAltos.length}</Badge>
+                  )}
+                </TabsTrigger>
 
-                {(estatisticas.riscosCriticos > 0 || estatisticas.acoesPendentes > 0) && (
-                  <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50 flex-wrap">
-                    {estatisticas.riscosCriticos > 0 && (
-                      <div className="flex items-center gap-1.5 text-xs text-destructive">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        {estatisticas.riscosCriticos} risco(s) crítico(s)
-                      </div>
-                    )}
-                    {estatisticas.acoesPendentes > 0 && (
-                      <div className="flex items-center gap-1.5 text-xs text-warning">
-                        <ClipboardCheck className="h-3.5 w-3.5" />
-                        {estatisticas.acoesPendentes} ação(ões) pendente(s)
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+                {/* 4. Plano de Ação */}
+                <TabsTrigger value="acoes" className="gap-2">
+                  <Wrench className="h-4 w-4" />
+                  <span className="hidden sm:inline">4.</span> Plano de Ação
+                  {acoes.length > 0 && (
+                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{acoes.length}</Badge>
+                  )}
+                </TabsTrigger>
 
-          {/* ── Tabs Principais ── */}
-          <Tabs defaultValue="gro" className="space-y-4">
-            <TabsList className="flex-wrap h-auto gap-1">
-              <TabsTrigger value="gro" className="gap-2">
-                <ShieldCheck className="h-4 w-4" />
-                GRO / Inventário
-              </TabsTrigger>
-              <TabsTrigger value="pdca" className="gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Ciclo PDCA
-              </TabsTrigger>
-              <TabsTrigger value="motor_aet" className="gap-2">
-                <Zap className="h-4 w-4" />
-                Motor AET
-                {groRiscos.filter(r => ["alto","critico"].includes(r.nivel_risco)).length > 0 && (
-                  <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">
-                    {groRiscos.filter(r => ["alto","critico"].includes(r.nivel_risco)).length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="analise_ia" className="gap-2">
-                <Brain className="h-4 w-4" />
-                Análise por IA
-              </TabsTrigger>
-              <TabsTrigger value="registros" className="gap-2">
-                <Database className="h-4 w-4" />
-                Base Ergonômica
-                {stats.totalAnalises > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{stats.totalAnalises}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="mapa" className="gap-2">
-                <Map className="h-4 w-4" />
-                Mapa de Risco
-              </TabsTrigger>
-              <TabsTrigger value="inventario" className="gap-2">
-                <ClipboardCheck className="h-4 w-4" />
-                Inventário de Riscos
-              </TabsTrigger>
-              <TabsTrigger value="ler_dort" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
-                LER/DORT
-              </TabsTrigger>
-              <TabsTrigger value="aep" className="gap-2">
-                <FileText className="h-4 w-4" />
-                Gerar AEP
-              </TabsTrigger>
-              <TabsTrigger value="riscos" className="gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Riscos NR-17
-                {riscos.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{riscos.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="acoes" className="gap-2">
-                <Zap className="h-4 w-4" />
-                Plano de Ação
-                {acoes.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{acoes.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="hub" className="gap-2">
-                <BookOpen className="h-4 w-4" />
-                Hub de Serviços
-              </TabsTrigger>
-            </TabsList>
+                {/* 5. Monitoramento */}
+                <TabsTrigger value="monitoramento" className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  <span className="hidden sm:inline">5.</span> Monitoramento
+                  {stats.totalAnalises > 0 && (
+                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{stats.totalAnalises}</Badge>
+                  )}
+                </TabsTrigger>
 
-            {/* GRO — Inventário Unificado (nova aba central) */}
-            <TabsContent value="gro">
-              <GROPainel onNovo={() => setShowRiscoForm(true)} />
-            </TabsContent>
+                {/* Suporte */}
+                <TabsTrigger value="analise_ia" className="gap-2">
+                  <Brain className="h-4 w-4" />
+                  Análise por IA
+                </TabsTrigger>
+                <TabsTrigger value="base_ergonomica" className="gap-2">
+                  <Database className="h-4 w-4" />
+                  Base Ergonômica
+                  {stats.totalAnalises > 0 && (
+                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{stats.totalAnalises}</Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            {/* Ciclo PDCA — Conformidade NR-1 */}
-            <TabsContent value="pdca">
-              <GROCicloPDCA riscos={groRiscos} />
-            </TabsContent>
-
-            {/* Motor AET — RQ-11 */}
-            <TabsContent value="motor_aet">
-              <MotorAET riscos={groRiscos} />
-            </TabsContent>
-
-            {/* Análise por IA */}
-            <TabsContent value="analise_ia">
-              <AnaliseIASection />
-            </TabsContent>
-
-            {/* Base Ergonômica - Registros */}
-            <TabsContent value="registros">
-              <RegistrosErgonomicos
-                analises={analises}
-                onArquivar={arquivarAnalise}
-              />
-            </TabsContent>
-
-            {/* Mapa de Risco Ergonômico */}
-            <TabsContent value="mapa">
-              <MapaRiscoErgonomico mapaRiscos={mapaRiscos} />
-            </TabsContent>
-
-            {/* Inventário de Riscos */}
-            <TabsContent value="inventario">
-              <InventarioRiscos analises={analises} />
-            </TabsContent>
-
-            {/* LER/DORT */}
-            <TabsContent value="ler_dort">
-              <AnaliseLERDORT analiseLERDORT={analiseLERDORT} />
-            </TabsContent>
-
-            {/* Gerar AEP */}
+            {/* ① Avaliar Riscos — AEP (ponto de entrada principal) */}
             <TabsContent value="aep" className="space-y-4">
-              <div className="flex items-center gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
-                <span className="text-sm font-medium">Modo de Geração:</span>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-4 mb-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Análise Ergonômica Preliminar (AEP)</p>
+                  <p className="text-xs text-muted-foreground">Ponto de entrada: identifique perigos e gere riscos automaticamente para o inventário GRO</p>
+                </div>
+                <div className="flex gap-2 ml-auto shrink-0">
                   <Button
                     variant={aepMode === "simples" ? "default" : "outline"}
                     size="sm"
@@ -457,16 +425,17 @@ export default function Ergonomia() {
               {aepMode === "simples" ? <AEPGenerator /> : <AEPGeneratorMulti />}
             </TabsContent>
 
-            {/* Riscos NR-17 */}
-            <TabsContent value="riscos" className="space-y-4">
-              {isLoadingRiscos ? (
-                <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
-              ) : (
-                <RiscosList riscos={riscos} />
-              )}
+            {/* ② Inventário GRO — Identificação + Avaliação unificados */}
+            <TabsContent value="inventario_gro">
+              <GROPainel onNovo={() => setShowRiscoForm(true)} />
             </TabsContent>
 
-            {/* Plano de Ação */}
+            {/* ③ Riscos Prioritários — Críticos e Altos que exigem ação */}
+            <TabsContent value="prioritarios">
+              <InventarioRiscos analises={analises} />
+            </TabsContent>
+
+            {/* ④ Plano de Ação */}
             <TabsContent value="acoes" className="space-y-4">
               {isLoadingAcoes ? (
                 <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
@@ -475,38 +444,45 @@ export default function Ergonomia() {
               )}
             </TabsContent>
 
-            {/* Documento de Metodologia — RQ-26 */}
-            <TabsContent value="metodologia">
-              <DocumentoMetodologia riscos={groRiscos} />
+            {/* ⑤ Monitoramento — evolução + mapa visual */}
+            <TabsContent value="monitoramento" className="space-y-4">
+              <MapaRiscoErgonomico mapaRiscos={mapaRiscos} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <DocumentoMetodologia riscos={groRiscos} />
+                <ComunicacaoTrabalhadores riscos={groRiscos} />
+              </div>
             </TabsContent>
 
-            {/* Comunicação aos Trabalhadores — RQ-19/20 */}
-            <TabsContent value="comunicacao">
-              <ComunicacaoTrabalhadores riscos={groRiscos} />
+            {/* Suporte: Análise por IA */}
+            <TabsContent value="analise_ia">
+              <AnaliseIASection />
             </TabsContent>
 
-            {/* Hub de Serviços */}
-            <TabsContent value="hub">
-              <HubServicos />
+            {/* Suporte: Base Ergonômica */}
+            <TabsContent value="base_ergonomica">
+              <RegistrosErgonomicos
+                analises={analises}
+                onArquivar={arquivarAnalise}
+              />
             </TabsContent>
           </Tabs>
         </>
       )}
 
-      {/* ══ Sheet: Conformidade NR-17 ══ */}
-      <Sheet open={showConformidade} onOpenChange={setShowConformidade}>
+      {/* ══ Sheet: Status GRO (itens NR-17) ══ */}
+      <Sheet open={showStatusGRO} onOpenChange={setShowStatusGRO}>
         <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
           <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              Conformidade NR-17
+              Status GRO Ergonômico
             </SheetTitle>
             <SheetDescription>
-              Itens normativos avaliados — {percentualConformidade}% de conformidade
+              Itens normativos NR-17 avaliados — {percentualConformidade}% de conformidade
             </SheetDescription>
             <Tabs
-              value={conformidadeEixo}
-              onValueChange={(v) => setConformidadeEixo(v as typeof conformidadeEixo)}
+              value={statusEixo}
+              onValueChange={(v) => setStatusEixo(v as typeof statusEixo)}
               className="mt-3"
             >
               <TabsList className="w-full">
@@ -527,7 +503,7 @@ export default function Ergonomia() {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-            {categoriasEixo[conformidadeEixo].map((categoria) => {
+            {categoriasEixo[statusEixo].map((categoria) => {
               const itens = itensPorCategoria[categoria] || [];
               if (itens.length === 0) return null;
               return (
