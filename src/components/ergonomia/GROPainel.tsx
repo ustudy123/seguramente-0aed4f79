@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { ExportarRelatorioErgonomia } from "./ExportarRelatorioErgonomia";
 import {
   GRO_SUBTIPO_LABELS,
   GRO_NIVEL_RISCO_LABELS,
@@ -194,6 +195,8 @@ export function GROPainel({ onNovo }: GROPainelProps) {
                     <SelectItem value="baixo">Baixo</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <ExportarRelatorioErgonomia riscos={riscos} />
 
                 {onNovo && (
                   <Button size="sm" onClick={onNovo} className="gap-2 h-8">
