@@ -10,7 +10,10 @@ import {
   Loader2,
   ShieldCheck,
   Database,
+  BookOpen,
+  RefreshCw,
 } from "lucide-react";
+import { RelatorioModal } from "./RelatorioModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
