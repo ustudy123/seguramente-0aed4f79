@@ -54,12 +54,12 @@ export function EstrategiaEscopoSelector({ escopo, onChange }: Props) {
               <span>{empresaAtiva?.nome_fantasia || empresaAtiva?.razao_social || "Empresa selecionada"}</span>
             </span>
           </SelectItem>
-          {grupos.length > 0 && (
+          {gruposVisiveis.length > 0 && (
             <>
               <div className="px-2 py-1 text-[11px] text-muted-foreground font-semibold uppercase tracking-wide mt-1">
                 Grupos Econômicos
               </div>
-              {grupos.filter((g) => g.ativo).map((grupo) => (
+              {gruposVisiveis.map((grupo) => (
                 <SelectItem key={grupo.id} value={grupo.id}>
                   <span className="flex items-center gap-2">
                     <Users2 className="w-3.5 h-3.5 text-accent-foreground" />
