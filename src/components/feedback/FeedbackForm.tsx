@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import type { FeedbackCategoria } from "@/types/feedback";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -36,6 +38,7 @@ const CATEGORIAS: { value: FeedbackCategoria; label: string; icon: React.Element
 
 export function FeedbackForm({ onSubmit, isLoading }: FeedbackFormProps) {
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [colaboradorId, setColaboradorId] = useState("");
   const [categoria, setCategoria] = useState<FeedbackCategoria | "">("");
   const [descricao, setDescricao] = useState("");
@@ -114,6 +117,7 @@ export function FeedbackForm({ onSubmit, isLoading }: FeedbackFormProps) {
               ))}
             </SelectContent>
           </Select>
+          {selectedColab && <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColab.cpf, nome: selectedColab.nome_completo })} />}
           {selectedColab && (
             <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 grid grid-cols-2 gap-1">
               <span>Função: {selectedColab.cargo}</span>

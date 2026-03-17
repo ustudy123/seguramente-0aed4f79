@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import {
   CATEGORIAS_PRINCIPAIS,
   ORIGENS_PREDOMINANTES,
@@ -62,6 +64,7 @@ const STEPS_ACIDENTE = [
 
 export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending }: Props) => {
   const { colaboradores } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [tipo, setTipo] = useState<EventoSSTTipo>(initial?.tipo || "incidente");
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, any>>({});
@@ -257,6 +260,10 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
                   ))}
                 </SelectContent>
               </Select>
+              {form.colaborador_id && form.colaborador_id !== "manual" && (() => {
+                const colab = colaboradores.find(c => c.id === form.colaborador_id);
+                return colab ? <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} /> : null;
+              })()}
             </div>
 
             {!form.colaborador_id ? (

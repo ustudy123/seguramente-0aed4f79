@@ -88,6 +88,8 @@ import { AdmissaoDetail } from "@/components/admissao/AdmissaoDetail";
 import { useAdmissoes } from "@/hooks/useAdmissoes";
 import { AdmissaoFormData } from "@/types/database";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return "-";
@@ -133,6 +135,7 @@ function AtivosTab() {
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
   const { empresaAtivaId } = useEmpresaAtiva();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -362,10 +365,11 @@ function AtivosTab() {
                   </div>
                 )}
               </div>
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 flex-wrap">
                 <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
                   {statusLabels[colab.status] || "Ativo"}
                 </Badge>
+                <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} compact />
               </div>
             </motion.div>
           ))}
@@ -407,9 +411,12 @@ function AtivosTab() {
                     {colab.data_admissao ? new Date(colab.data_admissao).toLocaleDateString("pt-BR") : "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
-                      {statusLabels[colab.status] || "Ativo"}
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={cn("text-xs", statusStyles[colab.status] || statusStyles.concluido)}>
+                        {statusLabels[colab.status] || "Ativo"}
+                      </Badge>
+                      <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} compact />
+                    </div>
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
@@ -503,6 +510,7 @@ function AtivosTab() {
                   </div>
                 )}
               </div>
+              <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColaborador.cpf, nome: selectedColaborador.nome_completo })} />
               <div className="pt-4 border-t flex justify-between items-center">
                 <Badge className={cn("text-xs", statusStyles[selectedColaborador.status] || statusStyles.concluido)}>
                   {statusLabels[selectedColaborador.status] || "Ativo"}

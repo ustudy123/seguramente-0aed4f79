@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import type { OcorrenciaTipo } from "@/types/feedback";
 import { toast } from "sonner";
 
@@ -40,6 +42,7 @@ const TIPOS: { value: OcorrenciaTipo; label: string; icon: React.ElementType; co
 
 export function OcorrenciaForm({ onSubmit, onCreateAdvertenciaLink, isLoading }: OcorrenciaFormProps) {
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [colaboradorId, setColaboradorId] = useState("");
   const [tipo, setTipo] = useState<OcorrenciaTipo | "">("");
   const [descricao, setDescricao] = useState("");
@@ -133,6 +136,7 @@ export function OcorrenciaForm({ onSubmit, onCreateAdvertenciaLink, isLoading }:
                 ))}
               </SelectContent>
             </Select>
+            {selectedColab && <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColab.cpf, nome: selectedColab.nome_completo })} />}
             {selectedColab && (
               <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 grid grid-cols-2 gap-1">
                 <span>Função: {selectedColab.cargo}</span>

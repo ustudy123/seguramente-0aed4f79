@@ -40,6 +40,8 @@ import { PhotoCapture } from "./PhotoCapture";
 import { SignatureCapture } from "./SignatureCapture";
 import { EpiEntregaRecibo } from "./EpiEntregaRecibo";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { useDocumentos } from "@/hooks/useDocumentos";
 import { useEpiLocais } from "@/hooks/useEpiLocais";
@@ -87,6 +89,7 @@ export function EpiEntregaWizard({
 }: EpiEntregaWizardProps) {
   const { tenantId, user, profile } = useAuth();
   const { colaboradores, isLoading: colaboradoresLoading } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const { upload: uploadDocumento } = useDocumentos();
   const { locaisAtivos } = useEpiLocais();
   const { usarControleEstoque } = useEpiConfig();
@@ -576,7 +579,10 @@ export function EpiEntregaWizard({
                                   )}
                                 />
                                 <div className="flex flex-col">
-                                  <span>{c.nome_completo}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span>{c.nome_completo}</span>
+                                    <AfastadoBadge afastamento={getAfastamento({ cpf: c.cpf, nome: c.nome_completo })} compact />
+                                  </div>
                                   <span className="text-xs text-muted-foreground">
                                     CPF: {c.cpf} {c.cargo && `• ${c.cargo}`}
                                   </span>

@@ -45,6 +45,8 @@ import { cn } from "@/lib/utils";
 import type { EpiCompleto } from "@/types/epi";
 import { MOTIVOS_ENTREGA } from "@/types/epi";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 const schema = z.object({
   epi_id: z.string().min(1, "Selecione o EPI"),
@@ -94,6 +96,7 @@ export function EpiEntregaForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -249,9 +252,10 @@ export function EpiEntregaForm({
                         )}
                       >
                         {selectedColaborador ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <UserCheck className="h-4 w-4 text-primary" />
                             <span>{selectedColaborador.nome_completo}</span>
+                            <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColaborador.cpf, nome: selectedColaborador.nome_completo })} compact />
                             <Badge variant="secondary" className="ml-auto">
                               {selectedColaborador.cargo}
                             </Badge>

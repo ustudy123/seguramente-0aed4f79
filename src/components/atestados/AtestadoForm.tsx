@@ -67,6 +67,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import type { AtestadoFormData, AtestadoTipo, AtestadoExtractedData } from "@/types/atestado";
 import { 
   SUBTIPO_ASSISTENCIAL_LABELS,
@@ -134,6 +136,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const [openColaboradorPopover, setOpenColaboradorPopover] = useState(false);
   
   const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -400,7 +403,10 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                                 )}
                               />
                               <div className="flex flex-col">
-                                <span>{colaborador.nome_completo}</span>
+                                <div className="flex items-center gap-2">
+                                  <span>{colaborador.nome_completo}</span>
+                                  <AfastadoBadge afastamento={getAfastamento({ cpf: colaborador.cpf, nome: colaborador.nome_completo })} compact />
+                                </div>
                                 <span className="text-xs text-muted-foreground">
                                   {colaborador.cargo} • {colaborador.cpf}
                                 </span>
