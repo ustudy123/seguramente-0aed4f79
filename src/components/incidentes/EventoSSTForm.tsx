@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import {
   CATEGORIAS_PRINCIPAIS,
   ORIGENS_PREDOMINANTES,
