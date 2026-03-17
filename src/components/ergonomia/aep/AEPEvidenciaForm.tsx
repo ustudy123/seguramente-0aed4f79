@@ -193,46 +193,24 @@ export function AEPEvidenciaForm({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Seleção de contexto */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Setor */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1">
-              <Building2 className="h-3.5 w-3.5" />
-              Setor *
-            </Label>
-            <Select value={setorId} onValueChange={(v) => { setSetorId(v); setFuncaoId(""); setColaboradorId(""); }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o setor" />
-              </SelectTrigger>
-              <SelectContent>
-                {setoresDisponiveis.map(setor => (
-                  <SelectItem key={setor.id} value={setor.id}>
-                    {setor.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Função */}
-          <div className="space-y-2">
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Situação de Trabalho */}
+          <div className="space-y-2 md:col-span-1">
             <Label className="flex items-center gap-1">
               <Briefcase className="h-3.5 w-3.5" />
-              Função *
+              Situação de Trabalho *
             </Label>
-            <Select value={funcaoId} onValueChange={(v) => { setFuncaoId(v); setColaboradorId(""); }} disabled={!setorId}>
+            <Select value={situacaoId} onValueChange={(v) => { setSituacaoId(v); setColaboradorId(""); }}>
               <SelectTrigger>
-                <SelectValue placeholder={setorId ? "Selecione a função" : "Selecione o setor primeiro"} />
+                <SelectValue placeholder="Selecione a situação" />
               </SelectTrigger>
               <SelectContent>
-                {funcoesDisponiveis.length === 0 ? (
-                  <SelectItem value="_none" disabled>
-                    Nenhuma função cadastrada neste setor
-                  </SelectItem>
+                {situacoes.length === 0 ? (
+                  <SelectItem value="_none" disabled>Nenhuma situação cadastrada</SelectItem>
                 ) : (
-                  funcoesDisponiveis.map(funcao => (
-                    <SelectItem key={funcao.id} value={funcao.id}>
-                      {funcao.nome}
+                  situacoes.map(sit => (
+                    <SelectItem key={sit.id} value={sit.id}>
+                      {sit.setorNome} › {sit.funcaoNome}
                     </SelectItem>
                   ))
                 )}
