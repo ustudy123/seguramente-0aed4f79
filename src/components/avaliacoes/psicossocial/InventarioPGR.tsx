@@ -400,6 +400,11 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           ))}
         </div>
 
+        {/* GAP C — Alerta de privacidade por grupo (ISO 45003) */}
+        {privacidadeGrupos && (campanhaAtual?.situacoes_trabalho?.length ?? 0) > 0 && (
+          <PrivacidadeGrupoAlert resultado={privacidadeGrupos} />
+        )}
+
         {/* Tabela */}
         <div className="rounded-lg border overflow-hidden">
           <Table>
