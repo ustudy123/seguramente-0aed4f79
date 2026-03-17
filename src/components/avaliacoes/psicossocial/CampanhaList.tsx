@@ -216,9 +216,10 @@ interface CampanhaCardProps {
   onVerResultados: () => void;
   onGerenciarParticipacao: () => void;
   isExpanded: boolean;
+  isExportandoGRO?: boolean;
 }
 
-function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, isExpanded }: CampanhaCardProps) {
+function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, isExpanded, isExportandoGRO }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
 
@@ -227,7 +228,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
       case 'rascunho':
         return <Badge variant="secondary">Rascunho</Badge>;
       case 'ativa':
-        return <Badge className="bg-emerald-500">Ativa</Badge>;
+        return <Badge className="bg-emerald-500 text-white">Ativa</Badge>;
       case 'encerrada':
         return <Badge variant="outline">Encerrada</Badge>;
     }
