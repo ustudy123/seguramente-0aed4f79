@@ -20,6 +20,7 @@ import {
   Zap,
   RotateCcw,
   Users,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +54,7 @@ import { DocumentoMetodologia } from "@/components/ergonomia/DocumentoMetodologi
 import { ComunicacaoTrabalhadores } from "@/components/ergonomia/ComunicacaoTrabalhadores";
 import { MotorAET } from "@/components/ergonomia/MotorAET";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { GuiaRapidoErgonomia } from "@/components/ergonomia/GuiaRapidoErgonomia";
 import {
   ITENS_NR17_PADRAO,
   MATURIDADE_LABELS,
@@ -80,6 +82,7 @@ export default function Ergonomia() {
   const [showConformidade, setShowConformidade] = useState(false);
   const [conformidadeEixo, setConformidadeEixo] = useState<"todos" | "fisico" | "cognitivo" | "organizacional">("todos");
   const [aepMode, setAepMode] = useState<"simples" | "multi">("simples");
+  const [showGuiaRapido, setShowGuiaRapido] = useState(false);
 
   const { riscos: groRiscos } = useGRORiscos();
 
@@ -176,6 +179,10 @@ export default function Ergonomia() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowGuiaRapido(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
+            <HelpCircle className="h-4 w-4" />
+            Guia Rápido
+          </Button>
           <Button variant="outline" size="sm" onClick={() => refetchItens()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
@@ -562,6 +569,8 @@ export default function Ergonomia() {
         }}
         isLoading={isCreatingAcao}
       />
+
+      <GuiaRapidoErgonomia open={showGuiaRapido} onOpenChange={setShowGuiaRapido} />
     </div>
   );
 }
