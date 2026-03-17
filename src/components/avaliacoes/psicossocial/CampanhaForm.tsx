@@ -120,6 +120,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const { criarCampanha, campanhas } = usePsicossocial();
   const { empresaAtivaId } = useEmpresaAtiva();
   const { user } = useAuth();
+  const { departamentos } = useDepartamentos();
+  const { cargos } = useCargos();
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
   // Situações de trabalho (pares Setor+Função) vinculadas à campanha
@@ -128,6 +130,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   );
   const [novoSetor, setNovoSetor] = useState('');
   const [novaFuncao, setNovaFuncao] = useState('');
+  const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
+  const [funcaoPopoverOpen, setFuncaoPopoverOpen] = useState(false);
 
   const isReaplicacao = !!campanhaAnterior;
 
