@@ -510,6 +510,7 @@ function AtivosTab() {
                   </div>
                 )}
               </div>
+              <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColaborador.cpf, nome: selectedColaborador.nome_completo })} />
               <div className="pt-4 border-t flex justify-between items-center">
                 <Badge className={cn("text-xs", statusStyles[selectedColaborador.status] || statusStyles.concluido)}>
                   {statusLabels[selectedColaborador.status] || "Ativo"}
