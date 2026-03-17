@@ -67,6 +67,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import type { AtestadoFormData, AtestadoTipo, AtestadoExtractedData } from "@/types/atestado";
 import { 
   SUBTIPO_ASSISTENCIAL_LABELS,
