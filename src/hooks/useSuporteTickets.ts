@@ -61,22 +61,26 @@ export const PRIORIDADE_LABELS: Record<TicketPrioridade, string> = {
 };
 
 export function useSuporteTickets() {
-  const { tenantId, user, profile } = useAuth();
+  const { tenantId, user, profile, isSuperAdmin } = useAuth();
   const qc = useQueryClient();
 
   const { data: tickets = [], isLoading } = useQuery({
-    queryKey: ["suporte-tickets", tenantId],
+    queryKey: ["suporte-tickets", tenantId, isSuperAdmin],
     queryFn: async (): Promise<SuporteTicket[]> => {
-      if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
+      if (!isSuperAdmin && !tenantId) return [];
+      let query = (supabase as any)
         .from("suporte_tickets")
         .select("*")
-        .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      // Superadmins veem todos os tickets; usuários normais só do seu tenant
+      if (!isSuperAdmin) {
+        query = query.eq("tenant_id", tenantId);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
-    enabled: !!tenantId,
+    enabled: isSuperAdmin || !!tenantId,
   });
 
   const createTicket = useMutation({
