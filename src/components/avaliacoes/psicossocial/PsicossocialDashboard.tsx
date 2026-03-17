@@ -35,7 +35,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
-import { ManualPsicossocial } from "./ManualPsicossocial";
+
 import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
 import { DistribuicaoModal } from "./DistribuicaoModal";
