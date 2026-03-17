@@ -28,7 +28,7 @@ export default function Psicossocial() {
           variant="outline"
           size="sm"
           onClick={() => setShowGuia(true)}
-          className="gap-2 text-purple-700 border-purple-300 hover:bg-purple-50 self-start sm:self-auto"
+          className="gap-2 text-primary border-primary/30 hover:bg-primary/5 self-start sm:self-auto"
         >
           <HelpCircle className="h-4 w-4" />
           Guia Rápido
