@@ -35,7 +35,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
-import { ManualPsicossocial } from "./ManualPsicossocial";
+
 import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
 import { DistribuicaoModal } from "./DistribuicaoModal";
@@ -96,7 +96,6 @@ export function PsicossocialDashboard() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
-          <ManualPsicossocial />
           <Button onClick={handleNovaCampanha} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
             <Plus className="h-4 w-4" />
             Nova Campanha
@@ -133,7 +132,6 @@ export function PsicossocialDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <ManualPsicossocial />
             <Button onClick={handleNovaCampanha} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
               <Plus className="h-4 w-4" />
               Nova Campanha

@@ -10,14 +10,12 @@ import {
   BookOpen,
   Brain,
   Plus,
+  Link2,
   BarChart3,
-  TrendingUp,
   ShieldCheck,
   Activity,
   FileText,
-  Flame,
   ClipboardList,
-  Users,
   ChevronRight,
   ChevronLeft,
   X,
@@ -25,10 +23,15 @@ import {
   Circle,
   Lightbulb,
   Lock,
-  Target,
   Sparkles,
+  AlertTriangle,
+  RefreshCw,
+  Wrench,
+  Users,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ManualPsicossocial } from "./ManualPsicossocial";
 
 interface GuiaRapidoPsicossocialProps {
   open: boolean;
@@ -41,143 +44,179 @@ const PASSOS = [
     icon: Brain,
     color: "text-purple-600",
     bgColor: "bg-purple-50",
-    titulo: "Bem-vindo à Gestão Psicossocial",
-    subtitulo: "NR-01 · NR-17 · ISO 45001 · ISO 45003",
+    titulo: "O que é esse módulo?",
+    subtitulo: "Visão geral — para quem é e o que resolve",
     descricao:
-      "O módulo de Gestão Psicossocial permite monitorar continuamente o bem-estar organizacional por meio de campanhas de avaliação anônimas, gerando índices científicos e alertas de risco para ação proativa.",
+      "O módulo Psicossocial do Seguramente ajuda sua empresa a identificar, avaliar e tratar riscos relacionados ao trabalho — como estresse excessivo, falta de autonomia e esgotamento — de forma automática e em conformidade com a lei (NR-01).",
     destaques: [
-      { icon: ShieldCheck, label: "Conformidade NR-01 / ISO 45003" },
-      { icon: Activity, label: "IPS — Índice Psicossocial" },
-      { icon: Lock, label: "Anonimato Garantido (mín. 5 respostas)" },
-      { icon: Sparkles, label: "Instrumentos Validados (SIPRO, PHQ-9)" },
+      { icon: Users, label: "Para: RH, Gestores e SST" },
+      { icon: ShieldCheck, label: "Exigido pela NR-01 / GRO" },
+      { icon: Lock, label: "100% Anônimo para o colaborador" },
+      { icon: Sparkles, label: "Questionários validados cientificamente" },
     ],
+    dica: "Você não precisa ser especialista. O sistema faz as análises — você só precisa criar a campanha e distribuir o link.",
   },
   {
-    id: "campanha",
+    id: "coleta",
     icon: Plus,
     color: "text-purple-600",
     bgColor: "bg-purple-50",
-    titulo: "Passo 1 — Criar uma Campanha",
-    subtitulo: "Seu ponto de partida",
+    titulo: "Passo 1 — Crie uma Campanha",
+    subtitulo: "Por onde tudo começa",
     descricao:
-      "Tudo começa com uma campanha de avaliação. Defina o instrumento adequado ao seu objetivo (rastreamento geral, burnout específico, retorno ao trabalho) e configure o período de coleta.",
+      "A campanha é o ponto de partida. Você escolhe o tipo de questionário, define o período de coleta e configura quem vai responder. O Assistente de Seleção te guia na escolha certa.",
     acoes: [
-      "Clique no botão **Nova Campanha** no topo da página",
-      "O **Assistente de Seleção** vai guiá-lo na escolha do instrumento ideal",
-      "Configure o nome, objetivo e período de vigência",
-      "Defina se a campanha é para toda a empresa ou setor específico",
-      "Ative a campanha para começar a coletar respostas",
+      "Clique em **Nova Campanha** no topo da página",
+      "O **Assistente** vai recomendar o instrumento ideal para o seu caso",
+      "Escolha o **SIPRO** para avaliação geral (recomendado para a maioria)",
+      "Defina o nome, período de início e fim da campanha",
+      "Avance para configurar os grupos de trabalho (próximo passo)",
     ],
-    dica: "Use o Assistente de Seleção para escolher entre SIPRO (geral), PHQ-9 (depressão), GAD-7 (ansiedade) e outros instrumentos validados.",
+    dica: "Use o SIPRO para campanhas regulares. Outros instrumentos (PHQ-9, GAD-7, MBI) são para situações específicas como investigar depressão ou burnout.",
   },
   {
-    id: "instrumentos",
+    id: "vinculo",
+    icon: Link2,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    titulo: "Passo 2 — Vincule Setor e Função",
+    subtitulo: "Etapa obrigatória pela NR-17",
+    descricao:
+      "Antes de ativar a campanha, você precisa informar quais grupos de trabalho serão avaliados. Não são os nomes das pessoas — são as combinações de Setor + Função da empresa.",
+    acoes: [
+      "Exemplo: **Produção + Operador de Máquinas**",
+      "Exemplo: **Comercial + Consultor de Vendas**",
+      "Use o autocomplete: o sistema já sugere os setores e funções cadastrados",
+      "Você pode adicionar quantos pares precisar",
+      "**Sem esse vínculo, a campanha não pode ser criada** — isso é exigência legal",
+    ],
+    dica: "Isso representa a 'situação de trabalho' exigida pela NR-17 e ISO 45003. O sistema usa esse dado para associar riscos identificados aos grupos certos.",
+  },
+  {
+    id: "distribuicao",
+    icon: Link2,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
+    titulo: "Passo 3 — Envie para os Colaboradores",
+    subtitulo: "Como as pessoas respondem",
+    descricao:
+      "Após ativar a campanha, o sistema gera um link único. Você distribui esse link pelo canal que preferir: WhatsApp, e-mail ou QR Code. O colaborador não precisa ter login.",
+    acoes: [
+      "Na campanha ativa, clique em **Distribuir** para ver o link e QR Code",
+      "Envie o link por **WhatsApp, e-mail ou imprima o QR Code**",
+      "O colaborador acessa pelo celular ou computador — sem login",
+      "Uma verificação via **código WhatsApp** garante 1 resposta por pessoa",
+      "**Identidade nunca é salva** junto às respostas — só um hash anônimo",
+    ],
+    dica: "Mire em pelo menos 60% de participação para ter resultados estatisticamente representativos. Comunique que é anônimo para aumentar a adesão.",
+  },
+  {
+    id: "anonimato",
+    icon: Lock,
+    color: "text-rose-600",
+    bgColor: "bg-rose-50",
+    titulo: "Passo 4 — Regra do Anonimato",
+    subtitulo: "Como o sistema protege os colaboradores",
+    descricao:
+      "O sistema garante que nenhum colaborador seja identificado pelas suas respostas. Uma regra automática de confidencialidade protege os dados de grupos pequenos.",
+    acoes: [
+      "**Mínimo de 5 respondentes** por grupo para exibir resultados",
+      "Se um grupo tem menos de 5: sistema **agrupa automaticamente** (Setor → Empresa)",
+      "Para empresas com menos de 20 pessoas: use apenas o nível **Empresa**",
+      "Resultados exibidos **somente em formato agregado** — nunca individual",
+      "Se não há dados suficientes: exibe '**Dados insuficientes para garantir confidencialidade**'",
+    ],
+    dica: "Esta regra segue a ISO 45003 e o COPSOQ III. O sistema aplica tudo automaticamente — você não precisa se preocupar com isso.",
+  },
+  {
+    id: "resultados",
+    icon: BarChart3,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    titulo: "Passo 5 — Veja os Resultados",
+    subtitulo: "O que o sistema calcula automaticamente",
+    descricao:
+      "Ao encerrar a campanha (ou quando o prazo termina), o sistema calcula automaticamente o IPS e classifica cada dimensão avaliada. Os resultados aparecem em gráficos de radar e uma análise em texto simples.",
+    acoes: [
+      "**IPS (Índice Psicossocial)**: score de 0 a 100 — quanto maior, melhor",
+      "**0–49 = Risco** → ação corretiva prioritária",
+      "**50–64 = Atenção** → monitoramento intensificado",
+      "**65–79 = Estável** → manutenção e melhorias pontuais",
+      "**80–100 = Saudável** → ambiente favorável",
+    ],
+    dica: "Clique em 'Ver Resultados' na campanha encerrada para ver os gráficos detalhados e a análise interpretativa gerada automaticamente.",
+  },
+  {
+    id: "gro",
+    icon: ClipboardList,
+    color: "text-orange-600",
+    bgColor: "bg-orange-50",
+    titulo: "Passo 6 — Riscos Vão para o GRO Automaticamente",
+    subtitulo: "Integração com o inventário de riscos",
+    descricao:
+      "Ao encerrar a campanha, os fatores de risco identificados são automaticamente exportados para o GRO (Inventário de Riscos Ocupacionais) — o documento obrigatório do PGR.",
+    acoes: [
+      "**Nenhuma ação necessária** — exportação é automática ao encerrar",
+      "Cada risco fica vinculado ao **Setor + Função** correspondente",
+      "Riscos classificados como **Alto ou Crítico** geram um **Plano de Ação 5W2H** automático",
+      "Prazo automático: **30 dias** para Crítico, **60 dias** para Alto",
+      "**Não é possível arquivar um risco** sem ter um plano de ação vinculado",
+    ],
+    dica: "O PGR da sua empresa é atualizado automaticamente a cada campanha encerrada. Isso garante conformidade contínua com a NR-01.",
+  },
+  {
+    id: "aet",
+    icon: AlertTriangle,
+    color: "text-amber-600",
+    bgColor: "bg-amber-50",
+    titulo: "Passo 7 — Quando o Sistema Recomenda a AET",
+    subtitulo: "Análise Ergonômica do Trabalho (NR-17)",
+    descricao:
+      "Quando o sistema identifica situações críticas — como IPS muito baixo, riscos recorrentes ou múltiplos fatores simultâneos — ele recomenda a realização de uma AET (Análise Ergonômica do Trabalho), conforme exige a NR-17.",
+    acoes: [
+      "O **banner de AET** aparece automaticamente nos resultados quando necessário",
+      "**IPS abaixo de 65** → recomendação de AET",
+      "**IPS abaixo de 50 ou múltiplos fatores críticos** → AET obrigatória pela NR-17",
+      "Os dados psicossociais alimentam a **Avaliação Ergonômica Preliminar (AEP)**",
+      "Acesse o módulo de **Ergonomia** para iniciar a AET recomendada",
+    ],
+    dica: "O psicossocial não é isolado — ele integra a ergonomia. Um ambiente com problemas psicossociais quase sempre tem aspectos ergonômicos relacionados.",
+  },
+  {
+    id: "monitoramento",
+    icon: RefreshCw,
+    color: "text-teal-600",
+    bgColor: "bg-teal-50",
+    titulo: "Passo 8 — Monitore e Reaprecie",
+    subtitulo: "O ciclo não termina na primeira campanha",
+    descricao:
+      "Após executar as ações do plano, o sistema exige que os riscos sejam reavaliados. O histórico de campanhas mostra a evolução do IPS ao longo do tempo, permitindo medir o impacto das intervenções.",
+    acoes: [
+      "Acompanhe o **Histórico IPS** na aba correspondente",
+      "Após executar ações, **reavalue os riscos** no GRO",
+      "**Campanhas trimestrais** são o intervalo recomendado",
+      "Compare resultados **antes e depois** de intervenções",
+      "O **Inventário PGR** consolida todos os dados para auditoria",
+    ],
+    dica: "Campanhas realizadas regularmente constroem um histórico robusto. Isso demonstra evolução e ROI das ações — importante para relatórios de auditoria da NR-01.",
+  },
+  {
+    id: "recursos",
     icon: FileText,
     color: "text-indigo-600",
     bgColor: "bg-indigo-50",
-    titulo: "Passo 2 — Instrumentos Disponíveis",
-    subtitulo: "Ferramentas validadas cientificamente",
+    titulo: "Documentos e Recursos",
+    subtitulo: "Tudo que o sistema gera para você",
     descricao:
-      "O módulo oferece múltiplos instrumentos psicométricos validados. Cada um tem finalidade específica e gera índices automáticos ao atingir o mínimo de 5 respostas anônimas.",
+      "O Seguramente gera automaticamente todos os documentos necessários para conformidade legal e auditoria. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
     acoes: [
-      "Acesse a aba **Instrumentos** para ver todos os disponíveis",
-      "**SIPRO** — avaliação psicossocial completa com 10 eixos",
-      "**PHQ-9** — rastreamento de sintomas depressivos",
-      "**GAD-7** — escala de transtorno de ansiedade generalizada",
-      "**MBI** — Inventário de Burnout de Maslach",
-      "**AUDIT-C** — rastreamento de uso de álcool",
+      "**Inventário de Riscos Ocupacionais** — exportável para o PGR",
+      "**Plano de Ação 5W2H** — gerado automaticamente para riscos Alto/Crítico",
+      "**Relatório Psicossocial** — diagnóstico completo da campanha",
+      "**Documento de Metodologia** — documenta os critérios utilizados",
+      "**Relatório de Integração AEP** — conecta psicossocial ao módulo de Ergonomia",
     ],
-    dica: "O SIPRO é o instrumento principal do módulo. Ele gera o IPS (Índice Psicossocial) e todos os índices derivados (IBO-S, IBD-S, IREC-S, ICOP-S, INOT-S).",
-  },
-  {
-    id: "ips",
-    icon: Activity,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    titulo: "Passo 3 — Entendendo o IPS",
-    subtitulo: "Índice Psicossocial Organizacional (0–100)",
-    descricao:
-      "O IPS é o indicador central do módulo. Calculado automaticamente ao atingir o mínimo de anonimato, ele classifica o ambiente organizacional em 5 níveis e orienta as ações prioritárias.",
-    acoes: [
-      "**0–34 — Crítico**: Intervenção urgente necessária",
-      "**35–49 — Risco**: Ações corretivas prioritárias",
-      "**50–64 — Atenção**: Monitoramento intensificado",
-      "**65–79 — Estável**: Manutenção e melhorias pontuais",
-      "**80–100 — Saudável**: Ambiente psicossocial favorável",
-    ],
-    dica: "Quando o IPS está abaixo de 65%, o Motor AET do módulo de Ergonomia é acionado automaticamente para indicar análise ergopsicossocial.",
-  },
-  {
-    id: "burnout",
-    icon: Flame,
-    color: "text-orange-600",
-    bgColor: "bg-orange-50",
-    titulo: "Passo 4 — Burnout & Boreout",
-    subtitulo: "Análise de esgotamento e desengajamento",
-    descricao:
-      "O radar de Burnout & Boreout oferece uma visão multidimensional do esgotamento profissional e do desengajamento por falta de desafios, cruzando dados de múltiplas campanhas.",
-    acoes: [
-      "Acesse a aba **Burnout & Boreout** para ver os radares",
-      "Visualize os índices IBO-S (Burnout) e IBD-S (Boreout) por campanha",
-      "Compare campanhas para identificar tendências",
-      "Use o índice IREC-S para avaliar capacidade de recuperação",
-      "Verifique INOT-S para riscos específicos do trabalho noturno",
-    ],
-    dica: "O Boreout é frequentemente subestimado. Colaboradores com muito baixo desafio têm risco similar ao Burnout em termos de turnover e produtividade.",
-  },
-  {
-    id: "pgr",
-    icon: ClipboardList,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    titulo: "Passo 5 — Inventário PGR",
-    subtitulo: "Integração com o Programa de Gerenciamento de Riscos",
-    descricao:
-      "O Inventário PGR consolida os dados psicossociais de todas as campanhas encerradas em um único relatório auditável, com médias ponderadas pelo número de respondentes.",
-    acoes: [
-      "Acesse a aba **Inventário PGR**",
-      "Visualize o consolidado de todas as campanhas encerradas",
-      "O IPS médio é calculado por **média ponderada** (respondentes)",
-      "Exporte o relatório em PDF para auditoria NR-01",
-      "Use os filtros por período e instrumento para análises específicas",
-    ],
-    dica: "O PGR psicossocial deve ser revisado anualmente ou sempre que houver mudanças organizacionais significativas (reestruturação, fusão, mudança de liderança).",
-  },
-  {
-    id: "alertas",
-    icon: ShieldCheck,
-    color: "text-rose-600",
-    bgColor: "bg-rose-50",
-    titulo: "Passo 6 — Alertas e Indicadores",
-    subtitulo: "Ação proativa baseada em evidências",
-    descricao:
-      "O painel de Alertas Psicossociais gera notificações automáticas quando índices críticos são detectados, permitindo intervenção antes que os riscos se materializem em afastamentos.",
-    acoes: [
-      "Monitore o **Painel de Alertas** no topo do dashboard",
-      "Alertas **Críticos** (vermelho) exigem ação imediata",
-      "Alertas de **Atenção** (amarelo) requerem monitoramento próximo",
-      "Vincule alertas a ações do Plano de Ação da Ergonomia",
-      "Consulte o histórico de alertas na aba **Histórico IPS**",
-    ],
-    dica: "Configure notificações para que o RH e a liderança sejam alertados automaticamente quando o IPS cair abaixo de 65%, garantindo resposta rápida.",
-  },
-  {
-    id: "historico",
-    icon: TrendingUp,
-    color: "text-teal-600",
-    bgColor: "bg-teal-50",
-    titulo: "Passo 7 — Histórico e Evolução",
-    subtitulo: "Tendências ao longo do tempo",
-    descricao:
-      "O gráfico de Histórico IPS mostra a evolução do índice psicossocial ao longo do tempo, permitindo avaliar o impacto de intervenções e campanhas de bem-estar.",
-    acoes: [
-      "Acesse a aba **Histórico IPS**",
-      "Visualize a curva de evolução do IPS ao longo das campanhas",
-      "Identifique quedas correlacionadas a eventos organizacionais",
-      "Compare resultados antes e depois de intervenções",
-      "Use os **Índices Derivados** para análise multidimensional",
-    ],
-    dica: "Realize campanhas trimestrais para ter um histórico significativo. Campanhas muito espaçadas dificultam a identificação de tendências e a demonstração de ROI das intervenções.",
+    dica: "Todos os documentos são rastreáveis e auditáveis. A metodologia é documentada automaticamente, atendendo ao requisito de transparência da NR-01.",
   },
 ];
 
@@ -192,28 +231,33 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
     if (idx >= 0 && idx < PASSOS.length) setPasso(idx);
   };
 
+  const handleClose = () => {
+    setPasso(0);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange(true); }}>
       <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
-        {/* Header fixo */}
+        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b bg-background">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-purple-100">
               <BookOpen className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-foreground">Guia Rápido — Gestão Psicossocial</h2>
+              <h2 className="font-bold text-base text-foreground">Guia do Módulo Psicossocial</h2>
               <p className="text-xs text-muted-foreground">
                 {passo + 1} de {PASSOS.length} — {atual.titulo}
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Barra de progresso roxa */}
+        {/* Barra de progresso */}
         <div className="h-1 bg-muted">
           <motion.div
             className="h-full bg-purple-600"
@@ -223,10 +267,10 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
         </div>
 
         <div className="flex min-h-[500px]">
-          {/* Sidebar de navegação */}
+          {/* Sidebar */}
           <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
-              Navegação
+              Passo a Passo
             </p>
             {PASSOS.map((p, idx) => {
               const Icone = p.icon;
@@ -250,13 +294,15 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                   )}
-                  <span className="text-xs leading-tight">{p.titulo.replace(/^Passo \d+ — /, "")}</span>
+                  <span className="text-xs leading-tight">
+                    {p.titulo.replace(/^Passo \d+ — /, "")}
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Conteúdo principal */}
+          {/* Conteúdo */}
           <div className="flex-1 overflow-y-auto">
             <AnimatePresence mode="wait">
               <motion.div
@@ -267,7 +313,7 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
                 transition={{ duration: 0.2 }}
                 className="p-6 space-y-5"
               >
-                {/* Cabeçalho do passo */}
+                {/* Cabeçalho */}
                 <div className="flex items-start gap-4">
                   <div className={cn("p-3 rounded-xl shrink-0", atual.bgColor)}>
                     <IconeAtual className={cn("h-6 w-6", atual.color)} />
@@ -275,22 +321,17 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-lg text-foreground">{atual.titulo}</h3>
-                      {passo > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {atual.subtitulo}
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {atual.subtitulo}
+                      </Badge>
                     </div>
-                    {passo === 0 && (
-                      <p className="text-sm text-muted-foreground mt-0.5">{atual.subtitulo}</p>
-                    )}
                   </div>
                 </div>
 
                 {/* Descrição */}
                 <p className="text-sm text-foreground/80 leading-relaxed">{atual.descricao}</p>
 
-                {/* Destaques (somente na overview) */}
+                {/* Destaques (overview) */}
                 {atual.destaques && (
                   <div className="grid grid-cols-2 gap-3">
                     {atual.destaques.map(({ icon: Ic, label }) => (
@@ -305,7 +346,7 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
                   </div>
                 )}
 
-                {/* Ações passo a passo */}
+                {/* Ações */}
                 {atual.acoes && (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -337,7 +378,17 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
                   </div>
                 )}
 
-                {/* Indicadores de passo (mobile) */}
+                {/* CTA Manual PDF — última etapa */}
+                {passo === PASSOS.length - 1 && (
+                  <div className="flex flex-col items-center gap-3 pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground text-center">
+                      Quer um guia de referência para consultar offline?
+                    </p>
+                    <ManualPsicossocial />
+                  </div>
+                )}
+
+                {/* Indicadores mobile */}
                 <div className="flex justify-center gap-1.5 sm:hidden pt-2">
                   {PASSOS.map((_, i) => (
                     <button
@@ -355,7 +406,7 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
           </div>
         </div>
 
-        {/* Footer de navegação */}
+        {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
           <Button
             variant="outline"
@@ -373,12 +424,20 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
           </span>
 
           {passo < PASSOS.length - 1 ? (
-            <Button size="sm" onClick={() => irPara(passo + 1)} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+            <Button
+              size="sm"
+              onClick={() => irPara(passo + 1)}
+              className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+            >
               Próximo
               <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button size="sm" onClick={() => onOpenChange(false)} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+            <Button
+              size="sm"
+              onClick={handleClose}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
               <CheckCircle2 className="h-4 w-4" />
               Concluir
             </Button>
