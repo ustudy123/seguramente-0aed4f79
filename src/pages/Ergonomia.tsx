@@ -77,6 +77,8 @@ export default function Ergonomia() {
   const [conformidadeEixo, setConformidadeEixo] = useState<"todos" | "fisico" | "cognitivo" | "organizacional">("todos");
   const [aepMode, setAepMode] = useState<"simples" | "multi">("simples");
 
+  const { riscos: groRiscos } = useGRORiscos();
+
   const {
     itensNR17,
     riscos,
