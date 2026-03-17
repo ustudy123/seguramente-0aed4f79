@@ -136,6 +136,7 @@ export function OcorrenciaForm({ onSubmit, onCreateAdvertenciaLink, isLoading }:
                 ))}
               </SelectContent>
             </Select>
+            {selectedColab && <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColab.cpf, nome: selectedColab.nome_completo })} />}
             {selectedColab && (
               <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 grid grid-cols-2 gap-1">
                 <span>Função: {selectedColab.cargo}</span>
