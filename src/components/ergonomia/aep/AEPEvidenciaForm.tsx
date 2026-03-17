@@ -72,8 +72,6 @@ export function AEPEvidenciaForm({
     c.departamento === departamentos.find(d => d.id === setorId)?.nome
   );
 
-  const setorNome = departamentos.find(d => d.id === setorId)?.nome || "";
-  const funcaoNome = cargos.find(c => c.id === funcaoId)?.nome || "";
   const colaboradorNome = colaboradores.find(c => c.id === colaboradorId)?.nome_completo;
 
   // File upload
