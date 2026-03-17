@@ -156,7 +156,11 @@ export function usePsicossocial() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []).map(c => ({ ...c, radar_data: c.radar_data as unknown as RadarDimensao[] | undefined })) as CampanhaPsicossocial[];
+      return (data || []).map(c => ({
+        ...c,
+        radar_data: c.radar_data as unknown as RadarDimensao[] | undefined,
+        situacoes_trabalho: (c as any).situacoes_trabalho as unknown as import("@/types/psicossocial").SituacaoTrabalhoCampanha[] | undefined,
+      })) as unknown as CampanhaPsicossocial[];
     },
     enabled: !!tenantId,
   });
@@ -184,6 +188,7 @@ export function usePsicossocial() {
           departamentos_ids: dados.departamentos_ids,
           cargos_ids: dados.cargos_ids,
           blocos_dinamicos: dados.blocos_dinamicos,
+          situacoes_trabalho: dados.situacoes_trabalho ?? [],
           motivo_extraordinaria: dados.motivo_extraordinaria,
           evento_gatilho_tipo: dados.evento_gatilho_tipo,
           evento_gatilho_id: dados.evento_gatilho_id,
@@ -194,12 +199,16 @@ export function usePsicossocial() {
           token_publico: Array.from(crypto.getRandomValues(new Uint8Array(12)))
             .map(b => b.toString(16).padStart(2, '0'))
             .join(''),
-        })
+        } as any)
         .select()
         .single();
 
       if (error) throw error;
-      return { ...data, radar_data: (data as any).radar_data as unknown as RadarDimensao[] | undefined } as CampanhaPsicossocial;
+      return {
+        ...data,
+        radar_data: (data as any).radar_data as unknown as RadarDimensao[] | undefined,
+        situacoes_trabalho: (data as any).situacoes_trabalho as unknown as import("@/types/psicossocial").SituacaoTrabalhoCampanha[] | undefined,
+      } as unknown as CampanhaPsicossocial;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["psicossocial-campanhas"] });

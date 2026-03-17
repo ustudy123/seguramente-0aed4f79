@@ -119,6 +119,9 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   );
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
+  // Verifica se a campanha mais recente tem situações de trabalho vinculadas
+  const campanhaAtual = campanhasValidas[0];
+  const semEscopoGRO = !campanhaAtual?.situacoes_trabalho || campanhaAtual.situacoes_trabalho.length === 0;
 
   /**
    * Agregação real das dimensões.
@@ -180,6 +183,16 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     // Importar da campanha mais recente com radar_data
     const campanha = campanhasValidas[0];
     const radar = campanha.radar_data as RadarDimensao[];
+    const situacoes = campanha.situacoes_trabalho ?? [];
+
+    if (situacoes.length === 0) {
+      toast.error(
+        "Esta campanha não possui situações de trabalho (Setor+Função) vinculadas. " +
+        "Edite a campanha para adicionar pares Setor+Função antes de exportar ao GRO (NR-17).",
+        { duration: 6000 }
+      );
+      return;
+    }
 
     await importarDaCampanha.mutateAsync({
       campanhaId: campanha.id,
@@ -187,6 +200,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
       dimensoes: radar.map(d => ({ subject: d.subject, value: d.value })),
       empresaId: null,
       isSipro: campanha.instrumento === 'sipro',
+      situacoes,
     });
   };
 
@@ -341,9 +355,11 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
               className="gap-2"
               onClick={handleImportarGRO}
               disabled={importarDaCampanha.isPending}
+              title={semEscopoGRO ? "Campanha sem Setor+Função vinculado — adicione situações de trabalho para exportar ao GRO com conformidade NR-17" : "Enviar riscos ao inventário GRO"}
             >
               {importarDaCampanha.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
               Enviar ao GRO
+              {semEscopoGRO && <AlertTriangle className="h-3 w-3 text-amber-500" />}
             </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={handleExportarPDF} disabled={exportando}>
               {exportando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}

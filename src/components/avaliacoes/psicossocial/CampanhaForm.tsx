@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info, Plus, Trash2, Building2, UserCog } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial } from "@/types/psicossocial";
+import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +107,12 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const { user } = useAuth();
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
+  // Situações de trabalho (pares Setor+Função) vinculadas à campanha
+  const [situacoes, setSituacoes] = useState<SituacaoTrabalhoCampanha[]>(
+    campanhaAnterior?.situacoes_trabalho ?? []
+  );
+  const [novoSetor, setNovoSetor] = useState('');
+  const [novaFuncao, setNovaFuncao] = useState('');
 
   const isReaplicacao = !!campanhaAnterior;
 
@@ -173,6 +179,23 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
     fetchEmpresa();
   }, [open, empresaAtivaId, user]);
 
+  const addSituacao = () => {
+    if (!novoSetor.trim() || !novaFuncao.trim()) return;
+    const nova: SituacaoTrabalhoCampanha = {
+      setorId: novoSetor.trim().toLowerCase().replace(/\s+/g, '_'),
+      setorNome: novoSetor.trim(),
+      funcaoId: novaFuncao.trim().toLowerCase().replace(/\s+/g, '_'),
+      funcaoNome: novaFuncao.trim(),
+    };
+    setSituacoes(prev => [...prev, nova]);
+    setNovoSetor('');
+    setNovaFuncao('');
+  };
+
+  const removeSituacao = (idx: number) => {
+    setSituacoes(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const onSubmit = async (data: FormValues) => {
     await criarCampanha.mutateAsync({
       nome: data.nome,
@@ -187,11 +210,13 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
       mensagem_institucional: undefined,
       politica_uso_dados: data.politica_uso_dados,
       blocos_dinamicos: data.blocos_dinamicos,
+      situacoes_trabalho: situacoes,
       motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
       evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
       campanha_anterior_id: data.campanha_anterior_id,
     });
     form.reset();
+    setSituacoes([]);
     onOpenChange(false);
   };
 
@@ -684,6 +709,84 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                 </FormItem>
               )}
             />
+
+            {/* ── Situações de Trabalho (NR-17) ── */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-purple-600" />
+                <span className="font-medium text-sm">Situações de Trabalho (NR-17)</span>
+                <Badge variant="secondary" className="text-xs">Recomendado para GRO</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Vincule pares de <strong>Setor + Função</strong> que serão analisados nesta campanha.
+                Campanhas sem vínculo não poderão ser exportadas ao GRO com conformidade NR-17.
+              </p>
+
+              {/* Lista de situações adicionadas */}
+              {situacoes.length > 0 && (
+                <div className="space-y-2">
+                  {situacoes.map((sit, idx) => (
+                    <div key={idx} className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <UserCog className="h-3.5 w-3.5 text-purple-500" />
+                        <span className="font-medium">{sit.funcaoNome}</span>
+                        <span className="text-muted-foreground">em</span>
+                        <span>{sit.setorNome}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:text-destructive"
+                        onClick={() => removeSituacao(idx)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Adicionar nova situação */}
+              <div className="rounded-lg border border-dashed p-3 space-y-2">
+                <p className="text-xs text-muted-foreground font-medium">Adicionar situação de trabalho</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="Setor (ex: Produção)"
+                    value={novoSetor}
+                    onChange={e => setNovoSetor(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  <Input
+                    placeholder="Função (ex: Operador)"
+                    value={novaFuncao}
+                    onChange={e => setNovaFuncao(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSituacao())}
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-7 text-xs"
+                  disabled={!novoSetor.trim() || !novaFuncao.trim()}
+                  onClick={addSituacao}
+                >
+                  <Plus className="h-3 w-3" />
+                  Adicionar par Setor+Função
+                </Button>
+              </div>
+
+              {situacoes.length === 0 && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800">
+                    <strong>Atenção:</strong> Sem situações de trabalho vinculadas, os riscos identificados não poderão ser exportados ao GRO com conformidade NR-17/ISO 45003. Você ainda pode criar a campanha e adicionar o vínculo depois.
+                  </p>
+                </div>
+              )}
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

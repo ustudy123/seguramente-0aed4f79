@@ -15222,6 +15222,7 @@ export type Database = {
           departamentos_ids: string[] | null
           descricao: string | null
           escopo: string | null
+          escopo_tipo: string | null
           escopo_valores: string[] | null
           evento_gatilho_id: string | null
           evento_gatilho_tipo: string | null
@@ -15242,6 +15243,7 @@ export type Database = {
           permite_identificacao_voluntaria: boolean
           politica_uso_dados: string | null
           radar_data: Json | null
+          situacoes_trabalho: Json | null
           status: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo: string
@@ -15262,6 +15264,7 @@ export type Database = {
           departamentos_ids?: string[] | null
           descricao?: string | null
           escopo?: string | null
+          escopo_tipo?: string | null
           escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
@@ -15282,6 +15285,7 @@ export type Database = {
           permite_identificacao_voluntaria?: boolean
           politica_uso_dados?: string | null
           radar_data?: Json | null
+          situacoes_trabalho?: Json | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id: string
           tipo?: string
@@ -15302,6 +15306,7 @@ export type Database = {
           departamentos_ids?: string[] | null
           descricao?: string | null
           escopo?: string | null
+          escopo_tipo?: string | null
           escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
@@ -15322,6 +15327,7 @@ export type Database = {
           permite_identificacao_voluntaria?: boolean
           politica_uso_dados?: string | null
           radar_data?: Json | null
+          situacoes_trabalho?: Json | null
           status?: Database["public"]["Enums"]["campanha_psicossocial_status"]
           tenant_id?: string
           tipo?: string
