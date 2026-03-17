@@ -28,6 +28,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
+import { ManualPsicossocial } from "./ManualPsicossocial";
 import { type IPSClassificacao, getIPSColor, getIPSBgColor, calcularIPSClassificacao } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
 
@@ -78,10 +79,13 @@ export function PsicossocialDashboard() {
             NR-01 · NR-17 · ISO 45001 · ISO 45003 — Análise multidimensional baseada em evidências
           </p>
         </div>
-        <Button onClick={handleNovaCampanha} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Campanha
-        </Button>
+        <div className="flex items-center gap-2">
+          <ManualPsicossocial />
+          <Button onClick={handleNovaCampanha} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Campanha
+          </Button>
+        </div>
       </div>
 
       {/* Stats + IPS */}
