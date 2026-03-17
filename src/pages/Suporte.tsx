@@ -73,7 +73,7 @@ const prioridadeColors: Record<TicketPrioridade, string> = {
 export default function Suporte() {
   const { hasMinimumRole } = useAuthContext();
   const isAdmin = hasMinimumRole("admin");
-  const { tickets, isLoading, createTicket, updateTicket, fetchComentarios, addComentario } = useSuporteTickets();
+  const { tickets, isLoading, isSuperAdmin, createTicket, updateTicket, fetchComentarios, addComentario } = useSuporteTickets();
 
   const [showForm, setShowForm] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SuporteTicket | null>(null);
@@ -290,6 +290,7 @@ export default function Suporte() {
                         </span>
                         {ticket.modulo && <span>• {ticket.modulo}</span>}
                         <span>• {ticket.criado_por_nome || "Anônimo"}</span>
+                        {isSuperAdmin && <span className="font-medium text-primary">• Tenant: {ticket.tenant_id.slice(0, 8)}…</span>}
                         <span>• {new Date(ticket.created_at).toLocaleDateString("pt-BR")}</span>
                       </div>
                     </div>
