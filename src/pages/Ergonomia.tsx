@@ -19,6 +19,7 @@ import {
   BarChart3,
   Zap,
   RotateCcw,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,6 +49,8 @@ import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import { GROPainel } from "@/components/ergonomia/GROPainel";
 import { GROCicloPDCA } from "@/components/ergonomia/GROCicloPDCA";
+import { DocumentoMetodologia } from "@/components/ergonomia/DocumentoMetodologia";
+import { ComunicacaoTrabalhadores } from "@/components/ergonomia/ComunicacaoTrabalhadores";
 import { MotorAET } from "@/components/ergonomia/MotorAET";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
 import {
@@ -462,6 +465,16 @@ export default function Ergonomia() {
                 <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
               ) : (
                 <AcoesList acoes={acoes} onUpdateStatus={handleUpdateAcaoStatus} />
+              </TabsContent>
+
+              {/* Documento de Metodologia — RQ-26 */}
+              <TabsContent value="metodologia">
+                <DocumentoMetodologia riscos={groRiscos} />
+              </TabsContent>
+
+              {/* Comunicação aos Trabalhadores — RQ-19/20 */}
+              <TabsContent value="comunicacao">
+                <ComunicacaoTrabalhadores riscos={groRiscos} />
               )}
             </TabsContent>
 
