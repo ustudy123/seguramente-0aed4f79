@@ -10,7 +10,10 @@ import {
   Loader2,
   ShieldCheck,
   Database,
+  BookOpen,
+  RefreshCw,
 } from "lucide-react";
+import { RelatorioModal } from "./RelatorioModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,6 +114,7 @@ interface InventarioItem {
 export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [relatorioOpen, setRelatorioOpen] = useState(false);
   const { importarDaCampanha } = useGRORiscos();
 
   // Campanhas válidas (mín. anonimato e com radar_data real)
@@ -365,6 +369,17 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             {altos > 0 && (
               <Badge className="bg-orange-500 text-white">{altos} alto(s)</Badge>
             )}
+            {/* GAP 4: Botão Relatório completo com metodologia */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setRelatorioOpen(true)}
+              title="Gerar relatório estruturado com metodologia — NR-01 / ISO 45003"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Relatório
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -476,15 +491,33 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           </Button>
         )}
 
+        {/* GAP 2: Alerta de ações obrigatórias para alto/crítico */}
+        {(criticos > 0 || altos > 0) && (
+          <div className="flex items-start gap-2 p-3 bg-orange-50/50 rounded-lg border border-orange-200 text-xs text-orange-800">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-orange-500" />
+            <p>
+              <strong>{criticos + altos} dimensão(ões) não tolerável(is)</strong> identificada(s).
+              Ações obrigatórias foram geradas automaticamente no Plano de Ação Global
+              {criticos > 0 && ` (${criticos} crítica(s) — prazo 30 dias`}{altos > 0 && `, ${altos} alta(s) — prazo 60 dias`}{(criticos > 0 || altos > 0) && ")"}. NR-01 / ISO 45003.
+            </p>
+          </div>
+        )}
+
         <div className="flex items-start gap-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-xs text-blue-700">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           <p>
             Os scores são calculados a partir dos dados <strong>reais do radar psicossocial</strong> de {campanhasValidas.length} campanha(s),
-            com média ponderada pelo número de respondentes. Compatível com o PGR da empresa (NR-01) e Análise Ergonômica do Trabalho (NR-17).
-            Use <strong>"Enviar ao GRO"</strong> para integrar este inventário ao módulo de Ergonomia.
+            com média ponderada pelo número de respondentes. Use <strong>"Relatório"</strong> para exportar documento estruturado com metodologia auditável.
           </p>
         </div>
       </CardContent>
+
+      {/* GAP 4: Modal de relatório estruturado */}
+      <RelatorioModal
+        open={relatorioOpen}
+        onClose={() => setRelatorioOpen(false)}
+        campanhas={campanhas}
+      />
     </Card>
   );
 }
