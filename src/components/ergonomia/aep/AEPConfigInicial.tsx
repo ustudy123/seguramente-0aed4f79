@@ -1,56 +1,96 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, Calendar, User, CheckSquare, X } from "lucide-react";
-import { useDepartamentos } from "@/hooks/useCadastros";
-import { AEPEmpresaInfo } from "@/types/aep-multi";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Building2, MapPin, Calendar, User, Plus, X, Copy,
+  ChevronsUpDown, Check, Briefcase, AlertTriangle
+} from "lucide-react";
+import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { AEPEmpresaInfo, SituacaoTrabalho } from "@/types/aep-multi";
 import { formatCnpj, cleanCnpj } from "@/lib/brasilapi";
+import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 interface AEPConfigInicialProps {
   empresa: AEPEmpresaInfo;
-  avaliarTodosSetores: boolean;
-  setoresSelecionados: { id: string; nome: string }[];
+  situacoes: SituacaoTrabalho[];
   onUpdateEmpresa: (updates: Partial<AEPEmpresaInfo>) => void;
-  onSetAvaliarTodosSetores: (value: boolean) => void;
-  onSetSetoresSelecionados: (setores: { id: string; nome: string }[]) => void;
+  onAddSituacao: (s: Omit<SituacaoTrabalho, 'id'>) => void;
+  onRemoveSituacao: (id: string) => void;
+  onDuplicateSituacao: (id: string) => void;
+  onUpdateSituacao: (id: string, updates: Partial<Omit<SituacaoTrabalho, 'id'>>) => void;
 }
 
 export function AEPConfigInicial({
   empresa,
-  avaliarTodosSetores,
-  setoresSelecionados,
+  situacoes,
   onUpdateEmpresa,
-  onSetAvaliarTodosSetores,
-  onSetSetoresSelecionados
+  onAddSituacao,
+  onRemoveSituacao,
+  onDuplicateSituacao,
+  onUpdateSituacao,
 }: AEPConfigInicialProps) {
+  const { empresaAtiva } = useEmpresaAtiva();
   const { departamentos, isLoading: loadingDepts } = useDepartamentos();
-  const [searchSetor, setSearchSetor] = useState("");
+  const { cargos, isLoading: loadingCargos } = useCargos();
 
-  const departamentosAtivos = departamentos.filter(d => d.ativo);
-  
-  const filteredDepartamentos = departamentosAtivos.filter(d => 
-    d.nome.toLowerCase().includes(searchSetor.toLowerCase())
+  // Auto-fill empresa data
+  useEffect(() => {
+    if (empresaAtiva) {
+      const nome = empresaAtiva.nome_fantasia || empresaAtiva.razao_social || "";
+      const cnpj = empresaAtiva.cnpj ? formatCnpj(cleanCnpj(empresaAtiva.cnpj)) : "";
+      onUpdateEmpresa({ nome, cnpj });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empresaAtiva?.id]);
+
+  // New situação form state
+  const [setorOpen, setSetorOpen] = useState(false);
+  const [funcaoOpen, setFuncaoOpen] = useState(false);
+  const [newSetorId, setNewSetorId] = useState("");
+  const [newSetorNome, setNewSetorNome] = useState("");
+  const [newFuncaoId, setNewFuncaoId] = useState("");
+  const [newFuncaoNome, setNewFuncaoNome] = useState("");
+
+  const departamentosAtivos = useMemo(
+    () => departamentos.filter((d) => d.ativo),
+    [departamentos]
   );
 
-  const toggleSetor = (dept: { id: string; nome: string }) => {
-    const exists = setoresSelecionados.find(s => s.id === dept.id);
-    if (exists) {
-      onSetSetoresSelecionados(setoresSelecionados.filter(s => s.id !== dept.id));
-    } else {
-      onSetSetoresSelecionados([...setoresSelecionados, { id: dept.id, nome: dept.nome }]);
-    }
+  const funcoesFiltradas = useMemo(() => {
+    if (!newSetorId) return [];
+    return cargos.filter(
+      (c) => c.ativo !== false && (c as any).departamento_id === newSetorId
+    );
+  }, [cargos, newSetorId]);
+
+  const handleAddSituacao = () => {
+    if (!newSetorId || !newFuncaoId) return;
+    // Avoid duplicates
+    const exists = situacoes.some(
+      (s) => s.setorId === newSetorId && s.funcaoId === newFuncaoId
+    );
+    if (exists) return;
+    onAddSituacao({
+      setorId: newSetorId,
+      setorNome: newSetorNome,
+      funcaoId: newFuncaoId,
+      funcaoNome: newFuncaoNome,
+    });
+    setNewSetorId("");
+    setNewSetorNome("");
+    setNewFuncaoId("");
+    setNewFuncaoNome("");
   };
 
-  const handleTodosSetoresChange = (checked: boolean) => {
-    onSetAvaliarTodosSetores(checked);
-    if (checked) {
-      onSetSetoresSelecionados([]);
-    }
-  };
+  const canAdd = !!newSetorId && !!newFuncaoId &&
+    !situacoes.some((s) => s.setorId === newSetorId && s.funcaoId === newFuncaoId);
 
   return (
     <div className="space-y-6">
@@ -61,9 +101,7 @@ export function AEPConfigInicial({
             <Building2 className="h-5 w-5 text-primary" />
             Identificação da Empresa
           </CardTitle>
-          <CardDescription>
-            Dados da empresa para o documento AEP
-          </CardDescription>
+          <CardDescription>Dados da empresa para o documento AEP</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -72,10 +110,10 @@ export function AEPConfigInicial({
               id="empresa"
               placeholder="Nome da empresa"
               value={empresa.nome}
-              onChange={e => onUpdateEmpresa({ nome: e.target.value })}
+              onChange={(e) => onUpdateEmpresa({ nome: e.target.value })}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="cnpj">CNPJ</Label>
             <Input
@@ -83,7 +121,7 @@ export function AEPConfigInicial({
               placeholder="00.000.000/0000-00"
               value={empresa.cnpj}
               maxLength={18}
-              onChange={e => {
+              onChange={(e) => {
                 const cleaned = cleanCnpj(e.target.value);
                 if (cleaned.length <= 14) {
                   onUpdateEmpresa({ cnpj: formatCnpj(cleaned) });
@@ -101,7 +139,7 @@ export function AEPConfigInicial({
               id="unidade"
               placeholder="Matriz, Filial SP, etc."
               value={empresa.unidade}
-              onChange={e => onUpdateEmpresa({ unidade: e.target.value })}
+              onChange={(e) => onUpdateEmpresa({ unidade: e.target.value })}
             />
           </div>
 
@@ -114,7 +152,7 @@ export function AEPConfigInicial({
               id="dataAvaliacao"
               type="date"
               value={empresa.dataAvaliacao}
-              onChange={e => onUpdateEmpresa({ dataAvaliacao: e.target.value })}
+              onChange={(e) => onUpdateEmpresa({ dataAvaliacao: e.target.value })}
             />
           </div>
 
@@ -127,7 +165,7 @@ export function AEPConfigInicial({
               id="responsavel"
               placeholder="Nome do avaliador"
               value={empresa.responsavelLevantamento}
-              onChange={e => onUpdateEmpresa({ responsavelLevantamento: e.target.value })}
+              onChange={(e) => onUpdateEmpresa({ responsavelLevantamento: e.target.value })}
             />
           </div>
 
@@ -137,122 +175,208 @@ export function AEPConfigInicial({
               id="validador"
               placeholder="Ergonomista, Médico do Trabalho, etc."
               value={empresa.profissionalValidador}
-              onChange={e => onUpdateEmpresa({ profissionalValidador: e.target.value })}
+              onChange={(e) => onUpdateEmpresa({ profissionalValidador: e.target.value })}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Seleção de Setores */}
+      {/* Situações de Trabalho */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckSquare className="h-5 w-5 text-primary" />
-            Setores a Avaliar
+            <Briefcase className="h-5 w-5 text-primary" />
+            Situações de Trabalho a Avaliar
           </CardTitle>
           <CardDescription>
-            Selecione os setores que serão incluídos nesta AEP
+            Adicione cada combinação <strong>Setor + Função</strong> que representa uma realidade de trabalho distinta (NR-17)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Toggle todos os setores */}
-          <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg border">
-            <Checkbox
-              id="todosSetores"
-              checked={avaliarTodosSetores}
-              onCheckedChange={handleTodosSetoresChange}
-            />
-            <Label htmlFor="todosSetores" className="font-medium cursor-pointer">
-              Avaliar todos os setores da empresa
-            </Label>
-            {avaliarTodosSetores && (
-              <Badge variant="secondary" className="ml-auto">
-                {departamentosAtivos.length} setores
-              </Badge>
-            )}
+          {/* Info box */}
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>
+              Cada situação distinta deve ter sua própria análise. Funções com realidades diferentes
+              precisam de AEPs separadas — a consolidação é feita automaticamente no documento final.
+            </span>
           </div>
 
-          {/* Seleção individual */}
-          {!avaliarTodosSetores && (
-            <div className="space-y-3">
-              <Input
-                placeholder="Buscar setor..."
-                value={searchSetor}
-                onChange={e => setSearchSetor(e.target.value)}
-              />
+          {/* Formulário para nova situação */}
+          <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end p-4 bg-muted/50 rounded-lg border border-dashed">
+            {/* Setor */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Setor *</Label>
+              <Popover open={setorOpen} onOpenChange={setSetorOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between font-normal bg-background"
+                  >
+                    <span className="truncate">
+                      {newSetorNome || "Selecionar setor..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[260px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar setor..." />
+                    <CommandList>
+                      <CommandEmpty>
+                        {loadingDepts ? "Carregando..." : "Nenhum setor encontrado."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {departamentosAtivos.map((dept) => (
+                          <CommandItem
+                            key={dept.id}
+                            value={dept.nome}
+                            onSelect={() => {
+                              setNewSetorId(dept.id);
+                              setNewSetorNome(dept.nome);
+                              setNewFuncaoId("");
+                              setNewFuncaoNome("");
+                              setSetorOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                newSetorId === dept.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {dept.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
 
-              {/* Setores selecionados */}
-              {setoresSelecionados.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {setoresSelecionados.map(setor => (
-                    <Badge 
-                      key={setor.id} 
-                      variant="default"
-                      className="flex items-center gap-1 pl-2"
-                    >
-                      {setor.nome}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 p-0 ml-1 hover:bg-primary-foreground/20"
-                        onClick={() => toggleSetor(setor)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+            {/* Função */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Função *</Label>
+              <Popover open={funcaoOpen} onOpenChange={setFuncaoOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    disabled={!newSetorId}
+                    className="w-full justify-between font-normal bg-background"
+                  >
+                    <span className="truncate">
+                      {newFuncaoNome || (newSetorId ? "Selecionar função..." : "Selecione o setor primeiro")}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[260px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar função..." />
+                    <CommandList>
+                      <CommandEmpty>
+                        {loadingCargos
+                          ? "Carregando..."
+                          : funcoesFiltradas.length === 0
+                          ? "Nenhuma função cadastrada neste setor."
+                          : "Nenhuma função encontrada."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {funcoesFiltradas.map((cargo) => (
+                          <CommandItem
+                            key={cargo.id}
+                            value={cargo.nome}
+                            onSelect={() => {
+                              setNewFuncaoId(cargo.id);
+                              setNewFuncaoNome(cargo.nome);
+                              setFuncaoOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                newFuncaoId === cargo.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {cargo.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Botão adicionar */}
+            <Button
+              onClick={handleAddSituacao}
+              disabled={!canAdd}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar
+            </Button>
+          </div>
+
+          {/* Lista de situações adicionadas */}
+          {situacoes.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhuma situação de trabalho adicionada. Adicione pelo menos uma para continuar.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {situacoes.map((sit) => (
+                <div
+                  key={sit.id}
+                  className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {sit.setorNome}
                     </Badge>
-                  ))}
+                    <span className="text-muted-foreground">›</span>
+                    <span className="text-sm font-medium truncate">{sit.funcaoNome}</span>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      title="Duplicar situação"
+                      onClick={() => onDuplicateSituacao(sit.id)}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => onRemoveSituacao(sit.id)}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-              )}
-
-              {/* Lista de setores disponíveis */}
-              <div className="grid gap-2 max-h-[200px] overflow-y-auto">
-                {loadingDepts ? (
-                  <p className="text-sm text-muted-foreground p-2">Carregando setores...</p>
-                ) : filteredDepartamentos.length === 0 ? (
-                  <p className="text-sm text-muted-foreground p-2">
-                    {departamentosAtivos.length === 0 
-                      ? "Nenhum setor cadastrado. Cadastre departamentos primeiro."
-                      : "Nenhum setor encontrado."}
-                  </p>
-                ) : (
-                  filteredDepartamentos.map(dept => {
-                    const isSelected = setoresSelecionados.some(s => s.id === dept.id);
-                    return (
-                      <div
-                        key={dept.id}
-                        className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-primary/10 border-primary' 
-                            : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => toggleSetor({ id: dept.id, nome: dept.nome })}
-                      >
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSetor({ id: dept.id, nome: dept.nome })}
-                        />
-                        <span className="flex-1">{dept.nome}</span>
-                        {dept.descricao && (
-                          <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                            {dept.descricao}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+              ))}
             </div>
           )}
 
           {/* Resumo */}
           <div className="pt-2 border-t text-sm text-muted-foreground">
-            {avaliarTodosSetores ? (
-              <span>Todos os {departamentosAtivos.length} setores serão avaliados</span>
-            ) : setoresSelecionados.length > 0 ? (
-              <span>{setoresSelecionados.length} setor(es) selecionado(s)</span>
+            {situacoes.length > 0 ? (
+              <span>
+                {situacoes.length} situação(ões) de trabalho definida(s) —{" "}
+                {new Set(situacoes.map((s) => s.setorId)).size} setor(es),{" "}
+                {new Set(situacoes.map((s) => s.funcaoId)).size} função(ões) distinta(s)
+              </span>
             ) : (
-              <span className="text-warning">Selecione pelo menos um setor para continuar</span>
+              <span className="text-warning">
+                Adicione pelo menos uma situação de trabalho (Setor + Função) para continuar
+              </span>
             )}
           </div>
         </CardContent>
