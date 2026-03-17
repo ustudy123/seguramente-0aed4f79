@@ -252,9 +252,10 @@ export function EpiEntregaForm({
                         )}
                       >
                         {selectedColaborador ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <UserCheck className="h-4 w-4 text-primary" />
                             <span>{selectedColaborador.nome_completo}</span>
+                            <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColaborador.cpf, nome: selectedColaborador.nome_completo })} compact />
                             <Badge variant="secondary" className="ml-auto">
                               {selectedColaborador.cargo}
                             </Badge>
