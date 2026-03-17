@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   AEPMultiState, 
+  SituacaoTrabalho,
   EvidenciaAEP, 
   AEPAvaliacaoFuncao,
   AEPEmpresaInfo,
@@ -38,19 +39,38 @@ export function useAEPMulti() {
     }));
   }, []);
 
-  // Setores selection
-  const setAvaliarTodosSetores = useCallback((value: boolean) => {
+  // Situações (pares setor+função)
+  const setSituacoes = useCallback((situacoes: SituacaoTrabalho[]) => {
+    setState(prev => ({ ...prev, situacoes }));
+  }, []);
+
+  const addSituacao = useCallback((situacao: Omit<SituacaoTrabalho, 'id'>) => {
     setState(prev => ({
       ...prev,
-      avaliarTodosSetores: value,
-      setoresSelecionados: value ? [] : prev.setoresSelecionados
+      situacoes: [...prev.situacoes, { ...situacao, id: crypto.randomUUID() }]
     }));
   }, []);
 
-  const setSetoresSelecionados = useCallback((setores: { id: string; nome: string }[]) => {
+  const removeSituacao = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
-      setoresSelecionados: setores
+      situacoes: prev.situacoes.filter(s => s.id !== id)
+    }));
+  }, []);
+
+  const duplicateSituacao = useCallback((id: string) => {
+    setState(prev => {
+      const original = prev.situacoes.find(s => s.id === id);
+      if (!original) return prev;
+      const clone: SituacaoTrabalho = { ...original, id: crypto.randomUUID() };
+      return { ...prev, situacoes: [...prev.situacoes, clone] };
+    });
+  }, []);
+
+  const updateSituacao = useCallback((id: string, updates: Partial<Omit<SituacaoTrabalho, 'id'>>) => {
+    setState(prev => ({
+      ...prev,
+      situacoes: prev.situacoes.map(s => s.id === id ? { ...s, ...updates } : s)
     }));
   }, []);
 
@@ -178,7 +198,6 @@ export function useAEPMulti() {
       const [setorId, funcaoId] = key.split('|');
       const firstEv = evidencias[0];
       
-      // Collect all riscos and recomendacoes from analyzed evidencias
       const allRiscos = evidencias
         .filter(e => e.resultadoIA)
         .flatMap(e => e.resultadoIA!.riscosIdentificados);
@@ -193,14 +212,12 @@ export function useAEPMulti() {
           .map(e => e.colaboradorNome!)
       )];
 
-      // Calculate classification based on risks
       const hasCritico = allRiscos.some(r => r.severidade === 'critico');
       const hasAlto = allRiscos.some(r => r.severidade === 'alto');
       const classificacaoRisco: 'baixo' | 'medio' | 'alto' = 
         hasCritico ? 'alto' : hasAlto ? 'medio' : 'baixo';
 
-      // Generate acoes from recommendations
-      const acoes: AEPAcaoRecomendada[] = [...new Set(allRecomendacoes)].map((rec, idx) => ({
+      const acoes: AEPAcaoRecomendada[] = [...new Set(allRecomendacoes)].map((rec) => ({
         id: crypto.randomUUID(),
         acao: rec,
         tipo: 'organizacional' as const,
@@ -223,9 +240,30 @@ export function useAEPMulti() {
       });
     });
 
+    // Also generate entries for situações that have no evidências yet
+    state.situacoes.forEach(sit => {
+      const key = `${sit.setorId}|${sit.funcaoId}`;
+      if (!evidenciasPorFuncao.has(key)) {
+        avaliacoes.push({
+          id: crypto.randomUUID(),
+          setorId: sit.setorId,
+          setorNome: sit.setorNome,
+          funcaoId: sit.funcaoId,
+          funcaoNome: sit.funcaoNome,
+          colaboradoresAvaliados: [],
+          evidencias: [],
+          descricaoAtividade: defaultDoc.descricaoAtividade,
+          riscosFisicos: defaultDoc.riscosFisicos,
+          riscosCognitivos: defaultDoc.riscosCognitivos,
+          classificacaoRisco: 'baixo',
+          acoesRecomendadas: []
+        });
+      }
+    });
+
     setState(prev => ({ ...prev, avaliacoes }));
     return avaliacoes;
-  }, [evidenciasPorFuncao]);
+  }, [evidenciasPorFuncao, state.situacoes]);
 
   // Update avaliação
   const updateAvaliacao = useCallback((id: string, updates: Partial<AEPAvaliacaoFuncao>) => {
@@ -264,8 +302,9 @@ export function useAEPMulti() {
     totalEvidencias: state.evidencias.length,
     evidenciasAnalisadas: state.evidencias.filter(e => e.analisadaPorIA).length,
     totalFuncoes: evidenciasPorFuncao.size,
-    totalSetores: new Set(state.evidencias.map(e => e.setorId)).size
-  }), [state.evidencias, evidenciasPorFuncao]);
+    totalSetores: new Set(state.evidencias.map(e => e.setorId)).size,
+    totalSituacoes: state.situacoes.length,
+  }), [state.evidencias, state.situacoes, evidenciasPorFuncao]);
 
   return {
     state,
@@ -280,9 +319,12 @@ export function useAEPMulti() {
     // Empresa
     updateEmpresa,
     
-    // Setores
-    setAvaliarTodosSetores,
-    setSetoresSelecionados,
+    // Situações
+    setSituacoes,
+    addSituacao,
+    removeSituacao,
+    duplicateSituacao,
+    updateSituacao,
     
     // Evidências
     addEvidencia,

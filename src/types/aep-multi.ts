@@ -94,8 +94,7 @@ export interface AEPDocumentoMulti {
   id?: string;
   tenant_id?: string;
   empresa: AEPEmpresaInfo;
-  setoresSelecionados: { id: string; nome: string }[];
-  avaliarTodosSetores: boolean;
+  situacoes: SituacaoTrabalho[];
   avaliacoes: AEPAvaliacaoFuncao[];
   sinteseGeral?: AEPSinteseAvaliacao;
   acoesConsolidadas: AEPAcaoRecomendada[];
@@ -136,18 +135,32 @@ export interface AnaliseMultiResponse {
   riscosCriticosGerais: string[];
 }
 
+// Par Setor+Função = unidade de análise normativa (NR-17)
+export interface SituacaoTrabalho {
+  id: string;
+  setorId: string;
+  setorNome: string;
+  funcaoId: string;
+  funcaoNome: string;
+}
+
 // Estado do wizard multi-função
 export interface AEPMultiState {
   step: number;
   empresa: AEPEmpresaInfo;
-  avaliarTodosSetores: boolean;
-  setoresSelecionados: { id: string; nome: string }[];
+  situacoes: SituacaoTrabalho[];  // pares setor+função obrigatórios
   evidencias: EvidenciaAEP[];
   avaliacoes: AEPAvaliacaoFuncao[];
   sinteseGeral?: AEPSinteseAvaliacao;
   acoesConsolidadas: AEPAcaoRecomendada[];
   assinaturas: AEPAssinatura;
   isAnalyzing: boolean;
+}
+
+// Mantido para compatibilidade retroativa
+export interface AEPDocumentoMultiLegado {
+  setoresSelecionados: { id: string; nome: string }[];
+  avaliarTodosSetores: boolean;
 }
 
 // Default values
@@ -171,8 +184,7 @@ export const getDefaultAEPAssinaturas = (): AEPAssinatura => ({
 export const getDefaultAEPMultiState = (): AEPMultiState => ({
   step: 1,
   empresa: getDefaultAEPEmpresaInfo(),
-  avaliarTodosSetores: false,
-  setoresSelecionados: [],
+  situacoes: [],
   evidencias: [],
   avaliacoes: [],
   sinteseGeral: undefined,
