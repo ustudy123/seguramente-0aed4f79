@@ -89,6 +89,7 @@ export function EpiEntregaWizard({
 }: EpiEntregaWizardProps) {
   const { tenantId, user, profile } = useAuth();
   const { colaboradores, isLoading: colaboradoresLoading } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const { upload: uploadDocumento } = useDocumentos();
   const { locaisAtivos } = useEpiLocais();
   const { usarControleEstoque } = useEpiConfig();
