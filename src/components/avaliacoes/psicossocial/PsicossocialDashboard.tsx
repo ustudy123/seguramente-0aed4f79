@@ -96,7 +96,6 @@ export function PsicossocialDashboard() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-end gap-2">
-          <ManualPsicossocial />
           <Button onClick={handleNovaCampanha} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
             <Plus className="h-4 w-4" />
             Nova Campanha
