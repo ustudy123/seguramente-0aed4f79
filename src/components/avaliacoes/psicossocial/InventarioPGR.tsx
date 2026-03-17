@@ -8,18 +8,27 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  Sparkles,
+  ShieldCheck,
+  Database,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { CampanhaPsicossocial } from "@/types/psicossocial";
-import { calcularIPSClassificacao, getIPSColor, getIPSBgColor } from "@/types/psicossocial";
+import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useGRORiscos } from "@/hooks/useGRORiscos";
+import {
+  GRO_NIVEL_RISCO_LABELS,
+  scoreToProbabilidade,
+  scoreToSeveridade,
+  calcularNivelGRO,
+  GRO_PROBABILIDADE_LABELS,
+  GRO_SEVERIDADE_LABELS,
+} from "@/types/gro";
 
 interface InventarioPGRProps {
   campanhas: CampanhaPsicossocial[];
@@ -27,94 +36,159 @@ interface InventarioPGRProps {
 
 const MINIMO_ANONIMATO = 5;
 
-// Dimensões → Grupos de Exposição Psicossocial
-const DIMENSOES_MAP: Record<string, { fator: string; norma: string }> = {
-  "Demanda de Trabalho": { fator: "Sobrecarga quantitativa e pressão por tempo", norma: "NR-01 / ISO 45003" },
-  "Controle e Autonomia": { fator: "Baixo controle sobre o trabalho", norma: "NR-01 / NR-17" },
-  "Suporte Social": { fator: "Isolamento e falta de suporte", norma: "NR-01 / ISO 45003" },
+// Mapeamento: subject do radar → informações normativas
+const DIMENSAO_NORMATIVA: Record<string, { fator: string; norma: string }> = {
+  // SIPRO
+  "Demandas Quantitativas": { fator: "Sobrecarga quantitativa e pressão por tempo", norma: "NR-01 / NR-17 / ISO 45003" },
+  "Demandas Cognitivas": { fator: "Atenção constante e sobrecarga cognitiva", norma: "NR-17 / ISO 45003" },
+  "Demandas Emocionais": { fator: "Desgaste emocional e trabalho emocional", norma: "NR-01 / ISO 45003" },
+  "Autonomia e": { fator: "Baixo controle sobre o trabalho", norma: "NR-17 / ISO 45003" },
+  "Autonomia e Controle": { fator: "Baixo controle sobre o trabalho", norma: "NR-17 / ISO 45003" },
+  "Clareza de": { fator: "Ambiguidade de papéis e responsabilidades", norma: "NR-01" },
+  "Reconhecimento e": { fator: "Injustiça organizacional e falta de reconhecimento", norma: "NR-01 / ISO 45003" },
+  "Relacionamentos e": { fator: "Conflitos interpessoais e clima organizacional", norma: "NR-01 / ISO 45003" },
+  "Sentido do": { fator: "Falta de propósito e monotonia", norma: "NR-17 / ISO 45003" },
+  "Recuperação e": { fator: "Desequilíbrio trabalho-vida e falta de descanso", norma: "NR-01" },
+  "Sinais Precoces": { fator: "Esgotamento, irritabilidade e sinais de burnout", norma: "NR-01 / ISO 45003" },
+  // COPSOQ
+  "Demanda Quantitativa": { fator: "Sobrecarga quantitativa e pressão por tempo", norma: "NR-01 / ISO 45003" },
+  "Demanda Cognitiva": { fator: "Atenção constante e sobrecarga cognitiva", norma: "NR-17 / ISO 45003" },
+  "Demanda Emocional": { fator: "Desgaste emocional no trabalho", norma: "NR-01 / ISO 45003" },
+  "Influência e Controle": { fator: "Baixo controle sobre o trabalho", norma: "NR-17 / ISO 45003" },
+  "Suporte dos Colegas": { fator: "Isolamento e falta de suporte social", norma: "NR-01 / ISO 45003" },
+  "Suporte da Liderança": { fator: "Ausência de suporte da gestão", norma: "NR-01 / ISO 45003" },
+  "Clareza de Papéis": { fator: "Ambiguidade e conflito de papéis", norma: "NR-01" },
+  "Conflito de Papéis": { fator: "Exigências contraditórias no trabalho", norma: "NR-01" },
   "Reconhecimento": { fator: "Injustiça organizacional e falta de reconhecimento", norma: "NR-01 / ISO 45003" },
+  "Previsibilidade": { fator: "Incerteza e falta de informação", norma: "NR-01 / ISO 45003" },
+  "Sentido do Trabalho": { fator: "Falta de propósito e significado", norma: "NR-17 / ISO 45003" },
+  "Burnout": { fator: "Esgotamento profissional", norma: "NR-01 / ISO 45003" },
+  "Equilíbrio Trabalho-Vida": { fator: "Desequilíbrio vida pessoal-profissional", norma: "NR-01" },
+  // Genérico / outros
+  "Demanda": { fator: "Sobrecarga de demandas ocupacionais", norma: "NR-01 / ISO 45003" },
+  "Controle": { fator: "Baixo controle sobre o trabalho", norma: "NR-17" },
+  "Suporte do Gestor": { fator: "Falta de suporte gerencial", norma: "NR-01 / ISO 45003" },
+  "Suporte dos Pares": { fator: "Isolamento social no trabalho", norma: "NR-01 / ISO 45003" },
+  "Relacionamentos": { fator: "Conflitos interpessoais", norma: "NR-01 / ISO 45003" },
+  "Função": { fator: "Ambiguidade e sobrecarga de função", norma: "NR-01" },
+  "Gestão de Mudanças": { fator: "Insegurança e falta de participação em mudanças", norma: "ISO 45003" },
+  "Justiça Organizacional": { fator: "Injustiça e falta de reconhecimento", norma: "NR-01 / ISO 45003" },
+  "Suporte da": { fator: "Ausência de suporte da liderança", norma: "NR-01 / ISO 45003" },
+  "Suporte Social": { fator: "Isolamento e falta de suporte entre pares", norma: "NR-01 / ISO 45003" },
+  "Qualidade das": { fator: "Qualidade das relações interpessoais", norma: "NR-01 / ISO 45003" },
   "Segurança Psicológica": { fator: "Medo de punição e silêncio organizacional", norma: "ISO 45003" },
-  "Sentido do Trabalho": { fator: "Falta de propósito e monotonia", norma: "NR-17 / ISO 45003" },
-  "Conflito Trabalho-Vida": { fator: "Desequilíbrio entre vida pessoal e profissional", norma: "NR-01" },
-  "Assédio e Violência": { fator: "Assédio moral, sexual e violência organizacional", norma: "NR-01 / Lei 14.457/22" },
-  "Organização do Trabalho": { fator: "Estrutura de trabalho inadequada", norma: "NR-17 / NR-01" },
-  "Relações Sociais": { fator: "Conflitos interpessoais e clima organizacional ruim", norma: "NR-01 / ISO 45003" },
-  "Pressão": { fator: "Sobrecarga e pressão por resultados", norma: "NR-01" },
-  "Autonomia": { fator: "Falta de autonomia e participação", norma: "NR-17" },
-  "Carga de Trabalho": { fator: "Excesso de trabalho e exaustão", norma: "NR-01 / NR-17" },
-  "Clareza de Função": { fator: "Ambiguidade de papéis e responsabilidades", norma: "NR-01" },
+  "Ritmo Biológico": { fator: "Perturbação do ritmo biológico / trabalho noturno", norma: "NR-17 / NR-01" },
 };
 
-function getProbabilidade(score: number, isSipro: boolean): { label: string; valor: number; cor: string } {
-  // Para SIPRO (IRP-S): score alto = maior risco
-  // Para outros: score baixo = maior risco
-  const risco = isSipro ? score : 100 - score;
-  if (risco >= 75) return { label: "Muito Alta", valor: 5, cor: "text-red-600" };
-  if (risco >= 60) return { label: "Alta", valor: 4, cor: "text-orange-600" };
-  if (risco >= 45) return { label: "Moderada", valor: 3, cor: "text-amber-600" };
-  if (risco >= 30) return { label: "Baixa", valor: 2, cor: "text-blue-600" };
-  return { label: "Muito Baixa", valor: 1, cor: "text-emerald-600" };
+function getNormativaForSubject(subject: string): { fator: string; norma: string } {
+  // Exact match first
+  if (DIMENSAO_NORMATIVA[subject]) return DIMENSAO_NORMATIVA[subject];
+  // Partial match — find longest key that is contained in the subject
+  const found = Object.entries(DIMENSAO_NORMATIVA).find(([key]) =>
+    subject.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(subject.toLowerCase())
+  );
+  return found?.[1] ?? { fator: subject, norma: "NR-01 / ISO 45003" };
 }
 
-function getSeveridade(score: number, isSipro: boolean): { label: string; valor: number } {
-  const risco = isSipro ? score : 100 - score;
-  if (risco >= 65) return { label: "Grave", valor: 3 };
-  if (risco >= 40) return { label: "Moderada", valor: 2 };
-  return { label: "Leve", valor: 1 };
-}
-
-function getGrauRisco(prob: number, sev: number): { label: string; cor: string; bg: string } {
-  const grau = prob * sev;
-  if (grau >= 12) return { label: "Risco Crítico", cor: "text-red-700", bg: "bg-red-50 border-red-200" };
-  if (grau >= 6) return { label: "Risco Alto", cor: "text-orange-700", bg: "bg-orange-50 border-orange-200" };
-  if (grau >= 3) return { label: "Risco Médio", cor: "text-amber-700", bg: "bg-amber-50 border-amber-200" };
-  return { label: "Risco Baixo", cor: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" };
+interface InventarioItem {
+  dimensao: string;
+  fator: string;
+  norma: string;
+  scoreReal: number;
+  probabilidadeLabel: string;
+  severidadeLabel: string;
+  nivelLabel: string;
+  nivelKey: 'baixo' | 'medio' | 'alto' | 'critico';
+  fonteCampanhas: number; // quantas campanhas contribuíram com score para essa dimensão
 }
 
 export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const { importarDaCampanha, isLoading: importandoGRO } = useGRORiscos();
 
-  // Pegar campanhas encerradas com dados suficientes
+  // Campanhas válidas (mín. anonimato e com radar_data real)
   const campanhasValidas = useMemo(() =>
-    campanhas.filter(c => c.ips_score != null && (c.total_respostas || 0) >= MINIMO_ANONIMATO),
+    campanhas.filter(c =>
+      c.ips_score != null &&
+      (c.total_respostas || 0) >= MINIMO_ANONIMATO &&
+      Array.isArray(c.radar_data) &&
+      c.radar_data.length > 0
+    ),
     [campanhas]
   );
 
-  // Agregar dimensões de todas as campanhas válidas (média ponderada)
-  // Aqui usamos os dados de campanhas — na prática seria necessário buscar as dimensões
-  // Construir inventário com base nos dados disponíveis
-  const inventario = useMemo(() => {
+  const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
+
+  /**
+   * Agregação real das dimensões.
+   * Para cada subject único no radar_data de todas as campanhas válidas,
+   * calcula a média ponderada pelo total_respostas de cada campanha.
+   */
+  const inventario = useMemo((): InventarioItem[] => {
     if (campanhasValidas.length === 0) return [];
 
-    // Calcular IPS médio consolidado
-    const ipsMedia = Math.round(
-      campanhasValidas.reduce((sum, c) => sum + (c.ips_score || 50), 0) / campanhasValidas.length
-    );
+    // Agregar por subject — média ponderada pelo total_respostas
+    const agregado: Record<string, { somaScore: number; pesoTotal: number; campanhas: number }> = {};
 
-    const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
+    campanhasValidas.forEach(campanha => {
+      const peso = campanha.total_respostas ?? 1;
+      const radar = campanha.radar_data as RadarDimensao[];
 
-    // Gerar itens de inventário com base nas dimensões disponíveis
-    const dimensoes = Object.entries(DIMENSOES_MAP);
-    return dimensoes.map(([dimensao, info], i) => {
-      // Score aproximado baseado no IPS geral com variação por dimensão
-      const variacao = ((i % 5) - 2) * 8;
-      const score = Math.max(0, Math.min(100, ipsMedia + variacao));
-      const prob = getProbabilidade(score, isSipro);
-      const sev = getSeveridade(score, isSipro);
-      const grau = getGrauRisco(prob.valor, sev.valor);
+      radar.forEach(dim => {
+        if (!agregado[dim.subject]) {
+          agregado[dim.subject] = { somaScore: 0, pesoTotal: 0, campanhas: 0 };
+        }
+        agregado[dim.subject].somaScore += dim.value * peso;
+        agregado[dim.subject].pesoTotal += peso;
+        agregado[dim.subject].campanhas += 1;
+      });
+    });
+
+    const items: InventarioItem[] = Object.entries(agregado).map(([subject, agg]) => {
+      const scoreReal = Math.round(agg.somaScore / agg.pesoTotal);
+      const prob = scoreToProbabilidade(scoreReal, isSipro);
+      const sev = scoreToSeveridade(scoreReal, isSipro);
+      const nivel = calcularNivelGRO(prob, sev);
+      const normativa = getNormativaForSubject(subject);
+
       return {
-        dimensao,
-        fator: info.fator,
-        norma: info.norma,
-        score,
-        probabilidade: prob,
-        severidade: sev,
-        grau,
-        isSipro,
+        dimensao: subject,
+        fator: normativa.fator,
+        norma: normativa.norma,
+        scoreReal,
+        probabilidadeLabel: GRO_PROBABILIDADE_LABELS[prob],
+        severidadeLabel: GRO_SEVERIDADE_LABELS[sev],
+        nivelLabel: GRO_NIVEL_RISCO_LABELS[nivel],
+        nivelKey: nivel,
+        fonteCampanhas: agg.campanhas,
       };
-    }).sort((a, b) => b.probabilidade.valor * b.severidade.valor - a.probabilidade.valor * a.severidade.valor);
-  }, [campanhasValidas]);
+    });
+
+    // Ordenar por gravidade (crítico → alto → médio → baixo)
+    const ordem: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+    return items.sort((a, b) => (ordem[a.nivelKey] ?? 4) - (ordem[b.nivelKey] ?? 4));
+  }, [campanhasValidas, isSipro]);
+
+  const criticos = inventario.filter(i => i.nivelKey === 'critico').length;
+  const altos = inventario.filter(i => i.nivelKey === 'alto').length;
+  const medios = inventario.filter(i => i.nivelKey === 'medio').length;
+  const baixos = inventario.filter(i => i.nivelKey === 'baixo').length;
+
+  const handleImportarGRO = async () => {
+    if (campanhasValidas.length === 0) return;
+    // Importar da campanha mais recente com radar_data
+    const campanha = campanhasValidas[0];
+    const radar = campanha.radar_data as RadarDimensao[];
+
+    await importarDaCampanha.mutateAsync({
+      campanhaId: campanha.id,
+      campanhaName: campanha.nome,
+      dimensoes: radar.map(d => ({ subject: d.subject, value: d.value })),
+      empresaId: null,
+      isSipro: campanha.instrumento === 'sipro',
+    });
+  };
 
   const handleExportarPDF = async () => {
     if (inventario.length === 0) return;
@@ -122,44 +196,51 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     try {
       const doc = new jsPDF({ orientation: "landscape" });
 
-      // Cabeçalho
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("INVENTÁRIO DE RISCOS PSICOSSOCIAIS — NR-01 / ISO 45003", 14, 18);
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")} | Campanhas analisadas: ${campanhasValidas.length}`, 14, 26);
+      doc.text(
+        `Gerado em: ${new Date().toLocaleDateString("pt-BR")} | Campanhas: ${campanhasValidas.length} | Dados: Reais (radar agregado)`,
+        14, 26
+      );
+      doc.text(
+        `Instrumento: ${isSipro ? 'SIPRO' : (campanhasValidas[0]?.instrumento?.toUpperCase() ?? 'N/A')} | Score alto = maior risco`,
+        14, 32
+      );
 
-      // Tabela inventário
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("1. INVENTÁRIO DE FATORES PSICOSSOCIAIS DE RISCO", 14, 36);
+      doc.text("1. INVENTÁRIO DE FATORES PSICOSSOCIAIS DE RISCO", 14, 42);
 
       autoTable(doc, {
-        startY: 40,
-        head: [["Fator Psicossocial / Dimensão", "Descrição do Risco", "Base Normativa", "Probabilidade", "Severidade", "Grau de Risco"]],
+        startY: 46,
+        head: [["Dimensão / Fator", "Descrição do Risco", "Base Normativa", "Score Real", "Probabilidade", "Severidade", "Grau de Risco"]],
         body: inventario.map(item => [
           item.dimensao,
           item.fator,
           item.norma,
-          item.probabilidade.label,
-          item.severidade.label,
-          item.grau.label,
+          `${item.scoreReal}%`,
+          item.probabilidadeLabel,
+          item.severidadeLabel,
+          item.nivelLabel,
         ]),
         headStyles: { fillColor: [88, 28, 135], textColor: 255, fontSize: 8 },
         bodyStyles: { fontSize: 8 },
         columnStyles: {
-          0: { cellWidth: 45 },
-          1: { cellWidth: 65 },
+          0: { cellWidth: 38 },
+          1: { cellWidth: 55 },
           2: { cellWidth: 35 },
-          3: { cellWidth: 28 },
+          3: { cellWidth: 20 },
           4: { cellWidth: 28 },
-          5: { cellWidth: 35 },
+          5: { cellWidth: 25 },
+          6: { cellWidth: 35 },
         },
         alternateRowStyles: { fillColor: [248, 245, 255] },
         didParseCell: (data) => {
-          if (data.section === "body" && data.column.index === 5) {
+          if (data.section === "body" && data.column.index === 6) {
             const val = data.cell.raw as string;
             if (val.includes("Crítico")) data.cell.styles.textColor = [185, 28, 28];
             else if (val.includes("Alto")) data.cell.styles.textColor = [194, 65, 12];
@@ -169,20 +250,19 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
         },
       });
 
-      // Matriz de risco
       const finalY = (doc as any).lastAutoTable.finalY + 10;
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("2. MATRIZ DE RISCO PSICOSSOCIAL", 14, finalY);
+      doc.text("2. MATRIZ DE RISCO PSICOSSOCIAL (NR-01)", 14, finalY);
 
       autoTable(doc, {
         startY: finalY + 4,
-        head: [["Grau de Risco", "Qtde. de Fatores", "Ação Recomendada", "Prazo"]],
+        head: [["Grau de Risco", "Qtde. de Dimensões", "Ação Recomendada", "Prazo"]],
         body: [
-          ["Risco Crítico (≥12)", String(inventario.filter(i => i.probabilidade.valor * i.severidade.valor >= 12).length), "Intervenção imediata — revisão do PGR e plano de ação", "30 dias"],
-          ["Risco Alto (6-11)", String(inventario.filter(i => { const g = i.probabilidade.valor * i.severidade.valor; return g >= 6 && g < 12; }).length), "Implementar medidas preventivas prioritárias", "60 dias"],
-          ["Risco Médio (3-5)", String(inventario.filter(i => { const g = i.probabilidade.valor * i.severidade.valor; return g >= 3 && g < 6; }).length), "Monitoramento e ações de melhoria contínua", "90 dias"],
-          ["Risco Baixo (<3)", String(inventario.filter(i => i.probabilidade.valor * i.severidade.valor < 3).length), "Manter vigilância e registrar evidências", "180 dias"],
+          ["Risco Crítico", String(criticos), "Intervenção imediata — revisão do PGR e plano de ação", "30 dias"],
+          ["Risco Alto", String(altos), "Implementar medidas preventivas prioritárias", "60 dias"],
+          ["Risco Médio", String(medios), "Monitoramento e ações de melhoria contínua", "90 dias"],
+          ["Risco Baixo", String(baixos), "Manter vigilância e registrar evidências", "180 dias"],
         ],
         headStyles: { fillColor: [88, 28, 135], textColor: 255, fontSize: 8 },
         bodyStyles: { fontSize: 8 },
@@ -204,16 +284,28 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-8 text-center gap-2">
           <ShieldAlert className="h-8 w-8 text-muted-foreground opacity-40" />
-          <p className="text-sm text-muted-foreground">
-            Inventário disponível após campanhas encerradas com mín. {MINIMO_ANONIMATO} respostas.
+          <p className="text-sm font-medium">Inventário não disponível</p>
+          <p className="text-xs text-muted-foreground">
+            Necessário ao menos uma campanha encerrada com mín. {MINIMO_ANONIMATO} respostas e dados do radar calculados.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  const criticos = inventario.filter(i => i.probabilidade.valor * i.severidade.valor >= 12).length;
-  const altos = inventario.filter(i => { const g = i.probabilidade.valor * i.severidade.valor; return g >= 6 && g < 12; }).length;
+  const nivelColors: Record<string, string> = {
+    critico: "border-l-red-500",
+    alto: "border-l-orange-500",
+    medio: "border-l-amber-500",
+    baixo: "border-l-emerald-500",
+  };
+
+  const nivelBadgeColors: Record<string, string> = {
+    critico: "bg-red-50 text-red-700 border-red-200",
+    alto: "bg-orange-50 text-orange-700 border-orange-200",
+    medio: "bg-amber-50 text-amber-700 border-amber-200",
+    baixo: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  };
 
   return (
     <Card>
@@ -223,12 +315,17 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             <CardTitle className="text-base flex items-center gap-2">
               <FileText className="h-4 w-4 text-purple-600" />
               Inventário de Riscos Psicossociais
+              <Badge variant="outline" className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border-emerald-200 gap-1">
+                <ShieldCheck className="h-2.5 w-2.5" />
+                Dados Reais
+              </Badge>
             </CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              NR-01 · ISO 45003 — {inventario.length} fatores avaliados · {campanhasValidas.length} campanha(s) consolidada(s)
+              NR-01 · ISO 45003 — {inventario.length} dimensões avaliadas · {campanhasValidas.length} campanha(s) consolidada(s)
+              {" · "}Instrumento: <strong>{isSipro ? "SIPRO" : campanhasValidas[0]?.instrumento?.toUpperCase()}</strong>
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {criticos > 0 && (
               <Badge className="bg-red-600 text-white gap-1">
                 <AlertTriangle className="h-3 w-3" />
@@ -238,6 +335,16 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             {altos > 0 && (
               <Badge className="bg-orange-500 text-white">{altos} alto(s)</Badge>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleImportarGRO}
+              disabled={importarDaCampanha.isPending}
+            >
+              {importarDaCampanha.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+              Enviar ao GRO
+            </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={handleExportarPDF} disabled={exportando}>
               {exportando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               Exportar PDF
@@ -246,13 +353,13 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Matriz Resumida */}
+        {/* Matriz resumida */}
         <div className="grid grid-cols-4 gap-2">
           {[
             { label: "Crítico", count: criticos, bg: "bg-red-50 border-red-200", text: "text-red-700" },
             { label: "Alto", count: altos, bg: "bg-orange-50 border-orange-200", text: "text-orange-700" },
-            { label: "Médio", count: inventario.filter(i => { const g = i.probabilidade.valor * i.severidade.valor; return g >= 3 && g < 6; }).length, bg: "bg-amber-50 border-amber-200", text: "text-amber-700" },
-            { label: "Baixo", count: inventario.filter(i => i.probabilidade.valor * i.severidade.valor < 3).length, bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700" },
+            { label: "Médio", count: medios, bg: "bg-amber-50 border-amber-200", text: "text-amber-700" },
+            { label: "Baixo", count: baixos, bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700" },
           ].map(({ label, count, bg, text }) => (
             <div key={label} className={cn("p-3 rounded-lg border text-center", bg)}>
               <p className={cn("text-xl font-bold", text)}>{count}</p>
@@ -261,12 +368,13 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           ))}
         </div>
 
-        {/* Tabela de inventário */}
+        {/* Tabela */}
         <div className="rounded-lg border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="text-xs">Dimensão / Fator</TableHead>
+                <TableHead className="text-xs text-center">Score Real</TableHead>
                 <TableHead className="text-xs">Base Normativa</TableHead>
                 <TableHead className="text-xs text-center">Probabilidade</TableHead>
                 <TableHead className="text-xs text-center">Severidade</TableHead>
@@ -274,31 +382,40 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(expanded ? inventario : inventario.slice(0, 6)).map((item) => (
-                <TableRow key={item.dimensao} className={cn("border-l-2", {
-                  "border-l-red-500": item.grau.label.includes("Crítico"),
-                  "border-l-orange-500": item.grau.label.includes("Alto"),
-                  "border-l-amber-500": item.grau.label.includes("Médio"),
-                  "border-l-emerald-500": item.grau.label.includes("Baixo"),
-                })}>
+              {(expanded ? inventario : inventario.slice(0, 7)).map((item) => (
+                <TableRow key={item.dimensao} className={cn("border-l-2", nivelColors[item.nivelKey])}>
                   <TableCell className="py-2">
                     <p className="font-medium text-sm">{item.dimensao}</p>
                     <p className="text-xs text-muted-foreground">{item.fator}</p>
+                  </TableCell>
+                  <TableCell className="py-2 text-center">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="font-bold text-sm">{item.scoreReal}%</span>
+                      <div className="w-16 bg-muted rounded-full h-1.5">
+                        <div
+                          className={cn("h-1.5 rounded-full", {
+                            "bg-red-500": item.nivelKey === 'critico',
+                            "bg-orange-500": item.nivelKey === 'alto',
+                            "bg-amber-500": item.nivelKey === 'medio',
+                            "bg-emerald-500": item.nivelKey === 'baixo',
+                          })}
+                          style={{ width: `${item.scoreReal}%` }}
+                        />
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell className="py-2">
                     <Badge variant="outline" className="text-xs font-mono">{item.norma}</Badge>
                   </TableCell>
                   <TableCell className="py-2 text-center">
-                    <span className={cn("text-xs font-semibold", item.probabilidade.cor)}>
-                      {item.probabilidade.label}
-                    </span>
+                    <span className="text-xs font-semibold">{item.probabilidadeLabel}</span>
                   </TableCell>
                   <TableCell className="py-2 text-center">
-                    <span className="text-xs text-muted-foreground">{item.severidade.label}</span>
+                    <span className="text-xs text-muted-foreground">{item.severidadeLabel}</span>
                   </TableCell>
                   <TableCell className="py-2 text-center">
-                    <Badge className={cn("text-xs", item.grau.bg, item.grau.cor, "border")}>
-                      {item.grau.label}
+                    <Badge className={cn("text-xs border", nivelBadgeColors[item.nivelKey])}>
+                      {item.nivelLabel}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -307,7 +424,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           </Table>
         </div>
 
-        {inventario.length > 6 && (
+        {inventario.length > 7 && (
           <Button
             variant="ghost"
             size="sm"
@@ -317,14 +434,18 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             {expanded ? (
               <><ChevronUp className="h-3.5 w-3.5" /> Mostrar menos</>
             ) : (
-              <><ChevronDown className="h-3.5 w-3.5" /> Ver todos os {inventario.length} fatores</>
+              <><ChevronDown className="h-3.5 w-3.5" /> Ver todas as {inventario.length} dimensões</>
             )}
           </Button>
         )}
 
         <div className="flex items-start gap-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-xs text-blue-700">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-          <p>Este inventário foi gerado automaticamente com base nas campanhas psicossociais realizadas e pode ser utilizado como evidência no PGR da empresa (NR-01) e na Análise Ergonômica do Trabalho (NR-17).</p>
+          <p>
+            Os scores são calculados a partir dos dados <strong>reais do radar psicossocial</strong> de {campanhasValidas.length} campanha(s),
+            com média ponderada pelo número de respondentes. Compatível com o PGR da empresa (NR-01) e Análise Ergonômica do Trabalho (NR-17).
+            Use <strong>"Enviar ao GRO"</strong> para integrar este inventário ao módulo de Ergonomia.
+          </p>
         </div>
       </CardContent>
     </Card>

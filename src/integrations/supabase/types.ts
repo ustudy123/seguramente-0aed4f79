@@ -8245,6 +8245,141 @@ export type Database = {
           },
         ]
       }
+      gro_riscos: {
+        Row: {
+          acao_id: string | null
+          analise_ergonomia_id: string | null
+          atividade: string | null
+          ativo: boolean
+          base_normativa: string[] | null
+          campanha_id: string | null
+          cargo: string | null
+          created_at: string
+          descricao: string | null
+          dimensao_psicossocial: string | null
+          empresa_id: string | null
+          ergonomia_risco_id: string | null
+          fonte: string
+          grupos_expostos: string[] | null
+          id: string
+          medidas_existentes: string[] | null
+          medidas_recomendadas: string[] | null
+          nivel_risco: string
+          perigo_identificado: string | null
+          probabilidade: string
+          score_dimensao: number | null
+          setor: string | null
+          severidade: string
+          status_gro: string
+          subtipo: string
+          tenant_id: string
+          titulo: string
+          trabalhadores_expostos: number | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao_id?: string | null
+          analise_ergonomia_id?: string | null
+          atividade?: string | null
+          ativo?: boolean
+          base_normativa?: string[] | null
+          campanha_id?: string | null
+          cargo?: string | null
+          created_at?: string
+          descricao?: string | null
+          dimensao_psicossocial?: string | null
+          empresa_id?: string | null
+          ergonomia_risco_id?: string | null
+          fonte?: string
+          grupos_expostos?: string[] | null
+          id?: string
+          medidas_existentes?: string[] | null
+          medidas_recomendadas?: string[] | null
+          nivel_risco?: string
+          perigo_identificado?: string | null
+          probabilidade?: string
+          score_dimensao?: number | null
+          setor?: string | null
+          severidade?: string
+          status_gro?: string
+          subtipo: string
+          tenant_id: string
+          titulo: string
+          trabalhadores_expostos?: number | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao_id?: string | null
+          analise_ergonomia_id?: string | null
+          atividade?: string | null
+          ativo?: boolean
+          base_normativa?: string[] | null
+          campanha_id?: string | null
+          cargo?: string | null
+          created_at?: string
+          descricao?: string | null
+          dimensao_psicossocial?: string | null
+          empresa_id?: string | null
+          ergonomia_risco_id?: string | null
+          fonte?: string
+          grupos_expostos?: string[] | null
+          id?: string
+          medidas_existentes?: string[] | null
+          medidas_recomendadas?: string[] | null
+          nivel_risco?: string
+          perigo_identificado?: string | null
+          probabilidade?: string
+          score_dimensao?: number | null
+          setor?: string | null
+          severidade?: string
+          status_gro?: string
+          subtipo?: string
+          tenant_id?: string
+          titulo?: string
+          trabalhadores_expostos?: number | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gro_riscos_analise_ergonomia_id_fkey"
+            columns: ["analise_ergonomia_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_analises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gro_riscos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gro_riscos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gro_riscos_ergonomia_risco_id_fkey"
+            columns: ["ergonomia_risco_id"]
+            isOneToOne: false
+            referencedRelation: "ergonomia_riscos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gro_riscos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grupos_economicos: {
         Row: {
           ativo: boolean
