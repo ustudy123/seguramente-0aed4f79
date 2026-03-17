@@ -340,6 +340,8 @@ export interface NovaCampanha {
   departamentos_ids?: string[];
   cargos_ids?: string[];
   blocos_dinamicos?: string[];
+  // Situações de trabalho (pares Setor+Função — NR-17, obrigatório para exportação GRO)
+  situacoes_trabalho?: SituacaoTrabalhoCampanha[];
   // Campos para reaplicação extraordinária
   motivo_extraordinaria?: string;
   evento_gatilho_tipo?: EventoGatilhoTipo;
