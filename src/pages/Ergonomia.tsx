@@ -465,17 +465,17 @@ export default function Ergonomia() {
                 <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
               ) : (
                 <AcoesList acoes={acoes} onUpdateStatus={handleUpdateAcaoStatus} />
-              </TabsContent>
-
-              {/* Documento de Metodologia — RQ-26 */}
-              <TabsContent value="metodologia">
-                <DocumentoMetodologia riscos={groRiscos} />
-              </TabsContent>
-
-              {/* Comunicação aos Trabalhadores — RQ-19/20 */}
-              <TabsContent value="comunicacao">
-                <ComunicacaoTrabalhadores riscos={groRiscos} />
               )}
+            </TabsContent>
+
+            {/* Documento de Metodologia — RQ-26 */}
+            <TabsContent value="metodologia">
+              <DocumentoMetodologia riscos={groRiscos} />
+            </TabsContent>
+
+            {/* Comunicação aos Trabalhadores — RQ-19/20 */}
+            <TabsContent value="comunicacao">
+              <ComunicacaoTrabalhadores riscos={groRiscos} />
             </TabsContent>
 
             {/* Hub de Serviços */}
