@@ -10,15 +10,23 @@ import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+type RGB = [number, number, number];
+
 // ── Paleta ───────────────────────────────────────────────────────────────────
-const ROXO: [number, number, number] = [88, 28, 135];
-const ROXO_LIGHT: [number, number, number] = [233, 213, 255];
-const CINZA: [number, number, number] = [50, 50, 50];
-const MUTED: [number, number, number] = [100, 100, 100];
-const VERDE: [number, number, number] = [16, 185, 129];
-const AZUL: [number, number, number] = [37, 99, 235];
-const LARANJA: [number, number, number] = [234, 88, 12];
-const VERMELHO: [number, number, number] = [220, 38, 38];
+const ROXO: RGB = [88, 28, 135];
+const ROXO_LIGHT: RGB = [233, 213, 255];
+const CINZA: RGB = [50, 50, 50];
+const MUTED: RGB = [120, 120, 120];
+const VERDE: RGB = [16, 185, 129];
+const AZUL: RGB = [37, 99, 235];
+const LARANJA: RGB = [234, 88, 12];
+const VERMELHO: RGB = [220, 38, 38];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fill(doc: jsPDF, c: RGB) { doc.setFillColor(c[0], c[1], c[2]); }
+function stroke(doc: jsPDF, c: RGB) { doc.setDrawColor(c[0], c[1], c[2]); }
+function text(doc: jsPDF, c: RGB) { doc.setTextColor(c[0], c[1], c[2]); }
+const WHITE: RGB = [255, 255, 255];
 
 // ── Conteúdo do manual ────────────────────────────────────────────────────────
 const PASSOS = [
@@ -28,10 +36,10 @@ const PASSOS = [
     subtitulo: "Por onde começar",
     cor: AZUL,
     paragrafos: [
-      "No menu lateral do sistema, clique em "Avaliações" e depois em "Psicossocial". Você verá o painel principal com o histórico de campanhas e o Índice Psicossocial Organizacional (IPS) da sua empresa.",
+      'No menu lateral do sistema, clique em "Avaliações" e depois em "Psicossocial". Você verá o painel principal com o histórico de campanhas e o Índice Psicossocial Organizacional (IPS) da sua empresa.',
       "Se é a primeira vez que acessa, a tela estará vazia — isso é normal. Todo o processo começa com a criação de uma campanha.",
     ],
-    dica: "💡 Dica: O IPS só aparece após a primeira campanha ter pelo menos 5 respostas.",
+    dica: "Dica: O IPS só aparece após a primeira campanha ter pelo menos 5 respostas.",
   },
   {
     num: "02",
@@ -39,10 +47,10 @@ const PASSOS = [
     subtitulo: "Configurando a avaliação",
     cor: ROXO,
     paragrafos: [
-      "Clique no botão "Nova Campanha" no canto superior direito. Um assistente irá aparecer para te ajudar a escolher o instrumento (tipo de questionário) mais adequado para o porte e perfil da sua empresa.",
+      'Clique no botão "Nova Campanha" no canto superior direito. Um assistente irá aparecer para te ajudar a escolher o instrumento (tipo de questionário) mais adequado para o porte e perfil da sua empresa.',
       "Após escolher o instrumento, preencha as informações básicas: nome da campanha, período de coleta (data de início e fim) e a periodicidade (trimestral, semestral, anual).",
     ],
-    dica: "💡 Dica: O instrumento SIPRO é recomendado para a maioria das empresas brasileiras — é validado cientificamente e atende à NR-01.",
+    dica: "Dica: O instrumento SIPRO é recomendado para a maioria das empresas brasileiras — é validado cientificamente e atende à NR-01.",
   },
   {
     num: "03",
@@ -51,10 +59,10 @@ const PASSOS = [
     cor: VERMELHO,
     paragrafos: [
       "Esta é a etapa exigida pela NR-17. Você precisa informar quais grupos de trabalho serão avaliados. Não são os nomes das pessoas — são as combinações de Setor e Função.",
-      "Exemplo: "Produção + Operador de Máquinas" e "Comercial + Consultor de Vendas". Cada par representa uma situação de trabalho que será analisada separadamente.",
-      "Use os campos com autocomplete: ao clicar em "Setor", o sistema já sugere os departamentos cadastrados. O mesmo acontece com "Função". Você pode escolher da lista ou digitar um novo.",
+      'Exemplo: "Producao + Operador de Maquinas" e "Comercial + Consultor de Vendas". Cada par representa uma situacao de trabalho que sera analisada separadamente.',
+      "Use os campos com autocomplete: ao clicar em Setor, o sistema ja sugere os departamentos cadastrados. O mesmo acontece com Funcao. Voce pode escolher da lista ou digitar um novo.",
     ],
-    dica: "⚠️ Atenção: Sem pelo menos um par Setor+Função, a campanha não pode ser criada. Isso garante que os riscos identificados sejam rastreáveis no GRO.",
+    dica: "Atencao: Sem pelo menos um par Setor+Funcao, a campanha nao pode ser criada. Isso garante que os riscos identificados sejam rastreaveis no GRO.",
   },
   {
     num: "04",
@@ -66,7 +74,7 @@ const PASSOS = [
       "Cada colaborador acessa o link, confirma sua identidade via código WhatsApp (apenas para garantir que cada pessoa responde uma vez) e preenche o questionário. Nenhum dado de identidade é armazenado junto às respostas.",
       "O colaborador não precisa ter login no sistema. O link funciona em qualquer celular ou computador.",
     ],
-    dica: "🔒 Segurança: O nome, CPF e telefone do colaborador nunca são vinculados às respostas. O sistema usa apenas um código hash anônimo.",
+    dica: "Seguranca: O nome, CPF e telefone do colaborador nunca sao vinculados as respostas. O sistema usa apenas um codigo hash anonimo.",
   },
   {
     num: "05",
@@ -77,7 +85,7 @@ const PASSOS = [
       "Durante o período da campanha, você pode ver quantas pessoas já responderam na tela da campanha ativa. Aparece a taxa de participação e o prazo restante.",
       "Os resultados só ficam disponíveis após o encerramento da campanha E com no mínimo 5 respondentes. Isso protege o anonimato.",
     ],
-    dica: "💡 Dica: Uma taxa de participação acima de 60% garante resultados mais representativos e confiáveis estatisticamente.",
+    dica: "Dica: Uma taxa de participacao acima de 60% garante resultados mais representativos e confiaveis estatisticamente.",
   },
   {
     num: "06",
@@ -89,19 +97,19 @@ const PASSOS = [
       "Você verá gráficos radar com os pontos fortes e áreas de atenção, separados por Setor+Função (se houver respostas suficientes em cada grupo).",
       "A IA do sistema também gera uma análise interpretativa em texto, explicando os resultados em linguagem acessível e sugerindo as próximas ações.",
     ],
-    dica: "💡 Dica: Clique em "Exportar Relatório PDF" para gerar um documento formal que pode ser arquivado no PGR da empresa.",
+    dica: 'Dica: Clique em "Exportar Relatorio PDF" para gerar um documento formal que pode ser arquivado no PGR da empresa.',
   },
   {
     num: "07",
-    titulo: "Os Riscos São Exportados para o GRO Automaticamente",
+    titulo: "Riscos são Exportados para o GRO Automaticamente",
     subtitulo: "Integração com o inventário de riscos",
     cor: LARANJA,
     paragrafos: [
-      "Dimensões com score de risco identificado (acima de 35 pontos de risco) são exportadas automaticamente para o GRO — Gerenciamento de Riscos Ocupacionais.",
-      "Cada risco no GRO fica associado ao Setor+Função que você vinculou na campanha. Por exemplo: "Demanda Cognitiva Alta — Operador de Máquinas (Produção)".",
+      "Dimensões com score de risco identificado (acima de 35 pontos) são exportadas automaticamente para o GRO — Gerenciamento de Riscos Ocupacionais.",
+      'Cada risco no GRO fica associado ao Setor+Função. Por exemplo: "Demanda Cognitiva Alta — Operador de Maquinas (Producao)".',
       "Riscos de nível Alto ou Crítico geram automaticamente um Plano de Ação 5W2H com prazo definido, conforme exigido pela NR-01.",
     ],
-    dica: "⚠️ Importante: Riscos Críticos ou Altos no GRO não podem ser arquivados sem ter um plano de ação vinculado. Isso garante a conformidade legal.",
+    dica: "Importante: Riscos Criticos ou Altos no GRO nao podem ser arquivados sem ter um plano de acao vinculado. Isso garante a conformidade legal.",
   },
   {
     num: "08",
@@ -111,23 +119,23 @@ const PASSOS = [
     paragrafos: [
       "Se um grupo de trabalho tiver menos de 5 respondentes, o sistema não exibe resultados individuais para esse grupo. Isso evita que alguém seja identificado pelas suas respostas.",
       "Nesses casos, o sistema agrupa os dados automaticamente: primeiro tenta mostrar por Setor; se ainda não chega a 5, mostra o resultado geral da empresa.",
-      "Para empresas com menos de 20 funcionários, recomenda-se não segmentar por Função — use apenas o nível Setor ou empresa para garantir que os resultados apareçam.",
+      "Para empresas com menos de 20 funcionários, recomenda-se não segmentar por Função — use apenas o nível Setor ou empresa inteira para garantir que os resultados apareçam.",
     ],
-    dica: "🔒 Conformidade: Esta regra segue a ISO 45003 e o COPSOQ III, padrões internacionais para avaliação psicossocial com privacidade garantida.",
+    dica: "Conformidade: Esta regra segue a ISO 45003 e o COPSOQ III, padroes internacionais para avaliacao psicossocial com privacidade garantida.",
   },
 ];
 
-const GLOSSARIO = [
-  ["IPS", "Índice Psicossocial Organizacional. Score de 0 a 100 que indica a saúde psicossocial geral da empresa. Quanto maior, melhor."],
-  ["GRO", "Gerenciamento de Riscos Ocupacionais. Inventário de todos os riscos identificados, exigido pela NR-01."],
+const GLOSSARIO: [string, string][] = [
+  ["IPS", "Indice Psicossocial Organizacional. Score de 0 a 100 que indica a saude psicossocial geral da empresa. Quanto maior, melhor."],
+  ["GRO", "Gerenciamento de Riscos Ocupacionais. Inventario de todos os riscos identificados, exigido pela NR-01."],
   ["NR-01", "Norma Regulamentadora 1 — obriga as empresas a identificar, avaliar e controlar riscos ocupacionais."],
-  ["NR-17", "Norma Regulamentadora 17 — foca em ergonomia e condições de trabalho, exigindo avaliação das situações de trabalho."],
-  ["ISO 45003", "Norma internacional sobre gestão de saúde psicológica no trabalho."],
-  ["5W2H", "Modelo de plano de ação: O quê, Por quê, Onde, Quando, Quem, Como, Quanto custa."],
-  ["Situação de Trabalho", "Combinação de Setor + Função que representa um grupo de colaboradores a ser avaliado."],
-  ["Campanha Regular", "Avaliação periódica programada (trimestral, semestral ou anual)."],
-  ["Campanha Extraordinária", "Avaliação urgente disparada por um evento crítico como acidente ou reestruturação."],
-  ["SIPRO", "Instrumento de avaliação psicossocial validado para o contexto brasileiro. Recomendado pela plataforma."],
+  ["NR-17", "Norma Regulamentadora 17 — foca em ergonomia e condicoes de trabalho, exigindo avaliacao das situacoes de trabalho."],
+  ["ISO 45003", "Norma internacional sobre gestao de saude psicologica no trabalho."],
+  ["5W2H", "Modelo de plano de acao: O que, Por que, Onde, Quando, Quem, Como, Quanto custa."],
+  ["Situacao de Trabalho", "Combinacao de Setor + Funcao que representa um grupo de colaboradores a ser avaliado."],
+  ["Campanha Regular", "Avaliacao periodica programada (trimestral, semestral ou anual)."],
+  ["Campanha Extraordinaria", "Avaliacao urgente disparada por um evento critico como acidente ou reestruturacao."],
+  ["SIPRO", "Instrumento de avaliacao psicossocial validado para o contexto brasileiro. Recomendado pela plataforma."],
 ];
 
 export function ManualPsicossocial() {
@@ -145,8 +153,7 @@ export function ManualPsicossocial() {
       const addPage = () => {
         doc.addPage();
         y = margin;
-        // linha topo
-        doc.setDrawColor(...ROXO);
+        stroke(doc, ROXO);
         doc.setLineWidth(0.3);
         doc.line(margin, 10, pageW - margin, 10);
       };
@@ -157,51 +164,39 @@ export function ManualPsicossocial() {
 
       const rodape = (pageNum: number, total: number) => {
         doc.setFontSize(7);
-        doc.setTextColor(...MUTED);
+        text(doc, MUTED);
         doc.text(
-          `Seguramente — Manual do Usuário · Módulo Psicossocial · Página ${pageNum}/${total}`,
+          `Seguramente — Manual do Usuario | Modulo Psicossocial | Pagina ${pageNum}/${total}`,
           pageW / 2, pageH - 8, { align: "center" }
         );
       };
 
       // ── CAPA ──────────────────────────────────────────────────────────────
-      // Fundo roxo capa
-      doc.setFillColor(...ROXO);
+      fill(doc, ROXO);
       doc.rect(0, 0, pageW, pageH, "F");
 
-      // Ornamento circular
-      doc.setFillColor(255, 255, 255, 0.05);
-      doc.circle(pageW - 30, 40, 60, "F");
-      doc.circle(20, pageH - 30, 45, "F");
-
-      // Título
-      doc.setTextColor(255, 255, 255);
+      text(doc, WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(28);
-      doc.text("MANUAL DO USUÁRIO", margin, 70);
+      doc.text("MANUAL DO USUARIO", margin, 70);
       doc.setFontSize(22);
-      doc.text("Módulo de Gestão", margin, 84);
+      doc.text("Modulo de Gestao", margin, 84);
       doc.text("Psicossocial", margin, 96);
 
-      // Subtítulo
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
       doc.setTextColor(233, 213, 255);
       doc.text("Passo a passo em linguagem simples para", margin, 112);
-      doc.text("RH, gestores e responsáveis de SST.", margin, 120);
+      doc.text("RH, gestores e responsaveis de SST.", margin, 120);
 
-      // Linha separadora
-      doc.setDrawColor(255, 255, 255, 0.4);
+      doc.setDrawColor(255, 255, 255);
       doc.setLineWidth(0.5);
       doc.line(margin, 130, pageW - margin, 130);
 
-      // Normas de referência
       doc.setFontSize(9);
       doc.setTextColor(216, 180, 254);
-      const normas = ["NR-01  ·  NR-17  ·  ISO 45001  ·  ISO 45003  ·  COPSOQ III  ·  LGPD"];
-      doc.text(normas[0], pageW / 2, 140, { align: "center" });
+      doc.text("NR-01  |  NR-17  |  ISO 45001  |  ISO 45003  |  COPSOQ III  |  LGPD", pageW / 2, 140, { align: "center" });
 
-      // Data
       doc.setFontSize(8);
       doc.setTextColor(196, 181, 253);
       doc.text(
@@ -214,28 +209,28 @@ export function ManualPsicossocial() {
       doc.addPage();
       y = margin + 4;
 
-      doc.setFillColor(...ROXO);
+      fill(doc, ROXO);
       doc.rect(0, 0, pageW, 28, "F");
-      doc.setTextColor(255, 255, 255);
+      text(doc, WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
-      doc.text("SUMÁRIO", margin, 18);
-      doc.setTextColor(...CINZA);
+      doc.text("SUMARIO", margin, 18);
+      text(doc, CINZA);
 
       y = 40;
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
 
       const itens = [
-        ["Passo 01", "Acesse o Módulo Psicossocial", "3"],
-        ["Passo 02", "Crie uma Nova Campanha", "3"],
-        ["Passo 03", "Vincule Setor + Função (Obrigatório — NR-17)", "4"],
-        ["Passo 04", "Envie os Questionários", "5"],
-        ["Passo 05", "Acompanhe as Respostas em Tempo Real", "5"],
-        ["Passo 06", "Encerre a Campanha e Veja os Resultados", "6"],
-        ["Passo 07", "Os Riscos São Exportados para o GRO Automaticamente", "7"],
-        ["Passo 08", "Regra do Anonimato — Empresas Pequenas", "8"],
-        ["—", "Glossário de Termos", "9"],
+        ["Passo 01", "Acesse o Modulo Psicossocial", "3"],
+        ["Passo 02", "Crie uma Nova Campanha", "4"],
+        ["Passo 03", "Vincule Setor + Funcao (Obrigatorio - NR-17)", "5"],
+        ["Passo 04", "Envie os Questionarios", "6"],
+        ["Passo 05", "Acompanhe as Respostas em Tempo Real", "7"],
+        ["Passo 06", "Encerre a Campanha e Veja os Resultados", "8"],
+        ["Passo 07", "Riscos Exportados para o GRO Automaticamente", "9"],
+        ["Passo 08", "Regra do Anonimato - Empresas Pequenas", "10"],
+        ["—", "Glossario de Termos", "11"],
       ];
 
       itens.forEach(([num, titulo, pag], i) => {
@@ -245,34 +240,33 @@ export function ManualPsicossocial() {
           doc.rect(margin, bgY, pageW - 2 * margin, 8, "F");
         }
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(...ROXO);
+        text(doc, ROXO);
         doc.text(num, margin + 2, y + 1);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...CINZA);
+        text(doc, CINZA);
         doc.text(titulo, margin + 28, y + 1);
-        doc.setTextColor(...MUTED);
-        doc.text(`pág. ${pag}`, pageW - margin - 2, y + 1, { align: "right" });
+        text(doc, MUTED);
+        doc.text(`pag. ${pag}`, pageW - margin - 2, y + 1, { align: "right" });
         y += 10;
       });
 
       y += 6;
 
-      // Intro
-      doc.setFillColor(...ROXO_LIGHT);
-      doc.roundedRect(margin, y, pageW - 2 * margin, 30, 2, 2, "F");
+      fill(doc, ROXO_LIGHT);
+      doc.roundedRect(margin, y, pageW - 2 * margin, 28, 2, 2, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.setTextColor(...ROXO);
-      doc.text("Para quem é este manual?", margin + 4, y + 7);
+      text(doc, ROXO);
+      doc.text("Para quem e este manual?", margin + 4, y + 7);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(...CINZA);
+      text(doc, CINZA);
       const introText = doc.splitTextToSize(
-        "Este material foi escrito para gestores de RH, responsáveis de SST e líderes de equipe que precisam usar o módulo psicossocial do sistema Seguramente sem conhecimento técnico prévio. Cada passo explica exatamente o que fazer e o que acontece nos bastidores.",
+        "Este material foi escrito para gestores de RH, responsaveis de SST e lideres de equipe que precisam usar o modulo psicossocial do sistema Seguramente sem conhecimento tecnico previo. Cada passo explica exatamente o que fazer e o que acontece nos bastidores do sistema.",
         pageW - 2 * margin - 8
       );
       doc.setFontSize(8.5);
       introText.forEach((line: string, i: number) => {
-        doc.text(line, margin + 4, y + 15 + i * 5);
+        doc.text(line, margin + 4, y + 14 + i * 5);
       });
 
       // ── PASSOS ────────────────────────────────────────────────────────────
@@ -280,36 +274,34 @@ export function ManualPsicossocial() {
         addPage();
         y = margin + 4;
 
-        // Cabeçalho do passo
-        doc.setFillColor(...passo.cor);
+        fill(doc, passo.cor);
         doc.roundedRect(margin, y, pageW - 2 * margin, 22, 2, 2, "F");
 
-        // Número grande
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(26);
-        doc.setTextColor(255, 255, 255, 0.3);
-        doc.text(passo.num, pageW - margin - 4, y + 16, { align: "right" });
-
         doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
+        text(doc, WHITE);
         doc.text(passo.titulo, margin + 4, y + 10);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(255, 255, 255, 0.85);
+        doc.setTextColor(220, 220, 255);
         doc.text(passo.subtitulo, margin + 4, y + 17);
 
-        y += 30;
+        // Número grande decorativo
+        doc.setFontSize(36);
+        doc.setTextColor(255, 255, 255);
+        doc.text(passo.num, pageW - margin - 4, y + 18, { align: "right" });
 
-        // Parágrafos
-        passo.paragrafos.forEach((para, pi) => {
+        y += 30;
+        text(doc, CINZA);
+
+        passo.paragrafos.forEach((para) => {
           checkY(18);
-          // Bullet colorido
-          doc.setFillColor(...passo.cor);
+          fill(doc, passo.cor);
           doc.circle(margin + 2, y + 1.5, 1.5, "F");
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9.5);
-          doc.setTextColor(...CINZA);
+          text(doc, CINZA);
           const linhas = doc.splitTextToSize(para, pageW - 2 * margin - 10);
           linhas.forEach((l: string, li: number) => {
             checkY(6);
@@ -321,16 +313,15 @@ export function ManualPsicossocial() {
         y += 4;
         checkY(20);
 
-        // Caixa de dica
         const dicaLinhas = doc.splitTextToSize(passo.dica, pageW - 2 * margin - 12);
         const dicaH = dicaLinhas.length * 5 + 10;
         doc.setFillColor(248, 245, 255);
-        doc.setDrawColor(...passo.cor);
+        stroke(doc, passo.cor);
         doc.setLineWidth(0.6);
         doc.roundedRect(margin, y, pageW - 2 * margin, dicaH, 2, 2, "FD");
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
-        doc.setTextColor(...CINZA);
+        text(doc, CINZA);
         dicaLinhas.forEach((l: string, li: number) => {
           doc.text(l, margin + 6, y + 7 + li * 5);
         });
@@ -341,23 +332,23 @@ export function ManualPsicossocial() {
       addPage();
       y = margin + 4;
 
-      doc.setFillColor(...ROXO);
+      fill(doc, ROXO);
       doc.rect(0, margin - 4, pageW, 20, "F");
-      doc.setTextColor(255, 255, 255);
+      text(doc, WHITE);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("FLUXO RESUMIDO — O QUE ACONTECE EM CADA ETAPA", margin, margin + 10);
+      doc.setFontSize(12);
+      doc.text("FLUXO RESUMIDO — O QUE ACONTECE EM CADA ETAPA", margin, margin + 11);
       y = margin + 24;
-      doc.setTextColor(...CINZA);
+      text(doc, CINZA);
 
       const fluxo = [
-        { etapa: "Criar campanha", sistema: "Gera link único de participação e configura questionário", cor: AZUL },
-        { etapa: "Vincular Setor+Função", sistema: "Registra as situações de trabalho obrigatórias (NR-17)", cor: ROXO },
-        { etapa: "Colaborador responde", sistema: "Verifica unicidade via WhatsApp · Armazena hash anônimo · Descarta identidade", cor: VERDE },
-        { etapa: "< 5 respostas no grupo", sistema: "Agrupa dados: Função → Setor → Empresa (proteção de anonimato)", cor: LARANJA },
-        { etapa: "Encerrar campanha", sistema: "Calcula IPS · Gera radar dimensional · IA interpreta resultados", cor: ROXO },
-        { etapa: "Risco identificado", sistema: "Exporta automaticamente para GRO com Setor+Função vinculados", cor: VERMELHO },
-        { etapa: "Risco Crítico ou Alto", sistema: "Gera Plano de Ação 5W2H com prazo · Bloqueia arquivamento sem ação", cor: VERMELHO },
+        { etapa: "Criar campanha", sistema: "Gera link unico de participacao e configura questionario", cor: AZUL },
+        { etapa: "Vincular Setor+Funcao", sistema: "Registra as situacoes de trabalho obrigatorias (NR-17)", cor: ROXO },
+        { etapa: "Colaborador responde", sistema: "Verifica unicidade via WhatsApp | Armazena hash anonimo | Descarta identidade", cor: VERDE },
+        { etapa: "< 5 respostas no grupo", sistema: "Agrupa dados: Funcao > Setor > Empresa (protecao de anonimato)", cor: LARANJA },
+        { etapa: "Encerrar campanha", sistema: "Calcula IPS | Gera radar dimensional | IA interpreta resultados", cor: ROXO },
+        { etapa: "Risco identificado", sistema: "Exporta para GRO com Setor+Funcao vinculados automaticamente", cor: VERMELHO },
+        { etapa: "Risco Critico ou Alto", sistema: "Gera Plano de Acao 5W2H com prazo | Bloqueia arquivamento sem acao", cor: VERMELHO },
       ];
 
       fluxo.forEach((f, i) => {
@@ -366,18 +357,18 @@ export function ManualPsicossocial() {
           doc.setFillColor(248, 248, 255);
           doc.rect(margin, y - 3, pageW - 2 * margin, 13, "F");
         }
-        doc.setFillColor(...f.cor);
+        fill(doc, f.cor);
         doc.roundedRect(margin, y - 1, 3, 8, 1, 1, "F");
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8.5);
-        doc.setTextColor(...f.cor);
+        text(doc, f.cor);
         doc.text(f.etapa, margin + 6, y + 4);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...MUTED);
-        doc.text("→", margin + 55, y + 4);
-        doc.setTextColor(...CINZA);
-        const sysLinhas = doc.splitTextToSize(f.sistema, pageW - 2 * margin - 65);
-        sysLinhas.forEach((l: string, li: number) => doc.text(l, margin + 62, y + 4 + li * 4.5));
+        text(doc, MUTED);
+        doc.text("->", margin + 56, y + 4);
+        text(doc, CINZA);
+        const sysLinhas = doc.splitTextToSize(f.sistema, pageW - 2 * margin - 66);
+        sysLinhas.forEach((l: string, li: number) => doc.text(l, margin + 63, y + 4 + li * 4.5));
         y += 14;
       });
 
@@ -385,16 +376,16 @@ export function ManualPsicossocial() {
       addPage();
       y = margin + 4;
 
-      doc.setFillColor(...ROXO);
+      fill(doc, ROXO);
       doc.rect(0, margin - 4, pageW, 20, "F");
-      doc.setTextColor(255, 255, 255);
+      text(doc, WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("GLOSSÁRIO DE TERMOS", margin, margin + 10);
+      doc.text("GLOSSARIO DE TERMOS", margin, margin + 11);
       y = margin + 24;
 
       GLOSSARIO.forEach(([termo, def], i) => {
-        const defLinhas = doc.splitTextToSize(def, pageW - 2 * margin - 36);
+        const defLinhas = doc.splitTextToSize(def, pageW - 2 * margin - 38);
         const linhaH = defLinhas.length * 4.8 + 8;
         checkY(linhaH);
 
@@ -404,12 +395,12 @@ export function ManualPsicossocial() {
         }
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8.5);
-        doc.setTextColor(...ROXO);
+        text(doc, ROXO);
         doc.text(termo, margin + 3, y + 6);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...CINZA);
+        text(doc, CINZA);
         defLinhas.forEach((l: string, li: number) => {
-          doc.text(l, margin + 36, y + 6 + li * 4.8);
+          doc.text(l, margin + 38, y + 6 + li * 4.8);
         });
         y += linhaH;
       });
