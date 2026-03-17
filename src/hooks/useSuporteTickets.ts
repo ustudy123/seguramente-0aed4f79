@@ -159,6 +159,7 @@ export function useSuporteTickets() {
   return {
     tickets,
     isLoading,
+    isSuperAdmin,
     createTicket,
     updateTicket,
     fetchComentarios,
