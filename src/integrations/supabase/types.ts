@@ -15262,6 +15262,8 @@ export type Database = {
           escopo_valores: string[] | null
           evento_gatilho_id: string | null
           evento_gatilho_tipo: string | null
+          gro_exportado_em: string | null
+          gro_riscos_count: number | null
           ibd_score: number | null
           ibo_score: number | null
           icop_score: number | null
@@ -15304,6 +15306,8 @@ export type Database = {
           escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
+          gro_exportado_em?: string | null
+          gro_riscos_count?: number | null
           ibd_score?: number | null
           ibo_score?: number | null
           icop_score?: number | null
@@ -15346,6 +15350,8 @@ export type Database = {
           escopo_valores?: string[] | null
           evento_gatilho_id?: string | null
           evento_gatilho_tipo?: string | null
+          gro_exportado_em?: string | null
+          gro_riscos_count?: number | null
           ibd_score?: number | null
           ibo_score?: number | null
           icop_score?: number | null

@@ -513,12 +513,38 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
           </div>
         )}
 
-        <div className="flex items-start gap-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-xs text-blue-700">
-          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-          <p>
-            Os scores são calculados a partir dos dados <strong>reais do radar psicossocial</strong> de {campanhasValidas.length} campanha(s),
-            com média ponderada pelo número de respondentes. Use <strong>"Relatório"</strong> para exportar documento estruturado com metodologia auditável.
+        {/* GAP 4: Metodologia sempre visível no Inventário PGR */}
+        <div className="rounded-lg border border-border/60 bg-muted/30 p-3 space-y-2">
+          <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <BookOpen className="h-3.5 w-3.5 text-purple-600" />
+            Metodologia — NR-01 / NR-17 / ISO 45003
           </p>
+          <div className="grid gap-1.5 sm:grid-cols-2 text-xs text-muted-foreground">
+            <div className="flex items-start gap-1.5">
+              <span className="text-purple-600 font-bold shrink-0">1.</span>
+              <span><strong>Coleta:</strong> Respostas agregadas anonimamente (mín. 5 respondentes por grupo)</span>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <span className="text-purple-600 font-bold shrink-0">2.</span>
+              <span><strong>Score real:</strong> Média ponderada por n° de respondentes de {campanhasValidas.length} campanha(s)</span>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <span className="text-purple-600 font-bold shrink-0">3.</span>
+              <span><strong>Probabilidade × Severidade:</strong> Calculados via mapeamento normativo SIPRO/COPSOQ</span>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <span className="text-purple-600 font-bold shrink-0">4.</span>
+              <span><strong>Nível GRO:</strong> Crítico / Alto / Médio / Baixo conforme matriz P×S (NR-01 Anexo I)</span>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <span className="text-purple-600 font-bold shrink-0">5.</span>
+              <span><strong>Ações 5W2H:</strong> Geradas automaticamente para Crítico (30d) e Alto (60d)</span>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <span className="text-purple-600 font-bold shrink-0">6.</span>
+              <span><strong>Auditabilidade:</strong> Use "Relatório" para exportar documento completo com rastreabilidade</span>
+            </div>
+          </div>
         </div>
       </CardContent>
 

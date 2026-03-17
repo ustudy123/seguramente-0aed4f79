@@ -242,6 +242,9 @@ export interface CampanhaPsicossocial {
   irec_score?: number | null;
   icop_score?: number | null;
   inot_score?: number | null;
+  // GAP 1: Rastreamento de exportação automática ao GRO
+  gro_exportado_em?: string | null;
+  gro_riscos_count?: number | null;
   created_at: string;
   updated_at: string;
 }

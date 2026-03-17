@@ -532,6 +532,51 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
 
             {/* ── Tab: Ergonomia / AEP ── */}
             <TabsContent value="ergonomia" className="mt-4 space-y-3">
+              {/* GAP 3: Banner de recomendação de AET quando IPS < 65 ou múltiplos críticos */}
+              {stats?.anonimato_garantido && ips !== undefined && (
+                (() => {
+                  const criticos = dimensoesAgregadas.filter(d => isCritico(d.media));
+                  const isRiscoRelevante = isSipro ? ips >= 50 : ips < 65;
+                  const multiplosRiscos = criticos.length >= 2;
+                  const riscoUrgente = isSipro ? ips >= 75 : ips < 35;
+
+                  if (!isRiscoRelevante && !multiplosRiscos) return null;
+
+                  return (
+                    <div className={`flex items-start gap-3 p-4 rounded-xl border-2 ${
+                      riscoUrgente
+                        ? 'border-destructive/50 bg-destructive/5'
+                        : 'border-orange-200 bg-orange-50/50'
+                    }`}>
+                      <div className={`p-2 rounded-lg shrink-0 ${riscoUrgente ? 'bg-destructive/10' : 'bg-orange-100'}`}>
+                        <span className="text-lg">{riscoUrgente ? '🚨' : '⚠️'}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold text-sm ${riscoUrgente ? 'text-destructive' : 'text-orange-800'}`}>
+                          {riscoUrgente
+                            ? 'AET Obrigatória — Risco Crítico Identificado (NR-17 §17.5)'
+                            : `AET Recomendada — ${criticos.length > 0 ? `${criticos.length} dimensão(ões) em risco` : 'IPS em nível de atenção'}`
+                          }
+                        </p>
+                        <p className={`text-xs mt-0.5 ${riscoUrgente ? 'text-destructive/80' : 'text-orange-700'}`}>
+                          {riscoUrgente
+                            ? 'Riscos críticos exigem Análise Ergonômica do Trabalho para investigação aprofundada das condições organizacionais conforme NR-17.'
+                            : 'Recomenda-se iniciar uma Análise Ergonômica do Trabalho (AET) para aprofundar a investigação dos fatores psicossociais identificados.'
+                          }
+                          {criticos.length > 0 && (
+                            <span className="block mt-1">
+                              <strong>Dimensões afetadas:</strong> {criticos.slice(0, 3).map(d => d.bloco).join(', ')}{criticos.length > 3 ? ` e mais ${criticos.length - 3}` : ''}.
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          📋 Base normativa: NR-17 / ISO 45003 — Acesse o módulo de Ergonomia para iniciar a AET.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
               <IntegracaoErgonomiaAEP
                 campanha={campanha}
                 ips={ips}
