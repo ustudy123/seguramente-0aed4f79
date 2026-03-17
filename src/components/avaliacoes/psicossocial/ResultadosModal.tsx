@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart3,
   Brain,
@@ -13,6 +13,11 @@ import {
   GitCompare,
   Wrench,
 } from "lucide-react";
+import { PrivacidadeGrupoAlert } from "./PrivacidadeGrupoAlert";
+import {
+  aplicarRegrasPrivacidade,
+  estimarContagemPorGrupo,
+} from "@/lib/psicossocial-privacy";
 import { ExportarRelatorio } from "./ExportarRelatorio";
 import { IntegracaoErgonomiaAEP } from "./IntegracaoErgonomiaAEP";
 import { ContaprovaOrganizacional } from "./ContaprovaOrganizacional";

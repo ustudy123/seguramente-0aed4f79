@@ -21,6 +21,12 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { PrivacidadeGrupoAlert } from "./PrivacidadeGrupoAlert";
+import {
+  aplicarRegrasPrivacidade,
+  estimarContagemPorGrupo,
+  MINIMO_RESPONDENTES_GRUPO,
+} from "@/lib/psicossocial-privacy";
 import {
   GRO_NIVEL_RISCO_LABELS,
   scoreToProbabilidade,
