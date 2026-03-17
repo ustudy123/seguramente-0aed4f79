@@ -181,7 +181,7 @@ export function AEPEvidenciaForm({
     toast.success("Evidência adicionada!");
   };
 
-  const canSubmit = setorId && funcaoId && (arquivo || audioBlob || contextoTexto);
+  const canSubmit = situacaoId && (arquivo || audioBlob || contextoTexto);
 
   return (
     <Card>
