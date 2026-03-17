@@ -197,6 +197,13 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   };
 
   const onSubmit = async (data: FormValues) => {
+    // ── GAP-P1: Bloqueio obrigatório — NR-17 exige vínculo Setor+Função ──────
+    if (situacoes.length === 0) {
+      // Mostrar erro no formulário e rolar até a seção
+      document.getElementById('situacoes-trabalho-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return; // bloqueia submissão
+    }
+
     await criarCampanha.mutateAsync({
       nome: data.nome,
       descricao: data.descricao,
@@ -710,16 +717,18 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
               )}
             />
 
-            {/* ── Situações de Trabalho (NR-17) ── */}
-            <div className="space-y-3">
+            {/* ── GAP-P1: Situações de Trabalho (NR-17) — OBRIGATÓRIO ── */}
+            <div id="situacoes-trabalho-section" className="space-y-3">
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-purple-600" />
                 <span className="font-medium text-sm">Situações de Trabalho (NR-17)</span>
-                <Badge variant="secondary" className="text-xs">Recomendado para GRO</Badge>
+                <Badge className="text-xs bg-red-100 text-red-700 border border-red-200">
+                  Obrigatório
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Vincule pares de <strong>Setor + Função</strong> que serão analisados nesta campanha.
-                Campanhas sem vínculo não poderão ser exportadas ao GRO com conformidade NR-17.
+                <strong className="text-red-700"> Obrigatório</strong> para conformidade NR-17 — sem vínculo a campanha não pode ser criada.
               </p>
 
               {/* Lista de situações adicionadas */}
@@ -778,11 +787,13 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                 </Button>
               </div>
 
+              {/* GAP-P1: Bloqueio visual — erro quando tenta criar sem vínculo */}
               {situacoes.length === 0 && (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800">
-                    <strong>Atenção:</strong> Sem situações de trabalho vinculadas, os riscos identificados não poderão ser exportados ao GRO com conformidade NR-17/ISO 45003. Você ainda pode criar a campanha e adicionar o vínculo depois.
+                <div className="flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 p-3">
+                  <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-800">
+                    <strong>Obrigatório para criar a campanha:</strong> Adicione pelo menos um par Setor+Função.
+                    Exigência NR-17 e ISO 45003 — necessário para rastreabilidade no GRO e conformidade legal.
                   </p>
                 </div>
               )}
@@ -792,7 +803,11 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={criarCampanha.isPending}>
+              <Button
+                type="submit"
+                disabled={criarCampanha.isPending || situacoes.length === 0}
+                title={situacoes.length === 0 ? "Adicione pelo menos um par Setor+Função (obrigatório — NR-17)" : undefined}
+              >
                 {criarCampanha.isPending ? "Criando..." : "Criar Campanha"}
               </Button>
             </DialogFooter>
