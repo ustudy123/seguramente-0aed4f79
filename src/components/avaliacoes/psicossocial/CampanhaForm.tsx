@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info, Plus, Trash2, Building2, UserCog } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
-import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial } from "@/types/psicossocial";
+import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";

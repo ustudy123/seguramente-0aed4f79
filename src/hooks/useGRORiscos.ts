@@ -119,6 +119,7 @@ export function useGRORiscos() {
   });
 
   // ── Importar do módulo psicossocial (campanha encerrada) ──────────────────
+  // Gera 1 risco GRO por dimensão crítica por situação de trabalho (NR-17)
   const importarDaCampanha = useMutation({
     mutationFn: async ({
       campanhaId,
@@ -126,50 +127,66 @@ export function useGRORiscos() {
       dimensoes,
       empresaId,
       isSipro,
+      situacoes,
     }: {
       campanhaId: string;
       campanhaName: string;
       dimensoes: { subject: string; value: number }[];
       empresaId?: string | null;
       isSipro: boolean;
+      situacoes?: { setorId: string; setorNome: string; funcaoId: string; funcaoNome: string }[];
     }) => {
       if (!tenantId) throw new Error("Tenant não identificado");
 
+      // Bloquear se campanha não tem vínculo de setor/função
+      if (!situacoes || situacoes.length === 0) {
+        throw new Error(
+          "Esta campanha não possui situações de trabalho (Setor+Função) vinculadas. " +
+          "Para exportar ao GRO com conformidade NR-17, edite a campanha e adicione pelo menos uma situação de trabalho."
+        );
+      }
+
       const { scoreToProbabilidade, scoreToSeveridade } = await import("@/types/gro");
 
-      const riscosDimensoes = dimensoes
-        .filter(d => {
-          const risco = isSipro ? d.value : 100 - d.value;
-          return risco >= 35; // só importa riscos moderados ou acima
-        })
-        .map(d => ({
+      // Dimensões que configuram risco (≥35 no score de risco)
+      const dimensoesCriticas = dimensoes.filter(d => {
+        const risco = isSipro ? d.value : 100 - d.value;
+        return risco >= 35;
+      });
+
+      if (dimensoesCriticas.length === 0) return 0;
+
+      // Para cada situação de trabalho + cada dimensão crítica = 1 risco GRO
+      const riscos = situacoes.flatMap(sit =>
+        dimensoesCriticas.map(d => ({
           tenant_id: tenantId,
           empresa_id: empresaId ?? empresaAtivaId ?? null,
           subtipo: 'psicossocial' as const,
           fonte: 'psicossocial' as const,
-          titulo: `Risco Psicossocial — ${d.subject}`,
-          descricao: `Risco identificado na campanha "${campanhaName}". Dimensão: ${d.subject}. Score: ${d.value}%.`,
+          titulo: `${d.subject} — ${sit.funcaoNome} (${sit.setorNome})`,
+          descricao: `Risco psicossocial identificado na campanha "${campanhaName}". Dimensão: ${d.subject}. Score: ${d.value}%. Situação de trabalho: ${sit.funcaoNome} no setor ${sit.setorNome}.`,
           dimensao_psicossocial: d.subject,
           score_dimensao: d.value,
           probabilidade: scoreToProbabilidade(d.value, isSipro),
           severidade: scoreToSeveridade(d.value, isSipro),
           campanha_id: campanhaId,
-          base_normativa: ['NR-01', 'ISO 45003'],
+          setor: sit.setorNome,
+          cargo: sit.funcaoNome,
+          base_normativa: ['NR-01', 'NR-17', 'ISO 45003'],
           status_gro: 'identificado' as const,
           ativo: true,
-        }));
-
-      if (riscosDimensoes.length === 0) return 0;
+        }))
+      );
 
       const { error } = await (supabase as any)
         .from("gro_riscos")
-        .insert(riscosDimensoes);
+        .insert(riscos);
       if (error) throw error;
-      return riscosDimensoes.length;
+      return riscos.length;
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success(`${count} risco(s) psicossocial(is) importado(s) para o GRO!`);
+      toast.success(`${count} risco(s) psicossocial(is) importado(s) para o GRO com vínculo NR-17!`);
     },
     onError: (e: any) => toast.error(`Erro ao importar riscos: ${e.message}`),
   });
