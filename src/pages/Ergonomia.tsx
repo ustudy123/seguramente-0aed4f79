@@ -18,6 +18,7 @@ import {
   Map,
   BarChart3,
   Zap,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,6 +47,8 @@ import { AnaliseLERDORT } from "@/components/ergonomia/AnaliseLERDORT";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import { GROPainel } from "@/components/ergonomia/GROPainel";
+import { GROCicloPDCA } from "@/components/ergonomia/GROCicloPDCA";
+import { MotorAET } from "@/components/ergonomia/MotorAET";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
 import {
   ITENS_NR17_PADRAO,
@@ -74,6 +77,8 @@ export default function Ergonomia() {
   const [showConformidade, setShowConformidade] = useState(false);
   const [conformidadeEixo, setConformidadeEixo] = useState<"todos" | "fisico" | "cognitivo" | "organizacional">("todos");
   const [aepMode, setAepMode] = useState<"simples" | "multi">("simples");
+
+  const { riscos: groRiscos } = useGRORiscos();
 
   const {
     itensNR17,
@@ -313,6 +318,19 @@ export default function Ergonomia() {
                 <ShieldCheck className="h-4 w-4" />
                 GRO / Inventário
               </TabsTrigger>
+              <TabsTrigger value="pdca" className="gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Ciclo PDCA
+              </TabsTrigger>
+              <TabsTrigger value="motor_aet" className="gap-2">
+                <Zap className="h-4 w-4" />
+                Motor AET
+                {groRiscos.filter(r => ["alto","critico"].includes(r.nivel_risco)).length > 0 && (
+                  <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">
+                    {groRiscos.filter(r => ["alto","critico"].includes(r.nivel_risco)).length}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="analise_ia" className="gap-2">
                 <Brain className="h-4 w-4" />
                 Análise por IA
@@ -363,6 +381,16 @@ export default function Ergonomia() {
             {/* GRO — Inventário Unificado (nova aba central) */}
             <TabsContent value="gro">
               <GROPainel onNovo={() => setShowRiscoForm(true)} />
+            </TabsContent>
+
+            {/* Ciclo PDCA — Conformidade NR-1 */}
+            <TabsContent value="pdca">
+              <GROCicloPDCA riscos={groRiscos} />
+            </TabsContent>
+
+            {/* Motor AET — RQ-11 */}
+            <TabsContent value="motor_aet">
+              <MotorAET riscos={groRiscos} />
             </TabsContent>
 
             {/* Análise por IA */}
