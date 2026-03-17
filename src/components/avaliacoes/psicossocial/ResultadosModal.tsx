@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart3,
   Brain,
@@ -13,6 +13,11 @@ import {
   GitCompare,
   Wrench,
 } from "lucide-react";
+import { PrivacidadeGrupoAlert } from "./PrivacidadeGrupoAlert";
+import {
+  aplicarRegrasPrivacidade,
+  estimarContagemPorGrupo,
+} from "@/lib/psicossocial-privacy";
 import { ExportarRelatorio } from "./ExportarRelatorio";
 import { IntegracaoErgonomiaAEP } from "./IntegracaoErgonomiaAEP";
 import { ContaprovaOrganizacional } from "./ContaprovaOrganizacional";
@@ -88,6 +93,15 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
     ? 'Score 0–100: quanto maior, maior o risco organizacional'
     : 'Score 0–100: quanto maior, mais saudável o ambiente';
 
+  // ── GAP A+B+C: Proteção de privacidade por grupo (ISO 45003) ───────────────
+  // Verifica se há situações de trabalho segmentadas e aplica regras de mínimo.
+  const privacidadeGrupos = useMemo(() => {
+    const situacoes = campanha.situacoes_trabalho ?? [];
+    const totalRespondentes = stats?.concluidos ?? 0;
+    if (situacoes.length === 0) return null; // sem segmentação — usa proteção global
+    const contagem = estimarContagemPorGrupo(totalRespondentes, situacoes);
+    return aplicarRegrasPrivacidade(situacoes, contagem, totalRespondentes);
+  }, [campanha.situacoes_trabalho, stats?.concluidos]);
 
   // Dimensões por resposta → agregar média por dimensão
   // Para SIPRO (IRP-S): maior score = maior risco → críticas têm score ALTO, pontos fortes têm score BAIXO
@@ -275,6 +289,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                 </Card>
               ) : (
                 <>
+                  {/* GAP C — badge compacto de privacidade por grupo na visão geral */}
+                  {privacidadeGrupos && (
+                    <PrivacidadeGrupoAlert resultado={privacidadeGrupos} compact />
+                  )}
+
                   {/* IPS principal */}
                   <div className="grid gap-4 md:grid-cols-2">
                     <Card className="border-purple-200 bg-gradient-to-br from-purple-50/50 to-background">
@@ -388,7 +407,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  {/* GAP C — Alerta de privacidade por grupo (ISO 45003) */}
+                  {privacidadeGrupos && (
+                    <PrivacidadeGrupoAlert resultado={privacidadeGrupos} />
+                  )}
                   {dimensoesAgregadas.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">Sem dados de dimensões disponíveis.</p>
                   ) : (

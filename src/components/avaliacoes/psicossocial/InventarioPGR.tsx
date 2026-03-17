@@ -21,6 +21,12 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { PrivacidadeGrupoAlert } from "./PrivacidadeGrupoAlert";
+import {
+  aplicarRegrasPrivacidade,
+  estimarContagemPorGrupo,
+  MINIMO_RESPONDENTES_GRUPO,
+} from "@/lib/psicossocial-privacy";
 import {
   GRO_NIVEL_RISCO_LABELS,
   scoreToProbabilidade,
@@ -105,7 +111,7 @@ interface InventarioItem {
 export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
-  const { importarDaCampanha, isLoading: importandoGRO } = useGRORiscos();
+  const { importarDaCampanha } = useGRORiscos();
 
   // Campanhas válidas (mín. anonimato e com radar_data real)
   const campanhasValidas = useMemo(() =>
@@ -119,9 +125,19 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   );
 
   const isSipro = campanhasValidas[0]?.instrumento === 'sipro';
-  // Verifica se a campanha mais recente tem situações de trabalho vinculadas
   const campanhaAtual = campanhasValidas[0];
   const semEscopoGRO = !campanhaAtual?.situacoes_trabalho || campanhaAtual.situacoes_trabalho.length === 0;
+
+  // ── GAP A+B: Proteção de privacidade por grupo (ISO 45003) ──────────────────
+  // Calcula quais pares setor+função têm respondentes suficientes,
+  // aplica fallback automático (funcao → setor → empresa) para grupos pequenos.
+  const privacidadeGrupos = useMemo(() => {
+    if (!campanhaAtual) return null;
+    const situacoes = campanhaAtual.situacoes_trabalho ?? [];
+    const totalRespondentes = campanhaAtual.total_respostas ?? 0;
+    const contagem = estimarContagemPorGrupo(totalRespondentes, situacoes);
+    return aplicarRegrasPrivacidade(situacoes, contagem, totalRespondentes);
+  }, [campanhaAtual]);
 
   /**
    * Agregação real das dimensões.
@@ -383,6 +399,11 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             </div>
           ))}
         </div>
+
+        {/* GAP C — Alerta de privacidade por grupo (ISO 45003) */}
+        {privacidadeGrupos && (campanhaAtual?.situacoes_trabalho?.length ?? 0) > 0 && (
+          <PrivacidadeGrupoAlert resultado={privacidadeGrupos} />
+        )}
 
         {/* Tabela */}
         <div className="rounded-lg border overflow-hidden">
