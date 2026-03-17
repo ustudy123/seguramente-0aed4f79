@@ -795,7 +795,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                                 {v.status === "ativo" && (
                                   <Button size="sm" variant="ghost"
                                     className="text-destructive hover:bg-destructive/10 shrink-0"
-                                    onClick={() => encerrarVinculo.mutateAsync({ id: v.id, usuario_id: usuario.id })}>
+                                    onClick={async () => { await encerrarVinculo.mutateAsync({ id: v.id, usuario_id: usuario.id }); queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] }); }}>
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
                                 )}
