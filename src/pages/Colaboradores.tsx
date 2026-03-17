@@ -135,6 +135,7 @@ function AtivosTab() {
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
   const { empresaAtivaId } = useEmpresaAtiva();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
