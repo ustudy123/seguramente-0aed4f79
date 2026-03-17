@@ -78,7 +78,6 @@ const DIMENSAO_NORMATIVA: Record<string, { fator: string; norma: string }> = {
   "Qualidade das": { fator: "Qualidade das relações interpessoais", norma: "NR-01 / ISO 45003" },
   "Segurança Psicológica": { fator: "Medo de punição e silêncio organizacional", norma: "ISO 45003" },
   "Ritmo Biológico": { fator: "Perturbação do ritmo biológico / trabalho noturno", norma: "NR-17 / NR-01" },
-  "Demanda Quantitativa": { fator: "Sobrecarga quantitativa e pressão por tempo", norma: "NR-01 / NR-17" },
 };
 
 function getNormativaForSubject(subject: string): { fator: string; norma: string } {
