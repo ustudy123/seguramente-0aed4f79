@@ -244,6 +244,19 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
           {campanha.anonimo && (
             <Badge variant="outline" className="text-xs">Anônimo</Badge>
           )}
+          {/* GAP 1: Badge indicando que riscos já foram exportados ao GRO */}
+          {campanha.gro_exportado_em && (
+            <Badge variant="outline" className="text-xs gap-1 text-emerald-700 border-emerald-300 bg-emerald-50">
+              <Database className="h-3 w-3" />
+              GRO exportado
+            </Badge>
+          )}
+          {isExportandoGRO && (
+            <Badge variant="outline" className="text-xs gap-1 text-blue-700 border-blue-300 bg-blue-50">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Exportando ao GRO...
+            </Badge>
+          )}
         </div>
         
         {campanha.descricao && (
