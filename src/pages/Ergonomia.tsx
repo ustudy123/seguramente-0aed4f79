@@ -45,6 +45,8 @@ import { InventarioRiscos } from "@/components/ergonomia/InventarioRiscos";
 import { AnaliseLERDORT } from "@/components/ergonomia/AnaliseLERDORT";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
+import { GROPainel } from "@/components/ergonomia/GROPainel";
+import { useGRORiscos } from "@/hooks/useGRORiscos";
 import {
   ITENS_NR17_PADRAO,
   MATURIDADE_LABELS,
