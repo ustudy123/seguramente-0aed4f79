@@ -204,7 +204,22 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const [novoTipo, setNovoTipo] = useState("gestor");
   const [novoContexto, setNovoContexto] = useState("");
 
-  const vinculos: UsuarioVinculo[] = (usuario as any).vinculos || [];
+  // Fetch vinculos reactively so they update after mutations
+  const { data: vinculosFresh = [] } = useQuery({
+    queryKey: ['usuario-vinculos', usuario.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('usuario_vinculos')
+        .select('*, empresa:empresa_id(razao_social, nome_fantasia)')
+        .eq('usuario_id', usuario.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as UsuarioVinculo[];
+    },
+    enabled: open && !!usuario.id,
+  });
+
+  const vinculos = vinculosFresh.length > 0 ? vinculosFresh : ((usuario as any).vinculos || []) as UsuarioVinculo[];
   const vinculosAtivos = vinculos.filter(v => v.status === "ativo");
   const { score, pct } = calcularQualidade(usuario, vinculos);
 
@@ -336,6 +351,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
       status: "ativo",
       data_inicio: new Date().toISOString().split("T")[0],
     });
+    queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
     setAddingVinculo(false);
     setNovaEmpresaId(""); setNovoTipo("gestor"); setNovoContexto("");
   }
@@ -779,7 +795,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                                 {v.status === "ativo" && (
                                   <Button size="sm" variant="ghost"
                                     className="text-destructive hover:bg-destructive/10 shrink-0"
-                                    onClick={() => encerrarVinculo.mutateAsync({ id: v.id, usuario_id: usuario.id })}>
+                                    onClick={async () => { await encerrarVinculo.mutateAsync({ id: v.id, usuario_id: usuario.id }); queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] }); }}>
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
                                 )}
