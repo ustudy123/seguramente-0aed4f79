@@ -96,6 +96,7 @@ export function EpiEntregaForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
