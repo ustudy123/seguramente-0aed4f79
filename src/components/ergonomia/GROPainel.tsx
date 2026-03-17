@@ -196,6 +196,8 @@ export function GROPainel({ onNovo }: GROPainelProps) {
                   </SelectContent>
                 </Select>
 
+                <ExportarRelatorioErgonomia riscos={riscos} />
+
                 {onNovo && (
                   <Button size="sm" onClick={onNovo} className="gap-2 h-8">
                     <Plus className="h-3.5 w-3.5" />
