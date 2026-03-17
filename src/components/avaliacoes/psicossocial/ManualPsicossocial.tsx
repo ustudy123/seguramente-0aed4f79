@@ -1,6 +1,6 @@
 /**
  * Manual do Usuário — Módulo de Gestão Psicossocial
- * Gerado em PDF via jsPDF com passo a passo em linguagem acessível.
+ * Gerado em PDF via jsPDF. Reescrito com base no manual GRO/PGR revisado.
  */
 import { useState } from "react";
 import { BookOpen, Loader2 } from "lucide-react";
@@ -12,7 +12,6 @@ import { ptBR } from "date-fns/locale";
 
 type RGB = [number, number, number];
 
-// ── Paleta ───────────────────────────────────────────────────────────────────
 const ROXO: RGB = [88, 28, 135];
 const ROXO_LIGHT: RGB = [233, 213, 255];
 const CINZA: RGB = [50, 50, 50];
@@ -21,121 +20,125 @@ const VERDE: RGB = [16, 185, 129];
 const AZUL: RGB = [37, 99, 235];
 const LARANJA: RGB = [234, 88, 12];
 const VERMELHO: RGB = [220, 38, 38];
+const AMBER: RGB = [180, 120, 0];
+const WHITE: RGB = [255, 255, 255];
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function fill(doc: jsPDF, c: RGB) { doc.setFillColor(c[0], c[1], c[2]); }
 function stroke(doc: jsPDF, c: RGB) { doc.setDrawColor(c[0], c[1], c[2]); }
 function text(doc: jsPDF, c: RGB) { doc.setTextColor(c[0], c[1], c[2]); }
-const WHITE: RGB = [255, 255, 255];
 
-// ── Conteúdo do manual ────────────────────────────────────────────────────────
 const PASSOS = [
   {
     num: "01",
-    titulo: "Acesse o Módulo Psicossocial",
-    subtitulo: "Por onde começar",
-    cor: AZUL,
+    titulo: "Crie uma Campanha de Avaliação",
+    subtitulo: "O ponto de partida",
+    cor: ROXO,
     paragrafos: [
-      'No menu lateral do sistema, clique em "Avaliações" e depois em "Psicossocial". Você verá o painel principal com o histórico de campanhas e o Índice Psicossocial Organizacional (IPS) da sua empresa.',
-      "Se é a primeira vez que acessa, a tela estará vazia — isso é normal. Todo o processo começa com a criação de uma campanha.",
+      'Acesse o menu lateral → "Avaliações" → "Psicossocial". Clique no botão "Nova Campanha" no canto superior direito da tela.',
+      'O Assistente de Seleção irá aparecer para recomendar o instrumento mais adequado. Para a maioria das empresas, o SIPRO é o instrumento correto — ele é validado cientificamente para o contexto brasileiro e atende à NR-01.',
+      'Preencha o nome da campanha e defina o período de coleta (data de início e fim). Você pode criar campanhas regulares (trimestrais, semestrais ou anuais) ou campanhas extraordinárias para situações urgentes.',
     ],
-    dica: "Dica: O IPS só aparece após a primeira campanha ter pelo menos 5 respostas.",
+    dica: "Dica: Campanhas trimestrais constroem um histórico robusto e permitem medir o impacto das ações ao longo do tempo.",
   },
   {
     num: "02",
-    titulo: "Crie uma Nova Campanha",
-    subtitulo: "Configurando a avaliação",
-    cor: ROXO,
+    titulo: "Vincule Setor + Função (Obrigatório — NR-17)",
+    subtitulo: "Etapa exigida por lei",
+    cor: VERMELHO,
     paragrafos: [
-      'Clique no botão "Nova Campanha" no canto superior direito. Um assistente irá aparecer para te ajudar a escolher o instrumento (tipo de questionário) mais adequado para o porte e perfil da sua empresa.',
-      "Após escolher o instrumento, preencha as informações básicas: nome da campanha, período de coleta (data de início e fim) e a periodicidade (trimestral, semestral, anual).",
+      'Esta é a etapa mais importante do processo. Você precisa informar quais grupos de trabalho serão avaliados. Não são os nomes das pessoas — são as combinações de Setor e Função.',
+      'Exemplos: "Produção + Operador de Máquinas", "Comercial + Consultor de Vendas". Cada par representa uma situação de trabalho que será analisada separadamente.',
+      'Use os campos com autocomplete — o sistema já sugere os setores e funções cadastrados. Você pode selecionar da lista ou digitar um novo. Adicione quantos pares precisar.',
     ],
-    dica: "Dica: O instrumento SIPRO é recomendado para a maioria das empresas brasileiras — é validado cientificamente e atende à NR-01.",
+    dica: "Atenção: Sem pelo menos um par Setor+Função, a campanha não pode ser criada. Isso garante que os riscos identificados sejam rastreáveis no GRO e no PGR.",
   },
   {
     num: "03",
-    titulo: "Vincule Setor + Função (Obrigatório — NR-17)",
-    subtitulo: "A etapa mais importante",
-    cor: VERMELHO,
+    titulo: "Distribua para os Colaboradores",
+    subtitulo: "Como as pessoas respondem",
+    cor: AZUL,
     paragrafos: [
-      "Esta é a etapa exigida pela NR-17. Você precisa informar quais grupos de trabalho serão avaliados. Não são os nomes das pessoas — são as combinações de Setor e Função.",
-      'Exemplo: "Producao + Operador de Maquinas" e "Comercial + Consultor de Vendas". Cada par representa uma situacao de trabalho que sera analisada separadamente.',
-      "Use os campos com autocomplete: ao clicar em Setor, o sistema ja sugere os departamentos cadastrados. O mesmo acontece com Funcao. Voce pode escolher da lista ou digitar um novo.",
+      'Após ativar a campanha, o sistema gera um link único de participação. Acesse a campanha e clique em "Distribuir" para ver o link, QR Code e modelos de mensagem prontos.',
+      'Envie o link por WhatsApp, e-mail ou imprima o QR Code para fixar nos murais. O colaborador não precisa ter login no sistema.',
+      'Ao acessar o link, o colaborador passa por uma verificação via código WhatsApp (apenas para garantir que cada pessoa responde uma vez). Após a verificação, o código é descartado — a identidade nunca é vinculada às respostas.',
     ],
-    dica: "Atencao: Sem pelo menos um par Setor+Funcao, a campanha nao pode ser criada. Isso garante que os riscos identificados sejam rastreaveis no GRO.",
+    dica: "Segurança: Nome, CPF e telefone nunca são armazenados junto às respostas. O sistema usa apenas um código hash anônimo que não permite rastrear a identidade.",
   },
   {
     num: "04",
-    titulo: "Envie os Questionários",
-    subtitulo: "Como os colaboradores respondem",
+    titulo: "Regra do Anonimato",
+    subtitulo: "Como o sistema protege os colaboradores",
     cor: VERDE,
     paragrafos: [
-      "Após criar a campanha, o sistema gera um link de acesso. Você pode enviar esse link por WhatsApp, e-mail ou qualquer outro canal da empresa.",
-      "Cada colaborador acessa o link, confirma sua identidade via código WhatsApp (apenas para garantir que cada pessoa responde uma vez) e preenche o questionário. Nenhum dado de identidade é armazenado junto às respostas.",
-      "O colaborador não precisa ter login no sistema. O link funciona em qualquer celular ou computador.",
+      'O sistema aplica automaticamente a regra de confidencialidade: resultados só são exibidos quando o grupo tem no mínimo 5 respondentes. Isso impede que qualquer pessoa seja identificada pelas respostas.',
+      'Quando um grupo tem menos de 5 respondentes, os dados são agrupados automaticamente: primeiro tenta mostrar por Setor; se ainda não atinge o mínimo, exibe o resultado geral da empresa.',
+      'Para empresas com menos de 20 funcionários, recomenda-se não segmentar por Função — use apenas o nível Setor ou empresa inteira para garantir que os resultados apareçam.',
     ],
-    dica: "Seguranca: O nome, CPF e telefone do colaborador nunca sao vinculados as respostas. O sistema usa apenas um codigo hash anonimo.",
+    dica: "Conformidade: Esta regra segue a ISO 45003 e o COPSOQ III. Se não for possível garantir anonimato, o sistema exibe: 'Dados insuficientes para garantir confidencialidade'.",
   },
   {
     num: "05",
-    titulo: "Acompanhe as Respostas em Tempo Real",
-    subtitulo: "Monitorando a participação",
-    cor: AZUL,
+    titulo: "Encerre e Veja os Resultados",
+    subtitulo: "O diagnóstico automático",
+    cor: ROXO,
     paragrafos: [
-      "Durante o período da campanha, você pode ver quantas pessoas já responderam na tela da campanha ativa. Aparece a taxa de participação e o prazo restante.",
-      "Os resultados só ficam disponíveis após o encerramento da campanha E com no mínimo 5 respondentes. Isso protege o anonimato.",
+      'Ao final do prazo (ou manualmente), encerre a campanha. O sistema calcula automaticamente o IPS (Índice Psicossocial) de 0 a 100 e classifica cada dimensão avaliada.',
+      'Você verá gráficos radar com os pontos fortes e áreas de atenção. O sistema também gera uma análise interpretativa em texto simples, explicando o que os números significam na prática.',
+      'O IPS é classificado em: 0–49 (Risco), 50–64 (Atenção), 65–79 (Estável), 80–100 (Saudável). Clique em "Ver Resultados" na campanha encerrada para acessar o diagnóstico completo.',
     ],
-    dica: "Dica: Uma taxa de participacao acima de 60% garante resultados mais representativos e confiaveis estatisticamente.",
+    dica: "Dica: Clique em 'Exportar Relatório PDF' para gerar um documento formal que pode ser arquivado no PGR da empresa.",
   },
   {
     num: "06",
-    titulo: "Encerre a Campanha e Veja os Resultados",
-    subtitulo: "Analisando o diagnóstico",
-    cor: ROXO,
+    titulo: "Riscos Vão para o GRO Automaticamente",
+    subtitulo: "Integração com o inventário de riscos (PGR)",
+    cor: LARANJA,
     paragrafos: [
-      "Ao final do prazo, ou manualmente, encerre a campanha. O sistema calcula automaticamente o IPS (Índice Psicossocial) de 0 a 100 e classifica cada dimensão avaliada.",
-      "Você verá gráficos radar com os pontos fortes e áreas de atenção, separados por Setor+Função (se houver respostas suficientes em cada grupo).",
-      "A IA do sistema também gera uma análise interpretativa em texto, explicando os resultados em linguagem acessível e sugerindo as próximas ações.",
+      'Ao encerrar a campanha, todos os fatores de risco identificados são exportados automaticamente para o GRO — o Inventário de Riscos Ocupacionais exigido pelo PGR (NR-01).',
+      'Cada risco fica vinculado ao Setor + Função correspondente. Por exemplo: "Sobrecarga de Trabalho — Operador de Máquinas (Produção)".',
+      'Riscos classificados como Alto (score 51–74) ou Crítico (score 75–100) geram automaticamente um Plano de Ação 5W2H com prazo definido: 30 dias para Crítico, 60 dias para Alto.',
     ],
-    dica: 'Dica: Clique em "Exportar Relatorio PDF" para gerar um documento formal que pode ser arquivado no PGR da empresa.',
+    dica: "Importante: Não é possível arquivar ou encerrar um risco Alto ou Crítico sem ter um plano de ação vinculado. Isso garante conformidade contínua com a NR-01.",
   },
   {
     num: "07",
-    titulo: "Riscos são Exportados para o GRO Automaticamente",
-    subtitulo: "Integração com o inventário de riscos",
-    cor: LARANJA,
+    titulo: "Quando o Sistema Recomenda a AET",
+    subtitulo: "Análise Ergonômica do Trabalho (NR-17)",
+    cor: AMBER,
     paragrafos: [
-      "Dimensões com score de risco identificado (acima de 35 pontos) são exportadas automaticamente para o GRO — Gerenciamento de Riscos Ocupacionais.",
-      'Cada risco no GRO fica associado ao Setor+Função. Por exemplo: "Demanda Cognitiva Alta — Operador de Maquinas (Producao)".',
-      "Riscos de nível Alto ou Crítico geram automaticamente um Plano de Ação 5W2H com prazo definido, conforme exigido pela NR-01.",
+      'Quando o sistema identifica situações críticas — IPS abaixo de 65, riscos recorrentes ou múltiplos fatores simultâneos — ele recomenda a realização de uma AET (Análise Ergonômica do Trabalho).',
+      'A recomendação aparece automaticamente na tela de resultados da campanha. IPS abaixo de 50 ou múltiplos fatores críticos geram uma indicação de AET obrigatória, conforme exige a NR-17.',
+      'Os dados psicossociais alimentam a Avaliação Ergonômica Preliminar (AEP) do módulo de Ergonomia. O psicossocial não é isolado — ele integra a ergonomia e contribui para a análise da organização do trabalho.',
     ],
-    dica: "Importante: Riscos Criticos ou Altos no GRO nao podem ser arquivados sem ter um plano de acao vinculado. Isso garante a conformidade legal.",
+    dica: "Acesse o módulo de Ergonomia para iniciar a AET. Os dados da campanha psicossocial já estarão disponíveis como insumo para a análise.",
   },
   {
     num: "08",
-    titulo: "Regra do Anonimato — Empresas Pequenas",
-    subtitulo: "Como o sistema protege colaboradores",
+    titulo: "Monitore e Reaprecie os Riscos",
+    subtitulo: "O ciclo não termina na primeira campanha",
     cor: VERDE,
     paragrafos: [
-      "Se um grupo de trabalho tiver menos de 5 respondentes, o sistema não exibe resultados individuais para esse grupo. Isso evita que alguém seja identificado pelas suas respostas.",
-      "Nesses casos, o sistema agrupa os dados automaticamente: primeiro tenta mostrar por Setor; se ainda não chega a 5, mostra o resultado geral da empresa.",
-      "Para empresas com menos de 20 funcionários, recomenda-se não segmentar por Função — use apenas o nível Setor ou empresa inteira para garantir que os resultados apareçam.",
+      'Após executar as ações do plano, o sistema exige que os riscos sejam reavaliados. Isso garante que as intervenções foram eficazes e que o ciclo GRO está completo.',
+      'O Histórico IPS mostra a evolução do índice ao longo das campanhas, permitindo identificar tendências e medir o impacto das ações. Compare resultados antes e depois de intervenções.',
+      'O Inventário PGR consolida os dados de todas as campanhas encerradas em um único relatório auditável, com médias ponderadas pelo número de respondentes. Exporte para PDF para auditoria da NR-01.',
     ],
-    dica: "Conformidade: Esta regra segue a ISO 45003 e o COPSOQ III, padroes internacionais para avaliacao psicossocial com privacidade garantida.",
+    dica: "Recomendação: Realize campanhas pelo menos a cada 6 meses. A NR-01 exige atualização periódica do PGR sempre que houver mudanças organizacionais significativas.",
   },
 ];
 
 const GLOSSARIO: [string, string][] = [
-  ["IPS", "Indice Psicossocial Organizacional. Score de 0 a 100 que indica a saude psicossocial geral da empresa. Quanto maior, melhor."],
-  ["GRO", "Gerenciamento de Riscos Ocupacionais. Inventario de todos os riscos identificados, exigido pela NR-01."],
-  ["NR-01", "Norma Regulamentadora 1 — obriga as empresas a identificar, avaliar e controlar riscos ocupacionais."],
-  ["NR-17", "Norma Regulamentadora 17 — foca em ergonomia e condicoes de trabalho, exigindo avaliacao das situacoes de trabalho."],
-  ["ISO 45003", "Norma internacional sobre gestao de saude psicologica no trabalho."],
-  ["5W2H", "Modelo de plano de acao: O que, Por que, Onde, Quando, Quem, Como, Quanto custa."],
-  ["Situacao de Trabalho", "Combinacao de Setor + Funcao que representa um grupo de colaboradores a ser avaliado."],
-  ["Campanha Regular", "Avaliacao periodica programada (trimestral, semestral ou anual)."],
-  ["Campanha Extraordinaria", "Avaliacao urgente disparada por um evento critico como acidente ou reestruturacao."],
-  ["SIPRO", "Instrumento de avaliacao psicossocial validado para o contexto brasileiro. Recomendado pela plataforma."],
+  ["IPS", "Índice Psicossocial Organizacional. Score de 0 a 100 que indica a saúde psicossocial geral da empresa. Quanto maior, melhor."],
+  ["GRO", "Gerenciamento de Riscos Ocupacionais. Inventário de todos os riscos identificados, exigido pela NR-01."],
+  ["PGR", "Programa de Gerenciamento de Riscos. Documento obrigatório que inclui o inventário de riscos e o plano de ação."],
+  ["NR-01", "Norma Regulamentadora 1 — obriga as empresas a identificar, avaliar e controlar riscos ocupacionais, incluindo psicossociais."],
+  ["NR-17", "Norma Regulamentadora 17 — foca em ergonomia e condições de trabalho, exigindo avaliação das situações de trabalho."],
+  ["ISO 45003", "Norma internacional sobre gestão de saúde psicológica no trabalho."],
+  ["AET", "Análise Ergonômica do Trabalho. Estudo aprofundado de situações de trabalho críticas, exigido pela NR-17."],
+  ["5W2H", "Modelo de plano de ação: O que, Por que, Onde, Quando, Quem, Como, Quanto custa."],
+  ["Situação de Trabalho", "Combinação de Setor + Função que representa um grupo de colaboradores a ser avaliado."],
+  ["SIPRO", "Instrumento de avaliação psicossocial validado para o contexto brasileiro. Recomendado pelo sistema."],
+  ["Campanha Regular", "Avaliação periódica programada (trimestral, semestral ou anual)."],
+  ["Campanha Extraordinária", "Avaliação urgente disparada por um evento crítico como acidente ou reestruturação."],
 ];
 
 export function ManualPsicossocial() {
@@ -166,7 +169,7 @@ export function ManualPsicossocial() {
         doc.setFontSize(7);
         text(doc, MUTED);
         doc.text(
-          `Seguramente — Manual do Usuario | Modulo Psicossocial | Pagina ${pageNum}/${total}`,
+          `Seguramente — Manual do Usuário | Gestão Psicossocial | Página ${pageNum}/${total}`,
           pageW / 2, pageH - 8, { align: "center" }
         );
       };
@@ -177,25 +180,44 @@ export function ManualPsicossocial() {
 
       text(doc, WHITE);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(28);
-      doc.text("MANUAL DO USUARIO", margin, 70);
-      doc.setFontSize(22);
-      doc.text("Modulo de Gestao", margin, 84);
-      doc.text("Psicossocial", margin, 96);
+      doc.setFontSize(26);
+      doc.text("MANUAL DO USUÁRIO", margin, 62);
+      doc.setFontSize(20);
+      doc.text("Gestão de Riscos Psicossociais", margin, 76);
+      doc.setFontSize(14);
+      doc.text("GRO / PGR — NR-01", margin, 88);
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setTextColor(233, 213, 255);
-      doc.text("Passo a passo em linguagem simples para", margin, 112);
-      doc.text("RH, gestores e responsaveis de SST.", margin, 120);
+      doc.text("Passo a passo em linguagem simples para", margin, 106);
+      doc.text("RH, gestores e responsáveis de SST.", margin, 114);
 
       doc.setDrawColor(255, 255, 255);
       doc.setLineWidth(0.5);
-      doc.line(margin, 130, pageW - margin, 130);
+      doc.line(margin, 124, pageW - margin, 124);
 
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(216, 180, 254);
-      doc.text("NR-01  |  NR-17  |  ISO 45001  |  ISO 45003  |  COPSOQ III  |  LGPD", pageW / 2, 140, { align: "center" });
+      doc.text("NR-01  |  NR-17  |  ISO 45001  |  ISO 45003  |  LGPD", pageW / 2, 133, { align: "center" });
+
+      // Fluxo resumido na capa
+      const etapas = ["Coleta", "Vínculo", "Identificação", "Avaliação", "Inventário", "Ação", "Monitoramento"];
+      const boxW = (pageW - 2 * margin) / etapas.length;
+      const boxY = 148;
+      etapas.forEach((etapa, i) => {
+        const bx = margin + i * boxW;
+        doc.setFillColor(120, 40, 180);
+        doc.roundedRect(bx + 1, boxY, boxW - 2, 14, 1, 1, "F");
+        doc.setFontSize(6.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text(etapa, bx + boxW / 2, boxY + 9, { align: "center" });
+        if (i < etapas.length - 1) {
+          doc.setTextColor(200, 180, 255);
+          doc.setFontSize(8);
+          doc.text("→", bx + boxW - 1.5, boxY + 9, { align: "center" });
+        }
+      });
 
       doc.setFontSize(8);
       doc.setTextColor(196, 181, 253);
@@ -214,7 +236,7 @@ export function ManualPsicossocial() {
       text(doc, WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
-      doc.text("SUMARIO", margin, 18);
+      doc.text("SUMÁRIO", margin, 18);
       text(doc, CINZA);
 
       y = 40;
@@ -222,15 +244,16 @@ export function ManualPsicossocial() {
       doc.setFont("helvetica", "normal");
 
       const itens = [
-        ["Passo 01", "Acesse o Modulo Psicossocial", "3"],
-        ["Passo 02", "Crie uma Nova Campanha", "4"],
-        ["Passo 03", "Vincule Setor + Funcao (Obrigatorio - NR-17)", "5"],
-        ["Passo 04", "Envie os Questionarios", "6"],
-        ["Passo 05", "Acompanhe as Respostas em Tempo Real", "7"],
-        ["Passo 06", "Encerre a Campanha e Veja os Resultados", "8"],
-        ["Passo 07", "Riscos Exportados para o GRO Automaticamente", "9"],
-        ["Passo 08", "Regra do Anonimato - Empresas Pequenas", "10"],
-        ["—", "Glossario de Termos", "11"],
+        ["Passo 01", "Crie uma Campanha de Avaliação", "3"],
+        ["Passo 02", "Vincule Setor + Função (Obrigatório — NR-17)", "4"],
+        ["Passo 03", "Distribua para os Colaboradores", "5"],
+        ["Passo 04", "Regra do Anonimato", "6"],
+        ["Passo 05", "Encerre e Veja os Resultados", "7"],
+        ["Passo 06", "Riscos Vão para o GRO Automaticamente", "8"],
+        ["Passo 07", "Quando o Sistema Recomenda a AET", "9"],
+        ["Passo 08", "Monitore e Reaprecie os Riscos", "10"],
+        ["—", "Fluxo Resumido", "11"],
+        ["—", "Glossário de Termos", "12"],
       ];
 
       itens.forEach(([num, titulo, pag], i) => {
@@ -246,22 +269,22 @@ export function ManualPsicossocial() {
         text(doc, CINZA);
         doc.text(titulo, margin + 28, y + 1);
         text(doc, MUTED);
-        doc.text(`pag. ${pag}`, pageW - margin - 2, y + 1, { align: "right" });
+        doc.text(`pág. ${pag}`, pageW - margin - 2, y + 1, { align: "right" });
         y += 10;
       });
 
       y += 6;
 
       fill(doc, ROXO_LIGHT);
-      doc.roundedRect(margin, y, pageW - 2 * margin, 28, 2, 2, "F");
+      doc.roundedRect(margin, y, pageW - 2 * margin, 32, 2, 2, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       text(doc, ROXO);
-      doc.text("Para quem e este manual?", margin + 4, y + 7);
+      doc.text("Para quem é este manual?", margin + 4, y + 7);
       doc.setFont("helvetica", "normal");
       text(doc, CINZA);
       const introText = doc.splitTextToSize(
-        "Este material foi escrito para gestores de RH, responsaveis de SST e lideres de equipe que precisam usar o modulo psicossocial do sistema Seguramente sem conhecimento tecnico previo. Cada passo explica exatamente o que fazer e o que acontece nos bastidores do sistema.",
+        "Este material foi escrito para gestores de RH, responsáveis de SST e líderes de equipe. Você não precisa ter conhecimento técnico — cada passo explica exatamente o que fazer e o que acontece automaticamente nos bastidores. O sistema cuida das análises; você cuida das decisões.",
         pageW - 2 * margin - 8
       );
       doc.setFontSize(8.5);
@@ -270,7 +293,7 @@ export function ManualPsicossocial() {
       });
 
       // ── PASSOS ────────────────────────────────────────────────────────────
-      PASSOS.forEach((passo) => {
+      PASSOS.forEach((passo, passoIdx) => {
         addPage();
         y = margin + 4;
 
@@ -278,16 +301,15 @@ export function ManualPsicossocial() {
         doc.roundedRect(margin, y, pageW - 2 * margin, 22, 2, 2, "F");
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
+        doc.setFontSize(13);
         text(doc, WHITE);
-        doc.text(passo.titulo, margin + 4, y + 10);
+        doc.text(passo.titulo, margin + 4, y + 9);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        doc.setFontSize(8.5);
         doc.setTextColor(220, 220, 255);
         doc.text(passo.subtitulo, margin + 4, y + 17);
 
-        // Número grande decorativo
-        doc.setFontSize(36);
+        doc.setFontSize(34);
         doc.setTextColor(255, 255, 255);
         doc.text(passo.num, pageW - margin - 4, y + 18, { align: "right" });
 
@@ -314,18 +336,24 @@ export function ManualPsicossocial() {
         checkY(20);
 
         const dicaLinhas = doc.splitTextToSize(passo.dica, pageW - 2 * margin - 12);
-        const dicaH = dicaLinhas.length * 5 + 10;
-        doc.setFillColor(248, 245, 255);
-        stroke(doc, passo.cor);
+        const dicaH = dicaLinhas.length * 5 + 12;
+        doc.setFillColor(255, 251, 235);
+        stroke(doc, AMBER);
         doc.setLineWidth(0.6);
         doc.roundedRect(margin, y, pageW - 2 * margin, dicaH, 2, 2, "FD");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(180, 120, 0);
+        doc.text("💡 ", margin + 3, y + 7);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         text(doc, CINZA);
         dicaLinhas.forEach((l: string, li: number) => {
-          doc.text(l, margin + 6, y + 7 + li * 5);
+          doc.text(l, margin + 8, y + 8 + li * 5);
         });
         y += dicaH + 6;
+
+        rodape(passoIdx + 3, PASSOS.length + 4);
       });
 
       // ── FLUXO RESUMIDO ────────────────────────────────────────────────────
@@ -342,35 +370,39 @@ export function ManualPsicossocial() {
       text(doc, CINZA);
 
       const fluxo = [
-        { etapa: "Criar campanha", sistema: "Gera link unico de participacao e configura questionario", cor: AZUL },
-        { etapa: "Vincular Setor+Funcao", sistema: "Registra as situacoes de trabalho obrigatorias (NR-17)", cor: ROXO },
-        { etapa: "Colaborador responde", sistema: "Verifica unicidade via WhatsApp | Armazena hash anonimo | Descarta identidade", cor: VERDE },
-        { etapa: "< 5 respostas no grupo", sistema: "Agrupa dados: Funcao > Setor > Empresa (protecao de anonimato)", cor: LARANJA },
-        { etapa: "Encerrar campanha", sistema: "Calcula IPS | Gera radar dimensional | IA interpreta resultados", cor: ROXO },
-        { etapa: "Risco identificado", sistema: "Exporta para GRO com Setor+Funcao vinculados automaticamente", cor: VERMELHO },
-        { etapa: "Risco Critico ou Alto", sistema: "Gera Plano de Acao 5W2H com prazo | Bloqueia arquivamento sem acao", cor: VERMELHO },
+        { etapa: "Criar campanha", sistema: "Gera link único de participação e configura o questionário selecionado", cor: AZUL },
+        { etapa: "Vincular Setor+Função", sistema: "Registra as situações de trabalho obrigatórias (NR-17) para rastreabilidade", cor: ROXO },
+        { etapa: "Colaborador responde", sistema: "Verificação via WhatsApp (unicidade) → armazena hash anônimo → descarta identidade", cor: VERDE },
+        { etapa: "< 5 respostas no grupo", sistema: "Agrupa dados automaticamente: Função → Setor → Empresa (proteção de anonimato ISO 45003)", cor: LARANJA },
+        { etapa: "Encerrar campanha", sistema: "Calcula IPS | Gera radar dimensional | Identifica fatores de risco | Interpretação automática", cor: ROXO },
+        { etapa: "Risco identificado", sistema: "Exporta para GRO com Setor+Função vinculados | Registra no inventário do PGR", cor: VERMELHO },
+        { etapa: "Risco Alto ou Crítico", sistema: "Gera Plano de Ação 5W2H automático | Prazo: 30d (Crítico) ou 60d (Alto) | Bloqueia arquivamento sem ação", cor: VERMELHO },
+        { etapa: "IPS < 65 ou múltiplos críticos", sistema: "Sistema recomenda ou exige AET (NR-17) | Dados alimentam a AEP do módulo de Ergonomia", cor: AMBER },
+        { etapa: "Após execução das ações", sistema: "Sistema exige reavaliação dos riscos | Atualiza histórico IPS | Mantém PGR atualizado", cor: VERDE },
       ];
 
       fluxo.forEach((f, i) => {
         checkY(14);
         if (i % 2 === 0) {
           doc.setFillColor(248, 248, 255);
-          doc.rect(margin, y - 3, pageW - 2 * margin, 13, "F");
+          doc.rect(margin, y - 3, pageW - 2 * margin, 14, "F");
         }
         fill(doc, f.cor);
         doc.roundedRect(margin, y - 1, 3, 8, 1, 1, "F");
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
+        doc.setFontSize(8);
         text(doc, f.cor);
         doc.text(f.etapa, margin + 6, y + 4);
         doc.setFont("helvetica", "normal");
         text(doc, MUTED);
-        doc.text("->", margin + 56, y + 4);
+        doc.text("→", margin + 57, y + 4);
         text(doc, CINZA);
-        const sysLinhas = doc.splitTextToSize(f.sistema, pageW - 2 * margin - 66);
+        const sysLinhas = doc.splitTextToSize(f.sistema, pageW - 2 * margin - 67);
         sysLinhas.forEach((l: string, li: number) => doc.text(l, margin + 63, y + 4 + li * 4.5));
-        y += 14;
+        y += 14 + (sysLinhas.length > 1 ? (sysLinhas.length - 1) * 4.5 : 0);
       });
+
+      rodape(PASSOS.length + 3, PASSOS.length + 4);
 
       // ── GLOSSÁRIO ─────────────────────────────────────────────────────────
       addPage();
@@ -380,54 +412,56 @@ export function ManualPsicossocial() {
       doc.rect(0, margin - 4, pageW, 20, "F");
       text(doc, WHITE);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("GLOSSARIO DE TERMOS", margin, margin + 11);
+      doc.setFontSize(12);
+      doc.text("GLOSSÁRIO DE TERMOS", margin, margin + 11);
       y = margin + 24;
 
       GLOSSARIO.forEach(([termo, def], i) => {
-        const defLinhas = doc.splitTextToSize(def, pageW - 2 * margin - 38);
-        const linhaH = defLinhas.length * 4.8 + 8;
-        checkY(linhaH);
+        const defLinhas = doc.splitTextToSize(def, pageW - 2 * margin - 32);
+        const itemH = defLinhas.length * 4.8 + 8;
+        checkY(itemH);
 
         if (i % 2 === 0) {
           doc.setFillColor(248, 245, 255);
-          doc.rect(margin, y, pageW - 2 * margin, linhaH, "F");
+          doc.rect(margin, y - 2, pageW - 2 * margin, itemH, "F");
         }
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
+        doc.setFontSize(9);
         text(doc, ROXO);
-        doc.text(termo, margin + 3, y + 6);
+        doc.text(termo, margin + 3, y + 4);
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
         text(doc, CINZA);
         defLinhas.forEach((l: string, li: number) => {
-          doc.text(l, margin + 38, y + 6 + li * 4.8);
+          doc.text(l, margin + 32, y + 4 + li * 4.8);
         });
-        y += linhaH;
+        y += itemH;
       });
 
-      // ── RODAPÉS ───────────────────────────────────────────────────────────
-      const totalPages = (doc as any).internal.getNumberOfPages();
-      for (let i = 2; i <= totalPages; i++) {
-        doc.setPage(i);
-        rodape(i - 1, totalPages - 1);
-      }
+      rodape(PASSOS.length + 4, PASSOS.length + 4);
 
       doc.save(`Manual_Psicossocial_Seguramente_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Manual gerado com sucesso!");
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao gerar o manual.");
+      toast.error("Erro ao gerar o manual. Tente novamente.");
     } finally {
       setGerando(false);
     }
   };
 
   return (
-    <Button variant="outline" size="sm" className="gap-2" onClick={gerarPDF} disabled={gerando}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={gerarPDF}
+      disabled={gerando}
+      className="gap-2"
+    >
       {gerando ? (
         <><Loader2 className="h-4 w-4 animate-spin" /> Gerando Manual...</>
       ) : (
-        <><BookOpen className="h-4 w-4" /> Manual do Usuário (PDF)</>
+        <><BookOpen className="h-4 w-4" /> Baixar Manual PDF</>
       )}
     </Button>
   );
