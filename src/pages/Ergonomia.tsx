@@ -46,6 +46,8 @@ import { AnaliseLERDORT } from "@/components/ergonomia/AnaliseLERDORT";
 import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import { GROPainel } from "@/components/ergonomia/GROPainel";
+import { GROCicloPDCA } from "@/components/ergonomia/GROCicloPDCA";
+import { MotorAET } from "@/components/ergonomia/MotorAET";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
 import {
   ITENS_NR17_PADRAO,
