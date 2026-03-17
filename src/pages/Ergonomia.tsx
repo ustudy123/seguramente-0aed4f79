@@ -569,6 +569,8 @@ export default function Ergonomia() {
         }}
         isLoading={isCreatingAcao}
       />
+
+      <GuiaRapidoErgonomia open={showGuiaRapido} onOpenChange={setShowGuiaRapido} />
     </div>
   );
 }
