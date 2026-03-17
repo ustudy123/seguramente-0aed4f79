@@ -351,6 +351,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
       status: "ativo",
       data_inicio: new Date().toISOString().split("T")[0],
     });
+    queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
     setAddingVinculo(false);
     setNovaEmpresaId(""); setNovoTipo("gestor"); setNovoContexto("");
   }
