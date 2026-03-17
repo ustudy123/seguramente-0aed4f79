@@ -42,6 +42,7 @@ const TIPOS: { value: OcorrenciaTipo; label: string; icon: React.ElementType; co
 
 export function OcorrenciaForm({ onSubmit, onCreateAdvertenciaLink, isLoading }: OcorrenciaFormProps) {
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [colaboradorId, setColaboradorId] = useState("");
   const [tipo, setTipo] = useState<OcorrenciaTipo | "">("");
   const [descricao, setDescricao] = useState("");

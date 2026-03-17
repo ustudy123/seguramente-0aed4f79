@@ -38,6 +38,7 @@ const CATEGORIAS: { value: FeedbackCategoria; label: string; icon: React.Element
 
 export function FeedbackForm({ onSubmit, isLoading }: FeedbackFormProps) {
   const { colaboradores, isLoading: loadingColabs } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [colaboradorId, setColaboradorId] = useState("");
   const [categoria, setCategoria] = useState<FeedbackCategoria | "">("");
   const [descricao, setDescricao] = useState("");
