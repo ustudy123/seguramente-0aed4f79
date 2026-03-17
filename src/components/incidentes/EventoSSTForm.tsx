@@ -260,6 +260,10 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
                   ))}
                 </SelectContent>
               </Select>
+              {form.colaborador_id && form.colaborador_id !== "manual" && (() => {
+                const colab = colaboradores.find(c => c.id === form.colaborador_id);
+                return colab ? <AfastadoBadge afastamento={getAfastamento({ cpf: colab.cpf, nome: colab.nome_completo })} /> : null;
+              })()}
             </div>
 
             {!form.colaborador_id ? (
