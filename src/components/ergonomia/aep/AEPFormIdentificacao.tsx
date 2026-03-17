@@ -112,7 +112,7 @@ export function AEPFormIdentificacao({ data, onChange }: AEPFormIdentificacaoPro
 
         {/* Unidade */}
         <div className="space-y-2">
-          <Label htmlFor="unidade">Unidade / Local *</Label>
+          <Label htmlFor="unidade">Unidade / Local</Label>
           <Input
             id="unidade"
             value={data.unidade}
