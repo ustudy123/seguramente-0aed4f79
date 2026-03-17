@@ -107,6 +107,12 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const { user } = useAuth();
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
+  // Situações de trabalho (pares Setor+Função) vinculadas à campanha
+  const [situacoes, setSituacoes] = useState<SituacaoTrabalhoCampanha[]>(
+    campanhaAnterior?.situacoes_trabalho ?? []
+  );
+  const [novoSetor, setNovoSetor] = useState('');
+  const [novaFuncao, setNovaFuncao] = useState('');
 
   const isReaplicacao = !!campanhaAnterior;
 
