@@ -102,9 +102,26 @@ export function useGRORiscos() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
-  // ── Inativar risco ────────────────────────────────────────────────────────
+  // ── Inativar risco ─────────────────────────────────────────────────────────
+  // GAP-E1: Bloquear arquivamento de riscos Crítico/Alto sem ação vinculada
   const inativarRisco = useMutation({
     mutationFn: async (id: string) => {
+      // Buscar o risco para checar nível e ação vinculada
+      const { data: risco, error: errRisco } = await (supabase as any)
+        .from("gro_riscos")
+        .select("nivel_risco, acao_id, titulo")
+        .eq("id", id)
+        .single();
+      if (errRisco) throw errRisco;
+
+      const nivelNaoToleravel = ['critico', 'alto'].includes(risco?.nivel_risco);
+      if (nivelNaoToleravel && !risco?.acao_id) {
+        throw new Error(
+          `Risco "${risco?.titulo}" é de nível ${risco?.nivel_risco?.toUpperCase()} e não possui ação corretiva vinculada. ` +
+          `Para arquivá-lo, vincule primeiro um Plano de Ação (NR-01 / ISO 45003).`
+        );
+      }
+
       const { error } = await (supabase as any)
         .from("gro_riscos")
         .update({ ativo: false })
@@ -115,7 +132,7 @@ export function useGRORiscos() {
       queryClient.invalidateQueries({ queryKey });
       toast.success("Risco arquivado.");
     },
-    onError: (e: any) => toast.error(`Erro: ${e.message}`),
+    onError: (e: any) => toast.error(e.message, { duration: 7000 }),
   });
 
   // ── Importar do módulo psicossocial (campanha encerrada) ──────────────────
