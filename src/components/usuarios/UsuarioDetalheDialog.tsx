@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User, Building2, Link2, History, AlertTriangle, CheckCircle2,
   Plus, Trash2, Shield, Ban, RotateCcw, Loader2, Pencil, Save, X,
-  Mail, Send, XCircle, Key,
+  Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search,
 } from "lucide-react";
 import {
   UsuarioBase, UsuarioVinculo, TIPO_USUARIO_LABELS, VINCULO_STATUS_LABELS,
@@ -31,6 +31,75 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { cleanCpf, formatCpf } from "@/lib/cpf";
 import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+
+function EmpresaSearchSelect({ empresas, value, onChange }: { empresas: any[]; value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return empresas;
+    const q = search.toLowerCase();
+    return empresas.filter((e: any) => {
+      const nome = (e.nome_fantasia || e.razao_social || "").toLowerCase();
+      const cnpj = (e.cnpj || "").replace(/\D/g, "");
+      return nome.includes(q) || cnpj.includes(q) || (e.cnpj || "").includes(q);
+    });
+  }, [empresas, search]);
+
+  const selected = empresas.find((e: any) => e.id === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open}
+          className="w-full h-8 justify-between font-normal text-sm">
+          {selected ? (selected.nome_fantasia || selected.razao_social) : "Buscar empresa…"}
+          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <div className="flex items-center border-b px-3 py-2">
+          <Search className="h-3.5 w-3.5 text-muted-foreground mr-2 shrink-0" />
+          <input
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            placeholder="Buscar por nome ou CNPJ…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            autoFocus
+          />
+        </div>
+        <div className="max-h-52 overflow-y-auto p-1">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma empresa encontrada</p>
+          ) : (
+            filtered.map((e: any) => (
+              <button
+                key={e.id}
+                className={cn(
+                  "w-full flex items-start gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors",
+                  value === e.id && "bg-accent"
+                )}
+                onClick={() => { onChange(e.id); setOpen(false); setSearch(""); }}
+              >
+                <Check className={cn("h-3.5 w-3.5 mt-0.5 shrink-0", value === e.id ? "opacity-100 text-primary" : "opacity-0")} />
+                <div className="flex flex-col gap-0">
+                  <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
+                  {e.cnpj && (
+                    <span className="text-xs text-muted-foreground leading-tight">
+                      CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface Props {
   usuario: UsuarioBase;
@@ -631,23 +700,11 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="col-span-2 space-y-1">
                         <Label className="text-xs">Empresa *</Label>
-                        <Select onValueChange={setNovaEmpresaId}>
-                          <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
-                          <SelectContent>
-                            {empresas.map((e: any) => (
-                              <SelectItem key={e.id} value={e.id}>
-                                <div className="flex flex-col gap-0.5 py-0.5">
-                                  <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
-                                  {e.cnpj && (
-                                    <span className="text-xs text-muted-foreground font-normal leading-tight">
-                                      CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
-                                    </span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <EmpresaSearchSelect
+                          empresas={empresas}
+                          value={novaEmpresaId}
+                          onChange={setNovaEmpresaId}
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Papel na empresa</Label>
