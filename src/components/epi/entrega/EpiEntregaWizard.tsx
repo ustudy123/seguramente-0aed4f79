@@ -579,7 +579,10 @@ export function EpiEntregaWizard({
                                   )}
                                 />
                                 <div className="flex flex-col">
-                                  <span>{c.nome_completo}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span>{c.nome_completo}</span>
+                                    <AfastadoBadge afastamento={getAfastamento({ cpf: c.cpf, nome: c.nome_completo })} compact />
+                                  </div>
                                   <span className="text-xs text-muted-foreground">
                                     CPF: {c.cpf} {c.cargo && `• ${c.cargo}`}
                                   </span>
