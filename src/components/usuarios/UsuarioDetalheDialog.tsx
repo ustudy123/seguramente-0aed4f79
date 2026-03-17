@@ -631,23 +631,11 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="col-span-2 space-y-1">
                         <Label className="text-xs">Empresa *</Label>
-                        <Select onValueChange={setNovaEmpresaId}>
-                          <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
-                          <SelectContent>
-                            {empresas.map((e: any) => (
-                              <SelectItem key={e.id} value={e.id}>
-                                <div className="flex flex-col gap-0.5 py-0.5">
-                                  <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
-                                  {e.cnpj && (
-                                    <span className="text-xs text-muted-foreground font-normal leading-tight">
-                                      CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
-                                    </span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <EmpresaSearchSelect
+                          empresas={empresas}
+                          value={novaEmpresaId}
+                          onChange={setNovaEmpresaId}
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Papel na empresa</Label>
