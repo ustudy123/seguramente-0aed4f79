@@ -220,6 +220,7 @@ export function usePsicossocial() {
   });
 
   // Atualizar status da campanha
+  // GAP 1: Ao encerrar, dispara exportação automática para GRO
   const atualizarStatusCampanha = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: CampanhaPsicossocial['status'] }) => {
       const { error } = await supabase
@@ -228,10 +229,86 @@ export function usePsicossocial() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // GAP 1 — Auto-export GRO ao encerrar campanha
+      if (status === 'encerrada') {
+        try {
+          // Buscar dados completos da campanha para exportar
+          const { data: campanha } = await (supabase as any)
+            .from("questionario_psicossocial_campanhas")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+          if (campanha?.radar_data && (campanha.total_respostas ?? 0) >= 5) {
+            const situacoes = campanha.situacoes_trabalho ?? [];
+
+            if (situacoes.length > 0) {
+              // Verificar se já foi exportado
+              const { data: logExist } = await (supabase as any)
+                .from("gro_exportacoes_log")
+                .select("id")
+                .eq("campanha_id", id)
+                .maybeSingle();
+
+              if (!logExist) {
+                const { scoreToProbabilidade, scoreToSeveridade } = await import("@/types/gro");
+                const isSipro = campanha.instrumento === 'sipro';
+                const radar = campanha.radar_data as { subject: string; value: number }[];
+
+                const dimensoesCriticas = radar.filter(d => {
+                  const risco = isSipro ? d.value : 100 - d.value;
+                  return risco >= 35;
+                });
+
+                if (dimensoesCriticas.length > 0) {
+                  const riscos = situacoes.flatMap((sit: { setorNome: string; funcaoNome: string }) =>
+                    dimensoesCriticas.map((d: { subject: string; value: number }) => ({
+                      tenant_id: campanha.tenant_id,
+                      empresa_id: campanha.empresa_id ?? null,
+                      subtipo: 'psicossocial' as const,
+                      fonte: 'psicossocial' as const,
+                      titulo: `${d.subject} — ${sit.funcaoNome} (${sit.setorNome})`,
+                      descricao: `Exportação automática ao encerrar campanha "${campanha.nome}". Dimensão: ${d.subject}. Score: ${d.value}%.`,
+                      dimensao_psicossocial: d.subject,
+                      score_dimensao: d.value,
+                      probabilidade: scoreToProbabilidade(d.value, isSipro),
+                      severidade: scoreToSeveridade(d.value, isSipro),
+                      campanha_id: id,
+                      setor: sit.setorNome,
+                      cargo: sit.funcaoNome,
+                      base_normativa: ['NR-01', 'NR-17', 'ISO 45003'],
+                      status_gro: 'identificado' as const,
+                      ativo: true,
+                    }))
+                  );
+
+                  await (supabase as any).from("gro_riscos").insert(riscos);
+
+                  // Registrar log de exportação
+                  await (supabase as any).from("gro_exportacoes_log").insert({
+                    tenant_id: campanha.tenant_id,
+                    campanha_id: id,
+                    riscos_gerados: riscos.length,
+                    status: 'sucesso',
+                  });
+                }
+              }
+            }
+          }
+        } catch (exportErr) {
+          // Não falhar o encerramento se a exportação der erro
+          console.warn('[GAP-1] Auto-export GRO falhou:', exportErr);
+        }
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["psicossocial-campanhas"] });
-      toast.success("Status atualizado!");
+      if (variables.status === 'encerrada') {
+        toast.success("Campanha encerrada! Riscos exportados automaticamente ao GRO.");
+      } else {
+        toast.success("Status atualizado!");
+      }
     },
     onError: (error) => {
       toast.error(`Erro ao atualizar: ${error.message}`);
