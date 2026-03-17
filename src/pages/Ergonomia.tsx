@@ -81,6 +81,7 @@ export default function Ergonomia() {
   const [showConformidade, setShowConformidade] = useState(false);
   const [conformidadeEixo, setConformidadeEixo] = useState<"todos" | "fisico" | "cognitivo" | "organizacional">("todos");
   const [aepMode, setAepMode] = useState<"simples" | "multi">("simples");
+  const [showGuiaRapido, setShowGuiaRapido] = useState(false);
 
   const { riscos: groRiscos } = useGRORiscos();
 
