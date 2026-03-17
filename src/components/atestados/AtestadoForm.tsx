@@ -136,6 +136,7 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
   const [openColaboradorPopover, setOpenColaboradorPopover] = useState(false);
   
   const { colaboradores, isLoading: loadingColaboradores } = useColaboradores();
+  const { getAfastamento } = useAfastamentosAtivos();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
