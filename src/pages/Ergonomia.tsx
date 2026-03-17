@@ -53,6 +53,7 @@ import { DocumentoMetodologia } from "@/components/ergonomia/DocumentoMetodologi
 import { ComunicacaoTrabalhadores } from "@/components/ergonomia/ComunicacaoTrabalhadores";
 import { MotorAET } from "@/components/ergonomia/MotorAET";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
+import { GuiaRapidoErgonomia } from "@/components/ergonomia/GuiaRapidoErgonomia";
 import {
   ITENS_NR17_PADRAO,
   MATURIDADE_LABELS,
