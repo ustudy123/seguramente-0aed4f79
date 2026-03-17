@@ -48,6 +48,8 @@ import { AEPGenerator } from "@/components/ergonomia/aep/AEPGenerator";
 import { AEPGeneratorMulti } from "@/components/ergonomia/aep/AEPGeneratorMulti";
 import { GROPainel } from "@/components/ergonomia/GROPainel";
 import { GROCicloPDCA } from "@/components/ergonomia/GROCicloPDCA";
+import { DocumentoMetodologia } from "@/components/ergonomia/DocumentoMetodologia";
+import { ComunicacaoTrabalhadores } from "@/components/ergonomia/ComunicacaoTrabalhadores";
 import { MotorAET } from "@/components/ergonomia/MotorAET";
 import { useGRORiscos } from "@/hooks/useGRORiscos";
 import {
