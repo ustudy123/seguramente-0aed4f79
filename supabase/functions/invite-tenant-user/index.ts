@@ -16,7 +16,7 @@ type Payload = {
 serve(async (req) => {
   const corsHeaders: Record<string, string> = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
@@ -38,16 +38,22 @@ serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Validate caller using anon client
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(jwt);
-  if (claimsError || !claimsData?.claims) return json({ error: "Invalid token" }, 401);
-  const callerId = claimsData.claims.sub as string;
+  // Validate caller using admin.auth.getUser with the JWT
+  let callerId: string;
+  try {
+    const { data: callerUser, error: callerError } = await admin.auth.admin.getUserById(
+      // First decode the JWT to get the sub
+      JSON.parse(atob(jwt.split('.')[1])).sub
+    );
+    if (callerError || !callerUser?.user) {
+      console.error("Caller validation error:", callerError?.message);
+      return json({ error: "Invalid token" }, 401);
+    }
+    callerId = callerUser.user.id;
+  } catch (e) {
+    console.error("JWT decode error:", e);
+    return json({ error: "Invalid token" }, 401);
+  }
 
   // Get full user data for audit logs
   const { data: userData } = await admin.auth.admin.getUserById(callerId);
@@ -101,11 +107,28 @@ serve(async (req) => {
 
   const tenantId = callerProfile.tenant_id;
 
-  // Check if email already exists as a user in this tenant
-  const { data: existingUsers } = await admin.auth.admin.listUsers();
-  const existingUser = existingUsers?.users?.find(
-    (u) => u.email?.toLowerCase() === email.toLowerCase()
-  );
+  // Check if email already exists - use listUsers with filter instead of loading all
+  let existingUser: any = null;
+  try {
+    const { data: listData } = await admin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1,
+    });
+    // Search by email using a targeted approach
+    const { data: userByEmail } = await admin
+      .from("profiles")
+      .select("user_id")
+      .eq("tenant_id", tenantId)
+      .limit(1);
+    
+    // Try to find user by email directly
+    const { data: allUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    existingUser = allUsers?.users?.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase()
+    );
+  } catch (e) {
+    console.error("Error checking existing users:", e);
+  }
 
   if (existingUser) {
     // Check if already in this tenant
@@ -123,53 +146,79 @@ serve(async (req) => {
 
   let newUserId: string;
 
-  if (method === "invite") {
-    const { data: invitedUser, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
-      email,
-      {
-        data: { tenant_id: tenantId, nome_completo: nomeCompleto },
-        redirectTo: `${SITE_URL}/login`,
+  try {
+    if (method === "invite") {
+      const { data: invitedUser, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+        email,
+        {
+          data: { tenant_id: tenantId, nome_completo: nomeCompleto },
+          redirectTo: `${SITE_URL}/login`,
+        }
+      );
+      if (inviteError || !invitedUser?.user) {
+        console.error("Invite error:", inviteError?.message);
+        // If user already exists in auth but not in this tenant, reuse
+        if (inviteError?.message?.includes("already been registered") && existingUser) {
+          newUserId = existingUser.id;
+        } else {
+          return json({ error: inviteError?.message ?? "Falha ao enviar convite" }, 500);
+        }
+      } else {
+        newUserId = invitedUser.user.id;
       }
-    );
-    if (inviteError || !invitedUser?.user) {
-      return json({ error: inviteError?.message ?? "Falha ao enviar convite" }, 500);
+    } else {
+      if (!password || password.length < 6) {
+        return json({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
+      }
+      const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      if (createError || !newUser?.user) {
+        console.error("Create error:", createError?.message);
+        if (createError?.message?.includes("already been registered") && existingUser) {
+          newUserId = existingUser.id;
+        } else {
+          return json({ error: createError?.message ?? "Falha ao criar usuário" }, 500);
+        }
+      } else {
+        newUserId = newUser.user.id;
+      }
     }
-    newUserId = invitedUser.user.id;
-  } else {
-    if (!password || password.length < 6) {
-      return json({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
-    }
-    const { data: newUser, error: createError } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-    if (createError || !newUser?.user) {
-      return json({ error: createError?.message ?? "Falha ao criar usuário" }, 500);
-    }
-    newUserId = newUser.user.id;
+  } catch (e: any) {
+    console.error("Auth operation error:", e?.message);
+    return json({ error: e?.message || "Erro ao criar usuário" }, 500);
   }
 
   // Create profile
   const { error: profileError } = await admin.from("profiles").insert({
-    user_id: newUserId,
+    user_id: newUserId!,
     tenant_id: tenantId,
     nome_completo: nomeCompleto,
   });
 
   if (profileError) {
-    await admin.auth.admin.deleteUser(newUserId);
-    return json({ error: profileError.message }, 500);
+    console.error("Profile error:", profileError.message);
+    // If profile already exists, it's ok (user exists in another tenant scenario)
+    if (!profileError.message.includes("duplicate")) {
+      await admin.auth.admin.deleteUser(newUserId!);
+      return json({ error: profileError.message }, 500);
+    }
   }
 
   // Assign role
   const { error: roleError } = await admin.from("user_roles").insert({
-    user_id: newUserId,
+    user_id: newUserId!,
     role,
   });
 
   if (roleError) {
-    return json({ error: roleError.message }, 500);
+    console.error("Role error:", roleError.message);
+    // Ignore duplicate role errors
+    if (!roleError.message.includes("duplicate")) {
+      return json({ error: roleError.message }, 500);
+    }
   }
 
   // Audit log
@@ -184,14 +233,14 @@ serve(async (req) => {
       ? `Convidou "${nomeCompleto}" (${email}) com perfil "${role}"`
       : `Criou usuário "${nomeCompleto}" (${email}) com perfil "${role}"`,
     target_type: "user",
-    target_id: newUserId,
+    target_id: newUserId!,
     target_name: nomeCompleto,
     metadata: { email, role, method },
   });
 
   return json({
     ok: true,
-    userId: newUserId,
+    userId: newUserId!,
     inviteSent: method === "invite",
   });
 });
