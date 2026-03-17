@@ -317,6 +317,19 @@ export default function Ergonomia() {
                 <ShieldCheck className="h-4 w-4" />
                 GRO / Inventário
               </TabsTrigger>
+              <TabsTrigger value="pdca" className="gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Ciclo PDCA
+              </TabsTrigger>
+              <TabsTrigger value="motor_aet" className="gap-2">
+                <Zap className="h-4 w-4" />
+                Motor AET
+                {groRiscos.filter(r => ["alto","critico"].includes(r.nivel_risco)).length > 0 && (
+                  <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">
+                    {groRiscos.filter(r => ["alto","critico"].includes(r.nivel_risco)).length}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="analise_ia" className="gap-2">
                 <Brain className="h-4 w-4" />
                 Análise por IA
@@ -367,6 +380,16 @@ export default function Ergonomia() {
             {/* GRO — Inventário Unificado (nova aba central) */}
             <TabsContent value="gro">
               <GROPainel onNovo={() => setShowRiscoForm(true)} />
+            </TabsContent>
+
+            {/* Ciclo PDCA — Conformidade NR-1 */}
+            <TabsContent value="pdca">
+              <GROCicloPDCA riscos={groRiscos} />
+            </TabsContent>
+
+            {/* Motor AET — RQ-11 */}
+            <TabsContent value="motor_aet">
+              <MotorAET riscos={groRiscos} />
             </TabsContent>
 
             {/* Análise por IA */}
