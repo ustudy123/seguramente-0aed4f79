@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User, Building2, Link2, History, AlertTriangle, CheckCircle2,
   Plus, Trash2, Shield, Ban, RotateCcw, Loader2, Pencil, Save, X,
-  Mail, Send, XCircle, Key,
+  Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search,
 } from "lucide-react";
 import {
   UsuarioBase, UsuarioVinculo, TIPO_USUARIO_LABELS, VINCULO_STATUS_LABELS,
