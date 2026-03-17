@@ -179,6 +179,23 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
     fetchEmpresa();
   }, [open, empresaAtivaId, user]);
 
+  const addSituacao = () => {
+    if (!novoSetor.trim() || !novaFuncao.trim()) return;
+    const nova: SituacaoTrabalhoCampanha = {
+      setorId: novoSetor.trim().toLowerCase().replace(/\s+/g, '_'),
+      setorNome: novoSetor.trim(),
+      funcaoId: novaFuncao.trim().toLowerCase().replace(/\s+/g, '_'),
+      funcaoNome: novaFuncao.trim(),
+    };
+    setSituacoes(prev => [...prev, nova]);
+    setNovoSetor('');
+    setNovaFuncao('');
+  };
+
+  const removeSituacao = (idx: number) => {
+    setSituacoes(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const onSubmit = async (data: FormValues) => {
     await criarCampanha.mutateAsync({
       nome: data.nome,
@@ -193,11 +210,13 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
       mensagem_institucional: undefined,
       politica_uso_dados: data.politica_uso_dados,
       blocos_dinamicos: data.blocos_dinamicos,
+      situacoes_trabalho: situacoes,
       motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
       evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
       campanha_anterior_id: data.campanha_anterior_id,
     });
     form.reset();
+    setSituacoes([]);
     onOpenChange(false);
   };
 
