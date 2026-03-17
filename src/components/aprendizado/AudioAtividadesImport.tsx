@@ -235,7 +235,7 @@ export function AudioAtividadesImport({ funcaoNome, onImportar }: AudioAtividade
                 </Button>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0">
+              <ScrollArea className="flex-1 min-h-0 max-h-[40vh]">
                 <div className="space-y-2 pr-3">
                   {atividades.map((at, i) => (
                     <div
