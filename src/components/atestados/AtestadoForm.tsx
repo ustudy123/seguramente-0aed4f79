@@ -403,7 +403,10 @@ export function AtestadoForm({ open, onOpenChange, onSubmit, loading }: Atestado
                                 )}
                               />
                               <div className="flex flex-col">
-                                <span>{colaborador.nome_completo}</span>
+                                <div className="flex items-center gap-2">
+                                  <span>{colaborador.nome_completo}</span>
+                                  <AfastadoBadge afastamento={getAfastamento({ cpf: colaborador.cpf, nome: colaborador.nome_completo })} compact />
+                                </div>
                                 <span className="text-xs text-muted-foreground">
                                   {colaborador.cargo} • {colaborador.cpf}
                                 </span>
