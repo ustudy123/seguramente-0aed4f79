@@ -369,6 +369,17 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
             {altos > 0 && (
               <Badge className="bg-orange-500 text-white">{altos} alto(s)</Badge>
             )}
+            {/* GAP 4: Botão Relatório completo com metodologia */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setRelatorioOpen(true)}
+              title="Gerar relatório estruturado com metodologia — NR-01 / ISO 45003"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Relatório
+            </Button>
             <Button
               variant="outline"
               size="sm"
