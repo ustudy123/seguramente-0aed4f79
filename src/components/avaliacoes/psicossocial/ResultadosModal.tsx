@@ -289,6 +289,11 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
                 </Card>
               ) : (
                 <>
+                  {/* GAP C — badge compacto de privacidade por grupo na visão geral */}
+                  {privacidadeGrupos && (
+                    <PrivacidadeGrupoAlert resultado={privacidadeGrupos} compact />
+                  )}
+
                   {/* IPS principal */}
                   <div className="grid gap-4 md:grid-cols-2">
                     <Card className="border-purple-200 bg-gradient-to-br from-purple-50/50 to-background">
