@@ -197,6 +197,13 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   };
 
   const onSubmit = async (data: FormValues) => {
+    // ── GAP-P1: Bloqueio obrigatório — NR-17 exige vínculo Setor+Função ──────
+    if (situacoes.length === 0) {
+      // Mostrar erro no formulário e rolar até a seção
+      document.getElementById('situacoes-trabalho-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return; // bloqueia submissão
+    }
+
     await criarCampanha.mutateAsync({
       nome: data.nome,
       descricao: data.descricao,
