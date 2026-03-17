@@ -191,6 +191,15 @@ export interface BlocoPsicossocial {
   condicao?: string; // Condição para exibir bloco dinâmico
 }
 
+// Situação de trabalho vinculada à campanha psicossocial (NR-17)
+// Unidade de análise = par Setor + Função
+export interface SituacaoTrabalhoCampanha {
+  setorId: string;
+  setorNome: string;
+  funcaoId: string;
+  funcaoNome: string;
+}
+
 // Campanhas
 export interface CampanhaPsicossocial {
   id: string;
@@ -202,6 +211,9 @@ export interface CampanhaPsicossocial {
   instrumento?: InstrumentoPsicossocial;
   escopo?: EscopoCampanha;
   escopo_valores?: string[];
+  // Situações de trabalho vinculadas (pares Setor+Função — NR-17)
+  situacoes_trabalho?: SituacaoTrabalhoCampanha[];
+  escopo_tipo?: string;
   periodicidade?: CampanhaPeriodicidade;
   data_inicio: string;
   data_fim: string;
