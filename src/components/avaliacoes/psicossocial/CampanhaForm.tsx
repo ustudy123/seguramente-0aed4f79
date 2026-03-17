@@ -722,7 +722,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-purple-600" />
                 <span className="font-medium text-sm">Situações de Trabalho (NR-17)</span>
-                <Badge className="text-xs bg-red-100 text-red-700 border-red-200 border">
+                <Badge className="text-xs bg-red-100 text-red-700 border border-red-200">
                   Obrigatório
                 </Badge>
               </div>
