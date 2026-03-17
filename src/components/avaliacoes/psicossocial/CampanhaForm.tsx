@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info, Plus, Trash2, Building2, UserCog } from "lucide-react";
+import { Brain, Shield, AlertTriangle, FileText, Calendar, RefreshCw, LockKeyhole, Sparkles, CheckCircle2, Info, Plus, Trash2, Building2, UserCog, ChevronDown, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
 import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 import { useEffect, useState } from "react";
@@ -105,6 +120,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const { criarCampanha, campanhas } = usePsicossocial();
   const { empresaAtivaId } = useEmpresaAtiva();
   const { user } = useAuth();
+  const { departamentos } = useDepartamentos();
+  const { cargos } = useCargos();
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
   // Situações de trabalho (pares Setor+Função) vinculadas à campanha
@@ -113,6 +130,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   );
   const [novoSetor, setNovoSetor] = useState('');
   const [novaFuncao, setNovaFuncao] = useState('');
+  const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
+  const [funcaoPopoverOpen, setFuncaoPopoverOpen] = useState(false);
 
   const isReaplicacao = !!campanhaAnterior;
 
@@ -760,19 +779,102 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
               <div className="rounded-lg border border-dashed p-3 space-y-2">
                 <p className="text-xs text-muted-foreground font-medium">Adicionar situação de trabalho</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    placeholder="Setor (ex: Produção)"
-                    value={novoSetor}
-                    onChange={e => setNovoSetor(e.target.value)}
-                    className="h-8 text-sm"
-                  />
-                  <Input
-                    placeholder="Função (ex: Operador)"
-                    value={novaFuncao}
-                    onChange={e => setNovaFuncao(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSituacao())}
-                    className="h-8 text-sm"
-                  />
+                  {/* ── Combobox Setor ── */}
+                  <Popover open={setorPopoverOpen} onOpenChange={setSetorPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className={cn("h-8 text-sm justify-between font-normal", !novoSetor && "text-muted-foreground")}
+                      >
+                        {novoSetor || "Setor (ex: Produção)"}
+                        <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[220px] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar ou digitar..."
+                          value={novoSetor}
+                          onValueChange={setNovoSetor}
+                          className="h-8 text-sm"
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            <span className="text-xs text-muted-foreground px-2">
+                              Pressione + para usar "{novoSetor}"
+                            </span>
+                          </CommandEmpty>
+                          {departamentos.length > 0 && (
+                            <CommandGroup heading="Departamentos cadastrados">
+                              {departamentos.map(d => (
+                                <CommandItem
+                                  key={d.id}
+                                  value={d.nome}
+                                  onSelect={v => { setNovoSetor(v); setSetorPopoverOpen(false); }}
+                                  className="text-sm"
+                                >
+                                  <Check className={cn("mr-2 h-3 w-3", novoSetor === d.nome ? "opacity-100" : "opacity-0")} />
+                                  {d.nome}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* ── Combobox Função ── */}
+                  <Popover open={funcaoPopoverOpen} onOpenChange={setFuncaoPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className={cn("h-8 text-sm justify-between font-normal", !novaFuncao && "text-muted-foreground")}
+                      >
+                        {novaFuncao || "Função (ex: Operador)"}
+                        <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[220px] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar ou digitar..."
+                          value={novaFuncao}
+                          onValueChange={setNovaFuncao}
+                          className="h-8 text-sm"
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            <span className="text-xs text-muted-foreground px-2">
+                              Pressione + para usar "{novaFuncao}"
+                            </span>
+                          </CommandEmpty>
+                          {cargos.length > 0 && (
+                            <CommandGroup heading="Funções/Cargos cadastrados">
+                              {cargos.map(c => (
+                                <CommandItem
+                                  key={c.id}
+                                  value={c.nome}
+                                  onSelect={v => { setNovaFuncao(v); setFuncaoPopoverOpen(false); }}
+                                  className="text-sm"
+                                >
+                                  <Check className={cn("mr-2 h-3 w-3", novaFuncao === c.nome ? "opacity-100" : "opacity-0")} />
+                                  {c.nome}
+                                  {c.departamento?.nome && (
+                                    <span className="ml-1 text-xs text-muted-foreground">· {c.departamento.nome}</span>
+                                  )}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <Button
                   type="button"
