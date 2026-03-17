@@ -164,6 +164,7 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
                 onVerResultados={() => handleVerResultados(campanha)}
                 onGerenciarParticipacao={() => handleGerenciarParticipacao(campanha)}
                 isExpanded={expandedCampanha === campanha.id}
+                isExportandoGRO={exportandoGRO === campanha.id}
               />
               
               {/* Painel de Participação expandido */}
