@@ -290,6 +290,7 @@ export default function Suporte() {
                         </span>
                         {ticket.modulo && <span>• {ticket.modulo}</span>}
                         <span>• {ticket.criado_por_nome || "Anônimo"}</span>
+                        {isSuperAdmin && <span className="font-medium text-primary">• Tenant: {ticket.tenant_id.slice(0, 8)}…</span>}
                         <span>• {new Date(ticket.created_at).toLocaleDateString("pt-BR")}</span>
                       </div>
                     </div>
