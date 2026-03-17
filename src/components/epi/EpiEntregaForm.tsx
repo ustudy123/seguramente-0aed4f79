@@ -45,6 +45,8 @@ import { cn } from "@/lib/utils";
 import type { EpiCompleto } from "@/types/epi";
 import { MOTIVOS_ENTREGA } from "@/types/epi";
 import { useColaboradores, type Colaborador } from "@/hooks/useColaboradores";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 const schema = z.object({
   epi_id: z.string().min(1, "Selecione o EPI"),
