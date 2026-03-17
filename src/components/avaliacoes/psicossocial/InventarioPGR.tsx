@@ -115,7 +115,10 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
-  const { importarDaCampanha } = useGRORiscos();
+  const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
+
+  // GAP-P2: Riscos GRO que precisam de reavaliação (pós-ação concluída)
+  const pendentesReavaliacao = groRiscos.filter(r => r.necessita_reavaliacao).length;
 
   // Campanhas válidas (mín. anonimato e com radar_data real)
   const campanhasValidas = useMemo(() =>
