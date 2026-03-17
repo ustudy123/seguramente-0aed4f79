@@ -199,6 +199,47 @@ export function MotorAET({ riscos }: MotorAETProps) {
       });
     }
 
+    // GAP-E2: Gatilho automático — riscos psicossociais Críticos importados de campanha encerrada
+    // Quando campanha encerrada gera risco Crítico, dispara AET obrigatória cruzada
+    const psicoCriticosImportados = riscos.filter(
+      (r) =>
+        r.subtipo === "psicossocial" &&
+        r.fonte === "psicossocial" &&
+        r.nivel_risco === "critico" &&
+        r.campanha_id
+    );
+    if (psicoCriticosImportados.length > 0) {
+      resultado.push({
+        id: "gap_e2_campanha_critica",
+        titulo: "⚡ Campanha Psicossocial: Risco Crítico Importado",
+        descricao:
+          "Riscos Críticos foram importados automaticamente ao encerrar uma campanha psicossocial. NR-17 §17.5 e ISO 45003 §5.4 exigem AET formal para investigar a organização do trabalho e definir medidas de controle estruturadas.",
+        referencia: "NR-17 §17.5 · ISO 45003 §5.4 · NR-1 §1.4.3",
+        riscosAfetados: psicoCriticosImportados,
+        criticidade: "obrigatoria",
+      });
+    }
+
+    // GAP-E2 (complemento): Riscos Altos importados de campanha — AET recomendada
+    const psicoAltosImportados = riscos.filter(
+      (r) =>
+        r.subtipo === "psicossocial" &&
+        r.fonte === "psicossocial" &&
+        r.nivel_risco === "alto" &&
+        r.campanha_id
+    );
+    if (psicoAltosImportados.length > 0 && psicoCriticosImportados.length === 0) {
+      resultado.push({
+        id: "gap_e2_campanha_alta",
+        titulo: "Campanha Psicossocial: Riscos Altos Importados",
+        descricao:
+          "Riscos de nível Alto importados de campanhas psicossociais indicam necessidade de revisão da organização do trabalho via AET. Mapeie exposições combinadas e proponha medidas preventivas estruturadas.",
+        referencia: "NR-17 §17.5 · ISO 45003 §6.1",
+        riscosAfetados: psicoAltosImportados,
+        criticidade: "recomendada",
+      });
+    }
+
     return resultado;
   }, [riscos]);
 
