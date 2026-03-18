@@ -398,11 +398,15 @@ export function useImportacaoPlanilha() {
       const departamentosUnicos = [...new Set(dadosValidos.map(d => d.departamento).filter(Boolean))];
       const mapaDepartamentos: Record<string, string> = {};
       
-      // Buscar departamentos existentes
-      const { data: depsExistentes } = await supabase
+      // Buscar departamentos existentes para esta empresa
+      let depQuery = supabase
         .from("departamentos")
         .select("id, nome")
         .eq("tenant_id", tenantId);
+      if (empresaAtivaId) {
+        depQuery = depQuery.eq("empresa_id", empresaAtivaId);
+      }
+      const { data: depsExistentes } = await depQuery;
       
       depsExistentes?.forEach(dep => {
         mapaDepartamentos[dep.nome.toLowerCase()] = dep.id;
