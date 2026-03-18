@@ -87,7 +87,6 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
         ref={containerRef}
         className="w-full h-[500px] overflow-hidden rounded-lg border bg-muted/20 select-none"
         style={{ cursor: isPanning ? "grabbing" : "grab" }}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
