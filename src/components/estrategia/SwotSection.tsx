@@ -27,7 +27,10 @@ export function SwotSection({ escopo }: Props) {
   }
 
   const handleCreate = () => {
-    if (!form.titulo.trim()) return;
+    if (!form.titulo.trim()) {
+      toast.error("Preencha o título da análise SWOT");
+      return;
+    }
     createSwot.mutate(form, { onSuccess: () => { setShowNew(false); setForm({ titulo: "", descricao: "", escopo: "empresa", periodo: "" }); } });
   };
 

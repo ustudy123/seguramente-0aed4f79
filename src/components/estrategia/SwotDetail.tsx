@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useEstrategia } from "@/hooks/useEstrategia";
+import { toast } from "sonner";
 import type { EstrategiaSwot, SwotTipo, SwotClassificacao, SwotImpacto } from "@/types/estrategia";
 import { SWOT_TIPO_LABELS, SWOT_CLASSIFICACAO_LABELS, SWOT_IMPACTO_LABELS } from "@/types/estrategia";
 
@@ -33,7 +35,10 @@ export function SwotDetail({ swot, onBack }: Props) {
   const [newItem, setNewItem] = useState({ tipo: "forca" as SwotTipo, descricao: "", classificacao: "estrategico" as SwotClassificacao, impacto: "medio" as SwotImpacto });
 
   const handleAdd = () => {
-    if (!newItem.descricao.trim()) return;
+    if (!newItem.descricao.trim()) {
+      toast.error("Preencha a descrição do item");
+      return;
+    }
     createSwotItem.mutate({ swot_id: swot.id, ...newItem }, {
       onSuccess: () => setNewItem({ ...newItem, descricao: "" }),
     });
@@ -48,9 +53,30 @@ export function SwotDetail({ swot, onBack }: Props) {
           <Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4 mr-1" /> Voltar</Button>
           <h3 className="text-lg font-semibold">{swot.titulo}</h3>
         </div>
-        <Button variant="destructive" size="sm" onClick={() => { deleteSwot.mutate(swot.id); onBack(); }}>
-          <Trash2 className="w-4 h-4 mr-1" /> Excluir
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="w-4 h-4 mr-1" /> Excluir
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir análise SWOT?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação é irreversível. A análise "{swot.titulo}" e todos os seus itens serão permanentemente removidos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => { deleteSwot.mutate(swot.id); onBack(); }}
+              >
+                Excluir permanentemente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Add item form */}
@@ -106,9 +132,30 @@ export function SwotDetail({ swot, onBack }: Props) {
                           <Badge className={`text-[10px] ${IMPACTO_COLORS[item.impacto]}`}>{SWOT_IMPACTO_LABELS[item.impacto]}</Badge>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteSwotItem.mutate(item.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir item?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              O item "{item.descricao}" será removido permanentemente do quadrante {SWOT_TIPO_LABELS[item.tipo]}.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => deleteSwotItem.mutate(item.id)}
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   ))
                 )}
