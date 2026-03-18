@@ -300,15 +300,15 @@ export function MotorAET({ riscos }: MotorAETProps) {
         </Card>
       </div>
 
-      {/* ── Alerta geral se há obrigatoriedade ── */}
+      {/* ── Alerta geral se há análises prioritárias ── */}
       {totalObrigatorias > 0 && (
         <Alert className="border-red-300 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800 text-sm">AET Obrigatória — Ação Imediata</AlertTitle>
+          <AlertTitle className="text-red-800 text-sm">AET Prioritária — Ação Recomendada com Urgência</AlertTitle>
           <AlertDescription className="text-red-700 text-xs mt-1">
-            Foram detectados {totalObrigatorias} gatilho(s) que exigem Análise Ergonômica do Trabalho (AET)
-            de forma obrigatória. Conforme NR-17 §17.1 e NR-1 §1.4.3, riscos não toleráveis sem medidas
-            de controle configuram infração administrativa. Recomenda-se acionar ergonomista habilitado.
+            O sistema identificou {totalObrigatorias} gatilho(s) que recomendam Análise Ergonômica do Trabalho (AET)
+            com prioridade elevada. Riscos não toleráveis sem medidas de controle podem configurar
+            infração administrativa (NR-17 §17.1 · NR-1 §1.4.3). Recomenda-se acionar ergonomista habilitado.
           </AlertDescription>
         </Alert>
       )}
