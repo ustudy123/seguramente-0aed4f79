@@ -60,7 +60,7 @@ const NIVEL_BADGE: Record<string, string> = {
 
 const CRITICIDADE_CONFIG = {
   obrigatoria: {
-    label: "AET Obrigatória",
+    label: "AET Prioritária",
     cor: "text-red-700 bg-red-50 border-red-200",
     icon: XCircle,
     iconCor: "text-red-600",
