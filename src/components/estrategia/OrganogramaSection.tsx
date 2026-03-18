@@ -149,7 +149,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
               <Plus className="w-4 h-4 mr-1" /> Nova Posição
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent data-organograma-dialog-content="true">
             <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
             <div className="space-y-3">
               {cargosAtivos.length > 0 && (
@@ -162,7 +162,11 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <PopoverContent
+                      container={typeof document !== "undefined" ? (document.querySelector("[data-organograma-dialog-content='true']") as HTMLElement | null) : null}
+                      className="w-[--radix-popover-trigger-width] p-0"
+                      align="start"
+                    >
                       <Command>
                         <CommandInput placeholder="Buscar função..." />
                         <CommandList>
