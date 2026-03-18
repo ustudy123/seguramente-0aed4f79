@@ -171,7 +171,7 @@ export function AtestadoList({
           >
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="p-3 md:p-4">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex-1 min-w-0 space-y-2">
                     {/* Header */}
                     <div className="flex flex-wrap items-center gap-2">
@@ -235,7 +235,7 @@ export function AtestadoList({
                   {/* Actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="flex-shrink-0">
+                      <Button variant="ghost" size="icon" className="flex-shrink-0 self-end sm:self-auto">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

@@ -146,7 +146,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -161,7 +161,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
           size="sm"
           onClick={handleGerarGlobal}
           disabled={!!generatingId || cargos.length === 0}
-          className="whitespace-nowrap gap-1.5"
+          className="whitespace-nowrap gap-1.5 w-full sm:w-auto"
         >
           {generatingId === "global" ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -186,7 +186,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
               className="cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => onSelect(cargo.id)}
             >
-              <CardContent className="p-4 flex items-center justify-between">
+              <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-primary" />
@@ -203,7 +203,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground w-full sm:w-auto justify-between sm:justify-end">
                   <span className="flex items-center gap-1" title="Atividades">
                     <ClipboardList className="w-3.5 h-3.5" />
                     {atividadeCounts[cargo.id] || 0}
@@ -219,7 +219,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1.5"
+                    className="gap-1.5 w-full sm:w-auto"
                     disabled={!!generatingId}
                     onClick={(e) => handleGerarPorFuncao(e, cargo)}
                   >

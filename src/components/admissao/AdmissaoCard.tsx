@@ -56,9 +56,9 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-xl border border-border p-5 hover:shadow-lg transition-all duration-300 group"
+      className="bg-card rounded-xl border border-border p-4 sm:p-5 hover:shadow-lg transition-all duration-300 group"
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12 border-2 border-primary/20">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -76,7 +76,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <Badge className={STATUS_COLORS[status]}>
             {STATUS_LABELS[status]}
           </Badge>
@@ -104,7 +104,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="h-4 w-4" />
           <span>{dadosProfissionais?.departamento || 'Sem departamento'}</span>
@@ -141,7 +141,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
+      <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border">
         <div className="flex -space-x-1">
           {historicoAprovacao.slice(0, 4).map((etapa, index) => (
             <div

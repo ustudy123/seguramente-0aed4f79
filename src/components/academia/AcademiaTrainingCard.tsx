@@ -40,7 +40,7 @@ export function AcademiaTrainingCard({ treinamento, onClick }: Props) {
         )}
 
         {/* Overlay badges */}
-        <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
           <Badge variant="outline" className={`text-[10px] ${nivel.color} backdrop-blur-sm`}>
             {nivel.label}
           </Badge>
@@ -71,7 +71,7 @@ export function AcademiaTrainingCard({ treinamento, onClick }: Props) {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-3 sm:p-4 space-y-3">
         {/* Category */}
         {treinamento.categoria && (
           <p className="text-[11px] font-medium text-primary uppercase tracking-wider">{treinamento.categoria.nome}</p>
@@ -86,9 +86,9 @@ export function AcademiaTrainingCard({ treinamento, onClick }: Props) {
         )}
 
         {/* Meta */}
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground">
           {treinamento.instrutor && (
-            <span className="truncate">{treinamento.instrutor}</span>
+            <span className="truncate max-w-[160px]">{treinamento.instrutor}</span>
           )}
           {treinamento.duracao_estimada && (
             <span className="flex items-center gap-1 whitespace-nowrap">
