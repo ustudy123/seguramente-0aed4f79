@@ -243,7 +243,7 @@ export function QuestionarioResponder({
                         )}
                       </p>
                       <div className="grid grid-cols-5 gap-1.5">
-                        {ESCALA.map(op => (
+                        {(dimensaoAtual?.tipo === 'protetor' ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => (
                           <button
                             key={op.valor}
                             onClick={() => onRespostaChange(pergunta.id, op.valor)}
