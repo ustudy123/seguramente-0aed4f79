@@ -88,7 +88,7 @@ const PASSOS = [
       "Exemplo: **Comercial + Consultor de Vendas**",
       "Use o autocomplete: o sistema já sugere os setores e funções cadastrados",
       "Você pode adicionar quantos pares precisar",
-      "**Sem esse vínculo, a campanha não pode ser criada** — isso é exigência legal",
+      "**Sem esse vínculo, a campanha não pode ser criada**, pois o sistema precisa identificar a situação de trabalho (setor/função) para realizar a análise de riscos conforme as exigências da NR-01 e NR-17.",
     ],
     dica: "Isso representa a 'situação de trabalho' exigida pela NR-17 e ISO 45003. O sistema usa esse dado para associar riscos identificados aos grupos certos.",
   },
