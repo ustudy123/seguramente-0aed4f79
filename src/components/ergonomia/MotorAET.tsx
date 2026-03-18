@@ -275,7 +275,7 @@ export function MotorAET({ riscos }: MotorAETProps) {
           <CardContent className="py-3 px-4">
             <div className="flex items-center gap-2 mb-1">
               <XCircle className={cn("h-4 w-4", totalObrigatorias > 0 ? "text-red-600" : "text-muted-foreground")} />
-              <span className="text-xs text-muted-foreground">AET Obrigatória</span>
+              <span className="text-xs text-muted-foreground">AET Prioritária</span>
             </div>
             <p className={cn("text-2xl font-bold", totalObrigatorias > 0 ? "text-red-700" : "")}>{totalObrigatorias}</p>
           </CardContent>
