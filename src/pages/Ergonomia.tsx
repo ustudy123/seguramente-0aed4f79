@@ -176,7 +176,7 @@ export default function Ergonomia() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowGuiaRapido(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
             <HelpCircle className="h-4 w-4" />
-            Guia
+            Guia Rápido
           </Button>
           <Button variant="outline" size="sm" onClick={() => refetchItens()}>
             <RefreshCw className="h-4 w-4 mr-2" />
