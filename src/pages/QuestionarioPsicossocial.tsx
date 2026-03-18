@@ -171,7 +171,8 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
 
       if (tokenTipo === 'participacao') {
         // Usa o token de participação individual
-        const indicadores = calcularIndicadores(respostas, instrumento);
+        const blocosDinamicos = (campanha.blocos_dinamicos as string[] | undefined) ?? [];
+        const indicadores = calcularIndicadores(respostas, instrumento, blocosDinamicos);
         const { data, error: rpcError } = await supabasePublic
           .rpc('salvar_resposta_por_token_participacao', {
             p_token: token,
