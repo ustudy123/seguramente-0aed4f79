@@ -162,7 +162,7 @@ const PASSOS = [
       "Prazo automático: **30 dias** para Crítico, **60 dias** para Alto",
       "**Não é possível arquivar um risco** sem ter um plano de ação vinculado",
     ],
-    dica: "O PGR da sua empresa é atualizado automaticamente a cada campanha encerrada. Isso garante conformidade contínua com a NR-01.",
+    dica: "O Inventário de Riscos Ocupacionais (GRO) é alimentado automaticamente a cada campanha encerrada. Esses dados sustentam a elaboração do PGR pela equipe técnica responsável, garantindo conformidade contínua com a NR-01.",
   },
   {
     id: "aet",
