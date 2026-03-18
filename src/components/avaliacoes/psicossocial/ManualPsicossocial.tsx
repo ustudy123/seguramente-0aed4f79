@@ -42,7 +42,7 @@ const PASSOS = [
     cor: ROXO,
     paragrafos: [
       'Acesse o menu lateral > "Avaliacoes" > "Psicossocial". Clique no botao "Nova Campanha" no canto superior direito da tela.',
-      'O Assistente de Selecao ira aparecer para recomendar o instrumento mais adequado. Para a maioria das empresas, o SIPRO e o instrumento correto - ele e validado cientificamente para o contexto brasileiro e atende a NR-01.',
+      'O Assistente de Selecao ira aparecer para recomendar o instrumento mais adequado. Para a maioria das empresas, o SIPRO e o instrumento mais indicado. Ele e um instrumento autoral do Seguramente, desenvolvido com base nos tres modelos internacionais validados (COPSOQ III, HSE e PROART) e adaptado ao contexto brasileiro. Sua principal vantagem e a integracao nativa com os demais modulos da plataforma - GRO, Planos de Acao, Motor AET, Afastamentos e Indicadores de Saude -, tornando a avaliacao muito mais assertiva do que um questionario isolado. Atende aos requisitos da NR-01.',
       'Preencha o nome da campanha e defina o periodo de coleta (data de inicio e fim). Voce pode criar campanhas regulares (trimestrais, semestrais ou anuais) ou campanhas extraordinarias para situacoes urgentes.',
     ],
     dica: "Dica: Campanhas trimestrais constroem um historico robusto e permitem medir o impacto das acoes ao longo do tempo.",
