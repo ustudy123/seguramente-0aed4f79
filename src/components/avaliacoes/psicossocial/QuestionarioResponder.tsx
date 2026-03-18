@@ -83,8 +83,7 @@ export function QuestionarioResponder({
   blocosDinamicos,
 }: QuestionarioResponderProps) {
   const dimensoes = getDimensoesCompletas(instrumento, blocosDinamicos);
-  // SIPRO usa escala 1-5; demais instrumentos usam 0-4
-  const ESCALA = instrumento === 'sipro' ? ESCALA_SIPRO : ESCALA_PADRAO;
+  // Escala é escolhida por dimensão (protetor vs risco) — ver getEscalaDimensao()
   const [dimAtual, setDimAtual] = useState(0);
   const [tempoInicio] = useState(Date.now());
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
