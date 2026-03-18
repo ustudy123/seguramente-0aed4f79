@@ -41,12 +41,21 @@ function getInstrumentoLabel(instrumento?: string) {
   }
 }
 
-function getTotalPerguntas(instrumento?: string) {
+function getTotalPerguntas(instrumento?: string, blocosDinamicos?: string[]) {
   const valid = ['copsoq', 'hse', 'proart', 'sipro', 'ambos'] as const;
   type V = typeof valid[number];
   const key: V = valid.includes(instrumento as V) ? instrumento as V : 'sipro';
   const dims = getDimensoesByInstrumento(key);
-  return dims.reduce((acc, d) => acc + d.perguntas.length, 0);
+  const base = dims.reduce((acc, d) => acc + d.perguntas.length, 0);
+  // Adicionar perguntas dos blocos CET ativos (exclusivo SIPRO)
+  if (key === 'sipro' && blocosDinamicos && blocosDinamicos.length > 0) {
+    const { BLOCOS_DINAMICOS } = require('@/types/psicossocial');
+    const extra = BLOCOS_DINAMICOS
+      .filter((b: { id: string; perguntas: unknown[] }) => blocosDinamicos.includes(b.id))
+      .reduce((acc: number, b: { perguntas: unknown[] }) => acc + b.perguntas.length, 0);
+    return base + extra;
+  }
+  return base;
 }
 
 interface Props {
