@@ -22,8 +22,8 @@ import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
 import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
 
-// Escala padrão para instrumentos COPSOQ/HSE/PROART (0-4)
-const ESCALA_PADRAO = [
+// Escala para fatores de RISCO: Nunca = bom (😊), Sempre = ruim (😰)
+const ESCALA_RISCO = [
   { valor: 0, label: 'Nunca', emoji: '😊', cor: 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
   { valor: 1, label: 'Raramente', emoji: '🙂', cor: 'border-green-400 bg-green-50 text-green-700 hover:bg-green-100' },
   { valor: 2, label: 'Às vezes', emoji: '😐', cor: 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100' },
@@ -31,13 +31,13 @@ const ESCALA_PADRAO = [
   { valor: 4, label: 'Sempre', emoji: '😰', cor: 'border-red-400 bg-red-50 text-red-700 hover:bg-red-100' },
 ];
 
-// Escala SIPRO (0-4) — mesma base Likert de 5 pontos do spec
-const ESCALA_SIPRO = [
-  { valor: 0, label: 'Nunca', emoji: '😊', cor: 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-  { valor: 1, label: 'Raramente', emoji: '🙂', cor: 'border-green-400 bg-green-50 text-green-700 hover:bg-green-100' },
+// Escala para fatores PROTETORES (invertida): Nunca = ruim (😰), Sempre = bom (😊)
+const ESCALA_PROTETOR = [
+  { valor: 0, label: 'Nunca', emoji: '😰', cor: 'border-red-400 bg-red-50 text-red-700 hover:bg-red-100' },
+  { valor: 1, label: 'Raramente', emoji: '😟', cor: 'border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100' },
   { valor: 2, label: 'Às vezes', emoji: '😐', cor: 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100' },
-  { valor: 3, label: 'Frequentemente', emoji: '😟', cor: 'border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100' },
-  { valor: 4, label: 'Sempre', emoji: '😰', cor: 'border-red-400 bg-red-50 text-red-700 hover:bg-red-100' },
+  { valor: 3, label: 'Raramente', emoji: '🙂', cor: 'border-green-400 bg-green-50 text-green-700 hover:bg-green-100' },
+  { valor: 4, label: 'Sempre', emoji: '😊', cor: 'border-emerald-400 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
 ];
 
 interface QuestionarioResponderProps {
