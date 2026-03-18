@@ -238,7 +238,7 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange(true); }}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh] h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b bg-background">
           <div className="flex items-center gap-3">
@@ -266,9 +266,9 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
           />
         </div>
 
-        <div className="flex min-h-[500px]">
+        <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Sidebar */}
-          <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block">
+          <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block overflow-y-auto">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
               Passo a Passo
             </p>
@@ -407,7 +407,7 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-background shrink-0">
           <Button
             variant="outline"
             size="sm"

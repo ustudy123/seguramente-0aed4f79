@@ -194,9 +194,9 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh] h-[90vh]">
         {/* Header fixo */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b bg-background">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b bg-background shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <BookOpen className="h-5 w-5 text-primary" />
@@ -222,9 +222,9 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
           />
         </div>
 
-        <div className="flex min-h-[500px]">
+        <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Sidebar de navegação */}
-          <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block">
+          <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block overflow-y-auto">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
               Navegação
             </p>
@@ -358,7 +358,7 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
         </div>
 
         {/* Footer de navegação */}
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-background shrink-0">
           <Button
             variant="outline"
             size="sm"
