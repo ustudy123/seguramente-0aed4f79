@@ -268,7 +268,7 @@ export function GuiaRapidoPsicossocial({ open, onOpenChange }: GuiaRapidoPsicoss
 
         <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Sidebar */}
-          <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block">
+          <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block overflow-y-auto">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
               Passo a Passo
             </p>
