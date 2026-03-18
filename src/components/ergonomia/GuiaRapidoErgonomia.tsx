@@ -30,6 +30,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ManualErgonomia } from "@/components/ergonomia/ManualErgonomia";
 
 interface GuiaRapidoErgonomiaProps {
   open: boolean;
