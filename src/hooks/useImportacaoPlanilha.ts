@@ -398,11 +398,15 @@ export function useImportacaoPlanilha() {
       const departamentosUnicos = [...new Set(dadosValidos.map(d => d.departamento).filter(Boolean))];
       const mapaDepartamentos: Record<string, string> = {};
       
-      // Buscar departamentos existentes
-      const { data: depsExistentes } = await supabase
+      // Buscar departamentos existentes para esta empresa
+      let depQuery = supabase
         .from("departamentos")
         .select("id, nome")
         .eq("tenant_id", tenantId);
+      if (empresaAtivaId) {
+        depQuery = depQuery.eq("empresa_id", empresaAtivaId);
+      }
+      const { data: depsExistentes } = await depQuery;
       
       depsExistentes?.forEach(dep => {
         mapaDepartamentos[dep.nome.toLowerCase()] = dep.id;
@@ -440,11 +444,15 @@ export function useImportacaoPlanilha() {
       
       const mapaCargos: Record<string, string> = {};
       
-      // Buscar cargos existentes
-      const { data: cargosExistentes } = await supabase
+      // Buscar cargos existentes para esta empresa
+      let cargoQuery = supabase
         .from("cargos")
         .select("id, nome")
         .eq("tenant_id", tenantId);
+      if (empresaAtivaId) {
+        cargoQuery = cargoQuery.eq("empresa_id", empresaAtivaId);
+      }
+      const { data: cargosExistentes } = await cargoQuery;
       
       cargosExistentes?.forEach(cargo => {
         mapaCargos[cargo.nome.toLowerCase()] = cargo.id;
