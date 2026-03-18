@@ -142,16 +142,17 @@ export function AEPFormSintese({ data, onChange }: AEPFormSinteseProps) {
             <div className="flex items-center space-x-3">
               <RadioGroupItem value="nao_indicado" id="aet-nao" />
               <Label htmlFor="aet-nao" className="cursor-pointer">
-                ☐ Não há indicativo de necessidade de AET no momento
+                Não há indicativo de necessidade de AET no momento
               </Label>
             </div>
             <div className="flex items-center space-x-3">
               <RadioGroupItem value="indicado" id="aet-sim" />
               <Label htmlFor="aet-sim" className="cursor-pointer">
-                ☑ Há indicativo de necessidade de AET para aprofundamento
+                Há indicativo de necessidade de AET para aprofundamento
               </Label>
             </div>
           </RadioGroup>
+
 
           <div className="space-y-2">
             <Label htmlFor="justificativaAET">Justificativa</Label>
