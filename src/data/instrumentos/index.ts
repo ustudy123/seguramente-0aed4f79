@@ -64,6 +64,13 @@ export const PESOS_ICOP: Record<string, number> = {
   sipro_autonomia_controle: 15,
 };
 
+/** Pesos para INOT-S (Trabalho Noturno/CET) — ativado apenas quando bloco cet_noturno presente */
+export const PESOS_INOT: Record<string, number> = {
+  cet_noturno: 70,
+  sipro_demandas_cognitivas: 15,
+  sipro_recuperacao_equilibrio: 15,
+};
+
 /**
  * Calcula um índice derivado com base em pesos e scores por dimensão.
  * Retorna score 0-100 (ponderado).
