@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, type ReactNode, type WheelEvent, type MouseEvent } from "react";
+import { useRef, useState, useCallback, useEffect, type ReactNode, type MouseEvent } from "react";
 import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,10 +14,17 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.08 : 0.08;
-    setScale((prev) => Math.min(2, Math.max(0.3, prev + delta)));
+  // Attach wheel listener as non-passive so preventDefault works
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = (e: globalThis.WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.08 : 0.08;
+      setScale((prev) => Math.min(2, Math.max(0.3, prev + delta)));
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
   }, []);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
