@@ -156,7 +156,7 @@ const GLOSSARIO: [string, string][] = [
   ["AET",           "Analise Ergonomica do Trabalho. Estudo aprofundado de situacoes criticas, exigido pela NR-17."],
   ["5W2H",          "Modelo de plano de acao: O que, Por que, Onde, Quando, Quem, Como, Quanto custa."],
   ["Sit. Trabalho", "Combinacao de Setor + Funcao que representa um grupo de colaboradores avaliados."],
-  ["SIPRO",         "Instrumento de avaliacao psicossocial validado para o contexto brasileiro. Recomendado pelo sistema."],
+  ["SIPRO",         "Instrumento autoral do Seguramente, criado com base no COPSOQ III, HSE e PROART. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma. Recomendado na maioria dos cenarios."],
   ["Camp. Regular", "Avaliacao periodica programada (trimestral, semestral ou anual)."],
   ["Camp. Extraord.","Avaliacao urgente disparada por evento critico (acidente, reestruturacao)."],
 ];
