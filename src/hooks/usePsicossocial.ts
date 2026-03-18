@@ -562,7 +562,8 @@ export function usePsicossocial() {
     tempoSegundos: number,
   ): Promise<void> => {
     const instrumento = (campanha.instrumento || 'sipro') as InstrumentoPsicossocial;
-    const indicadores = calcularIndicadores(respostas, instrumento);
+    const blocosDinamicos = (campanha.blocos_dinamicos as string[] | undefined) ?? [];
+    const indicadores = calcularIndicadores(respostas, instrumento, blocosDinamicos);
 
     const { error } = await supabasePublic
       .rpc('salvar_resposta_anonima_campanha', {
