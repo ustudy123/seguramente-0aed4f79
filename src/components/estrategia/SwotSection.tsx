@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Plus, Trash2, ChevronRight, Target, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,10 @@ export function SwotSection({ escopo }: Props) {
   }
 
   const handleCreate = () => {
-    if (!form.titulo.trim()) return;
+    if (!form.titulo.trim()) {
+      toast.error("Preencha o título da análise SWOT");
+      return;
+    }
     createSwot.mutate(form, { onSuccess: () => { setShowNew(false); setForm({ titulo: "", descricao: "", escopo: "empresa", periodo: "" }); } });
   };
 
