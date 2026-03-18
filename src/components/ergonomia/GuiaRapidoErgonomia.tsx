@@ -30,6 +30,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ManualErgonomia } from "@/components/ergonomia/ManualErgonomia";
 
 interface GuiaRapidoErgonomiaProps {
   open: boolean;
@@ -336,6 +337,16 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
                     <Lightbulb className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                     <p className="text-xs text-amber-800 leading-relaxed">{atual.dica}</p>
+                  </div>
+                )}
+
+                {/* CTA Manual PDF — última etapa */}
+                {passo === PASSOS.length - 1 && (
+                  <div className="flex flex-col items-center gap-3 pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground text-center">
+                      Quer um guia de referência completo para consultar offline?
+                    </p>
+                    <ManualErgonomia />
                   </div>
                 )}
 
