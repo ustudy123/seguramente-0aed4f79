@@ -21,6 +21,7 @@ import { VerificacaoTelefone } from "@/components/avaliacoes/psicossocial/Verifi
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
+  BLOCOS_DINAMICOS,
 } from "@/types/psicossocial";
 import { toast } from "sonner";
 import logoSeguramente from "@/assets/logo-seguramente.png";
