@@ -411,7 +411,7 @@ export function GuiaRapidoIncidentes({ open, onOpenChange }: GuiaRapidoIncidente
               <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button size="sm" onClick={() => onOpenChange(false)} className="gap-2 bg-red-600 hover:bg-red-700">
+            <Button size="sm" onClick={() => onOpenChange(false)} className="gap-2 bg-destructive hover:bg-destructive/90">
               <CheckCircle2 className="h-4 w-4" />
               Concluir
             </Button>
