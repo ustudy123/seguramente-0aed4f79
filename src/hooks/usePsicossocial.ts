@@ -59,20 +59,21 @@ export function calcularIndicadores(
 
   if (instrumento === 'sipro') {
     // ── Injetar dimensões CET quando blocos estão ativos ───────────────────
-    const dimensoesCET = (blocosDinamicos && blocosDinamicos.length > 0)
+    const dimensoesCET: DimensaoInstrumento[] = (blocosDinamicos && blocosDinamicos.length > 0)
       ? BLOCOS_DINAMICOS
           .filter(b => blocosDinamicos.includes(b.id))
           .map(b => ({
             id: b.id,
             nome: b.titulo,
             tipo: 'risco' as const,
-            peso: 1,
             descricao: b.descricao,
+            normas: b.perguntas[0]?.mapeamento ?? ['NR-01', 'ISO 45003'],
             perguntas: b.perguntas.map(p => ({
               id: p.id,
               texto: p.texto,
               invertida: p.invertida ?? false,
               peso: 1,
+              dimensao: b.id,
             })),
           }))
       : [];
