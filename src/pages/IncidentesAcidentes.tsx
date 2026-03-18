@@ -17,6 +17,7 @@ import type { EventoSST } from "@/types/eventoSST";
 export default function IncidentesAcidentes() {
   const { eventos, isLoading, stats, createEvento, updateEvento } = useEventosSST();
   const [showForm, setShowForm] = useState(false);
+  const [showGuia, setShowGuia] = useState(false);
   const [editing, setEditing] = useState<EventoSST | null>(null);
   const [selected, setSelected] = useState<EventoSST | null>(null);
   const [filters, setFilters] = useState({
