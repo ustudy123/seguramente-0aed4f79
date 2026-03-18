@@ -194,9 +194,9 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh] h-[90vh]">
         {/* Header fixo */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b bg-background">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b bg-background shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <BookOpen className="h-5 w-5 text-primary" />
