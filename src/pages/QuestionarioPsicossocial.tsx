@@ -48,12 +48,10 @@ function getTotalPerguntas(instrumento?: string, blocosDinamicos?: string[]) {
   const key: V = valid.includes(instrumento as V) ? instrumento as V : 'sipro';
   const dims = getDimensoesByInstrumento(key);
   const base = dims.reduce((acc, d) => acc + d.perguntas.length, 0);
-  // Adicionar perguntas dos blocos CET ativos (exclusivo SIPRO)
   if (key === 'sipro' && blocosDinamicos && blocosDinamicos.length > 0) {
-    const { BLOCOS_DINAMICOS } = require('@/types/psicossocial');
     const extra = BLOCOS_DINAMICOS
-      .filter((b: { id: string; perguntas: unknown[] }) => blocosDinamicos.includes(b.id))
-      .reduce((acc: number, b: { perguntas: unknown[] }) => acc + b.perguntas.length, 0);
+      .filter(b => blocosDinamicos.includes(b.id))
+      .reduce((acc, b) => acc + b.perguntas.length, 0);
     return base + extra;
   }
   return base;
