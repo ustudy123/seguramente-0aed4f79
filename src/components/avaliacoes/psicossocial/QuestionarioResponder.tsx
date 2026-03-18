@@ -46,16 +46,32 @@ interface QuestionarioResponderProps {
   onRespostaChange: (perguntaId: string, valor: number) => void;
   onConcluir: () => void;
   nomeCampanha?: string;
+  blocosDinamicos?: string[];
 }
 
-function getDimensoesByInstrumento(instrumento: InstrumentoPsicossocial): DimensaoInstrumento[] {
+function getDimensoesCompletas(instrumento: InstrumentoPsicossocial, blocosDinamicos?: string[]): DimensaoInstrumento[] {
+  let base: DimensaoInstrumento[];
   switch (instrumento) {
-    case 'copsoq': return COPSOQ_DIMENSOES;
-    case 'hse': return HSE_DIMENSOES;
-    case 'proart': return PROART_DIMENSOES;
-    case 'sipro': return SIPRO_DIMENSOES;
-    default: return [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES];
+    case 'copsoq': base = COPSOQ_DIMENSOES; break;
+    case 'hse': base = HSE_DIMENSOES; break;
+    case 'proart': base = PROART_DIMENSOES; break;
+    case 'sipro': base = SIPRO_DIMENSOES; break;
+    default: base = [...COPSOQ_DIMENSOES, ...HSE_DIMENSOES];
   }
+
+  if (blocosDinamicos && blocosDinamicos.length > 0) {
+    const blocosCET = BLOCOS_DINAMICOS
+      .filter(b => blocosDinamicos.includes(b.id))
+      .map(b => ({
+        id: b.id,
+        nome: b.titulo,
+        descricao: b.descricao,
+        perguntas: b.perguntas.map(p => ({ id: p.id, texto: p.texto, invertida: p.invertida })),
+      } as DimensaoInstrumento));
+    return [...base, ...blocosCET];
+  }
+
+  return base;
 }
 
 export function QuestionarioResponder({
@@ -64,8 +80,9 @@ export function QuestionarioResponder({
   onRespostaChange,
   onConcluir,
   nomeCampanha,
+  blocosDinamicos,
 }: QuestionarioResponderProps) {
-  const dimensoes = getDimensoesByInstrumento(instrumento);
+  const dimensoes = getDimensoesCompletas(instrumento, blocosDinamicos);
   // SIPRO usa escala 1-5; demais instrumentos usam 0-4
   const ESCALA = instrumento === 'sipro' ? ESCALA_SIPRO : ESCALA_PADRAO;
   const [dimAtual, setDimAtual] = useState(0);
