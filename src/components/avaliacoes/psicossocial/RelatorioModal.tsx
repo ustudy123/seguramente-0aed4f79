@@ -185,7 +185,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         {
           titulo: "4.1 Instrumento Utilizado",
           corpo: isSipro
-            ? "SIPRO — Índice Seguramente de Risco Psicossocial Organizacional. Instrumento validado estatisticamente que avalia fatores de risco psicossocial com escala Likert 1-5. Score calculado por ((média-1)/4)×100 por dimensão, onde score alto indica maior risco (modelo positivo de risco). Cobre 11 dimensões com 43 perguntas."
+            ? "SIPRO — Indice Seguramente de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma Seguramente, proporcionando avaliacao mais assertiva do que questionarios isolados. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
             : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliação de riscos psicossociais. Escala Likert 0-4, onde score alto indica melhor condição (modelo protetivo), com inversão para cálculo de risco.`,
         },
         {
