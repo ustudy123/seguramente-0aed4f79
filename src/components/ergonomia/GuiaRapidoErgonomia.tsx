@@ -358,7 +358,7 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
         </div>
 
         {/* Footer de navegação */}
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-background">
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-background shrink-0">
           <Button
             variant="outline"
             size="sm"
