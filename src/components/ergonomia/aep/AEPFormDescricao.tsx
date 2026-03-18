@@ -18,7 +18,7 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
 
   return (
     <div className="space-y-4">
-      {/* 4. Descrição do Trabalho Real (17.1) */}
+      {/* 4. Descrição do Trabalho Real */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -32,11 +32,12 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* 4.1 Tarefa Prescrita × Real */}
+
+          {/* 4.1 Tarefa e Atividade Real */}
           <div className="space-y-4">
             <h4 className="font-medium text-sm flex items-center gap-2">
               4.1 Tarefa e Atividade Real
-              <span className="text-xs text-muted-foreground font-normal">(auditores verificam o descompasso tarefa prescrita vs. real)</span>
+              <span className="text-xs text-muted-foreground font-normal">(auditores verificam descompasso tarefa prescrita vs. real)</span>
             </h4>
             <div className="space-y-2">
               <Label htmlFor="descricaoGeral">Descrição geral da atividade *</Label>
@@ -101,7 +102,7 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
                 <Input
                   id="participacaoTrabalhadores"
                   value={data.participacaoTrabalhadores || ''}
-                  onChange={(e) => handleChange('participacaoTrabalhadores' as any, e.target.value)}
+                  onChange={(e) => handleChange('participacaoTrabalhadores', e.target.value)}
                   placeholder="Nomes, forma de participação (entrevista, observação, validação...)"
                 />
               </div>
@@ -111,7 +112,7 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
           {/* 4.2 Condições Ambientais — NR-17 §17.5 */}
           <div className="space-y-4">
             <h4 className="font-medium text-sm flex items-center gap-2">
-              <Thermometer className="h-4 w-4 text-orange-500" />
+              <Thermometer className="h-4 w-4 text-destructive" />
               4.2 Condições Ambientais de Trabalho
               <Badge variant="outline" className="text-[10px] font-mono">NR-17 §17.5</Badge>
             </h4>
@@ -121,9 +122,7 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="espacoFisico" className="flex items-center gap-1">
-                  Espaço físico / layout do posto
-                </Label>
+                <Label htmlFor="espacoFisico">Espaço físico / layout do posto</Label>
                 <Input
                   id="espacoFisico"
                   value={data.espacoFisico}
@@ -133,19 +132,19 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="iluminacao" className="flex items-center gap-1">
-                  <Sun className="h-3 w-3 text-yellow-500" />
-                  Iluminação (ofuscamento, reflexos, contraste)
+                  <Sun className="h-3 w-3 text-warning" />
+                  Iluminação (ofuscamento, reflexos)
                 </Label>
                 <Input
                   id="iluminacao"
                   value={data.iluminacao}
                   onChange={(e) => handleChange('iluminacao', e.target.value)}
-                  placeholder="Adequada / Ofuscamento / Reflexo na tela / Lux estimado"
+                  placeholder="Adequada / Ofuscamento / Reflexo na tela / Lux"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="temperatura" className="flex items-center gap-1">
-                  <Thermometer className="h-3 w-3 text-orange-500" />
+                  <Thermometer className="h-3 w-3 text-destructive" />
                   Temperatura efetiva (alvo: 20–23°C)
                 </Label>
                 <Input
@@ -157,31 +156,29 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ruido" className="flex items-center gap-1">
-                  <Volume2 className="h-3 w-3 text-blue-500" />
+                  <Volume2 className="h-3 w-3 text-primary" />
                   Ruído (alvo: ≤ 65 dB(A) para conforto)
                 </Label>
                 <Input
                   id="ruido"
                   value={data.ruido}
                   onChange={(e) => handleChange('ruido', e.target.value)}
-                  placeholder="Medição: __ dB(A) / Fonte principal de ruído"
+                  placeholder="Medição: __ dB(A) / Fonte principal"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="umidadeVelocidadeAr">
-                  Umidade / velocidade do ar
-                </Label>
+                <Label htmlFor="umidadeVelocidadeAr">Umidade / velocidade do ar</Label>
                 <Input
                   id="umidadeVelocidadeAr"
                   value={data.umidadeVelocidadeAr || ''}
-                  onChange={(e) => handleChange('umidadeVelocidadeAr' as any, e.target.value)}
-                  placeholder="Umidade: _% (≥40%) / Ar-cond.: __ m/s (≤0,75)"
+                  onChange={(e) => handleChange('umidadeVelocidadeAr', e.target.value)}
+                  placeholder="Umidade: _% (≥40%) / Ar: __ m/s (≤0,75)"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="organizacaoPosto" className="flex items-center gap-1">
-                  <Armchair className="h-3 w-3 text-purple-500" />
-                  Organização do posto / mobiliário
+                  <Armchair className="h-3 w-3 text-secondary-foreground" />
+                  Mobiliário / organização do posto
                 </Label>
                 <Input
                   id="organizacaoPosto"
@@ -196,13 +193,13 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
           {/* 4.3 Organização do Trabalho — NR-17 §17.6 */}
           <div className="space-y-4">
             <h4 className="font-medium text-sm flex items-center gap-2">
-              <Users className="h-4 w-4 text-indigo-500" />
+              <Users className="h-4 w-4 text-primary" />
               4.3 Organização do Trabalho
               <Badge variant="outline" className="text-[10px] font-mono">NR-17 §17.6</Badge>
             </h4>
             <p className="text-xs text-muted-foreground">
               Item mais verificado pelos auditores. Inclui normas de produção, ritmo, pausas, prêmios de produtividade,
-              jornada e conteúdo do trabalho.
+              jornada e conteúdo do trabalho. Para entrada eletrônica de dados: máx. 8.000 toques/hora.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -210,7 +207,7 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
                 <Input
                   id="normasProducao"
                   value={data.normasProducao || ''}
-                  onChange={(e) => handleChange('normasProducao' as any, e.target.value)}
+                  onChange={(e) => handleChange('normasProducao', e.target.value)}
                   placeholder="Há cotas de produção? Prêmios por produtividade?"
                 />
               </div>
@@ -219,8 +216,8 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
                 <Input
                   id="pausasDescanso"
                   value={data.pausasDescanso || ''}
-                  onChange={(e) => handleChange('pausasDescanso' as any, e.target.value)}
-                  placeholder="Frequência, duração, são fora do posto? (NR-17: 10 min / 50 min para entrada de dados)"
+                  onChange={(e) => handleChange('pausasDescanso', e.target.value)}
+                  placeholder="Frequência, duração, fora do posto? (NR-17: 10min/50min para dados)"
                 />
               </div>
               <div className="space-y-2">
@@ -228,17 +225,17 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
                 <Input
                   id="jornadaHorasExtras"
                   value={data.jornadaHorasExtras || ''}
-                  onChange={(e) => handleChange('jornadaHorasExtras' as any, e.target.value)}
+                  onChange={(e) => handleChange('jornadaHorasExtras', e.target.value)}
                   placeholder="Turno, horas extras habituais, dupla jornada?"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="modoOperatorio">Modo operatório / autonomia do trabalhador</Label>
+                <Label htmlFor="modoOperatorio">Autonomia / modo operatório</Label>
                 <Input
                   id="modoOperatorio"
                   value={data.modoOperatorio || ''}
-                  onChange={(e) => handleChange('modoOperatorio' as any, e.target.value)}
-                  placeholder="Trabalhador pode escolher como e quando executar? Ou é totalmente prescrito?"
+                  onChange={(e) => handleChange('modoOperatorio', e.target.value)}
+                  placeholder="Trabalhador pode escolher como executar? Ou é totalmente prescrito?"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -246,12 +243,13 @@ export function AEPFormDescricao({ data, onChange }: AEPFormDescricaoProps) {
                 <Input
                   id="indicadoresSaude"
                   value={data.indicadoresSaude || ''}
-                  onChange={(e) => handleChange('indicadoresSaude' as any, e.target.value)}
-                  placeholder="Alto absenteísmo e rotatividade são indicadores indiretos de sobrecarga (Manual NR-17, §17.1)"
+                  onChange={(e) => handleChange('indicadoresSaude', e.target.value)}
+                  placeholder="Alto absenteísmo e rotatividade são indicadores indiretos de sobrecarga (Manual NR-17 §17.1)"
                 />
               </div>
             </div>
           </div>
+
         </CardContent>
       </Card>
     </div>
