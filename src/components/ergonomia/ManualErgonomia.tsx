@@ -46,14 +46,14 @@ const PASSOS = [
   {
     num: "02",
     titulo: "Passo 1 — Analise Ergonomica Preliminar (AEP)",
-    subtitulo: "A abordagem inicial recomendada para avaliacao das condicoes de trabalho",
+    subtitulo: "Focada em Funcao/Posto — onde a NR-17 realmente acontece",
     cor: VERDE,
     paragrafos: [
-      'A AEP (Analise Ergonomica Preliminar) e a abordagem inicial recomendada para avaliacao das condicoes ergonomicas antes de estudos mais aprofundados. Ela mapeia as condicoes de trabalho por "Situacao de Trabalho" — normalmente representada por setor, funcao ou atividade. No sistema, o modelo padrao utiliza o par Setor + Funcao, que atende a maioria dos cenarios organizacionais.',
-      'Para gerar uma AEP, acesse a aba "Avaliar Riscos (AEP)" e clique em "Nova AEP". Selecione o Setor e a Funcao. O sistema preenchera automaticamente o CNPJ e a Razao Social da empresa. Voce pode optar pela AEP simples (uma funcao) ou multi-setor (varias funcoes de uma vez).',
-      'O sistema aplica 6 dominios baseados em boas praticas ergonomicas e psicossociais, alinhados a NR-17 e a ISO 45003: (1) Ritmo e Carga de Trabalho, (2) Demandas Cognitivas e Emocionais, (3) Autonomia e Controle, (4) Relacoes e Suporte, (5) Suporte Organizacional e (6) Clareza de Papel. Se a empresa ja realizou campanhas psicossociais, esses dados sao preenchidos automaticamente como evidencia objetiva.',
+      'A AEP e a abordagem inicial recomendada para avaliacao das condicoes ergonomicas. Ela e SEMPRE focada na Funcao/Posto de trabalho. A hierarquia e: (1) Empresa — nivel de gestao e inventario (PGR); (2) Departamento — util para agrupar riscos ambientais comuns como ruido e temperatura que afetam a todos; (3) Funcao/Posto — foco da AEP, onde a biomecânica, mobiliario e repetitividade sao avaliados. Nao faca uma AEP generica "da empresa" — cada Situacao de Trabalho (par Setor + Funcao) deve ter sua propria analise.',
+      'A NR-17 exige que a AEP descreva o trabalho REAL, nao apenas o prescrito. Auditores fiscais verificam o descompasso entre a tarefa prescrita (POP/procedimento) e o que o trabalhador efetivamente faz. O sistema inclui campos especificos para: descricao do trabalho real, posturas adotadas, ferramentasutilizadas, variabilidade e imprevistos, participacao dos trabalhadores (obrigatoria pela NR-17) e indicadores de saude do grupo (absenteismo, LER/DORT). Para funcoes similares no mesmo setor, use a funcao "Duplicar Situacao" — isso representa o GHE (Grupo de Exposicao Homogenea) exigido pela NR-1.',
+      'O sistema inclui tres secoes tecnicas alinhadas ao Manual de Aplicacao da NR-17 (MTE, 2002): (A) Condicoes Ambientais (sec.17.5) — ruido: conforto maximo 65 dB(A), temperatura efetiva 20-23 C, velocidade do ar ate 0,75 m/s, umidade relativa minima 40%; (B) Organizacao do Trabalho (sec.17.6) — normas de producao, cotas, pausas de recuperacao (minimo 10 min a cada 50 min para entrada de dados), jornada, autonomia e modo operatorio; (C) Checklist de Conformidade NR-17 — 12 itens baseados nos paragrafos sec.17.2 a sec.17.6 que auditores fiscais verificam obrigatoriamente. O sistema calcula automaticamente o percentual de conformidade e alerta se estiver abaixo de 80%.',
     ],
-    dica: "Atencao: A NR-17 determina que as condicoes ergonomicas dos postos de trabalho devem ser avaliadas. O sistema aplica a AEP como ponto de partida documental para atender essa exigencia de forma organizada e rastreavel.",
+    dica: "Quando a AEP nao e suficiente: a NR-17 exige AET (Analise Ergonomica do Trabalho) quando: (1) a AEP nao consegue determinar a causa ou solucao do problema; (2) ha indicios de doencas ocupacionais (LER/DORT); (3) e sugerida pelo acompanhamento de saude (PCMSO). O Motor AET do sistema detecta esses gatilhos automaticamente.",
   },
   {
     num: "03",
