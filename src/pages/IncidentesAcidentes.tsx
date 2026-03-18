@@ -157,6 +157,9 @@ export default function IncidentesAcidentes() {
         </TabsContent>
       </Tabs>
 
+      {/* Guia Rápido */}
+      <GuiaRapidoIncidentes open={showGuia} onOpenChange={setShowGuia} />
+
       {/* Form */}
       <EventoSSTForm
         open={showForm}
