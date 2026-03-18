@@ -80,6 +80,8 @@ export interface AEPSinteseAvaliacao {
   pontosCriticos: string[];
   necessidadeAET: NecessidadeAET;
   justificativaAET: string;
+  // Checklist de conformidade NR-17 (Manual MTE/2002)
+  checklistNR17?: Record<string, boolean>;
 }
 
 export type TipoAcao = 'engenharia' | 'organizacional' | 'administrativa' | 'treinamento';
