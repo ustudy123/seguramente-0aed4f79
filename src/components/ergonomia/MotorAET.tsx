@@ -138,7 +138,7 @@ export function MotorAET({ riscos }: MotorAETProps) {
       });
     }
 
-    // Gatilho 3: Indicadores psicossociais críticos (score >= 65)
+    // Gatilho 3: Indicadores psicossociais críticos (score >= 65 — limiar interno do sistema)
     const psicoCriticos = riscos.filter(
       (r) =>
         r.subtipo === "psicossocial" &&
@@ -149,9 +149,9 @@ export function MotorAET({ riscos }: MotorAETProps) {
     if (psicoCriticos.length > 0) {
       resultado.push({
         id: "psicossocial_critico",
-        titulo: "Indicadores Psicossociais Críticos",
+        titulo: "Indicadores Psicossociais em Nível Crítico",
         descricao:
-          "Dimensões psicossociais com score ≥ 65% de risco indicam fatores organizacionais que devem ser investigados via AET, conforme ISO 45003 e NR-17 sobre organização do trabalho.",
+          "O sistema identificou indicadores psicossociais em nível crítico. O sistema recomenda aprofundamento da análise ergonômica para investigar fatores organizacionais combinados, em linha com as diretrizes da ISO 45003 e NR-17 sobre organização do trabalho.",
         referencia: "ISO 45003 §5.4 · NR-17 §17.5",
         riscosAfetados: psicoCriticos,
         criticidade: "recomendada",
