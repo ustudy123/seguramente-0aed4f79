@@ -430,7 +430,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
           onRespostaChange={handleRespostaChange}
           onConcluir={handleSubmit}
           nomeCampanha={campanha?.nome}
-          blocosDinamicos={campanha?.blocos_dinamicos as string[] | undefined}
+          blocosDinamicos={blocosDinamicosAtivos}
         />
 
         {submitting && (
