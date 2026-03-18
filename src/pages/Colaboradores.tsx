@@ -285,7 +285,7 @@ function AtivosTab() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" onClick={handleExportarColaboradores} title="Exportar colaboradores">
             <Download className="w-4 h-4" />
           </Button>
         </div>
