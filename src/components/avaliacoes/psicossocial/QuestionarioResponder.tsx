@@ -20,6 +20,7 @@ import { PROART_DIMENSOES } from "@/data/instrumentos/proart";
 import { SIPRO_DIMENSOES } from "@/data/instrumentos/sipro";
 import type { DimensaoInstrumento } from "@/data/instrumentos/copsoq";
 import type { InstrumentoPsicossocial } from "@/types/psicossocial";
+import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
 
 // Escala padrão para instrumentos COPSOQ/HSE/PROART (0-4)
 const ESCALA_PADRAO = [
