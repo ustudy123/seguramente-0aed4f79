@@ -85,10 +85,10 @@ const PASSOS = [
       "Acesse a aba **Ciclo PDCA**",
       "Visualize o funil de fases com a distribuição dos riscos",
       "Acompanhe o **Score de Maturidade GRO** (0-100%)",
-      "Use os cards para responder às perguntas obrigatórias de auditoria",
+      "Use os cards para acompanhar as perguntas de auditoria respondidas automaticamente",
       "Monitore a evolução ao longo do tempo",
     ],
-    dica: "O Score de Maturidade GRO responde automaticamente às perguntas obrigatórias de auditorias NR-01.",
+    dica: "O Score de Maturidade GRO auxilia na preparação para auditorias da NR-01, organizando as evidências de gestão do programa ergonômico.",
   },
   {
     id: "motor_aet",
@@ -102,11 +102,11 @@ const PASSOS = [
     acoes: [
       "Acesse a aba **Motor AET**",
       "Visualize as recomendações classificadas por prioridade",
-      "Análises **Obrigatórias** devem ser priorizadas imediatamente",
+      "Análises **Prioritárias** devem ser atendidas com urgência",
       "Use o botão **Gerar AEP** para análises psicossociais indicadas",
       "Marque análises como concluídas para atualizar o score",
     ],
-    dica: "Quando o IPS Psicossocial estiver abaixo de 65%, o Motor AET indicará automaticamente análise ergopsicossocial.",
+    dica: "Quando indicadores psicossociais atingem nível crítico, o Motor AET recomenda automaticamente aprofundamento da análise ergonômica (AET).",
   },
   {
     id: "analise_ia",

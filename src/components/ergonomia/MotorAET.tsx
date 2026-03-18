@@ -60,7 +60,7 @@ const NIVEL_BADGE: Record<string, string> = {
 
 const CRITICIDADE_CONFIG = {
   obrigatoria: {
-    label: "AET Obrigatória",
+    label: "AET Prioritária",
     cor: "text-red-700 bg-red-50 border-red-200",
     icon: XCircle,
     iconCor: "text-red-600",
@@ -138,7 +138,7 @@ export function MotorAET({ riscos }: MotorAETProps) {
       });
     }
 
-    // Gatilho 3: Indicadores psicossociais críticos (score >= 65)
+    // Gatilho 3: Indicadores psicossociais críticos (score >= 65 — limiar interno do sistema)
     const psicoCriticos = riscos.filter(
       (r) =>
         r.subtipo === "psicossocial" &&
@@ -149,9 +149,9 @@ export function MotorAET({ riscos }: MotorAETProps) {
     if (psicoCriticos.length > 0) {
       resultado.push({
         id: "psicossocial_critico",
-        titulo: "Indicadores Psicossociais Críticos",
+        titulo: "Indicadores Psicossociais em Nível Crítico",
         descricao:
-          "Dimensões psicossociais com score ≥ 65% de risco indicam fatores organizacionais que devem ser investigados via AET, conforme ISO 45003 e NR-17 sobre organização do trabalho.",
+          "O sistema identificou indicadores psicossociais em nível crítico. O sistema recomenda aprofundamento da análise ergonômica para investigar fatores organizacionais combinados, em linha com as diretrizes da ISO 45003 e NR-17 sobre organização do trabalho.",
         referencia: "ISO 45003 §5.4 · NR-17 §17.5",
         riscosAfetados: psicoCriticos,
         criticidade: "recomendada",
@@ -275,7 +275,7 @@ export function MotorAET({ riscos }: MotorAETProps) {
           <CardContent className="py-3 px-4">
             <div className="flex items-center gap-2 mb-1">
               <XCircle className={cn("h-4 w-4", totalObrigatorias > 0 ? "text-red-600" : "text-muted-foreground")} />
-              <span className="text-xs text-muted-foreground">AET Obrigatória</span>
+              <span className="text-xs text-muted-foreground">AET Prioritária</span>
             </div>
             <p className={cn("text-2xl font-bold", totalObrigatorias > 0 ? "text-red-700" : "")}>{totalObrigatorias}</p>
           </CardContent>
@@ -300,15 +300,15 @@ export function MotorAET({ riscos }: MotorAETProps) {
         </Card>
       </div>
 
-      {/* ── Alerta geral se há obrigatoriedade ── */}
+      {/* ── Alerta geral se há análises prioritárias ── */}
       {totalObrigatorias > 0 && (
         <Alert className="border-red-300 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800 text-sm">AET Obrigatória — Ação Imediata</AlertTitle>
+          <AlertTitle className="text-red-800 text-sm">AET Prioritária — Ação Recomendada com Urgência</AlertTitle>
           <AlertDescription className="text-red-700 text-xs mt-1">
-            Foram detectados {totalObrigatorias} gatilho(s) que exigem Análise Ergonômica do Trabalho (AET)
-            de forma obrigatória. Conforme NR-17 §17.1 e NR-1 §1.4.3, riscos não toleráveis sem medidas
-            de controle configuram infração administrativa. Recomenda-se acionar ergonomista habilitado.
+            O sistema identificou {totalObrigatorias} gatilho(s) que recomendam Análise Ergonômica do Trabalho (AET)
+            com prioridade elevada. Riscos não toleráveis sem medidas de controle podem configurar
+            infração administrativa (NR-17 §17.1 · NR-1 §1.4.3). Recomenda-se acionar ergonomista habilitado.
           </AlertDescription>
         </Alert>
       )}
