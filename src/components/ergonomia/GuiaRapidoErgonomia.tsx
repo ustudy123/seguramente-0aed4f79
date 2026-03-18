@@ -222,7 +222,7 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
           />
         </div>
 
-        <div className="flex min-h-[500px]">
+        <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Sidebar de navegação */}
           <div className="w-52 shrink-0 border-r bg-muted/30 py-4 hidden sm:block">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-2">
