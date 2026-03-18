@@ -340,6 +340,16 @@ export function GuiaRapidoErgonomia({ open, onOpenChange }: GuiaRapidoErgonomiaP
                   </div>
                 )}
 
+                {/* CTA Manual PDF — última etapa */}
+                {passo === PASSOS.length - 1 && (
+                  <div className="flex flex-col items-center gap-3 pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground text-center">
+                      Quer um guia de referência completo para consultar offline?
+                    </p>
+                    <ManualErgonomia />
+                  </div>
+                )}
+
                 {/* Indicadores de passo (mobile) */}
                 <div className="flex justify-center gap-1.5 sm:hidden pt-2">
                   {PASSOS.map((_, i) => (
