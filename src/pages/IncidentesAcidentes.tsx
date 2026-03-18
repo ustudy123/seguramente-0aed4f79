@@ -51,9 +51,14 @@ export default function IncidentesAcidentes() {
             Cada incidente registrado é uma oportunidade de evitar o próximo acidente.
           </p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Registrar Evento
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)}>
+            <BookOpen className="w-4 h-4 mr-2" /> Guia Rápido
+          </Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Registrar Evento
+          </Button>
+        </div>
       </div>
 
       <EventoSSTStats stats={stats} />
