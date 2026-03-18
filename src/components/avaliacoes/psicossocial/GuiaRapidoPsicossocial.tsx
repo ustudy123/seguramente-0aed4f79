@@ -68,7 +68,7 @@ const PASSOS = [
     acoes: [
       "Clique em **Nova Campanha** no topo da página",
       "O **Assistente** vai recomendar o instrumento ideal para o seu caso",
-      "Escolha o **SIPRO** para avaliação geral (recomendado para a maioria)",
+      "Escolha o **SIPRO** para avaliação geral — instrumento autoral do Seguramente, integrado com GRO, AET e demais módulos (recomendado na maioria dos casos)",
       "Defina o nome, período de início e fim da campanha",
       "Avance para configurar os grupos de trabalho (próximo passo)",
     ],
