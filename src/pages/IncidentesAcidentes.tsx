@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Shield, LayoutDashboard, List, BarChart3 } from "lucide-react";
+import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen } from "lucide-react";
 import { useEventosSST } from "@/hooks/useEventosSST";
 import { EventoSSTStats } from "@/components/incidentes/EventoSSTStats";
 import { EventoSSTList } from "@/components/incidentes/EventoSSTList";
@@ -11,11 +11,13 @@ import { EventoSSTForm } from "@/components/incidentes/EventoSSTForm";
 import { EventoSSTDetail } from "@/components/incidentes/EventoSSTDetail";
 import { EventoSSTDashboard } from "@/components/incidentes/EventoSSTDashboard";
 import { PiramideSeguranca } from "@/components/incidentes/PiramideSeguranca";
+import { GuiaRapidoIncidentes } from "@/components/incidentes/GuiaRapidoIncidentes";
 import type { EventoSST } from "@/types/eventoSST";
 
 export default function IncidentesAcidentes() {
   const { eventos, isLoading, stats, createEvento, updateEvento } = useEventosSST();
   const [showForm, setShowForm] = useState(false);
+  const [showGuia, setShowGuia] = useState(false);
   const [editing, setEditing] = useState<EventoSST | null>(null);
   const [selected, setSelected] = useState<EventoSST | null>(null);
   const [filters, setFilters] = useState({
@@ -49,9 +51,14 @@ export default function IncidentesAcidentes() {
             Cada incidente registrado é uma oportunidade de evitar o próximo acidente.
           </p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Registrar Evento
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)}>
+            <BookOpen className="w-4 h-4 mr-2" /> Guia Rápido
+          </Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Registrar Evento
+          </Button>
+        </div>
       </div>
 
       <EventoSSTStats stats={stats} />
@@ -149,6 +156,9 @@ export default function IncidentesAcidentes() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Guia Rápido */}
+      <GuiaRapidoIncidentes open={showGuia} onOpenChange={setShowGuia} />
 
       {/* Form */}
       <EventoSSTForm
