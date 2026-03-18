@@ -19,11 +19,19 @@ export interface AEPDescricaoAtividade {
   ferramentasUtilizadas: string;
   ritmoRepetitividade: string;
   variabilidadeTarefa: string;
+  participacaoTrabalhadores?: string;
   espacoFisico: string;
   iluminacao: string;
   temperatura: string;
   ruido: string;
+  umidadeVelocidadeAr?: string;
   organizacaoPosto: string;
+  // §17.6 Organização do trabalho
+  normasProducao?: string;
+  pausasDescanso?: string;
+  jornadaHorasExtras?: string;
+  modoOperatorio?: string;
+  indicadoresSaude?: string;
 }
 
 export type NivelRisco = 'baixo' | 'medio' | 'alto' | 'critico';
@@ -72,6 +80,8 @@ export interface AEPSinteseAvaliacao {
   pontosCriticos: string[];
   necessidadeAET: NecessidadeAET;
   justificativaAET: string;
+  // Checklist de conformidade NR-17 (Manual MTE/2002)
+  checklistNR17?: Record<string, boolean>;
 }
 
 export type TipoAcao = 'engenharia' | 'organizacional' | 'administrativa' | 'treinamento';
