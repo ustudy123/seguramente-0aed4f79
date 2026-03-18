@@ -159,8 +159,9 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     loadCampanha();
   }, [token, tokenTipo]);
 
+  const blocosDinamicosAtivos = (campanha?.blocos_dinamicos as string[] | undefined) ?? [];
   const instrumento = (campanha?.instrumento || 'sipro') as InstrumentoPsicossocial;
-  const totalPerguntas = getTotalPerguntas(instrumento);
+  const totalPerguntas = getTotalPerguntas(instrumento, blocosDinamicosAtivos);
   const tempoEstimado = Math.ceil(totalPerguntas * 0.4);
 
   const handleRespostaChange = (perguntaId: string, valor: number) => {
