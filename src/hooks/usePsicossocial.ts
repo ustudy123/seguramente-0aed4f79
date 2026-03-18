@@ -26,7 +26,10 @@ import {
   PESOS_IBD,
   PESOS_IREC,
   PESOS_ICOP,
+  PESOS_INOT,
 } from "@/data/instrumentos";
+import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
+import type { DimensaoInstrumento } from "@/data/instrumentos";
 
 // Gerar token único
 function gerarToken(): string {
@@ -38,21 +41,46 @@ function gerarToken(): string {
  *
  * SIPRO: usa calcularIRPS() — escala 1-5, fórmula ((média-1)/4)×100, quanto maior = maior risco.
  * Demais: usa calcularIPSInstrumento() — escala 0-4, quanto maior = melhor condição.
+ *
+ * blocosDinamicos: IDs dos blocos CET ativos na campanha (ex: ['cet_noturno']).
+ * Exclusivos do SIPRO — adicionam dimensões ao cálculo e habilitam INOT-S.
  */
 export function calcularIndicadores(
   respostas: Record<string, number>,
-  instrumento: InstrumentoPsicossocial = 'sipro'
+  instrumento: InstrumentoPsicossocial = 'sipro',
+  blocosDinamicos?: string[]
 ): IndicadoresPsicossociais {
   const validKeys = ['copsoq', 'hse', 'proart', 'sipro'] as const;
   type ValidKey = typeof validKeys[number];
   const instrumentoKey: ValidKey = validKeys.includes(instrumento as ValidKey)
     ? instrumento as ValidKey
     : 'sipro';
-  const dimensoes = getDimensoesByInstrumento(instrumentoKey);
+  const dimensoesBase = getDimensoesByInstrumento(instrumentoKey);
 
   if (instrumento === 'sipro') {
+    // ── Injetar dimensões CET quando blocos estão ativos ───────────────────
+    const dimensoesCET: DimensaoInstrumento[] = (blocosDinamicos && blocosDinamicos.length > 0)
+      ? BLOCOS_DINAMICOS
+          .filter(b => blocosDinamicos.includes(b.id))
+          .map(b => ({
+            id: b.id,
+            nome: b.titulo,
+            tipo: 'risco' as const,
+            descricao: b.descricao,
+            normas: b.perguntas[0]?.mapeamento ?? ['NR-01', 'ISO 45003'],
+            perguntas: b.perguntas.map(p => ({
+              id: p.id,
+              texto: p.texto,
+              invertida: p.invertida ?? false,
+              peso: 1,
+              dimensao: b.id,
+            })),
+          }))
+      : [];
+
+    const dimensoes = [...dimensoesBase, ...dimensoesCET];
+
     // ── SIPRO: modelo estatístico próprio ──────────────────────────────────
-    // Escala 1-5 | Protetores invertidos (6-x) | Score ((média-1)/4)×100
     const resultado = calcularIRPS(respostas, dimensoes);
 
     const radar: RadarDimensao[] = dimensoes.map(dim => ({
@@ -74,12 +102,16 @@ export function calcularIndicadores(
       nivel: (nivelIrpsMap[resultado.porDimensao[dim.id]?.nivel ?? 'atencao'] ?? 'moderado') as 'baixo' | 'moderado' | 'alto' | 'critico',
     }));
 
-    // Mapear IRP-S para classificação compatível com IPS (semântica invertida para UI)
     const irps = calcularIndicePonderado(resultado.porDimensao, PESOS_IRPS);
     const iboS = calcularIndicePonderado(resultado.porDimensao, PESOS_IBO);
     const ibdS = calcularIndicePonderado(resultado.porDimensao, PESOS_IBD);
     const irecS = calcularIndicePonderado(resultado.porDimensao, PESOS_IREC);
     const icopS = calcularIndicePonderado(resultado.porDimensao, PESOS_ICOP);
+
+    // INOT-S: calculado somente quando bloco cet_noturno está ativo
+    const inotS = (blocosDinamicos?.includes('cet_noturno'))
+      ? calcularIndicePonderado(resultado.porDimensao, PESOS_INOT)
+      : undefined;
 
     let classificacao: ReturnType<typeof calcularIPSClassificacao>;
     if (irps <= 24) classificacao = 'saudavel';
@@ -95,13 +127,14 @@ export function calcularIndicadores(
       IBD_S: ibdS,
       IREC_S: irecS,
       ICOP_S: icopS,
+      INOT_S: inotS,
       detalhes,
       radar,
     };
   }
 
-  // ── Instrumentos padrão: COPSOQ, HSE, PROART ─────────────────────────────
-  const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoes);
+  // ── Instrumentos padrão: COPSOQ, HSE, PROART (sem suporte a CET) ──────────
+  const { ips, porDimensao } = calcularIPSInstrumento(respostas, dimensoesBase);
   const classificacao = calcularIPSClassificacao(ips);
 
   const nivelMap: Record<string, 'baixo' | 'moderado' | 'alto' | 'critico'> = {
@@ -111,13 +144,13 @@ export function calcularIndicadores(
     critico: 'critico',
   };
 
-  const detalhes = dimensoes.map(dim => ({
+  const detalhes = dimensoesBase.map(dim => ({
     bloco: dim.nome,
     media: porDimensao[dim.id]?.score ?? 50,
     nivel: (nivelMap[porDimensao[dim.id]?.nivel ?? 'moderado'] ?? 'moderado') as 'baixo' | 'moderado' | 'alto' | 'critico',
   }));
 
-  const radar: RadarDimensao[] = dimensoes.map(dim => ({
+  const radar: RadarDimensao[] = dimensoesBase.map(dim => ({
     subject: dim.nome.split(' ').slice(0, 2).join(' '),
     value: porDimensao[dim.id]?.score ?? 50,
     fullMark: 100,
@@ -529,7 +562,8 @@ export function usePsicossocial() {
     tempoSegundos: number,
   ): Promise<void> => {
     const instrumento = (campanha.instrumento || 'sipro') as InstrumentoPsicossocial;
-    const indicadores = calcularIndicadores(respostas, instrumento);
+    const blocosDinamicos = (campanha.blocos_dinamicos as string[] | undefined) ?? [];
+    const indicadores = calcularIndicadores(respostas, instrumento, blocosDinamicos);
 
     const { error } = await supabasePublic
       .rpc('salvar_resposta_anonima_campanha', {

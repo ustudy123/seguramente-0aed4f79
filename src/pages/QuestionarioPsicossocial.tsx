@@ -21,6 +21,7 @@ import { VerificacaoTelefone } from "@/components/avaliacoes/psicossocial/Verifi
 import {
   type CampanhaPsicossocial,
   type InstrumentoPsicossocial,
+  BLOCOS_DINAMICOS,
 } from "@/types/psicossocial";
 import { toast } from "sonner";
 import logoSeguramente from "@/assets/logo-seguramente.png";
@@ -41,12 +42,19 @@ function getInstrumentoLabel(instrumento?: string) {
   }
 }
 
-function getTotalPerguntas(instrumento?: string) {
+function getTotalPerguntas(instrumento?: string, blocosDinamicos?: string[]) {
   const valid = ['copsoq', 'hse', 'proart', 'sipro', 'ambos'] as const;
   type V = typeof valid[number];
   const key: V = valid.includes(instrumento as V) ? instrumento as V : 'sipro';
   const dims = getDimensoesByInstrumento(key);
-  return dims.reduce((acc, d) => acc + d.perguntas.length, 0);
+  const base = dims.reduce((acc, d) => acc + d.perguntas.length, 0);
+  if (key === 'sipro' && blocosDinamicos && blocosDinamicos.length > 0) {
+    const extra = BLOCOS_DINAMICOS
+      .filter(b => blocosDinamicos.includes(b.id))
+      .reduce((acc, b) => acc + b.perguntas.length, 0);
+    return base + extra;
+  }
+  return base;
 }
 
 interface Props {
@@ -151,8 +159,9 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     loadCampanha();
   }, [token, tokenTipo]);
 
+  const blocosDinamicosAtivos = (campanha?.blocos_dinamicos as string[] | undefined) ?? [];
   const instrumento = (campanha?.instrumento || 'sipro') as InstrumentoPsicossocial;
-  const totalPerguntas = getTotalPerguntas(instrumento);
+  const totalPerguntas = getTotalPerguntas(instrumento, blocosDinamicosAtivos);
   const tempoEstimado = Math.ceil(totalPerguntas * 0.4);
 
   const handleRespostaChange = (perguntaId: string, valor: number) => {
@@ -171,7 +180,8 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
 
       if (tokenTipo === 'participacao') {
         // Usa o token de participação individual
-        const indicadores = calcularIndicadores(respostas, instrumento);
+        const blocosDinamicos = (campanha.blocos_dinamicos as string[] | undefined) ?? [];
+        const indicadores = calcularIndicadores(respostas, instrumento, blocosDinamicos);
         const { data, error: rpcError } = await supabasePublic
           .rpc('salvar_resposta_por_token_participacao', {
             p_token: token,
@@ -420,7 +430,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
           onRespostaChange={handleRespostaChange}
           onConcluir={handleSubmit}
           nomeCampanha={campanha?.nome}
-          blocosDinamicos={campanha?.blocos_dinamicos as string[] | undefined}
+          blocosDinamicos={blocosDinamicosAtivos}
         />
 
         {submitting && (
