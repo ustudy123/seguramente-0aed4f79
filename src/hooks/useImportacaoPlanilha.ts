@@ -444,11 +444,15 @@ export function useImportacaoPlanilha() {
       
       const mapaCargos: Record<string, string> = {};
       
-      // Buscar cargos existentes
-      const { data: cargosExistentes } = await supabase
+      // Buscar cargos existentes para esta empresa
+      let cargoQuery = supabase
         .from("cargos")
         .select("id, nome")
         .eq("tenant_id", tenantId);
+      if (empresaAtivaId) {
+        cargoQuery = cargoQuery.eq("empresa_id", empresaAtivaId);
+      }
+      const { data: cargosExistentes } = await cargoQuery;
       
       cargosExistentes?.forEach(cargo => {
         mapaCargos[cargo.nome.toLowerCase()] = cargo.id;
