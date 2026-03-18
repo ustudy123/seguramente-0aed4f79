@@ -26,7 +26,10 @@ import {
   PESOS_IBD,
   PESOS_IREC,
   PESOS_ICOP,
+  PESOS_INOT,
 } from "@/data/instrumentos";
+import { BLOCOS_DINAMICOS } from "@/types/psicossocial";
+import type { DimensaoInstrumento } from "@/data/instrumentos";
 
 // Gerar token único
 function gerarToken(): string {
