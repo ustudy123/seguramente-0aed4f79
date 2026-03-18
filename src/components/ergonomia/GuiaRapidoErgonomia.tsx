@@ -102,11 +102,11 @@ const PASSOS = [
     acoes: [
       "Acesse a aba **Motor AET**",
       "Visualize as recomendações classificadas por prioridade",
-      "Análises **Obrigatórias** devem ser priorizadas imediatamente",
+      "Análises **Prioritárias** devem ser atendidas com urgência",
       "Use o botão **Gerar AEP** para análises psicossociais indicadas",
       "Marque análises como concluídas para atualizar o score",
     ],
-    dica: "Quando o IPS Psicossocial estiver abaixo de 65%, o Motor AET indicará automaticamente análise ergopsicossocial.",
+    dica: "Quando indicadores psicossociais atingem nível crítico, o Motor AET recomenda automaticamente aprofundamento da análise ergonômica (AET).",
   },
   {
     id: "analise_ia",
