@@ -147,6 +147,32 @@ function AtivosTab() {
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [desligarColab, setDesligarColab] = useState<ColaboradorExtendido | null>(null);
 
+  const handleExportarColaboradores = () => {
+    if (filteredColaboradores.length === 0) {
+      toast.error("Nenhum colaborador para exportar.");
+      return;
+    }
+    import("xlsx").then((XLSX) => {
+      const dados = filteredColaboradores.map((c) => ({
+        Nome: c.nome_completo,
+        CPF: c.cpf,
+        Email: c.email,
+        Celular: c.celular || "",
+        Cargo: c.cargo,
+        Departamento: c.departamento || "",
+        Filial: c.filial || "",
+        "Tipo Contrato": c.tipo_contrato || "",
+        "Data Admissão": c.data_admissao || "",
+        Status: statusLabels[c.status] || c.status,
+      }));
+      const ws = XLSX.utils.json_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
+      XLSX.writeFile(wb, `colaboradores_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Planilha exportada com sucesso!");
+    });
+  };
+
   const handleEditColaborador = (colab: ColaboradorExtendido) => {
     setEditingColaborador({
       id: colab.id,
