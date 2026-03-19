@@ -27,6 +27,9 @@ export default function Estrategia() {
           <p className="text-muted-foreground mt-1">
             Planejamento estratégico, cultura organizacional e estrutura que viram ação
           </p>
+          <p className="text-muted-foreground mt-1">
+            O módulo Estratégia e Governança é essencial para ajudar a planejar e organizar a direção da empresa. Ele fornece ferramentas para melhorar a cultura organizacional e a estrutura interna.
+          </p>
         </div>
         <EstrategiaEscopoSelector escopo={escopo} onChange={setEscopo} />
       </div>
