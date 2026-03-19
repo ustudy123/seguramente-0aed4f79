@@ -228,7 +228,7 @@ export default function UsuariosContent() {
               <Card
                 key={u.id}
                 className="hover:border-primary/40 cursor-pointer transition-all"
-                onClick={() => setSelecionado(u)}
+                onClick={() => setSelecionadoId(u.id)}
               >
                 <CardContent className="p-4">
                   <div className="md:hidden space-y-2">
