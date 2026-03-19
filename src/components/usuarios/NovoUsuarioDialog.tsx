@@ -35,6 +35,7 @@ const schemaEtapa1 = z.object({
   empresa_id: z.string().optional(),
   tipo_vinculo: z.string(),
   contexto_operacional: z.string().optional(),
+  observacoes: z.string().optional(),
 });
 
 const schemaEtapa2 = z.object({
