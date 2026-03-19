@@ -12409,6 +12409,7 @@ export type Database = {
           template_origem_id: string | null
           tenant_id: string
           tipo: string
+          tipo_usuario_sugerido: string | null
           total_usuarios: number
           updated_at: string
         }
@@ -12429,6 +12430,7 @@ export type Database = {
           template_origem_id?: string | null
           tenant_id: string
           tipo?: string
+          tipo_usuario_sugerido?: string | null
           total_usuarios?: number
           updated_at?: string
         }
@@ -12449,6 +12451,7 @@ export type Database = {
           template_origem_id?: string | null
           tenant_id?: string
           tipo?: string
+          tipo_usuario_sugerido?: string | null
           total_usuarios?: number
           updated_at?: string
         }
