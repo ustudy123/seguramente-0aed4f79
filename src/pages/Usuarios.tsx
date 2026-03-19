@@ -237,7 +237,7 @@ export default function Usuarios() {
               <Card
                 key={u.id}
                 className="hover:border-primary/40 cursor-pointer transition-all"
-                onClick={() => setSelecionado(u)}
+                onClick={() => setSelecionadoId(u.id)}
               >
                 <CardContent className="p-4">
                   {/* Mobile */}
