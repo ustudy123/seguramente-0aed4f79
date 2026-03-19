@@ -197,7 +197,23 @@ serve(async (req) => {
     return json({ error: "Invalid tenantSlug" }, 400);
   }
 
-  // Prevent double-creation if profile already exists
+  // Check if CPF/CNPJ already exists in empresa_cadastro
+  if (documento) {
+    const docField = tipoPessoa === "pf" ? "cpf" : "cnpj";
+    const { data: existingDoc } = await admin
+      .from("empresa_cadastro")
+      .select("id")
+      .eq(docField, documento)
+      .maybeSingle();
+
+    if (existingDoc) {
+      // Cleanup: delete the auth user since registration can't proceed
+      await admin.auth.admin.deleteUser(userId);
+      const docLabel = tipoPessoa === "pf" ? "CPF" : "CNPJ";
+      return json({ error: `${docLabel} já cadastrado no sistema. Utilize outro documento ou entre em contato com o suporte.` }, 409);
+    }
+  }
+
   const { data: existingProfile, error: existingProfileError } = await admin
     .from("profiles")
     .select("id, tenant_id")

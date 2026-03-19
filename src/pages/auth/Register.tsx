@@ -172,7 +172,7 @@ export default function Register() {
       }
 
       // 2. Call onboarding-signup to create tenant + profile + owner role
-      const { error: fnError } = await supabase.functions.invoke("onboarding-signup", {
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("onboarding-signup", {
         body: {
           tenantNome: data.tenantNome,
           tenantSlug: data.tenantSlug,
@@ -186,8 +186,14 @@ export default function Register() {
 
       if (fnError) {
         console.error("onboarding-signup error:", fnError);
-        // Account was created but tenant setup failed — still show success
-        // since the user can retry later
+        // Check if it's a duplicate document error (user was already cleaned up server-side)
+        const errorBody = typeof fnData === 'object' && fnData?.error ? fnData.error : fnError.message;
+        if (errorBody?.includes("já cadastrado")) {
+          await supabase.auth.signOut();
+          toast.error("Documento já cadastrado", { description: errorBody });
+          return;
+        }
+        // Other errors — account was created but tenant setup failed
       }
 
       // Sign out so user must verify email first
