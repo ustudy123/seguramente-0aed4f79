@@ -212,25 +212,30 @@ serve(async (req) => {
     return json({ ok: true, tenantId: existingProfile.tenant_id }, 200);
   }
 
-  // Ensure tenant slug isn't already used
-  const { data: existingTenant, error: existingTenantError } = await admin
-    .from("tenants")
-    .select("id")
-    .eq("slug", tenantSlug)
-    .maybeSingle();
+  // Ensure tenant slug is unique — auto-append suffix if taken
+  let finalSlug = tenantSlug;
+  let slugAttempt = 0;
+  while (true) {
+    const { data: existingTenant, error: existingTenantError } = await admin
+      .from("tenants")
+      .select("id")
+      .eq("slug", finalSlug)
+      .maybeSingle();
 
-  if (existingTenantError) {
-    return json({ error: existingTenantError.message }, 500);
-  }
+    if (existingTenantError) {
+      return json({ error: existingTenantError.message }, 500);
+    }
 
-  if (existingTenant?.id) {
-    return json({ error: "Tenant slug already exists" }, 409);
+    if (!existingTenant?.id) break;
+
+    slugAttempt++;
+    finalSlug = `${tenantSlug}-${slugAttempt}`;
   }
 
   // 1) Create tenant
   const { data: tenant, error: tenantError } = await admin
     .from("tenants")
-    .insert({ nome: tenantNome, slug: tenantSlug, plano })
+    .insert({ nome: tenantNome, slug: finalSlug, plano })
     .select("id")
     .single();
 
