@@ -55,7 +55,7 @@ const colorClasses = {
   },
 };
 
-export const PilarCard = ({
+export const PilarCard = forwardRef<HTMLDivElement, PilarCardProps>(({
   title,
   description,
   icon: Icon,
@@ -64,7 +64,7 @@ export const PilarCard = ({
   color,
   delay = 0,
   pilarIndicator,
-}: PilarCardProps) => {
+}, ref) => {
   const colors = colorClasses[color];
   const [selectedIndicator, setSelectedIndicator] = useState<{
     type: IndicatorType;
