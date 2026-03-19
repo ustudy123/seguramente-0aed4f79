@@ -212,7 +212,7 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
               </SelectContent>
             </Select>
             <Input className="flex-1" placeholder="Descreva..." value={newItemDesc} onChange={(e) => setNewItemDesc(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAdd()} />
-            <Button onClick={handleAdd}><Plus className="w-4 h-4" /></Button>
+            <Button onClick={handleAdd} disabled={createOceanoItem.isPending}><Plus className="w-4 h-4" /></Button>
           </div>
         </CardContent>
       </Card>
