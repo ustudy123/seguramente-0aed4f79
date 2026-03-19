@@ -37,7 +37,8 @@ export default function UsuariosContent() {
   const [filterTipo, setFilterTipo] = useState("todos");
   const [filterEmpresa, setFilterEmpresa] = useState("todos");
   const [showNovo, setShowNovo] = useState(false);
-  const [selecionado, setSelecionado] = useState<any>(null);
+  const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
+  const selecionado = selecionadoId ? usuarios.find(u => u.id === selecionadoId) || null : null;
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-lista", tenantId],
