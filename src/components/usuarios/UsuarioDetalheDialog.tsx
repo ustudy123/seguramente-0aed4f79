@@ -113,7 +113,30 @@ type Tab = "dados" | "vinculos" | "logs";
 export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const { tenantId } = useAuth();
   const { updateStatus, updateUsuario, createVinculo, encerrarVinculo } = useUsuarios();
+  const { perfis, vincularPerfil, desvincularPerfil } = usePerfisAcesso();
   const [tab, setTab] = useState<Tab>("dados");
+
+  // Perfil de acesso vinculado ao usuário
+  const { data: perfilVinculos = [], refetch: refetchPerfilVinculos } = useQuery({
+    queryKey: ["usuario-perfil-vinculo", usuario.id, tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data, error } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .select("*, perfil:perfil_id(id,nome,cor,icone,nivel_risco,descricao)")
+        .eq("tenant_id", tenantId)
+        .eq("usuario_id", usuario.id)
+        .eq("ativo", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: open && !!tenantId && !!usuario.id,
+  });
+
+  const perfilAtual = perfilVinculos.length > 0 ? perfilVinculos[0] : null;
+  const perfilAtualObj = perfilAtual?.perfil as PerfilAcesso | null;
+  const perfisAtivos = perfis.filter(p => p.ativo);
 
   // Edição
   const [editando, setEditando] = useState(false);
@@ -128,6 +151,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     data_nascimento: usuario.data_nascimento || "",
     tipo_usuario: usuario.tipo_usuario || "",
     observacoes: usuario.observacoes || "",
+    perfil_acesso_id: perfilAtualObj?.id || "",
   });
 
   // Bloqueio
