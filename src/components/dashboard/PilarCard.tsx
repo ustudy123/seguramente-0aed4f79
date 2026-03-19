@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { LucideIcon, TrendingUp, TrendingDown, Minus, ChevronRight, Expand } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ const colorClasses = {
   },
 };
 
-export const PilarCard = ({
+export const PilarCard = forwardRef<HTMLDivElement, PilarCardProps>(({
   title,
   description,
   icon: Icon,
@@ -64,7 +64,7 @@ export const PilarCard = ({
   color,
   delay = 0,
   pilarIndicator,
-}: PilarCardProps) => {
+}, ref) => {
   const colors = colorClasses[color];
   const [selectedIndicator, setSelectedIndicator] = useState<{
     type: IndicatorType;
@@ -105,6 +105,7 @@ export const PilarCard = ({
   return (
     <>
       <motion.div
+        ref={ref}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay }}
@@ -214,4 +215,5 @@ export const PilarCard = ({
       )}
     </>
   );
-};
+});
+PilarCard.displayName = "PilarCard";
