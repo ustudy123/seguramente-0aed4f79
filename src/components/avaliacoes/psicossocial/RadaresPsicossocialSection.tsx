@@ -612,7 +612,7 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
         custo_estimado: acao.custo_estimado ? parseFloat(acao.custo_estimado) : undefined,
         tipo: acao.tipo,
         prioridade: (acao.prioridade === 'baixa' ? 'baixo' : acao.prioridade === 'media' ? 'medio' : acao.prioridade === 'urgente' ? 'urgente' : 'imediato') as any,
-        origem_modulo: 'manual' as const,
+        origem_modulo: 'psicossocial' as const,
         origem_descricao: `Radar ${radarType === 'burnout' ? 'Burnout' : 'Boreout'} — Fator: ${fatorKey} — Psicossocial NR-01`,
         criado_por: user?.id,
         criado_por_nome: profile?.nome_completo || 'Sistema',
