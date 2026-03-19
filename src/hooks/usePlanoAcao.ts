@@ -20,6 +20,7 @@ import type {
   UpdatePlanoTarefaDTO,
   AcaoStatus,
   TarefaStatus,
+  OrigemModulo,
 } from "@/types/planoAcao";
 
 export function usePlanoAcao(filters?: PlanoAcaoFilters) {
