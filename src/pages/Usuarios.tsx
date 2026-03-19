@@ -310,9 +310,17 @@ export default function Usuarios() {
                       )}
                     </div>
 
-                    <Badge variant="secondary" className="text-xs truncate">
-                      {TIPO_USUARIO_LABELS[u.tipo_usuario] || u.tipo_usuario}
-                    </Badge>
+                    {(() => {
+                      const perfil = perfilPorUsuario.get(u.id);
+                      return perfil ? (
+                        <Badge variant="outline" className="text-xs truncate" style={{ borderColor: perfil.cor, color: perfil.cor }}>
+                          <span className="w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ backgroundColor: perfil.cor }} />
+                          {perfil.nome}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      );
+                    })()}
 
                     <div className="flex items-center gap-1 text-sm">
                       <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
