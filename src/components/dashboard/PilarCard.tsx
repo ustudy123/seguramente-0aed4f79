@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { LucideIcon, TrendingUp, TrendingDown, Minus, ChevronRight, Expand } from "lucide-react";
 import { cn } from "@/lib/utils";
