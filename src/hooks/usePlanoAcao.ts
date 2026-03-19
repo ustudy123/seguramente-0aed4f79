@@ -225,8 +225,9 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       };
 
       finalData.forEach((a) => {
-        if (a.origem_modulo && result.por_origem[a.origem_modulo as keyof typeof result.por_origem] !== undefined) {
-          result.por_origem[a.origem_modulo as keyof typeof result.por_origem]++;
+        if (a.origem_modulo) {
+          const key = a.origem_modulo as OrigemModulo;
+          result.por_origem[key] = (result.por_origem[key] || 0) + 1;
         }
         if (a.prioridade && result.por_prioridade[a.prioridade as keyof typeof result.por_prioridade] !== undefined) {
           result.por_prioridade[a.prioridade as keyof typeof result.por_prioridade]++;
