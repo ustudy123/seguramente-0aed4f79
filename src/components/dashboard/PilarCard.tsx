@@ -214,4 +214,5 @@ export const PilarCard = forwardRef<HTMLDivElement, PilarCardProps>(({
       )}
     </>
   );
-};
+});
+PilarCard.displayName = "PilarCard";
