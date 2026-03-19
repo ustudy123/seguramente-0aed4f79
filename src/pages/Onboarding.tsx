@@ -47,6 +47,12 @@ export default function Onboarding() {
         </div>
       </div>
 
+      <div className="mt-4">
+        <p className="text-base text-muted-foreground">
+          Este é o seu ponto de partida para explorar o onboarding gamificado. Aqui, você passará por diversas etapas que tornarão sua integração na empresa mais interativa e engajante. Boa sorte!
+        </p>
+      </div>
+
       <Tabs defaultValue="processos" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-lg">
           <TabsTrigger value="processos">Processos</TabsTrigger>
