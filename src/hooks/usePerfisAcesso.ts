@@ -331,6 +331,8 @@ export function usePerfisAcesso() {
   const updatePerfil = useMutation({
     mutationFn: async ({ id, permissoes, ...payload }: Partial<PerfilAcesso> & { id: string; permissoes?: Partial<PerfilPermissao>[] }) => {
       const { data: before } = await (supabase as any).from("perfis_acesso").select("*").eq("id", id).single();
+      // Sanitize empty strings to null for timestamp/date fields
+      if ('expira_em' in payload && !payload.expira_em) (payload as any).expira_em = null;
       const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
       const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
       const { error } = await (supabase as any).from("perfis_acesso").update(updatePayload).eq("id", id);
