@@ -453,36 +453,36 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                 <QualidadeScoreIndicator score={score} pct={pct} />
               </div>
             </div>
+          </div>
 
-            {/* Ações de status */}
-            <div className="flex gap-2 shrink-0">
-              {convitePendente && (
-                <>
-              <Button size="sm" variant="outline" className="text-primary border-primary/30 hover:bg-primary/10"
-                    onClick={handleEnviarConvite} disabled={updateStatus.isPending}>
-                    <Send className="w-3 h-3 mr-1" />
-                    {usuario.status === "convite_enviado" ? "Reenviar" : "Enviar convite"}
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-muted-foreground"
-                    onClick={handleCancelarConvite} disabled={updateStatus.isPending}>
-                    <XCircle className="w-3 h-3 mr-1" /> Cancelar
-                  </Button>
-                </>
-              )}
-              {!convitePendente && (
-                isBloqueado ? (
-                  <Button size="sm" variant="outline" onClick={handleReativar} disabled={updateStatus.isPending}>
-                    <RotateCcw className="w-3 h-3 mr-1" /> Reativar
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="outline"
-                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                    onClick={() => setShowBloqueioForm(true)}>
-                    <Ban className="w-3 h-3 mr-1" /> Bloquear
-                  </Button>
-                )
-              )}
-            </div>
+          {/* Ações de status — separadas do header para não colidir com o X */}
+          <div className="flex gap-2 flex-wrap">
+            {convitePendente && (
+              <>
+                <Button size="sm" variant="outline" className="text-primary border-primary/30 hover:bg-primary/10"
+                  onClick={handleEnviarConvite} disabled={updateStatus.isPending}>
+                  <Send className="w-3 h-3 mr-1" />
+                  {usuario.status === "convite_enviado" ? "Reenviar" : "Enviar convite"}
+                </Button>
+                <Button size="sm" variant="ghost" className="text-muted-foreground"
+                  onClick={handleCancelarConvite} disabled={updateStatus.isPending}>
+                  <XCircle className="w-3 h-3 mr-1" /> Cancelar
+                </Button>
+              </>
+            )}
+            {!convitePendente && (
+              isBloqueado ? (
+                <Button size="sm" variant="outline" onClick={handleReativar} disabled={updateStatus.isPending}>
+                  <RotateCcw className="w-3 h-3 mr-1" /> Reativar
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => setShowBloqueioForm(true)}>
+                  <Ban className="w-3 h-3 mr-1" /> Bloquear
+                </Button>
+              )
+            )}
           </div>
 
           {/* Bloqueio form */}
