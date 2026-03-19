@@ -15,16 +15,36 @@ export function usePerfilPermissions() {
 
   const isOwner = hasMinimumRole("owner") || isSuperAdmin;
 
-  // 1. Buscar o perfil vinculado ativo do usuário
-  const { data: vinculo } = useQuery({
-    queryKey: ["meu_perfil_vinculo", user?.id, tenantId],
+  // 1. Buscar o usuarios_base.id a partir do auth user id
+  const { data: usuarioBase } = useQuery({
+    queryKey: ["meu_usuario_base_id", user?.id, tenantId],
     queryFn: async () => {
       if (!user?.id || !tenantId) return null;
-      // Try principal profile first, then any active profile
+      const { data, error } = await (supabase as any)
+        .from("usuarios_base")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      if (error) {
+        console.error("Erro ao buscar usuario_base:", error);
+        return null;
+      }
+      return data as { id: string } | null;
+    },
+    enabled: !!user?.id && !!tenantId,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // 2. Buscar o perfil vinculado ativo do usuário (usando usuarios_base.id)
+  const { data: vinculo } = useQuery({
+    queryKey: ["meu_perfil_vinculo", usuarioBase?.id, tenantId],
+    queryFn: async () => {
+      if (!usuarioBase?.id || !tenantId) return null;
       const { data, error } = await (supabase as any)
         .from("usuario_perfil_vinculos")
         .select("perfil_id, is_perfil_principal")
-        .eq("usuario_id", user.id)
+        .eq("usuario_id", usuarioBase.id)
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
         .order("is_perfil_principal", { ascending: false })
@@ -36,7 +56,7 @@ export function usePerfilPermissions() {
       }
       return data as { perfil_id: string } | null;
     },
-    enabled: !!user?.id && !!tenantId,
+    enabled: !!usuarioBase?.id && !!tenantId,
     staleTime: 5 * 60 * 1000,
   });
 
