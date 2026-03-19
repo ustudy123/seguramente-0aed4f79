@@ -100,6 +100,22 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     enabled: !!tenantId,
   });
 
+  // Perfis de acesso do tenant
+  const { data: perfisAcesso = [] } = useQuery({
+    queryKey: ["perfis-acesso-select", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await (supabase as any)
+        .from("perfis_acesso")
+        .select("id, nome, cor, tipo_usuario_sugerido, descricao")
+        .eq("tenant_id", tenantId)
+        .eq("ativo", true)
+        .order("nome");
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
   const { register, handleSubmit, watch, setValue, reset, trigger, getValues, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schemaEtapa1),
     defaultValues: { tipo_usuario: "gestor", tipo_vinculo: "gestor" },
