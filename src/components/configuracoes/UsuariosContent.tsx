@@ -213,7 +213,7 @@ export default function UsuariosContent() {
           <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
             <span>Usuário</span>
             <span>Empresa / E-mail</span>
-            <span>Tipo</span>
+            <span>Perfil de Acesso</span>
             <span>Vínculos</span>
             <span>Qualidade</span>
             <span>Status</span>
