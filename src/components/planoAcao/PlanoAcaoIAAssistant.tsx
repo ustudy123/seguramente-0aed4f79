@@ -9,21 +9,32 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
-  AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  Check,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { usePlanoAcaoIA, type SugestaoAcao, type GUT, type W5H2 } from "@/hooks/usePlanoAcaoIA";
+import { usePlanoAcao } from "@/hooks/usePlanoAcao";
+import { toast } from "sonner";
 
 interface PlanoAcaoIAAssistantProps {
   onApplySuggestion?: (sugestao: SugestaoAcao) => void;
   onApply5W2H?: (w5h2: W5H2) => void;
   onApplyGUT?: (gut: GUT) => void;
 }
+
+const PRIORIDADE_MAP: Record<string, "baixo" | "medio" | "urgente" | "imediato"> = {
+  baixa: "baixo",
+  media: "medio",
+  alta: "urgente",
+  urgente: "imediato",
+};
 
 export function PlanoAcaoIAAssistant({ 
   onApplySuggestion, 
@@ -35,11 +46,17 @@ export function PlanoAcaoIAAssistant({
   const [descricao, setDescricao] = useState("");
   const [expanded, setExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState<"sugerir" | "5w2h" | "priorizar">("sugerir");
+  const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
+  const [createdIndexes, setCreatedIndexes] = useState<Set<number>>(new Set());
+  const [isCreating, setIsCreating] = useState(false);
 
   const { isLoading, resultado, sugerirAcoes, gerar5W2H, priorizarAcao, limpar } = usePlanoAcaoIA();
+  const { createAcao } = usePlanoAcao();
 
   const handleSugerir = async () => {
     if (!contexto.trim()) return;
+    setSelectedIndexes(new Set());
+    setCreatedIndexes(new Set());
     await sugerirAcoes(contexto);
   };
 
@@ -51,6 +68,70 @@ export function PlanoAcaoIAAssistant({
   const handlePriorizar = async () => {
     if (!titulo.trim()) return;
     await priorizarAcao(titulo, descricao);
+  };
+
+  const toggleSelect = (idx: number) => {
+    if (createdIndexes.has(idx)) return;
+    setSelectedIndexes(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (!resultado?.sugestoes) return;
+    const allAvailable = resultado.sugestoes
+      .map((_, i) => i)
+      .filter(i => !createdIndexes.has(i));
+    
+    const allSelected = allAvailable.every(i => selectedIndexes.has(i));
+    if (allSelected) {
+      setSelectedIndexes(new Set());
+    } else {
+      setSelectedIndexes(new Set(allAvailable));
+    }
+  };
+
+  const handleCriarSelecionadas = async () => {
+    if (!resultado?.sugestoes || selectedIndexes.size === 0) return;
+    setIsCreating(true);
+    let successCount = 0;
+
+    for (const idx of selectedIndexes) {
+      const sugestao = resultado.sugestoes[idx];
+      if (!sugestao || createdIndexes.has(idx)) continue;
+
+      try {
+        const prioridade = PRIORIDADE_MAP[sugestao.prioridade] || "medio";
+        const gutScore = prioridade === "imediato" ? 5 : prioridade === "urgente" ? 4 : prioridade === "medio" ? 3 : 2;
+        
+        await createAcao({
+          titulo: sugestao.titulo,
+          descricao: sugestao.descricao,
+          tipo: sugestao.tipo,
+          origem_modulo: "manual",
+          origem_descricao: "Gerada via Assistente IA",
+          prioridade,
+          gravidade: gutScore,
+          urgencia: gutScore,
+          tendencia: gutScore,
+          exige_evidencia: false,
+        });
+        
+        setCreatedIndexes(prev => new Set(prev).add(idx));
+        successCount++;
+      } catch (err) {
+        console.error(`Erro ao criar ação "${sugestao.titulo}":`, err);
+      }
+    }
+
+    setSelectedIndexes(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ação(ões) criada(s) com sucesso no Plano de Ação!`);
+    }
+    setIsCreating(false);
   };
 
   const getPrioridadeColor = (prioridade: string) => {
@@ -70,6 +151,10 @@ export function PlanoAcaoIAAssistant({
     }
   };
 
+  const availableCount = resultado?.sugestoes
+    ? resultado.sugestoes.filter((_, i) => !createdIndexes.has(i)).length
+    : 0;
+
   return (
     <Card className="relative border-0 overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 text-white shadow-2xl shadow-indigo-500/20">
       {/* Animated background elements */}
@@ -77,7 +162,6 @@ export function PlanoAcaoIAAssistant({
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl animate-pulse [animation-delay:1s]" />
         <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl animate-pulse [animation-delay:2s]" />
-        {/* Grid overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:32px_32px]" />
       </div>
 
@@ -122,7 +206,7 @@ export function PlanoAcaoIAAssistant({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  onClick={() => { setActiveTab("sugerir"); limpar(); }}
+                  onClick={() => { setActiveTab("sugerir"); limpar(); setSelectedIndexes(new Set()); setCreatedIndexes(new Set()); }}
                   className={activeTab === "sugerir" 
                     ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700" 
                     : "bg-white/5 text-indigo-200 border border-white/10 hover:bg-white/10 hover:text-white"}
@@ -207,44 +291,108 @@ export function PlanoAcaoIAAssistant({
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-4 pt-4 border-t border-white/10"
                 >
-                  {/* Sugestões */}
+                  {/* Sugestões com seleção múltipla */}
                   {resultado.sugestoes && resultado.sugestoes.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm flex items-center gap-2">
-                        <Lightbulb className="h-4 w-4 text-yellow-500" />
-                        Ações Sugeridas
-                      </h4>
-                      {resultado.sugestoes.map((sugestao, idx) => (
-                        <div 
-                          key={idx}
-                          className="p-3 bg-white/5 rounded-lg border border-white/10 space-y-2"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <p className="font-medium text-sm text-white">{sugestao.titulo}</p>
-                              <p className="text-xs text-indigo-200/60 mt-1">{sugestao.descricao}</p>
-                            </div>
-                            <div className="flex gap-1">
-                              <Badge className={getTipoColor(sugestao.tipo)} variant="secondary">
-                                {sugestao.tipo}
-                              </Badge>
-                              <Badge className={getPrioridadeColor(sugestao.prioridade)}>
-                                {sugestao.prioridade}
-                              </Badge>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4 text-yellow-500" />
+                          Ações Sugeridas
+                        </h4>
+                        {availableCount > 0 && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={selectAll}
+                            className="text-indigo-300 hover:text-white hover:bg-white/10 text-xs h-7"
+                          >
+                            {selectedIndexes.size === availableCount ? "Desmarcar todas" : "Selecionar todas"}
+                          </Button>
+                        )}
+                      </div>
+
+                      {resultado.sugestoes.map((sugestao, idx) => {
+                        const isCreated = createdIndexes.has(idx);
+                        const isSelected = selectedIndexes.has(idx);
+
+                        return (
+                          <div 
+                            key={idx}
+                            onClick={() => toggleSelect(idx)}
+                            className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                              isCreated
+                                ? "bg-emerald-500/10 border-emerald-500/30 opacity-70 cursor-default"
+                                : isSelected
+                                ? "bg-indigo-500/15 border-indigo-400/40 shadow-md shadow-indigo-500/10"
+                                : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 shrink-0">
+                                {isCreated ? (
+                                  <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
+                                    <Check className="h-3.5 w-3.5 text-white" />
+                                  </div>
+                                ) : (
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() => toggleSelect(idx)}
+                                    className="border-white/30 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
+                                  />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className={`font-medium text-sm ${isCreated ? "text-emerald-300 line-through" : "text-white"}`}>
+                                      {sugestao.titulo}
+                                    </p>
+                                    <p className="text-xs text-indigo-200/60 mt-1">{sugestao.descricao}</p>
+                                  </div>
+                                  <div className="flex gap-1 shrink-0">
+                                    {isCreated && (
+                                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
+                                        ✓ Criada
+                                      </Badge>
+                                    )}
+                                    <Badge className={getTipoColor(sugestao.tipo)} variant="secondary">
+                                      {sugestao.tipo}
+                                    </Badge>
+                                    <Badge className={getPrioridadeColor(sugestao.prioridade)}>
+                                      {sugestao.prioridade}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          {onApplySuggestion && (
-                            <Button 
-                              size="sm" 
-                              onClick={() => onApplySuggestion(sugestao)}
-                              className="bg-white/10 text-indigo-200 border border-white/10 hover:bg-white/20 hover:text-white"
-                            >
-                              <ArrowRight className="h-3 w-3 mr-1" />
-                              Usar esta sugestão
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
+
+                      {/* Barra de ação fixa */}
+                      {selectedIndexes.size > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center justify-between p-3 rounded-lg bg-indigo-500/20 border border-indigo-400/30"
+                        >
+                          <p className="text-sm text-indigo-200">
+                            <strong>{selectedIndexes.size}</strong> ação(ões) selecionada(s)
+                          </p>
+                          <Button
+                            onClick={handleCriarSelecionadas}
+                            disabled={isCreating}
+                            size="sm"
+                            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-700"
+                          >
+                            {isCreating ? (
+                              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Criando...</>
+                            ) : (
+                              <><Plus className="h-4 w-4 mr-2" />Criar {selectedIndexes.size} Ação(ões) no Plano</>
+                            )}
+                          </Button>
+                        </motion.div>
+                      )}
                     </div>
                   )}
 
