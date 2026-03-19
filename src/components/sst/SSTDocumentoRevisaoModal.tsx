@@ -362,20 +362,20 @@ export function SSTDocumentoRevisaoModal({ open, onOpenChange, documento }: Prop
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
                               <InventarioIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                              <span className="font-medium text-sm">{r.risco}</span>
+                              <span className="font-medium text-sm">{r.risco && r.risco !== "null" ? r.risco : "Risco não identificado"}</span>
                             </div>
                             <div className="flex gap-1 flex-shrink-0">
-                              <Badge variant="outline" className="text-[10px]">{r.tipo_risco}</Badge>
+                              {r.tipo_risco && r.tipo_risco !== "null" && <Badge variant="outline" className="text-[10px]">{r.tipo_risco}</Badge>}
                               <ConfiancaBadge confianca={r.confianca} />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                            {r.setor && <span><strong>Setor:</strong> {r.setor}</span>}
-                            {r.funcao && <span><strong>Função:</strong> {r.funcao}</span>}
-                            {r.fonte_geradora && <span><strong>Fonte:</strong> {r.fonte_geradora}</span>}
-                            {r.intensidade && <span><strong>Intensidade:</strong> {r.intensidade}</span>}
-                            {r.danos && <span className="col-span-2"><strong>Danos:</strong> {r.danos}</span>}
-                            {r.metodologia && <span className="col-span-2"><strong>Metodologia:</strong> {r.metodologia}</span>}
+                            {r.setor && r.setor !== "null" && <span><strong>Setor:</strong> {r.setor}</span>}
+                            {r.funcao && r.funcao !== "null" && <span><strong>Função:</strong> {r.funcao}</span>}
+                            {r.fonte_geradora && r.fonte_geradora !== "null" && <span><strong>Fonte:</strong> {r.fonte_geradora}</span>}
+                            {r.intensidade && r.intensidade !== "null" && <span><strong>Intensidade:</strong> {r.intensidade}</span>}
+                            {r.danos && r.danos !== "null" && <span className="col-span-2"><strong>Danos:</strong> {r.danos}</span>}
+                            {r.metodologia && r.metodologia !== "null" && <span className="col-span-2"><strong>Metodologia:</strong> {r.metodologia}</span>}
                           </div>
                           {r.controles_existentes?.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
