@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ResponsavelSelect } from "@/components/planoAcao/ResponsavelSelect";
 import { Plus, Lightbulb, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
