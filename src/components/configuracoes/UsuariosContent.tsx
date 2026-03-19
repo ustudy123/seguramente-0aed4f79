@@ -53,6 +53,29 @@ export default function UsuariosContent() {
     enabled: !!tenantId,
   });
 
+  // Buscar vínculos de perfil de acesso para todos os usuários
+  const { data: perfilVinculos = [] } = useQuery({
+    queryKey: ["usuarios-perfil-vinculos-lista", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .select("usuario_id, perfil:perfil_id(id,nome,cor)")
+        .eq("tenant_id", tenantId)
+        .eq("ativo", true);
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  const perfilPorUsuario = useMemo(() => {
+    const map = new Map<string, { nome: string; cor: string }>();
+    for (const v of perfilVinculos) {
+      if (v.perfil) map.set(v.usuario_id, { nome: v.perfil.nome, cor: v.perfil.cor });
+    }
+    return map;
+  }, [perfilVinculos]);
+
   const filtered = useMemo(() => {
     return usuarios.filter(u => {
       const q = search.toLowerCase();
