@@ -331,7 +331,7 @@ export default function UsuariosContent() {
         <UsuarioDetalheDialog
           usuario={selecionado}
           open={!!selecionado}
-          onOpenChange={v => { if (!v) setSelecionado(null); }}
+          onOpenChange={v => { if (!v) setSelecionadoId(null); }}
         />
       )}
     </div>
