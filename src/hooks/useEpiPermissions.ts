@@ -1,52 +1,81 @@
 import { useAuth } from "./useAuth";
+import { usePerfilPermissions } from "./usePerfilPermissions";
 import { useMemo } from "react";
 
 /**
  * RF-13 – Permissões por perfil no módulo de EPIs
  *
- * Hierarquia:
- *  - user:     visualizar estoque, entregas, histórico, alertas, saldo por local
- *  - manager:  + registrar entrega, devolução
- *  - admin:    + criar/editar/excluir EPIs e tipos, movimentar estoque (entrada/saída/transferência), ajustar estoque, matriz, IA fiscal
- *  - owner:    + configurações do módulo
+ * As permissões agora são derivadas do perfil de acesso vinculado ao usuário.
+ * O módulo no perfil é "epi" e as ações mapeiam para:
+ *   visualizar, criar, editar, excluir, exportar, importar, aprovar,
+ *   parametrizar, administrar, acessar_sensivel, etc.
+ *
+ * Fallback: se o usuário não tem perfil vinculado, usa a hierarquia de roles.
  */
 export function useEpiPermissions() {
   const { hasMinimumRole, isSuperAdmin } = useAuth();
+  const { temPermissao, perfilVinculado, isOwner } = usePerfilPermissions();
 
   return useMemo(() => {
+    // Se tem perfil vinculado, usar permissões do perfil
+    if (perfilVinculado) {
+      const pode = (acao: string) => temPermissao("epi", acao);
+
+      return {
+        // Visualização
+        podeVerEstoque: pode("visualizar"),
+        podeVerEntregas: pode("visualizar"),
+        podeVerHistorico: pode("visualizar"),
+        podeVerAlertas: pode("visualizar"),
+        podeVerSaldoLocal: pode("visualizar"),
+
+        // Ações CRUD
+        podeRegistrarEntrega: pode("criar"),
+        podeRegistrarDevolucao: pode("criar"),
+        podeCriarEpi: pode("criar"),
+        podeEditarEpi: pode("editar"),
+        podeExcluirEpi: pode("excluir"),
+        podeCriarTipo: pode("criar"),
+        podeMovimentarEstoque: pode("criar") || pode("administrar"),
+        podeAjustarEstoque: pode("editar") || pode("administrar"),
+        podeGerenciarMatriz: pode("administrar") || pode("parametrizar"),
+        podeUsarIAFiscal: pode("administrar"),
+
+        // Configuração
+        podeConfigurar: pode("parametrizar") || pode("administrar") || isOwner,
+
+        // Helpers
+        isManager: pode("criar"),
+        isAdmin: pode("administrar") || pode("editar"),
+        isOwner,
+      };
+    }
+
+    // Fallback: hierarquia de roles (sem perfil vinculado)
     const isManager = hasMinimumRole("manager");
     const isAdmin = hasMinimumRole("admin");
-    const isOwner = hasMinimumRole("owner") || isSuperAdmin;
+    const isOwnerRole = hasMinimumRole("owner") || isSuperAdmin;
 
     return {
-      // Visualização — todos os perfis autenticados
       podeVerEstoque: true,
       podeVerEntregas: true,
       podeVerHistorico: true,
       podeVerAlertas: true,
       podeVerSaldoLocal: true,
-
-      // Manager+
       podeRegistrarEntrega: isManager,
       podeRegistrarDevolucao: isManager,
-
-      // Admin+
       podeCriarEpi: isAdmin,
       podeEditarEpi: isAdmin,
       podeExcluirEpi: isAdmin,
       podeCriarTipo: isAdmin,
-      podeMovimentarEstoque: isAdmin, // entradas, saídas, transferências
+      podeMovimentarEstoque: isAdmin,
       podeAjustarEstoque: isAdmin,
       podeGerenciarMatriz: isAdmin,
       podeUsarIAFiscal: isAdmin,
-
-      // Owner+
-      podeConfigurar: isOwner,
-
-      // Helpers
+      podeConfigurar: isOwnerRole,
       isManager,
       isAdmin,
-      isOwner,
+      isOwner: isOwnerRole,
     };
-  }, [hasMinimumRole, isSuperAdmin]);
+  }, [hasMinimumRole, isSuperAdmin, temPermissao, perfilVinculado, isOwner]);
 }
