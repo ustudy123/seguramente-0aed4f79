@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Shield, ClipboardList, ShieldCheck, Rocket, ArrowRight } from "lucide-react";
+import { Users, ClipboardList, ShieldCheck, Rocket, ArrowRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EquipeTab } from "@/components/configuracoes/EquipeTab";
 import { AuditoriaTab } from "@/components/configuracoes/AuditoriaTab";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -55,12 +54,8 @@ export default function Configuracoes() {
         </motion.div>
       )}
 
-      <Tabs defaultValue="equipe">
+      <Tabs defaultValue="usuarios">
         <TabsList>
-          <TabsTrigger value="equipe" className="flex items-center gap-1.5">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Equipe</span>
-          </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="usuarios" className="flex items-center gap-1.5">
               <Users className="h-4 w-4" />
@@ -80,19 +75,6 @@ export default function Configuracoes() {
             </TabsTrigger>
           )}
         </TabsList>
-
-        <TabsContent value="equipe" className="mt-6">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            {isAdmin ? (
-              <EquipeTab />
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Você não tem permissão para acessar esta seção.</p>
-              </div>
-            )}
-          </motion.div>
-        </TabsContent>
 
         {isAdmin && (
           <TabsContent value="usuarios" className="mt-6">
