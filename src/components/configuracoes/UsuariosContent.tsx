@@ -244,9 +244,17 @@ export default function UsuariosContent() {
                       <UsuarioStatusBadge status={u.status} />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="secondary" className="text-xs">
-                        {TIPO_USUARIO_LABELS[u.tipo_usuario] || u.tipo_usuario}
-                      </Badge>
+                      {(() => {
+                        const perfil = perfilPorUsuario.get(u.id);
+                        return perfil ? (
+                          <Badge variant="outline" className="text-xs" style={{ borderColor: perfil.cor, color: perfil.cor }}>
+                            <span className="w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ backgroundColor: perfil.cor }} />
+                            {perfil.nome}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs text-muted-foreground">Sem perfil</Badge>
+                        );
+                      })()}
                       {empresaPrincipal && (
                         <span className="text-xs text-muted-foreground">
                           <Building2 className="w-3 h-3 inline mr-0.5" />{empresaPrincipal}
