@@ -198,7 +198,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
     queryKey: ["plano-acoes-stats", tenantId, empresaAtivaId],
     queryFn: async (): Promise<PlanoAcaoStats> => {
       if (!tenantId) {
-        return { total: 0, pendentes: 0, em_andamento: 0, atrasadas: 0, concluidas: 0, por_origem: { manual: 0, ergonomia: 0, ouvidoria: 0, epi: 0, ponto: 0, humor: 0 }, por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 } };
+        return { total: 0, pendentes: 0, em_andamento: 0, atrasadas: 0, concluidas: 0, por_origem: {}, por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 } };
       }
 
       let statsQuery = supabase
