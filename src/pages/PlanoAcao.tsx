@@ -34,7 +34,8 @@ export default function PlanoAcao() {
     isLoadingAcoes, 
     stats, 
     isLoadingStats,
-    minhasAcoes,
+    minhasResponsavel,
+    minhasCriadas,
     isLoadingMinhasAcoes,
   } = usePlanoAcao({ 
     ...filters, 
