@@ -37,7 +37,8 @@ export default function Usuarios() {
   const [filterTipo, setFilterTipo] = useState("todos");
   const [filterEmpresa, setFilterEmpresa] = useState("todos");
   const [showNovo, setShowNovo] = useState(false);
-  const [selecionado, setSelecionado] = useState<any>(null);
+  const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
+  const selecionado = selecionadoId ? usuarios.find(u => u.id === selecionadoId) || null : null;
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-lista", tenantId],
@@ -236,7 +237,7 @@ export default function Usuarios() {
               <Card
                 key={u.id}
                 className="hover:border-primary/40 cursor-pointer transition-all"
-                onClick={() => setSelecionado(u)}
+                onClick={() => setSelecionadoId(u.id)}
               >
                 <CardContent className="p-4">
                   {/* Mobile */}
@@ -352,7 +353,7 @@ export default function Usuarios() {
         <UsuarioDetalheDialog
           usuario={selecionado}
           open={!!selecionado}
-          onOpenChange={v => { if (!v) setSelecionado(null); }}
+          onOpenChange={v => { if (!v) setSelecionadoId(null); }}
         />
       )}
     </div>
