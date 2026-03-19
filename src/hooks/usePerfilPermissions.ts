@@ -60,7 +60,7 @@ export function usePerfilPermissions() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // 2. Buscar as permissões do perfil
+  // 3. Buscar as permissões do perfil
   const { data: permissoes = [], isLoading } = useQuery({
     queryKey: ["minhas_perfil_permissoes", vinculo?.perfil_id],
     queryFn: async () => {
