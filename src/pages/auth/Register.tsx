@@ -212,7 +212,9 @@ export default function Register() {
         console.error("onboarding-signup error:", fnError);
 
         const errorMessage = await extractEdgeFunctionErrorMessage(fnError);
-        await supabase.auth.signOut();
+        
+        // User may have been deleted server-side (cleanup), so signOut can fail — ignore
+        try { await supabase.auth.signOut(); } catch { /* user already deleted */ }
 
         if (errorMessage?.includes("já cadastrado")) {
           toast.error("Documento já cadastrado", { description: errorMessage });
