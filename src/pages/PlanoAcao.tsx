@@ -153,9 +153,9 @@ export default function PlanoAcao() {
           <TabsTrigger value="minhas" className="flex items-center gap-2">
             <Inbox className="h-4 w-4" />
             Minha Caixa
-            {minhasAcoes.length > 0 && (
+            {(minhasResponsavel.length + minhasCriadas.length) > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
-                {minhasAcoes.length}
+                {minhasResponsavel.length + minhasCriadas.length}
               </span>
             )}
           </TabsTrigger>
