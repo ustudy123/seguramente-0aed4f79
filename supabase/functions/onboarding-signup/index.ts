@@ -282,7 +282,33 @@ serve(async (req) => {
     return json({ error: roleError.message }, 500);
   }
 
-  // 4) Create empresa_cadastro (pre-registration) if documento provided
+  // 4) Create default perfis de acesso for the new tenant
+  const defaultPerfis = [
+    { nome: "Administrador Master", descricao: "Acesso total à plataforma, incluindo configurações e gestão de usuários.", cor: "#dc2626", tipo_usuario_sugerido: "admin" },
+    { nome: "Gestor / Líder", descricao: "Acesso aos módulos de gestão de equipe, SST e indicadores.", cor: "#059669", tipo_usuario_sugerido: "gestor" },
+    { nome: "RH / Gestão de Pessoas", descricao: "Acesso aos módulos de RH, admissões, folha e benefícios.", cor: "#7c3aed", tipo_usuario_sugerido: "rh_dp" },
+    { nome: "Financeiro / Administrativo", descricao: "Acesso ao hub contábil, guias e relatórios financeiros.", cor: "#0891b2", tipo_usuario_sugerido: "financeiro" },
+    { nome: "Profissional SST / Clínica", descricao: "Acesso aos módulos de SST, atestados, ergonomia e saúde.", cor: "#b45309", tipo_usuario_sugerido: "sst" },
+    { nome: "Colaborador com Acesso", descricao: "Acesso básico: perfil, trilhas, bem-estar e academia.", cor: "#d97706", tipo_usuario_sugerido: "colaborador" },
+    { nome: "Consultor Externo", descricao: "Acesso restrito para consultores e auditores externos.", cor: "#475569", tipo_usuario_sugerido: "consultor" },
+  ];
+
+  const { error: perfisError } = await admin
+    .from("perfis_acesso")
+    .insert(defaultPerfis.map(p => ({
+      tenant_id: tenant.id,
+      ...p,
+      tipo: "padrao_sistema",
+      ativo: true,
+      permite_acumulo: false,
+      total_usuarios: 0,
+    })));
+
+  if (perfisError) {
+    console.error("Error creating default perfis_acesso:", perfisError.message);
+  }
+
+  // 5) Create empresa_cadastro (pre-registration) if documento provided
   if (documento) {
     const empresaPayload: Record<string, unknown> = {
       tenant_id: tenant.id,
