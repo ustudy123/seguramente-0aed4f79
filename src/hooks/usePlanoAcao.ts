@@ -569,6 +569,8 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
     stats,
     isLoadingStats,
     minhasAcoes,
+    minhasResponsavel,
+    minhasCriadas,
     isLoadingMinhasAcoes,
     
     // Hooks para uso individual
