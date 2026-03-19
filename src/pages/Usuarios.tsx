@@ -53,6 +53,28 @@ export default function Usuarios() {
     enabled: !!tenantId,
   });
 
+  const { data: perfilVinculos = [] } = useQuery({
+    queryKey: ["usuarios-perfil-vinculos-lista", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .select("usuario_id, perfil:perfil_id(id,nome,cor)")
+        .eq("tenant_id", tenantId)
+        .eq("ativo", true);
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  const perfilPorUsuario = useMemo(() => {
+    const map = new Map<string, { nome: string; cor: string }>();
+    for (const v of perfilVinculos) {
+      if (v.perfil) map.set(v.usuario_id, { nome: v.perfil.nome, cor: v.perfil.cor });
+    }
+    return map;
+  }, [perfilVinculos]);
+
   const filtered = useMemo(() => {
     return usuarios.filter(u => {
       const q = search.toLowerCase();
@@ -195,10 +217,10 @@ export default function Usuarios() {
       ) : (
         <div className="space-y-2">
           {/* Header da lista */}
-          <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+           <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
             <span>Usuário</span>
             <span>Empresa / E-mail</span>
-            <span>Tipo</span>
+            <span>Perfil de Acesso</span>
             <span>Vínculos</span>
             <span>Qualidade</span>
             <span>Status</span>
@@ -232,9 +254,17 @@ export default function Usuarios() {
                       <UsuarioStatusBadge status={u.status} />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="secondary" className="text-xs">
-                        {TIPO_USUARIO_LABELS[u.tipo_usuario] || u.tipo_usuario}
-                      </Badge>
+                      {(() => {
+                        const perfil = perfilPorUsuario.get(u.id);
+                        return perfil ? (
+                          <Badge variant="outline" className="text-xs" style={{ borderColor: perfil.cor, color: perfil.cor }}>
+                            <span className="w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ backgroundColor: perfil.cor }} />
+                            {perfil.nome}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs text-muted-foreground">Sem perfil</Badge>
+                        );
+                      })()}
                       {empresaPrincipal && (
                         <span className="text-xs text-muted-foreground">
                           <Building2 className="w-3 h-3 inline mr-0.5" />{empresaPrincipal}
@@ -280,9 +310,17 @@ export default function Usuarios() {
                       )}
                     </div>
 
-                    <Badge variant="secondary" className="text-xs truncate">
-                      {TIPO_USUARIO_LABELS[u.tipo_usuario] || u.tipo_usuario}
-                    </Badge>
+                    {(() => {
+                      const perfil = perfilPorUsuario.get(u.id);
+                      return perfil ? (
+                        <Badge variant="outline" className="text-xs truncate" style={{ borderColor: perfil.cor, color: perfil.cor }}>
+                          <span className="w-2 h-2 rounded-full mr-1.5 shrink-0" style={{ backgroundColor: perfil.cor }} />
+                          {perfil.nome}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      );
+                    })()}
 
                     <div className="flex items-center gap-1 text-sm">
                       <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
