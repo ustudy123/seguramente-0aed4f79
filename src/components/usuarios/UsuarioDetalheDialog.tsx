@@ -631,15 +631,28 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                         onChange={v => setEditForm(f => ({ ...f, cpf: cleanCpf(v) }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Tipo de Usuário</Label>
-                      <Select value={editForm.tipo_usuario} onValueChange={v => setEditForm(f => ({ ...f, tipo_usuario: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                      <Label>Perfil de Acesso</Label>
+                      <Select value={editForm.perfil_acesso_id} onValueChange={v => setEditForm(f => ({ ...f, perfil_acesso_id: v }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um perfil…" />
+                        </SelectTrigger>
                         <SelectContent>
-                          {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          {perfisAtivos.map(p => (
+                            <SelectItem key={p.id} value={p.id}>
+                              <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.cor || "#6366f1" }} />
+                                {p.nome}
+                              </div>
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {editForm.perfil_acesso_id && (() => {
+                        const sel = perfisAtivos.find(p => p.id === editForm.perfil_acesso_id);
+                        return sel?.descricao ? (
+                          <p className="text-[11px] text-muted-foreground mt-1">{sel.descricao}</p>
+                        ) : null;
+                      })()}
                     </div>
                     <div className="space-y-1.5">
                       <Label>Nome Social</Label>
