@@ -246,6 +246,20 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         data_inicio: new Date().toISOString().split("T")[0],
       });
 
+      // Vincular perfil de acesso se selecionado
+      if (data.perfil_acesso_id) {
+        await (supabase as any)
+          .from("usuario_perfil_vinculos")
+          .insert({
+            tenant_id: tenantId,
+            usuario_id: usuario.id,
+            perfil_id: data.perfil_acesso_id,
+            ativo: true,
+            is_principal: true,
+            atribuido_por_nome: "Sistema (cadastro)",
+          });
+      }
+
       setNovoUsuarioId(usuario.id);
       setEtapa(3);
     } catch (e: any) {
