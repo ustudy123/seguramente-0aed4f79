@@ -174,7 +174,8 @@ export default function PlanoAcao() {
 
         <TabsContent value="minhas">
           <PlanoAcaoInbox 
-            acoes={minhasAcoes} 
+            responsavel={minhasResponsavel} 
+            criadas={minhasCriadas}
             isLoading={isLoadingMinhasAcoes} 
           />
         </TabsContent>
