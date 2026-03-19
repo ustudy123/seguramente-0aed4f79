@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User, Building2, Link2, History, AlertTriangle, CheckCircle2,
   Plus, Trash2, Shield, Ban, RotateCcw, Loader2, Pencil, Save, X,
-  Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search,
+  Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search, ShieldCheck,
 } from "lucide-react";
 import {
   UsuarioBase, UsuarioVinculo, TIPO_USUARIO_LABELS, VINCULO_STATUS_LABELS,
@@ -33,6 +33,7 @@ import { cleanCpf, formatCpf } from "@/lib/cpf";
 import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { usePerfisAcesso, type PerfilAcesso } from "@/hooks/usePerfisAcesso";
 
 function EmpresaSearchSelect({ empresas, value, onChange }: { empresas: any[]; value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
