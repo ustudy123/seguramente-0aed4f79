@@ -249,7 +249,7 @@ export interface PlanoAcaoStats {
   atrasadas: number;
   concluidas: number;
   tempo_medio_resolucao_dias?: number;
-  por_origem: Record<OrigemModulo, number>;
+  por_origem: Partial<Record<OrigemModulo, number>>;
   por_prioridade: Record<AcaoGutPrioridade, number>;
 }
 

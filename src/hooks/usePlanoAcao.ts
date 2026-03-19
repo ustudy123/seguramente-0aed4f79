@@ -206,7 +206,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         .select("status, origem_modulo, prioridade, prazo")
         .eq("tenant_id", tenantId);
 
-      if (empresaAtivaId) statsQuery = statsQuery.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) statsQuery = statsQuery.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
 
       const { data, error } = await statsQuery;
 
