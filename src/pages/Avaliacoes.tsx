@@ -85,6 +85,9 @@ export default function Avaliacoes() {
           <p className="text-muted-foreground">
             Performance · Desenvolvimento · Risco Humano · Decisão · Prova Organizacional
           </p>
+          <p className="text-muted-foreground text-sm">
+            Esta seção permite gerenciar avaliações de desempenho, acompanhar o progresso em cada ciclo e definir metas para melhorar a performance organizacional.
+          </p>
         </div>
       </div>
 
