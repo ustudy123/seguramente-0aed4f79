@@ -235,7 +235,7 @@ serve(async (req) => {
   // 1) Create tenant
   const { data: tenant, error: tenantError } = await admin
     .from("tenants")
-    .insert({ nome: tenantNome, slug: tenantSlug, plano })
+    .insert({ nome: tenantNome, slug: finalSlug, plano })
     .select("id")
     .single();
 
