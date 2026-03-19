@@ -4,7 +4,7 @@ export type AcaoGutPrioridade = 'baixo' | 'medio' | 'urgente' | 'imediato';
 export type TarefaStatus = 'nao_iniciada' | 'em_andamento' | 'bloqueada' | 'concluida';
 export type AcaoStatus = 'pendente' | 'em_andamento' | 'pausada' | 'concluida' | 'cancelada';
 export type AcaoTipo = 'corretiva' | 'preventiva' | 'melhoria';
-export type OrigemModulo = 'manual' | 'ergonomia' | 'ouvidoria' | 'epi' | 'ponto' | 'humor';
+export type OrigemModulo = 'manual' | 'ergonomia' | 'ouvidoria' | 'epi' | 'ponto' | 'humor' | 'psicossocial' | 'atestados' | 'sst' | 'compliance_sst' | 'compliance' | 'documentos' | 'avaliacoes' | 'estrategia' | 'gro';
 export type ParticipanteTipo = 'co_responsavel' | 'consulta' | 'validacao' | 'apoio';
 export type EvidenciaTipo = 'anexo' | 'foto' | 'documento' | 'comprovante';
 export type HistoricoEventoTipo = 
@@ -249,7 +249,7 @@ export interface PlanoAcaoStats {
   atrasadas: number;
   concluidas: number;
   tempo_medio_resolucao_dias?: number;
-  por_origem: Record<OrigemModulo, number>;
+  por_origem: Partial<Record<OrigemModulo, number>>;
   por_prioridade: Record<AcaoGutPrioridade, number>;
 }
 

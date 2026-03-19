@@ -58,6 +58,15 @@ const ORIGEM_LABELS: Record<string, { label: string }> = {
   epi: { label: "EPIs" },
   ponto: { label: "Ponto" },
   humor: { label: "Humor" },
+  psicossocial: { label: "Psicossocial" },
+  atestados: { label: "Atestados" },
+  sst: { label: "SST" },
+  compliance_sst: { label: "Compliance SST" },
+  compliance: { label: "Compliance" },
+  documentos: { label: "Documentos" },
+  avaliacoes: { label: "Avaliações" },
+  estrategia: { label: "Estratégia" },
+  gro: { label: "GRO" },
 };
 
 export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação encontrada" }: PlanoAcaoListProps) {

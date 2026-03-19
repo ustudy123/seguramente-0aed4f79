@@ -67,7 +67,7 @@ function CriarAcaoModal({ open, onOpenChange, colaboradorNome, cicloNome, contex
         progresso: 0,
         responsavel_id: userId,
         criado_por: userId,
-        origem_modulo: "manual",
+        origem_modulo: "avaliacoes",
         origem_descricao: `📊 Avaliação de Desempenho — Ciclo: ${cicloNome} | Colaborador: ${colaboradorNome}`,
         prioridade: "medio",
         tipo: "melhoria",

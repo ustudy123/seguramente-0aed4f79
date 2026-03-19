@@ -1,0 +1,1 @@
+UPDATE plano_acoes SET origem_modulo = 'psicossocial' WHERE origem_modulo = 'manual' AND (origem_descricao ILIKE '%psicossocial%' OR origem_descricao ILIKE '%radar%burnout%' OR origem_descricao ILIKE '%radar%boreout%' OR origem_descricao ILIKE '%campanha%psicossocial%');

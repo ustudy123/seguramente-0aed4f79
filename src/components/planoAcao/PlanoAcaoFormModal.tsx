@@ -58,7 +58,7 @@ const formSchema = z.object({
   
   // Tipo e origem
   tipo: z.enum(["corretiva", "preventiva", "melhoria"]),
-  origem_modulo: z.enum(["manual", "ergonomia", "ouvidoria", "epi", "ponto", "humor"]),
+  origem_modulo: z.enum(["manual", "ergonomia", "ouvidoria", "epi", "ponto", "humor", "psicossocial", "atestados", "sst", "compliance_sst", "compliance", "documentos", "avaliacoes", "estrategia", "gro"]),
   
   // GUT
   gravidade: z.number().min(1).max(5),

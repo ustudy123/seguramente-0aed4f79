@@ -20,6 +20,7 @@ import type {
   UpdatePlanoTarefaDTO,
   AcaoStatus,
   TarefaStatus,
+  OrigemModulo,
 } from "@/types/planoAcao";
 
 export function usePlanoAcao(filters?: PlanoAcaoFilters) {
@@ -47,7 +48,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         .order("pontuacao_gut", { ascending: false })
         .order("prazo", { ascending: true, nullsFirst: false });
 
-      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
       if (filters?.status?.length) {
         query = query.in("status", filters.status as any);
       }
@@ -198,7 +199,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
     queryKey: ["plano-acoes-stats", tenantId, empresaAtivaId],
     queryFn: async (): Promise<PlanoAcaoStats> => {
       if (!tenantId) {
-        return { total: 0, pendentes: 0, em_andamento: 0, atrasadas: 0, concluidas: 0, por_origem: { manual: 0, ergonomia: 0, ouvidoria: 0, epi: 0, ponto: 0, humor: 0 }, por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 } };
+        return { total: 0, pendentes: 0, em_andamento: 0, atrasadas: 0, concluidas: 0, por_origem: {}, por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 } };
       }
 
       let statsQuery = supabase
@@ -206,7 +207,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         .select("status, origem_modulo, prioridade, prazo")
         .eq("tenant_id", tenantId);
 
-      if (empresaAtivaId) statsQuery = statsQuery.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) statsQuery = statsQuery.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
 
       const { data, error } = await statsQuery;
 
@@ -220,13 +221,14 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         em_andamento: finalData.filter((a) => a.status === "em_andamento").length,
         atrasadas: finalData.filter((a) => a.prazo && new Date(a.prazo) < new Date() && a.status !== "concluida").length,
         concluidas: finalData.filter((a) => a.status === "concluida").length,
-        por_origem: { manual: 0, ergonomia: 0, ouvidoria: 0, epi: 0, ponto: 0, humor: 0 },
+        por_origem: {},
         por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 },
       };
 
       finalData.forEach((a) => {
-        if (a.origem_modulo && result.por_origem[a.origem_modulo as keyof typeof result.por_origem] !== undefined) {
-          result.por_origem[a.origem_modulo as keyof typeof result.por_origem]++;
+        if (a.origem_modulo) {
+          const key = a.origem_modulo as OrigemModulo;
+          result.por_origem[key] = (result.por_origem[key] || 0) + 1;
         }
         if (a.prioridade && result.por_prioridade[a.prioridade as keyof typeof result.por_prioridade] !== undefined) {
           result.por_prioridade[a.prioridade as keyof typeof result.por_prioridade]++;
