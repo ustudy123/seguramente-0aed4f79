@@ -332,7 +332,10 @@ export function PlanoAcaoFormModal({ open, onOpenChange, origem, editData }: Pla
                       />
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do responsável" {...field} />
+                      <ResponsavelSelect
+                        value={field.value || ""}
+                        onChange={(nome) => field.onChange(nome)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
