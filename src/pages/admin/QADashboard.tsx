@@ -135,11 +135,11 @@ const FLOW_ROUTES: Record<string, string> = {
 // ═══════════════════════════════════════════════════
 
 const SCAN_CATEGORIES = [
-  { id: "dados", label: "Dados & Integridade", icon: Database, description: "Verifica integridade referencial, perfis órfãos, dados incompletos.", color: "text-blue-500", bgColor: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
-  { id: "seguranca", label: "Segurança & RLS", icon: Shield, description: "Testa acesso anônimo, políticas RLS, distribuição de roles.", color: "text-red-500", bgColor: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
-  { id: "edge_functions", label: "Edge Functions", icon: Server, description: "Testa disponibilidade de todas as edge functions.", color: "text-purple-500", bgColor: "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20" },
-  { id: "modulos", label: "Módulos do Sistema", icon: LayoutGrid, description: "Verifica campanhas, estoque EPIs, afastamentos, ASOs.", color: "text-amber-500", bgColor: "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20" },
-  { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações.", color: "text-emerald-500", bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
+  { id: "dados", label: "Dados & Integridade", icon: Database, description: "Verifica integridade referencial, perfis órfãos, dados incompletos.", color: "text-blue-500", bgColor: "bg-blue-900/10 hover:bg-blue-900/20 border-blue-900/20" },
+  { id: "seguranca", label: "Segurança & RLS", icon: Shield, description: "Testa acesso anônimo, políticas RLS, distribuição de roles.", color: "text-red-500", bgColor: "bg-red-900/10 hover:bg-red-900/20 border-red-900/20" },
+  { id: "edge_functions", label: "Edge Functions", icon: Server, description: "Testa disponibilidade de todas as edge functions.", color: "text-purple-500", bgColor: "bg-purple-900/10 hover:bg-purple-900/20 border-purple-900/20" },
+  { id: "modulos", label: "Módulos do Sistema", icon: LayoutGrid, description: "Verifica campanhas, estoque EPIs, afastamentos, ASOs.", color: "text-amber-500", bgColor: "bg-amber-900/10 hover:bg-amber-900/20 border-amber-900/20" },
+  { id: "todos", label: "Varredura Completa", icon: Zap, description: "Executa TODAS as verificações.", color: "text-emerald-500", bgColor: "bg-emerald-900/10 hover:bg-emerald-900/20 border-emerald-900/20" },
 ];
 
 interface AgentFlow {
@@ -207,11 +207,11 @@ const AGENT_FLOWS: AgentFlow[] = [
 ];
 
 const severityConfig = {
-  critico: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-100 text-red-700 border-red-200", label: "Crítico" },
-  alto: { icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-100 text-orange-700 border-orange-200", label: "Alto" },
-  medio: { icon: Info, color: "text-amber-500", bg: "bg-amber-100 text-amber-700 border-amber-200", label: "Médio" },
-  baixo: { icon: Info, color: "text-blue-500", bg: "bg-blue-100 text-blue-700 border-blue-200", label: "Baixo" },
-  info: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-100 text-emerald-700 border-emerald-200", label: "Info" },
+  critico: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-500 text-red-100 border-red-200", label: "Crítico" },
+  alto: { icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-700 text-orange-100 border-orange-200", label: "Alto" },
+  medio: { icon: Info, color: "text-amber-500", bg: "bg-amber-700 text-amber-100 border-amber-200", label: "Médio" },
+  baixo: { icon: Info, color: "text-blue-500", bg: "bg-blue-700 text-blue-100 border-blue-200", label: "Baixo" },
+  info: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-700 text-emerald-100 border-emerald-200", label: "Info" },
 };
 
 // ═══════════════════════════════════════════════════
@@ -431,12 +431,11 @@ export default function QADashboard() {
   const isAgentActive = agentRunning !== null || (liveFlows.length > 0 && !agentResult);
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
+    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-6">
       <div className="max-w-[1600px] mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
-            <ArrowLeft className="w-5 h-5" />
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>            <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -857,3 +856,4 @@ export default function QADashboard() {
     </div>
   );
 }
+
