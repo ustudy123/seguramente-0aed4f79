@@ -175,9 +175,30 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
           <Button variant="ghost" size="sm" onClick={onBack}><ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Voltar</Button>
           <h3 className="text-lg font-semibold">{oceano.titulo}</h3>
         </div>
-        <Button variant="destructive" size="sm" onClick={() => { deleteOceano.mutate(oceano.id); onBack(); }}>
-          <Trash2 className="w-4 h-4 mr-1" /> Excluir
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="w-4 h-4 mr-1" /> Excluir
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir matriz Oceano Azul?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação é irreversível. A matriz "{oceano.titulo}" e todos os seus itens serão permanentemente removidos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => { deleteOceano.mutate(oceano.id); onBack(); }}
+              >
+                Excluir permanentemente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Add item */}
