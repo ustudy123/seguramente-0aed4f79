@@ -669,7 +669,11 @@ export function GerarEstruturaWizard({ open, onOpenChange, onGerar, gerando, jaT
             )}
             <div className="flex-1" />
             {step < STEPS.length - 1 ? (
-              <Button onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
+              <Button
+                onClick={() => setStep(s => s + 1)}
+                disabled={!canNext()}
+                className="bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:from-primary/90 hover:to-secondary/90"
+              >
                 Próximo <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
