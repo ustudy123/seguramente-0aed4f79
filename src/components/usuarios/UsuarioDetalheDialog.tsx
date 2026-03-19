@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User, Building2, Link2, History, AlertTriangle, CheckCircle2,
   Plus, Trash2, Shield, Ban, RotateCcw, Loader2, Pencil, Save, X,
-  Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search,
+  Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search, ShieldCheck,
 } from "lucide-react";
 import {
   UsuarioBase, UsuarioVinculo, TIPO_USUARIO_LABELS, VINCULO_STATUS_LABELS,
@@ -33,6 +33,7 @@ import { cleanCpf, formatCpf } from "@/lib/cpf";
 import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { usePerfisAcesso, type PerfilAcesso } from "@/hooks/usePerfisAcesso";
 
 function EmpresaSearchSelect({ empresas, value, onChange }: { empresas: any[]; value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -112,7 +113,30 @@ type Tab = "dados" | "vinculos" | "logs";
 export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const { tenantId } = useAuth();
   const { updateStatus, updateUsuario, createVinculo, encerrarVinculo } = useUsuarios();
+  const { perfis, vincularPerfil, desvincularPerfil } = usePerfisAcesso();
   const [tab, setTab] = useState<Tab>("dados");
+
+  // Perfil de acesso vinculado ao usuário
+  const { data: perfilVinculos = [], refetch: refetchPerfilVinculos } = useQuery({
+    queryKey: ["usuario-perfil-vinculo", usuario.id, tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data, error } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .select("*, perfil:perfil_id(id,nome,cor,icone,nivel_risco,descricao)")
+        .eq("tenant_id", tenantId)
+        .eq("usuario_id", usuario.id)
+        .eq("ativo", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: open && !!tenantId && !!usuario.id,
+  });
+
+  const perfilAtual = perfilVinculos.length > 0 ? perfilVinculos[0] : null;
+  const perfilAtualObj = perfilAtual?.perfil as PerfilAcesso | null;
+  const perfisAtivos = perfis.filter(p => p.ativo);
 
   // Edição
   const [editando, setEditando] = useState(false);
@@ -127,6 +151,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     data_nascimento: usuario.data_nascimento || "",
     tipo_usuario: usuario.tipo_usuario || "",
     observacoes: usuario.observacoes || "",
+    perfil_acesso_id: perfilAtualObj?.id || "",
   });
 
   // Bloqueio
@@ -266,12 +291,31 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   }
 
   async function handleSalvarEdicao() {
-    const { tipo_usuario, ...rest } = editForm;
+    const { tipo_usuario, perfil_acesso_id, ...rest } = editForm;
     await updateUsuario.mutateAsync({
       id: usuario.id,
       ...rest,
       ...(tipo_usuario ? { tipo_usuario: tipo_usuario as import("@/hooks/useUsuarios").UsuarioTipo } : {}),
     });
+
+    // Gerenciar vínculo de perfil de acesso
+    const perfilAnteriorId = perfilAtualObj?.id || "";
+    if (perfil_acesso_id !== perfilAnteriorId) {
+      // Desvincular perfil anterior se existir
+      if (perfilAtual?.id) {
+        await desvincularPerfil.mutateAsync(perfilAtual.id);
+      }
+      // Vincular novo perfil se selecionado
+      if (perfil_acesso_id) {
+        await vincularPerfil.mutateAsync({
+          usuario_id: usuario.id,
+          perfil_id: perfil_acesso_id,
+          is_perfil_principal: true,
+        });
+      }
+      refetchPerfilVinculos();
+    }
+
     setEditando(false);
   }
 
@@ -392,9 +436,16 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
               </div>
               <p className="text-sm text-muted-foreground">{usuario.email_principal}</p>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                <span className="text-xs text-muted-foreground">
-                  {TIPO_USUARIO_LABELS[usuario.tipo_usuario] || usuario.tipo_usuario}
-                </span>
+                {perfilAtualObj ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: perfilAtualObj.cor || "#6366f1" }} />
+                    {perfilAtualObj.nome}
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {TIPO_USUARIO_LABELS[usuario.tipo_usuario] || usuario.tipo_usuario}
+                  </span>
+                )}
                 <span className="text-muted-foreground/40">•</span>
                 <span className="text-xs text-muted-foreground">{vinculosAtivos.length} vínculo(s) ativo(s)</span>
                 <span className="text-muted-foreground/40">•</span>
@@ -547,6 +598,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                         data_nascimento: usuario.data_nascimento || "",
                         tipo_usuario: usuario.tipo_usuario || "",
                         observacoes: usuario.observacoes || "",
+                        perfil_acesso_id: perfilAtualObj?.id || "",
                       });
                       setEditando(true);
                     }}>
@@ -586,15 +638,28 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                         onChange={v => setEditForm(f => ({ ...f, cpf: cleanCpf(v) }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Tipo de Usuário</Label>
-                      <Select value={editForm.tipo_usuario} onValueChange={v => setEditForm(f => ({ ...f, tipo_usuario: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                      <Label>Perfil de Acesso</Label>
+                      <Select value={editForm.perfil_acesso_id} onValueChange={v => setEditForm(f => ({ ...f, perfil_acesso_id: v }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um perfil…" />
+                        </SelectTrigger>
                         <SelectContent>
-                          {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          {perfisAtivos.map(p => (
+                            <SelectItem key={p.id} value={p.id}>
+                              <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.cor || "#6366f1" }} />
+                                {p.nome}
+                              </div>
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {editForm.perfil_acesso_id && (() => {
+                        const sel = perfisAtivos.find(p => p.id === editForm.perfil_acesso_id);
+                        return sel?.descricao ? (
+                          <p className="text-[11px] text-muted-foreground mt-1">{sel.descricao}</p>
+                        ) : null;
+                      })()}
                     </div>
                     <div className="space-y-1.5">
                       <Label>Nome Social</Label>
