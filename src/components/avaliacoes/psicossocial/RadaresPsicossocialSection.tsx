@@ -687,7 +687,7 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
         como: sugestao?.como || `Implementar ações específicas para reduzir os fatores de risco de ${tipo}.`,
         tipo: tipo === 'burnout' ? 'preventiva' : 'melhoria',
         prioridade: prioridade as any,
-        origem_modulo: 'manual' as const,
+        origem_modulo: 'psicossocial' as const,
         origem_descricao: `Radar ${tipo === 'burnout' ? 'Burnout' : 'Boreout'} (IA) — Psicossocial NR-01`,
         criado_por: user?.id,
         criado_por_nome: profile?.nome_completo || 'Sistema',

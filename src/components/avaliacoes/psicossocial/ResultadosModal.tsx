@@ -208,7 +208,7 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
         como: sugestao?.como || 'Implementar ações de melhoria psicossocial conforme diagnóstico.',
         tipo: 'preventiva' as const,
         prioridade: (ips < 35 ? 'imediato' : ips < 50 ? 'urgente' : 'medio') as any,
-        origem_modulo: 'manual' as const,
+        origem_modulo: 'psicossocial' as const,
         origem_descricao: `Campanha Psicossocial: ${campanha.nome}`,
         criado_por: user?.id,
         criado_por_nome: profile?.nome_completo || 'Sistema',

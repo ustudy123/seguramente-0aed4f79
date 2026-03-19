@@ -47,7 +47,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         .order("pontuacao_gut", { ascending: false })
         .order("prazo", { ascending: true, nullsFirst: false });
 
-      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
       if (filters?.status?.length) {
         query = query.in("status", filters.status as any);
       }

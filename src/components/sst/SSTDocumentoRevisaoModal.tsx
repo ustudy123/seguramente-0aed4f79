@@ -129,7 +129,7 @@ export function SSTDocumentoRevisaoModal({ open, onOpenChange, documento }: Prop
         tipo: tipoAcao,
         prioridade: (prioridadeMap[acao.prioridade] || "medio") as any,
         status: "pendente" as any,
-        origem_modulo: "manual",
+        origem_modulo: "compliance_sst",
         origem_descricao: `Revisão pós-importação: ${documento.arquivo_nome || tipo}`,
         criado_por: session.user.id,
         criado_por_nome: session.user.email,

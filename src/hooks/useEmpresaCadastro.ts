@@ -182,7 +182,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
           titulo: obrigacao.titulo,
           descricao: obrigacao.descricao,
           porque: `Base legal: ${obrigacao.base_legal || 'N/A'}`,
-          origem_modulo: 'manual',
+          origem_modulo: 'compliance',
           origem_id: obrigacao.id,
           origem_descricao: `Cadastro Empresa → ${obrigacao.subcategoria?.toUpperCase() || obrigacao.categoria}`,
           tipo: 'corretiva',

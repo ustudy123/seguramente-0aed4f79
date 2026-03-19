@@ -176,7 +176,7 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
       prazo: form.prazo || undefined,
       responsavel_nome: form.responsavel_nome || undefined,
       tipo: form.tipo,
-      origem_modulo: "manual",
+      origem_modulo: "estrategia",
       origem_descricao: `Oceano Azul: ${oceanoTitulo} → ${OCEANO_QUADRANTE_LABELS[item.quadrante]}`,
       gravidade: item.quadrante === "eliminar" ? 4 : item.quadrante === "reduzir" ? 3 : 3,
       urgencia: item.quadrante === "eliminar" ? 4 : item.quadrante === "reduzir" ? 3 : 2,
