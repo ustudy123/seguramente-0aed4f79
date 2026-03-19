@@ -146,7 +146,10 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
   const importedSwotIds = new Set(itens.map((i) => i.swot_item_id).filter(Boolean));
 
   const handleAdd = () => {
-    if (!newItemDesc.trim()) return;
+    if (!newItemDesc.trim()) {
+      toast.error("Preencha a descrição do item");
+      return;
+    }
     createOceanoItem.mutate({ oceano_id: oceano.id, quadrante: newItemQuad, descricao: newItemDesc }, {
       onSuccess: () => setNewItemDesc(""),
     });
