@@ -130,7 +130,7 @@ export function OceanoItemAcaoModal({ open, onOpenChange, item, oceanoTitulo }: 
     porque: s.porque || undefined,
     como: s.como || undefined,
     tipo: s.tipo,
-    origem_modulo: "manual" as const,
+    origem_modulo: "estrategia" as const,
     origem_descricao: `Oceano Azul: ${oceanoTitulo} → ${OCEANO_QUADRANTE_LABELS[item.quadrante]}`,
     gravidade: item.quadrante === "eliminar" ? 4 : item.quadrante === "reduzir" ? 3 : 3,
     urgencia: item.quadrante === "eliminar" ? 4 : item.quadrante === "reduzir" ? 3 : 2,
