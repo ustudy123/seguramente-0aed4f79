@@ -20,13 +20,15 @@ export function usePerfilPermissions() {
     queryKey: ["meu_perfil_vinculo", user?.id, tenantId],
     queryFn: async () => {
       if (!user?.id || !tenantId) return null;
+      // Try principal profile first, then any active profile
       const { data, error } = await (supabase as any)
         .from("usuario_perfil_vinculos")
-        .select("perfil_id")
+        .select("perfil_id, is_perfil_principal")
         .eq("usuario_id", user.id)
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
-        .eq("is_perfil_principal", true)
+        .order("is_perfil_principal", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) {
         console.error("Erro ao buscar vínculo de perfil:", error);

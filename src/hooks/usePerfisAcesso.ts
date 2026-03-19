@@ -297,6 +297,8 @@ export function usePerfisAcesso() {
     qc.invalidateQueries({ queryKey: ["perfis_acesso"] });
     qc.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
     qc.invalidateQueries({ queryKey: ["perfil_audit_log"] });
+    qc.invalidateQueries({ queryKey: ["meu_perfil_vinculo"] });
+    qc.invalidateQueries({ queryKey: ["minhas_perfil_permissoes"] });
   };
 
   // CRUD Perfis
@@ -304,10 +306,12 @@ export function usePerfisAcesso() {
     mutationFn: async (payload: Partial<PerfilAcesso> & { permissoes?: Partial<PerfilPermissao>[] }) => {
       if (!tenantId) throw new Error("Sem tenant");
       const { permissoes, ...perfilData } = payload;
+      // Sanitize empty strings to null for timestamp/date fields
+      if ('expira_em' in perfilData && !perfilData.expira_em) perfilData.expira_em = undefined;
       const nivelRisco = calcularNivelRisco(permissoes || []);
       const { data, error } = await (supabase as any)
         .from("perfis_acesso")
-        .insert({ ...perfilData, nivel_risco: nivelRisco, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
+        .insert({ ...perfilData, expira_em: perfilData.expira_em || null, nivel_risco: nivelRisco, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
         .select().single();
       if (error) throw error;
       if (permissoes?.length) {
@@ -329,6 +333,8 @@ export function usePerfisAcesso() {
   const updatePerfil = useMutation({
     mutationFn: async ({ id, permissoes, ...payload }: Partial<PerfilAcesso> & { id: string; permissoes?: Partial<PerfilPermissao>[] }) => {
       const { data: before } = await (supabase as any).from("perfis_acesso").select("*").eq("id", id).single();
+      // Sanitize empty strings to null for timestamp/date fields
+      if ('expira_em' in payload && !payload.expira_em) (payload as any).expira_em = null;
       const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
       const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
       const { error } = await (supabase as any).from("perfis_acesso").update(updatePayload).eq("id", id);

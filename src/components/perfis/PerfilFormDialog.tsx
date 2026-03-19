@@ -68,7 +68,11 @@ export function PerfilFormDialog({ open, onClose, perfilInicial, onSubmit, loadi
   );
 
   const handleSubmit = async (data: FormData) => {
-    await onSubmit({ ...data, permissoes });
+    await onSubmit({
+      ...data,
+      expira_em: data.expira_em || undefined,
+      permissoes,
+    });
     form.reset();
     setPermissoes([]);
     setTab("geral");
