@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ResponsavelSelect } from "@/components/planoAcao/ResponsavelSelect";
 import { Plus, Lightbulb, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -274,12 +275,9 @@ export function FatorActionForm({
                 label="QUEM (Who)" 
                 tooltip="Responsável pela execução da ação"
               />
-              <Input
+              <ResponsavelSelect
                 value={formData.responsavel_nome}
-                onChange={(e) => setFormData(prev => ({ ...prev, responsavel_nome: e.target.value }))}
-                placeholder="Nome do responsável"
-                className="text-sm h-9"
-                maxLength={100}
+                onChange={(nome) => setFormData(prev => ({ ...prev, responsavel_nome: nome }))}
               />
             </div>
 
