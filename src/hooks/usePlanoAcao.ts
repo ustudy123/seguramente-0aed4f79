@@ -240,66 +240,62 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
     enabled: !!tenantId,
   });
 
-  // Minhas ações (inbox)
-  const { data: minhasAcoes = [], isLoading: isLoadingMinhasAcoes } = useQuery({
-    queryKey: ["plano-minhas-acoes", tenantId, user?.id, empresaAtivaId],
+  // Ações onde sou responsável
+  const { data: minhasResponsavel = [], isLoading: isLoadingMinhasResponsavel } = useQuery({
+    queryKey: ["plano-minhas-responsavel", tenantId, user?.id, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId || !user?.id) return [];
 
-      // Ações onde sou responsável
       let respQuery = supabase
         .from("plano_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("responsavel_id", user.id)
-        .neq("status", "concluida")
         .order("pontuacao_gut", { ascending: false });
 
-      if (empresaAtivaId) respQuery = respQuery.eq("empresa_id", empresaAtivaId);
+      if (empresaAtivaId) respQuery = respQuery.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
 
-      const { data: responsavel, error: errResp } = await respQuery;
-
-      if (errResp) throw errResp;
-
-      // Ações onde sou participante
-      const { data: participante, error: errPart } = await supabase
-        .from("plano_participantes")
-        .select("acao_id")
-        .eq("tenant_id", tenantId)
-        .eq("usuario_id", user.id);
-
-      if (errPart) throw errPart;
-
-      const participanteIds = participante?.map((p) => p.acao_id) || [];
-
-      if (participanteIds.length > 0) {
-        let partQuery = supabase
-          .from("plano_acoes")
-          .select("*")
-          .in("id", participanteIds)
-          .neq("status", "concluida");
-
-        if (empresaAtivaId) partQuery = partQuery.eq("empresa_id", empresaAtivaId);
-
-        const { data: acoesParticipante, error: errAcoes } = await partQuery;
-
-        if (errAcoes) throw errAcoes;
-
-        // Merge sem duplicatas
-        const merged = [...(responsavel || [])];
-        acoesParticipante?.forEach((a) => {
-          if (!merged.find((m) => m.id === a.id)) {
-            merged.push(a);
-          }
-        });
-        
-        return merged as PlanoAcao[];
-      }
-
-      return (responsavel || []) as PlanoAcao[];
+      const { data, error } = await respQuery;
+      if (error) throw error;
+      return (data || []) as PlanoAcao[];
     },
     enabled: !!tenantId && !!user?.id,
   });
+
+  // Ações criadas por mim
+  const { data: minhasCriadas = [], isLoading: isLoadingMinhasCriadas } = useQuery({
+    queryKey: ["plano-minhas-criadas", tenantId, user?.id, empresaAtivaId],
+    queryFn: async () => {
+      if (!tenantId || !user?.id) return [];
+
+      let query = supabase
+        .from("plano_acoes")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .eq("criado_por", user.id)
+        .order("created_at", { ascending: false });
+
+      if (empresaAtivaId) query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as PlanoAcao[];
+    },
+    enabled: !!tenantId && !!user?.id,
+  });
+
+  // Combinação para compatibilidade
+  const minhasAcoes = useMemo(() => {
+    const merged = [...minhasResponsavel];
+    minhasCriadas.forEach((a) => {
+      if (!merged.find((m) => m.id === a.id)) {
+        merged.push(a);
+      }
+    });
+    return merged;
+  }, [minhasResponsavel, minhasCriadas]);
+
+  const isLoadingMinhasAcoes = isLoadingMinhasResponsavel || isLoadingMinhasCriadas;
 
   // ===================== MUTATIONS =====================
 
