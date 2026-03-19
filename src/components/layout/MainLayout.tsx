@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AppSidebar } from "./AppSidebar";
@@ -7,13 +7,13 @@ import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 import { useIframeNavigation } from "@/hooks/useIframeNavigation";
 import { OnboardingGate } from "@/components/auth/OnboardingGate";
 
-export const MainLayout = () => {
+export const MainLayout = forwardRef<HTMLDivElement>((_, ref) => {
   useIframeNavigation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <EmpresaAtivaProvider>
-      <div className="min-h-screen bg-background">
+      <div ref={ref} className="min-h-screen bg-background">
         <AppSidebar
           isCollapsed={isSidebarCollapsed}
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -36,4 +36,6 @@ export const MainLayout = () => {
       </div>
     </EmpresaAtivaProvider>
   );
-};
+});
+
+MainLayout.displayName = "MainLayout";
