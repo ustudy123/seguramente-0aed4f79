@@ -436,9 +436,16 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
               </div>
               <p className="text-sm text-muted-foreground">{usuario.email_principal}</p>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                <span className="text-xs text-muted-foreground">
-                  {TIPO_USUARIO_LABELS[usuario.tipo_usuario] || usuario.tipo_usuario}
-                </span>
+                {perfilAtualObj ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: perfilAtualObj.cor || "#6366f1" }} />
+                    {perfilAtualObj.nome}
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {TIPO_USUARIO_LABELS[usuario.tipo_usuario] || usuario.tipo_usuario}
+                  </span>
+                )}
                 <span className="text-muted-foreground/40">•</span>
                 <span className="text-xs text-muted-foreground">{vinculosAtivos.length} vínculo(s) ativo(s)</span>
                 <span className="text-muted-foreground/40">•</span>
