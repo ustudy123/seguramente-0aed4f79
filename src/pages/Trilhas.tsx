@@ -60,6 +60,9 @@ export default function Trilhas() {
             <p className="text-sm text-muted-foreground">
               Trilhas de conhecimento e desenvolvimento contínuo
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Esta tela ajuda você a seguir trilhas de aprendizado e desenvolvimento. Explore as opções para se aprimorar cada vez mais!
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
