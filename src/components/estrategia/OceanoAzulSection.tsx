@@ -30,7 +30,10 @@ export function OceanoAzulSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [form, setForm] = useState({ titulo: "", descricao: "", swot_id: "" });
 
   const handleCreate = () => {
-    if (!form.titulo.trim()) return;
+    if (!form.titulo.trim()) {
+      toast.error("Preencha o título da matriz");
+      return;
+    }
     const payload = { titulo: form.titulo, descricao: form.descricao || undefined, swot_id: form.swot_id || undefined };
     createOceano.mutate(payload, { onSuccess: () => { setShowNew(false); setForm({ titulo: "", descricao: "", swot_id: "" }); } });
   };
