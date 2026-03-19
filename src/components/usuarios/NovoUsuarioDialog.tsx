@@ -52,6 +52,7 @@ const schemaEtapa2 = z.object({
   empresa_id: z.string().min(1, "Selecione uma empresa"),
   tipo_vinculo: z.string(),
   contexto_operacional: z.string().optional(),
+  observacoes: z.string().optional(),
 });
 
 // Union type for form (uses the looser schema for typing)
