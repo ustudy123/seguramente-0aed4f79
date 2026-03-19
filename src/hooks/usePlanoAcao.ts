@@ -220,7 +220,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         em_andamento: finalData.filter((a) => a.status === "em_andamento").length,
         atrasadas: finalData.filter((a) => a.prazo && new Date(a.prazo) < new Date() && a.status !== "concluida").length,
         concluidas: finalData.filter((a) => a.status === "concluida").length,
-        por_origem: { manual: 0, ergonomia: 0, ouvidoria: 0, epi: 0, ponto: 0, humor: 0 },
+        por_origem: {},
         por_prioridade: { baixo: 0, medio: 0, urgente: 0, imediato: 0 },
       };
 
