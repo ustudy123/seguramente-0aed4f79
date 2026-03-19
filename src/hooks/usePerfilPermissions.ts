@@ -1,0 +1,99 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { useMemo } from "react";
+
+/**
+ * Hook centralizado que busca as permissões do perfil de acesso vinculado ao usuário atual.
+ * Retorna uma função `temPermissao(modulo, acao)` que verifica se o usuário
+ * possui determinada ação em um módulo, baseado no perfil vinculado.
+ *
+ * Superadmins e owners têm acesso total automaticamente.
+ */
+export function usePerfilPermissions() {
+  const { user, tenantId, isSuperAdmin, hasMinimumRole } = useAuth();
+
+  const isOwner = hasMinimumRole("owner") || isSuperAdmin;
+
+  // 1. Buscar o perfil vinculado ativo do usuário
+  const { data: vinculo } = useQuery({
+    queryKey: ["meu_perfil_vinculo", user?.id, tenantId],
+    queryFn: async () => {
+      if (!user?.id || !tenantId) return null;
+      const { data, error } = await (supabase as any)
+        .from("usuario_perfil_vinculos")
+        .select("perfil_id")
+        .eq("usuario_id", user.id)
+        .eq("tenant_id", tenantId)
+        .eq("ativo", true)
+        .eq("is_perfil_principal", true)
+        .maybeSingle();
+      if (error) {
+        console.error("Erro ao buscar vínculo de perfil:", error);
+        return null;
+      }
+      return data as { perfil_id: string } | null;
+    },
+    enabled: !!user?.id && !!tenantId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 2. Buscar as permissões do perfil
+  const { data: permissoes = [], isLoading } = useQuery({
+    queryKey: ["minhas_perfil_permissoes", vinculo?.perfil_id],
+    queryFn: async () => {
+      if (!vinculo?.perfil_id) return [];
+      const { data, error } = await (supabase as any)
+        .from("perfil_permissoes")
+        .select("modulo, acao, escopo, ativo")
+        .eq("perfil_id", vinculo.perfil_id)
+        .eq("ativo", true);
+      if (error) {
+        console.error("Erro ao buscar permissões do perfil:", error);
+        return [];
+      }
+      return data as Array<{ modulo: string; acao: string; escopo: string; ativo: boolean }>;
+    },
+    enabled: !!vinculo?.perfil_id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 3. Criar um Set para lookup rápido
+  const permissaoSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of permissoes) {
+      set.add(`${p.modulo}:${p.acao}`);
+    }
+    return set;
+  }, [permissoes]);
+
+  /**
+   * Verifica se o usuário tem permissão para uma ação em um módulo.
+   * Owners e superadmins sempre retornam true.
+   */
+  const temPermissao = useMemo(() => {
+    return (modulo: string, acao: string): boolean => {
+      if (isOwner) return true;
+      return permissaoSet.has(`${modulo}:${acao}`);
+    };
+  }, [permissaoSet, isOwner]);
+
+  /**
+   * Verifica se o usuário tem acesso a qualquer ação de um módulo.
+   */
+  const temAcessoModulo = useMemo(() => {
+    return (modulo: string): boolean => {
+      if (isOwner) return true;
+      return permissoes.some((p) => p.modulo === modulo);
+    };
+  }, [permissoes, isOwner]);
+
+  return {
+    temPermissao,
+    temAcessoModulo,
+    permissoes,
+    isLoading,
+    perfilVinculado: !!vinculo?.perfil_id,
+    isOwner,
+  };
+}
