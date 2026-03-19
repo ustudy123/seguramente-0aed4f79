@@ -47,7 +47,7 @@ const schemaEtapa2 = z.object({
   matricula: z.string().optional(),
   data_nascimento: z.string().optional(),
   tipo_usuario: z.string(),
-  observacoes: z.string().optional(),
+  perfil_acesso_id: z.string().optional(),
   empresa_id: z.string().min(1, "Selecione uma empresa"),
   tipo_vinculo: z.string(),
   contexto_operacional: z.string().optional(),
