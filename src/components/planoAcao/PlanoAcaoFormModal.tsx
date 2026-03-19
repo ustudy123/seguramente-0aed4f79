@@ -44,6 +44,7 @@ import { Separator } from "@/components/ui/separator";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
 import { cn } from "@/lib/utils";
 import type { PlanoAcao } from "@/types/planoAcao";
+import { ResponsavelSelect } from "./ResponsavelSelect";
 
 const formSchema = z.object({
   // 5W2H
