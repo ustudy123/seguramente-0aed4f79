@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, Plus, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ResponsavelSelect } from "@/components/planoAcao/ResponsavelSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -308,12 +309,12 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                         </div>
                         <div>
                           <Label className="text-xs">Responsável</Label>
-                          <Input
-                            placeholder="Nome do responsável"
-                            value={editando.responsavel ?? ""}
-                            onChange={(e) => setEditando((p) => ({ ...p, responsavel: e.target.value }))}
-                            className="mt-1 h-8 text-sm"
-                          />
+                          <div className="mt-1">
+                            <ResponsavelSelect
+                              value={editando.responsavel ?? ""}
+                              onChange={(nome) => setEditando((p) => ({ ...p, responsavel: nome }))}
+                            />
+                          </div>
                         </div>
                       </div>
 
