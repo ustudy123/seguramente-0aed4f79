@@ -291,10 +291,11 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   }
 
   async function handleSalvarEdicao() {
-    const { tipo_usuario, perfil_acesso_id, ...rest } = editForm;
+    const { tipo_usuario, perfil_acesso_id, data_nascimento, ...rest } = editForm;
     await updateUsuario.mutateAsync({
       id: usuario.id,
       ...rest,
+      data_nascimento: data_nascimento || null,
       ...(tipo_usuario ? { tipo_usuario: tipo_usuario as import("@/hooks/useUsuarios").UsuarioTipo } : {}),
     });
 
