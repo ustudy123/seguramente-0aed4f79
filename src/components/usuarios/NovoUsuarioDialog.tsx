@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, AlertTriangle, UserCheck, Search } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck } from "lucide-react";
 import { useUsuarios, TIPO_USUARIO_LABELS, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,10 +31,11 @@ const schemaEtapa1 = z.object({
   matricula: z.string().optional(),
   data_nascimento: z.string().optional(),
   tipo_usuario: z.string(),
-  observacoes: z.string().optional(),
+  perfil_acesso_id: z.string().optional(),
   empresa_id: z.string().optional(),
   tipo_vinculo: z.string(),
   contexto_operacional: z.string().optional(),
+  observacoes: z.string().optional(),
 });
 
 const schemaEtapa2 = z.object({
@@ -47,10 +48,11 @@ const schemaEtapa2 = z.object({
   matricula: z.string().optional(),
   data_nascimento: z.string().optional(),
   tipo_usuario: z.string(),
-  observacoes: z.string().optional(),
+  perfil_acesso_id: z.string().optional(),
   empresa_id: z.string().min(1, "Selecione uma empresa"),
   tipo_vinculo: z.string(),
   contexto_operacional: z.string().optional(),
+  observacoes: z.string().optional(),
 });
 
 // Union type for form (uses the looser schema for typing)
@@ -93,6 +95,22 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         .select("id, razao_social, nome_fantasia, cnpj")
         .eq("tenant_id", tenantId)
         .order("razao_social");
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Perfis de acesso do tenant
+  const { data: perfisAcesso = [] } = useQuery({
+    queryKey: ["perfis-acesso-select", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await (supabase as any)
+        .from("perfis_acesso")
+        .select("id, nome, cor, tipo_usuario_sugerido, descricao")
+        .eq("tenant_id", tenantId)
+        .eq("ativo", true)
+        .order("nome");
       return data || [];
     },
     enabled: !!tenantId,
@@ -227,6 +245,20 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         status: "ativo",
         data_inicio: new Date().toISOString().split("T")[0],
       });
+
+      // Vincular perfil de acesso se selecionado
+      if (data.perfil_acesso_id) {
+        await (supabase as any)
+          .from("usuario_perfil_vinculos")
+          .insert({
+            tenant_id: tenantId,
+            usuario_id: usuario.id,
+            perfil_id: data.perfil_acesso_id,
+            ativo: true,
+            is_principal: true,
+            atribuido_por_nome: "Sistema (cadastro)",
+          });
+      }
 
       setNovoUsuarioId(usuario.id);
       setEtapa(3);
@@ -384,25 +416,39 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                     <Input {...register("telefone_principal")} placeholder="(11) 99000-0000" />
                   </div>
 
-                  {/* Linha 5: Tipo de Usuário (full width) */}
+                  {/* Perfil de Acesso (full width) */}
                   <div className="sm:col-span-2 space-y-1.5">
-                    <Label>Tipo de Usuário</Label>
+                    <Label className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Perfil de Acesso
+                    </Label>
                     <Select
-                      defaultValue="gestor"
-                      onValueChange={v => {
-                        setValue("tipo_usuario", v);
-                        setValue("tipo_vinculo", v);
+                      value={watchedValues.perfil_acesso_id || ""}
+                      onValueChange={perfilId => {
+                        setValue("perfil_acesso_id", perfilId);
+                        const perfil = perfisAcesso.find((p: any) => p.id === perfilId);
+                        if (perfil?.tipo_usuario_sugerido) {
+                          setValue("tipo_usuario", perfil.tipo_usuario_sugerido);
+                          setValue("tipo_vinculo", perfil.tipo_usuario_sugerido);
+                        }
                       }}
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um perfil de acesso" />
+                      </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(TIPO_USUARIO_LABELS).map(([k, v]) => (
-                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        {perfisAcesso.map((p: any) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.cor || 'hsl(var(--muted))' }} />
+                              {p.nome}
+                            </span>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Classificação global desta pessoa no sistema Seguramente.
+                      Define o nível de acesso e permissões deste usuário no sistema.
                     </p>
                   </div>
 
