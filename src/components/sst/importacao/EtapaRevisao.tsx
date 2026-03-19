@@ -469,27 +469,27 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          {r.setor && <span><strong>Setor:</strong> {r.setor}</span>}
-                          {r.funcao && <span><strong>Função:</strong> {r.funcao}</span>}
-                          {r.fonte_geradora && <span><strong>Fonte:</strong> {r.fonte_geradora}</span>}
-                          {r.intensidade && <span><strong>Intensidade:</strong> {r.intensidade}</span>}
-                          {r.limite_tolerancia && <span><strong>Limite:</strong> {r.limite_tolerancia}</span>}
-                          {r.acima_limite !== undefined && (
+                          {r.setor && r.setor !== "null" && <span><strong>Setor:</strong> {r.setor}</span>}
+                          {r.funcao && r.funcao !== "null" && <span><strong>Função:</strong> {r.funcao}</span>}
+                          {r.fonte_geradora && r.fonte_geradora !== "null" && <span><strong>Fonte:</strong> {r.fonte_geradora}</span>}
+                          {r.intensidade && r.intensidade !== "null" && <span><strong>Intensidade:</strong> {r.intensidade}</span>}
+                          {r.limite_tolerancia && r.limite_tolerancia !== "null" && <span><strong>Limite:</strong> {r.limite_tolerancia}</span>}
+                          {r.acima_limite !== undefined && r.acima_limite !== null && (
                             <span><strong>Acima do LT:</strong>
                               <Badge variant={r.acima_limite ? "destructive" : "secondary"} className="ml-1 text-[10px]">{r.acima_limite ? "Sim" : "Não"}</Badge>
                             </span>
                           )}
-                          {r.caracterizado !== undefined && (
+                          {r.caracterizado !== undefined && r.caracterizado !== null && (
                             <span><strong>Caracterizado:</strong>
                               <Badge variant={r.caracterizado ? "destructive" : "secondary"} className="ml-1 text-[10px]">{r.caracterizado ? "Sim" : "Não"}</Badge>
                             </span>
                           )}
-                          {r.grau_insalubridade && <span><strong>Grau:</strong> {r.grau_insalubridade}</span>}
-                          {r.condicao_perigosa && <span className="col-span-2"><strong>Condição perigosa:</strong> {r.condicao_perigosa}</span>}
-                          {r.conclusao && <span className="col-span-2"><strong>Conclusão:</strong> {r.conclusao}</span>}
-                          {r.conclusao_previdenciaria && <span className="col-span-2"><strong>Conclusão prev.:</strong> {r.conclusao_previdenciaria}</span>}
-                          {r.metodologia && <span className="col-span-2"><strong>Metodologia:</strong> {r.metodologia}</span>}
-                          {r.danos && <span className="col-span-2"><strong>Danos:</strong> {r.danos}</span>}
+                          {r.grau_insalubridade && r.grau_insalubridade !== "null" && <span><strong>Grau:</strong> {r.grau_insalubridade}</span>}
+                          {r.condicao_perigosa && r.condicao_perigosa !== "null" && <span className="col-span-2"><strong>Condição perigosa:</strong> {r.condicao_perigosa}</span>}
+                          {r.conclusao && r.conclusao !== "null" && <span className="col-span-2"><strong>Conclusão:</strong> {r.conclusao}</span>}
+                          {r.conclusao_previdenciaria && r.conclusao_previdenciaria !== "null" && <span className="col-span-2"><strong>Conclusão prev.:</strong> {r.conclusao_previdenciaria}</span>}
+                          {r.metodologia && r.metodologia !== "null" && <span className="col-span-2"><strong>Metodologia:</strong> {r.metodologia}</span>}
+                          {r.danos && r.danos !== "null" && <span className="col-span-2"><strong>Danos:</strong> {r.danos}</span>}
                         </div>
                         {r.controles_existentes && r.controles_existentes.length > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
