@@ -291,12 +291,31 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   }
 
   async function handleSalvarEdicao() {
-    const { tipo_usuario, ...rest } = editForm;
+    const { tipo_usuario, perfil_acesso_id, ...rest } = editForm;
     await updateUsuario.mutateAsync({
       id: usuario.id,
       ...rest,
       ...(tipo_usuario ? { tipo_usuario: tipo_usuario as import("@/hooks/useUsuarios").UsuarioTipo } : {}),
     });
+
+    // Gerenciar vínculo de perfil de acesso
+    const perfilAnteriorId = perfilAtualObj?.id || "";
+    if (perfil_acesso_id !== perfilAnteriorId) {
+      // Desvincular perfil anterior se existir
+      if (perfilAtual?.id) {
+        await desvincularPerfil.mutateAsync(perfilAtual.id);
+      }
+      // Vincular novo perfil se selecionado
+      if (perfil_acesso_id) {
+        await vincularPerfil.mutateAsync({
+          usuario_id: usuario.id,
+          perfil_id: perfil_acesso_id,
+          is_perfil_principal: true,
+        });
+      }
+      refetchPerfilVinculos();
+    }
+
     setEditando(false);
   }
 
