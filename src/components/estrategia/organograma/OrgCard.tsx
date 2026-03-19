@@ -2,6 +2,7 @@ import { Plus, Trash2, User, Briefcase, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 
@@ -48,17 +49,35 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling }: OrgCardPro
       </Badge>
 
       {/* Delete button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(node.id);
-        }}
-      >
-        <Trash2 className="w-3 h-3" />
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir posição?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A posição "{node.titulo}"{node.nome_ocupante ? ` (${node.nome_ocupante})` : ""} será removida permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => onDelete(node.id)}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Add child (below) */}
       <Tooltip>

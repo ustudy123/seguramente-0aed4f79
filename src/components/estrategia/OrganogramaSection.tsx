@@ -90,7 +90,10 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   };
 
   const handleCreate = async () => {
-    if (!form.titulo.trim()) return;
+    if (!form.titulo.trim()) {
+      toast.error("Preencha o nome da função");
+      return;
+    }
     const titulo = form.titulo.trim();
 
     if (!form.cargo_id) {

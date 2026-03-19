@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { Plus, Trash2, ChevronRight, Waves, MinusCircle, ArrowDownCircle, ArrowUpCircle, Sparkles, Target, Bot } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -29,7 +31,10 @@ export function OceanoAzulSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [form, setForm] = useState({ titulo: "", descricao: "", swot_id: "" });
 
   const handleCreate = () => {
-    if (!form.titulo.trim()) return;
+    if (!form.titulo.trim()) {
+      toast.error("Preencha o título da matriz");
+      return;
+    }
     const payload = { titulo: form.titulo, descricao: form.descricao || undefined, swot_id: form.swot_id || undefined };
     createOceano.mutate(payload, { onSuccess: () => { setShowNew(false); setForm({ titulo: "", descricao: "", swot_id: "" }); } });
   };
@@ -142,7 +147,10 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
   const importedSwotIds = new Set(itens.map((i) => i.swot_item_id).filter(Boolean));
 
   const handleAdd = () => {
-    if (!newItemDesc.trim()) return;
+    if (!newItemDesc.trim()) {
+      toast.error("Preencha a descrição do item");
+      return;
+    }
     createOceanoItem.mutate({ oceano_id: oceano.id, quadrante: newItemQuad, descricao: newItemDesc }, {
       onSuccess: () => setNewItemDesc(""),
     });
@@ -167,9 +175,30 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
           <Button variant="ghost" size="sm" onClick={onBack}><ChevronRight className="w-4 h-4 mr-1 rotate-180" /> Voltar</Button>
           <h3 className="text-lg font-semibold">{oceano.titulo}</h3>
         </div>
-        <Button variant="destructive" size="sm" onClick={() => { deleteOceano.mutate(oceano.id); onBack(); }}>
-          <Trash2 className="w-4 h-4 mr-1" /> Excluir
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="w-4 h-4 mr-1" /> Excluir
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir matriz Oceano Azul?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação é irreversível. A matriz "{oceano.titulo}" e todos os seus itens serão permanentemente removidos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => { deleteOceano.mutate(oceano.id); onBack(); }}
+              >
+                Excluir permanentemente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Add item */}
@@ -183,7 +212,7 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
               </SelectContent>
             </Select>
             <Input className="flex-1" placeholder="Descreva..." value={newItemDesc} onChange={(e) => setNewItemDesc(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAdd()} />
-            <Button onClick={handleAdd}><Plus className="w-4 h-4" /></Button>
+            <Button onClick={handleAdd} disabled={createOceanoItem.isPending}><Plus className="w-4 h-4" /></Button>
           </div>
         </CardContent>
       </Card>
@@ -221,9 +250,30 @@ function OceanoDetail({ oceano, onBack }: { oceano: EstrategiaOceanoAzul; onBack
                           >
                             <Bot className="w-3.5 h-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteOceanoItem.mutate(item.id)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir item?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  O item "{item.descricao}" será removido permanentemente.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => deleteOceanoItem.mutate(item.id)}
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     ))}
