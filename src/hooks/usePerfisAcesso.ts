@@ -297,6 +297,8 @@ export function usePerfisAcesso() {
     qc.invalidateQueries({ queryKey: ["perfis_acesso"] });
     qc.invalidateQueries({ queryKey: ["usuario_perfil_vinculos"] });
     qc.invalidateQueries({ queryKey: ["perfil_audit_log"] });
+    qc.invalidateQueries({ queryKey: ["meu_perfil_vinculo"] });
+    qc.invalidateQueries({ queryKey: ["minhas_perfil_permissoes"] });
   };
 
   // CRUD Perfis
