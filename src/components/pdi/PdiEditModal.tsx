@@ -149,7 +149,11 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Responsável (líder)</Label>
-              <Input value={form.responsavel_nome} onChange={e => setForm(f => ({ ...f, responsavel_nome: e.target.value }))} placeholder="Nome do líder" />
+              <ResponsavelSelect
+                value={form.responsavel_nome}
+                onChange={(nome) => setForm(f => ({ ...f, responsavel_nome: nome }))}
+                placeholder="Selecione ou digite o líder"
+              />
             </div>
             <div>
               <Label>Co-responsável</Label>

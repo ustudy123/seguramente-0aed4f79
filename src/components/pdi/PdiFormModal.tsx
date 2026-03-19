@@ -128,7 +128,11 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
 
           <div>
             <Label>Responsável (líder)</Label>
-            <Input value={form.responsavel_nome} onChange={e => setForm(f => ({ ...f, responsavel_nome: e.target.value }))} placeholder="Nome do líder responsável" />
+            <ResponsavelSelect
+              value={form.responsavel_nome}
+              onChange={(nome) => setForm(f => ({ ...f, responsavel_nome: nome }))}
+              placeholder="Selecione ou digite o líder responsável"
+            />
           </div>
 
           <Button onClick={handleSubmit} disabled={isCreating || !form.colaborador_id || !form.titulo || !form.data_fim} className="w-full">
