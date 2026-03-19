@@ -171,6 +171,9 @@ export default function Ergonomia() {
           <p className="text-muted-foreground mt-0.5 text-sm">
             Fluxo GRO · NR-1 · NR-17 · ISO 45003 — Identificação, avaliação, controle e monitoramento de riscos
           </p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Aqui você acompanha e organiza os riscos ergonômicos, define ações e monitora a evolução para manter o trabalho seguro e saudável.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
