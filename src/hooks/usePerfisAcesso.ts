@@ -304,10 +304,12 @@ export function usePerfisAcesso() {
     mutationFn: async (payload: Partial<PerfilAcesso> & { permissoes?: Partial<PerfilPermissao>[] }) => {
       if (!tenantId) throw new Error("Sem tenant");
       const { permissoes, ...perfilData } = payload;
+      // Sanitize empty strings to null for timestamp/date fields
+      if ('expira_em' in perfilData && !perfilData.expira_em) perfilData.expira_em = undefined;
       const nivelRisco = calcularNivelRisco(permissoes || []);
       const { data, error } = await (supabase as any)
         .from("perfis_acesso")
-        .insert({ ...perfilData, nivel_risco: nivelRisco, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
+        .insert({ ...perfilData, expira_em: perfilData.expira_em || null, nivel_risco: nivelRisco, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
         .select().single();
       if (error) throw error;
       if (permissoes?.length) {
