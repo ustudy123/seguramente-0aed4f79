@@ -572,6 +572,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                         data_nascimento: usuario.data_nascimento || "",
                         tipo_usuario: usuario.tipo_usuario || "",
                         observacoes: usuario.observacoes || "",
+                        perfil_acesso_id: perfilAtualObj?.id || "",
                       });
                       setEditando(true);
                     }}>
