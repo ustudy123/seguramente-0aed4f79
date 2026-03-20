@@ -194,7 +194,15 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{cargo.nome}</p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      {cargo.departamento?.nome && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {cargo.departamento.nome}
+                        </span>
+                      )}
+                      {cargo.departamento?.nome && cargo.nivel && (
+                        <span className="text-xs text-muted-foreground/40">•</span>
+                      )}
                       {cargo.nivel && (
                         <Badge variant="secondary" className={`text-xs ${nivelColor[cargo.nivel] || ""}`}>
                           {nivelLabel[cargo.nivel] || cargo.nivel}
