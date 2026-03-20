@@ -1,0 +1,2 @@
+ALTER TABLE public.eventos_sst ADD COLUMN IF NOT EXISTS gravidade_potencial text;
+COMMENT ON COLUMN public.eventos_sst.gravidade_potencial IS 'Gravidade potencial do evento: baixa, media, alta, critica';

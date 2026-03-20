@@ -5543,6 +5543,7 @@ export type Database = {
           gravidade_lesao:
             | Database["public"]["Enums"]["acidente_gravidade_lesao"]
             | null
+          gravidade_potencial: string | null
           hora_evento: string | null
           id: string
           local_especifico: string | null
@@ -5587,6 +5588,7 @@ export type Database = {
           gravidade_lesao?:
             | Database["public"]["Enums"]["acidente_gravidade_lesao"]
             | null
+          gravidade_potencial?: string | null
           hora_evento?: string | null
           id?: string
           local_especifico?: string | null
@@ -5631,6 +5633,7 @@ export type Database = {
           gravidade_lesao?:
             | Database["public"]["Enums"]["acidente_gravidade_lesao"]
             | null
+          gravidade_potencial?: string | null
           hora_evento?: string | null
           id?: string
           local_especifico?: string | null
