@@ -12,7 +12,7 @@ export type VinculoStatus = 'ativo' | 'pendente' | 'suspenso' | 'revogado' | 'en
 export type UsuarioTipo =
   'administrador' | 'rh_dp' | 'gestor' | 'lideranca' | 'tecnico_seguranca' |
   'saude_ocupacional' | 'clinica_parceira' | 'consultor_externo' |
-  'prestador_terceiro' | 'auditor' | 'implantador' | 'suporte_autorizado' | 'corporativo_multiempresa';
+  'prestador_terceiro' | 'auditor' | 'implantador' | 'suporte_autorizado' | 'corporativo_multiempresa' | 'colaborador';
 
 export type QualidadeScore = 'completo' | 'suficiente' | 'incompleto' | 'inconsistente';
 
@@ -87,6 +87,7 @@ export const TIPO_USUARIO_LABELS: Record<UsuarioTipo, string> = {
   implantador: 'Implantador',
   suporte_autorizado: 'Suporte Autorizado',
   corporativo_multiempresa: 'Corporativo Multiempresa',
+  colaborador: 'Colaborador',
 };
 
 export const STATUS_LABELS: Record<UsuarioStatus, string> = {
