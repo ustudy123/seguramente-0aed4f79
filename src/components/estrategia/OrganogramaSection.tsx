@@ -70,7 +70,7 @@ function buildOrgSuggestion(colaboradores: { nome_completo: string; cargo: strin
 
 export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia(escopo);
-  const { cargos, createCargo } = useCargos();
+  const { cargos, createCargo } = useCargos({ skipEmpresaFilter: true });
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -347,9 +347,10 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                               — Nenhuma (digitar nova) —
                             </CommandItem>
                             {cargosAtivos.map((c: any) => (
-                              <CommandItem key={c.id} value={c.nome} onSelect={() => { handleCargoSelect(c.id); setCargoOpen(false); }}>
+                              <CommandItem key={c.id} value={`${c.nome} ${c.departamento?.nome || ''}`} onSelect={() => { handleCargoSelect(c.id); setCargoOpen(false); }}>
                                 <Check className={cn("mr-2 h-4 w-4", form.cargo_id === c.id ? "opacity-100" : "opacity-0")} />
-                                {c.nome}
+                                <span>{c.nome}</span>
+                                {c.departamento?.nome && <span className="ml-1.5 text-xs text-muted-foreground">({c.departamento.nome})</span>}
                               </CommandItem>
                             ))}
                           </CommandGroup>

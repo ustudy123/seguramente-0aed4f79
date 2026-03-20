@@ -156,13 +156,14 @@ export function useDepartamentos() {
 }
 
 // Cargos Hook
-export function useCargos() {
+export function useCargos(options?: { skipEmpresaFilter?: boolean }) {
   const { tenantId } = useTenant();
   const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
+  const skipEmpresa = options?.skipEmpresaFilter ?? false;
 
   const { data: cargos = [], isLoading, error } = useQuery({
-    queryKey: ["cargos", tenantId, empresaAtivaId],
+    queryKey: ["cargos", tenantId, skipEmpresa ? "all" : empresaAtivaId],
     queryFn: async () => {
       let query = supabase
         .from("cargos")
@@ -170,7 +171,7 @@ export function useCargos() {
         .eq("tenant_id", tenantId!)
         .order("nome");
 
-      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      if (!skipEmpresa && empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
 
       const { data, error } = await query;
       if (error) throw error;
