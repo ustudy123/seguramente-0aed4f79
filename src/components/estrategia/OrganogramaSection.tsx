@@ -1,13 +1,14 @@
 import { useState, useMemo } from "react";
-import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown, Sparkles, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos } from "@/hooks/useCadastros";
