@@ -218,7 +218,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                   <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
                   <p className="font-medium">Arraste um arquivo ou clique para selecionar</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    PDF, imagens ou documentos Word (máx. 20MB)
+                    PDF, imagens ou documentos Word (máx. 50MB)
                   </p>
                 </div>
               )}
