@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Camera, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface LivenessAction {
@@ -17,21 +17,27 @@ const ALL_ACTIONS: LivenessAction[] = [
 ];
 
 interface LivenessDetectionProps {
-  onComplete: (data: { actions: string[]; timestamps: string[] }) => void;
+  onComplete: (data: { actions: string[]; timestamps: string[]; frames?: string[] }) => void;
   onError?: (error: string) => void;
 }
 
 export function LivenessDetection({ onComplete, onError }: LivenessDetectionProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const detectorRef = useRef<any>(null);
+  const detectionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [faceDetectorSupported, setFaceDetectorSupported] = useState<boolean | null>(null);
+
   const [actions, setActions] = useState<LivenessAction[]>([]);
   const [currentActionIndex, setCurrentActionIndex] = useState(0);
   const [completedActions, setCompletedActions] = useState<string[]>([]);
   const [timestamps, setTimestamps] = useState<string[]>([]);
+  const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Gerar 3 ações aleatórias
@@ -40,35 +46,85 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
     setActions(shuffled);
   }, []);
 
+  // Inicializar FaceDetector
+  useEffect(() => {
+    const initDetector = async () => {
+      try {
+        if ("FaceDetector" in window) {
+          const detector = new (window as any).FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+          detectorRef.current = detector;
+          setFaceDetectorSupported(true);
+        } else {
+          setFaceDetectorSupported(false);
+        }
+      } catch {
+        setFaceDetectorSupported(false);
+      }
+    };
+    initDetector();
+  }, []);
+
+  // Detecção contínua de rosto
+  const startFaceDetection = useCallback(() => {
+    if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+
+    detectionIntervalRef.current = setInterval(async () => {
+      if (!videoRef.current || !detectorRef.current) return;
+      if (videoRef.current.readyState < 2) return;
+
+      try {
+        const faces = await detectorRef.current.detect(videoRef.current);
+        setFaceDetected(faces.length > 0);
+      } catch {
+        // Silently ignore detection errors
+      }
+    }, 500);
+  }, []);
+
+  // Capturar frame do vídeo
+  const captureFrame = useCallback((): string | null => {
+    if (!videoRef.current || !canvasRef.current) return null;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(video, 0, 0);
+    return canvas.toDataURL("image/jpeg", 0.7);
+  }, []);
+
   // Iniciar câmera
   const startCamera = useCallback(async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
       });
-      
       streamRef.current = mediaStream;
-      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
-      
-      setStream(mediaStream);
       setCameraReady(true);
       setCameraError(null);
-    } catch (err) {
+
+      if (detectorRef.current) {
+        startFaceDetection();
+      }
+    } catch {
       const errorMessage = "Não foi possível acessar a câmera. Verifique as permissões.";
       setCameraError(errorMessage);
       onError?.(errorMessage);
     }
-  }, [onError]);
+  }, [onError, startFaceDetection]);
 
   useEffect(() => {
     startCamera();
-    
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
       }
     };
   }, [startCamera]);
@@ -76,30 +132,38 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
   // Confirmar ação atual
   const handleConfirmAction = () => {
     if (isProcessing || currentActionIndex >= actions.length) return;
-    
+
+    // Se FaceDetector é suportado, exigir rosto
+    if (faceDetectorSupported && !faceDetected) return;
+
     setIsProcessing(true);
     const currentAction = actions[currentActionIndex];
     const timestamp = new Date().toISOString();
-    
+    const frame = captureFrame();
+
     setCompletedActions(prev => [...prev, currentAction.type]);
     setTimestamps(prev => [...prev, timestamp]);
-    
+    if (frame) setCapturedFrames(prev => [...prev, frame]);
+
     setTimeout(() => {
       setIsProcessing(false);
-      
+
       if (currentActionIndex === actions.length - 1) {
-        // Todas as ações completas
         const finalActions = [...completedActions, currentAction.type];
         const finalTimestamps = [...timestamps, timestamp];
-        
-        // Parar câmera
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
+        const finalFrames = frame ? [...capturedFrames, frame] : capturedFrames;
+
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
         }
-        
+        if (detectionIntervalRef.current) {
+          clearInterval(detectionIntervalRef.current);
+        }
+
         onComplete({
           actions: finalActions,
           timestamps: finalTimestamps,
+          frames: finalFrames,
         });
       } else {
         setCurrentActionIndex(prev => prev + 1);
@@ -108,6 +172,7 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
   };
 
   const currentAction = actions[currentActionIndex];
+  const canConfirm = cameraReady && !isProcessing && (faceDetectorSupported ? faceDetected : true);
 
   if (cameraError) {
     return (
@@ -155,13 +220,42 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
           muted
           className="aspect-video w-full transform scale-x-[-1]"
         />
-        
+
+        {/* Indicador de detecção de rosto */}
+        {cameraReady && faceDetectorSupported && (
+          <div className={`absolute top-2 right-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+            faceDetected
+              ? "bg-green-500/90 text-white"
+              : "bg-red-500/90 text-white animate-pulse"
+          }`}>
+            {faceDetected ? (
+              <>
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Rosto detectado
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="h-3.5 w-3.5" />
+                Nenhum rosto
+              </>
+            )}
+          </div>
+        )}
+
         {!cameraReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
         )}
       </div>
+
+      {/* Aviso se FaceDetector não suportado */}
+      {faceDetectorSupported === false && (
+        <div className="flex items-center gap-2 rounded-md bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-700 dark:text-amber-400 mx-auto max-w-sm">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>Detecção facial não suportada neste navegador. Frames serão capturados como evidência.</span>
+        </div>
+      )}
 
       {/* Instrução atual */}
       <AnimatePresence mode="wait">
@@ -175,9 +269,16 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
           >
             <Card className="mx-auto max-w-sm p-6">
               <p className="mb-4 text-xl font-medium">{currentAction.instruction}</p>
+
+              {faceDetectorSupported && !faceDetected && cameraReady && (
+                <p className="mb-3 text-sm text-destructive font-medium">
+                  Posicione seu rosto na câmera para continuar
+                </p>
+              )}
+
               <Button
                 onClick={handleConfirmAction}
-                disabled={!cameraReady || isProcessing}
+                disabled={!canConfirm}
                 size="lg"
                 className="w-full"
               >
@@ -212,6 +313,8 @@ export function LivenessDetection({ onComplete, onError }: LivenessDetectionProp
           ))}
         </div>
       )}
+
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }
