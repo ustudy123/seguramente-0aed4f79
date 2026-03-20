@@ -28,6 +28,7 @@ import { useEventosSST } from "@/hooks/useEventosSST";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
+import { InvestigacaoAssistidaIA } from "./InvestigacaoAssistidaIA";
 
 interface Props {
   evento: EventoSST;
