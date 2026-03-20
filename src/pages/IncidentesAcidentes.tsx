@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen } from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen, TrendingUp, Calculator } from "lucide-react";
 import { useEventosSST } from "@/hooks/useEventosSST";
 import { EventoSSTStats } from "@/components/incidentes/EventoSSTStats";
 import { EventoSSTList } from "@/components/incidentes/EventoSSTList";
@@ -12,6 +13,9 @@ import { EventoSSTDetail } from "@/components/incidentes/EventoSSTDetail";
 import { EventoSSTDashboard } from "@/components/incidentes/EventoSSTDashboard";
 import { PiramideSeguranca } from "@/components/incidentes/PiramideSeguranca";
 import { GuiaRapidoIncidentes } from "@/components/incidentes/GuiaRapidoIncidentes";
+import { IndicadoresEstrategicos } from "@/components/incidentes/IndicadoresEstrategicos";
+import { AnalyticsAvancado } from "@/components/incidentes/AnalyticsAvancado";
+import { SimuladorFAP } from "@/components/incidentes/SimuladorFAP";
 import type { EventoSST } from "@/types/eventoSST";
 
 export default function IncidentesAcidentes() {
@@ -32,13 +36,16 @@ export default function IncidentesAcidentes() {
 
   if (selected) {
     return (
-      <div className="p-6 space-y-6">
-        <EventoSSTDetail evento={selected} onBack={() => setSelected(null)} />
-      </div>
+      <TooltipProvider>
+        <div className="p-6 space-y-6">
+          <EventoSSTDetail evento={selected} onBack={() => setSelected(null)} />
+        </div>
+      </TooltipProvider>
     );
   }
 
   return (
+    <TooltipProvider>
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -64,10 +71,13 @@ export default function IncidentesAcidentes() {
       <EventoSSTStats stats={stats} />
 
       <Tabs defaultValue="lista">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="lista"><List className="w-4 h-4 mr-1" /> Ocorrências</TabsTrigger>
           <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Análise</TabsTrigger>
-          <TabsTrigger value="piramide"><BarChart3 className="w-4 h-4 mr-1" /> Pirâmide</TabsTrigger>
+          <TabsTrigger value="indicadores"><TrendingUp className="w-4 h-4 mr-1" /> Indicadores</TabsTrigger>
+          <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" /> Analytics</TabsTrigger>
+          <TabsTrigger value="fap"><Calculator className="w-4 h-4 mr-1" /> FAP</TabsTrigger>
+          <TabsTrigger value="piramide"><Shield className="w-4 h-4 mr-1" /> Pirâmide</TabsTrigger>
         </TabsList>
 
         <TabsContent value="lista" className="space-y-4">
@@ -150,6 +160,18 @@ export default function IncidentesAcidentes() {
           <EventoSSTDashboard eventos={eventos} />
         </TabsContent>
 
+        <TabsContent value="indicadores" className="space-y-4">
+          <IndicadoresEstrategicos eventos={eventos} />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <AnalyticsAvancado eventos={eventos} />
+        </TabsContent>
+
+        <TabsContent value="fap" className="space-y-4">
+          <SimuladorFAP eventos={eventos} />
+        </TabsContent>
+
         <TabsContent value="piramide">
           <div className="max-w-lg mx-auto">
             <PiramideSeguranca eventos={eventos} />
@@ -175,5 +197,6 @@ export default function IncidentesAcidentes() {
         isPending={createEvento.isPending || updateEvento.isPending}
       />
     </div>
+    </TooltipProvider>
   );
 }
