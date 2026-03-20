@@ -195,6 +195,7 @@ INSTRUÇÕES OBRIGATÓRIAS:
    - Para CADA função, uma seção completa com:
      * Nome e nível do cargo em header destacado
      * Descrição da função (expanda se necessário com contexto profissional)
+     * Se houver RESPONSABILIDADE DA FUNÇÃO, incluir seção destacada "Responsabilidade & Escopo" logo após a descrição, com caixa visual diferenciada
      * Tabela de Atividades com colunas: Nome, Frequência, Complexidade, Classificação, Responsável, Ferramentas, Consequência de Erro
      * Para cada atividade que tenha POP vinculado, incluir uma subseção "Procedimento Operacional Padrão" com objetivo, materiais, etapas e pontos de atenção formatados como checklist visual
      * Se houver materiais de treinamento, incluir uma subseção "Materiais de Referência" com links e descrições
