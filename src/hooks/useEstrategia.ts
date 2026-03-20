@@ -212,8 +212,9 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const createOrgNode = useMutation({
     mutationFn: async (input: { titulo: string; parent_id?: string; cargo_id?: string; departamento_id?: string; nome_ocupante?: string; tipo?: string }) => {
-      const { error } = await supabase.from("estrategia_organograma" as never).insert({ ...input, tenant_id: tenantId, ...scopePayload() } as never) as { error: Error | null };
+      const { data, error } = await supabase.from("estrategia_organograma" as never).insert({ ...input, tenant_id: tenantId, ...scopePayload() } as never).select().single() as { data: EstrategiaOrganograma | null; error: Error | null };
       if (error) throw error;
+      return data;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_organograma"] }); toast.success("Posição adicionada"); },
   });
