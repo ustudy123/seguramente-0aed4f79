@@ -479,6 +479,108 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
           </div>
         );
 
+      case "Classificação Legal":
+        return (
+          <div className="space-y-5">
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <p className="text-xs text-muted-foreground">
+                <strong>Classificação legal</strong> conforme eSocial S-2210 e Lei 8.213/91. Esses campos são necessários para emissão correta da CAT e envio ao NTEP/INSS.
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Tipo de Acidente (Legal)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "tipico", label: "Típico", desc: "Ocorrido durante a jornada no trabalho" },
+                  { value: "trajeto", label: "De Trajeto", desc: "No percurso residência ↔ trabalho" },
+                  { value: "doenca_ocupacional", label: "Doença Ocupacional", desc: "Equiparado a acidente por nexo causal" },
+                  { value: "ntep", label: "NTEP", desc: "Nexo Técnico Epidemiológico Previdenciário" },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => set("tipo_acidente_legal", opt.value)}
+                    className={cn(
+                      "text-left text-sm px-3 py-3 rounded-lg border-2 transition-all",
+                      form.tipo_acidente_legal === opt.value
+                        ? "border-primary bg-primary/5 text-primary font-medium"
+                        : "border-border hover:border-muted-foreground/30"
+                    )}
+                  >
+                    <span className="font-semibold block">{opt.label}</span>
+                    <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">CID-10</Label>
+                <input
+                  type="text"
+                  value={form.cid10 || ""}
+                  onChange={e => set("cid10", e.target.value.toUpperCase())}
+                  placeholder="Ex: S60.0, M54.5"
+                  maxLength={10}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Código CID conforme atestado/CAT</p>
+              </div>
+              <div>
+                <Label className="text-sm">Dias de Afastamento Real</Label>
+                <input
+                  type="number"
+                  value={form.dias_afastamento_total || ""}
+                  onChange={e => set("dias_afastamento_total", Number(e.target.value))}
+                  placeholder="0"
+                  min={0}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Nexo Causal</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "confirmado", label: "✓ Confirmado", color: "border-green-400 bg-green-50 text-green-700" },
+                  { value: "suspeito", label: "? Suspeito", color: "border-amber-400 bg-amber-50 text-amber-700" },
+                  { value: "descartado", label: "✗ Descartado", color: "border-muted-foreground/30 bg-muted/30 text-muted-foreground" },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => set("nexo_causal", opt.value)}
+                    className={cn(
+                      "text-sm py-2.5 rounded-lg border-2 transition-all font-medium",
+                      form.nexo_causal === opt.value ? opt.color : "border-border hover:border-muted-foreground/30"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm">Agente Causador (eSocial)</Label>
+              <select
+                value={form.agente_causador_esocial || ""}
+                onChange={e => set("agente_causador_esocial", e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="">Selecione o agente causador</option>
+                {AGENTES_CAUSADORES_ESOCIAL.map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">Tabela de agentes causadores conforme leiaute eSocial S-2210</p>
+            </div>
+          </div>
+        );
+
       case "CAT":
         return (
           <div className="space-y-5">
