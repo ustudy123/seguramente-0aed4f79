@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 
 export const Header = () => {
-  const { profile, signOut, isSuperAdmin } = useAuthContext();
+  const { profile, signOut, isSuperAdmin, user } = useAuthContext();
   const { tenant } = useTenant();
   const navigate = useNavigate();
 
@@ -48,6 +48,10 @@ export const Header = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-4">
+        {/* Logged in as */}
+        <span className="hidden md:inline text-xs text-muted-foreground">
+          Logado como <strong className="text-foreground">{user?.email}</strong>
+        </span>
         {/* Super Admin indicator */}
         {isSuperAdmin && (
           <Button
