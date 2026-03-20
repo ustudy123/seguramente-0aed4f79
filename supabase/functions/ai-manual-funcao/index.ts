@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     // Fetch cargos
     let cargosQuery = supabase
       .from("cargos")
-      .select("id, nome, nivel, descricao")
+      .select("id, nome, nivel, descricao, responsabilidade")
       .eq("tenant_id", tenantId)
       .eq("ativo", true)
       .order("nome");

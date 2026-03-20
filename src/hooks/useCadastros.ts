@@ -165,7 +165,7 @@ export function useCargos() {
     queryFn: async () => {
       let query = supabase
         .from("cargos")
-        .select(`*, departamento:departamentos(id, nome)`)
+        .select(`*, departamento:departamentos(id, nome), responsabilidade`)
         .eq("tenant_id", tenantId!)
         .order("nome");
 
