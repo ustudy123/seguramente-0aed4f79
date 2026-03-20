@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 
 export const Header = () => {
-  const { profile, signOut, isSuperAdmin } = useAuthContext();
+  const { profile, signOut, isSuperAdmin, user } = useAuthContext();
   const { tenant } = useTenant();
   const navigate = useNavigate();
 
