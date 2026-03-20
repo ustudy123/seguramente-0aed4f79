@@ -16,9 +16,11 @@ import {
   ORIGENS_PREDOMINANTES,
   FATORES_ERGONOMICOS,
   TURNOS,
+  AGENTES_CAUSADORES_ESOCIAL,
   type EventoSST,
   type EventoSSTTipo,
 } from "@/types/eventoSST";
+
 import {
   Shield,
   AlertTriangle,
