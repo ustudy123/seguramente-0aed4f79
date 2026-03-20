@@ -282,14 +282,23 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   ))}
                 </div>
                 {organograma.length > 0 && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/40 text-xs">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-muted-foreground" />
-                    <p className="text-muted-foreground">O organograma já possui {organograma.length} posição(ões). As novas posições serão adicionadas sem apagar as existentes.</p>
+                  <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+                    <div className="text-amber-700 dark:text-amber-400">
+                      <p className="font-medium">Organograma já possui {organograma.length} posição(ões).</p>
+                      <p className="mt-0.5">Recomendamos <strong>Limpar e Gerar</strong> para recriar com a hierarquia correta, ou <strong>Gerar</strong> para apenas adicionar.</p>
+                    </div>
                   </div>
                 )}
-                <DialogFooter>
+                <DialogFooter className="gap-2 flex-wrap">
                   <Button variant="outline" onClick={() => setShowSugestao(false)}>Cancelar</Button>
-                  <Button onClick={handleGerarOrganograma} disabled={isSugerindo}>
+                  {organograma.length > 0 && (
+                    <Button variant="destructive" onClick={() => handleGerarOrganograma(true)} disabled={isSugerindo}>
+                      {isSugerindo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <AlertTriangle className="w-4 h-4 mr-1" />}
+                      Limpar e Gerar
+                    </Button>
+                  )}
+                  <Button onClick={() => handleGerarOrganograma(false)} disabled={isSugerindo}>
                     {isSugerindo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
                     Gerar Organograma
                   </Button>
