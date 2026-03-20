@@ -289,9 +289,9 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   ))}
                 </div>
                 {organograma.length > 0 && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-xs">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
-                    <div className="text-amber-700 dark:text-amber-400">
+                  <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5 text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-destructive" />
+                    <div className="text-destructive/90">
                       <p className="font-medium">Organograma já possui {organograma.length} posição(ões).</p>
                       <p className="mt-0.5">Recomendamos <strong>Limpar e Gerar</strong> para recriar com a hierarquia correta, ou <strong>Gerar</strong> para apenas adicionar.</p>
                     </div>
