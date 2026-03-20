@@ -59,9 +59,10 @@ const STEPS_ACIDENTE = [
   { id: 1, label: "Envolvidos", icon: User },
   { id: 2, label: "Classificação", icon: Tag },
   { id: 3, label: "Gravidade", icon: Stethoscope },
-  { id: 4, label: "CAT", icon: FileCheck },
-  { id: 5, label: "Descrição", icon: FileText },
-  { id: 6, label: "Fatores", icon: Brain },
+  { id: 4, label: "Classificação Legal", icon: FileCheck },
+  { id: 5, label: "CAT", icon: FileCheck },
+  { id: 6, label: "Descrição", icon: FileText },
+  { id: 7, label: "Fatores", icon: Brain },
 ];
 
 export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending }: Props) => {
