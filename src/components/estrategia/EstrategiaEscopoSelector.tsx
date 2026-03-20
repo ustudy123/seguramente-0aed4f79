@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Building2, Users2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,10 +19,16 @@ export function EstrategiaEscopoSelector({ escopo, onChange }: Props) {
   const { grupos } = useGruposEconomicos();
   const { empresaAtiva } = useEmpresaAtiva();
 
-  // Only show groups that the active company belongs to
   const gruposVisiveis = grupos.filter(
     (g) => g.ativo && empresaAtiva?.grupo_economico_id === g.id
   );
+
+  // Auto-reset to empresa scope when the selected group is no longer visible
+  useEffect(() => {
+    if (escopo.tipo === "grupo" && !gruposVisiveis.some((g) => g.id === escopo.grupoId)) {
+      onChange({ tipo: "empresa", grupoId: null });
+    }
+  }, [escopo, gruposVisiveis, onChange]);
 
   const handleChange = (value: string) => {
     if (value === "empresa") {
@@ -31,7 +38,6 @@ export function EstrategiaEscopoSelector({ escopo, onChange }: Props) {
     }
   };
 
-  // Reset to empresa scope if current group is no longer visible
   const selectedValue = escopo.tipo === "empresa"
     ? "empresa"
     : gruposVisiveis.some((g) => g.id === escopo.grupoId)
