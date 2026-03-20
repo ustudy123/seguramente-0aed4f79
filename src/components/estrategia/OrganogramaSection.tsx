@@ -181,6 +181,15 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     if (sugestaoNodes.length === 0) return;
     setIsSugerindo(true);
     try {
+      // If requested, delete all existing nodes first
+      if (limparAntes) {
+        for (const node of organograma) {
+          await new Promise<void>((resolve) => {
+            deleteOrgNode.mutate(node.id, { onSuccess: () => resolve(), onError: () => resolve() });
+          });
+        }
+      }
+
       // Map: nome → db id, built sequentially so parents exist before children
       const nomeToId = new Map<string, string>();
 
@@ -203,8 +212,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       }
 
       // Multi-level: iterate until all non-root nodes are inserted or we detect no progress
-      const pending = sugestaoNodes.filter(n => n.gestor);
-      let remaining = [...pending];
+      let remaining = sugestaoNodes.filter(n => n.gestor);
       let iterations = 0;
       while (remaining.length > 0 && iterations < 20) {
         iterations++;
@@ -212,14 +220,13 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         for (const node of remaining) {
           const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
           if (node.gestor && !parentId) {
-            // Parent not yet created — defer to next round
             nextRound.push(node);
             continue;
           }
           const id = await insertNode(node.cargo, node.nome, parentId);
           if (id) nomeToId.set(node.nome, id);
         }
-        if (nextRound.length === remaining.length) break; // no progress, stop
+        if (nextRound.length === remaining.length) break;
         remaining = nextRound;
       }
 
