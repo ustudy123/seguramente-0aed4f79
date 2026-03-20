@@ -272,9 +272,9 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   ))}
                 </div>
                 {organograma.length > 0 && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground text-xs">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
-                    <p className="text-amber-800 dark:text-amber-200">O organograma já possui {organograma.length} posição(ões). As novas posições serão adicionadas sem apagar as existentes.</p>
+                  <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/40 text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-muted-foreground" />
+                    <p className="text-muted-foreground">O organograma já possui {organograma.length} posição(ões). As novas posições serão adicionadas sem apagar as existentes.</p>
                   </div>
                 )}
                 <DialogFooter>
