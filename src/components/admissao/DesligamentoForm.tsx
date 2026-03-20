@@ -560,8 +560,8 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 p-2 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
-                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-muted text-muted-foreground text-xs border border-border">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
                       Nenhum ASO ocupacional encontrado — exame demissional obrigatório.
                     </div>
                   )}
