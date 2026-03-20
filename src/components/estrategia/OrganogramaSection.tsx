@@ -1,13 +1,14 @@
 import { useState, useMemo } from "react";
-import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown, Sparkles, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos } from "@/hooks/useCadastros";
@@ -37,6 +38,36 @@ function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
 
 const INITIAL_FORM = { titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] };
 
+// Build a hierarchical suggestion from collaborator gestor_imediato relationships
+function buildOrgSuggestion(colaboradores: { nome_completo: string; cargo: string; gestor_imediato?: string | null }[]) {
+  // Map each person to their manager
+  const nodes: { nome: string; cargo: string; gestor: string | null }[] = [];
+  const seen = new Set<string>();
+
+  colaboradores.forEach((c) => {
+    if (!seen.has(c.nome_completo)) {
+      seen.add(c.nome_completo);
+      nodes.push({ nome: c.nome_completo, cargo: c.cargo || c.nome_completo, gestor: c.gestor_imediato || null });
+    }
+  });
+
+  // Find root nodes (gestores that don't appear as subordinates, or have no manager)
+  const allNomes = new Set(nodes.map(n => n.nome));
+  const allGestores = new Set(nodes.map(n => n.gestor).filter(Boolean) as string[]);
+
+  // Include gestores that aren't in the main list
+  allGestores.forEach((g) => {
+    if (!allNomes.has(g)) {
+      // Find their cargo by seeing who lists them as manager
+      const subordinate = nodes.find(n => n.gestor === g);
+      nodes.push({ nome: g, cargo: g, gestor: null });
+      allNomes.add(g);
+    }
+  });
+
+  return nodes;
+}
+
 export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia(escopo);
   const { cargos, createCargo } = useCargos();
@@ -45,6 +76,8 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [cargoOpen, setCargoOpen] = useState(false);
   const [ocupanteSearch, setOcupanteSearch] = useState("");
+  const [showSugestao, setShowSugestao] = useState(false);
+  const [isSugerindo, setIsSugerindo] = useState(false);
 
   const tree = buildTree(organograma);
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
@@ -135,9 +168,63 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
 
   const isCreating = createOrgNode.isPending || createCargo.isPending;
 
+  // Suggestion logic: build org from gestor_imediato relationships
+  const sugestaoNodes = useMemo(() => {
+    const colsWithGestor = colaboradores.filter(c => c.gestor_imediato);
+    if (colsWithGestor.length === 0) return [];
+    return buildOrgSuggestion(colaboradores);
+  }, [colaboradores]);
+
+  const colsComGestor = colaboradores.filter(c => c.gestor_imediato);
+
+  const handleGerarOrganograma = async () => {
+    if (sugestaoNodes.length === 0) return;
+    setIsSugerindo(true);
+    try {
+      // Build a map: nome → id, to resolve parent references sequentially
+      const nomeToId = new Map<string, string>();
+
+      // First pass: create root nodes (no gestor or gestor not in list)
+      const roots = sugestaoNodes.filter(n => !n.gestor);
+      for (const node of roots) {
+        await new Promise<void>((resolve, reject) => {
+          createOrgNode.mutate(
+            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: undefined, tipo: "funcao" },
+            {
+              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
+              onError: reject,
+            }
+          );
+        });
+      }
+
+      // Second pass: create nodes with parents
+      const children = sugestaoNodes.filter(n => n.gestor);
+      for (const node of children) {
+        const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
+        await new Promise<void>((resolve, reject) => {
+          createOrgNode.mutate(
+            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: parentId, tipo: "funcao" },
+            {
+              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
+              onError: reject,
+            }
+          );
+        });
+      }
+
+      toast.success(`Organograma gerado com ${sugestaoNodes.length} posições!`);
+      setShowSugestao(false);
+    } catch {
+      toast.error("Erro ao gerar organograma. Tente novamente.");
+    } finally {
+      setIsSugerindo(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" /> Organograma
@@ -146,12 +233,66 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             Arraste para mover · Scroll para zoom · Clique <Plus className="w-3 h-3 inline" /> nos cards para adicionar
           </p>
         </div>
-        <Dialog open={showNew} onOpenChange={setShowNew}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setForm(INITIAL_FORM)}>
-              <Plus className="w-4 h-4 mr-1" /> Nova Posição
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          {/* Sugerir Organograma button */}
+          {colsComGestor.length > 0 && (
+            <Dialog open={showSugestao} onOpenChange={setShowSugestao}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                  <Sparkles className="w-4 h-4 mr-1" /> Sugerir Organograma
+                  <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 h-4">{colsComGestor.length}</Badge>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" /> Sugestão de Organograma
+                  </DialogTitle>
+                  <DialogDescription>
+                    Baseado no campo "Gestor Imediato" dos {colsComGestor.length} colaboradores cadastrados, o sistema identificou a seguinte hierarquia:
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-80 overflow-y-auto space-y-2 py-2">
+                  {sugestaoNodes.map((node, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/20">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <User className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">{node.nome}</p>
+                        <p className="text-xs text-muted-foreground">{node.cargo}</p>
+                        {node.gestor && (
+                          <p className="text-xs text-primary/70 mt-0.5">↳ Reporta a: {node.gestor}</p>
+                        )}
+                        {!node.gestor && (
+                          <Badge variant="outline" className="text-[10px] mt-0.5 h-4 px-1.5 border-primary/30 text-primary">Raiz</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {organograma.length > 0 && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/40 text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-muted-foreground" />
+                    <p className="text-muted-foreground">O organograma já possui {organograma.length} posição(ões). As novas posições serão adicionadas sem apagar as existentes.</p>
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowSugestao(false)}>Cancelar</Button>
+                  <Button onClick={handleGerarOrganograma} disabled={isSugerindo}>
+                    {isSugerindo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                    Gerar Organograma
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+          <Dialog open={showNew} onOpenChange={setShowNew}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={() => setForm(INITIAL_FORM)}>
+                <Plus className="w-4 h-4 mr-1" /> Nova Posição
+              </Button>
+            </DialogTrigger>
           <DialogContent data-organograma-dialog-content="true">
             <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
             <div className="space-y-3">
@@ -269,7 +410,8 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        </div>{/* end flex gap-2 */}
+      </div>{/* end header */}
 
       {loadingOrganograma ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
