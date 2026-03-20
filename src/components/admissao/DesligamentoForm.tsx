@@ -544,7 +544,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
 
                   {/* Último ASO */}
                   {asoValidacao.ultimoAso ? (
-                    <div className={`flex items-center gap-2 p-2 rounded-md text-xs ${asoValidacao.asoValido ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-destructive/10 text-destructive"}`}>
+                    <div className={`flex items-center gap-2 p-2 rounded-md text-xs border ${asoValidacao.asoValido ? "bg-primary/5 text-primary border-primary/20" : "bg-destructive/10 text-destructive border-destructive/20"}`}>
                       {asoValidacao.asoValido
                         ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                         : <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
