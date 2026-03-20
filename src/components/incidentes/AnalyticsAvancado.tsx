@@ -9,7 +9,8 @@ interface Props {
   eventos: EventoSST[];
 }
 
-const COLORS = ["hsl(var(--destructive))", "hsl(var(--warning, 38 92% 50%))", "hsl(var(--primary))", "hsl(var(--muted-foreground))", "hsl(215 20% 65%)"];
+// recharts needs actual CSS values, computed at render time
+const CHART_COLORS = ["var(--destructive)", "var(--primary)", "var(--warning)", "var(--muted-foreground)"];
 
 export const AnalyticsAvancado = ({ eventos }: Props) => {
   // Pareto de causas
