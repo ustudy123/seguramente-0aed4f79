@@ -21,6 +21,7 @@ export interface Cargo {
   tenant_id: string;
   nome: string;
   descricao: string | null;
+  responsabilidade?: string | null;
   departamento_id: string | null;
   nivel: string | null;
   faixa_salarial_min: number | null;
