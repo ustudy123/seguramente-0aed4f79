@@ -48,6 +48,10 @@ export const Header = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-4">
+        {/* Logged in as */}
+        <span className="hidden md:inline text-xs text-muted-foreground">
+          Logado como <strong className="text-foreground">{state?.user?.email}</strong>
+        </span>
         {/* Super Admin indicator */}
         {isSuperAdmin && (
           <Button
