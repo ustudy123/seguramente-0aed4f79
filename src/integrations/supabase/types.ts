@@ -5521,6 +5521,7 @@ export type Database = {
           afastamento:
             | Database["public"]["Enums"]["acidente_afastamento"]
             | null
+          agente_causador_esocial: string | null
           atendimento:
             | Database["public"]["Enums"]["acidente_atendimento"]
             | null
@@ -5532,6 +5533,7 @@ export type Database = {
           cat_observacoes: string | null
           cat_tipo: Database["public"]["Enums"]["cat_tipo"] | null
           categoria_principal: string | null
+          cid10: string | null
           codigo: string | null
           colaborador_funcao: string | null
           colaborador_id: string | null
@@ -5542,14 +5544,17 @@ export type Database = {
           criado_por_nome: string | null
           data_evento: string
           descricao: string | null
+          dias_afastamento_total: number | null
           fatores_ergonomicos: string[] | null
           gravidade_lesao:
             | Database["public"]["Enums"]["acidente_gravidade_lesao"]
             | null
           gravidade_potencial: string | null
           hora_evento: string | null
+          horas_perdidas: number | null
           id: string
           local_especifico: string | null
+          nexo_causal: string | null
           obito: boolean | null
           origem_predominante: string | null
           outros_envolvidos: string | null
@@ -5558,6 +5563,7 @@ export type Database = {
           status: Database["public"]["Enums"]["evento_sst_status"]
           tenant_id: string
           tipo: Database["public"]["Enums"]["evento_sst_tipo"]
+          tipo_acidente_legal: string | null
           turno: string | null
           unidade: string | null
           updated_at: string
@@ -5566,6 +5572,7 @@ export type Database = {
           afastamento?:
             | Database["public"]["Enums"]["acidente_afastamento"]
             | null
+          agente_causador_esocial?: string | null
           atendimento?:
             | Database["public"]["Enums"]["acidente_atendimento"]
             | null
@@ -5577,6 +5584,7 @@ export type Database = {
           cat_observacoes?: string | null
           cat_tipo?: Database["public"]["Enums"]["cat_tipo"] | null
           categoria_principal?: string | null
+          cid10?: string | null
           codigo?: string | null
           colaborador_funcao?: string | null
           colaborador_id?: string | null
@@ -5587,14 +5595,17 @@ export type Database = {
           criado_por_nome?: string | null
           data_evento: string
           descricao?: string | null
+          dias_afastamento_total?: number | null
           fatores_ergonomicos?: string[] | null
           gravidade_lesao?:
             | Database["public"]["Enums"]["acidente_gravidade_lesao"]
             | null
           gravidade_potencial?: string | null
           hora_evento?: string | null
+          horas_perdidas?: number | null
           id?: string
           local_especifico?: string | null
+          nexo_causal?: string | null
           obito?: boolean | null
           origem_predominante?: string | null
           outros_envolvidos?: string | null
@@ -5603,6 +5614,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["evento_sst_status"]
           tenant_id: string
           tipo: Database["public"]["Enums"]["evento_sst_tipo"]
+          tipo_acidente_legal?: string | null
           turno?: string | null
           unidade?: string | null
           updated_at?: string
@@ -5611,6 +5623,7 @@ export type Database = {
           afastamento?:
             | Database["public"]["Enums"]["acidente_afastamento"]
             | null
+          agente_causador_esocial?: string | null
           atendimento?:
             | Database["public"]["Enums"]["acidente_atendimento"]
             | null
@@ -5622,6 +5635,7 @@ export type Database = {
           cat_observacoes?: string | null
           cat_tipo?: Database["public"]["Enums"]["cat_tipo"] | null
           categoria_principal?: string | null
+          cid10?: string | null
           codigo?: string | null
           colaborador_funcao?: string | null
           colaborador_id?: string | null
@@ -5632,14 +5646,17 @@ export type Database = {
           criado_por_nome?: string | null
           data_evento?: string
           descricao?: string | null
+          dias_afastamento_total?: number | null
           fatores_ergonomicos?: string[] | null
           gravidade_lesao?:
             | Database["public"]["Enums"]["acidente_gravidade_lesao"]
             | null
           gravidade_potencial?: string | null
           hora_evento?: string | null
+          horas_perdidas?: number | null
           id?: string
           local_especifico?: string | null
+          nexo_causal?: string | null
           obito?: boolean | null
           origem_predominante?: string | null
           outros_envolvidos?: string | null
@@ -5648,6 +5665,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["evento_sst_status"]
           tenant_id?: string
           tipo?: Database["public"]["Enums"]["evento_sst_tipo"]
+          tipo_acidente_legal?: string | null
           turno?: string | null
           unidade?: string | null
           updated_at?: string
