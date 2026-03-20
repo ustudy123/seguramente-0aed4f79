@@ -177,40 +177,57 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
 
   const colsComGestor = colaboradores.filter(c => c.gestor_imediato);
 
-  const handleGerarOrganograma = async () => {
+  const handleGerarOrganograma = async (limparAntes = false) => {
     if (sugestaoNodes.length === 0) return;
     setIsSugerindo(true);
     try {
-      // Build a map: nome → id, to resolve parent references sequentially
-      const nomeToId = new Map<string, string>();
-
-      // First pass: create root nodes (no gestor or gestor not in list)
-      const roots = sugestaoNodes.filter(n => !n.gestor);
-      for (const node of roots) {
-        await new Promise<void>((resolve, reject) => {
-          createOrgNode.mutate(
-            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: undefined, tipo: "funcao" },
-            {
-              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
-              onError: reject,
-            }
-          );
-        });
+      // If requested, delete all existing nodes first
+      if (limparAntes) {
+        for (const node of organograma) {
+          await new Promise<void>((resolve) => {
+            deleteOrgNode.mutate(node.id, { onSuccess: () => resolve(), onError: () => resolve() });
+          });
+        }
       }
 
-      // Second pass: create nodes with parents
-      const children = sugestaoNodes.filter(n => n.gestor);
-      for (const node of children) {
-        const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
-        await new Promise<void>((resolve, reject) => {
+      // Map: nome → db id, built sequentially so parents exist before children
+      const nomeToId = new Map<string, string>();
+
+      // Helper: insert one node and await its returned id
+      const insertNode = (titulo: string, nome: string, parentId?: string): Promise<string | undefined> =>
+        new Promise((resolve, reject) => {
           createOrgNode.mutate(
-            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: parentId, tipo: "funcao" },
+            { titulo, nome_ocupante: nome, parent_id: parentId, tipo: "funcao" },
             {
-              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
+              onSuccess: (created: any) => resolve(created?.id as string | undefined),
               onError: reject,
             }
           );
         });
+
+      // First pass: root nodes (no gestor)
+      for (const node of sugestaoNodes.filter(n => !n.gestor)) {
+        const id = await insertNode(node.cargo, node.nome, undefined);
+        if (id) nomeToId.set(node.nome, id);
+      }
+
+      // Multi-level: iterate until all non-root nodes are inserted or we detect no progress
+      let remaining = sugestaoNodes.filter(n => n.gestor);
+      let iterations = 0;
+      while (remaining.length > 0 && iterations < 20) {
+        iterations++;
+        const nextRound: typeof remaining = [];
+        for (const node of remaining) {
+          const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
+          if (node.gestor && !parentId) {
+            nextRound.push(node);
+            continue;
+          }
+          const id = await insertNode(node.cargo, node.nome, parentId);
+          if (id) nomeToId.set(node.nome, id);
+        }
+        if (nextRound.length === remaining.length) break;
+        remaining = nextRound;
       }
 
       toast.success(`Organograma gerado com ${sugestaoNodes.length} posições!`);
@@ -272,14 +289,23 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   ))}
                 </div>
                 {organograma.length > 0 && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/40 text-xs">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-muted-foreground" />
-                    <p className="text-muted-foreground">O organograma já possui {organograma.length} posição(ões). As novas posições serão adicionadas sem apagar as existentes.</p>
+                  <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5 text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-destructive" />
+                    <div className="text-destructive/90">
+                      <p className="font-medium">Organograma já possui {organograma.length} posição(ões).</p>
+                      <p className="mt-0.5">Recomendamos <strong>Limpar e Gerar</strong> para recriar com a hierarquia correta, ou <strong>Gerar</strong> para apenas adicionar.</p>
+                    </div>
                   </div>
                 )}
-                <DialogFooter>
+                <DialogFooter className="gap-2 flex-wrap">
                   <Button variant="outline" onClick={() => setShowSugestao(false)}>Cancelar</Button>
-                  <Button onClick={handleGerarOrganograma} disabled={isSugerindo}>
+                  {organograma.length > 0 && (
+                    <Button variant="destructive" onClick={() => handleGerarOrganograma(true)} disabled={isSugerindo}>
+                      {isSugerindo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <AlertTriangle className="w-4 h-4 mr-1" />}
+                      Limpar e Gerar
+                    </Button>
+                  )}
+                  <Button onClick={() => handleGerarOrganograma(false)} disabled={isSugerindo}>
                     {isSugerindo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
                     Gerar Organograma
                   </Button>
