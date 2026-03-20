@@ -87,6 +87,7 @@ export const TIPO_USUARIO_LABELS: Record<UsuarioTipo, string> = {
   implantador: 'Implantador',
   suporte_autorizado: 'Suporte Autorizado',
   corporativo_multiempresa: 'Corporativo Multiempresa',
+  colaborador: 'Colaborador',
 };
 
 export const STATUS_LABELS: Record<UsuarioStatus, string> = {
