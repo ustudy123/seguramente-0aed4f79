@@ -104,7 +104,13 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
       cat_data_emissao: initial?.cat_data_emissao || "",
       cat_tipo: initial?.cat_tipo || "",
       cat_observacoes: initial?.cat_observacoes || "",
+      tipo_acidente_legal: initial?.tipo_acidente_legal || "",
+      cid10: initial?.cid10 || "",
+      nexo_causal: initial?.nexo_causal || "",
+      agente_causador_esocial: initial?.agente_causador_esocial || "",
+      dias_afastamento_total: initial?.dias_afastamento_total || 0,
       fatores_ergonomicos: initial?.fatores_ergonomicos || [],
+
     });
   }, [initial, open]);
 
