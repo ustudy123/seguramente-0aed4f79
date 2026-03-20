@@ -165,8 +165,8 @@ export function AEPFormIdentificacao({ data, onChange }: AEPFormIdentificacaoPro
                       <CommandItem
                         key={dept.id}
                         value={dept.nome}
-                        onSelect={(val) => {
-                          handleChange("setor", val);
+                        onSelect={() => {
+                          handleChange("setor", dept.nome);
                           handleChange("funcao", ""); // reset funcao when setor changes
                           setSetorOpen(false);
                         }}
