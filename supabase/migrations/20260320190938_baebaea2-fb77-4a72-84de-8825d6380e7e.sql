@@ -1,0 +1,1 @@
+ALTER TYPE usuario_tipo ADD VALUE IF NOT EXISTS 'colaborador';
