@@ -17,6 +17,7 @@ interface Cargo {
   nivel: string | null;
   departamento_id: string | null;
   descricao: string | null;
+  departamento?: { id: string; nome: string } | null;
 }
 
 interface FuncaoListProps {
