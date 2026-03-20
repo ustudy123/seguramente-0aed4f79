@@ -63,6 +63,25 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
   const [submitting, setSubmitting] = useState(false);
   const [asoFile, setAsoFile] = useState<File | null>(null);
   const [uploadingAso, setUploadingAso] = useState(false);
+
+  // NR-07: ASO anterior válido para desligamento
+  const [usarAsoAnterior, setUsarAsoAnterior] = useState(false);
+  const [asoValidacao, setAsoValidacao] = useState<{
+    grauRisco: number | null;
+    limiteValidade: number; // dias
+    ultimoAso: { data: string; subtipo: string; resultado: string } | null;
+    diasDesdeUltimoAso: number | null;
+    asoValido: boolean;
+    carregando: boolean;
+  }>({
+    grauRisco: null,
+    limiteValidade: 135,
+    ultimoAso: null,
+    diasDesdeUltimoAso: null,
+    asoValido: false,
+    carregando: false,
+  });
+
   const [form, setForm] = useState({
     data_desligamento: "",
     motivo_desligamento: "",
@@ -80,6 +99,85 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     chave_conectividade: "",
     observacoes_desligamento: "",
   });
+
+  // Buscar grau de risco da empresa e último ASO do colaborador ao abrir o diálogo
+  useEffect(() => {
+    if (!open || !tenantId) return;
+
+    const buscarDadosNR07 = async () => {
+      setAsoValidacao(prev => ({ ...prev, carregando: true }));
+      try {
+        // Buscar empresa_id do colaborador
+        const { data: admissaoData } = await supabase
+          .from("admissoes")
+          .select("empresa_id")
+          .eq("id", admissao.id)
+          .single();
+
+        let grauRisco: number | null = null;
+
+        if (admissaoData?.empresa_id) {
+          const { data: empresa } = await supabase
+            .from("empresa_cadastro")
+            .select("grau_risco, grau_risco_ajustado")
+            .eq("id", admissaoData.empresa_id)
+            .single();
+
+          grauRisco = empresa?.grau_risco_ajustado ?? empresa?.grau_risco ?? null;
+        }
+
+        // Limite por grau de risco: GR 1 e 2 = 135 dias, GR 3 e 4 = 90 dias
+        const limiteValidade = grauRisco && grauRisco >= 3 ? 90 : 135;
+
+        // Buscar último ASO ocupacional do colaborador
+        const { data: atestados } = await supabase
+          .from("atestados")
+          .select("data_emissao, subtipo_ocupacional, aptidao")
+          .eq("tenant_id", tenantId)
+          .eq("colaborador_id", admissao.id)
+          .eq("tipo", "ocupacional")
+          .in("subtipo_ocupacional", ["admissional", "periodico", "retorno_trabalho", "mudanca_funcao"])
+          .order("data_emissao", { ascending: false })
+          .limit(1);
+
+        const ultimoAso = atestados?.[0] ?? null;
+        let diasDesdeUltimoAso: number | null = null;
+        let asoValido = false;
+
+        if (ultimoAso) {
+          diasDesdeUltimoAso = differenceInDays(new Date(), parseISO(ultimoAso.data_emissao));
+          asoValido = diasDesdeUltimoAso <= limiteValidade;
+        }
+
+        setAsoValidacao({
+          grauRisco,
+          limiteValidade,
+          ultimoAso: ultimoAso
+            ? {
+                data: ultimoAso.data_emissao,
+                subtipo: ultimoAso.subtipo_ocupacional ?? "",
+                resultado: ultimoAso.aptidao ?? "",
+              }
+            : null,
+          diasDesdeUltimoAso,
+          asoValido,
+          carregando: false,
+        });
+      } catch {
+        setAsoValidacao(prev => ({ ...prev, carregando: false }));
+      }
+    };
+
+    buscarDadosNR07();
+  }, [open, admissao.id, tenantId]);
+
+  // Se ativar "usar ASO anterior", limpar campos do exame demissional novo
+  useEffect(() => {
+    if (usarAsoAnterior) {
+      setForm(f => ({ ...f, data_exame_demissional: "", resultado_exame_demissional: "", medico_exame_demissional: "", crm_exame_demissional: "" }));
+      setAsoFile(null);
+    }
+  }, [usarAsoAnterior]);
 
   // Calcular dias de aviso prévio (Lei 12.506/2011)
   const diasAvisoPrevio = useMemo(() => {
@@ -107,8 +205,12 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
   // Alertas
   const alertas = useMemo(() => {
     const items: string[] = [];
-    if (!form.data_exame_demissional) {
+    // Só exige exame demissional se não estiver usando ASO anterior válido
+    if (!usarAsoAnterior && !form.data_exame_demissional) {
       items.push("Exame demissional é obrigatório (NR-7, item 7.5.11)");
+    }
+    if (usarAsoAnterior && !asoValidacao.asoValido) {
+      items.push(`ASO anterior fora do prazo de validade (${asoValidacao.limiteValidade} dias para GR ${asoValidacao.grauRisco ?? "desconhecido"}).`);
     }
     if (admissao.data_admissao) {
       const anos = differenceInYears(new Date(), new Date(admissao.data_admissao));
@@ -120,7 +222,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
       items.push("Justa causa requer documentação comprobatória robusta");
     }
     return items;
-  }, [form, admissao]);
+  }, [form, admissao, usarAsoAnterior, asoValidacao]);
 
   // Upload ASO para storage e vincular à pasta do colaborador
   const uploadAsoFile = async () => {
