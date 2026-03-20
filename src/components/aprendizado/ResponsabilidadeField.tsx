@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
-import { Mic, MicOff, Square, Loader2, Save, CheckCircle2 } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Mic, Square, Loader2, Save, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,12 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
   const [isSaving, setIsSaving] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Keep in sync if parent provides updated initialValue (e.g. after query refetch)
+  useEffect(() => {
+    setValue(initialValue || "");
+  }, [initialValue]);
 
   const recorder = useAudioRecorder({ maxDuration: 180 });
 
@@ -32,6 +39,9 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
 
       if (error) throw error;
 
+      // Invalidate so parent query re-fetches the updated responsabilidade
+      await queryClient.invalidateQueries({ queryKey: ["cargos"] });
+
       setSaved(true);
       onSaved?.(value);
       toast.success("Responsabilidade salva!");
@@ -41,13 +51,13 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
     } finally {
       setIsSaving(false);
     }
-  }, [cargoId, value, onSaved]);
+  }, [cargoId, value, onSaved, queryClient]);
 
   const handleStopAndTranscribe = useCallback(async () => {
     recorder.stopRecording();
 
-    // Wait a tick for the blob to be set
-    await new Promise((res) => setTimeout(res, 400));
+    // Wait for onstop to fire and set audioBlob
+    await new Promise((res) => setTimeout(res, 600));
 
     const base64 = await recorder.getBase64();
     if (!base64) {
@@ -79,7 +89,7 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <Label className="text-sm font-medium text-foreground">
           Responsabilidade da Função
         </Label>
@@ -118,7 +128,7 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
             size="sm"
             className="gap-1.5 h-8 text-xs"
             onClick={handleSave}
-            disabled={isSaving || !isDirty}
+            disabled={isSaving || (!isDirty && !saved)}
             variant={saved ? "outline" : "default"}
           >
             {isSaving ? (
@@ -148,7 +158,7 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
         rows={4}
         className={cn(
           "resize-none text-sm transition-colors",
-          recorder.isRecording && "border-destructive/60 bg-destructive/5"
+          recorder.isRecording && "border-destructive/60"
         )}
       />
 
