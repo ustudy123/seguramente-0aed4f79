@@ -431,8 +431,8 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
         </DialogHeader>
 
         {alertas.length > 0 && (
-          <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/5">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <Alert variant="destructive" className="border-destructive/50 bg-destructive/5">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-xs space-y-1">
               {alertas.map((a, i) => (
                 <p key={i}>⚠️ {a}</p>
