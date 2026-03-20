@@ -91,6 +91,7 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
       origem_predominante: initial?.origem_predominante || "",
       descricao: initial?.descricao || "",
       percepcao_causa: initial?.percepcao_causa || "",
+      gravidade_potencial: initial?.gravidade_potencial || "",
       gravidade_lesao: initial?.gravidade_lesao || "",
       afastamento: initial?.afastamento || "",
       obito: initial?.obito || false,
