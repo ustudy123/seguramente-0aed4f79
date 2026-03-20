@@ -1,6 +1,6 @@
-import { useState, useMemo, useRef } from "react";
-import { format, differenceInYears } from "date-fns";
-import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2 } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { format, differenceInYears, differenceInDays, parseISO } from "date-fns";
+import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2, CheckCircle2, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
