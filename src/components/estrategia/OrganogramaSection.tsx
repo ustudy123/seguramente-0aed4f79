@@ -177,7 +177,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
 
   const colsComGestor = colaboradores.filter(c => c.gestor_imediato);
 
-  const handleGerarOrganograma = async () => {
+  const handleGerarOrganograma = async (limparAntes = false) => {
     if (sugestaoNodes.length === 0) return;
     setIsSugerindo(true);
     try {
