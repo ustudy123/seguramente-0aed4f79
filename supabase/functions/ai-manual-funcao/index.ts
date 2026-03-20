@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
 FUNÇÃO: ${cargo.nome}${cargo.nivel ? ` (Nível: ${cargo.nivel})` : ""}
 ══════════════════════════════════════════════════════
 ${cargo.descricao ? `Descrição: ${cargo.descricao}` : ""}
+${cargo.responsabilidade ? `\nRESPONSABILIDADE DA FUNÇÃO:\n${cargo.responsabilidade}` : ""}
 
 ATIVIDADES E PROCEDIMENTOS (${cargoAtividades.length}):
 ${atividadesText}
