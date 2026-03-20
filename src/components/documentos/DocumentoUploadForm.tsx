@@ -32,7 +32,7 @@ import { useDocumentos, TIPOS_DOCUMENTO } from "@/hooks/useDocumentos";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { cn } from "@/lib/utils";
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
   "image/jpeg",
