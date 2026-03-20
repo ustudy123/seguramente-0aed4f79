@@ -50,7 +50,7 @@ export const Header = () => {
       <div className="flex items-center gap-4">
         {/* Logged in as */}
         <span className="hidden md:inline text-xs text-muted-foreground">
-          Logado como <strong className="text-foreground">{state?.user?.email}</strong>
+          Logado como <strong className="text-foreground">{user?.email}</strong>
         </span>
         {/* Super Admin indicator */}
         {isSuperAdmin && (
