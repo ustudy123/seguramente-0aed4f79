@@ -100,7 +100,7 @@ export function useEpis() {
         .eq("tenant_id", tenantId);
 
       if (empresaAtivaId) {
-        query = query.eq("empresa_id", empresaAtivaId);
+        query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
       }
 
       const { data, error } = await query.order("data_entrega", { ascending: false });
