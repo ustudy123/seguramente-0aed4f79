@@ -181,36 +181,46 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     if (sugestaoNodes.length === 0) return;
     setIsSugerindo(true);
     try {
-      // Build a map: nome → id, to resolve parent references sequentially
+      // Map: nome → db id, built sequentially so parents exist before children
       const nomeToId = new Map<string, string>();
 
-      // First pass: create root nodes (no gestor or gestor not in list)
-      const roots = sugestaoNodes.filter(n => !n.gestor);
-      for (const node of roots) {
-        await new Promise<void>((resolve, reject) => {
+      // Helper: insert one node and await its returned id
+      const insertNode = (titulo: string, nome: string, parentId?: string): Promise<string | undefined> =>
+        new Promise((resolve, reject) => {
           createOrgNode.mutate(
-            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: undefined, tipo: "funcao" },
+            { titulo, nome_ocupante: nome, parent_id: parentId, tipo: "funcao" },
             {
-              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
+              onSuccess: (created: any) => resolve(created?.id as string | undefined),
               onError: reject,
             }
           );
         });
+
+      // First pass: root nodes (no gestor)
+      for (const node of sugestaoNodes.filter(n => !n.gestor)) {
+        const id = await insertNode(node.cargo, node.nome, undefined);
+        if (id) nomeToId.set(node.nome, id);
       }
 
-      // Second pass: create nodes with parents
-      const children = sugestaoNodes.filter(n => n.gestor);
-      for (const node of children) {
-        const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
-        await new Promise<void>((resolve, reject) => {
-          createOrgNode.mutate(
-            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: parentId, tipo: "funcao" },
-            {
-              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
-              onError: reject,
-            }
-          );
-        });
+      // Multi-level: iterate until all non-root nodes are inserted or we detect no progress
+      const pending = sugestaoNodes.filter(n => n.gestor);
+      let remaining = [...pending];
+      let iterations = 0;
+      while (remaining.length > 0 && iterations < 20) {
+        iterations++;
+        const nextRound: typeof remaining = [];
+        for (const node of remaining) {
+          const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
+          if (node.gestor && !parentId) {
+            // Parent not yet created — defer to next round
+            nextRound.push(node);
+            continue;
+          }
+          const id = await insertNode(node.cargo, node.nome, parentId);
+          if (id) nomeToId.set(node.nome, id);
+        }
+        if (nextRound.length === remaining.length) break; // no progress, stop
+        remaining = nextRound;
       }
 
       toast.success(`Organograma gerado com ${sugestaoNodes.length} posições!`);
