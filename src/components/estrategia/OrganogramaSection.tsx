@@ -410,7 +410,8 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        </div>{/* end flex gap-2 */}
+      </div>{/* end header */}
 
       {loadingOrganograma ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
