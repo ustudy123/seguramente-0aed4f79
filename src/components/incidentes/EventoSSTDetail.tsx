@@ -28,6 +28,7 @@ import { useEventosSST } from "@/hooks/useEventosSST";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
+import { InvestigacaoAssistidaIA } from "./InvestigacaoAssistidaIA";
 
 interface Props {
   evento: EventoSST;
@@ -400,8 +401,16 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
           </Card>
         </div>
 
-        {/* Right column: Attachments & Info */}
+        {/* Right column: Investigação + Attachments */}
         <div className="space-y-4">
+          {/* IA Investigation */}
+          <InvestigacaoAssistidaIA
+            evento={evento}
+            onUpdateEvento={async (data) => {
+              await updateEvento.mutateAsync({ id: evento.id, ...data } as any);
+            }}
+          />
+
           <Card>
             <CardHeader><CardTitle className="text-sm">Anexos</CardTitle></CardHeader>
             <CardContent className="space-y-3">

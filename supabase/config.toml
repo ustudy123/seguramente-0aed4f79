@@ -1,6 +1,8 @@
 project_id = "diayjpsrcerycycyaxst"
 
 [functions]
+  [functions.ai-sst-investigacao]
+    verify_jwt = false
   [functions.advertencia-link]
     verify_jwt = false
   [functions.ai-audio-atividades]

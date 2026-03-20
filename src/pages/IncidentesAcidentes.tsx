@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen, TrendingUp, Calculator } from "lucide-react";
+import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen, TrendingUp, Calculator, Zap, Trophy } from "lucide-react";
 import { useEventosSST } from "@/hooks/useEventosSST";
 import { EventoSSTStats } from "@/components/incidentes/EventoSSTStats";
 import { EventoSSTList } from "@/components/incidentes/EventoSSTList";
@@ -16,6 +16,8 @@ import { GuiaRapidoIncidentes } from "@/components/incidentes/GuiaRapidoIncident
 import { IndicadoresEstrategicos } from "@/components/incidentes/IndicadoresEstrategicos";
 import { AnalyticsAvancado } from "@/components/incidentes/AnalyticsAvancado";
 import { SimuladorFAP } from "@/components/incidentes/SimuladorFAP";
+import { AnalysePreditiva } from "@/components/incidentes/AnalysePreditiva";
+import { CulturaSeguranca } from "@/components/incidentes/CulturaSeguranca";
 import type { EventoSST } from "@/types/eventoSST";
 
 export default function IncidentesAcidentes() {
@@ -76,6 +78,8 @@ export default function IncidentesAcidentes() {
           <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Análise</TabsTrigger>
           <TabsTrigger value="indicadores"><TrendingUp className="w-4 h-4 mr-1" /> Indicadores</TabsTrigger>
           <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" /> Analytics</TabsTrigger>
+          <TabsTrigger value="preditivo"><Zap className="w-4 h-4 mr-1" /> Preditivo</TabsTrigger>
+          <TabsTrigger value="cultura"><Trophy className="w-4 h-4 mr-1" /> Cultura</TabsTrigger>
           <TabsTrigger value="fap"><Calculator className="w-4 h-4 mr-1" /> FAP</TabsTrigger>
           <TabsTrigger value="piramide"><Shield className="w-4 h-4 mr-1" /> Pirâmide</TabsTrigger>
         </TabsList>
@@ -168,6 +172,14 @@ export default function IncidentesAcidentes() {
           <AnalyticsAvancado eventos={eventos} />
         </TabsContent>
 
+        <TabsContent value="preditivo" className="space-y-4">
+          <AnalysePreditiva eventos={eventos} />
+        </TabsContent>
+
+        <TabsContent value="cultura" className="space-y-4">
+          <CulturaSeguranca eventos={eventos} />
+        </TabsContent>
+
         <TabsContent value="fap" className="space-y-4">
           <SimuladorFAP eventos={eventos} />
         </TabsContent>
@@ -200,3 +212,4 @@ export default function IncidentesAcidentes() {
     </TooltipProvider>
   );
 }
+
