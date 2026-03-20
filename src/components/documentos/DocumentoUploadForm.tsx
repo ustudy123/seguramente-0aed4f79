@@ -32,7 +32,7 @@ import { useDocumentos, TIPOS_DOCUMENTO } from "@/hooks/useDocumentos";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { cn } from "@/lib/utils";
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
   "image/jpeg",
@@ -86,7 +86,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
     if (!file) return;
     
     if (file.size > MAX_FILE_SIZE) {
-      form.setError("root", { message: "Arquivo muito grande. Máximo 20MB." });
+      form.setError("root", { message: "Arquivo muito grande. Máximo 50MB." });
       return;
     }
     
@@ -218,7 +218,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
                   <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
                   <p className="font-medium">Arraste um arquivo ou clique para selecionar</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    PDF, imagens ou documentos Word (máx. 20MB)
+                    PDF, imagens ou documentos Word (máx. 50MB)
                   </p>
                 </div>
               )}
