@@ -86,7 +86,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
     if (!file) return;
     
     if (file.size > MAX_FILE_SIZE) {
-      form.setError("root", { message: "Arquivo muito grande. Máximo 20MB." });
+      form.setError("root", { message: "Arquivo muito grande. Máximo 50MB." });
       return;
     }
     
