@@ -41,6 +41,13 @@ export interface EventoSST {
   cat_arquivo_nome: string | null;
   cat_observacoes: string | null;
   fatores_ergonomicos: string[];
+  // Campos legais (NR, eSocial, NTEP)
+  tipo_acidente_legal: TipoAcidenteLegal | null;
+  cid10: string | null;
+  nexo_causal: NexoCausal | null;
+  agente_causador_esocial: string | null;
+  dias_afastamento_total: number | null;
+  horas_perdidas: number | null;
   criado_por: string | null;
   criado_por_nome: string | null;
   created_at: string;
