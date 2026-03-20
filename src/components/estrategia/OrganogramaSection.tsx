@@ -168,9 +168,63 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
 
   const isCreating = createOrgNode.isPending || createCargo.isPending;
 
+  // Suggestion logic: build org from gestor_imediato relationships
+  const sugestaoNodes = useMemo(() => {
+    const colsWithGestor = colaboradores.filter(c => c.gestor_imediato);
+    if (colsWithGestor.length === 0) return [];
+    return buildOrgSuggestion(colaboradores);
+  }, [colaboradores]);
+
+  const colsComGestor = colaboradores.filter(c => c.gestor_imediato);
+
+  const handleGerarOrganograma = async () => {
+    if (sugestaoNodes.length === 0) return;
+    setIsSugerindo(true);
+    try {
+      // Build a map: nome → id, to resolve parent references sequentially
+      const nomeToId = new Map<string, string>();
+
+      // First pass: create root nodes (no gestor or gestor not in list)
+      const roots = sugestaoNodes.filter(n => !n.gestor);
+      for (const node of roots) {
+        await new Promise<void>((resolve, reject) => {
+          createOrgNode.mutate(
+            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: undefined, tipo: "funcao" },
+            {
+              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
+              onError: reject,
+            }
+          );
+        });
+      }
+
+      // Second pass: create nodes with parents
+      const children = sugestaoNodes.filter(n => n.gestor);
+      for (const node of children) {
+        const parentId = node.gestor ? nomeToId.get(node.gestor) : undefined;
+        await new Promise<void>((resolve, reject) => {
+          createOrgNode.mutate(
+            { titulo: node.cargo, nome_ocupante: node.nome, parent_id: parentId, tipo: "funcao" },
+            {
+              onSuccess: (created: any) => { if (created?.id) nomeToId.set(node.nome, created.id); resolve(); },
+              onError: reject,
+            }
+          );
+        });
+      }
+
+      toast.success(`Organograma gerado com ${sugestaoNodes.length} posições!`);
+      setShowSugestao(false);
+    } catch {
+      toast.error("Erro ao gerar organograma. Tente novamente.");
+    } finally {
+      setIsSugerindo(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" /> Organograma
@@ -179,12 +233,66 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             Arraste para mover · Scroll para zoom · Clique <Plus className="w-3 h-3 inline" /> nos cards para adicionar
           </p>
         </div>
-        <Dialog open={showNew} onOpenChange={setShowNew}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setForm(INITIAL_FORM)}>
-              <Plus className="w-4 h-4 mr-1" /> Nova Posição
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          {/* Sugerir Organograma button */}
+          {colsComGestor.length > 0 && (
+            <Dialog open={showSugestao} onOpenChange={setShowSugestao}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5">
+                  <Sparkles className="w-4 h-4 mr-1" /> Sugerir Organograma
+                  <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 h-4">{colsComGestor.length}</Badge>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" /> Sugestão de Organograma
+                  </DialogTitle>
+                  <DialogDescription>
+                    Baseado no campo "Gestor Imediato" dos {colsComGestor.length} colaboradores cadastrados, o sistema identificou a seguinte hierarquia:
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-80 overflow-y-auto space-y-2 py-2">
+                  {sugestaoNodes.map((node, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/20">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <User className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">{node.nome}</p>
+                        <p className="text-xs text-muted-foreground">{node.cargo}</p>
+                        {node.gestor && (
+                          <p className="text-xs text-primary/70 mt-0.5">↳ Reporta a: {node.gestor}</p>
+                        )}
+                        {!node.gestor && (
+                          <Badge variant="outline" className="text-[10px] mt-0.5 h-4 px-1.5 border-primary/30 text-primary">Raiz</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {organograma.length > 0 && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>O organograma já possui {organograma.length} posição(ões). As novas posições serão adicionadas sem apagar as existentes.</p>
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowSugestao(false)}>Cancelar</Button>
+                  <Button onClick={handleGerarOrganograma} disabled={isSugerindo}>
+                    {isSugerindo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                    Gerar Organograma
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+          <Dialog open={showNew} onOpenChange={setShowNew}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={() => setForm(INITIAL_FORM)}>
+                <Plus className="w-4 h-4 mr-1" /> Nova Posição
+              </Button>
+            </DialogTrigger>
           <DialogContent data-organograma-dialog-content="true">
             <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
             <div className="space-y-3">
