@@ -631,42 +631,45 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
                       }
                     }}
                   />
-              {!asoFile ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-1 border-dashed"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Selecionar arquivo (PDF, JPG, PNG)
-                </Button>
-              ) : (
-                <div className="flex items-center gap-2 mt-1 p-2 rounded-lg bg-muted/50 border">
-                  <FileText className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-sm truncate flex-1">{asoFile.name}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {(asoFile.size / 1024).toFixed(0)} KB
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => {
-                      setAsoFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+                  {!asoFile ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-1 border-dashed"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Selecionar arquivo (PDF, JPG, PNG)
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1 p-2 rounded-lg bg-muted/50 border">
+                      <FileText className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-sm truncate flex-1">{asoFile.name}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {(asoFile.size / 1024).toFixed(0)} KB
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0"
+                        onClick={() => {
+                          setAsoFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    O documento será salvo na pasta de documentos do colaborador
+                  </p>
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                O documento será salvo na pasta de documentos do colaborador
-              </p>
-            </div>
+              </>
+            )}
           </div>
+
 
           <Separator />
 
