@@ -36,13 +36,16 @@ export default function IncidentesAcidentes() {
 
   if (selected) {
     return (
-      <div className="p-6 space-y-6">
-        <EventoSSTDetail evento={selected} onBack={() => setSelected(null)} />
-      </div>
+      <TooltipProvider>
+        <div className="p-6 space-y-6">
+          <EventoSSTDetail evento={selected} onBack={() => setSelected(null)} />
+        </div>
+      </TooltipProvider>
     );
   }
 
   return (
+    <TooltipProvider>
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -68,10 +71,13 @@ export default function IncidentesAcidentes() {
       <EventoSSTStats stats={stats} />
 
       <Tabs defaultValue="lista">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="lista"><List className="w-4 h-4 mr-1" /> Ocorrências</TabsTrigger>
           <TabsTrigger value="dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Análise</TabsTrigger>
-          <TabsTrigger value="piramide"><BarChart3 className="w-4 h-4 mr-1" /> Pirâmide</TabsTrigger>
+          <TabsTrigger value="indicadores"><TrendingUp className="w-4 h-4 mr-1" /> Indicadores</TabsTrigger>
+          <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" /> Analytics</TabsTrigger>
+          <TabsTrigger value="fap"><Calculator className="w-4 h-4 mr-1" /> FAP</TabsTrigger>
+          <TabsTrigger value="piramide"><Shield className="w-4 h-4 mr-1" /> Pirâmide</TabsTrigger>
         </TabsList>
 
         <TabsContent value="lista" className="space-y-4">
@@ -154,6 +160,18 @@ export default function IncidentesAcidentes() {
           <EventoSSTDashboard eventos={eventos} />
         </TabsContent>
 
+        <TabsContent value="indicadores" className="space-y-4">
+          <IndicadoresEstrategicos eventos={eventos} />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <AnalyticsAvancado eventos={eventos} />
+        </TabsContent>
+
+        <TabsContent value="fap" className="space-y-4">
+          <SimuladorFAP eventos={eventos} />
+        </TabsContent>
+
         <TabsContent value="piramide">
           <div className="max-w-lg mx-auto">
             <PiramideSeguranca eventos={eventos} />
@@ -179,5 +197,6 @@ export default function IncidentesAcidentes() {
         isPending={createEvento.isPending || updateEvento.isPending}
       />
     </div>
+    </TooltipProvider>
   );
 }
