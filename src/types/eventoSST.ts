@@ -107,3 +107,34 @@ export const FATORES_ERGONOMICOS = [
 ];
 
 export const TURNOS = ["1º Turno", "2º Turno", "3º Turno", "Outro"];
+
+export const AGENTES_CAUSADORES_ESOCIAL = [
+  "01.01 — Animais domésticos e de produção",
+  "01.02 — Animais peçonhentos",
+  "02.01 — Substâncias químicas",
+  "03.01 — Poeiras minerais",
+  "03.02 — Fumos metálicos",
+  "04.01 — Ruído",
+  "04.02 — Vibração",
+  "04.03 — Radiação ionizante",
+  "04.04 — Radiação não ionizante",
+  "04.05 — Temperatura extrema",
+  "05.01 — Bactérias",
+  "05.02 — Vírus",
+  "05.03 — Fungos",
+  "06.01 — Esforço físico intenso",
+  "06.02 — Levantamento e transporte manual",
+  "06.03 — Exigência de postura inadequada",
+  "06.04 — Monotonia e repetitividade",
+  "06.05 — Ritmo excessivo",
+  "07.01 — Queda com diferença de nível",
+  "07.02 — Queda em mesmo nível",
+  "07.03 — Choque contra objeto",
+  "07.04 — Corte por objeto",
+  "07.05 — Esmagamento / aprisionamento",
+  "07.06 — Eletricidade",
+  "07.07 — Explosão / incêndio",
+  "08.01 — Fator humano / ato inseguro",
+  "09.01 — Outros",
+];
+
