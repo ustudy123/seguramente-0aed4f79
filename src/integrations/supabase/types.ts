@@ -2081,6 +2081,7 @@ export type Database = {
           periculosidade: boolean
           periculosidade_tipo: string | null
           periodicidade_exame_meses: number | null
+          responsabilidade: string | null
           tenant_id: string
           updated_at: string
         }
@@ -2104,6 +2105,7 @@ export type Database = {
           periculosidade?: boolean
           periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
+          responsabilidade?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -2127,6 +2129,7 @@ export type Database = {
           periculosidade?: boolean
           periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
+          responsabilidade?: string | null
           tenant_id?: string
           updated_at?: string
         }
