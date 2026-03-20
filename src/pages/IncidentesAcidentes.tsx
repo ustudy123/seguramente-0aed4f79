@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen } from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Plus, Search, Shield, LayoutDashboard, List, BarChart3, BookOpen, TrendingUp, Calculator } from "lucide-react";
 import { useEventosSST } from "@/hooks/useEventosSST";
 import { EventoSSTStats } from "@/components/incidentes/EventoSSTStats";
 import { EventoSSTList } from "@/components/incidentes/EventoSSTList";
@@ -12,6 +13,9 @@ import { EventoSSTDetail } from "@/components/incidentes/EventoSSTDetail";
 import { EventoSSTDashboard } from "@/components/incidentes/EventoSSTDashboard";
 import { PiramideSeguranca } from "@/components/incidentes/PiramideSeguranca";
 import { GuiaRapidoIncidentes } from "@/components/incidentes/GuiaRapidoIncidentes";
+import { IndicadoresEstrategicos } from "@/components/incidentes/IndicadoresEstrategicos";
+import { AnalyticsAvancado } from "@/components/incidentes/AnalyticsAvancado";
+import { SimuladorFAP } from "@/components/incidentes/SimuladorFAP";
 import type { EventoSST } from "@/types/eventoSST";
 
 export default function IncidentesAcidentes() {
