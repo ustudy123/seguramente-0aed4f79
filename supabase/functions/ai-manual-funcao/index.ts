@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     // Fetch cargos
     let cargosQuery = supabase
       .from("cargos")
-      .select("id, nome, nivel, descricao")
+      .select("id, nome, nivel, descricao, responsabilidade")
       .eq("tenant_id", tenantId)
       .eq("ativo", true)
       .order("nome");
@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
 FUNÇÃO: ${cargo.nome}${cargo.nivel ? ` (Nível: ${cargo.nivel})` : ""}
 ══════════════════════════════════════════════════════
 ${cargo.descricao ? `Descrição: ${cargo.descricao}` : ""}
+${cargo.responsabilidade ? `\nRESPONSABILIDADE DA FUNÇÃO:\n${cargo.responsabilidade}` : ""}
 
 ATIVIDADES E PROCEDIMENTOS (${cargoAtividades.length}):
 ${atividadesText}
@@ -194,6 +195,7 @@ INSTRUÇÕES OBRIGATÓRIAS:
    - Para CADA função, uma seção completa com:
      * Nome e nível do cargo em header destacado
      * Descrição da função (expanda se necessário com contexto profissional)
+     * Se houver RESPONSABILIDADE DA FUNÇÃO, incluir seção destacada "Responsabilidade & Escopo" logo após a descrição, com caixa visual diferenciada
      * Tabela de Atividades com colunas: Nome, Frequência, Complexidade, Classificação, Responsável, Ferramentas, Consequência de Erro
      * Para cada atividade que tenha POP vinculado, incluir uma subseção "Procedimento Operacional Padrão" com objetivo, materiais, etapas e pontos de atenção formatados como checklist visual
      * Se houver materiais de treinamento, incluir uma subseção "Materiais de Referência" com links e descrições

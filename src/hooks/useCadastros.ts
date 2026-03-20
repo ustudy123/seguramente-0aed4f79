@@ -21,6 +21,7 @@ export interface Cargo {
   tenant_id: string;
   nome: string;
   descricao: string | null;
+  responsabilidade?: string | null;
   departamento_id: string | null;
   nivel: string | null;
   faixa_salarial_min: number | null;
@@ -165,7 +166,7 @@ export function useCargos() {
     queryFn: async () => {
       let query = supabase
         .from("cargos")
-        .select(`*, departamento:departamentos(id, nome)`)
+        .select(`*, departamento:departamentos(id, nome), responsabilidade`)
         .eq("tenant_id", tenantId!)
         .order("nome");
 
