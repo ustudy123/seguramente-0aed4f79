@@ -230,8 +230,8 @@ export function AEPFormIdentificacao({ data, onChange }: AEPFormIdentificacaoPro
                       <CommandItem
                         key={cargo.id}
                         value={cargo.nome}
-                        onSelect={(val) => {
-                          handleChange("funcao", val);
+                        onSelect={() => {
+                          handleChange("funcao", cargo.nome);
                           setFuncaoOpen(false);
                         }}
                       >
