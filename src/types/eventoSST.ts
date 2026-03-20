@@ -4,6 +4,8 @@ export type AcidenteGravidadeLesao = "sem_lesao" | "leve" | "moderada" | "grave"
 export type AcidenteAfastamento = "sem_afastamento" | "ate_15_dias" | "mais_15_dias";
 export type AcidenteAtendimento = "nao_necessario" | "ambulatorial" | "hospitalar";
 export type CATTipo = "inicial" | "reabertura" | "comunicacao_obito";
+export type TipoAcidenteLegal = "tipico" | "trajeto" | "doenca_ocupacional" | "ntep";
+export type NexoCausal = "confirmado" | "suspeito" | "descartado";
 
 export interface EventoSST {
   id: string;
