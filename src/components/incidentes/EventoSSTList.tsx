@@ -105,9 +105,22 @@ export const EventoSSTList = ({ eventos, onSelect, onEdit, filters }: Props) => 
                   }
                 </TableCell>
                 <TableCell className="text-sm">
-                  {e.tipo === "acidente" && e.gravidade_lesao ?
-                  lesaoMap[e.gravidade_lesao] || "-" :
-                  "-"}
+                  {(() => {
+                    const gravPotMap: Record<string, { label: string; class: string }> = {
+                      baixa: { label: "Baixa", class: "bg-green-100 text-green-700" },
+                      media: { label: "Média", class: "bg-amber-100 text-amber-700" },
+                      alta: { label: "Alta", class: "bg-orange-100 text-orange-700" },
+                      critica: { label: "Crítica", class: "bg-red-100 text-red-700" },
+                    };
+                    if ((e as any).gravidade_potencial && gravPotMap[(e as any).gravidade_potencial]) {
+                      const g = gravPotMap[(e as any).gravidade_potencial];
+                      return <Badge variant="outline" className={`text-xs ${g.class}`}>{g.label}</Badge>;
+                    }
+                    if (e.tipo === "acidente" && e.gravidade_lesao) {
+                      return lesaoMap[e.gravidade_lesao] || "-";
+                    }
+                    return "-";
+                  })()}
                 </TableCell>
                 <TableCell className="text-sm">
                   {[e.unidade, e.setor].filter(Boolean).join(" / ") || "-"}

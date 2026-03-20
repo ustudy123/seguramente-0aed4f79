@@ -91,6 +91,7 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
       origem_predominante: initial?.origem_predominante || "",
       descricao: initial?.descricao || "",
       percepcao_causa: initial?.percepcao_causa || "",
+      gravidade_potencial: initial?.gravidade_potencial || "",
       gravidade_lesao: initial?.gravidade_lesao || "",
       afastamento: initial?.afastamento || "",
       obito: initial?.obito || false,
@@ -341,6 +342,41 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
                     )}
                   >
                     {o}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Gravidade potencial - aparece para todos os tipos */}
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
+                {tipo === "incidente" ? "Gravidade Potencial" : "Gravidade do Evento"}
+              </Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                {tipo === "incidente"
+                  ? "Qual seria a gravidade se o incidente tivesse resultado em acidente?"
+                  : "Qual a gravidade geral deste evento?"}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "baixa", label: "Baixa", desc: "Sem potencial de lesão", color: "text-green-600 border-green-200 bg-green-50" },
+                  { value: "media", label: "Média", desc: "Potencial de lesão leve", color: "text-amber-600 border-amber-200 bg-amber-50" },
+                  { value: "alta", label: "Alta", desc: "Potencial de lesão grave", color: "text-orange-600 border-orange-200 bg-orange-50" },
+                  { value: "critica", label: "Crítica", desc: "Potencial fatal ou incapacitante", color: "text-destructive border-red-200 bg-red-50" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => set("gravidade_potencial", opt.value)}
+                    className={cn(
+                      "text-left text-sm px-3 py-3 rounded-lg border-2 transition-all",
+                      form.gravidade_potencial === opt.value
+                        ? `${opt.color} font-medium shadow-sm`
+                        : "border-border hover:border-muted-foreground/30"
+                    )}
+                  >
+                    <span className="font-semibold">{opt.label}</span>
+                    <span className="block text-xs text-muted-foreground mt-0.5">{opt.desc}</span>
                   </button>
                 ))}
               </div>
