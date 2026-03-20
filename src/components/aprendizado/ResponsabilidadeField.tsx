@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Mic, Square, Loader2, Save, CheckCircle2 } from "lucide-react";
+import { Mic, Square, Loader2, Save, CheckCircle2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -19,12 +19,13 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
   const [value, setValue] = useState(initialValue || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [isEditing, setIsEditing] = useState(!initialValue);
   const queryClient = useQueryClient();
 
-  // Keep in sync if parent provides updated initialValue (e.g. after query refetch)
   useEffect(() => {
     setValue(initialValue || "");
+    // If there's a saved value, show in view mode; otherwise open edit mode
+    setIsEditing(!initialValue);
   }, [initialValue]);
 
   const recorder = useAudioRecorder({ maxDuration: 180 });
@@ -39,13 +40,11 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
 
       if (error) throw error;
 
-      // Invalidate so parent query re-fetches the updated responsabilidade
       await queryClient.invalidateQueries({ queryKey: ["cargos"] });
 
-      setSaved(true);
       onSaved?.(value);
       toast.success("Responsabilidade salva!");
-      setTimeout(() => setSaved(false), 3000);
+      setIsEditing(false);
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
     } finally {
@@ -53,10 +52,14 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
     }
   }, [cargoId, value, onSaved, queryClient]);
 
+  const handleCancel = useCallback(() => {
+    setValue(initialValue || "");
+    setIsEditing(false);
+    recorder.clearRecording?.();
+  }, [initialValue, recorder]);
+
   const handleStopAndTranscribe = useCallback(async () => {
     recorder.stopRecording();
-
-    // Wait for onstop to fire and set audioBlob
     await new Promise((res) => setTimeout(res, 600));
 
     const base64 = await recorder.getBase64();
@@ -85,8 +88,33 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
     }
   }, [recorder]);
 
-  const isDirty = value !== (initialValue || "");
+  // ── VIEW MODE ──────────────────────────────────────────────────────────────
+  if (!isEditing) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+            Responsabilidade da Função
+          </Label>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 h-7 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setIsEditing(true)}
+          >
+            <Pencil className="w-3 h-3" />
+            Editar
+          </Button>
+        </div>
+        <div className="rounded-md border border-border bg-muted/40 px-3 py-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed min-h-[80px]">
+          {value || <span className="text-muted-foreground italic">Nenhuma responsabilidade cadastrada.</span>}
+        </div>
+      </div>
+    );
+  }
 
+  // ── EDIT MODE ──────────────────────────────────────────────────────────────
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -123,22 +151,33 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
             </Button>
           )}
 
+          {/* Cancel button — only if there's already a saved value */}
+          {initialValue && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 h-8 text-xs text-muted-foreground"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              <X className="w-3.5 h-3.5" />
+              Cancelar
+            </Button>
+          )}
+
           {/* Save button */}
           <Button
             size="sm"
             className="gap-1.5 h-8 text-xs"
             onClick={handleSave}
-            disabled={isSaving || (!isDirty && !saved)}
-            variant={saved ? "outline" : "default"}
+            disabled={isSaving || !value.trim()}
           >
             {isSaving ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : saved ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
             ) : (
               <Save className="w-3.5 h-3.5" />
             )}
-            {saved ? "Salvo" : "Salvar"}
+            {isSaving ? "Salvando..." : "Salvar"}
           </Button>
         </div>
       </div>
