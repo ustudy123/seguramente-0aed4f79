@@ -514,51 +514,123 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               <Shield className="h-4 w-4 text-primary" />
               Exame Demissional (NR-7)
             </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Data do Exame *</Label>
-                <Input type="date" value={form.data_exame_demissional} onChange={e => set("data_exame_demissional", e.target.value)} />
+
+            {/* Painel NR-07: usar ASO anterior */}
+            <div className="mb-4 rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  <strong>NR-07:</strong> Empresas de Grau de Risco 1 e 2 podem usar ASO anterior com até{" "}
+                  <strong>135 dias</strong>. Grau de Risco 3 e 4 até <strong>90 dias</strong>.
+                </div>
               </div>
-              <div>
-                <Label>Resultado</Label>
-                <Select value={form.resultado_exame_demissional} onValueChange={v => set("resultado_exame_demissional", v)}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(RESULTADOS_EXAME).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Médico Responsável</Label>
-                <Input value={form.medico_exame_demissional} onChange={e => set("medico_exame_demissional", e.target.value)} placeholder="Dr(a). Nome" />
-              </div>
-              <div>
-                <Label>CRM</Label>
-                <Input value={form.crm_exame_demissional} onChange={e => set("crm_exame_demissional", e.target.value)} placeholder="CRM/UF 00000" />
-              </div>
+
+              {asoValidacao.carregando ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Verificando ASO anterior...
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Grau de risco da empresa */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground">Grau de Risco da empresa:</span>
+                    {asoValidacao.grauRisco ? (
+                      <Badge variant="outline" className="text-xs">GR {asoValidacao.grauRisco} — validade {asoValidacao.limiteValidade} dias</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">Não informado no cadastro</Badge>
+                    )}
+                  </div>
+
+                  {/* Último ASO */}
+                  {asoValidacao.ultimoAso ? (
+                    <div className={`flex items-center gap-2 p-2 rounded-md text-xs ${asoValidacao.asoValido ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-destructive/10 text-destructive"}`}>
+                      {asoValidacao.asoValido
+                        ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        : <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      }
+                      <span>
+                        Último ASO: <strong>{format(parseISO(asoValidacao.ultimoAso.data), "dd/MM/yyyy")}</strong>
+                        {" "}({asoValidacao.diasDesdeUltimoAso} dias atrás)
+                        {" — "}
+                        {asoValidacao.asoValido
+                          ? `Dentro do prazo (${asoValidacao.limiteValidade - (asoValidacao.diasDesdeUltimoAso ?? 0)} dias restantes)`
+                          : `Fora do prazo — exame demissional obrigatório`
+                        }
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      Nenhum ASO ocupacional encontrado — exame demissional obrigatório.
+                    </div>
+                  )}
+
+                  {/* Toggle para usar ASO anterior */}
+                  {asoValidacao.asoValido && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Switch
+                        checked={usarAsoAnterior}
+                        onCheckedChange={setUsarAsoAnterior}
+                        id="usar-aso-anterior"
+                      />
+                      <Label htmlFor="usar-aso-anterior" className="text-sm cursor-pointer">
+                        Usar ASO anterior no lugar do exame demissional (NR-07)
+                      </Label>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Upload ASO */}
-            <div className="mt-3">
-              <Label>Anexar ASO Demissional</Label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (file.size > 10 * 1024 * 1024) {
-                      toast.error("Arquivo muito grande (máx. 10MB)");
-                      return;
-                    }
-                    setAsoFile(file);
-                  }
-                }}
-              />
+            {/* Campos do novo exame — ocultos se usando ASO anterior */}
+            {!usarAsoAnterior && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Data do Exame *</Label>
+                    <Input type="date" value={form.data_exame_demissional} onChange={e => set("data_exame_demissional", e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Resultado</Label>
+                    <Select value={form.resultado_exame_demissional} onValueChange={v => set("resultado_exame_demissional", v)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(RESULTADOS_EXAME).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Médico Responsável</Label>
+                    <Input value={form.medico_exame_demissional} onChange={e => set("medico_exame_demissional", e.target.value)} placeholder="Dr(a). Nome" />
+                  </div>
+                  <div>
+                    <Label>CRM</Label>
+                    <Input value={form.crm_exame_demissional} onChange={e => set("crm_exame_demissional", e.target.value)} placeholder="CRM/UF 00000" />
+                  </div>
+                </div>
+
+                {/* Upload ASO */}
+                <div className="mt-3">
+                  <Label>Anexar ASO Demissional</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error("Arquivo muito grande (máx. 10MB)");
+                          return;
+                        }
+                        setAsoFile(file);
+                      }
+                    }}
+                  />
               {!asoFile ? (
                 <Button
                   type="button"
