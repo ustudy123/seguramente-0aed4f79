@@ -26,6 +26,7 @@ export interface EventoSST {
   origem_predominante: string | null;
   descricao: string | null;
   percepcao_causa: string | null;
+  gravidade_potencial: string | null;
   gravidade_lesao: AcidenteGravidadeLesao | null;
   afastamento: AcidenteAfastamento | null;
   obito: boolean;
