@@ -38,6 +38,36 @@ function buildTree(nodes: EstrategiaOrganograma[]): EstrategiaOrganograma[] {
 
 const INITIAL_FORM = { titulo: "", nome_ocupante: "", parent_id: "", cargo_id: "", selectedOcupantes: [] as string[] };
 
+// Build a hierarchical suggestion from collaborator gestor_imediato relationships
+function buildOrgSuggestion(colaboradores: { nome_completo: string; cargo: string; gestor_imediato?: string | null }[]) {
+  // Map each person to their manager
+  const nodes: { nome: string; cargo: string; gestor: string | null }[] = [];
+  const seen = new Set<string>();
+
+  colaboradores.forEach((c) => {
+    if (!seen.has(c.nome_completo)) {
+      seen.add(c.nome_completo);
+      nodes.push({ nome: c.nome_completo, cargo: c.cargo || c.nome_completo, gestor: c.gestor_imediato || null });
+    }
+  });
+
+  // Find root nodes (gestores that don't appear as subordinates, or have no manager)
+  const allNomes = new Set(nodes.map(n => n.nome));
+  const allGestores = new Set(nodes.map(n => n.gestor).filter(Boolean) as string[]);
+
+  // Include gestores that aren't in the main list
+  allGestores.forEach((g) => {
+    if (!allNomes.has(g)) {
+      // Find their cargo by seeing who lists them as manager
+      const subordinate = nodes.find(n => n.gestor === g);
+      nodes.push({ nome: g, cargo: g, gestor: null });
+      allNomes.add(g);
+    }
+  });
+
+  return nodes;
+}
+
 export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia(escopo);
   const { cargos, createCargo } = useCargos();
