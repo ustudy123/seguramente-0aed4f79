@@ -413,7 +413,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar módulo..."
-            className="w-full pl-8 pr-8 py-2 rounded-lg bg-sidebar-accent/40 border border-sidebar-border text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/35 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/50 focus:bg-sidebar-accent/60 transition-all" />
+            className="w-full pl-8 pr-8 py-2 rounded-lg bg-sidebar-accent/60 border border-sidebar-border/60 text-[13px] text-sidebar-foreground placeholder:text-sidebar-foreground/60 focus:outline-none focus:ring-1 focus:ring-sidebar-primary/50 focus:bg-sidebar-accent/80 transition-all" />
 
             {isSearching &&
           <button
