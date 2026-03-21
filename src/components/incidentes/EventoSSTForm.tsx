@@ -73,9 +73,43 @@ const STEPS_ACIDENTE = [
 export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending }: Props) => {
   const { colaboradores } = useColaboradores();
   const { getAfastamento } = useAfastamentosAtivos();
+  const { tenant } = useTenant();
+  const tid = tenant?.id;
   const [tipo, setTipo] = useState<EventoSSTTipo>(initial?.tipo || "incidente");
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, any>>({});
+  const [openEstab, setOpenEstab] = useState(false);
+  const [openSetor, setOpenSetor] = useState(false);
+
+  // Buscar empresas/estabelecimentos cadastrados
+  const { data: empresas = [] } = useQuery({
+    queryKey: ["empresas-sst-form", tid],
+    queryFn: async () => {
+      if (!tid) return [];
+      const { data } = await supabase
+        .from("empresa_cadastro")
+        .select("id, razao_social, nome_fantasia")
+        .eq("tenant_id", tid)
+        .order("razao_social");
+      return data || [];
+    },
+    enabled: !!tid,
+  });
+
+  // Buscar departamentos/setores cadastrados
+  const { data: departamentos = [] } = useQuery({
+    queryKey: ["departamentos-sst-form", tid],
+    queryFn: async () => {
+      if (!tid) return [];
+      const { data } = await supabase
+        .from("departamentos")
+        .select("id, nome")
+        .eq("tenant_id", tid)
+        .order("nome");
+      return data || [];
+    },
+    enabled: !!tid,
+  });
 
   const steps = tipo === "acidente" ? STEPS_ACIDENTE : STEPS;
   const maxStep = steps.length - 1;
