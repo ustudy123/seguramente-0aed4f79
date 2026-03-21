@@ -860,7 +860,7 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col rounded-none sm:rounded-lg">
+      <DialogContent className="w-full max-w-2xl h-[100dvh] sm:h-[90vh] p-0 gap-0 overflow-hidden flex flex-col rounded-none sm:rounded-lg">
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3 shrink-0">
           <DialogTitle className="text-base sm:text-lg">
             {initial ? "Editar Evento" : "Registrar Novo Evento SST"}
