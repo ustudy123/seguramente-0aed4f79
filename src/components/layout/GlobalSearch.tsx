@@ -62,9 +62,10 @@ export function GlobalSearch() {
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
-    const q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const q = normalize(query.trim());
+
     return searchItems.filter((item) => {
-      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       return (
         normalize(item.title).includes(q) ||
         normalize(item.section).includes(q) ||
