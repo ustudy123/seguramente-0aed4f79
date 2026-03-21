@@ -764,8 +764,8 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1 min-h-0 px-4 sm:px-6">
-          <div className="pb-4">
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="px-4 sm:px-6 pb-4 pt-1">
             {renderStepContent()}
           </div>
         </ScrollArea>
