@@ -56,6 +56,14 @@ interface MenuSection {
   sectionIcon: React.ElementType;
 }
 
+const normalizeSearchText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const menuSections: MenuSection[] = [
   {
     label: "Visão Geral & Estratégia",
@@ -379,13 +387,18 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
     return items;
   }, []);
 
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return allItems.filter((item) => item.title.toLowerCase().includes(q));
-  }, [searchQuery, allItems]);
+  const normalizedQuery = useMemo(() => normalizeSearchText(searchQuery), [searchQuery]);
 
-  const isSearching = searchQuery.trim().length > 0;
+  const searchResults = useMemo(() => {
+    if (!normalizedQuery) return [];
+    return allItems.filter((item) => {
+      const normalizedTitle = normalizeSearchText(item.title);
+      const normalizedSection = normalizeSearchText(item.sectionLabel);
+      return normalizedTitle.includes(normalizedQuery) || normalizedSection.includes(normalizedQuery);
+    });
+  }, [normalizedQuery, allItems]);
+
+  const isSearching = normalizedQuery.length > 0;
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
