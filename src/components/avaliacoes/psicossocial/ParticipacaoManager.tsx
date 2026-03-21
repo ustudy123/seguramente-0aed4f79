@@ -62,7 +62,8 @@ interface ParticipacaoManagerProps {
   campanha: CampanhaPsicossocial;
 }
 
-const BASE_URL = window.location.origin;
+// Sempre usa a URL publicada para garantir acesso anônimo sem login Lovable
+const BASE_URL = import.meta.env.VITE_APP_URL || "https://seguramente.lovable.app";
 
 function getLinkParticipacao(token: string) {
   return `${BASE_URL}/p/${token}`;
