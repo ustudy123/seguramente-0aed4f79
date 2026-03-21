@@ -13,8 +13,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
-import { useTenantContext } from "@/contexts/TenantContext";
+import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import {
   CATEGORIAS_PRINCIPAIS,
   ORIGENS_PREDOMINANTES,
