@@ -258,14 +258,111 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
             <div>
               <Label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Onde aconteceu?</Label>
               <div className="grid grid-cols-2 gap-3">
+                {/* Estabelecimento / Obra — busca com Combobox */}
                 <div>
-                  <Label className="text-sm">Unidade / Estabelecimento</Label>
-                  <Input value={form.unidade} onChange={(e) => set("unidade", e.target.value)} placeholder="Ex: Matriz, Filial SP" />
+                  <Label className="text-sm">Estabelecimento / Obra</Label>
+                  <Popover open={openEstab} onOpenChange={setOpenEstab}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal h-10 text-sm"
+                      >
+                        <span className={cn("truncate", !form.unidade && "text-muted-foreground")}>
+                          {form.unidade || "Selecione ou digite..."}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar estabelecimento..."
+                          onValueChange={(v) => {
+                            if (!empresas.find(e => (e.nome_fantasia || e.razao_social) === v)) {
+                              set("unidade", v);
+                            }
+                          }}
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            <span className="text-xs text-muted-foreground">Nenhum resultado. Digite para informar manualmente.</span>
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {empresas.map((e) => {
+                              const label = e.nome_fantasia || e.razao_social;
+                              return (
+                                <CommandItem
+                                  key={e.id}
+                                  value={label}
+                                  onSelect={() => {
+                                    set("unidade", label);
+                                    setOpenEstab(false);
+                                  }}
+                                >
+                                  <Check className={cn("mr-2 h-4 w-4", form.unidade === label ? "opacity-100" : "opacity-0")} />
+                                  {label}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
+
+                {/* Setor / Área — busca com Combobox */}
                 <div>
                   <Label className="text-sm">Setor / Área</Label>
-                  <Input value={form.setor} onChange={(e) => set("setor", e.target.value)} placeholder="Ex: Produção, Almoxarifado" />
+                  <Popover open={openSetor} onOpenChange={setOpenSetor}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal h-10 text-sm"
+                      >
+                        <span className={cn("truncate", !form.setor && "text-muted-foreground")}>
+                          {form.setor || "Selecione ou digite..."}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar setor..."
+                          onValueChange={(v) => {
+                            if (!departamentos.find(d => d.nome === v)) {
+                              set("setor", v);
+                            }
+                          }}
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            <span className="text-xs text-muted-foreground">Nenhum resultado. Digite para informar manualmente.</span>
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {departamentos.map((d) => (
+                              <CommandItem
+                                key={d.id}
+                                value={d.nome}
+                                onSelect={() => {
+                                  set("setor", d.nome);
+                                  setOpenSetor(false);
+                                }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", form.setor === d.nome ? "opacity-100" : "opacity-0")} />
+                                {d.nome}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
+
                 <div>
                   <Label className="text-sm">Local Específico</Label>
                   <Input value={form.local_especifico} onChange={(e) => set("local_especifico", e.target.value)} placeholder="Ex: Linha 3, próximo ao refeitório" />
@@ -283,6 +380,7 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
             </div>
           </div>
         );
+
 
       case "Envolvidos":
         return (
