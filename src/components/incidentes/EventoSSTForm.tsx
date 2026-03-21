@@ -8,9 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
+import { useTenantContext } from "@/contexts/TenantContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIAS_PRINCIPAIS,
   ORIGENS_PREDOMINANTES,
@@ -24,7 +28,6 @@ import {
 import {
   Shield,
   AlertTriangle,
-  CalendarDays,
   MapPin,
   User,
   Tag,
@@ -35,6 +38,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
