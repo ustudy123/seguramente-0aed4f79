@@ -412,7 +412,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
       className="h-screen gradient-sidebar border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-40"
     >
       {/* Logo */}
-      <div className="p-4 flex items-center justify-center border-b border-white/[0.08] bg-white/[0.03]">
+      <div className="p-4 flex items-center justify-center border-b border-white/[0.08] bg-white rounded-b-xl">
         {isCollapsed ? (
           <Logo size="md" showText={false} />
         ) : (
