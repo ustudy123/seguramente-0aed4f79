@@ -152,7 +152,7 @@ export const PilaresSummaryLive = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handlePilarClick(pilar)}
-                className="group relative bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-all cursor-pointer hover:shadow-md"
+                className="group relative bg-card rounded-lg p-4 border border-border shadow-sm hover:shadow-lg transition-all cursor-pointer"
               >
                 {/* Expand hint */}
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
