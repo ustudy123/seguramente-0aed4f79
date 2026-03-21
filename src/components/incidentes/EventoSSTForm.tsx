@@ -723,15 +723,15 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-3">
-          <DialogTitle className="text-lg">
+      <DialogContent className="w-full max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col rounded-none sm:rounded-lg">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3 shrink-0">
+          <DialogTitle className="text-base sm:text-lg">
             {initial ? "Editar Evento" : "Registrar Novo Evento SST"}
           </DialogTitle>
         </DialogHeader>
 
         {/* Step indicator */}
-        <div className="px-4 pb-3">
+        <div className="px-3 sm:px-4 pb-2 sm:pb-3 shrink-0">
           <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
             {steps.map((s, i) => {
               const Icon = s.icon;
@@ -764,14 +764,14 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1 max-h-[55vh] px-6">
+        <ScrollArea className="flex-1 min-h-0 px-4 sm:px-6">
           <div className="pb-4">
             {renderStepContent()}
           </div>
         </ScrollArea>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-2 px-6 py-3 border-t bg-muted/30">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 border-t bg-muted/30 shrink-0">
           <div className="text-xs text-muted-foreground">
             Etapa {step + 1} de {steps.length}
           </div>
@@ -796,3 +796,4 @@ export const EventoSSTForm = ({ open, onOpenChange, initial, onSubmit, isPending
     </Dialog>
   );
 };
+
