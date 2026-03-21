@@ -1,5 +1,4 @@
-import { Bell, Search, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +14,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
+import { GlobalSearch } from "@/components/layout/GlobalSearch";
 
 export const Header = () => {
   const { profile, signOut, isSuperAdmin, user } = useAuthContext();
@@ -37,14 +37,8 @@ export const Header = () => {
 
   return (
     <header className="h-16 bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-30">
-      {/* Search */}
-      <div className="relative max-w-md flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar colaboradores, documentos..."
-          className="pl-10 bg-muted/50 border-0 focus-visible:ring-primary"
-        />
-      </div>
+      {/* Global Search */}
+      <GlobalSearch />
 
       {/* Actions */}
       <div className="flex items-center gap-4">
