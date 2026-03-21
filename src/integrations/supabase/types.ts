@@ -2959,6 +2959,108 @@ export type Database = {
           },
         ]
       }
+      desvios_seguranca: {
+        Row: {
+          acao_imediata: string | null
+          acao_imediata_prazo: string | null
+          acao_imediata_responsavel: string | null
+          categoria: string | null
+          causa_provavel: string | null
+          codigo: string | null
+          convertido_em: string | null
+          convertido_em_incidente_id: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data_desvio: string
+          descricao: string
+          foto_nome: string | null
+          foto_url: string | null
+          gro_risco_id: string | null
+          hora_desvio: string | null
+          id: string
+          local_especifico: string | null
+          plano_acao_id: string | null
+          potencial_risco: string
+          reportante_anonimo: boolean | null
+          reportante_id: string | null
+          reportante_nome: string | null
+          setor: string | null
+          status: string
+          tenant_id: string
+          tipo_desvio: string
+          turno: string | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao_imediata?: string | null
+          acao_imediata_prazo?: string | null
+          acao_imediata_responsavel?: string | null
+          categoria?: string | null
+          causa_provavel?: string | null
+          codigo?: string | null
+          convertido_em?: string | null
+          convertido_em_incidente_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_desvio: string
+          descricao: string
+          foto_nome?: string | null
+          foto_url?: string | null
+          gro_risco_id?: string | null
+          hora_desvio?: string | null
+          id?: string
+          local_especifico?: string | null
+          plano_acao_id?: string | null
+          potencial_risco?: string
+          reportante_anonimo?: boolean | null
+          reportante_id?: string | null
+          reportante_nome?: string | null
+          setor?: string | null
+          status?: string
+          tenant_id: string
+          tipo_desvio: string
+          turno?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao_imediata?: string | null
+          acao_imediata_prazo?: string | null
+          acao_imediata_responsavel?: string | null
+          categoria?: string | null
+          causa_provavel?: string | null
+          codigo?: string | null
+          convertido_em?: string | null
+          convertido_em_incidente_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data_desvio?: string
+          descricao?: string
+          foto_nome?: string | null
+          foto_url?: string | null
+          gro_risco_id?: string | null
+          hora_desvio?: string | null
+          id?: string
+          local_especifico?: string | null
+          plano_acao_id?: string | null
+          potencial_risco?: string
+          reportante_anonimo?: boolean | null
+          reportante_id?: string | null
+          reportante_nome?: string | null
+          setor?: string | null
+          status?: string
+          tenant_id?: string
+          tipo_desvio?: string
+          turno?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documento_audit_log: {
         Row: {
           acao: string
