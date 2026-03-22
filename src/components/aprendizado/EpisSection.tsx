@@ -125,7 +125,7 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
         </Card>
       )}
 
-      {epiVinculacoes.length === 0 && !showVincForm && (
+      {epiVinculacoes.length === 0 && !showVincForm && !semEpisCadastrados && (
         <div className="text-center py-8 text-muted-foreground text-sm">
           Nenhum EPI vinculado. Cadastre tipos de EPI e vincule-os à função.
         </div>
