@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, ExternalLink, Shield, HelpCircle, FileText } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Shield, HelpCircle, FileText, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,9 +11,10 @@ import { useAprendizado } from "@/hooks/useAprendizado";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const OBRIG_LABELS: Record<string, string> = { obrigatorio: "Obrigatório", recomendado: "Recomendado", condicional: "Condicional" };
-const OBRIG_COLORS: Record<string, string> = { obrigatorio: "bg-red-100 text-red-800", recomendado: "bg-yellow-100 text-yellow-800", condicional: "bg-blue-100 text-blue-800" };
+const OBRIG_COLORS: Record<string, string> = { obrigatorio: "bg-destructive/10 text-destructive", recomendado: "bg-warning/10 text-warning", condicional: "bg-primary/10 text-primary" };
 const CONTEUDO_LABELS: Record<string, string> = { manual: "Manual", pop: "POP", instrucao: "Instrução", video: "Vídeo", apresentacao: "Apresentação", documento: "Documento", link: "Link" };
 
 interface EpisSectionProps {
