@@ -2,13 +2,16 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LayoutDashboard, UserPlus, UserMinus, Umbrella, AlertOctagon,
-  FileBarChart, Stethoscope, FileQuestion, Settings, List
+  FileBarChart, Stethoscope, FileQuestion, List, BarChart2, Settings
 } from "lucide-react";
 import { useHubProcessos } from "@/hooks/useHubProcessos";
 import { HubPainel } from "@/components/hub-contabil/HubPainel";
 import { HubProcessoLista } from "@/components/hub-contabil/HubProcessoLista";
 import { HubProcessoDetalhe } from "@/components/hub-contabil/HubProcessoDetalhe";
 import { HubNovoProcessoModal } from "@/components/hub-contabil/HubNovoProcessoModal";
+import { HubRelatorios } from "@/components/hub-contabil/HubRelatorios";
+import { HubSlaConfig } from "@/components/hub-contabil/HubSlaConfig";
+import { HubFeriasIntegracao } from "@/components/hub-contabil/HubFeriasIntegracao";
 
 const NAV_TABS = [
   { value: "painel", label: "Painel", icon: LayoutDashboard, tipo: undefined },
@@ -20,6 +23,8 @@ const NAV_TABS = [
   { value: "atestado", label: "Atestados", icon: Stethoscope, tipo: "atestado_afastamento" },
   { value: "geral", label: "Geral", icon: FileQuestion, tipo: "solicitacao_geral" },
   { value: "todos", label: "Todos", icon: List, tipo: undefined },
+  { value: "relatorios", label: "Relatórios", icon: BarChart2, tipo: undefined },
+  { value: "configuracoes", label: "Config.", icon: Settings, tipo: undefined },
 ];
 
 const HubContabil = () => {
@@ -29,8 +34,6 @@ const HubContabil = () => {
   const [tipoNovo, setTipoNovo] = useState<string | undefined>(undefined);
 
   const { processos, contabilidades, loading, criarProcesso, fetchAll } = useHubProcessos();
-
-  const currentNav = NAV_TABS.find(t => t.value === activeTab);
 
   const handleNovoProcesso = (tipo?: string) => {
     setTipoNovo(tipo);
@@ -53,6 +56,9 @@ const HubContabil = () => {
 
   return (
     <div className="space-y-5">
+      {/* Integração automática de férias (componente invisível) */}
+      <HubFeriasIntegracao />
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Hub de Comunicação Contábil</h1>
@@ -67,17 +73,24 @@ const HubContabil = () => {
           <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
             {NAV_TABS.map(tab => {
               const Icon = tab.icon;
-              const count = tab.tipo
-                ? processos.filter(p => p.tipo === tab.tipo && !["concluido", "cancelado"].includes(p.status)).length
-                : tab.value === "todos"
-                ? processos.filter(p => !["concluido", "cancelado"].includes(p.status)).length
-                : processos.filter(p => !["concluido", "cancelado"].includes(p.status)).length;
+
+              // Calcula contador apenas para abas de tipo de processo
+              let count = 0;
+              if (tab.tipo) {
+                count = processos.filter(p => p.tipo === tab.tipo && !["concluido", "cancelado"].includes(p.status)).length;
+              } else if (tab.value === "todos") {
+                count = processos.filter(p => !["concluido", "cancelado"].includes(p.status)).length;
+              }
 
               return (
-                <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 text-xs whitespace-nowrap px-3 py-2">
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="gap-1.5 text-xs whitespace-nowrap px-3 py-2"
+                >
                   <Icon className="w-3.5 h-3.5" />
                   {tab.label}
-                  {tab.value !== "painel" && count > 0 && (
+                  {count > 0 && (
                     <span className="ml-1 bg-primary/20 text-primary text-xs rounded-full px-1.5 leading-5 font-medium">
                       {count}
                     </span>
@@ -119,6 +132,16 @@ const HubContabil = () => {
             onNovoProcesso={() => handleNovoProcesso()}
             onVerProcesso={id => setProcessoSelecionado(id)}
           />
+        </TabsContent>
+
+        {/* Relatórios */}
+        <TabsContent value="relatorios" className="mt-5">
+          <HubRelatorios processos={processos} loading={loading} />
+        </TabsContent>
+
+        {/* Configurações */}
+        <TabsContent value="configuracoes" className="mt-5">
+          <HubSlaConfig contabilidades={contabilidades} onRefresh={fetchAll} />
         </TabsContent>
       </Tabs>
 
