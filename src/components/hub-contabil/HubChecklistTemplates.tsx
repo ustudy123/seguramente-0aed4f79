@@ -56,7 +56,7 @@ export function HubChecklistTemplates() {
       .or(`tenant_id.is.null,tenant_id.eq.${profile.tenant_id}`)
       .order("tipo")
       .order("ordem");
-    setTemplates((data as Template[]) || []);
+    setTemplates((data as unknown as Template[]) || []);
     setLoading(false);
   };
 
