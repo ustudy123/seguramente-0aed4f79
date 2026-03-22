@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, ExternalLink, Shield, HelpCircle, FileText } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Shield, HelpCircle, FileText, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,9 +11,10 @@ import { useAprendizado } from "@/hooks/useAprendizado";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const OBRIG_LABELS: Record<string, string> = { obrigatorio: "Obrigatório", recomendado: "Recomendado", condicional: "Condicional" };
-const OBRIG_COLORS: Record<string, string> = { obrigatorio: "bg-red-100 text-red-800", recomendado: "bg-yellow-100 text-yellow-800", condicional: "bg-blue-100 text-blue-800" };
+const OBRIG_COLORS: Record<string, string> = { obrigatorio: "bg-destructive/10 text-destructive", recomendado: "bg-warning/10 text-warning", condicional: "bg-primary/10 text-primary" };
 const CONTEUDO_LABELS: Record<string, string> = { manual: "Manual", pop: "POP", instrucao: "Instrução", video: "Vídeo", apresentacao: "Apresentação", documento: "Documento", link: "Link" };
 
 interface EpisSectionProps {
@@ -22,6 +23,7 @@ interface EpisSectionProps {
 
 export function EpisSection({ cargoId }: EpisSectionProps) {
   const { tenantId } = useAuth();
+  const navigate = useNavigate();
   const {
     epiVinculacoes, criarEpiVinculacao, excluirEpiVinculacao,
     epiConteudos, criarEpiConteudo, excluirEpiConteudo,
@@ -29,7 +31,7 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
   } = useAprendizado(cargoId);
 
   // Load EPI types for selection
-  const { data: epiTipos = [] } = useQuery({
+  const { data: epiTipos = [], isLoading: loadingEpiTipos } = useQuery({
     queryKey: ["epi_tipos", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
@@ -54,15 +56,38 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
 
   const alreadyLinked = new Set(epiVinculacoes.map((v) => v.epi_tipo_id));
   const availableEpis = epiTipos.filter((e) => !alreadyLinked.has(e.id));
+  const semEpisCadastrados = !loadingEpiTipos && epiTipos.length === 0;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">EPIs Vinculados ({epiVinculacoes.length})</h3>
-        <Button size="sm" onClick={() => setShowVincForm(!showVincForm)} disabled={availableEpis.length === 0}>
+        <Button size="sm" onClick={() => setShowVincForm(!showVincForm)} disabled={availableEpis.length === 0 && !semEpisCadastrados}>
           <Plus className="w-4 h-4 mr-1" /> Vincular EPI
         </Button>
       </div>
+
+      {/* Aviso: nenhum tipo de EPI cadastrado */}
+      {semEpisCadastrados && !showVincForm && epiVinculacoes.length === 0 && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Nenhum tipo de EPI cadastrado</p>
+            <p className="text-xs text-muted-foreground">
+              Para vincular EPIs a esta função, primeiro cadastre os tipos de EPI no módulo{" "}
+              <strong>EPIs</strong> (menu lateral).
+            </p>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary"
+              onClick={() => navigate("/epis")}
+            >
+              Ir para o cadastro de EPIs →
+            </Button>
+          </div>
+        </div>
+      )}
 
       {showVincForm && (
         <Card>
@@ -100,7 +125,7 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
         </Card>
       )}
 
-      {epiVinculacoes.length === 0 && !showVincForm && (
+      {epiVinculacoes.length === 0 && !showVincForm && !semEpisCadastrados && (
         <div className="text-center py-8 text-muted-foreground text-sm">
           Nenhum EPI vinculado. Cadastre tipos de EPI e vincule-os à função.
         </div>
