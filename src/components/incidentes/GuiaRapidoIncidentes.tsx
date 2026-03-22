@@ -20,6 +20,9 @@ import {
   CheckCircle2,
   Circle,
   Lightbulb,
+  Zap,
+  DollarSign,
+  BrainCircuit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ManualIncidentes } from "@/components/incidentes/ManualIncidentes";
