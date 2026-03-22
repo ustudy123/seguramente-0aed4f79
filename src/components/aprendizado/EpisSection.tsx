@@ -23,6 +23,7 @@ interface EpisSectionProps {
 
 export function EpisSection({ cargoId }: EpisSectionProps) {
   const { tenantId } = useAuth();
+  const navigate = useNavigate();
   const {
     epiVinculacoes, criarEpiVinculacao, excluirEpiVinculacao,
     epiConteudos, criarEpiConteudo, excluirEpiConteudo,
@@ -30,7 +31,7 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
   } = useAprendizado(cargoId);
 
   // Load EPI types for selection
-  const { data: epiTipos = [] } = useQuery({
+  const { data: epiTipos = [], isLoading: loadingEpiTipos } = useQuery({
     queryKey: ["epi_tipos", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
@@ -55,15 +56,38 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
 
   const alreadyLinked = new Set(epiVinculacoes.map((v) => v.epi_tipo_id));
   const availableEpis = epiTipos.filter((e) => !alreadyLinked.has(e.id));
+  const semEpisCadastrados = !loadingEpiTipos && epiTipos.length === 0;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">EPIs Vinculados ({epiVinculacoes.length})</h3>
-        <Button size="sm" onClick={() => setShowVincForm(!showVincForm)} disabled={availableEpis.length === 0}>
+        <Button size="sm" onClick={() => setShowVincForm(!showVincForm)} disabled={availableEpis.length === 0 && !semEpisCadastrados}>
           <Plus className="w-4 h-4 mr-1" /> Vincular EPI
         </Button>
       </div>
+
+      {/* Aviso: nenhum tipo de EPI cadastrado */}
+      {semEpisCadastrados && !showVincForm && epiVinculacoes.length === 0 && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Nenhum tipo de EPI cadastrado</p>
+            <p className="text-xs text-muted-foreground">
+              Para vincular EPIs a esta função, primeiro cadastre os tipos de EPI no módulo{" "}
+              <strong>EPIs</strong> (menu lateral).
+            </p>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary"
+              onClick={() => navigate("/epis")}
+            >
+              Ir para o cadastro de EPIs →
+            </Button>
+          </div>
+        </div>
+      )}
 
       {showVincForm && (
         <Card>
