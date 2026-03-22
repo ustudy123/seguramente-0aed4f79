@@ -409,7 +409,8 @@ export function ManualIncidentes() {
         y += 28;
 
         passo.paragrafos.forEach((par) => {
-          const linhas = doc.splitTextToSize(par, pageW - 2 * margin);
+          const maxW = pageW - 2 * margin;
+          const linhas = doc.splitTextToSize(par, maxW);
           const alturaBloco = linhas.length * 5 + 6;
           checkY(alturaBloco);
 
@@ -417,7 +418,7 @@ export function ManualIncidentes() {
           doc.setFontSize(9.5);
           text(doc, CINZA);
           linhas.forEach((linha: string) => {
-            doc.text(linha, margin, y);
+            doc.text(linha, margin, y, { align: "left", maxWidth: maxW });
             y += 5;
           });
           y += 4;
