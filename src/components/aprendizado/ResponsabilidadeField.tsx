@@ -133,7 +133,7 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
       <div className="space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
             Responsabilidade da Função
           </Label>
           <Button
