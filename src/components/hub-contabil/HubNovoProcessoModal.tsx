@@ -281,7 +281,9 @@ export function HubNovoProcessoModal({ open, onOpenChange, onSubmit, contabilida
               <FormField control={form.control} name="competencia" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Competência</FormLabel>
-                  <FormControl><Input placeholder="YYYY-MM" {...field} /></FormControl>
+                  <FormControl>
+                    <CompetenciaInput value={field.value || ""} onChange={field.onChange} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
