@@ -12,6 +12,7 @@ import { HubProcessoDetalhe } from "@/components/hub-contabil/HubProcessoDetalhe
 import { HubNovoProcessoModal } from "@/components/hub-contabil/HubNovoProcessoModal";
 import { HubRelatorios } from "@/components/hub-contabil/HubRelatorios";
 import { HubSlaConfig } from "@/components/hub-contabil/HubSlaConfig";
+import { HubChecklistTemplates } from "@/components/hub-contabil/HubChecklistTemplates";
 import { HubFeriasIntegracao } from "@/components/hub-contabil/HubFeriasIntegracao";
 import { HubKanban } from "@/components/hub-contabil/HubKanban";
 import { HubColaboradorTimeline } from "@/components/hub-contabil/HubColaboradorTimeline";
