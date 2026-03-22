@@ -32,7 +32,7 @@ export function ProvisoesTab() {
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Competência</Label>
-          <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="w-40" />
+          <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-40" />
         </div>
       </div>
 

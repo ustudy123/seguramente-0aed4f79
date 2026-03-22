@@ -122,7 +122,7 @@ export function HubHistorico({ hub }: Props) {
         </div>
         <div>
           <span className="text-xs text-muted-foreground">Competência</span>
-          <Input type="month" value={filtroCompetencia} onChange={(e) => setFiltroCompetencia(e.target.value)} className="w-[160px]" />
+          <CompetenciaInput value={filtroCompetencia} onChange={setFiltroCompetencia} className="w-[160px]" />
         </div>
         {(filtroAcao !== "todos" || filtroCompetencia) && (
           <Button variant="ghost" size="sm" onClick={() => { setFiltroAcao("todos"); setFiltroCompetencia(""); }}>Limpar</Button>

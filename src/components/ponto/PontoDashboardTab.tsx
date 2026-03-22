@@ -85,7 +85,7 @@ export function PontoDashboardTab() {
             Visão geral da jornada — {format(today, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
-        <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="w-[180px]" />
+        <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
       </div>
 
       {/* Quick Stats */}

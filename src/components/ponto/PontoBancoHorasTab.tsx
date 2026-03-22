@@ -81,7 +81,7 @@ export function PontoBancoHorasTab() {
           <p className="text-sm text-muted-foreground">Saldos, movimentações e compensações</p>
         </div>
         <div className="flex items-center gap-2">
-          <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="w-[180px]" />
+          <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
           <Button onClick={() => setShowCriar(true)}>
             <Plus className="w-4 h-4 mr-2" /> Novo Banco
           </Button>

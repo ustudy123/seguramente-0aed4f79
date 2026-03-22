@@ -130,7 +130,7 @@ export function HubDocumentos({ hub }: Props) {
 
               <div>
                 <Label>Competência *</Label>
-                <Input type="month" value={form.competencia} onChange={(e) => setForm({ ...form, competencia: e.target.value })} />
+                <CompetenciaInput value={form.competencia} onChange={(v) => setForm({ ...form, competencia: v })} />
               </div>
               <div>
                 <Label>Direção</Label>

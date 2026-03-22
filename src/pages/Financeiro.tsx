@@ -606,7 +606,7 @@ const FolhaTab = () => {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Competência (mês/ano) *</Label>
-              <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} />
+              <CompetenciaInput value={competencia} onChange={setCompetencia} />
             </div>
           </div>
           <DialogFooter>
