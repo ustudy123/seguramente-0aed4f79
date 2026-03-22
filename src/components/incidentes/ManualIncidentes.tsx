@@ -277,8 +277,8 @@ export function ManualIncidentes() {
       doc.text("MANUAL DO USUARIO", margin, 62);
       doc.setFontSize(20);
       doc.text("Incidentes & Acidentes", margin, 76);
-      doc.setFontSize(14);
-      doc.text("CAT / e-Social / GRO / Piramide de Bird", margin, 88);
+      doc.setFontSize(13);
+      doc.text("Cartoes de Desvio / CAT / e-Social / FAP / GRO / Piramide de Bird", margin, 88);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
