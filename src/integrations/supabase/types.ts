@@ -8795,6 +8795,66 @@ export type Database = {
           },
         ]
       }
+      hub_catalogo_documentos: {
+        Row: {
+          ativo: boolean
+          codigo: string | null
+          created_at: string
+          id: string
+          nome: string
+          obrigatoriedade: string
+          ordem: number
+          prazo_retencao_anos: number | null
+          processo_tipo: Database["public"]["Enums"]["hub_processo_tipo"] | null
+          requer_assinatura: boolean
+          template_url: string | null
+          tenant_id: string
+          visibilidade_perfis: string[] | null
+        }
+        Insert: {
+          ativo?: boolean
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          obrigatoriedade?: string
+          ordem?: number
+          prazo_retencao_anos?: number | null
+          processo_tipo?:
+            | Database["public"]["Enums"]["hub_processo_tipo"]
+            | null
+          requer_assinatura?: boolean
+          template_url?: string | null
+          tenant_id: string
+          visibilidade_perfis?: string[] | null
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          obrigatoriedade?: string
+          ordem?: number
+          prazo_retencao_anos?: number | null
+          processo_tipo?:
+            | Database["public"]["Enums"]["hub_processo_tipo"]
+            | null
+          requer_assinatura?: boolean
+          template_url?: string | null
+          tenant_id?: string
+          visibilidade_perfis?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_catalogo_documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_certidoes: {
         Row: {
           arquivo_nome: string | null
@@ -8900,6 +8960,156 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "hub_competencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_config: {
+        Row: {
+          auto_gerar_admissao: boolean
+          auto_gerar_advertencia: boolean
+          auto_gerar_atestado: boolean
+          auto_gerar_demissao: boolean
+          auto_gerar_ferias: boolean
+          auto_gerar_folha: boolean
+          contabilidade_id: string | null
+          created_at: string
+          empresa_id: string | null
+          id: string
+          modulo_ativo: boolean
+          notificar_email: boolean
+          notificar_sistema: boolean
+          observacoes: string | null
+          sla_admissao: number | null
+          sla_advertencia: number | null
+          sla_demissao: number | null
+          sla_ferias: number | null
+          sla_folha: number | null
+          sla_geral: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_gerar_admissao?: boolean
+          auto_gerar_advertencia?: boolean
+          auto_gerar_atestado?: boolean
+          auto_gerar_demissao?: boolean
+          auto_gerar_ferias?: boolean
+          auto_gerar_folha?: boolean
+          contabilidade_id?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          modulo_ativo?: boolean
+          notificar_email?: boolean
+          notificar_sistema?: boolean
+          observacoes?: string | null
+          sla_admissao?: number | null
+          sla_advertencia?: number | null
+          sla_demissao?: number | null
+          sla_ferias?: number | null
+          sla_folha?: number | null
+          sla_geral?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          auto_gerar_admissao?: boolean
+          auto_gerar_advertencia?: boolean
+          auto_gerar_atestado?: boolean
+          auto_gerar_demissao?: boolean
+          auto_gerar_ferias?: boolean
+          auto_gerar_folha?: boolean
+          contabilidade_id?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          modulo_ativo?: boolean
+          notificar_email?: boolean
+          notificar_sistema?: boolean
+          observacoes?: string | null
+          sla_admissao?: number | null
+          sla_advertencia?: number | null
+          sla_demissao?: number | null
+          sla_ferias?: number | null
+          sla_folha?: number | null
+          sla_geral?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_config_contabilidade_id_fkey"
+            columns: ["contabilidade_id"]
+            isOneToOne: false
+            referencedRelation: "hub_contabilidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_contabilidades: {
+        Row: {
+          ativo: boolean
+          cnpj: string | null
+          created_at: string
+          email_notificacoes: string | null
+          email_principal: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          responsavel_nome: string | null
+          telefone: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          email_notificacoes?: string | null
+          email_principal?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          responsavel_nome?: string | null
+          telefone?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          email_notificacoes?: string | null
+          email_principal?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          responsavel_nome?: string | null
+          telefone?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_contabilidades_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -9169,6 +9379,538 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "hub_notificacao_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_processo_assinaturas: {
+        Row: {
+          assinado_em: string | null
+          created_at: string
+          documento_id: string | null
+          expira_em: string | null
+          hash_documento: string | null
+          id: string
+          imagem_assinatura_url: string | null
+          ip_assinatura: string | null
+          link_assinatura: string | null
+          motivo_recusa: string | null
+          ordem: number
+          processo_id: string
+          recusado_em: string | null
+          signatario_cpf: string | null
+          signatario_email: string | null
+          signatario_nome: string
+          signatario_papel: string
+          status: Database["public"]["Enums"]["hub_assinatura_status"]
+          tenant_id: string
+          token: string | null
+          updated_at: string
+        }
+        Insert: {
+          assinado_em?: string | null
+          created_at?: string
+          documento_id?: string | null
+          expira_em?: string | null
+          hash_documento?: string | null
+          id?: string
+          imagem_assinatura_url?: string | null
+          ip_assinatura?: string | null
+          link_assinatura?: string | null
+          motivo_recusa?: string | null
+          ordem?: number
+          processo_id: string
+          recusado_em?: string | null
+          signatario_cpf?: string | null
+          signatario_email?: string | null
+          signatario_nome: string
+          signatario_papel?: string
+          status?: Database["public"]["Enums"]["hub_assinatura_status"]
+          tenant_id: string
+          token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assinado_em?: string | null
+          created_at?: string
+          documento_id?: string | null
+          expira_em?: string | null
+          hash_documento?: string | null
+          id?: string
+          imagem_assinatura_url?: string | null
+          ip_assinatura?: string | null
+          link_assinatura?: string | null
+          motivo_recusa?: string | null
+          ordem?: number
+          processo_id?: string
+          recusado_em?: string | null
+          signatario_cpf?: string | null
+          signatario_email?: string | null
+          signatario_nome?: string
+          signatario_papel?: string
+          status?: Database["public"]["Enums"]["hub_assinatura_status"]
+          tenant_id?: string
+          token?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_processo_assinaturas_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processo_documentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_assinaturas_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_assinaturas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_processo_checklist: {
+        Row: {
+          concluido: boolean
+          concluido_em: string | null
+          concluido_por: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          item: string
+          justificativa_excecao: string | null
+          obrigatorio: boolean
+          ordem: number
+          preenchido_automaticamente: boolean
+          processo_id: string
+          tenant_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          item: string
+          justificativa_excecao?: string | null
+          obrigatorio?: boolean
+          ordem?: number
+          preenchido_automaticamente?: boolean
+          processo_id: string
+          tenant_id: string
+        }
+        Update: {
+          concluido?: boolean
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          item?: string
+          justificativa_excecao?: string | null
+          obrigatorio?: boolean
+          ordem?: number
+          preenchido_automaticamente?: boolean
+          processo_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_processo_checklist_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_checklist_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_processo_comentarios: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          autor_nome: string
+          autor_perfil: string
+          conteudo: string
+          created_at: string
+          eh_interno: boolean
+          eh_pendencia: boolean
+          id: string
+          pendencia_resolvida: boolean
+          pendencia_resolvida_em: string | null
+          processo_id: string
+          tenant_id: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          autor_nome: string
+          autor_perfil?: string
+          conteudo: string
+          created_at?: string
+          eh_interno?: boolean
+          eh_pendencia?: boolean
+          id?: string
+          pendencia_resolvida?: boolean
+          pendencia_resolvida_em?: string | null
+          processo_id: string
+          tenant_id: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          autor_nome?: string
+          autor_perfil?: string
+          conteudo?: string
+          created_at?: string
+          eh_interno?: boolean
+          eh_pendencia?: boolean
+          id?: string
+          pendencia_resolvida?: boolean
+          pendencia_resolvida_em?: string | null
+          processo_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_processo_comentarios_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_comentarios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_processo_documentos: {
+        Row: {
+          arquivo_mime: string | null
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          assinatura_status:
+            | Database["public"]["Enums"]["hub_assinatura_status"]
+            | null
+          created_at: string
+          descricao: string | null
+          eh_obrigatorio: boolean
+          eh_versao_final: boolean
+          enviado_por: string | null
+          id: string
+          nome: string
+          origem: Database["public"]["Enums"]["hub_doc_origem"]
+          processo_id: string
+          requer_assinatura: boolean
+          status: string
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["hub_doc_tipo"]
+          updated_at: string
+          versao: number
+          versao_anterior_id: string | null
+        }
+        Insert: {
+          arquivo_mime?: string | null
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          assinatura_status?:
+            | Database["public"]["Enums"]["hub_assinatura_status"]
+            | null
+          created_at?: string
+          descricao?: string | null
+          eh_obrigatorio?: boolean
+          eh_versao_final?: boolean
+          enviado_por?: string | null
+          id?: string
+          nome: string
+          origem?: Database["public"]["Enums"]["hub_doc_origem"]
+          processo_id: string
+          requer_assinatura?: boolean
+          status?: string
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["hub_doc_tipo"]
+          updated_at?: string
+          versao?: number
+          versao_anterior_id?: string | null
+        }
+        Update: {
+          arquivo_mime?: string | null
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          assinatura_status?:
+            | Database["public"]["Enums"]["hub_assinatura_status"]
+            | null
+          created_at?: string
+          descricao?: string | null
+          eh_obrigatorio?: boolean
+          eh_versao_final?: boolean
+          enviado_por?: string | null
+          id?: string
+          nome?: string
+          origem?: Database["public"]["Enums"]["hub_doc_origem"]
+          processo_id?: string
+          requer_assinatura?: boolean
+          status?: string
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["hub_doc_tipo"]
+          updated_at?: string
+          versao?: number
+          versao_anterior_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_processo_documentos_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_documentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_documentos_versao_anterior_id_fkey"
+            columns: ["versao_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processo_documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_processo_historico: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_extras: Json | null
+          descricao: string | null
+          id: string
+          ip: string | null
+          perfil: string | null
+          processo_id: string
+          status_anterior:
+            | Database["public"]["Enums"]["hub_processo_status"]
+            | null
+          status_novo: Database["public"]["Enums"]["hub_processo_status"] | null
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_extras?: Json | null
+          descricao?: string | null
+          id?: string
+          ip?: string | null
+          perfil?: string | null
+          processo_id: string
+          status_anterior?:
+            | Database["public"]["Enums"]["hub_processo_status"]
+            | null
+          status_novo?:
+            | Database["public"]["Enums"]["hub_processo_status"]
+            | null
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_extras?: Json | null
+          descricao?: string | null
+          id?: string
+          ip?: string | null
+          perfil?: string | null
+          processo_id?: string
+          status_anterior?:
+            | Database["public"]["Enums"]["hub_processo_status"]
+            | null
+          status_novo?:
+            | Database["public"]["Enums"]["hub_processo_status"]
+            | null
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_processo_historico_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "hub_processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processo_historico_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_processos: {
+        Row: {
+          cancelado_em: string | null
+          cancelado_por: string | null
+          codigo: string
+          colaborador_cpf: string | null
+          colaborador_id: string | null
+          colaborador_matricula: string | null
+          colaborador_nome: string | null
+          competencia: string | null
+          concluido_em: string | null
+          contabilidade_id: string | null
+          created_at: string
+          data_limite: string | null
+          data_referencia: string | null
+          descricao: string | null
+          empresa_id: string | null
+          enviado_em: string | null
+          enviado_por: string | null
+          gerado_automaticamente: boolean
+          id: string
+          motivo_cancelamento: string | null
+          observacoes_internas: string | null
+          origem_descricao: string | null
+          origem_modulo: string | null
+          origem_registro_id: string | null
+          prioridade: Database["public"]["Enums"]["hub_prioridade"]
+          processado_em: string | null
+          protocolo_externo: string | null
+          recebido_em: string | null
+          sla_horas: number | null
+          sla_status: string | null
+          sla_vencimento: string | null
+          status: Database["public"]["Enums"]["hub_processo_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["hub_processo_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          codigo?: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_matricula?: string | null
+          colaborador_nome?: string | null
+          competencia?: string | null
+          concluido_em?: string | null
+          contabilidade_id?: string | null
+          created_at?: string
+          data_limite?: string | null
+          data_referencia?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          enviado_em?: string | null
+          enviado_por?: string | null
+          gerado_automaticamente?: boolean
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes_internas?: string | null
+          origem_descricao?: string | null
+          origem_modulo?: string | null
+          origem_registro_id?: string | null
+          prioridade?: Database["public"]["Enums"]["hub_prioridade"]
+          processado_em?: string | null
+          protocolo_externo?: string | null
+          recebido_em?: string | null
+          sla_horas?: number | null
+          sla_status?: string | null
+          sla_vencimento?: string | null
+          status?: Database["public"]["Enums"]["hub_processo_status"]
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["hub_processo_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          codigo?: string
+          colaborador_cpf?: string | null
+          colaborador_id?: string | null
+          colaborador_matricula?: string | null
+          colaborador_nome?: string | null
+          competencia?: string | null
+          concluido_em?: string | null
+          contabilidade_id?: string | null
+          created_at?: string
+          data_limite?: string | null
+          data_referencia?: string | null
+          descricao?: string | null
+          empresa_id?: string | null
+          enviado_em?: string | null
+          enviado_por?: string | null
+          gerado_automaticamente?: boolean
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes_internas?: string | null
+          origem_descricao?: string | null
+          origem_modulo?: string | null
+          origem_registro_id?: string | null
+          prioridade?: Database["public"]["Enums"]["hub_prioridade"]
+          processado_em?: string | null
+          protocolo_externo?: string | null
+          recebido_em?: string | null
+          sla_horas?: number | null
+          sla_status?: string | null
+          sla_vencimento?: string | null
+          status?: Database["public"]["Enums"]["hub_processo_status"]
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["hub_processo_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_processos_contabilidade_id_fkey"
+            columns: ["contabilidade_id"]
+            isOneToOne: false
+            referencedRelation: "hub_contabilidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hub_processos_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -17778,6 +18520,69 @@ export type Database = {
         | "oncologico"
         | "endocrino"
         | "outro"
+      hub_assinatura_status:
+        | "pendente"
+        | "enviado"
+        | "assinado"
+        | "recusado"
+        | "expirado"
+      hub_doc_origem:
+        | "sistema_automatico"
+        | "upload_rh"
+        | "devolutiva_contabilidade"
+        | "assinatura_concluida"
+      hub_doc_tipo:
+        | "ficha_registro"
+        | "contrato"
+        | "aditivo"
+        | "aviso_ferias"
+        | "recibo_ferias"
+        | "advertencia"
+        | "aviso_previo"
+        | "trct"
+        | "rescisao"
+        | "espelho_ponto"
+        | "relatorio_folha"
+        | "holerite"
+        | "guia"
+        | "comprovante"
+        | "aso"
+        | "documento_pessoal"
+        | "certidao"
+        | "procuracao"
+        | "declaracao"
+        | "laudo"
+        | "outros"
+      hub_prioridade: "baixa" | "normal" | "alta" | "urgente"
+      hub_processo_status:
+        | "rascunho"
+        | "aguardando_documentos"
+        | "pronto_para_envio"
+        | "enviado_contabilidade"
+        | "recebido_contabilidade"
+        | "em_analise"
+        | "pendente_complementacao"
+        | "processado"
+        | "documentos_devolvidos"
+        | "aguardando_assinatura"
+        | "assinado_parcialmente"
+        | "concluido"
+        | "cancelado"
+        | "erro_integracao"
+      hub_processo_tipo:
+        | "admissao"
+        | "demissao"
+        | "ferias"
+        | "advertencia"
+        | "atestado_afastamento"
+        | "ponto_folha"
+        | "eventos_variaveis"
+        | "solicitacao_geral"
+        | "alteracao_contratual"
+        | "mudanca_salarial"
+        | "cat"
+        | "ppp_ltcat"
+        | "pro_labore"
       marketplace_contratacao_status:
         | "solicitada"
         | "aceita"
@@ -18252,6 +19057,74 @@ export const Constants = {
         "oncologico",
         "endocrino",
         "outro",
+      ],
+      hub_assinatura_status: [
+        "pendente",
+        "enviado",
+        "assinado",
+        "recusado",
+        "expirado",
+      ],
+      hub_doc_origem: [
+        "sistema_automatico",
+        "upload_rh",
+        "devolutiva_contabilidade",
+        "assinatura_concluida",
+      ],
+      hub_doc_tipo: [
+        "ficha_registro",
+        "contrato",
+        "aditivo",
+        "aviso_ferias",
+        "recibo_ferias",
+        "advertencia",
+        "aviso_previo",
+        "trct",
+        "rescisao",
+        "espelho_ponto",
+        "relatorio_folha",
+        "holerite",
+        "guia",
+        "comprovante",
+        "aso",
+        "documento_pessoal",
+        "certidao",
+        "procuracao",
+        "declaracao",
+        "laudo",
+        "outros",
+      ],
+      hub_prioridade: ["baixa", "normal", "alta", "urgente"],
+      hub_processo_status: [
+        "rascunho",
+        "aguardando_documentos",
+        "pronto_para_envio",
+        "enviado_contabilidade",
+        "recebido_contabilidade",
+        "em_analise",
+        "pendente_complementacao",
+        "processado",
+        "documentos_devolvidos",
+        "aguardando_assinatura",
+        "assinado_parcialmente",
+        "concluido",
+        "cancelado",
+        "erro_integracao",
+      ],
+      hub_processo_tipo: [
+        "admissao",
+        "demissao",
+        "ferias",
+        "advertencia",
+        "atestado_afastamento",
+        "ponto_folha",
+        "eventos_variaveis",
+        "solicitacao_geral",
+        "alteracao_contratual",
+        "mudanca_salarial",
+        "cat",
+        "ppp_ltcat",
+        "pro_labore",
       ],
       marketplace_contratacao_status: [
         "solicitada",
