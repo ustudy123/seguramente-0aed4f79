@@ -493,6 +493,47 @@ export function useAprendizado(cargoId?: string) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // ===== TREINAMENTOS GERAIS DA FUNÇÃO =====
+  const { data: treinamentos = [], isLoading: loadingTreinamentos } = useQuery({
+    queryKey: ["funcao_treinamentos", cargoId],
+    queryFn: async () => {
+      if (!tenantId || !cargoId) return [];
+      const { data, error } = await supabase
+        .from("funcao_treinamentos" as never)
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .eq("cargo_id", cargoId)
+        .order("created_at") as { data: any[] | null; error: Error | null };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenantId && !!cargoId,
+  });
+
+  const criarTreinamentoMut = useMutation({
+    mutationFn: async (input: { titulo: string; tipo: string; url: string; descricao?: string; obrigatorio?: boolean; carga_horaria_min?: number }) => {
+      if (!tenantId || !cargoId) throw new Error("Sem contexto");
+      const { error } = await supabase
+        .from("funcao_treinamentos" as never)
+        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["funcao_treinamentos", cargoId] });
+      toast.success("Treinamento adicionado!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const excluirTreinamentoMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("funcao_treinamentos" as never).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_treinamentos", cargoId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return {
     atividades,
     loadingAtividades,
@@ -536,6 +577,11 @@ export function useAprendizado(cargoId?: string) {
     excluirEpiQuestionario: excluirEpiQuestionarioMut.mutateAsync,
 
     evidencias,
+
+    treinamentos,
+    loadingTreinamentos,
+    criarTreinamento: criarTreinamentoMut.mutateAsync,
+    excluirTreinamento: excluirTreinamentoMut.mutateAsync,
 
     config,
     salvarConfig: salvarConfigMut.mutateAsync,
