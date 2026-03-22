@@ -482,7 +482,7 @@ export function ManualIncidentes() {
         const cw1 = 52;
         const etapaLinhas = doc.splitTextToSize(etapa, cw1);
         etapaLinhas.forEach((l: string, li: number) => {
-          doc.text(l, margin + 11, rowY + 4 + li * 4.5);
+          doc.text(l, margin + 11, rowY + 4 + li * 4.5, { align: "left", maxWidth: cw1 });
         });
 
         text(doc, CINZA);
@@ -491,7 +491,7 @@ export function ManualIncidentes() {
         const cw2 = pageW - 2 * margin - 66;
         const sistLinhas = doc.splitTextToSize(sistema, cw2);
         sistLinhas.forEach((l: string, li: number) => {
-          doc.text(l, margin + 66, rowY + 4 + li * 4.5);
+          doc.text(l, margin + 66, rowY + 4 + li * 4.5, { align: "left", maxWidth: cw2 });
         });
 
         const rowH = Math.max(etapaLinhas.length, sistLinhas.length) * 4.5 + 4;
