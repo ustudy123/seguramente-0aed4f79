@@ -371,13 +371,14 @@ export function ManualIncidentes() {
       doc.text("Para quem e este manual?", margin + 4, y + 7);
       doc.setFont("helvetica", "normal");
       text(doc, CINZA);
+      const introMaxW = pageW - 2 * margin - 8;
       const introLinhas = doc.splitTextToSize(
         "Este manual foi escrito para gestores de RH, responsaveis por Saude e Seguranca do Trabalho (SST), membros da CIPA, tecnicos de seguranca e qualquer lider que precise gerenciar eventos de seguranca de forma estruturada e em conformidade legal. O sistema orienta cada etapa, alertas automaticos para prazos legais e integra os dados com ergonomia, saude e planos de acao.",
-        pageW - 2 * margin - 8
+        introMaxW
       );
       doc.setFontSize(8.5);
       introLinhas.forEach((line: string, i: number) => {
-        doc.text(line, margin + 4, y + 16 + i * 5);
+        doc.text(line, margin + 4, y + 16 + i * 5, { align: "left", maxWidth: introMaxW });
       });
 
       rodape();
@@ -390,21 +391,22 @@ export function ManualIncidentes() {
         fill(doc, passo.cor);
         doc.roundedRect(margin, y, pageW - 2 * margin, 22, 2, 2, "F");
 
+        const tituloMaxW = pageW - 2 * margin - 8;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13);
         text(doc, WHITE);
         const tituloLinhas = doc.splitTextToSize(
           `${passo.num}. ${passo.titulo}`,
-          pageW - 2 * margin - 8
+          tituloMaxW
         );
         tituloLinhas.forEach((linha: string, i: number) => {
-          doc.text(linha, margin + 4, y + 8 + i * 6);
+          doc.text(linha, margin + 4, y + 8 + i * 6, { align: "left", maxWidth: tituloMaxW });
         });
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(254, 226, 226);
-        doc.text(passo.subtitulo, margin + 4, y + 18);
+        doc.text(passo.subtitulo, margin + 4, y + 18, { align: "left" });
 
         y += 28;
 
@@ -425,7 +427,8 @@ export function ManualIncidentes() {
         });
 
         // Caixa de dica
-        const dicaLinhas = doc.splitTextToSize(passo.dica, pageW - 2 * margin - 10);
+        const dicaMaxW = pageW - 2 * margin - 10;
+        const dicaLinhas = doc.splitTextToSize(passo.dica, dicaMaxW);
         const dicaAltura = dicaLinhas.length * 4.8 + 8;
         checkY(dicaAltura + 6);
 
@@ -438,11 +441,11 @@ export function ManualIncidentes() {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
         doc.setTextColor(146, 64, 14);
-        doc.text("Atencao / Dica:", margin + 4, y + 5);
+        doc.text("Atencao / Dica:", margin + 4, y + 5, { align: "left" });
         doc.setFont("helvetica", "normal");
         doc.setTextColor(120, 53, 15);
         dicaLinhas.forEach((linha: string, i: number) => {
-          doc.text(linha, margin + 4, y + 10 + i * 4.8);
+          doc.text(linha, margin + 4, y + 10 + i * 4.8, { align: "left", maxWidth: dicaMaxW });
         });
         y += dicaAltura + 8;
 
