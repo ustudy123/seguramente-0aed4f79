@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoFechamento } from "@/hooks/usePontoFechamento";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
