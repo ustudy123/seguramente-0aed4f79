@@ -148,9 +148,9 @@ export function HubChecklistTemplates() {
         </Button>
       </div>
 
-      <div className="rounded-lg border bg-amber-50 border-amber-200 p-3 flex gap-2 text-xs text-amber-800">
-        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-        <span>
+      <div className="rounded-lg border bg-warning/10 border-warning/30 p-3 flex gap-2 text-xs text-warning-foreground">
+        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
+        <span className="text-muted-foreground">
           <strong>Itens globais</strong> (<Globe className="w-3 h-3 inline" />) são padrões do sistema e não podem ser editados.
           Para personalizar, adicione novos itens com o seu tenant — eles têm <strong>prioridade</strong> sobre os globais de mesmo nome.
         </span>
