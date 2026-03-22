@@ -84,6 +84,7 @@ const menuSections: MenuSection[] = [
       { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
       { title: "Psicossocial NR-01", icon: Brain, path: "/psicossocial" },
       { title: "EPIs", icon: Shield, path: "/epis" },
+      { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" },
     ],
   },
   {
