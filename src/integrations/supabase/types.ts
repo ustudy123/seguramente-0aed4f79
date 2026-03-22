@@ -8371,6 +8371,45 @@ export type Database = {
           },
         ]
       }
+      funcao_treinamentos: {
+        Row: {
+          carga_horaria_min: number | null
+          cargo_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          obrigatorio: boolean
+          tenant_id: string
+          tipo: string
+          titulo: string
+          url: string
+        }
+        Insert: {
+          carga_horaria_min?: number | null
+          cargo_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          obrigatorio?: boolean
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          url: string
+        }
+        Update: {
+          carga_horaria_min?: number | null
+          cargo_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          obrigatorio?: boolean
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          url?: string
+        }
+        Relationships: []
+      }
       gro_exportacoes_log: {
         Row: {
           campanha_id: string
