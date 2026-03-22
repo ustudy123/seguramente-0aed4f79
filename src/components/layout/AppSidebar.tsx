@@ -134,7 +134,6 @@ const menuSections: MenuSection[] = [
         ],
       },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
-      { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" },
     ],
   },
   {
