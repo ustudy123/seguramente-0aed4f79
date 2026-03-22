@@ -1,11 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Brain, Shield } from "lucide-react";
+import { ClipboardList, Brain, Shield, BookOpen } from "lucide-react";
 import { AtividadesSection } from "./AtividadesSection";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { EpisSection } from "./EpisSection";
+import { TreinamentosSection } from "./TreinamentosSection";
 import { ResponsabilidadeField } from "./ResponsabilidadeField";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface Cargo {
   id: string;
