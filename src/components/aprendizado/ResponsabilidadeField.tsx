@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Mic, Square, Loader2, Save, CheckCircle2, Pencil, X } from "lucide-react";
+import { Mic, Square, Loader2, Save, CheckCircle2, Pencil, X, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -8,23 +8,31 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ResponsabilidadeFieldProps {
   cargoId: string;
+  cargoNome?: string;
+  cargoDescricao?: string | null;
   initialValue?: string | null;
   onSaved?: (value: string) => void;
 }
 
-export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: ResponsabilidadeFieldProps) {
+export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, initialValue, onSaved }: ResponsabilidadeFieldProps) {
   const [value, setValue] = useState(initialValue || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(!initialValue);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setValue(initialValue || "");
-    // If there's a saved value, show in view mode; otherwise open edit mode
     setIsEditing(!initialValue);
   }, [initialValue]);
 
@@ -41,7 +49,6 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
       if (error) throw error;
 
       await queryClient.invalidateQueries({ queryKey: ["cargos"] });
-
       onSaved?.(value);
       toast.success("Responsabilidade salva!");
       setIsEditing(false);
@@ -88,13 +95,45 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
     }
   }, [recorder]);
 
+  const handleAiAction = useCallback(async (acao: "gerar" | "melhorar") => {
+    if (acao === "melhorar" && !value.trim()) {
+      toast.error("Digite algum texto primeiro para melhorar.");
+      return;
+    }
+
+    setIsAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-responsabilidade-funcao", {
+        body: {
+          cargoNome: cargoNome || "Função",
+          descricao: cargoDescricao || "",
+          textoAtual: value,
+          acao,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const textoGerado = data.texto as string;
+      if (textoGerado) {
+        setValue(textoGerado);
+        toast.success(acao === "gerar" ? "Texto gerado pela IA!" : "Texto melhorado pela IA!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao processar com IA");
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, [value, cargoNome, cargoDescricao]);
+
   // ── VIEW MODE ──────────────────────────────────────────────────────────────
   if (!isEditing) {
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
             Responsabilidade da Função
           </Label>
           <Button
@@ -121,7 +160,51 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
         <Label className="text-sm font-medium text-foreground">
           Responsabilidade da Função
         </Label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+
+          {/* IA Button */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-8 text-xs border-primary/40 text-primary hover:bg-primary/5"
+                disabled={isAiLoading || isTranscribing || recorder.isRecording}
+              >
+                {isAiLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                {isAiLoading ? "Processando..." : "IA"}
+                {!isAiLoading && <ChevronDown className="w-3 h-3 opacity-60" />}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem
+                onClick={() => handleAiAction("gerar")}
+                className="gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-primary" />
+                <div>
+                  <div className="text-sm font-medium">Gerar com IA</div>
+                  <div className="text-xs text-muted-foreground">Cria texto do zero</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleAiAction("melhorar")}
+              className="gap-2 cursor-pointer"
+              disabled={!value.trim()}
+            >
+              <Sparkles className="w-4 h-4 text-warning" />
+                <div>
+                  <div className="text-sm font-medium">Melhorar com IA</div>
+                  <div className="text-xs text-muted-foreground">Aprimora o texto atual</div>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Audio record button */}
           {recorder.isRecording ? (
             <Button
@@ -129,7 +212,7 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
               size="sm"
               className="gap-1.5 h-8 text-xs"
               onClick={handleStopAndTranscribe}
-              disabled={isTranscribing}
+              disabled={isTranscribing || isAiLoading}
             >
               {isTranscribing ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -144,14 +227,14 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
               size="sm"
               className="gap-1.5 h-8 text-xs"
               onClick={recorder.startRecording}
-              disabled={isTranscribing}
+              disabled={isTranscribing || isAiLoading}
             >
               <Mic className="w-3.5 h-3.5 text-primary" />
-              Gravar por Áudio
+              Gravar Áudio
             </Button>
           )}
 
-          {/* Cancel button — only if there's already a saved value */}
+          {/* Cancel button */}
           {initialValue && (
             <Button
               variant="ghost"
@@ -190,14 +273,23 @@ export function ResponsabilidadeField({ cargoId, initialValue, onSaved }: Respon
         </div>
       )}
 
+      {/* AI loading indicator */}
+      {isAiLoading && (
+        <div className="flex items-center gap-2 text-xs text-primary animate-pulse px-1">
+          <Sparkles className="w-3.5 h-3.5" />
+          IA processando o texto...
+        </div>
+      )}
+
       <Textarea
-        placeholder="Descreva a responsabilidade desta função: objetivos, impacto no negócio, área de atuação... Ou grave um áudio para preencher automaticamente."
+        placeholder="Descreva a responsabilidade desta função: objetivos, impacto no negócio, área de atuação... Ou use IA para gerar automaticamente, ou grave um áudio."
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        rows={4}
+        rows={5}
         className={cn(
           "resize-none text-sm transition-colors",
-          recorder.isRecording && "border-destructive/60"
+          recorder.isRecording && "border-destructive/60",
+          isAiLoading && "border-primary/40 bg-primary/5"
         )}
       />
 
