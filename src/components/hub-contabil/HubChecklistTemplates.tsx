@@ -194,11 +194,11 @@ export function HubChecklistTemplates() {
                     <div className="divide-y">
                       {grupo.items.map(item => (
                         <div key={item.id} className={`flex items-start gap-3 p-3 ${!item.ativo ? "opacity-50" : ""}`}>
-                          <div className="pt-0.5">
+                          <div className="pt-0.5" title={item.tenant_id ? "Template personalizado" : "Template global do sistema"}>
                             {item.tenant_id ? (
-                              <Building2 className="w-3.5 h-3.5 text-primary" title="Template personalizado do seu tenant" />
+                              <Building2 className="w-3.5 h-3.5 text-primary" />
                             ) : (
-                              <Globe className="w-3.5 h-3.5 text-muted-foreground" title="Template global do sistema" />
+                              <Globe className="w-3.5 h-3.5 text-muted-foreground" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
