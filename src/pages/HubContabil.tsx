@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LayoutDashboard, UserPlus, UserMinus, Umbrella, AlertOctagon,
-  FileBarChart, Stethoscope, FileQuestion, List, BarChart2, Settings
+  FileBarChart, Stethoscope, FileQuestion, List, BarChart2, Settings,
+  Kanban, Users, Clock
 } from "lucide-react";
 import { useHubProcessos } from "@/hooks/useHubProcessos";
 import { HubPainel } from "@/components/hub-contabil/HubPainel";
@@ -12,6 +13,8 @@ import { HubNovoProcessoModal } from "@/components/hub-contabil/HubNovoProcessoM
 import { HubRelatorios } from "@/components/hub-contabil/HubRelatorios";
 import { HubSlaConfig } from "@/components/hub-contabil/HubSlaConfig";
 import { HubFeriasIntegracao } from "@/components/hub-contabil/HubFeriasIntegracao";
+import { HubKanban } from "@/components/hub-contabil/HubKanban";
+import { HubColaboradorTimeline } from "@/components/hub-contabil/HubColaboradorTimeline";
 
 const NAV_TABS = [
   { value: "painel", label: "Painel", icon: LayoutDashboard, tipo: undefined },
@@ -23,6 +26,8 @@ const NAV_TABS = [
   { value: "atestado", label: "Atestados", icon: Stethoscope, tipo: "atestado_afastamento" },
   { value: "geral", label: "Geral", icon: FileQuestion, tipo: "solicitacao_geral" },
   { value: "todos", label: "Todos", icon: List, tipo: undefined },
+  { value: "kanban", label: "Kanban", icon: Kanban, tipo: undefined },
+  { value: "colaboradores", label: "Colaboradores", icon: Users, tipo: undefined },
   { value: "relatorios", label: "Relatórios", icon: BarChart2, tipo: undefined },
   { value: "configuracoes", label: "Config.", icon: Settings, tipo: undefined },
 ];
@@ -56,7 +61,7 @@ const HubContabil = () => {
 
   return (
     <div className="space-y-5">
-      {/* Integração automática de férias (componente invisível) */}
+      {/* Integração automática de férias */}
       <HubFeriasIntegracao />
 
       {/* Header */}
@@ -73,8 +78,6 @@ const HubContabil = () => {
           <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
             {NAV_TABS.map(tab => {
               const Icon = tab.icon;
-
-              // Calcula contador apenas para abas de tipo de processo
               let count = 0;
               if (tab.tipo) {
                 count = processos.filter(p => p.tipo === tab.tipo && !["concluido", "cancelado"].includes(p.status)).length;
@@ -130,6 +133,24 @@ const HubContabil = () => {
             processos={processos}
             loading={loading}
             onNovoProcesso={() => handleNovoProcesso()}
+            onVerProcesso={id => setProcessoSelecionado(id)}
+          />
+        </TabsContent>
+
+        {/* Kanban */}
+        <TabsContent value="kanban" className="mt-5">
+          <HubKanban
+            processos={processos}
+            onNovoProcesso={() => handleNovoProcesso()}
+            onVerProcesso={id => setProcessoSelecionado(id)}
+            onRefresh={fetchAll}
+          />
+        </TabsContent>
+
+        {/* Linha do tempo por colaborador */}
+        <TabsContent value="colaboradores" className="mt-5">
+          <HubColaboradorTimeline
+            processos={processos}
             onVerProcesso={id => setProcessoSelecionado(id)}
           />
         </TabsContent>
