@@ -67,6 +67,17 @@ export function HubPainel({ processos, loading, onNovoProcesso, onVerProcesso }:
   // Últimos processos ativos
   const recentes = ativos.slice(0, 8);
 
+  // SLA a vencer em 48h
+  const slaAVencer = ativos.filter(p => {
+    if (!p.sla_vencimento) return false;
+    const diff = (new Date(p.sla_vencimento).getTime() - new Date().getTime()) / 3600000;
+    return diff >= 0 && diff <= 48;
+  });
+
+  // Concluídos
+  const totalConcluidos = processos.filter(p => p.status === "concluido").length;
+  const totalCancelados = processos.filter(p => p.status === "cancelado").length;
+
   // Agrupamento por tipo
   const porTipo = processos.reduce<Record<string, number>>((acc, p) => {
     acc[p.tipo] = (acc[p.tipo] || 0) + 1;
