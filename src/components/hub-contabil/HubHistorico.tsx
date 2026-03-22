@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { History, Download, FileSpreadsheet } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -122,7 +123,7 @@ export function HubHistorico({ hub }: Props) {
         </div>
         <div>
           <span className="text-xs text-muted-foreground">Competência</span>
-          <Input type="month" value={filtroCompetencia} onChange={(e) => setFiltroCompetencia(e.target.value)} className="w-[160px]" />
+          <CompetenciaInput value={filtroCompetencia} onChange={setFiltroCompetencia} className="w-[160px]" />
         </div>
         {(filtroAcao !== "todos" || filtroCompetencia) && (
           <Button variant="ghost" size="sm" onClick={() => { setFiltroAcao("todos"); setFiltroCompetencia(""); }}>Limpar</Button>

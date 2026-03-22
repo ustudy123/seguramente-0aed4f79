@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoFechamento } from "@/hooks/usePontoFechamento";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -85,7 +86,7 @@ export function PontoDashboardTab() {
             Visão geral da jornada — {format(today, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
-        <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="w-[180px]" />
+        <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
       </div>
 
       {/* Quick Stats */}

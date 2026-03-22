@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,7 +33,7 @@ export function ProvisoesTab() {
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Competência</Label>
-          <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="w-40" />
+          <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-40" />
         </div>
       </div>
 

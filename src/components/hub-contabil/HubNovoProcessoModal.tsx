@@ -8,6 +8,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -280,7 +281,9 @@ export function HubNovoProcessoModal({ open, onOpenChange, onSubmit, contabilida
               <FormField control={form.control} name="competencia" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Competência</FormLabel>
-                  <FormControl><Input placeholder="YYYY-MM" {...field} /></FormControl>
+                  <FormControl>
+                    <CompetenciaInput value={field.value || ""} onChange={field.onChange} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

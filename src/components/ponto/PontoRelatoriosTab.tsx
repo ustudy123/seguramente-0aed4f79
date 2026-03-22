@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePonto } from "@/hooks/usePonto";
@@ -205,7 +206,7 @@ export function PontoRelatoriosTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>Competência</Label>
-          <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} />
+          <CompetenciaInput value={competencia} onChange={setCompetencia} />
         </div>
         <div className="space-y-2">
           <Label>Tipo de Relatório</Label>

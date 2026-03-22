@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -606,7 +607,7 @@ const FolhaTab = () => {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Competência (mês/ano) *</Label>
-              <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} />
+              <CompetenciaInput value={competencia} onChange={setCompetencia} />
             </div>
           </div>
           <DialogFooter>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -81,7 +82,7 @@ export function PontoBancoHorasTab() {
           <p className="text-sm text-muted-foreground">Saldos, movimentações e compensações</p>
         </div>
         <div className="flex items-center gap-2">
-          <Input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className="w-[180px]" />
+          <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
           <Button onClick={() => setShowCriar(true)}>
             <Plus className="w-4 h-4 mr-2" /> Novo Banco
           </Button>

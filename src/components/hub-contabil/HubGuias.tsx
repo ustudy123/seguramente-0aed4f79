@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { CompetenciaInput } from "@/components/ui/competencia-input";
 import { Label } from "@/components/ui/label";
 import { Plus, Receipt, CheckCircle2, XCircle, Upload, Download, Loader2 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
@@ -104,7 +105,7 @@ export function HubGuias({ hub }: Props) {
               </div>
               <div>
                 <Label>Competência *</Label>
-                <Input type="month" value={form.competencia} onChange={(e) => setForm({ ...form, competencia: e.target.value })} />
+                <CompetenciaInput value={form.competencia} onChange={(v) => setForm({ ...form, competencia: v })} />
               </div>
               <div>
                 <Label>Valor (R$)</Label>
