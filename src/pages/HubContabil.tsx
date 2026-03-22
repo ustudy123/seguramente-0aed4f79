@@ -162,8 +162,9 @@ const HubContabil = () => {
         </TabsContent>
 
         {/* Configurações */}
-        <TabsContent value="configuracoes" className="mt-5">
+        <TabsContent value="configuracoes" className="mt-5 space-y-6">
           <HubSlaConfig contabilidades={contabilidades} onRefresh={fetchAll} />
+          <HubChecklistTemplates />
         </TabsContent>
       </Tabs>
 
