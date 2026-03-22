@@ -1,11 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Brain, Shield } from "lucide-react";
+import { ClipboardList, Brain, Shield, BookOpen } from "lucide-react";
 import { AtividadesSection } from "./AtividadesSection";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { EpisSection } from "./EpisSection";
+import { TreinamentosSection } from "./TreinamentosSection";
 import { ResponsabilidadeField } from "./ResponsabilidadeField";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface Cargo {
   id: string;
@@ -62,7 +64,7 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <TabsTrigger value="competencias" className="gap-1">
             <Brain className="w-4 h-4" /> Competências
           </TabsTrigger>
-          <TabsTrigger value="epis" className="gap-1">
+        <TabsTrigger value="epis" className="gap-1">
             <Shield className="w-4 h-4" /> EPIs & Treinamento
           </TabsTrigger>
         </TabsList>
@@ -74,7 +76,11 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <CompetenciasSection cargoId={cargo.id} />
         </TabsContent>
         <TabsContent value="epis" className="mt-4">
-          <EpisSection cargoId={cargo.id} />
+          <div className="space-y-6">
+            <TreinamentosSection cargoId={cargo.id} />
+            <Separator />
+            <EpisSection cargoId={cargo.id} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
