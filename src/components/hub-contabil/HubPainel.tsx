@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   FileText, AlertTriangle, CheckCircle2, Clock, Send,
-  FileCheck, PenLine, TrendingUp, Users, Plus, ArrowRight
+  FileCheck, PenLine, TrendingUp, Users, Plus, ArrowRight,
+  Zap, XCircle
 } from "lucide-react";
 import { HubProcesso } from "@/hooks/useHubProcessos";
 import { differenceInHours, parseISO } from "date-fns";
