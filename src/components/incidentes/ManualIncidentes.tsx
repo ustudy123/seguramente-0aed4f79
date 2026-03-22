@@ -520,7 +520,8 @@ export function ManualIncidentes() {
       y = 36;
 
       GLOSSARIO.forEach(([termo, def], i) => {
-        const defLinhas = doc.splitTextToSize(def, pageW - 2 * margin - 38);
+        const defMaxW = pageW - 2 * margin - 38;
+        const defLinhas = doc.splitTextToSize(def, defMaxW);
         const rowH = defLinhas.length * 4.5 + 7;
         checkY(rowH);
 
@@ -532,13 +533,13 @@ export function ManualIncidentes() {
         text(doc, VERMELHO);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8.5);
-        doc.text(termo, margin + 2, y + 4);
+        doc.text(termo, margin + 2, y + 4, { align: "left" });
 
         text(doc, CINZA);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         defLinhas.forEach((l: string, li: number) => {
-          doc.text(l, margin + 38, y + 4 + li * 4.5);
+          doc.text(l, margin + 38, y + 4 + li * 4.5, { align: "left", maxWidth: defMaxW });
         });
 
         y += rowH;
