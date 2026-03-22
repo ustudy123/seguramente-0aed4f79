@@ -8911,6 +8911,50 @@ export type Database = {
           },
         ]
       }
+      hub_checklist_templates: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          item: string
+          obrigatorio: boolean
+          ordem: number
+          tenant_id: string | null
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          item: string
+          obrigatorio?: boolean
+          ordem?: number
+          tenant_id?: string | null
+          tipo: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          item?: string
+          obrigatorio?: boolean
+          ordem?: number
+          tenant_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_checklist_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hub_competencias: {
         Row: {
           aprovado_por: string | null
