@@ -133,57 +133,101 @@ const PASSOS = [
     subtitulo: "Como encontrar e filtrar eventos rapidamente",
     cor: AZUL,
     paragrafos: [
-      'A lista de eventos (aba "Ocorrencias") inclui um sistema de filtros avancados: (1) Busca textual — pesquisa por codigo do evento, nome do colaborador ou setor; (2) Tipo — todos, apenas incidentes ou apenas acidentes; (3) Status — todos, em aberto, em analise, acoes em andamento ou concluido; (4) Unidade — filtra por unidade/filial da empresa; (5) Turno — filtra por turno de trabalho; (6) Periodo — filtro por data de inicio e data fim do evento.',
-      'Os filtros podem ser combinados. Por exemplo: "acidentes em aberto do 3o turno no ultimo trimestre" ou "incidentes concluidos da unidade Sao Paulo em 2024". Use os filtros para preparar relatorios especificos para a CIPA, para o SESMT ou para auditorias externas.',
+      'A lista de eventos (aba "Ocorrencias") inclui um sistema de filtros avancados: (1) Busca textual — pesquisa por codigo do evento, nome do colaborador ou setor; (2) Tipo — todos, desvios, incidentes ou acidentes; (3) Status — todos, em aberto, em analise, acoes em andamento ou concluido; (4) Estabelecimento/Obra — filtra por unidade/filial da empresa (nome alinhado ao cadastro); (5) Turno — filtra por turno de trabalho; (6) Periodo — filtro por data de inicio e data fim do evento.',
+      'Os filtros podem ser combinados. Por exemplo: "acidentes em aberto do 3o turno no ultimo trimestre" ou "desvios criticos da obra X em 2024". Use os filtros para preparar relatorios especificos para a CIPA, para o SESMT ou para auditorias externas.',
       'Cada evento na lista exibe: codigo, tipo (badge colorido), data, colaborador, setor, status e a ultima atualizacao. Clique em qualquer evento para abrir a tela de detalhe completo, onde voce pode ver toda a investigacao, os anexos, as acoes vinculadas e o historico de alteracoes.',
     ],
-    dica: "Exportacao e relatorios: use os filtros para isolar o conjunto de dados que voce precisa antes de exportar. Por exemplo, para o relatorio anual da CIPA, filtre por tipo=acidente e periodo=01/01/ano a 31/12/ano. Para o PGR, filtre por tipo=todos e exporte a lista completa de eventos como evidencia do programa de gestao.",
+    dica: "Exportacao e relatorios: para o relatorio anual da CIPA, filtre tipo=acidente e periodo=01/01/ano a 31/12/ano. Para o PGR/GRO, inclua os desvios como evidencia do programa de identificacao continua de riscos exigido pela NR-01. Para auditorias ISO 45001, exporte desvios e incidentes como evidencia das clausulas 6.1 e 10.2.",
   },
   {
     num: "10",
+    titulo: "Cartoes de Desvio — Base Preventiva da Piramide",
+    subtitulo: "Registro proativo de condicoes inseguras antes do acidente",
+    cor: AZUL,
+    paragrafos: [
+      'Cartoes de Desvio sao micro-registros estruturados de condicoes inseguras, atos inseguros ou desvios de processo — captados ANTES de um incidente ou acidente ocorrer. A hierarquia tecnica do sistema e: [DESVIO] → [INCIDENTE] → [ACIDENTE]. Cada desvio registrado e uma oportunidade de prevencao que alimenta diretamente a base da Piramide de Bird.',
+      'Campos do Cartao de Desvio: (a) Tipo — Condicao Insegura, Ato Inseguro ou Desvio de Processo; (b) Local/Setor — onde o desvio foi identificado; (c) Data e hora; (d) Reportante — com opcao anonima; (e) Categoria tecnica — Ergonomia, EPI, Maquina, Organizacao do Trabalho ou Outro; (f) Potencial de risco — Baixo, Medio, Alto ou Critico; (g) Descricao e evidencia (foto/audio); (h) Vinculacao com o Inventario de Riscos (GRO).',
+      'Fluxo operacional dos desvios: (1) Colaborador ou supervisor registra o desvio; (2) Sistema classifica automaticamente o potencial de risco; (3) Desvios com risco Alto ou Critico geram alerta e podem ser escalados para Incidente; (4) Gestor atribui responsavel e prazo para tratamento; (5) Desvio tratado alimenta o score preditivo e reduz o risco do setor; (6) Dados cruzados com Ergonomia e Psicossocial geram alertas de padrao.',
+    ],
+    dica: "Impacto no FAP: desvios tratados antes de virarem acidentes evitam a geracao de CAT, de beneficios B91 e de NTEP — os tres fatores que mais impactam negativamente o FAP. Um programa estruturado de registro e tratamento de desvios e a intervencao mais custo-efetiva em SST: previne o acidente e protege o caixa da empresa.",
+  },
+  {
+    num: "11",
+    titulo: "Simulador FAP / RAT",
+    subtitulo: "Projete o impacto financeiro dos acidentes e planeje a prevencao",
+    cor: VERDE,
+    paragrafos: [
+      'O FAP (Fator Acidentario de Prevencao) e um multiplicador calculado pelo INSS que pode aumentar ou reduzir em ate 100% a aliquota do RAT (Risco Ambiental do Trabalho) da empresa. O RAT varia de 1% a 3% sobre a folha de pagamento conforme o grau de risco da atividade (CNAE). Com o FAP, o custo efetivo pode variar de 0,5% a 6% — uma diferenca significativa na folha.',
+      'O simulador do Seguramente exibe: (a) RAT atual da empresa com base no CNAE; (b) Score de risco estimado com base nos eventos registrados; (c) Projecao de B91 e NTEP — se os acidentes registrados possuem nexo tecnico que pode ser usado pelo INSS; (d) Simulacao de cenarios — "se eu reduzir X acidentes, qual seria meu FAP estimado?"; (e) Alertas de risco de enquadramento em NTEP por categoria de acidente.',
+      'Para usar o simulador: acesse a aba "Analise" → secao "Simulador FAP/RAT". Informe o numero de funcionarios e as horas trabalhadas no periodo. O sistema calcula automaticamente a Taxa de Frequencia e projeta o impacto no FAP com base nos dados registrados. Exporte o relatorio para apresentar ao Financeiro ou a Diretoria como argumento para investimento em prevencao.',
+    ],
+    dica: "Cada acidente com afastamento > 15 dias pode contribuir para um beneficio B91 no INSS por ate 3 anos. Nesse periodo, a empresa e computada na estatistica que define o FAP do proximo bienio. Registrar e tratar desvios, investigar causas raiz e implementar acoes corretivas efetivas e a estrategia mais eficaz para manter o FAP abaixo de 1,0.",
+  },
+  {
+    num: "12",
+    titulo: "Analise Preditiva e Score de Risco",
+    subtitulo: "Inteligencia para antecipar riscos antes que ocorram",
+    cor: ROXO,
+    paragrafos: [
+      'O sistema analisa padroes historicos de desvios, incidentes e fatores ergonomicos para calcular um score de risco por setor e turno. Quando o padrao indica alto potencial de acidente — por exemplo, multiplos desvios de EPI no mesmo setor em curto periodo — alertas proativos sao gerados antes que o acidente ocorra.',
+      'Indicadores preditivos disponiveis: (a) Score de risco por setor (0 a 100) — calculado com base na frequencia, gravidade e categorias dos eventos; (b) Taxa de conversao Desvio → Incidente → Acidente — mostra que percentual de desvios evolui para eventos mais graves; (c) Alertas de padrao recorrente — ativados quando o mesmo tipo de desvio ou fator ergonomico aparece 3 ou mais vezes; (d) Score de risco por turno — identifica se o 3o turno ou turnos noturnos concentram mais ocorrencias.',
+      'KPIs adicionais do modulo apos implementacao dos Cartoes de Desvio: (1) % de desvios tratados no prazo; (2) Tempo medio de resposta ao desvio (dias); (3) Numero de desvios por colaborador/setor; (4) Taxa de conversao Desvio → Incidente; (5) Taxa de conversao Incidente → Acidente. Essas metricas sao consideradas ouro para o calculo e acompanhamento do FAP.',
+    ],
+    dica: "Visao integrada: o ciclo completo de prevencao e: Desvio registrado → risco identificado → acao preventiva → verificacao de efetividade → historico alimenta GRO e PGR. Empresas que completam esse ciclo de forma sistematica demonstram maturidade de gestao em auditorias ISO 45001 e em processos de certificacao de SST.",
+  },
+  {
+    num: "13",
     titulo: "Integracao com Outros Modulos",
     subtitulo: "Como Incidentes & Acidentes se conecta com o ecossistema Seguramente",
     cor: VERDE,
     paragrafos: [
-      'O modulo de Incidentes & Acidentes se integra nativamente com outros modulos da plataforma: (1) Documentos — a pasta de investigacao e criada automaticamente para acidentes graves, centralizando toda a documentacao do evento em um local acessivel e auditavel; (2) Plano de Acao — acoes corretivas e preventivas criadas a partir de eventos aparecem no Plano de Acao Global, onde qualquer gestor pode acompanhar o progresso.',
-      '(3) Ergonomia — os fatores ergonomicos marcados nos eventos alimentam o Inventario GRO e a AEP. Quando um fator aparece repetidamente, o sistema recomenda a revisao ergonomica do posto. (4) Psicossocial — indicadores de estresse/exaustao registrados nos eventos sao cruzados com os dados das campanhas psicossociais para identificar grupos de risco.',
-      '(5) Saude / Afastamentos — acidentes com afastamento podem ser vinculados diretamente a um registro de afastamento no modulo de Saude, mantendo toda a trilha documental do trabalhador em um unico sistema. (6) e-Social — os dados de acidente preenchidos no Seguramente sao os mesmos exigidos pelo evento S-2210 do e-Social, facilitando a transmissao ao governo.',
+      'O modulo de Incidentes & Acidentes se integra nativamente com outros modulos da plataforma: (1) Documentos — a pasta de investigacao e criada automaticamente para acidentes graves, centralizando toda a documentacao; (2) Plano de Acao — acoes corretivas e preventivas criadas a partir de eventos e desvios aparecem no Plano de Acao Global; (3) Terceiros & SST — desvios e incidentes envolvendo prestadores de servico podem ser vinculados ao cadastro de terceiros.',
+      '(4) Ergonomia — os fatores ergonomicos marcados nos eventos alimentam o Inventario GRO e a AEP. Quando um fator aparece repetidamente, o sistema recomenda a revisao ergonomica do posto. (5) Psicossocial — indicadores de estresse/exaustao registrados nos eventos sao cruzados com os dados das campanhas psicossociais para identificar grupos de risco.',
+      '(6) Saude / Afastamentos — acidentes com afastamento podem ser vinculados diretamente a um registro de afastamento no modulo de Saude. (7) e-Social — os dados de acidente preenchidos no Seguramente sao os mesmos exigidos pelo evento S-2210 do e-Social. (8) Compliance SST — os desvios e incidentes alimentam o painel de conformidade legal da empresa.',
     ],
-    dica: "Visao integrada: uma empresa que usa Incidentes & Acidentes integrado com Ergonomia, Psicossocial e Saude tem uma gestao muito mais completa. O ciclo e: o incidente revela o risco → a ergonomia identifica a causa organizacional → o psicossocial confirma os fatores humanos → a saude monitora o impacto → o plano de acao fecha o ciclo. Cada modulo alimenta o outro com dados concretos.",
+    dica: "Visao integrada: o ciclo e: o desvio revela o risco → o incidente confirma o perigo → a ergonomia identifica a causa organizacional → o psicossocial confirma os fatores humanos → a saude monitora o impacto → o plano de acao fecha o ciclo → o FAP reflete o resultado. Cada modulo alimenta o outro com dados concretos para uma gestao preventiva e compliant.",
   },
 ];
 
 // Fluxo resumido
 const FLUXO_LINHAS: { etapa: string; sistema: string; cor: RGB }[] = [
-  { etapa: "Registrar Evento",         sistema: "Tipo (Incidente/Acidente) | Codigo automatico | Data, hora, setor, funcao | Origem",           cor: VERMELHO },
-  { etapa: "Descricao e Causas",        sistema: "Fatos objetivos | Categoria | Origem predominante | Fatores Ergonomicos -> GRO",                cor: LARANJA },
-  { etapa: "Campos de Acidente",        sistema: "Gravidade | Afastamento | Atendimento | Obito | CAT (numero, data, arquivo PDF)",              cor: LARANJA },
-  { etapa: "Pasta Investigacao",        sistema: "Criada automaticamente em Documentos | 5 subpastas padrao para acidente grave",                cor: AZUL },
-  { etapa: "Mudar Status",              sistema: "Em Aberto -> Em Analise -> Acoes em Andamento -> Concluido",                                   cor: AMBER },
-  { etapa: "Investigar Causa Raiz",     sistema: "Arvore de Causas / 5 Porques / Ishikawa | Documentar em pasta de Investigacao",               cor: AZUL },
-  { etapa: "Criar Acao Vinculada",      sistema: "Acao corretiva (acidente) ou preventiva (incidente) | Responsavel + Prazo automaticos",       cor: VERDE },
-  { etapa: "Acompanhar no Dashboard",   sistema: "Distribuicao por tipo/status/turno | Taxa de frequencia | Piramide de Bird",                   cor: ROXO },
-  { etapa: "Emitir CAT (se obrigatorio)", sistema: "Lei 8.213/91 — 1o dia util apos acidente | e-Social S-2210 | Multa por atraso",             cor: VERMELHO },
-  { etapa: "Concluir Evento",           sistema: "Todas as acoes concluidas | Evidencias anexadas | Pasta de investigacao completa",             cor: VERDE },
+  { etapa: "Registrar Desvio (Novo)",   sistema: "Tipo (Condicao/Ato/Processo) | Potencial de risco | Categoria tecnica | Foto",              cor: AZUL },
+  { etapa: "Registrar Evento",          sistema: "Tipo (Incidente/Acidente) | Codigo automatico | Data, hora, setor, funcao | Origem",        cor: VERMELHO },
+  { etapa: "Descricao e Causas",        sistema: "Fatos objetivos | Categoria | Origem predominante | Fatores Ergonomicos -> GRO",             cor: LARANJA },
+  { etapa: "Campos de Acidente",        sistema: "Gravidade | Afastamento | Atendimento | Obito | CAT (numero, data, arquivo PDF)",            cor: LARANJA },
+  { etapa: "Pasta Investigacao",        sistema: "Criada automaticamente em Documentos | 5 subpastas padrao para acidente grave",              cor: AZUL },
+  { etapa: "Mudar Status",              sistema: "Em Aberto -> Em Analise -> Acoes em Andamento -> Concluido",                                 cor: AMBER },
+  { etapa: "Investigar Causa Raiz",     sistema: "Arvore de Causas / 5 Porques / Ishikawa | Documentar em pasta de Investigacao",             cor: AZUL },
+  { etapa: "Criar Acao Vinculada",      sistema: "Acao corretiva (acidente) ou preventiva (incidente) | Responsavel + Prazo automaticos",     cor: VERDE },
+  { etapa: "Simulador FAP/RAT (Novo)",  sistema: "Score de risco | Projecao B91/NTEP | Impacto financeiro na folha de pagamento",             cor: VERDE },
+  { etapa: "Acompanhar no Dashboard",   sistema: "Desvios+Incidentes+Acidentes | Score preditivo | Taxa de conversao | Piramide ampliada",   cor: ROXO },
+  { etapa: "Emitir CAT (se obrigatorio)", sistema: "Lei 8.213/91 — 1o dia util apos acidente | e-Social S-2210 | Multa por atraso",           cor: VERMELHO },
+  { etapa: "Concluir Evento",           sistema: "Todas as acoes concluidas | Evidencias anexadas | Pasta de investigacao completa",          cor: VERDE },
 ];
 
 // Glossario
 const GLOSSARIO: [string, string][] = [
+  ["Desvio",          "Registro proativo de condicao insegura, ato inseguro ou desvio de processo, captado ANTES de um incidente ou acidente ocorrer. Base da Piramide de Bird ampliada."],
   ["Incidente",       "Evento que ocorreu no trabalho mas nao resultou em lesao, doenca ou morte. Inclui quase-acidentes (near miss) e situacoes de risco iminente."],
   ["Acidente",        "Evento que resultou em lesao, doenca ou morte decorrente do trabalho, conforme definicao legal da Lei 8.213/91."],
   ["CAT",             "Comunicacao de Acidente do Trabalho. Documento obrigatorio emitido pelo empregador no 1o dia util apos o acidente (Art. 22 da Lei 8.213/91). Em caso de obito, deve ser emitida imediatamente."],
   ["Near Miss",       "Quase-acidente. Evento que poderia ter causado lesao ou dano mas nao causou, por acaso ou por intervencao. Sao os eventos mais importantes para a prevencao."],
-  ["Piramide de Bird","Teoria que estabelece a proporcao entre acidentes graves e eventos menores. Para cada acidente fatal, ha ~10 graves, ~30 com dano material e ~600 quase-acidentes."],
-  ["GRO",             "Gerenciamento de Riscos Ocupacionais. Inventario de riscos exigido pela NR-01. Os eventos do modulo alimentam o inventario GRO com evidencias concretas."],
-  ["PGR",             "Programa de Gerenciamento de Riscos. Documento central da NR-01 que inclui o inventario GRO, planos de acao e historico de eventos."],
+  ["Piramide de Bird","Teoria que estabelece a proporcao entre acidentes graves e eventos menores. O sistema amplia a piramide com 5 niveis: Desvios (base) -> Quase-Acidentes -> Incidentes -> Acidentes Leves -> Graves/Fatais."],
+  ["FAP",             "Fator Acidentario de Prevencao. Multiplicador do RAT calculado pelo INSS com base na sinistralidade da empresa. Pode variar de 0,5 a 2,0, impactando diretamente a folha de pagamento."],
+  ["RAT",             "Risco Ambiental do Trabalho. Aliquota de contribuicao previdenciaria (1%, 2% ou 3%) ajustada pelo FAP. Cada acidente com afastamento pode elevar o FAP por ate 3 anos."],
+  ["B91",             "Beneficio de auxilio por acidente do trabalho (NTEP/FAP). Acidentes com afastamento > 15 dias podem gerar B91, impactando negativamente o FAP da empresa."],
+  ["NTEP",            "Nexo Tecnico Epidemiologico Previdenciario. Quando a doenca ou lesao tem correlacao estatistica com a atividade da empresa (CNAE), o INSS pode presumir que e acidente de trabalho."],
+  ["GRO",             "Gerenciamento de Riscos Ocupacionais. Inventario de riscos exigido pela NR-01. Os eventos e desvios do modulo alimentam o inventario GRO com evidencias concretas."],
+  ["PGR",             "Programa de Gerenciamento de Riscos. Documento central da NR-01 que inclui o inventario GRO, planos de acao e historico de eventos, incluindo desvios."],
   ["e-Social S-2210", "Evento do e-Social para comunicacao de acidentes do trabalho ao governo federal, incluindo acidentes tipicos, de trajeto e doencas do trabalho."],
   ["e-Social S-2220", "Evento do e-Social para monitoramento da saude do trabalhador, incluindo dados de afastamento e retorno ao trabalho."],
   ["TFA",             "Taxa de Frequencia de Acidentes com Afastamento. Calculada como: (num. acidentes x 1.000.000) / horas trabalhadas. Indicador KPI de SST."],
   ["ACD",             "Prefixo do codigo automatico de Acidentes gerado pelo sistema (ex: ACD-2024-001)."],
   ["INC",             "Prefixo do codigo automatico de Incidentes gerado pelo sistema (ex: INC-2024-001)."],
-  ["NR-01",           "Norma Regulamentadora 1 — obriga as empresas a manter o PGR com inventario de riscos e historico de eventos, incluindo incidentes e acidentes."],
+  ["DEV",             "Prefixo do codigo automatico de Desvios gerado pelo sistema (ex: DEV-2024-001)."],
+  ["NR-01",           "Norma Regulamentadora 1 — obriga as empresas a manter o PGR com inventario de riscos e historico de eventos, incluindo incidentes, acidentes e desvios identificados."],
   ["NR-17",           "Norma Regulamentadora 17 — ergonomia. Os fatores ergonomicos marcados nos eventos alimentam a AEP e o Inventario GRO do modulo de Ergonomia."],
-  ["ISO 45001",       "Norma internacional de sistema de gestao de saude e seguranca ocupacional. Exige registro, investigacao e aprendizado com todos os incidentes."],
+  ["ISO 45001",       "Norma internacional de sistema de gestao de saude e seguranca ocupacional. Exige registro, investigacao e aprendizado com todos os incidentes, incluindo desvios (clausulas 6.1 e 10.2)."],
   ["5W2H",            "Modelo de plano de acao: O que, Por que, Onde, Quando, Quem, Como e Quanto custa. Utilizado nas acoes corretivas/preventivas vinculadas ao evento."],
 ];
 
@@ -233,8 +277,8 @@ export function ManualIncidentes() {
       doc.text("MANUAL DO USUARIO", margin, 62);
       doc.setFontSize(20);
       doc.text("Incidentes & Acidentes", margin, 76);
-      doc.setFontSize(14);
-      doc.text("CAT / e-Social / GRO / Piramide de Bird", margin, 88);
+      doc.setFontSize(13);
+      doc.text("Cartoes de Desvio / CAT / e-Social / FAP / GRO / Piramide de Bird", margin, 88);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
