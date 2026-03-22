@@ -111,31 +111,37 @@ export function useFeedbackOcorrencias() {
       queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
       toast.success("Ocorrência registrada com sucesso!");
 
-      // Registrar advertência no Hub Contábil automaticamente
+      // Registrar advertência no Hub Contábil automaticamente (novo hub_processos)
       if (data && (data as any).is_advertencia && tenantId) {
         const competencia = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
-        await supabase.from("hub_documentos").insert({
-          tenant_id: tenantId,
-          competencia,
-          tipo: "outro",
-          descricao: `Advertência formal — ${(data as any).colaborador_nome || ""}`,
-          colaborador_nome: (data as any).colaborador_nome || null,
-          direcao: "enviado",
-          enviado_por: profile?.nome_completo || user?.email,
-          status: "ativo",
-          versao: 1,
-        } as any).then(() => {
-          supabase.from("hub_historico").insert({
+        const colaboradorNome = (data as any).colaborador_nome || "";
+
+        // Verificar se já existe processo para esta ocorrência
+        const { data: existente } = await supabase
+          .from("hub_processos")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .eq("origem_modulo", "advertencia")
+          .eq("origem_registro_id", (data as any).id)
+          .maybeSingle();
+
+        if (!existente) {
+          await supabase.from("hub_processos").insert({
             tenant_id: tenantId,
+            tipo: "advertencia",
+            titulo: `Advertência — ${colaboradorNome}`,
+            descricao: (data as any).descricao || null,
+            colaborador_nome: colaboradorNome || null,
             competencia,
-            acao: "enviado",
-            tipo_documento: "advertencia",
-            usuario_id: user?.id,
-            usuario_nome: profile?.nome_completo || user?.email,
-            perfil: "rh",
-            descricao: `Advertência enviada automaticamente — ${(data as any).colaborador_nome || ""}`,
+            status: "pronto_para_envio",
+            prioridade: "normal",
+            gerado_automaticamente: true,
+            origem_modulo: "advertencia",
+            origem_registro_id: (data as any).id,
+            origem_descricao: "Advertência emitida automaticamente pelo módulo disciplinar",
+            enviado_por: profile?.nome_completo || user?.email,
           } as any);
-        });
+        }
       }
     },
     onError: (error: Error) => toast.error("Erro ao registrar ocorrência: " + error.message),
