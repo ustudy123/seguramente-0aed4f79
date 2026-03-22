@@ -47,6 +47,8 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
         <CardContent className="pt-4 pb-4">
           <ResponsabilidadeField
             cargoId={cargo.id}
+            cargoNome={cargo.nome}
+            cargoDescricao={cargo.descricao}
             initialValue={cargo.responsabilidade}
           />
         </CardContent>

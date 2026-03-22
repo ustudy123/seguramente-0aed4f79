@@ -193,10 +193,10 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleAiAction("melhorar")}
-                className="gap-2 cursor-pointer"
-                disabled={!value.trim()}
-              >
-                <Sparkles className="w-4 h-4 text-amber-500" />
+              className="gap-2 cursor-pointer"
+              disabled={!value.trim()}
+            >
+              <Sparkles className="w-4 h-4 text-warning" />
                 <div>
                   <div className="text-sm font-medium">Melhorar com IA</div>
                   <div className="text-xs text-muted-foreground">Aprimora o texto atual</div>
