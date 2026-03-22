@@ -41,13 +41,14 @@ const PASSOS = [
     titulo: "Bem-vindo ao Módulo de Incidentes & Acidentes",
     subtitulo: "Registro, investigação e aprendizado organizacional",
     descricao:
-      "Este módulo centraliza todos os eventos de segurança da empresa — de quase-acidentes a acidentes fatais. Baseado na Pirâmide de Bird, o princípio é simples: cada incidente registrado é uma oportunidade de evitar o próximo acidente. O sistema guia o registro, aciona obrigações legais (CAT, e-Social) e integra os dados com Ergonomia, Documentos e Plano de Ação.",
+      "Este módulo centraliza todos os eventos de segurança da empresa — de Cartões de Desvio (base preventiva) a acidentes fatais. A hierarquia técnica do sistema segue a Pirâmide de Bird ampliada: Desvio → Incidente → Acidente. Cada desvio registrado é uma oportunidade de evitar o próximo acidente. O sistema guia o registro, aciona obrigações legais (CAT, e-Social), simula impacto no FAP/RAT e integra dados com Ergonomia, Documentos e Plano de Ação.",
     destaques: [
-      { icon: FileText,      label: "Registrar o Evento" },
+      { icon: Zap,           label: "Cartões de Desvio (Novo)" },
+      { icon: FileText,      label: "Registrar Incidente/Acidente" },
       { icon: AlertTriangle, label: "Investigar a Causa" },
       { icon: ClipboardCheck,label: "Emitir CAT (quando aplicável)" },
-      { icon: Link2,         label: "Criar Ação Vinculada" },
-      { icon: BarChart3,     label: "Analisar com Dashboard" },
+      { icon: DollarSign,    label: "Simulador FAP/RAT" },
+      { icon: BrainCircuit,  label: "Análise Preditiva" },
       { icon: TrendingUp,    label: "Pirâmide de Bird" },
     ],
   },
