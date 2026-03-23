@@ -23,7 +23,7 @@ const NIVEL_CONFIG = {
     bgColor: 'bg-success/10',
     borderColor: 'border-success/30',
     label: 'Engajado',
-    icon: '✓',
+    icon: '😊',
   },
   moderado: {
     color: 'text-warning',
