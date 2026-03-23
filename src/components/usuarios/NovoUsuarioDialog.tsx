@@ -233,6 +233,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       const authUserId = (authData as any)?.userId as string | undefined;
       if (!authUserId) throw new Error("Não foi possível provisionar o acesso no sistema.");
 
+      const jaExistia = (authData as any)?.alreadyExists === true;
+      if (jaExistia) {
+        toast.info("Usuário já existente no sistema — vinculando às empresas selecionadas.");
+      }
+
       const usuario = await createUsuario.mutateAsync({
         nome_completo: data.nome_completo,
         nome_social: data.nome_social || undefined,
