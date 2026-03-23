@@ -304,6 +304,14 @@ const Ferias = () => {
     aprovar.mutate(id);
   };
 
+  // ========== PUBLICAR NO FEED ==========
+  const handlePublicarFeed = (item: FeriasSolicitacao) => {
+    const inicio = new Date(item.data_inicio + "T12:00:00").toLocaleDateString("pt-BR");
+    const fim = new Date(item.data_fim + "T12:00:00").toLocaleDateString("pt-BR");
+    const msg = `🏖️ Informamos que ${item.colaborador_nome} estará de férias no período de ${inicio} a ${fim} (${item.dias_solicitados} dias). Desejamos um ótimo descanso! 🌴`;
+    criarPost.mutate({ conteudo: msg, tipo: "aviso" as any });
+  };
+
   // ========== GERAR AVISO PDF ==========
   const handleGerarAviso = async (item: FeriasSolicitacao) => {
     if (!tenantId || !user) { toast.error("Usuário não autenticado"); return; }
