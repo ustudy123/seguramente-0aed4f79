@@ -200,13 +200,22 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
   async function handleCriarUsuario() {
     const data = getValues();
-    // Validate etapa 2 (empresa_id required)
-    const parsed = schemaEtapa2.safeParse(data);
-    if (!parsed.success) {
-      const firstError = parsed.error.errors[0];
-      toast.error(firstError?.message || "Preencha todos os campos obrigatórios");
-      return;
+
+    // Validar modo de vínculo
+    if (modoVinculo === "empresa") {
+      const parsed = schemaEtapa2.safeParse(data);
+      if (!parsed.success) {
+        const firstError = parsed.error.errors[0];
+        toast.error(firstError?.message || "Preencha todos os campos obrigatórios");
+        return;
+      }
+    } else {
+      if (!grupoSelecionadoId) {
+        toast.error("Selecione um grupo econômico");
+        return;
+      }
     }
+
     try {
       const appRole = mapTipoUsuarioToAppRole(data.tipo_usuario);
       const { data: authData, error: authError } = await supabase.functions.invoke("invite-tenant-user", {
@@ -242,14 +251,34 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         qualidade_pct: 0,
       });
 
-      await createVinculo.mutateAsync({
-        usuario_id: usuario.id,
-        empresa_id: data.empresa_id!,
-        tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
-        contexto_operacional: data.contexto_operacional,
-        status: "ativo",
-        data_inicio: new Date().toISOString().split("T")[0],
-      });
+      if (modoVinculo === "empresa") {
+        // Vínculo com empresa individual
+        await createVinculo.mutateAsync({
+          usuario_id: usuario.id,
+          empresa_id: data.empresa_id!,
+          tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
+          contexto_operacional: data.contexto_operacional,
+          status: "ativo",
+          data_inicio: new Date().toISOString().split("T")[0],
+        });
+      } else {
+        // Vínculo com todas as empresas do grupo
+        const empresasDoGrupo = empresas.filter((e: any) => e.grupo_economico_id === grupoSelecionadoId);
+        if (empresasDoGrupo.length === 0) {
+          toast.error("Nenhuma empresa encontrada neste grupo econômico");
+          return;
+        }
+        for (const emp of empresasDoGrupo) {
+          await createVinculo.mutateAsync({
+            usuario_id: usuario.id,
+            empresa_id: emp.id,
+            tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
+            contexto_operacional: data.contexto_operacional,
+            status: "ativo",
+            data_inicio: new Date().toISOString().split("T")[0],
+          });
+        }
+      }
 
       // Vincular perfil de acesso se selecionado
       if (data.perfil_acesso_id) {
@@ -279,6 +308,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     setAlertaDuplicidade(null);
     setColaboradorEncontrado(null);
     setDadosReaproveitados(false);
+    setModoVinculo("empresa");
+    setGrupoSelecionadoId("");
     onOpenChange(false);
   }
 
@@ -289,6 +320,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     setAlertaDuplicidade(null);
     setColaboradorEncontrado(null);
     setDadosReaproveitados(false);
+    setModoVinculo("empresa");
+    setGrupoSelecionadoId("");
     onOpenChange(false);
   }
 
