@@ -22,11 +22,11 @@ interface ExportarRelatorioProps {
 }
 
 const IPS_LABELS: Record<IPSClassificacao, string> = {
-  saudavel: "Ambiente Saudável",
-  estavel: "Ambiente Estável",
-  atencao: "Atenção",
+  saudavel: "Ambiente Saudavel",
+  estavel: "Ambiente Estavel",
+  atencao: "Atencao",
   risco: "Risco Psicossocial",
-  critico: "Risco Crítico",
+  critico: "Risco Critico",
 };
 
 const IPS_COLORS: Record<IPSClassificacao, [number, number, number]> = {
@@ -36,6 +36,13 @@ const IPS_COLORS: Record<IPSClassificacao, [number, number, number]> = {
   risco: [249, 115, 22],
   critico: [239, 68, 68],
 };
+
+// Remove accented characters for jsPDF compatibility
+const sanitize = (text: string): string =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x00-\x7F]/g, " ");
 
 export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: ExportarRelatorioProps) {
   const [exportando, setExportando] = useState(false);
@@ -53,27 +60,27 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
       const margin = 18;
       let y = margin;
 
-      // ─── CABEÇALHO ───────────────────────────────────────────────────────────
+      // --- CABECALHO ---
       doc.setFillColor(88, 28, 135);
       doc.rect(0, 0, pageW, 32, "F");
 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(15);
       doc.setFont("helvetica", "bold");
-      doc.text("RELATÓRIO DE AVALIAÇÃO PSICOSSOCIAL", margin, 14);
+      doc.text("RELATORIO DE AVALIACAO PSICOSSOCIAL", margin, 14);
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("Seguramente — Gestão Inteligente de Riscos Psicossociais", margin, 22);
-      doc.text(`NR-01 · NR-17 · ISO 45001 · ISO 45003`, pageW - margin, 22, { align: "right" });
+      doc.text("Seguramente - Gestao Inteligente de Riscos Psicossociais", margin, 22);
+      doc.text("NR-01 | NR-17 | ISO 45001 | ISO 45003", pageW - margin, 22, { align: "right" });
 
       y = 44;
       doc.setTextColor(30, 30, 30);
 
-      // ─── INFO DA CAMPANHA ────────────────────────────────────────────────────
+      // --- INFO DA CAMPANHA ---
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("1. IDENTIFICAÇÃO DA CAMPANHA", margin, y);
+      doc.text("1. IDENTIFICACAO DA CAMPANHA", margin, y);
       y += 6;
 
       doc.setDrawColor(88, 28, 135);
@@ -83,15 +90,24 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      const infoLines = [
-        ["Campanha:", campanha.nome],
+
+      const formatDate = (dateStr: string) => {
+        try {
+          return format(new Date(dateStr), "dd/MM/yyyy", { locale: ptBR });
+        } catch {
+          return dateStr || "N/D";
+        }
+      };
+
+      const infoLines: [string, string][] = [
+        ["Campanha:", sanitize(campanha.nome)],
         ["Instrumento:", (campanha.instrumento || "COPSOQ").toUpperCase()],
-        ["Período:", `${format(new Date(campanha.data_inicio), "dd/MM/yyyy", { locale: ptBR })} — ${format(new Date(campanha.data_fim), "dd/MM/yyyy", { locale: ptBR })}`],
+        ["Periodo:", `${formatDate(campanha.data_inicio)} - ${formatDate(campanha.data_fim)}`],
         ["Total de Convites:", String(stats.total_convites)],
         ["Respostas Coletadas:", String(stats.concluidos)],
-        ["Taxa de Participação:", `${stats.taxa_participacao.toFixed(1)}%`],
-        ["Anonimato:", "Garantido — mínimo estatístico atingido"],
-        ["Data do Relatório:", format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })],
+        ["Taxa de Participacao:", `${stats.taxa_participacao.toFixed(1)}%`],
+        ["Anonimato:", "Garantido - minimo estatistico atingido"],
+        ["Data do Relatorio:", format(new Date(), "dd/MM/yyyy HH:mm")],
       ];
 
       infoLines.forEach(([label, value]) => {
@@ -104,10 +120,10 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
       y += 4;
 
-      // ─── IPS PRINCIPAL ───────────────────────────────────────────────────────
+      // --- IPS PRINCIPAL ---
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text("2. ÍNDICE PSICOSSOCIAL ORGANIZACIONAL (IPS)", margin, y);
+      doc.text("2. INDICE PSICOSSOCIAL ORGANIZACIONAL (IPS)", margin, y);
       y += 6;
       doc.setLineWidth(0.5);
       doc.line(margin, y, pageW - margin, y);
@@ -118,7 +134,6 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
         const clsLabel = IPS_LABELS[cls];
         const clsColor = IPS_COLORS[cls];
 
-        // Gauge visual simplificado — barra de progresso
         doc.setFontSize(28);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...clsColor);
@@ -127,12 +142,12 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...clsColor);
-        doc.text(`/ 100 — ${clsLabel}`, margin + 18, y + 8);
+        doc.text(`/ 100 - ${clsLabel}`, margin + 18, y + 8);
 
         doc.setTextColor(30, 30, 30);
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
-        doc.text("Escala: 0-34 Crítico · 35-49 Risco · 50-64 Atenção · 65-79 Estável · 80-100 Saudável", margin, y + 15);
+        doc.text("Escala: 0-34 Critico | 35-49 Risco | 50-64 Atencao | 65-79 Estavel | 80-100 Saudavel", margin, y + 15, { maxWidth: pageW - 2 * margin, align: "left" });
 
         // Barra
         const barW = pageW - 2 * margin;
@@ -146,25 +161,25 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
       y += 4;
 
-      // ─── DIMENSÕES ───────────────────────────────────────────────────────────
+      // --- DIMENSOES ---
       if (dimensoes.length > 0) {
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("3. ANÁLISE POR DIMENSÃO PSICOSSOCIAL", margin, y);
+        doc.text("3. ANALISE POR DIMENSAO PSICOSSOCIAL", margin, y);
         y += 6;
         doc.setLineWidth(0.5);
         doc.line(margin, y, pageW - margin, y);
         y += 5;
 
         doc.setFontSize(8);
-        // Cabeçalho da tabela
+        // Cabecalho da tabela
         doc.setFillColor(88, 28, 135);
         doc.rect(margin, y, pageW - 2 * margin, 6, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.text("Dimensão Psicossocial", margin + 2, y + 4);
+        doc.text("Dimensao Psicossocial", margin + 2, y + 4);
         doc.text("Score", pageW - margin - 28, y + 4);
-        doc.text("Classificação", pageW - margin - 22, y + 4);
+        doc.text("Classificacao", pageW - margin - 22, y + 4);
         y += 6;
 
         doc.setTextColor(30, 30, 30);
@@ -182,7 +197,8 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
             doc.rect(margin, y, pageW - 2 * margin, 6, "F");
           }
           doc.setFont("helvetica", "normal");
-          doc.text(d.bloco.length > 45 ? d.bloco.slice(0, 45) + "…" : d.bloco, margin + 2, y + 4);
+          const blocoText = sanitize(d.bloco);
+          doc.text(blocoText.length > 45 ? blocoText.slice(0, 45) + "..." : blocoText, margin + 2, y + 4);
 
           doc.setFont("helvetica", "bold");
           doc.setTextColor(...clsColor);
@@ -196,13 +212,13 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
       y += 8;
 
-      // ─── ANÁLISE IA ──────────────────────────────────────────────────────────
+      // --- ANALISE IA ---
       if (analiseIA) {
         if (y > 220) { doc.addPage(); y = margin; }
 
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.text("4. INTERPRETAÇÃO — INTELIGÊNCIA ARTIFICIAL", margin, y);
+        doc.text("4. INTERPRETACAO - INTELIGENCIA ARTIFICIAL", margin, y);
         y += 6;
         doc.setLineWidth(0.5);
         doc.line(margin, y, pageW - margin, y);
@@ -210,34 +226,31 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
         doc.setFontSize(8.5);
         doc.setFont("helvetica", "normal");
-        const lines = doc.splitTextToSize(analiseIA, pageW - 2 * margin);
+        const sanitizedAnalise = sanitize(analiseIA);
+        const lines = doc.splitTextToSize(sanitizedAnalise, pageW - 2 * margin);
         lines.forEach((line: string) => {
           if (y > 270) { doc.addPage(); y = margin; }
-          doc.text(line, margin, y);
+          doc.text(line, margin, y, { maxWidth: pageW - 2 * margin, align: "left" });
           y += 5;
         });
       }
 
-      // ─── RODAPÉ ──────────────────────────────────────────────────────────────
+      // --- RODAPE ---
       const totalPages = (doc as any).internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(7);
         doc.setTextColor(140, 140, 140);
-        doc.text(
-          `Seguramente — Relatório Psicossocial · ${campanha.nome} · Página ${i}/${totalPages}`,
-          pageW / 2,
-          doc.internal.pageSize.getHeight() - 8,
-          { align: "center" }
-        );
+        const rodape = `Seguramente - Relatorio Psicossocial | ${sanitize(campanha.nome)} | Pagina ${i}/${totalPages}`;
+        doc.text(rodape, pageW / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
       }
 
-      const nomeArquivo = `Relatorio_Psicossocial_${campanha.nome.replace(/\s+/g, "_").slice(0, 30)}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      const nomeArquivo = `Relatorio_Psicossocial_${campanha.nome.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30)}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
       doc.save(nomeArquivo);
       toast.success("Relatório exportado com sucesso!");
     } catch (err) {
-      console.error(err);
-      toast.error("Erro ao gerar PDF.");
+      console.error("Erro ao gerar PDF:", err);
+      toast.error("Erro ao gerar PDF. Verifique o console para detalhes.");
     } finally {
       setExportando(false);
     }
