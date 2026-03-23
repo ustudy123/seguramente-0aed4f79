@@ -428,8 +428,16 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                         setValue("perfil_acesso_id", perfilId);
                         const perfil = perfisAcesso.find((p: any) => p.id === perfilId);
                         if (perfil?.tipo_usuario_sugerido) {
-                          setValue("tipo_usuario", perfil.tipo_usuario_sugerido);
-                          setValue("tipo_vinculo", perfil.tipo_usuario_sugerido);
+                          // Map perfil tipo_usuario_sugerido to valid DB enum values
+                          const tipoMap: Record<string, string> = {
+                            admin: "administrador",
+                            sst: "tecnico_seguranca",
+                            financeiro: "gestor",
+                            consultor: "consultor_externo",
+                          };
+                          const tipoMapped = tipoMap[perfil.tipo_usuario_sugerido] || perfil.tipo_usuario_sugerido;
+                          setValue("tipo_usuario", tipoMapped);
+                          setValue("tipo_vinculo", tipoMapped);
                         }
                       }}
                     >
