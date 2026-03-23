@@ -13,8 +13,9 @@ import {
   Calendar, Plus, Filter, CheckCircle, XCircle, Clock, Sun, Plane,
   ChevronsUpDown, Check, DollarSign, Info, Banknote, AlertTriangle,
   FileText, Send, TrendingUp, Brain, Heart, BarChart3, ShieldCheck,
-  Loader2,
+  Loader2, MessageSquare,
 } from "lucide-react";
+import { useFeed } from "@/hooks/useFeed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -92,9 +93,10 @@ interface FeriasCardProps {
   onGerarRecibo: (item: FeriasSolicitacao) => void;
   onGerarFinanceiro: (item: FeriasSolicitacao) => void;
   onLinkAssinatura: (item: FeriasSolicitacao) => void;
+  onPublicarFeed: (item: FeriasSolicitacao) => void;
 }
 
-const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura }: FeriasCardProps) => {
+const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRecibo, onGerarFinanceiro, onLinkAssinatura, onPublicarFeed }: FeriasCardProps) => {
   const config = statusConfig[item.status] || statusConfig.pendente;
   const startDate = new Date(item.data_inicio + "T12:00:00").toLocaleDateString("pt-BR");
   const endDate = new Date(item.data_fim + "T12:00:00").toLocaleDateString("pt-BR");
@@ -208,6 +210,9 @@ const FeriasCard = ({ item, index, onAprovar, onRecusar, onGerarAviso, onGerarRe
             <Button size="sm" variant="outline" className="text-xs" onClick={() => onLinkAssinatura(item)}>
               <Send className="w-3.5 h-3.5 mr-1" /> Link Assinatura
             </Button>
+            <Button size="sm" variant="outline" className="text-xs col-span-2 text-primary" onClick={() => onPublicarFeed(item)}>
+              <MessageSquare className="w-3.5 h-3.5 mr-1" /> Publicar no Feed
+            </Button>
           </div>
         </div>
       )}
@@ -232,6 +237,7 @@ const Ferias = () => {
   const { data: periodos } = useFolhaPeriodos();
   const { tenantId, user, profile } = useAuth();
   const { enviarParaHub } = useEnviarParaHub();
+  const { criarPost } = useFeed();
 
   // Legacy adapter for components that still need FeriasItemLegacy
   const feriasLegacy = useMemo(() => solicitacoes.map(toLegacy), [solicitacoes]);
@@ -296,6 +302,14 @@ const Ferias = () => {
       toast.warning(`⚠ Sobreposição no setor "${item.departamento}": ${sobrepostos.join(", ")}`, { duration: 6000 });
     }
     aprovar.mutate(id);
+  };
+
+  // ========== PUBLICAR NO FEED ==========
+  const handlePublicarFeed = (item: FeriasSolicitacao) => {
+    const inicio = new Date(item.data_inicio + "T12:00:00").toLocaleDateString("pt-BR");
+    const fim = new Date(item.data_fim + "T12:00:00").toLocaleDateString("pt-BR");
+    const msg = `🏖️ Informamos que ${item.colaborador_nome} estará de férias no período de ${inicio} a ${fim} (${item.dias_solicitados} dias). Desejamos um ótimo descanso! 🌴`;
+    criarPost.mutate({ conteudo: msg, tipo: "aviso" as any });
   };
 
   // ========== GERAR AVISO PDF ==========
@@ -532,6 +546,7 @@ const Ferias = () => {
                   onAprovar={handleAprovar} onRecusar={(id) => recusar.mutate({ id })}
                   onGerarAviso={handleGerarAviso} onGerarRecibo={handleGerarRecibo}
                   onGerarFinanceiro={handleGerarFinanceiro} onLinkAssinatura={handleLinkAssinatura}
+                  onPublicarFeed={handlePublicarFeed}
                 />
               ))}
             </div>
