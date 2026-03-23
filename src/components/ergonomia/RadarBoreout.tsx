@@ -30,7 +30,7 @@ const NIVEL_CONFIG = {
     bgColor: 'bg-warning/10',
     borderColor: 'border-warning/30',
     label: 'Atenção',
-    icon: '⚠',
+    icon: '😐',
   },
   alto: {
     color: 'text-orange-500',
