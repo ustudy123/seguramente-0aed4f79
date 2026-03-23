@@ -237,6 +237,7 @@ const Ferias = () => {
   const { data: periodos } = useFolhaPeriodos();
   const { tenantId, user, profile } = useAuth();
   const { enviarParaHub } = useEnviarParaHub();
+  const { criarPost } = useFeed();
 
   // Legacy adapter for components that still need FeriasItemLegacy
   const feriasLegacy = useMemo(() => solicitacoes.map(toLegacy), [solicitacoes]);
