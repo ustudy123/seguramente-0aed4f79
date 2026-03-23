@@ -24,14 +24,14 @@ const NIVEL_CONFIG = {
     bgColor: 'bg-success/10',
     borderColor: 'border-success/30',
     label: 'Baixo Risco',
-    icon: '✓',
+    icon: '😌',
   },
   moderado: {
     color: 'text-warning',
     bgColor: 'bg-warning/10',
     borderColor: 'border-warning/30',
     label: 'Atenção',
-    icon: '⚠',
+    icon: '😐',
   },
   alto: {
     color: 'text-orange-500',
