@@ -92,12 +92,12 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   const [grupoSelecionadoId, setGrupoSelecionadoId] = useState<string>("");
 
   const { data: empresas = [] } = useQuery({
-    queryKey: ["empresas-lista", tenantId],
+    queryKey: ["empresas-lista-grupo", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
       const { data } = await (supabase as any)
         .from("empresa_cadastro")
-        .select("id, razao_social, nome_fantasia, cnpj")
+        .select("id, razao_social, nome_fantasia, cnpj, grupo_economico_id")
         .eq("tenant_id", tenantId)
         .order("razao_social");
       return data || [];
