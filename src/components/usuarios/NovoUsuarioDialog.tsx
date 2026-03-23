@@ -238,23 +238,55 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         toast.info("Usuário já existente no sistema — vinculando às empresas selecionadas.");
       }
 
-      const usuario = await createUsuario.mutateAsync({
-        nome_completo: data.nome_completo,
-        nome_social: data.nome_social || undefined,
-        email_principal: data.email_principal,
-        cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
-        telefone_principal: data.telefone_principal,
-        cargo_funcao: data.cargo_funcao,
-        matricula: data.matricula || undefined,
-        data_nascimento: data.data_nascimento || undefined,
-        tipo_usuario: data.tipo_usuario as UsuarioTipo,
-        observacoes: data.observacoes,
-        auth_user_id: authUserId,
-        status: "convite_enviado",
-        convite_enviado_em: new Date().toISOString(),
-        qualidade_score: "incompleto",
-        qualidade_pct: 0,
-      });
+      // Se já existia no tenant, buscar o registro do usuário na tabela usuarios
+      let usuario: any;
+      if (jaExistia) {
+        const { data: usuarioExistente } = await (supabase as any)
+          .from("usuarios")
+          .select("*")
+          .eq("auth_user_id", authUserId)
+          .eq("tenant_id", tenantId)
+          .maybeSingle();
+        if (usuarioExistente) {
+          usuario = usuarioExistente;
+        } else {
+          // Não existe na tabela usuarios ainda, criar
+          usuario = await createUsuario.mutateAsync({
+            nome_completo: data.nome_completo,
+            nome_social: data.nome_social || undefined,
+            email_principal: data.email_principal,
+            cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
+            telefone_principal: data.telefone_principal,
+            cargo_funcao: data.cargo_funcao,
+            matricula: data.matricula || undefined,
+            data_nascimento: data.data_nascimento || undefined,
+            tipo_usuario: data.tipo_usuario as UsuarioTipo,
+            observacoes: data.observacoes,
+            auth_user_id: authUserId,
+            status: "ativo",
+            qualidade_score: "incompleto",
+            qualidade_pct: 0,
+          });
+        }
+      } else {
+        usuario = await createUsuario.mutateAsync({
+          nome_completo: data.nome_completo,
+          nome_social: data.nome_social || undefined,
+          email_principal: data.email_principal,
+          cpf: data.cpf ? cleanCpf(data.cpf) : undefined,
+          telefone_principal: data.telefone_principal,
+          cargo_funcao: data.cargo_funcao,
+          matricula: data.matricula || undefined,
+          data_nascimento: data.data_nascimento || undefined,
+          tipo_usuario: data.tipo_usuario as UsuarioTipo,
+          observacoes: data.observacoes,
+          auth_user_id: authUserId,
+          status: "convite_enviado",
+          convite_enviado_em: new Date().toISOString(),
+          qualidade_score: "incompleto",
+          qualidade_pct: 0,
+        });
+      }
 
       if (modoVinculo === "empresa") {
         // Vínculo com empresa individual
