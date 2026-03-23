@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck, Building2, Layers } from "lucide-react";
 import { useUsuarios, TIPO_USUARIO_LABELS, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { cleanCpf, formatCpf, validateCpf } from "@/lib/cpf";
 import { CpfInput } from "@/components/ui/cpf-input";
 import { mapTipoUsuarioToAppRole } from "@/lib/userRoleMap";
+import { useGruposEconomicos } from "@/hooks/useGruposEconomicos";
 
 const schemaEtapa1 = z.object({
   nome_completo: z.string().min(3, "Nome obrigatório"),
