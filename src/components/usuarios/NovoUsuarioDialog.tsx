@@ -80,12 +80,16 @@ interface ColaboradorEncontrado {
 export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   const { tenantId } = useAuth();
   const { createUsuario, createVinculo, usuarios } = useUsuarios();
+  const { grupos } = useGruposEconomicos();
   const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
   const [alertaDuplicidade, setAlertaDuplicidade] = useState<string | null>(null);
   const [novoUsuarioId, setNovoUsuarioId] = useState<string | null>(null);
   const [buscandoCpf, setBuscandoCpf] = useState(false);
   const [colaboradorEncontrado, setColaboradorEncontrado] = useState<ColaboradorEncontrado | null>(null);
   const [dadosReaproveitados, setDadosReaproveitados] = useState(false);
+  // Modo de vínculo: empresa individual ou grupo econômico
+  const [modoVinculo, setModoVinculo] = useState<"empresa" | "grupo">("empresa");
+  const [grupoSelecionadoId, setGrupoSelecionadoId] = useState<string>("");
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-lista", tenantId],
