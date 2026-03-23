@@ -534,35 +534,105 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                  {/* Toggle: empresa ou grupo */}
                   <div className="sm:col-span-2 space-y-1.5">
-                    <Label>Empresa para vincular *</Label>
-                    <Select
-                      value={watchedValues.empresa_id || ""}
-                      onValueChange={v => setValue("empresa_id", v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a empresa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {empresas.map((e: any) => (
-                          <SelectItem key={e.id} value={e.id}>
-                            <div className="flex flex-col gap-0.5 py-0.5">
-                              <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
-                              {e.cnpj && (
-                                <span className="text-xs text-muted-foreground font-normal leading-tight">
-                                  CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
+                    <Label>Tipo de Vínculo *</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setModoVinculo("empresa"); setGrupoSelecionadoId(""); }}
+                        className={`flex items-center gap-2 justify-center p-2.5 rounded-lg border text-sm font-medium transition-all ${
+                          modoVinculo === "empresa"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <Building2 className="w-4 h-4" />
+                        Empresa específica
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setModoVinculo("grupo"); setValue("empresa_id", ""); }}
+                        className={`flex items-center gap-2 justify-center p-2.5 rounded-lg border text-sm font-medium transition-all ${
+                          modoVinculo === "grupo"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <Layers className="w-4 h-4" />
+                        Grupo econômico
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Empresa individual */}
+                  {modoVinculo === "empresa" && (
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Label>Empresa para vincular *</Label>
+                      <Select
+                        value={watchedValues.empresa_id || ""}
+                        onValueChange={v => setValue("empresa_id", v)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a empresa" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {empresas.map((e: any) => (
+                            <SelectItem key={e.id} value={e.id}>
+                              <div className="flex flex-col gap-0.5 py-0.5">
+                                <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
+                                {e.cnpj && (
+                                  <span className="text-xs text-muted-foreground font-normal leading-tight">
+                                    CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
+                    </div>
+                  )}
+
+                  {/* Grupo econômico */}
+                  {modoVinculo === "grupo" && (
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Label>Grupo Econômico *</Label>
+                      <Select
+                        value={grupoSelecionadoId}
+                        onValueChange={setGrupoSelecionadoId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o grupo econômico" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {grupos.filter((g: any) => g.ativo).map((g: any) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              <span className="flex items-center gap-2">
+                                <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+                                {g.nome}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {grupoSelecionadoId && (
+                        <p className="text-xs text-muted-foreground">
+                          O usuário será vinculado a{" "}
+                          <span className="font-medium text-primary">
+                            {empresas.filter((e: any) => e.grupo_economico_id === grupoSelecionadoId).length}
+                          </span>{" "}
+                          empresa(s) deste grupo.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="sm:col-span-2 space-y-1.5">
                     <Label className="flex items-center justify-between">
-                      <span>Papel nesta Empresa</span>
+                      <span>Papel {modoVinculo === "grupo" ? "no Grupo" : "nesta Empresa"}</span>
                       {watchedValues.tipo_vinculo === watchedValues.tipo_usuario && (
                         <span className="text-xs text-muted-foreground font-normal">
                           herdado do tipo de usuário
@@ -581,7 +651,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Como esta pessoa atua especificamente nesta empresa. Pode ser diferente do perfil global.
+                      Como esta pessoa atua. Pode ser diferente do perfil global.
                     </p>
                   </div>
                   <div className="space-y-1.5">
