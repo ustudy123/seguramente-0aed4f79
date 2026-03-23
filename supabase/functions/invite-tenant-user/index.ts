@@ -140,7 +140,13 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingProfile) {
-      return json({ error: "Este e-mail já possui acesso a esta empresa" }, 409);
+      // User already exists in this tenant — return their id so frontend can just link them
+      return json({
+        ok: true,
+        userId: existingUser.id,
+        inviteSent: false,
+        alreadyExists: true,
+      });
     }
   }
 
