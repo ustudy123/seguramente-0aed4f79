@@ -674,7 +674,13 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                 </div>
                 <div className="flex flex-wrap justify-center gap-2">
                   <Badge variant="secondary">Usuário criado</Badge>
-                  <Badge variant="secondary">Vínculo ativo</Badge>
+                  {modoVinculo === "grupo" ? (
+                    <Badge variant="secondary">
+                      {empresas.filter((e: any) => e.grupo_economico_id === grupoSelecionadoId).length} vínculos criados (grupo)
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">Vínculo ativo</Badge>
+                  )}
                   <Badge variant="secondary">Acesso no Auth criado</Badge>
                   {dadosReaproveitados && <Badge variant="outline" className="text-primary border-primary/30">Dados reaproveitados</Badge>}
                 </div>
