@@ -146,6 +146,7 @@ interface AdmissaoFormProps {
     dadosProfissionais: DadosProfissionais;
     dadosBancarios: DadosBancarios;
     exameAdmissional?: DadosExameAdmissional;
+    documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => void;
   onCancel: () => void;
   onAutoSave?: (dados: {
@@ -439,12 +440,22 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
   };
 
   const handleFinalSubmit = () => {
+    // Coletar documentos que possuem arquivos locais para upload
+    const docsComArquivo = documentos
+      .filter(doc => doc.arquivo instanceof File)
+      .map(doc => ({
+        documentoId: doc.id,
+        file: doc.arquivo as File,
+        obrigatorio: doc.obrigatorio,
+      }));
+
     onSubmit({
       dadosPessoais: formPessoais.getValues(),
       dadosContato: formContato.getValues(),
       dadosProfissionais: formProfissionais.getValues(),
       dadosBancarios: formBancarios.getValues(),
       exameAdmissional: formExame.getValues(),
+      documentosComArquivo: docsComArquivo.length > 0 ? docsComArquivo : undefined,
     });
   };
 
