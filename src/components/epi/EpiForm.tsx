@@ -58,6 +58,7 @@ const schema = z.object({
   localizacao: z.string().optional(),
   unidade_medida: z.string().optional(),
   tipo_durabilidade: z.string().optional(),
+  periodicidade_troca_dias: z.union([z.coerce.number().min(1, "Deve ser pelo menos 1 dia"), z.literal(""), z.undefined()]).optional(),
   fabricante: z.string().optional(),
   observacoes: z.string().optional(),
 });
@@ -75,6 +76,7 @@ interface EpiFormProps {
     unidade_medida?: string;
     tipo_durabilidade?: string;
     validade_meses?: number | null;
+    periodicidade_troca_dias?: number | null;
     ca_numero?: string;
     ca_validade?: string;
     marca?: string;
@@ -140,6 +142,7 @@ export function EpiForm({
       localizacao: epi?.localizacao || "",
       unidade_medida: epi?.tipo?.unidade_medida || "unidade",
       tipo_durabilidade: epi?.tipo?.tipo_durabilidade || "duravel",
+      periodicidade_troca_dias: epi?.tipo?.periodicidade_troca_dias || undefined,
       fabricante: epi?.tipo?.fabricante || "",
       observacoes: epi?.observacoes || "",
     },
@@ -164,6 +167,7 @@ export function EpiForm({
         localizacao: epi?.localizacao || "",
         unidade_medida: epi?.tipo?.unidade_medida || "unidade",
         tipo_durabilidade: epi?.tipo?.tipo_durabilidade || "duravel",
+        periodicidade_troca_dias: epi?.tipo?.periodicidade_troca_dias || undefined,
         fabricante: epi?.tipo?.fabricante || "",
         observacoes: epi?.observacoes || "",
       });
@@ -181,6 +185,7 @@ export function EpiForm({
         categoria: categoria,
         unidade_medida: data.unidade_medida,
         tipo_durabilidade: data.tipo_durabilidade,
+        periodicidade_troca_dias: data.periodicidade_troca_dias ? Number(data.periodicidade_troca_dias) : null,
         marca: data.marca,
         fabricante: data.fabricante,
         ca_numero: data.ca,
@@ -373,6 +378,25 @@ export function EpiForm({
                       {TIPOS_DURABILIDADE.map((td) => <SelectItem key={td.value} value={td.value}>{td.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="periodicidade_troca_dias" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    Periodicidade de Troca (dias)
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
+                          <p>Informe em dias a periodicidade de troca/manutenção do EPI. Será usado como referência no momento da entrega.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </FormLabel>
+                  <FormControl><Input type="number" min={1} placeholder="Ex: 180" {...field} value={field.value || ""} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

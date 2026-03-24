@@ -1,0 +1,1 @@
+ALTER TABLE public.epi_tipos ADD COLUMN IF NOT EXISTS periodicidade_troca_dias integer DEFAULT NULL;
