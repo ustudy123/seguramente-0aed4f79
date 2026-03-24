@@ -4394,6 +4394,7 @@ export type Database = {
           marca: string | null
           nome: string
           obrigatorio_para_funcoes: string[] | null
+          periodicidade_troca_dias: number | null
           quantidade_estoque: number | null
           tenant_id: string
           tipo_durabilidade: string
@@ -4415,6 +4416,7 @@ export type Database = {
           marca?: string | null
           nome: string
           obrigatorio_para_funcoes?: string[] | null
+          periodicidade_troca_dias?: number | null
           quantidade_estoque?: number | null
           tenant_id: string
           tipo_durabilidade?: string
@@ -4436,6 +4438,7 @@ export type Database = {
           marca?: string | null
           nome?: string
           obrigatorio_para_funcoes?: string[] | null
+          periodicidade_troca_dias?: number | null
           quantidade_estoque?: number | null
           tenant_id?: string
           tipo_durabilidade?: string
