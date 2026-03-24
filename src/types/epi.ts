@@ -17,6 +17,7 @@ export type EpiTipo = Database["public"]["Tables"]["epi_tipos"]["Row"] & {
   is_active?: boolean | null;
   unidade_medida?: string | null;
   tipo_durabilidade?: string | null;
+  periodicidade_troca_dias?: number | null;
 };
 export type EpiTipoInsert = Database["public"]["Tables"]["epi_tipos"]["Insert"];
 
