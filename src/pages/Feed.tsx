@@ -135,7 +135,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
   });
 
   const lembretes = useMemo(() => {
-    const hoje = new Date();
+    const hoje = startOfDay(new Date());
     const ano = hoje.getFullYear();
     const items: LembreteMural[] = [];
     const dispensadoSet = new Set(dispensados);
@@ -143,7 +143,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     for (const adm of admissoes) {
       if (adm.data_nascimento) {
         const nasc = parseISO(adm.data_nascimento);
-        let proxAniv = setYear(nasc, ano);
+        let proxAniv = startOfDay(setYear(nasc, ano));
         if (proxAniv < hoje) proxAniv = addYears(proxAniv, 1);
         const dias = differenceInDays(proxAniv, hoje);
         const chave = `aniv-${adm.id}-${proxAniv.getFullYear()}`;
