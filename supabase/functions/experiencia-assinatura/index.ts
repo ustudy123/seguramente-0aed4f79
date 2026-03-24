@@ -161,6 +161,13 @@ Deno.serve(async (req) => {
         console.error("Erro ao registrar histórico:", histErr);
       }
 
+      // Archive signed document to Documentos module
+      try {
+        await arquivarDocumentoNoDossie(supabase, link, assinatura_base64);
+      } catch (archErr) {
+        console.error("Erro ao arquivar no dossiê:", archErr);
+      }
+
       return new Response(JSON.stringify({ success: true, message: "Assinatura registrada com sucesso!" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
