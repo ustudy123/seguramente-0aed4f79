@@ -138,7 +138,7 @@ export function AdmissaoDetail({
               <InfoCard icon={User} label="Nome Completo" value={dadosPessoais.nomeCompleto} />
               <InfoCard icon={User} label="CPF" value={dadosPessoais.cpf} />
               <InfoCard icon={User} label="RG" value={dadosPessoais.rg} />
-              <InfoCard icon={Calendar} label="Data de Nascimento" value={format(new Date(dadosPessoais.dataNascimento), 'dd/MM/yyyy')} />
+              <InfoCard icon={Calendar} label="Data de Nascimento" value={format(parseISO(dadosPessoais.dataNascimento), 'dd/MM/yyyy')} />
               <InfoCard icon={User} label="Gênero" value={dadosPessoais.genero} />
               <InfoCard icon={User} label="Estado Civil" value={dadosPessoais.estadoCivil} />
               <InfoCard icon={User} label="Nacionalidade" value={dadosPessoais.nacionalidade} />
