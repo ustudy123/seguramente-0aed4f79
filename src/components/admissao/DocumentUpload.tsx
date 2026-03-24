@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
-  File, 
+  File as FileIcon2, 
   FileText, 
   Image, 
   CheckCircle, 
