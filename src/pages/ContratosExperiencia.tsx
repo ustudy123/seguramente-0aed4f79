@@ -49,7 +49,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 
 export default function ContratosExperiencia() {
   const {
-    contratos, isLoading, emExperiencia, vencendo15Dias, vencendo7Dias,
+    contratos, isLoading, emExperiencia, vencendo15Dias, vencendo7Dias, vencendo30Dias,
     prorrogar, prorrogando,
     efetivar, efetivando,
     encerrar, encerrando,
