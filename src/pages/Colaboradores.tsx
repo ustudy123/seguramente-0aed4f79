@@ -691,6 +691,7 @@ function AdmissoesTab() {
 
   const handleSubmitForm = async (dados: {
     dadosPessoais: any; dadosContato: any; dadosProfissionais: any; dadosBancarios: any; exameAdmissional?: any;
+    documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => {
     try {
       const formData: AdmissaoFormData = {
@@ -723,6 +724,22 @@ function AdmissoesTab() {
       if (viewMode === "new") {
         const novaAdmissao = await criarAdmissao(formData);
         toast.success("Admissão criada com sucesso!"); setSelectedId(novaAdmissao.id); setViewMode("detail");
+
+        // Upload documentos que foram anexados no formulário
+        if (dados.documentosComArquivo?.length) {
+          for (const docLocal of dados.documentosComArquivo) {
+            const indexMatch = docLocal.documentoId.match(/new-doc-(\d+)/);
+            if (indexMatch && novaAdmissao.documentos?.[parseInt(indexMatch[1])]) {
+              const realDocId = novaAdmissao.documentos[parseInt(indexMatch[1])].id;
+              try {
+                await uploadDocumento(novaAdmissao.id, realDocId, docLocal.file);
+              } catch (err) {
+                console.error('Erro ao enviar documento:', err);
+              }
+            }
+          }
+          toast.success("Documentos enviados com sucesso!");
+        }
       } else if (viewMode === "edit" && selectedId) {
         await atualizarAdmissao({ id: selectedId, dados: formData });
         toast.success("Admissão atualizada com sucesso!"); setViewMode("detail");
