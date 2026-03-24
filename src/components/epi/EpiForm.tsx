@@ -58,7 +58,7 @@ const schema = z.object({
   localizacao: z.string().optional(),
   unidade_medida: z.string().optional(),
   tipo_durabilidade: z.string().optional(),
-  periodicidade_troca_dias: z.coerce.number().min(1, "Deve ser pelo menos 1 dia").optional().or(z.literal("")),
+  periodicidade_troca_dias: z.union([z.coerce.number().min(1, "Deve ser pelo menos 1 dia"), z.literal(""), z.undefined()]).optional(),
   fabricante: z.string().optional(),
   observacoes: z.string().optional(),
 });
