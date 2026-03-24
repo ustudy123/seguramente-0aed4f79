@@ -185,6 +185,7 @@ export function EpiForm({
         categoria: categoria,
         unidade_medida: data.unidade_medida,
         tipo_durabilidade: data.tipo_durabilidade,
+        periodicidade_troca_dias: data.periodicidade_troca_dias ? Number(data.periodicidade_troca_dias) : null,
         marca: data.marca,
         fabricante: data.fabricante,
         ca_numero: data.ca,
