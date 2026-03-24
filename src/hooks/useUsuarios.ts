@@ -221,15 +221,25 @@ export function useUsuarios() {
 
   const encerrarVinculo = useMutation({
     mutationFn: async ({ id, usuario_id }: { id: string; usuario_id: string }) => {
-      const { error } = await (supabase as any)
+      if (!tenantId) throw new Error('Sem tenant');
+      const { data, error } = await (supabase as any)
         .from('usuario_vinculos')
         .update({ status: 'encerrado', data_fim: new Date().toISOString().split('T')[0] })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', tenantId)
+        .select()
+        .single();
       if (error) throw error;
-      await logAudit(tenantId!, usuario_id, id, 'vinculo_encerrado', 'vinculo', null, { status: 'encerrado' });
+      if (!data) throw new Error('Vínculo não encontrado ou sem permissão para encerrar.');
+      await logAudit(tenantId, usuario_id, id, 'vinculo_encerrado', 'vinculo', null, { status: 'encerrado' });
+      return { usuario_id };
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['usuarios'] }); toast.success('Vínculo encerrado!'); },
-    onError: (e: any) => toast.error('Erro: ' + e.message),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['usuarios'] });
+      qc.invalidateQueries({ queryKey: ['usuario-vinculos', variables.usuario_id] });
+      toast.success('Vínculo encerrado!');
+    },
+    onError: (e: any) => toast.error('Erro ao encerrar vínculo: ' + e.message),
   });
 
   return {
