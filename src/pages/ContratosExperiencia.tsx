@@ -58,6 +58,9 @@ export default function ContratosExperiencia() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [filtroFilial, setFiltroFilial] = useState("todos");
+  const [filtroGestor, setFiltroGestor] = useState("todos");
+  const [filtroPrazo, setFiltroPrazo] = useState("todos");
   const [selectedContrato, setSelectedContrato] = useState<ContratoExperiencia | null>(null);
   const [modalAction, setModalAction] = useState<"prorrogar" | "efetivar" | "encerrar" | "detalhes" | "documento" | null>(null);
 
@@ -68,10 +71,37 @@ export default function ContratosExperiencia() {
   const [motivoEncerramento, setMotivoEncerramento] = useState("");
   const [dataEncerramento, setDataEncerramento] = useState(format(new Date(), "yyyy-MM-dd"));
 
+  // Extrair listas únicas para filtros
+  const filiais = useMemo(() => {
+    const set = new Set(contratos.map(c => c.filial).filter(Boolean) as string[]);
+    return Array.from(set).sort();
+  }, [contratos]);
+
+  const gestores = useMemo(() => {
+    const set = new Set(contratos.map(c => c.gestor_imediato).filter(Boolean) as string[]);
+    return Array.from(set).sort();
+  }, [contratos]);
+
   const filtered = useMemo(() => {
     let result = contratos;
     if (filtroStatus !== "todos") {
       result = result.filter(c => c.status === filtroStatus);
+    }
+    if (filtroFilial !== "todos") {
+      result = result.filter(c => c.filial === filtroFilial);
+    }
+    if (filtroGestor !== "todos") {
+      result = result.filter(c => c.gestor_imediato === filtroGestor);
+    }
+    if (filtroPrazo !== "todos") {
+      result = result.filter(c => {
+        if (!isActive(c)) return false;
+        const dias = getDiasRestantes(c);
+        if (filtroPrazo === "7dias") return dias >= 0 && dias <= 7;
+        if (filtroPrazo === "15dias") return dias >= 0 && dias <= 15;
+        if (filtroPrazo === "30dias") return dias >= 0 && dias <= 30;
+        return true;
+      });
     }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -82,7 +112,7 @@ export default function ContratosExperiencia() {
       );
     }
     return result;
-  }, [contratos, filtroStatus, searchTerm]);
+  }, [contratos, filtroStatus, filtroFilial, filtroGestor, filtroPrazo, searchTerm]);
 
   const openAction = (contrato: ContratoExperiencia, action: typeof modalAction) => {
     setSelectedContrato(contrato);
@@ -256,24 +286,57 @@ export default function ContratosExperiencia() {
 
       {/* Filters */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-        className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
+        className="flex flex-col sm:flex-row gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar colaborador..." value={searchTerm}
+          <Input placeholder="Buscar colaborador, CPF ou cargo..." value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
         <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="todos">Todos os Status</SelectItem>
             <SelectItem value="em_experiencia">1º Período</SelectItem>
             <SelectItem value="em_experiencia_2_periodo">2º Período</SelectItem>
             <SelectItem value="efetivado">Efetivado</SelectItem>
             <SelectItem value="encerrado">Encerrado</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={filtroPrazo} onValueChange={setFiltroPrazo}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Prazo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os Prazos</SelectItem>
+            <SelectItem value="7dias">Vencendo em 7 dias</SelectItem>
+            <SelectItem value="15dias">Vencendo em 15 dias</SelectItem>
+            <SelectItem value="30dias">Vencendo em 30 dias</SelectItem>
+          </SelectContent>
+        </Select>
+        {filiais.length > 0 && (
+          <Select value={filtroFilial} onValueChange={setFiltroFilial}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Unidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todas Unidades</SelectItem>
+              {filiais.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        {gestores.length > 0 && (
+          <Select value={filtroGestor} onValueChange={setFiltroGestor}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Gestor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos Gestores</SelectItem>
+              {gestores.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </motion.div>
 
       {/* Table */}
