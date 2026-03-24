@@ -51,6 +51,21 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
   const [editingDescValue, setEditingDescValue] = useState("");
   const [popDesatualizadoId, setPopDesatualizadoId] = useState<string | null>(null);
 
+  // Editing header fields state
+  const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
+  const [editingHeaderValues, setEditingHeaderValues] = useState<{ nome: string; frequencia: string; complexidade: string; classificacao: string }>({ nome: "", frequencia: "diaria", complexidade: "media", classificacao: "rotineira" });
+
+  const handleSaveHeader = useCallback(async (atividadeId: string) => {
+    await atualizarAtividade({
+      id: atividadeId,
+      nome: editingHeaderValues.nome,
+      frequencia: editingHeaderValues.frequencia as any,
+      complexidade: editingHeaderValues.complexidade as any,
+      classificacao: editingHeaderValues.classificacao as any,
+    });
+    setEditingHeaderId(null);
+  }, [editingHeaderValues, atualizarAtividade]);
+
   const handleSaveDesc = useCallback(async (atividadeId: string) => {
     const original = atividades.find(a => a.id === atividadeId);
     if (original && original.descricao !== editingDescValue) {
