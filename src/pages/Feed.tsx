@@ -163,7 +163,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
       }
       if (adm.data_admissao) {
         const admDate = parseISO(adm.data_admissao);
-        let proxAniv = setYear(admDate, ano);
+        let proxAniv = startOfDay(setYear(admDate, ano));
         if (proxAniv < hoje) proxAniv = addYears(proxAniv, 1);
         const dias = differenceInDays(proxAniv, hoje);
         const anos = proxAniv.getFullYear() - admDate.getFullYear();
