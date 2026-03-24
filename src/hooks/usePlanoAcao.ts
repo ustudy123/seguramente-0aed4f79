@@ -69,7 +69,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
       }
       if (filters?.busca) {
         query = query.or(
-          `titulo.ilike.%${filters.busca}%,codigo.ilike.%${filters.busca}%,descricao.ilike.%${filters.busca}%`
+          `titulo.ilike.%${filters.busca}%,codigo.ilike.%${filters.busca}%,descricao.ilike.%${filters.busca}%,responsavel_nome.ilike.%${filters.busca}%`
         );
       }
 
