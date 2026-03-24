@@ -248,3 +248,63 @@ async function injectSignatureIntoDocument(supabase: any, link: any, assinaturaB
 
   console.log(`Documento atualizado com assinatura de ${link.signatario_nome}`);
 }
+
+async function arquivarDocumentoNoDossie(supabase: any, link: any, assinaturaBase64: string) {
+  const tipoLabels: Record<string, string> = {
+    contrato: "Contrato de Experiência",
+    prorrogacao: "Termo de Prorrogação",
+    efetivacao: "Termo de Efetivação",
+    rescisao: "Termo de Rescisão",
+  };
+
+  const nomeDoc = `${tipoLabels[link.tipo_documento] || link.tipo_documento} — ${link.signatario_nome} (Assinado)`;
+
+  // Build HTML content with signature
+  let htmlContent = link.documento_html || "";
+  if (!htmlContent && link.documento_storage_path) {
+    const { data: fileData } = await supabase.storage
+      .from("documentos")
+      .download(link.documento_storage_path);
+    if (fileData) {
+      htmlContent = await fileData.text();
+    }
+  }
+
+  if (!htmlContent) return;
+
+  // Upload signed document to storage
+  const storagePath = `${link.tenant_id}/experiencia-contratos/${link.contrato_id}/${link.tipo_documento}_assinado_${link.signatario_papel}_${Date.now()}.html`;
+  const signedBlob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+
+  const { error: upErr } = await supabase.storage
+    .from("documentos")
+    .upload(storagePath, signedBlob, { contentType: "text/html", upsert: false });
+
+  if (upErr) {
+    console.error("Erro ao upload documento assinado para dossiê:", upErr);
+    return;
+  }
+
+  // Insert into documentos table
+  const { error: docErr } = await supabase
+    .from("documentos")
+    .insert({
+      tenant_id: link.tenant_id,
+      nome: nomeDoc,
+      tipo: "contrato_experiencia",
+      categoria: "contratual",
+      subcategoria: link.tipo_documento,
+      status: "ativo",
+      storage_path: storagePath,
+      tamanho: signedBlob.size,
+      formato: "text/html",
+      colaborador_nome: link.colaborador_nome || link.signatario_nome,
+      observacoes: `Documento assinado digitalmente por ${link.signatario_nome} (${link.signatario_papel}) em ${new Date().toLocaleDateString("pt-BR")}.`,
+    });
+
+  if (docErr) {
+    console.error("Erro ao registrar documento no dossiê:", docErr);
+  } else {
+    console.log(`Documento arquivado no dossiê: ${nomeDoc}`);
+  }
+}
