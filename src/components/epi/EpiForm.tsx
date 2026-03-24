@@ -76,6 +76,7 @@ interface EpiFormProps {
     unidade_medida?: string;
     tipo_durabilidade?: string;
     validade_meses?: number | null;
+    periodicidade_troca_dias?: number | null;
     ca_numero?: string;
     ca_validade?: string;
     marca?: string;
