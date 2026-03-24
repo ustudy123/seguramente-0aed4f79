@@ -343,6 +343,10 @@ export function useContratosExperiencia() {
     const dias = getDiasRestantes(c);
     return dias >= 0 && dias <= 7;
   });
+  const vencendo30Dias = emExperiencia.filter(c => {
+    const dias = getDiasRestantes(c);
+    return dias >= 0 && dias <= 30;
+  });
 
   return {
     contratos,
@@ -350,6 +354,7 @@ export function useContratosExperiencia() {
     emExperiencia,
     vencendo15Dias,
     vencendo7Dias,
+    vencendo30Dias,
     useHistorico: historicoQuery,
 
     criarContrato: criarContratoMutation.mutateAsync,
