@@ -401,6 +401,7 @@ export default function ContratosExperiencia() {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{contrato.cargo || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{contrato.filial || "—"}</TableCell>
                     <TableCell>{formatDate(contrato.data_admissao)}</TableCell>
                     <TableCell>
                       <span className={urgente ? "text-destructive font-semibold" : ""}>
