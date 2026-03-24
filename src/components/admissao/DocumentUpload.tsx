@@ -214,7 +214,7 @@ function DocumentItem({
             {hasFile ? (
               <FileIcon className={cn("h-5 w-5", STATUS_CONFIG[documento.status].color)} />
             ) : (
-              <File className="h-5 w-5 text-muted-foreground" />
+              <FileIcon2 className="h-5 w-5 text-muted-foreground" />
             )}
           </div>
           <div>
@@ -479,7 +479,7 @@ export function DocumentUpload({
       {documentosOpcionais.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <File className="h-4 w-4 text-muted-foreground" />
+            <FileIcon2 className="h-4 w-4 text-muted-foreground" />
             Documentos Opcionais ({documentosOpcionais.length})
           </h4>
           <div className="space-y-3">
