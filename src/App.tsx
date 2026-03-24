@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
-import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Auth Pages
@@ -211,8 +211,6 @@ const App = () => (
           
           {/* Chat IA Widget removido */}
           
-          {/* WhatsApp flutuante */}
-          <WhatsAppButton />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
