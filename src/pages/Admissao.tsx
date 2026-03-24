@@ -164,6 +164,23 @@ export default function Admissao() {
         toast.success('Admissão criada com sucesso!');
         setSelectedId(novaAdmissao.id);
         setViewMode('detail');
+
+        // Upload documentos que foram anexados no formulário
+        if (dados.documentosComArquivo?.length) {
+          for (const docLocal of dados.documentosComArquivo) {
+            // Encontrar o ID real do documento pelo índice (new-doc-X -> index X)
+            const indexMatch = docLocal.documentoId.match(/new-doc-(\d+)/);
+            if (indexMatch && novaAdmissao.documentos?.[parseInt(indexMatch[1])]) {
+              const realDocId = novaAdmissao.documentos[parseInt(indexMatch[1])].id;
+              try {
+                await uploadDocumento(novaAdmissao.id, realDocId, docLocal.file);
+              } catch (err) {
+                console.error('Erro ao enviar documento:', err);
+              }
+            }
+          }
+          toast.success('Documentos enviados com sucesso!');
+        }
       } else if (viewMode === 'edit' && selectedId) {
         await atualizarAdmissao({ id: selectedId, dados: formData });
         toast.success('Admissão atualizada com sucesso!');
