@@ -141,6 +141,7 @@ export function EpiForm({
       localizacao: epi?.localizacao || "",
       unidade_medida: epi?.tipo?.unidade_medida || "unidade",
       tipo_durabilidade: epi?.tipo?.tipo_durabilidade || "duravel",
+      periodicidade_troca_dias: epi?.tipo?.periodicidade_troca_dias || undefined,
       fabricante: epi?.tipo?.fabricante || "",
       observacoes: epi?.observacoes || "",
     },
@@ -165,6 +166,7 @@ export function EpiForm({
         localizacao: epi?.localizacao || "",
         unidade_medida: epi?.tipo?.unidade_medida || "unidade",
         tipo_durabilidade: epi?.tipo?.tipo_durabilidade || "duravel",
+        periodicidade_troca_dias: epi?.tipo?.periodicidade_troca_dias || undefined,
         fabricante: epi?.tipo?.fabricante || "",
         observacoes: epi?.observacoes || "",
       });
