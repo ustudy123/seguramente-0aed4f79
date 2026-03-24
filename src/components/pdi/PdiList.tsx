@@ -8,6 +8,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Pdi, PdiStatus } from "@/types/pdi";
 import { PDI_STATUS_LABELS, PDI_PERIODO_LABELS } from "@/types/pdi";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 interface PdiListProps {
   pdis: Pdi[];
@@ -25,6 +27,7 @@ const statusVariant: Record<PdiStatus, "default" | "secondary" | "destructive" |
 };
 
 export const PdiList = ({ pdis, isLoading, onSelect, onDelete }: PdiListProps) => {
+  const { getAfastamento } = useAfastamentosAtivos();
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2">
@@ -57,6 +60,7 @@ export const PdiList = ({ pdis, isLoading, onSelect, onDelete }: PdiListProps) =
                   <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                     <User className="w-3.5 h-3.5" />
                     <span className="truncate">{pdi.colaborador_nome}</span>
+                    <AfastadoBadge afastamento={getAfastamento({ nome: pdi.colaborador_nome })} compact />
                   </div>
                 </div>
                 <Badge variant={statusVariant[pdi.status]}>{PDI_STATUS_LABELS[pdi.status]}</Badge>

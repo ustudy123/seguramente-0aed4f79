@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { Search, Clock, AlertTriangle, TrendingUp, Shield } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 const RISK_BADGE: Record<string, { variant: any; label: string }> = {
   baixo: { variant: "outline", label: "Risco Baixo" },
@@ -25,6 +27,7 @@ export function JornadaIndividual() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<any>(null);
   const [pontoDiario, setPontoDiario] = useState<any[]>([]);
+  const { getAfastamento } = useAfastamentosAtivos();
 
   useEffect(() => {
     if (!tenantId) return;
@@ -106,6 +109,7 @@ export function JornadaIndividual() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">{a.colaborador_nome}</p>
+                    <AfastadoBadge afastamento={getAfastamento({ cpf: a.colaborador_cpf, nome: a.colaborador_nome })} compact />
                     <p className="text-xs text-muted-foreground">{a.colaborador_cpf}</p>
                   </div>
                   <Badge {...RISK_BADGE[a.nivel_risco]} className="text-[10px]">
@@ -136,6 +140,7 @@ export function JornadaIndividual() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">{selected.colaborador_nome}</CardTitle>
+                    <AfastadoBadge afastamento={getAfastamento({ cpf: selected.colaborador_cpf, nome: selected.colaborador_nome })} compact />
                     <div className="flex gap-2">
                       <Badge {...RISK_BADGE[selected.nivel_risco]} className="text-[10px]">
                         {RISK_BADGE[selected.nivel_risco]?.label}
