@@ -358,12 +358,14 @@ export default function ContratosExperiencia() {
             <TableRow>
               <TableHead>Colaborador</TableHead>
               <TableHead>Cargo</TableHead>
+              <TableHead>Unidade</TableHead>
               <TableHead>Admissão</TableHead>
               <TableHead>Término</TableHead>
               <TableHead>Dias Restantes</TableHead>
               <TableHead>Período</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
             </TableRow>
           </TableHeader>
           <TableBody>
