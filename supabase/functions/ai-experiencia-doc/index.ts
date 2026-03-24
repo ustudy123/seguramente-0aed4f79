@@ -170,18 +170,20 @@ Deno.serve(async (req) => {
             role: "system",
             content: `Você é um advogado trabalhista e designer de documentos jurídicos. Gere APENAS HTML completo e profissional para documentos trabalhistas. 
 
-REGRAS DE FORMATAÇÃO HTML:
-- Use CSS inline em cada elemento
+REGRAS DE FORMATAÇÃO HTML OBRIGATÓRIAS:
+- Use uma tag <style> no <head> para toda estilização
 - Paleta: primário #1e3a5f, secundário #2d8a6e, accent #c9a84c, fundo #f8f9fa, texto #1a1a2e
 - Fonte: font-family: 'Georgia', 'Times New Roman', serif para corpo; 'Segoe UI', sans-serif para cabeçalhos
-- Estilo de documento jurídico formal: margens amplas, espaçamento 1.5, cláusulas numeradas
-- Cabeçalho com logo placeholder e dados da empresa
-- Rodapé com número de página, confidencialidade e data de geração
-- Espaços para assinatura com linhas e nome embaixo
-- Use @media print para impressão correta
+- Estilo de documento jurídico formal: margens amplas (margin: 50px), line-height: 1.6, cláusulas numeradas
+- Cabeçalho com dados da empresa centralizado
+- PROIBIDO usar position: fixed ou position: absolute em QUALQUER elemento
+- O rodapé/footer deve usar position: static (fluxo normal), com margin-top: 40px, sem sobrepor conteúdo
+- Espaços para assinatura com border-top e nome embaixo, margin-top: 60px
+- NÃO inclua tags <img> para logos ou placeholders
 - HTML SELF-CONTAINED (sem referências externas)
 - Comece com <!DOCTYPE html>
-- Nunca inclua markdown, code blocks ou explicações`
+- Nunca inclua markdown, code blocks ou explicações
+- NUNCA sobreponha elementos - todo conteúdo deve fluir verticalmente`
           },
           { role: "user", content: prompt }
         ],
