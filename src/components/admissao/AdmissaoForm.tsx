@@ -876,6 +876,26 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                 )}
               </div>
 
+              {/* Bloco específico para Contrato de Experiência */}
+              {formProfissionais.watch('tipoContrato') === 'contrato_experiencia' && (
+                <div className="col-span-full rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <AlertCircle className="w-4 h-4" />
+                    Contrato de Experiência (CLT art. 445)
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Ao concluir esta admissão, um contrato de experiência será criado automaticamente no módulo de Contratos de Experiência, 
+                    usando as configurações da empresa (duração do período, cláusula assecuratória, etc.). 
+                    Você poderá gerar o documento, enviar para assinatura e acompanhar prazos por lá.
+                  </p>
+                  <ul className="text-xs text-muted-foreground list-disc pl-5 space-y-0.5">
+                    <li>Duração máxima: 90 dias (pode ser dividido em 2 períodos)</li>
+                    <li>Apenas uma prorrogação é permitida</li>
+                    <li>Alertas automáticos de vencimento serão ativados</li>
+                  </ul>
+                </div>
+              )}
+
               {/* Jornada | Salário */}
               <div>
                 <Label htmlFor="jornadaTrabalho">Jornada de Trabalho *</Label>
