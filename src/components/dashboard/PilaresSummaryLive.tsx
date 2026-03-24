@@ -13,6 +13,7 @@ interface PilarSummary {
   scoreKey: "organizacao" | "condicoes" | "experiencia" | "governanca";
   color: string;
   bgColor: string;
+  bgLight: string;
   indicatorType: IndicatorType;
 }
 
@@ -25,6 +26,7 @@ const pilares: PilarSummary[] = [
     scoreKey: "organizacao",
     color: "text-primary",
     bgColor: "bg-primary",
+    bgLight: "bg-primary/10",
     indicatorType: "organizacao",
   },
   {
@@ -35,6 +37,7 @@ const pilares: PilarSummary[] = [
     scoreKey: "condicoes",
     color: "text-success",
     bgColor: "bg-success",
+    bgLight: "bg-success/10",
     indicatorType: "condicoes",
   },
   {
@@ -45,6 +48,7 @@ const pilares: PilarSummary[] = [
     scoreKey: "experiencia",
     color: "text-info",
     bgColor: "bg-info",
+    bgLight: "bg-info/10",
     indicatorType: "experiencia",
   },
   {
@@ -55,6 +59,7 @@ const pilares: PilarSummary[] = [
     scoreKey: "governanca",
     color: "text-warning",
     bgColor: "bg-warning",
+    bgLight: "bg-warning/10",
     indicatorType: "governanca",
   },
 ];
@@ -83,11 +88,11 @@ export const PilaresSummaryLive = () => {
     : 0;
 
   const getOverallLabel = (score: number) => {
-    if (score >= 80) return { label: "Cultura Saudável", icon: Trophy, color: "text-success" };
-    if (score >= 60) return { label: "Estratégico", icon: TrendingUp, color: "text-primary" };
-    if (score >= 40) return { label: "Preventivo", icon: ShieldCheck, color: "text-info" };
-    if (score >= 20) return { label: "Corretivo", icon: Wrench, color: "text-warning" };
-    return { label: "Reativo", icon: AlertTriangle, color: "text-destructive" };
+    if (score >= 80) return { label: "Cultura Saudável", icon: Trophy, color: "text-success", bgColor: "bg-success/10" };
+    if (score >= 60) return { label: "Estratégico", icon: TrendingUp, color: "text-primary", bgColor: "bg-primary/10" };
+    if (score >= 40) return { label: "Preventivo", icon: ShieldCheck, color: "text-info", bgColor: "bg-info/10" };
+    if (score >= 20) return { label: "Corretivo", icon: Wrench, color: "text-warning", bgColor: "bg-warning/10" };
+    return { label: "Reativo", icon: AlertTriangle, color: "text-destructive", bgColor: "bg-destructive/10" };
   };
 
   const overall = getOverallLabel(averageScore);
@@ -103,7 +108,7 @@ export const PilaresSummaryLive = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+      <div className="bg-card rounded-xl border border-border p-8 shadow-sm">
         <div className="flex items-center justify-center h-32">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
@@ -114,81 +119,82 @@ export const PilaresSummaryLive = () => {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card rounded-xl border border-border p-6 shadow-sm"
+        transition={{ duration: 0.5 }}
+        className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
       >
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-foreground">
-              Governança do Trabalho Humano
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Visão integrada dos 4 pilares estratégicos • Clique para detalhes
-            </p>
-          </div>
-          <div className="flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3">
-            <overall.icon className={cn("w-6 h-6", overall.color)} />
+        {/* Header com gradiente sutil */}
+        <div className="border-b border-border bg-muted/30 px-6 py-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Nível de Maturidade</p>
-              <p className="font-bold text-foreground">{overall.label}</p>
+              <h2 className="text-lg font-bold text-foreground">
+                Governança do Trabalho Humano
+              </h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Visão integrada dos 4 pilares estratégicos
+              </p>
             </div>
-            <div className="ml-4 pl-4 border-l border-border">
-              <p className="text-xs text-muted-foreground">Score Geral</p>
-              <p className="text-2xl font-bold text-foreground">{averageScore}%</p>
+            <div className="flex items-center gap-4">
+              <div className={cn("flex items-center gap-2 rounded-lg px-4 py-2.5", overall.bgColor)}>
+                <overall.icon className={cn("w-5 h-5", overall.color)} />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Nível</p>
+                  <p className={cn("text-sm font-bold -mt-0.5", overall.color)}>{overall.label}</p>
+                </div>
+              </div>
+              <div className="bg-muted/60 rounded-lg px-4 py-2.5 text-center min-w-[72px]">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Score</p>
+                <p className="text-2xl font-extrabold text-foreground -mt-0.5 tabular-nums">{averageScore}%</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Pilares Progress */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Pilares Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
           {pilares.map((pilar, index) => {
             const score = getScore(pilar.scoreKey);
             return (
-              <motion.div
+              <motion.button
                 key={pilar.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
                 onClick={() => handlePilarClick(pilar)}
-                className="group relative bg-card rounded-lg p-4 border border-border shadow-sm hover:shadow-lg transition-all cursor-pointer"
+                className="group relative px-5 py-5 text-left hover:bg-muted/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {/* Expand hint */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Expand className="w-4 h-4 text-muted-foreground" />
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Expand className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
 
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={cn("p-1.5 rounded-lg", pilar.bgColor)}>
-                    <pilar.icon className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className={cn("p-2 rounded-lg", pilar.bgLight)}>
+                    <pilar.icon className={cn("w-4 h-4", pilar.color)} />
                   </div>
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-semibold text-foreground">
                     {pilar.shortTitle}
                   </span>
                 </div>
 
-                <div className="mb-2">
-                  <div className="flex items-center justify-between mb-1">
+                <div className="mb-1.5">
+                  <div className="flex items-baseline justify-between mb-2">
                     <span className="text-xs text-muted-foreground">Maturidade</span>
-                    <span className={cn("text-lg font-bold", pilar.color)}>
+                    <span className={cn("text-xl font-extrabold tabular-nums", pilar.color)}>
                       {score}%
                     </span>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${score}%` }}
-                      transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
+                      animate={{ width: `${Math.max(score, 2)}%` }}
+                      transition={{ duration: 0.7, delay: 0.2 + index * 0.08 }}
                       className={cn("h-full rounded-full", pilar.bgColor)}
                     />
                   </div>
                 </div>
-
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  {pilar.title}
-                </p>
-              </motion.div>
+              </motion.button>
             );
           })}
         </div>
