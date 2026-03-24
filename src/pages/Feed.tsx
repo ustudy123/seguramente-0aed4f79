@@ -12,7 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_COLORS, STATUS_ACAO_LABELS } from "@/types/cultura";
-import { format, parseISO, differenceInDays, setYear, addYears } from "date-fns";
+import { format, parseISO, differenceInDays, setYear, addYears, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface LembreteMural {
