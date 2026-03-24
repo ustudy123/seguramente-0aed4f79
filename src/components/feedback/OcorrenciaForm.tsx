@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ThumbsUp, Minus, ThumbsDown, AlertTriangle, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ColaboradorSelect } from "@/components/shared/ColaboradorSelect";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,18 +124,12 @@ export function OcorrenciaForm({ onSubmit, onCreateAdvertenciaLink, isLoading }:
           {/* Colaborador */}
           <div className="space-y-2">
             <Label>Colaborador *</Label>
-            <Select value={colaboradorId} onValueChange={setColaboradorId}>
-              <SelectTrigger>
-                <SelectValue placeholder={loadingColabs ? "Carregando..." : "Selecione o colaborador"} />
-              </SelectTrigger>
-              <SelectContent>
-                {colaboradores.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nome_completo} — {c.cargo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ColaboradorSelect
+              value={colaboradorId}
+              onChange={setColaboradorId}
+              colaboradores={colaboradores}
+              isLoading={loadingColabs}
+            />
             {selectedColab && <AfastadoBadge afastamento={getAfastamento({ cpf: selectedColab.cpf, nome: selectedColab.nome_completo })} />}
             {selectedColab && (
               <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 grid grid-cols-2 gap-1">
