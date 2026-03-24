@@ -691,6 +691,7 @@ function AdmissoesTab() {
 
   const handleSubmitForm = async (dados: {
     dadosPessoais: any; dadosContato: any; dadosProfissionais: any; dadosBancarios: any; exameAdmissional?: any;
+    documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => {
     try {
       const formData: AdmissaoFormData = {

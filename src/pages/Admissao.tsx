@@ -111,6 +111,7 @@ export default function Admissao() {
     dadosProfissionais: any;
     dadosBancarios: any;
     exameAdmissional?: any;
+    documentosComArquivo?: { documentoId: string; file: File; obrigatorio: boolean }[];
   }) => {
     try {
       // Convert old format to new format
