@@ -76,6 +76,7 @@ export function AtestadoList({
   const [tipoFilter, setTipoFilter] = useState<string>("all");
   const [grupoFilter, setGrupoFilter] = useState<string>("all");
   const [deleteTarget, setDeleteTarget] = useState<Atestado | null>(null);
+  const { getAfastamento } = useAfastamentosAtivos();
 
   const filteredAtestados = atestados.filter((atestado) => {
     const matchesSearch = 
@@ -203,6 +204,7 @@ export function AtestadoList({
                       <div className="flex items-center gap-1.5 text-foreground font-medium">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate">{atestado.colaborador_nome}</span>
+                        <AfastadoBadge afastamento={getAfastamento({ cpf: atestado.colaborador_cpf, nome: atestado.colaborador_nome })} compact />
                       </div>
                       {atestado.colaborador_departamento && (
                         <div className="flex items-center gap-1.5 text-muted-foreground">

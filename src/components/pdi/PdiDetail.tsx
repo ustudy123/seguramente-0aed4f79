@@ -27,6 +27,7 @@ interface PdiDetailProps {
 
 export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
   const { updatePdi, createMeta, updateMeta, deleteMeta, createAcao, updateAcao, deleteAcao, createCheckin, checkins, createFeedback, feedbacks } = usePdi();
+  const { getAfastamento } = useAfastamentosAtivos();
   const [showMetaForm, setShowMetaForm] = useState(false);
   const [showCheckinForm, setShowCheckinForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
@@ -49,7 +50,8 @@ export const PdiDetail = ({ pdi, onBack }: PdiDetailProps) => {
             <Badge>{PDI_STATUS_LABELS[pdi.status]}</Badge>
           </div>
           <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {pdi.colaborador_nome}</span>
+             <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {pdi.colaborador_nome}</span>
+              <AfastadoBadge afastamento={getAfastamento({ nome: pdi.colaborador_nome })} compact />
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {format(new Date(pdi.data_inicio), "dd/MM/yy", { locale: ptBR })} — {format(new Date(pdi.data_fim), "dd/MM/yy", { locale: ptBR })}</span>
             <Badge variant="outline">{PDI_PERIODO_LABELS[pdi.periodo]}</Badge>
           </div>
