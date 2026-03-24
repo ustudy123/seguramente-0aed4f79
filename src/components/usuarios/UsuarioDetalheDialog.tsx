@@ -235,7 +235,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('usuario_vinculos')
-        .select('*, empresa:empresa_id(razao_social, nome_fantasia)')
+        .select('*, empresa:empresa_id(razao_social, nome_fantasia, cnpj)')
         .eq('usuario_id', usuario.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -837,6 +837,11 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                                     <span className="font-medium text-sm">
                                       {emp?.nome_fantasia || emp?.razao_social || "Empresa"}
                                     </span>
+                                    {emp?.cnpj && (
+                                      <span className="text-xs text-muted-foreground font-mono">
+                                        {emp.cnpj}
+                                      </span>
+                                    )}
                                     <span className={`text-xs px-1.5 py-0.5 rounded-full border ${
                                       v.status === "ativo"
                                         ? "bg-primary/10 text-primary border-primary/30"
