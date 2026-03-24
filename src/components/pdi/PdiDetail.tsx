@@ -17,6 +17,8 @@ import { PdiCheckinForm } from "./PdiCheckinForm";
 import { PdiFeedbackForm } from "./PdiFeedbackForm";
 import { PdiEditModal } from "./PdiEditModal";
 import { PdiDocumentoModal } from "./PdiDocumentoModal";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 interface PdiDetailProps {
   pdi: Pdi;

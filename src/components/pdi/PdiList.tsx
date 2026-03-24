@@ -8,6 +8,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Pdi, PdiStatus } from "@/types/pdi";
 import { PDI_STATUS_LABELS, PDI_PERIODO_LABELS } from "@/types/pdi";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 interface PdiListProps {
   pdis: Pdi[];

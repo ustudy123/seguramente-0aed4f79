@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { Search, Clock, AlertTriangle, TrendingUp, Shield } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
+import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 
 const RISK_BADGE: Record<string, { variant: any; label: string }> = {
   baixo: { variant: "outline", label: "Risco Baixo" },
