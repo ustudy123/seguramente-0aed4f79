@@ -237,7 +237,7 @@ export default function ContratosExperiencia() {
 
       {/* KPI Cards */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center justify-between">
@@ -268,6 +268,17 @@ export default function ContratosExperiencia() {
                 <p className="text-2xl font-bold">{vencendo15Dias.length}</p>
               </div>
               <Calendar className="w-8 h-8 text-amber-500 opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Vencendo em 30 dias</p>
+                <p className="text-2xl font-bold">{vencendo30Dias.length}</p>
+              </div>
+              <Calendar className="w-8 h-8 text-muted-foreground opacity-50" />
             </div>
           </CardContent>
         </Card>
