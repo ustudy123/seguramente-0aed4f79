@@ -51,6 +51,21 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
   const [editingDescValue, setEditingDescValue] = useState("");
   const [popDesatualizadoId, setPopDesatualizadoId] = useState<string | null>(null);
 
+  // Editing header fields state
+  const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
+  const [editingHeaderValues, setEditingHeaderValues] = useState<{ nome: string; frequencia: string; complexidade: string; classificacao: string }>({ nome: "", frequencia: "diaria", complexidade: "media", classificacao: "rotineira" });
+
+  const handleSaveHeader = useCallback(async (atividadeId: string) => {
+    await atualizarAtividade({
+      id: atividadeId,
+      nome: editingHeaderValues.nome,
+      frequencia: editingHeaderValues.frequencia as any,
+      complexidade: editingHeaderValues.complexidade as any,
+      classificacao: editingHeaderValues.classificacao as any,
+    });
+    setEditingHeaderId(null);
+  }, [editingHeaderValues, atualizarAtividade]);
+
   const handleSaveDesc = useCallback(async (atividadeId: string) => {
     const original = atividades.find(a => a.id === atividadeId);
     if (original && original.descricao !== editingDescValue) {
@@ -160,6 +175,51 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
         return (
           <Collapsible key={at.id} open={isExpanded} onOpenChange={() => setExpandedId(isExpanded ? null : at.id)}>
             <Card>
+              {editingHeaderId === at.id ? (
+                <CardHeader className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editingHeaderValues.nome}
+                        onChange={(e) => setEditingHeaderValues(v => ({ ...v, nome: e.target.value }))}
+                        className="text-sm font-medium flex-1"
+                        placeholder="Nome da atividade"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => { e.stopPropagation(); handleSaveHeader(at.id); }} disabled={atualizandoAtividade || !editingHeaderValues.nome.trim()}>
+                        <Check className="w-4 h-4 text-green-600" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => { e.stopPropagation(); setEditingHeaderId(null); }}>
+                        <X className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Frequência</Label>
+                        <Select value={editingHeaderValues.frequencia} onValueChange={(v) => setEditingHeaderValues(prev => ({ ...prev, frequencia: v }))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>{Object.entries(FREQ_LABELS).map(([k, lbl]) => <SelectItem key={k} value={k}>{lbl}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Complexidade</Label>
+                        <Select value={editingHeaderValues.complexidade} onValueChange={(v) => setEditingHeaderValues(prev => ({ ...prev, complexidade: v }))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>{Object.entries(COMPL_LABELS).map(([k, lbl]) => <SelectItem key={k} value={k}>{lbl}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Classificação</Label>
+                        <Select value={editingHeaderValues.classificacao} onValueChange={(v) => setEditingHeaderValues(prev => ({ ...prev, classificacao: v }))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>{Object.entries(CLASS_LABELS).map(([k, lbl]) => <SelectItem key={k} value={k}>{lbl}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+              ) : (
               <CollapsibleTrigger asChild>
                 <CardHeader className="p-4 cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center justify-between">
@@ -171,6 +231,9 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
                       <Badge variant="outline" className="text-xs">{FREQ_LABELS[at.frequencia]}</Badge>
                       <Badge className={`text-xs ${complColor[at.complexidade]}`}>{COMPL_LABELS[at.complexidade]}</Badge>
                       <Badge className={`text-xs ${classColor[at.classificacao]}`}>{CLASS_LABELS[at.classificacao]}</Badge>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setEditingHeaderId(at.id); setEditingHeaderValues({ nome: at.nome, frequencia: at.frequencia, complexidade: at.complexidade, classificacao: at.classificacao }); }}>
+                        <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); excluirAtividade(at.id); }}>
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
                       </Button>
@@ -178,6 +241,7 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
                   </div>
                 </CardHeader>
               </CollapsibleTrigger>
+              )}
               <CollapsibleContent>
                 <CardContent className="p-4 pt-0 space-y-4 border-t">
                   {/* Descrição editável */}
