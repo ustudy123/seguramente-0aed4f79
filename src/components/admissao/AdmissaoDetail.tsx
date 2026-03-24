@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DocumentUpload } from './DocumentUpload';
 import { WorkflowTimeline } from './WorkflowTimeline';
 import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface AdmissaoDetailProps {
