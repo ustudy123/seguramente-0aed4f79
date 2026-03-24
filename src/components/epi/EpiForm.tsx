@@ -381,6 +381,25 @@ export function EpiForm({
                   <FormMessage />
                 </FormItem>
               )} />
+              <FormField control={form.control} name="periodicidade_troca_dias" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    Periodicidade de Troca (dias)
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="start" className="max-w-xs z-[100]">
+                          <p>Informe em dias a periodicidade de troca/manutenção do EPI. Será usado como referência no momento da entrega.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </FormLabel>
+                  <FormControl><Input type="number" min={1} placeholder="Ex: 180" {...field} value={field.value || ""} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <FormField control={form.control} name="data_fabricacao" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Data de Fabricação</FormLabel>
