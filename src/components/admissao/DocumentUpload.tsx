@@ -150,8 +150,8 @@ function DocumentItem({
     const filePath = documento.arquivo_url || documento.urlPreview;
     
     if (!filePath) {
-      console.error('No file path available for document:', documento.nome);
-      toast.error('Documento ainda não foi salvo no servidor. Salve a admissão primeiro.');
+      console.error('No file path available for document:', documento.nome, 'Doc data:', { arquivo_url: documento.arquivo_url, urlPreview: documento.urlPreview, arquivo_nome: documento.arquivo_nome });
+      toast.error('Arquivo não encontrado. O documento pode não ter sido salvo corretamente.');
       return;
     }
     
