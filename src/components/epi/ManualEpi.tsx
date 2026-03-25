@@ -335,15 +335,8 @@ export function ManualEpi() {
         });
         y += dicaH + 4;
 
-        // Rodapé
-        doc.setFontSize(7);
-        text(doc, MUTED);
-        const pageNum = (doc as unknown as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
-        doc.text(
-          `Seguramente - Manual do Usuario | Gestao de EPIs | Pagina ${pageNum}`,
-          pageW / 2, pageH - 8, { align: "center" }
-        );
       });
+
 
       // ── FLUXO RESUMIDO ───────────────────────────────────────────────────
       addPage();
