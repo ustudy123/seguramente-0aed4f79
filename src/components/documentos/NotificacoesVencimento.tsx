@@ -215,13 +215,13 @@ export function NotificacoesVencimento({ documentos }: Props) {
           </Card>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-orange-300/50">
+          <Card className="border-destructive/40">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-orange-500/10">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
+              <div className="p-2.5 rounded-lg bg-destructive/10">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-orange-600">{criticos.length}</p>
+                <p className="text-2xl font-bold text-destructive">{criticos.length}</p>
                 <p className="text-xs text-muted-foreground">Críticos (≤ 7 dias)</p>
               </div>
             </CardContent>
