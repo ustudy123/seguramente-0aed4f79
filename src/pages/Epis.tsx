@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, HardHat, Package, Users, History, Shield, AlertTriangle, Wrench, ArrowDownCircle, Warehouse, ShieldCheck } from "lucide-react";
+import { Plus, HardHat, Package, Users, History, Shield, AlertTriangle, Wrench, ArrowDownCircle, Warehouse, ShieldCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEpis } from "@/hooks/useEpis";
@@ -20,6 +20,7 @@ import { EpiConfiguracaoTab } from "@/components/epi/EpiConfiguracaoTab";
 import { EntradasEstoqueTab } from "@/components/epi/EntradasEstoqueTab";
 import { SaldoLocalDashboard } from "@/components/epi/SaldoLocalDashboard";
 import { EpiStatsCards } from "@/components/epi/EpiStatsCards";
+import { GuiaRapidoEpi } from "@/components/epi/GuiaRapidoEpi";
 import type { EpiCompleto } from "@/types/epi";
 
 const Epis = () => {
@@ -43,6 +44,7 @@ const Epis = () => {
   const [showTipoForm, setShowTipoForm] = useState(false);
   const [showEpiForm, setShowEpiForm] = useState(false);
   const [showEntregaForm, setShowEntregaForm] = useState(false);
+  const [showGuia, setShowGuia] = useState(false);
   const [editingEpi, setEditingEpi] = useState<EpiCompleto | null>(null);
   const [ajustarEstoqueEpi, setAjustarEstoqueEpi] = useState<EpiCompleto | null>(null);
 
@@ -72,6 +74,10 @@ const Epis = () => {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
+            <HelpCircle className="h-4 w-4" />
+            Guia Rápido
+          </Button>
           {perm.podeCriarTipo && (
             <Button variant="outline" size="sm" onClick={() => setShowTipoForm(true)}>
               <Plus className="w-4 h-4 mr-1" /> Categoria
@@ -211,6 +217,7 @@ const Epis = () => {
         onOpenChange={(open) => { if (!open) setAjustarEstoqueEpi(null); }}
         onConfirm={async (epiId, novaQuantidade, motivo) => { await ajustarEstoque({ epiId, novaQuantidade, motivo }); }}
       />
+      <GuiaRapidoEpi open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 };
