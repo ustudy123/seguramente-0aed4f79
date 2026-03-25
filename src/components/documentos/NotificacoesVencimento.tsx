@@ -46,7 +46,6 @@ interface Props {
 
 export function NotificacoesVencimento({ documentos }: Props) {
   const { tenantId } = useAuth();
-  const queryClient = useQueryClient();
   const configKey = tenantId ? `${CONFIG_KEY_PREFIX}${tenantId}` : null;
 
   // Carregar config salva (localStorage + DB fallback)
