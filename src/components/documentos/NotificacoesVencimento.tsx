@@ -23,10 +23,6 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Documento } from "@/hooks/useDocumentos";
 import { PDCAAlertaAcaoModal } from "./PDCAAlertaAcaoModal";
 
-interface NotificacaoConfig {
-  dias_antecedencia: number;
-}
-
 interface AlertaDocumento {
   documento: Documento;
   diasRestantes: number;
