@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { differenceInDays, format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 import {
   Bell,
