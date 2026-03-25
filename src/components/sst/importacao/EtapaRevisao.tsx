@@ -32,7 +32,8 @@ type DadosExtraidosExtended = DadosExtraidos & {
   matriz_exames?: {
     cargo: string; setor?: string; risco_relacionado?: string;
     exames_clinicos?: string[]; exames_complementares?: string[];
-    periodicidade?: string; tipo_exame?: string; observacoes?: string;
+    periodicidade?: string; tipo_exame?: string; tipos_exame?: string[];
+    observacoes?: string;
     confianca: "alta" | "media" | "baixa";
   }[];
   fatores_ergonomicos?: {
