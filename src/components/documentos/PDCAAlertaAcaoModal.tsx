@@ -138,11 +138,17 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
       const descricao = editando.descricao || s.descricao;
       const w5h2 = s.w5h2;
 
+      // Gerar código único para a ação
+      const codigo = `DOC-${Date.now().toString(36).toUpperCase()}`;
+
       const payload = {
         tenant_id: tenantId,
-        codigo: "",
+        codigo,
         titulo,
-        descricao,
+        descricao: descricao || null,
+        porque: w5h2?.why || descricao || null,
+        onde: w5h2?.where || null,
+        como: w5h2?.how || null,
         tipo: s.tipo === "corretiva" ? "corretiva" : s.tipo === "preventiva" ? "preventiva" : "melhoria",
         origem_modulo: "documentos",
         status: "pendente",
@@ -151,19 +157,13 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
         responsavel_nome: editando.responsavel || null,
         criado_por: user?.id || null,
         criado_por_nome: user?.email || null,
-        o_que: w5h2?.what || titulo,
-        por_que: w5h2?.why || descricao,
-        onde: w5h2?.where || null,
-        quando: editando.prazo || w5h2?.when || null,
-        quem: editando.responsavel || w5h2?.who || null,
-        como: w5h2?.how || null,
-        quanto: w5h2?.howMuch || null,
+        // custo_estimado omitido — não relevante para documentos
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase.from("plano_acoes").insert(payload as any);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message || error.details || JSON.stringify(error));
 
       toast.success("Ação criada no Plano de Ação!", {
         description: `"${titulo}" adicionada com sucesso.`,
@@ -176,7 +176,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
       });
       setSugestaoExpandida(null);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      const msg = e instanceof Error ? e.message : String(e);
       toast.error("Erro ao criar ação: " + msg);
     } finally {
       setSaving(null);
