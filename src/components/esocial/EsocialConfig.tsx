@@ -198,13 +198,13 @@ export function EsocialConfig() {
       </div>
 
       {/* Info card */}
-      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+      <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4 pb-4">
           <div className="flex gap-3">
-            <KeyRound className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <KeyRound className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-blue-800 dark:text-blue-300">Certificado Digital A1</p>
-              <p className="text-blue-700/80 dark:text-blue-400 mt-1">
+              <p className="font-medium text-foreground">Certificado Digital A1</p>
+              <p className="text-muted-foreground mt-1">
                 Suporte a <strong>certificado próprio da empresa</strong> e{" "}
                 <strong>procuração eletrônica</strong> (escritório/procurador via e-CAC). 
                 O arquivo <code>.pfx</code> é armazenado de forma segura e criptografada no servidor.
