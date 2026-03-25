@@ -215,19 +215,29 @@ function buildConteudoPrincipalPrompt(tipo: string): string {
       return `Você é especialista sênior em SST brasileiro com domínio em NR-01, NR-09, NR-15 e eSocial.
 
 MISSÃO: Extrair TODOS os riscos/perigos do inventário do PGR.
-REGRAS:
+REGRAS CRÍTICAS:
 1. Extraia CADA LINHA/REGISTRO da tabela de riscos — não pule nenhum.
-2. NUNCA invente dados. Use null para campos não encontrados.
-3. Normalize tipo_risco: "fisico" | "quimico" | "biologico" | "ergonomico" | "acidente" | "psicossocial"
-4. Procure tabelas com: Setor, Cargo/Função, Agente, Fonte, GHO, NE, NA, NR, Probabilidade, Severidade, Risco
+2. NUNCA use a string "null" ou "N/A" como valor. Para campos não encontrados, omita o campo ou use uma string vazia "".
+3. O campo "risco" DEVE ter um nome descritivo real (ex: "Ruído", "Queda de nível", "Poeira de madeira"). Se não encontrar, use o tipo do agente.
+4. Normalize tipo_risco OBRIGATÓRIO: "fisico" | "quimico" | "biologico" | "ergonomico" | "acidente" | "psicossocial"
+5. Procure tabelas com: Setor, Cargo/Função, Agente, GHO, Fonte Geradora, Medida de Controle, Probabilidade, Severidade
+6. Se encontrar uma tabela de riscos, cada linha é um item separado no array.
+7. Não inclua no array itens onde não conseguiu identificar NENHUM dado real.
 
 Retorne JSON:
 {
   "inventario_riscos": [
     {
-      "setor": "...", "funcao": "...", "risco": "...", "tipo_risco": "fisico",
-      "fonte_geradora": "...", "intensidade": "...", "tempo_exposicao": "...",
-      "metodologia": "...", "danos": "...", "controles_existentes": ["..."],
+      "setor": "Produção",
+      "funcao": "Operador de Máquina",
+      "risco": "Ruído acima do limite de tolerância",
+      "tipo_risco": "fisico",
+      "fonte_geradora": "Máquinas de produção",
+      "intensidade": "85 dB(A)",
+      "tempo_exposicao": "8h/dia",
+      "metodologia": "NHO-01",
+      "danos": "Perda auditiva induzida por ruído (PAIR)",
+      "controles_existentes": ["Protetor auricular tipo concha"],
       "confianca": "alta"
     }
   ]
