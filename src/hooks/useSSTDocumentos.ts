@@ -195,8 +195,8 @@ export function useSSTDocumentos() {
         throw sstError;
       }
 
-      // 2. Also insert into "documentos" table (Documentos module) linked to "SST da Empresa" folder
-      const pastaId = await findOrCreateSSTFolder(tenantId);
+      // 2. Also insert into "documentos" table (Documentos module) linked to correct SST folder
+      const pastaId = await findOrCreateSSTFolder(tenantId, params.tipo);
 
       const docStatus = status === "vencido" ? "vencido" : "valido";
       const { error: docError } = await supabase
