@@ -567,7 +567,7 @@ Responda SOMENTE em JSON:
       const dg = content.dados_gerais || {};
       const dgScore = calcScore(Object.fromEntries(Object.entries(dg).map(([k, v]: any) => [k, v?.valor])));
 
-      let invCount = inventarioRiscos.length;
+      let invCount = inventarioRiscosValidos.length;
       if (tipo === "PCMSO") invCount = Math.max(invCount, matrizExames.length);
       if (tipo === "AET") invCount = Math.max(invCount, fatoresErgonomicos.length);
 
