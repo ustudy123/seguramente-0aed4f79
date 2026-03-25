@@ -5,17 +5,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   Send, FileCode2, CheckCircle2, XCircle, Clock, RefreshCw,
-  AlertTriangle, Eye, ChevronDown, ChevronUp, Shield
+  AlertTriangle, Eye, ChevronDown, ChevronUp, Shield, EyeOff, KeyRound
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -311,13 +310,39 @@ export function EsocialTransmissao({ evento }: Props) {
             </div>
 
             {certificados.find((c) => c.id === selectedCert)?.ambiente === "producao" && (
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-xs">
-                <AlertTriangle className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
-                <p className="text-yellow-700 dark:text-yellow-400">
+              <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-xs">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-destructive/90">
                   <strong>Ambiente de Produção:</strong> Esta transmissão será enviada oficialmente ao governo federal.
                 </p>
               </div>
             )}
+
+            {/* Campo de senha — digitada a cada transmissão, nunca armazenada */}
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5" /> Senha do Certificado
+              </Label>
+              <div className="relative">
+                <Input
+                  type={showSenha ? "text" : "password"}
+                  placeholder="Senha do arquivo .pfx"
+                  value={senhaCert}
+                  onChange={(e) => setSenhaCert(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowSenha((v) => !v)}
+                >
+                  {showSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                🔒 A senha é usada apenas para assinar o XML e nunca é armazenada.
+              </p>
+            </div>
           </div>
 
           <DialogFooter className="gap-2">
