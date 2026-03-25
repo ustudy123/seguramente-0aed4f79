@@ -46,7 +46,7 @@ export type DadosExtraidos = {
 };
 
 export type ImportacaoState = {
-  etapa: 0 | 1 | 2 | 3 | 4 | 5; // 0=idle, 1=upload, 2=classificacao, 3=extracao, 4=revisao, 5=consolidado
+  etapa: 0 | 1 | 3 | 4 | 5; // 0=idle, 1=upload(c/ tipo), 3=extracao, 4=revisao, 5=consolidado
   arquivo: File | null;
   textoExtraido: string;
   tipoDetectado: string;
