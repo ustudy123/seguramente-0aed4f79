@@ -235,7 +235,7 @@ export function SSTDocumentosTab() {
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                         title="Excluir"
                         disabled={deletingId === doc.id}
-                        onClick={() => handleDelete(doc)}
+                        onClick={() => setDocToDelete(doc)}
                       >
                         {deletingId === doc.id
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -262,6 +262,28 @@ export function SSTDocumentosTab() {
         onOpenChange={(open) => !open && setAnaliseDoc(null)}
         documento={analiseDoc}
       />
+
+      {/* Confirmação de exclusão */}
+      <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir documento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a excluir o documento <strong>{docToDelete?.tipo}</strong>
+              {docToDelete?.arquivo_nome ? ` — ${docToDelete.arquivo_nome}` : ""}. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
