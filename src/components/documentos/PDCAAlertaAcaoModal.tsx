@@ -333,7 +333,6 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                                 ["Quando", s.w5h2.when],
                                 ["Quem", s.w5h2.who],
                                 ["Como", s.w5h2.how],
-                                ["Quanto", s.w5h2.howMuch],
                               ] as [string, string][]).map(([label, val]) =>
                                 val ? (
                                   <div key={label} className="flex gap-2">
@@ -342,6 +341,16 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
                                   </div>
                                 ) : null
                               )}
+                            </div>
+                            {/* Custo — editável opcionalmente */}
+                            <div className="mt-2 pt-2 border-t border-border">
+                              <Label className="text-xs text-muted-foreground">Custo Estimado (opcional)</Label>
+                              <Input
+                                placeholder={s.w5h2.howMuch || "Informe se necessário..."}
+                                value={editando.custo ?? ""}
+                                onChange={(e) => setEditando((p) => ({ ...p, custo: e.target.value }))}
+                                className="mt-1 h-7 text-xs"
+                              />
                             </div>
                           </div>
                         </>
