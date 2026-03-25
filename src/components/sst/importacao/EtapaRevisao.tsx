@@ -582,19 +582,83 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
                   {/* Inventário de Riscos (todos os tipos) */}
                   {dados.inventario_riscos && dados.inventario_riscos.length > 0 && (
-                    (dados.inventario_riscos as RiscoItem[]).map((r, i) => (
-                      <div key={`risco-${i}`} className="p-3 rounded-lg border">
-                        <div className="flex items-start justify-between gap-2 mb-2">
+                    (dados.inventario_riscos as RiscoItem[]).map((r, i) => {
+                      const temEnquadramento = tipo === "LTCAT" && (
+                        r.enquadramento_insalubridade || r.enquadramento_periculosidade || r.enquadramento_aposentadoria_especial
+                      );
+                      const acaoFolhaSalva = acoesEnquadramentoSalvas[i];
+                      return (
+                      <div key={`risco-${i}`} className={`rounded-lg border overflow-hidden ${temEnquadramento ? "border-amber-300 dark:border-amber-700" : ""}`}>
+                        <div className="flex items-start justify-between gap-2 p-3">
                           <div className="flex items-center gap-2">
                             <InventarioIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
                             <span className="font-medium text-sm">{r.risco}</span>
                           </div>
-                          <div className="flex gap-1 flex-shrink-0">
+                          <div className="flex gap-1 flex-shrink-0 flex-wrap justify-end">
                             <Badge variant="outline" className="text-[10px]">{r.tipo_risco}</Badge>
                             <ConfiancaBadge confianca={r.confianca} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+
+                        {/* LTCAT: Badges de enquadramento previdenciário */}
+                        {tipo === "LTCAT" && (r.enquadramento_insalubridade || r.enquadramento_periculosidade || r.enquadramento_aposentadoria_especial || r.caracterizado) && (
+                          <div className="px-3 pb-2">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                              <ShieldAlert className="w-3 h-3" /> Enquadramento Previdenciário / Legal
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {r.enquadramento_insalubridade && (
+                                <Badge className="text-[11px] bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950/40 dark:text-orange-300 border">
+                                  🧪 Insalubre {r.grau_insalubridade ? `— Grau ${r.grau_insalubridade.charAt(0).toUpperCase() + r.grau_insalubridade.slice(1)}` : ""}
+                                </Badge>
+                              )}
+                              {r.enquadramento_periculosidade && (
+                                <Badge className="text-[11px] bg-red-100 text-red-800 border-red-300 dark:bg-red-950/40 dark:text-red-300 border">
+                                  ⚡ Periculoso (30%)
+                                </Badge>
+                              )}
+                              {r.enquadramento_aposentadoria_especial && (
+                                <Badge className="text-[11px] bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/40 dark:text-purple-300 border">
+                                  <Clock className="w-3 h-3 mr-1 inline" />
+                                  Apos. Especial {r.anos_aposentadoria_especial ? `${r.anos_aposentadoria_especial} anos` : ""}
+                                </Badge>
+                              )}
+                              {!r.enquadramento_insalubridade && !r.enquadramento_periculosidade && !r.enquadramento_aposentadoria_especial && r.caracterizado === false && (
+                                <Badge variant="secondary" className="text-[11px]">✓ Não enquadrado</Badge>
+                              )}
+                            </div>
+
+                            {/* Botão criar ação para folha de pagamento */}
+                            {temEnquadramento && (
+                              <div className="mt-2.5">
+                                {acaoFolhaSalva ? (
+                                  <div className="flex items-center gap-2 text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md px-2.5 py-1.5">
+                                    <CheckCheck className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <span className="font-medium">Ação criada no Plano de Ação</span>
+                                    <a href="/plano-acao" className="ml-auto flex items-center gap-0.5 text-green-600 hover:underline">
+                                      Ver <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-950/30"
+                                    disabled={criandoAcaoEnquadramento === i}
+                                    onClick={() => criarAcaoEnquadramento(r, i)}
+                                  >
+                                    {criandoAcaoEnquadramento === i
+                                      ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Criando ação...</>
+                                      : <><Target className="w-3.5 h-3.5" />Criar ação para folha de pagamento</>
+                                    }
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground px-3 pb-3">
                           {r.setor && r.setor !== "null" && <span><strong>Setor:</strong> {r.setor}</span>}
                           {r.funcao && r.funcao !== "null" && <span><strong>Função:</strong> {r.funcao}</span>}
                           {r.fonte_geradora && r.fonte_geradora !== "null" && <span><strong>Fonte:</strong> {r.fonte_geradora}</span>}
@@ -610,7 +674,7 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
                               <Badge variant={r.caracterizado ? "destructive" : "secondary"} className="ml-1 text-[10px]">{r.caracterizado ? "Sim" : "Não"}</Badge>
                             </span>
                           )}
-                          {r.grau_insalubridade && r.grau_insalubridade !== "null" && <span><strong>Grau:</strong> {r.grau_insalubridade}</span>}
+                          {r.grau_insalubridade && r.grau_insalubridade !== "null" && tipo !== "LTCAT" && <span><strong>Grau:</strong> {r.grau_insalubridade}</span>}
                           {r.condicao_perigosa && r.condicao_perigosa !== "null" && <span className="col-span-2"><strong>Condição perigosa:</strong> {r.condicao_perigosa}</span>}
                           {r.conclusao && r.conclusao !== "null" && <span className="col-span-2"><strong>Conclusão:</strong> {r.conclusao}</span>}
                           {r.conclusao_previdenciaria && r.conclusao_previdenciaria !== "null" && <span className="col-span-2"><strong>Conclusão prev.:</strong> {r.conclusao_previdenciaria}</span>}
@@ -618,12 +682,13 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
                           {r.danos && r.danos !== "null" && <span className="col-span-2"><strong>Danos:</strong> {r.danos}</span>}
                         </div>
                         {r.controles_existentes && r.controles_existentes.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
+                          <div className="px-3 pb-3 flex flex-wrap gap-1">
                             {r.controles_existentes.map((c, j) => <Badge key={j} variant="secondary" className="text-[10px]">{c}</Badge>)}
                           </div>
                         )}
                       </div>
-                    ))
+                      );
+                    })
                   )}
 
                   {inventarioCount === 0 && (
