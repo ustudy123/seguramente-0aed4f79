@@ -179,6 +179,13 @@ Retorne JSON:
     PGR: `inventário de riscos do PGR. Procure tabelas com: Setor, Cargo/Função, GHO, Agente, Fonte Geradora, Probabilidade, Severidade, Medida de Controle.
 Normalize tipo_risco: "fisico"|"quimico"|"biologico"|"ergonomico"|"acidente"|"psicossocial"`,
     LTCAT: `avaliação de agentes nocivos do LTCAT. Foco em concentrações, limites de tolerância, habitualidade e permanência.
+CRÍTICO para LTCAT: Para cada agente, identifique OBRIGATORIAMENTE:
+- enquadramento_insalubridade: true/false se o laudo conclui insalubridade
+- grau_insalubridade: "minimo"|"medio"|"maximo" (se insalubre - baseado em NR-15: mínimo=10%, médio=20%, máximo=40%)
+- enquadramento_periculosidade: true/false se o laudo conclui periculosidade
+- enquadramento_aposentadoria_especial: true/false se há conclusão de exposição habitual e permanente que caracterize aposentadoria especial
+- anos_aposentadoria_especial: 15|20|25 (anos necessários para aposentadoria, se aplicável - Decreto 3048/99)
+- caracterizado: true se a exposição está caracterizada como nociva, false se não
 Normalize tipo_risco: "fisico"|"quimico"|"biologico"|"ergonomico"|"acidente"|"psicossocial"`,
     AET: `fatores ergonômicos da AET. Procure: postura, repetitividade, esforço físico, mobiliário.
 Normalize tipo_risco como "ergonomico"`,
@@ -189,6 +196,13 @@ Normalize tipo_risco como "acidente"`,
   };
   const desc = tipoDesc[tipo] || `riscos e perigos do documento SST. Normalize tipo_risco: "fisico"|"quimico"|"biologico"|"ergonomico"|"acidente"|"psicossocial"`;
 
+  const ltcatExtraFields = tipo === "LTCAT" ? `
+      "enquadramento_insalubridade": false,
+      "grau_insalubridade": null,
+      "enquadramento_periculosidade": false,
+      "enquadramento_aposentadoria_especial": false,
+      "anos_aposentadoria_especial": null,` : "";
+
   return `Você é especialista sênior em SST brasileiro. Analisando trecho ${chunkIndex + 1} de ${totalChunks}.
 MISSÃO: Extrair TODOS os itens de ${desc}
 
@@ -198,6 +212,7 @@ REGRAS CRÍTICAS:
 3. Campo "risco" DEVE ser nome descritivo real (ex: "Ruído", "Poeira de sílica", "Queda de nível").
 4. Se não houver nenhuma tabela de riscos neste trecho, retorne {"inventario_riscos": []}.
 5. Não invente dados — extraia APENAS o que está escrito.
+${tipo === "LTCAT" ? "6. Para LTCAT: SEMPRE extraia os campos de enquadramento previdenciário (insalubridade, periculosidade, aposentadoria especial) baseado na conclusão técnica do laudo." : ""}
 
 Retorne JSON:
 {
@@ -211,7 +226,7 @@ Retorne JSON:
       "intensidade": "85 dB(A)",
       "metodologia": "NHO-01",
       "danos": "Perda auditiva",
-      "controles_existentes": ["EPI - protetor auricular"],
+      "controles_existentes": ["EPI - protetor auricular"],${ltcatExtraFields}
       "confianca": "alta"
     }
   ]
