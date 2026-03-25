@@ -70,6 +70,12 @@ export default function Configuracoes() {
             </TabsTrigger>
           )}
           {isAdmin && (
+            <TabsTrigger value="esocial" className="flex items-center gap-1.5">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">eSocial</span>
+            </TabsTrigger>
+          )}
+          {isAdmin && (
             <TabsTrigger value="auditoria" className="flex items-center gap-1.5">
               <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">Auditoria</span>
@@ -89,6 +95,14 @@ export default function Configuracoes() {
           <TabsContent value="perfis" className="mt-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <PerfisContent />
+            </motion.div>
+          </TabsContent>
+        )}
+
+        {isAdmin && (
+          <TabsContent value="esocial" className="mt-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <EsocialConfig />
             </motion.div>
           </TabsContent>
         )}
