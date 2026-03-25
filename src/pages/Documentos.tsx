@@ -19,6 +19,7 @@ import {
   Pencil,
   FoldVertical,
   UnfoldVertical,
+  Bell,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos
 import { MapaConformidade } from "@/components/documentos/MapaConformidade";
 import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
 import { PDCADashboard } from "@/components/documentos/PDCADashboard";
+import { NotificacoesVencimento } from "@/components/documentos/NotificacoesVencimento";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
@@ -518,6 +520,15 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <RefreshCw className="w-4 h-4" />
               PDCA
             </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="gap-2 relative">
+              <Bell className="w-4 h-4" />
+              Notificações
+              {(stats.vencidos > 0 || stats.vencendo > 0) && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                  {stats.vencidos + stats.vencendo}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="historico" className="gap-2">
               <History className="w-4 h-4" />
               Auditoria
@@ -704,6 +715,17 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               </div>
             </div>
             <PDCADashboard />
+          </motion.div>
+        </TabsContent>
+
+        {/* Notificações Tab */}
+        <TabsContent value="notificacoes" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="h-full bg-card rounded-xl border border-border p-6 overflow-auto"
+          >
+            <NotificacoesVencimento documentos={documentos} />
           </motion.div>
         </TabsContent>
 
