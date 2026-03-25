@@ -4,6 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   FileText, Loader2, Search, Eye, Trash2, Brain,
   CheckCircle2, AlertTriangle, Calendar, User, Building2,
   Download, ChevronRight
@@ -22,6 +32,7 @@ export function SSTDocumentosTab() {
   const [revisaoDoc, setRevisaoDoc] = useState<SSTDocumento | null>(null);
   const [analiseDoc, setAnaliseDoc] = useState<SSTDocumento | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [docToDelete, setDocToDelete] = useState<SSTDocumento | null>(null);
 
   const filtered = documentos.filter(d =>
     !search ||
@@ -31,11 +42,12 @@ export function SSTDocumentosTab() {
     d.profissional_responsavel?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = async (doc: SSTDocumento) => {
-    if (!confirm(`Excluir "${doc.tipo}" — ${doc.arquivo_nome || "documento"}?`)) return;
-    setDeletingId(doc.id);
+  const handleDelete = async () => {
+    if (!docToDelete) return;
+    setDeletingId(docToDelete.id);
+    setDocToDelete(null);
     try {
-      await deleteDocumento.mutateAsync(doc);
+      await deleteDocumento.mutateAsync(docToDelete);
     } finally {
       setDeletingId(null);
     }
