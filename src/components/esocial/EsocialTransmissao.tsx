@@ -70,6 +70,8 @@ export function EsocialTransmissao({ evento }: Props) {
   const [tipoEvento, setTipoEvento] = useState("S-2210");
   const [showXml, setShowXml] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [senhaCert, setSenhaCert] = useState("");
+  const [showSenha, setShowSenha] = useState(false);
 
   const { data: certificados = [] } = useQuery({
     queryKey: ["esocial-certificados", tid],
