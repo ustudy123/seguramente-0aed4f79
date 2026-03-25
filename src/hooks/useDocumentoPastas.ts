@@ -690,7 +690,7 @@ export function useDocumentoPastas() {
     pastas,
     documentos,
     auditLogs,
-    loading: loadingPastas || loadingDocs,
+    loading: !tenantId || loadingPastas || loadingDocs,
     loadingAudit,
     tree: buildTree(),
     needsSync,
