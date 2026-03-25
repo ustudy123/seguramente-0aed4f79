@@ -141,6 +141,10 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
       // Gerar código único para a ação
       const codigo = `DOC-${Date.now().toString(36).toUpperCase()}`;
 
+      // Custo opcional preenchido pelo usuário
+      const custoRaw = editando.custo?.trim();
+      const custoEstimado = custoRaw ? parseFloat(custoRaw.replace(/[^\d.,]/g, "").replace(",", ".")) : null;
+
       const payload = {
         tenant_id: tenantId,
         codigo,
@@ -157,7 +161,7 @@ export function PDCAAlertaAcaoModal({ open, onClose, alerta }: Props) {
         responsavel_nome: editando.responsavel || null,
         criado_por: user?.id || null,
         criado_por_nome: user?.email || null,
-        // custo_estimado omitido — não relevante para documentos
+        ...(custoEstimado !== null && !isNaN(custoEstimado) ? { custo_estimado: custoEstimado } : {}),
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
