@@ -26,28 +26,58 @@ const PLAN_SECTION_ANCHORS = [
   "ações corretivas", "acoes corretivas",
 ];
 
-// ── Extrair segmentos relevantes do texto completo ──────────────────────────
-function extractRelevantSegments(fullText: string, tipo: string): {
-  cabecalho: string;
-  conteudoPrincipal: string;
-  planoAcao: string;
-  planoAcaoComplementar: string;
-} {
+// ── Dividir texto em chunks para documentos grandes ─────────────────────────
+// Estratégia: localizar seções-chave por palavras-âncora e montar contextos focados
+const CHUNK_SIZE = 60000; // chars por chunk enviado à IA
+
+function findBestChunkForRiscos(fullText: string, tipo: string): string {
   const lower = fullText.toLowerCase();
   const total = fullText.length;
   const keywords = SEGMENT_KEYWORDS[tipo] || SEGMENT_KEYWORDS["PGR"];
 
-  const cabecalho = fullText.substring(0, 8000);
-
-  let mainStart = -1;
+  // Encontrar TODAS as ocorrências de palavras-chave e suas posições
+  const positions: number[] = [];
   for (const kw of keywords) {
-    const idx = lower.indexOf(kw);
-    if (idx !== -1 && (mainStart === -1 || idx < mainStart)) {
-      mainStart = Math.max(0, idx - 200);
+    let from = 0;
+    while (from < total) {
+      const idx = lower.indexOf(kw, from);
+      if (idx === -1) break;
+      positions.push(idx);
+      from = idx + kw.length;
     }
   }
 
-  // Busca âncoras de seção — usa a PRIMEIRA ocorrência relevante (não a última)
+  if (positions.length === 0) {
+    // Sem palavras-chave: usar terço do meio do documento
+    const start = Math.floor(total * 0.25);
+    console.log(`[riscos] sem âncoras — usando meio do doc: ${start}–${start + CHUNK_SIZE}`);
+    return fullText.substring(start, Math.min(start + CHUNK_SIZE, total));
+  }
+
+  positions.sort((a, b) => a - b);
+
+  // Encontrar o cluster mais denso de palavras-chave (janela de 20k chars)
+  const WINDOW = 20000;
+  let bestStart = positions[0];
+  let bestCount = 0;
+  for (const p of positions) {
+    const count = positions.filter(x => x >= p && x <= p + WINDOW).length;
+    if (count > bestCount) {
+      bestCount = count;
+      bestStart = p;
+    }
+  }
+
+  const chunkStart = Math.max(0, bestStart - 1000);
+  const chunkEnd = Math.min(total, chunkStart + CHUNK_SIZE);
+  console.log(`[riscos] cluster em @${bestStart} (${bestCount} ocorrências) → chunk ${chunkStart}–${chunkEnd} / total ${total}`);
+  return fullText.substring(chunkStart, chunkEnd);
+}
+
+function findBestChunkForPlano(fullText: string): { parte1: string; parte2: string } {
+  const lower = fullText.toLowerCase();
+  const total = fullText.length;
+
   let planStart = -1;
   for (const anchor of PLAN_SECTION_ANCHORS) {
     let searchFrom = 0;
@@ -55,9 +85,9 @@ function extractRelevantSegments(fullText: string, tipo: string): {
       const idx = lower.indexOf(anchor, searchFrom);
       if (idx === -1) break;
       const relPos = idx / total;
-      if (relPos > 0.3) {
+      if (relPos > 0.2) {
         if (planStart === -1 || idx < planStart) {
-          planStart = Math.max(0, idx - 300);
+          planStart = Math.max(0, idx - 500);
         }
         break;
       }
@@ -65,32 +95,15 @@ function extractRelevantSegments(fullText: string, tipo: string): {
     }
   }
 
-  if (planStart === -1) {
-    planStart = Math.max(0, total - 35000);
-  }
+  if (planStart === -1) planStart = Math.max(0, total - CHUNK_SIZE);
 
-  let conteudoPrincipal = "";
-  if (mainStart !== -1) {
-    const end = (planStart > mainStart + 2000)
-      ? Math.min(planStart, mainStart + 50000)
-      : mainStart + 50000;
-    conteudoPrincipal = fullText.substring(mainStart, Math.min(end, total));
-  } else {
-    const mid = Math.floor(total / 4);
-    conteudoPrincipal = fullText.substring(mid, Math.min(mid + 40000, total));
-  }
-
-  const PLAN_CHUNK = 40000;
-  const planoAcao = fullText.substring(planStart, Math.min(planStart + PLAN_CHUNK, total));
-  const complementStart = planStart + PLAN_CHUNK;
-  const planoAcaoComplementar = complementStart < total
-    ? fullText.substring(complementStart, Math.min(complementStart + 30000, total))
-    : "";
-
-  console.log(
-    `Segmentos [${tipo}] — cabeçalho:${cabecalho.length} principal:${conteudoPrincipal.length} plano:${planoAcao.length} planoCompl:${planoAcaoComplementar.length} | planStart@${planStart}/${total} (${Math.round(planStart / total * 100)}%)`
-  );
-  return { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar };
+  const parte1End = Math.min(total, planStart + CHUNK_SIZE);
+  const parte2 = parte1End < total ? fullText.substring(parte1End, Math.min(total, parte1End + CHUNK_SIZE)) : "";
+  console.log(`[plano] âncora @${planStart} / total ${total} → parte1: ${planStart}–${parte1End}, parte2: ${parte2.length} chars`);
+  return {
+    parte1: fullText.substring(planStart, parte1End),
+    parte2,
+  };
 }
 
 // ── Sanitização de valores "null" string ────────────────────────────────────
@@ -468,33 +481,30 @@ Responda SOMENTE em JSON:
 
       console.log(`Extracao iniciada. Tipo: ${tipo}, Total chars: ${totalChars}`);
 
-      const { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar } = extractRelevantSegments(textoCompleto, tipo);
+      // Cabeçalho: primeiros 10k chars para dados gerais
+      const cabecalho = textoCompleto.substring(0, 10000);
+      const contextoDadosGerais = cabecalho;
 
-      const contextoDadosGerais = `${cabecalho}\n\n--- CONTEUDO PRINCIPAL ---\n${conteudoPrincipal.substring(0, 6000)}`;
+      // Chunk inteligente: localizar ONDE estão os riscos no documento completo
+      const chunkRiscos = findBestChunkForRiscos(textoCompleto, tipo);
+      const { parte1: planoAcaoParte1, parte2: planoAcaoParte2 } = findBestChunkForPlano(textoCompleto);
 
       const promptDadosGerais = buildDadosGeraisPrompt(tipo);
       const promptConteudo = buildConteudoPrincipalPrompt(tipo);
       const promptPlano = buildPlanoAcaoPrompt(tipo, false);
       const promptPlanoCompl = buildPlanoAcaoPrompt(tipo, true);
 
-      // Para documentos pequenos (< 80k chars), enviar o texto COMPLETO para extração de riscos
-      // Isso garante que nenhuma tabela de riscos seja perdida por segmentação incorreta
-      const MAX_FULL_TEXT = 80000;
-      const textoParaRiscos = totalChars <= MAX_FULL_TEXT
-        ? textoCompleto
-        : conteudoPrincipal;
-
-      console.log(`Texto para riscos: ${textoParaRiscos.length} chars (${totalChars <= MAX_FULL_TEXT ? "texto completo" : "segmento principal"})`);
+      console.log(`Chunks: cabeçalho=${cabecalho.length} riscos=${chunkRiscos.length} plano1=${planoAcaoParte1.length} plano2=${planoAcaoParte2.length} / total=${totalChars}`);
 
       const promises: Promise<any>[] = [
-        callOpenAI(promptDadosGerais, `Documento ${tipo} - Cabecalho e estrutura:\n\n${contextoDadosGerais}`),
-        callOpenAI(promptConteudo, `Documento ${tipo} - TEXTO COMPLETO para extracao de riscos/inventario:\n\n${textoParaRiscos}`),
-        callOpenAI(promptPlano, `Documento ${tipo} - Plano de acao (parte 1):\n\n${planoAcao}`),
+        callOpenAI(promptDadosGerais, `Documento ${tipo} - Cabeçalho:\n\n${contextoDadosGerais}`),
+        callOpenAI(promptConteudo, `Documento ${tipo} - Inventário de Riscos (trecho selecionado por densidade de palavras-chave):\n\n${chunkRiscos}`),
+        callOpenAI(promptPlano, `Documento ${tipo} - Plano de Ação (parte 1):\n\n${planoAcaoParte1}`),
       ];
 
-      if (planoAcaoComplementar.length > 500) {
+      if (planoAcaoParte2.length > 500) {
         promises.push(
-          callOpenAI(promptPlanoCompl, `Documento ${tipo} - Plano de acao (parte 2 - continuacao):\n\n${planoAcaoComplementar}`)
+          callOpenAI(promptPlanoCompl, `Documento ${tipo} - Plano de Ação (parte 2 - continuação):\n\n${planoAcaoParte2}`)
         );
       }
 

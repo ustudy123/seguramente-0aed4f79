@@ -48,8 +48,8 @@ serve(async (req) => {
       extractedText = new TextDecoder("utf-8", { fatal: false }).decode(pdfBytes);
     }
 
-    // Limpeza e truncagem
-    extractedText = cleanText(extractedText).substring(0, 30000);
+    // Limpeza — sem truncagem: enviamos o texto completo para a IA processar por chunks
+    extractedText = cleanText(extractedText);
 
     const charCount = extractedText.length;
     const wordCount = extractedText.split(/\s+/).filter(Boolean).length;
