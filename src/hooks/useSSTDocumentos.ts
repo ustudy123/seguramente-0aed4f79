@@ -26,46 +26,92 @@ export interface SSTDocumento {
   updated_at: string;
 }
 
-async function findOrCreateSSTFolder(tenantId: string): Promise<string | null> {
-  // 1. Look for existing "SST da Empresa" folder (any tipo)
-  const { data: existing } = await supabase
-    .from("documento_pastas")
-    .select("id")
-    .eq("tenant_id", tenantId)
-    .eq("nome", "SST da Empresa")
-    .maybeSingle();
+// Mapeamento de tipo de documento SST → nome da pasta específica
+const SST_FOLDER_MAP: Record<string, string[]> = {
+  PGR:                  ["PGR"],
+  PCMSO:                ["PCMSO"],
+  LTCAT:                ["LTCAT"],
+  AET:                  ["AET — Análise Ergonômica do Trabalho", "AET"],
+  AEP:                  ["AEP — Avaliação Ergonômica Preliminar", "AEP"],
+  LAUDO_INSALUBRIDADE:  ["Laudos de Insalubridade", "Insalubridade", "Programas Legais"],
+  LAUDO_PERICULOSIDADE: ["Laudos de Periculosidade", "Periculosidade", "Programas Legais"],
+  PPP:                  ["PPP", "Registros e Evidências"],
+  APR:                  ["APR", "Análise de Riscos (APR / HAZOP)", "Análise de Riscos"],
+};
 
-  if (existing?.id) return existing.id;
+// Pastas pai candidatas para "Programas Legais" (fallback quando pasta específica não existe)
+const SST_PARENT_CANDIDATES = [
+  "Programas Legais",
+  "SST da Empresa",
+  "SST",
+  "Compliance SST",
+  "Gestão de Riscos - SST",
+  "SST e Saúde Ocupacional",
+  "Segurança e Saúde no Trabalho",
+];
 
-  // 2. Find or create parent "SST" / "Compliance SST" / "Gestão de Riscos - SST" folder
-  let pastaPaiId: string | null = null;
-  const parentCandidates = ["SST", "Compliance SST", "Gestão de Riscos - SST", "SST e Saúde Ocupacional", "Segurança e Saúde no Trabalho"];
+async function findOrCreateSSTFolder(tenantId: string, tipoDocumento?: string): Promise<string | null> {
+  // 1. Tentar encontrar a pasta específica pelo tipo do documento
+  const nomeCandidatos: string[] = tipoDocumento
+    ? (SST_FOLDER_MAP[tipoDocumento] || [])
+    : [];
 
-  for (const candidateName of parentCandidates) {
+  for (const nomePasta of nomeCandidatos) {
+    const { data: found } = await supabase
+      .from("documento_pastas")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("nome", nomePasta)
+      .maybeSingle();
+    if (found?.id) return found.id;
+  }
+
+  // 2. Fallback: procurar "Programas Legais" e subpastas SST genéricas
+  for (const candidateName of SST_PARENT_CANDIDATES) {
     const { data: parent } = await supabase
       .from("documento_pastas")
       .select("id")
       .eq("tenant_id", tenantId)
       .eq("nome", candidateName)
       .maybeSingle();
-    if (parent?.id) { pastaPaiId = parent.id; break; }
+    if (parent?.id) {
+      // Se encontrou "Programas Legais", criar a subpasta específica dentro dela
+      if (candidateName === "Programas Legais" && tipoDocumento && SST_FOLDER_MAP[tipoDocumento]) {
+        const nomePastaEspecifica = SST_FOLDER_MAP[tipoDocumento][0];
+        const { data: criada, error } = await supabase
+          .from("documento_pastas")
+          .insert({
+            tenant_id: tenantId,
+            nome: nomePastaEspecifica,
+            tipo: "custom",
+            icone: "FileText",
+            pasta_pai_id: parent.id,
+          })
+          .select("id")
+          .single();
+        if (!error && criada?.id) return criada.id;
+      }
+      return parent.id;
+    }
   }
 
-  // 3. If no SST parent exists, create a root "SST da Empresa" folder directly
+  // 3. Nenhuma pasta SST encontrada — criar "SST da Empresa" na raiz
   const { data: created, error } = await supabase
     .from("documento_pastas")
     .insert({
       tenant_id: tenantId,
-      nome: "SST da Empresa",
+      nome: tipoDocumento && SST_FOLDER_MAP[tipoDocumento]
+        ? SST_FOLDER_MAP[tipoDocumento][0]
+        : "SST da Empresa",
       tipo: "categoria",
       icone: "Shield",
-      pasta_pai_id: pastaPaiId,
+      pasta_pai_id: null,
     })
     .select("id")
     .single();
 
   if (error) {
-    console.warn("Aviso: não foi possível criar pasta SST da Empresa:", error.message);
+    console.warn("Aviso: não foi possível criar pasta SST:", error.message);
     return null;
   }
 
@@ -149,8 +195,8 @@ export function useSSTDocumentos() {
         throw sstError;
       }
 
-      // 2. Also insert into "documentos" table (Documentos module) linked to "SST da Empresa" folder
-      const pastaId = await findOrCreateSSTFolder(tenantId);
+      // 2. Also insert into "documentos" table (Documentos module) linked to correct SST folder
+      const pastaId = await findOrCreateSSTFolder(tenantId, params.tipo);
 
       const docStatus = status === "vencido" ? "vencido" : "valido";
       const { error: docError } = await supabase
