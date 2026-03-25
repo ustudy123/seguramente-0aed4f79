@@ -390,37 +390,92 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
               <ScrollArea className="h-[520px]">
                 <div className="space-y-3 pr-2">
 
-                  {/* PCMSO: Matriz de Exames */}
+                  {/* PCMSO: Matriz de Exames por Função */}
                   {isMedico && dados.matriz_exames && dados.matriz_exames.length > 0 && (
                     <>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Matriz de Exames por Cargo</p>
-                      {dados.matriz_exames.map((e, i) => (
-                        <div key={i} className="p-3 rounded-lg border">
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Stethoscope className="w-4 h-4 text-primary" />
-                              <span className="font-medium text-sm">{e.cargo}</span>
-                              {e.setor && <Badge variant="outline" className="text-xs">{e.setor}</Badge>}
+                      <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
+                        <Stethoscope className="w-3.5 h-3.5" />
+                        Matriz de Exames por Função — {dados.matriz_exames.length} cargo(s) identificado(s)
+                      </p>
+                      {dados.matriz_exames.map((e, i) => {
+                        const tiposExame = (e as any).tipos_exame as string[] | undefined;
+                        return (
+                          <div key={i} className="rounded-lg border overflow-hidden">
+                            {/* Cabeçalho da função */}
+                            <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-primary/5 border-b">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Briefcase className="w-4 h-4 text-primary flex-shrink-0" />
+                                <span className="font-semibold text-sm truncate">{e.cargo}</span>
+                                {e.setor && <Badge variant="outline" className="text-xs flex-shrink-0">{e.setor}</Badge>}
+                              </div>
+                              <ConfiancaBadge confianca={e.confianca} />
                             </div>
-                            <ConfiancaBadge confianca={e.confianca} />
+
+                            <div className="p-3 space-y-3">
+                              {/* Risco relacionado */}
+                              {e.risco_relacionado && (
+                                <div className="flex items-start gap-2 text-xs">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                  <span><strong className="text-foreground">Risco(s):</strong> <span className="text-muted-foreground">{e.risco_relacionado}</span></span>
+                                </div>
+                              )}
+
+                              {/* Periodicidade em destaque */}
+                              {e.periodicidade && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-foreground">Periodicidade:</span>
+                                  <Badge className="text-[11px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">{e.periodicidade}</Badge>
+                                </div>
+                              )}
+
+                              {/* Tipos de exame aplicáveis */}
+                              {tiposExame && tiposExame.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {tiposExame.map((t, j) => (
+                                    <Badge key={j} variant="secondary" className="text-[10px] capitalize">{t.replace(/_/g, " ")}</Badge>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Consulta / Exames Clínicos */}
+                              {e.exames_clinicos && e.exames_clinicos.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                    <Stethoscope className="w-3.5 h-3.5 text-primary" /> Consulta / Exames Clínicos
+                                  </p>
+                                  <div className="flex flex-wrap gap-1.5 pl-5">
+                                    {e.exames_clinicos.map((ex, j) => (
+                                      <Badge key={j} variant="secondary" className="text-[11px] px-2 py-0.5">{ex}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Exames Complementares */}
+                              {e.exames_complementares && e.exames_complementares.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                    <FlaskConical className="w-3.5 h-3.5 text-amber-500" /> Exames Complementares
+                                  </p>
+                                  <div className="flex flex-wrap gap-1.5 pl-5">
+                                    {e.exames_complementares.map((ex, j) => (
+                                      <Badge key={j} variant="outline" className="text-[11px] px-2 py-0.5 border-amber-200 text-amber-700 bg-amber-50/50 dark:bg-amber-950/20">{ex}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Observações */}
+                              {e.observacoes && (
+                                <div className="flex items-start gap-2 text-xs p-2 rounded bg-muted/50">
+                                  <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                  <span className="text-muted-foreground">{e.observacoes}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-1.5 text-xs text-muted-foreground">
-                            {e.risco_relacionado && <p><strong>Risco:</strong> {e.risco_relacionado}</p>}
-                            {e.periodicidade && <p><strong>Periodicidade:</strong> {e.periodicidade}</p>}
-                            {e.tipo_exame && <p><strong>Tipo:</strong> {e.tipo_exame}</p>}
-                            {e.exames_clinicos && e.exames_clinicos.length > 0 && (
-                              <div><strong>Clínicos:</strong>
-                                <div className="flex flex-wrap gap-1 mt-1">{e.exames_clinicos.map((ex, j) => <Badge key={j} variant="secondary" className="text-[10px]">{ex}</Badge>)}</div>
-                              </div>
-                            )}
-                            {e.exames_complementares && e.exames_complementares.length > 0 && (
-                              <div><strong>Complementares:</strong>
-                                <div className="flex flex-wrap gap-1 mt-1">{e.exames_complementares.map((ex, j) => <Badge key={j} variant="outline" className="text-[10px]">{ex}</Badge>)}</div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </>
                   )}
 
