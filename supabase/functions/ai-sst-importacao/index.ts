@@ -93,12 +93,42 @@ function extractRelevantSegments(fullText: string, tipo: string): {
   return { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar };
 }
 
-// ── Chamada OpenAI ────────────────────────────────────────────────────────────
-async function callOpenAI(systemPrompt: string, userContent: string, model = "gpt-4o"): Promise<any> {
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+// ── Sanitização de valores "null" string ────────────────────────────────────
+function sanitizeNulls(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj === "string") {
+    const s = obj.trim();
+    if (s === "null" || s === "undefined" || s === "N/A" || s === "n/a" || s === "-") return null;
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj
+      .map(sanitizeNulls)
+      .filter((v) => v !== null && v !== undefined && v !== "");
+  }
+  if (typeof obj === "object") {
+    const result: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = sanitizeNulls(v);
+    }
+    return result;
+  }
+  return obj;
+}
+
+// ── Chamada IA (Lovable AI Gateway com fallback OpenAI) ──────────────────────
+async function callOpenAI(systemPrompt: string, userContent: string, _model = "gpt-4o"): Promise<any> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const apiKey = LOVABLE_API_KEY || OPENAI_API_KEY;
+  const endpoint = LOVABLE_API_KEY
+    ? "https://ai.gateway.lovable.dev/v1/chat/completions"
+    : "https://api.openai.com/v1/chat/completions";
+  const model = LOVABLE_API_KEY ? "google/gemini-2.5-flash" : "gpt-4o";
+
+  const resp = await fetch(endpoint, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -114,13 +144,14 @@ async function callOpenAI(systemPrompt: string, userContent: string, model = "gp
 
   if (!resp.ok) {
     const errText = await resp.text();
-    console.error(`OpenAI error ${resp.status}:`, errText);
-    throw new Error(`OpenAI API retornou ${resp.status}: ${errText.substring(0, 200)}`);
+    console.error(`AI error ${resp.status}:`, errText);
+    throw new Error(`API IA retornou ${resp.status}: ${errText.substring(0, 200)}`);
   }
 
   const data = await resp.json();
-  if (data.error) throw new Error(data.error.message || "Erro na API OpenAI");
-  return JSON.parse(data.choices[0].message.content);
+  if (data.error) throw new Error(data.error.message || "Erro na API IA");
+  const raw = JSON.parse(data.choices[0].message.content);
+  return sanitizeNulls(raw);
 }
 
 // ── Prompts especializados por tipo ──────────────────────────────────────────
@@ -184,19 +215,29 @@ function buildConteudoPrincipalPrompt(tipo: string): string {
       return `Você é especialista sênior em SST brasileiro com domínio em NR-01, NR-09, NR-15 e eSocial.
 
 MISSÃO: Extrair TODOS os riscos/perigos do inventário do PGR.
-REGRAS:
+REGRAS CRÍTICAS:
 1. Extraia CADA LINHA/REGISTRO da tabela de riscos — não pule nenhum.
-2. NUNCA invente dados. Use null para campos não encontrados.
-3. Normalize tipo_risco: "fisico" | "quimico" | "biologico" | "ergonomico" | "acidente" | "psicossocial"
-4. Procure tabelas com: Setor, Cargo/Função, Agente, Fonte, GHO, NE, NA, NR, Probabilidade, Severidade, Risco
+2. NUNCA use a string "null" ou "N/A" como valor. Para campos não encontrados, omita o campo ou use uma string vazia "".
+3. O campo "risco" DEVE ter um nome descritivo real (ex: "Ruído", "Queda de nível", "Poeira de madeira"). Se não encontrar, use o tipo do agente.
+4. Normalize tipo_risco OBRIGATÓRIO: "fisico" | "quimico" | "biologico" | "ergonomico" | "acidente" | "psicossocial"
+5. Procure tabelas com: Setor, Cargo/Função, Agente, GHO, Fonte Geradora, Medida de Controle, Probabilidade, Severidade
+6. Se encontrar uma tabela de riscos, cada linha é um item separado no array.
+7. Não inclua no array itens onde não conseguiu identificar NENHUM dado real.
 
 Retorne JSON:
 {
   "inventario_riscos": [
     {
-      "setor": "...", "funcao": "...", "risco": "...", "tipo_risco": "fisico",
-      "fonte_geradora": "...", "intensidade": "...", "tempo_exposicao": "...",
-      "metodologia": "...", "danos": "...", "controles_existentes": ["..."],
+      "setor": "Produção",
+      "funcao": "Operador de Máquina",
+      "risco": "Ruído acima do limite de tolerância",
+      "tipo_risco": "fisico",
+      "fonte_geradora": "Máquinas de produção",
+      "intensidade": "85 dB(A)",
+      "tempo_exposicao": "8h/dia",
+      "metodologia": "NHO-01",
+      "danos": "Perda auditiva induzida por ruído (PAIR)",
+      "controles_existentes": ["Protetor auricular tipo concha"],
       "confianca": "alta"
     }
   ]
@@ -506,14 +547,19 @@ Responda SOMENTE em JSON:
         ) === idx;
       });
 
-      console.log(`Conteudo extraido: ${inventarioRiscos.length} riscos, ${matrizExames.length} exames, ${acoesParte1.length}+${acoesParte2.length}=${planoAcaoExtraido.length} acoes (apos dedup)`);
+      // Filtrar riscos sem nome (campo risco null/vazio após sanitização)
+      const inventarioRiscosValidos = inventarioRiscos.filter(
+        (r: any) => r && r.risco && String(r.risco).trim() !== ""
+      );
+
+      console.log(`Conteudo extraido: ${inventarioRiscosValidos.length} riscos validos (${inventarioRiscos.length} brutos), ${matrizExames.length} exames, ${acoesParte1.length}+${acoesParte2.length}=${planoAcaoExtraido.length} acoes (apos dedup)`);
 
       const content: any = {
         tipo_documento: tipo,
         dados_gerais: resultDados?.dados_gerais || {},
         estrutura_organizacional: resultDados?.estrutura_organizacional || { unidades: [], setores: [], departamentos: [] },
         funcoes_atividades: funcoesAtividades,
-        inventario_riscos: inventarioRiscos,
+        inventario_riscos: inventarioRiscosValidos,
         matriz_exames: matrizExames,
         fatores_ergonomicos: fatoresErgonomicos,
         plano_acao: planoAcaoExtraido,
@@ -531,7 +577,7 @@ Responda SOMENTE em JSON:
       const dg = content.dados_gerais || {};
       const dgScore = calcScore(Object.fromEntries(Object.entries(dg).map(([k, v]: any) => [k, v?.valor])));
 
-      let invCount = inventarioRiscos.length;
+      let invCount = inventarioRiscosValidos.length;
       if (tipo === "PCMSO") invCount = Math.max(invCount, matrizExames.length);
       if (tipo === "AET") invCount = Math.max(invCount, fatoresErgonomicos.length);
 
