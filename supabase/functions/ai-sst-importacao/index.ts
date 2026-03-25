@@ -477,9 +477,18 @@ Responda SOMENTE em JSON:
       const promptPlano = buildPlanoAcaoPrompt(tipo, false);
       const promptPlanoCompl = buildPlanoAcaoPrompt(tipo, true);
 
+      // Para documentos pequenos (< 80k chars), enviar o texto COMPLETO para extração de riscos
+      // Isso garante que nenhuma tabela de riscos seja perdida por segmentação incorreta
+      const MAX_FULL_TEXT = 80000;
+      const textoParaRiscos = totalChars <= MAX_FULL_TEXT
+        ? textoCompleto
+        : conteudoPrincipal;
+
+      console.log(`Texto para riscos: ${textoParaRiscos.length} chars (${totalChars <= MAX_FULL_TEXT ? "texto completo" : "segmento principal"})`);
+
       const promises: Promise<any>[] = [
         callOpenAI(promptDadosGerais, `Documento ${tipo} - Cabecalho e estrutura:\n\n${contextoDadosGerais}`),
-        callOpenAI(promptConteudo, `Documento ${tipo} - Conteudo principal:\n\n${conteudoPrincipal}`),
+        callOpenAI(promptConteudo, `Documento ${tipo} - TEXTO COMPLETO para extracao de riscos/inventario:\n\n${textoParaRiscos}`),
         callOpenAI(promptPlano, `Documento ${tipo} - Plano de acao (parte 1):\n\n${planoAcao}`),
       ];
 
