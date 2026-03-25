@@ -44,6 +44,7 @@ const Epis = () => {
   const [showTipoForm, setShowTipoForm] = useState(false);
   const [showEpiForm, setShowEpiForm] = useState(false);
   const [showEntregaForm, setShowEntregaForm] = useState(false);
+  const [showGuia, setShowGuia] = useState(false);
   const [editingEpi, setEditingEpi] = useState<EpiCompleto | null>(null);
   const [ajustarEstoqueEpi, setAjustarEstoqueEpi] = useState<EpiCompleto | null>(null);
 
@@ -73,6 +74,10 @@ const Epis = () => {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
+            <HelpCircle className="h-4 w-4" />
+            Guia Rápido
+          </Button>
           {perm.podeCriarTipo && (
             <Button variant="outline" size="sm" onClick={() => setShowTipoForm(true)}>
               <Plus className="w-4 h-4 mr-1" /> Categoria
