@@ -11,18 +11,14 @@ import {
   Sparkles,
   FileText,
   Calendar,
-  ChevronRight,
   Save,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Documento } from "@/hooks/useDocumentos";
 import { PDCAAlertaAcaoModal } from "./PDCAAlertaAcaoModal";
