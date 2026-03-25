@@ -116,19 +116,12 @@ function sanitizeNulls(obj: any): any {
   return obj;
 }
 
-// ── Chamada IA (Lovable AI Gateway com fallback OpenAI) ──────────────────────
-async function callOpenAI(systemPrompt: string, userContent: string, _model = "gpt-4o"): Promise<any> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const apiKey = LOVABLE_API_KEY || OPENAI_API_KEY;
-  const endpoint = LOVABLE_API_KEY
-    ? "https://ai.gateway.lovable.dev/v1/chat/completions"
-    : "https://api.openai.com/v1/chat/completions";
-  const model = LOVABLE_API_KEY ? "google/gemini-2.5-flash" : "gpt-4o";
-
-  const resp = await fetch(endpoint, {
+// ── Chamada OpenAI com sanitização ───────────────────────────────────────────
+async function callOpenAI(systemPrompt: string, userContent: string, model = "gpt-4o"): Promise<any> {
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -144,13 +137,14 @@ async function callOpenAI(systemPrompt: string, userContent: string, _model = "g
 
   if (!resp.ok) {
     const errText = await resp.text();
-    console.error(`AI error ${resp.status}:`, errText);
-    throw new Error(`API IA retornou ${resp.status}: ${errText.substring(0, 200)}`);
+    console.error(`OpenAI error ${resp.status}:`, errText);
+    throw new Error(`OpenAI API retornou ${resp.status}: ${errText.substring(0, 200)}`);
   }
 
   const data = await resp.json();
-  if (data.error) throw new Error(data.error.message || "Erro na API IA");
+  if (data.error) throw new Error(data.error.message || "Erro na API OpenAI");
   const raw = JSON.parse(data.choices[0].message.content);
+  // Sanitiza strings "null", "N/A", "-" retornadas pela IA
   return sanitizeNulls(raw);
 }
 
