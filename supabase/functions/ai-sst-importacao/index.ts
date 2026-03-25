@@ -140,10 +140,44 @@ Retorne JSON:
 }
 
 function buildRiscosPrompt(tipo: string, chunkIndex: number, totalChunks: number): string {
+  // PCMSO usa prompt e schema próprio para matriz_exames
+  if (tipo === "PCMSO") {
+    return `Você é especialista sênior em SST e medicina do trabalho brasileiro. Analisando trecho ${chunkIndex + 1} de ${totalChunks}.
+MISSÃO: Extrair TODA a matriz de exames do PCMSO.
+
+Procure ATENTAMENTE tabelas e listas com: Função/Cargo, Risco/GHO, Tipo de exame (admissional/periódico/retorno/demissional/mudança de função), Consulta/Exame clínico, Exames complementares, Periodicidade.
+
+REGRAS CRÍTICAS:
+1. Cada cargo/função = um item separado no array "matriz_exames". NÃO agrupe cargos.
+2. "exames_clinicos" = exames de consulta médica (ex: "Consulta médica", "Audiometria clínica").
+3. "exames_complementares" = exames laboratoriais ou de imagem (ex: "Hemograma", "Audiometria tonal", "Raio-X", "Espirometria", "EEG", "Acuidade visual").
+4. "periodicidade" = frequência de realização (ex: "Anual", "Semestral", "A cada 2 anos", "No admissional e anual").
+5. "tipos_exame" = lista dos tipos aplicáveis: "admissional", "periodico", "retorno_trabalho", "mudanca_funcao", "demissional".
+6. Se não encontrar nenhuma matriz de exames neste trecho, retorne {"matriz_exames": [], "inventario_riscos": []}.
+7. Não invente dados — extraia APENAS o que está escrito no texto.
+
+Retorne JSON:
+{
+  "matriz_exames": [
+    {
+      "cargo": "Auxiliar de Produção",
+      "setor": "Produção",
+      "risco_relacionado": "Ruído, Calor",
+      "exames_clinicos": ["Consulta médica ocupacional", "Avaliação audiológica"],
+      "exames_complementares": ["Audiometria tonal liminar", "Hemograma completo"],
+      "periodicidade": "Anual",
+      "tipos_exame": ["admissional", "periodico", "demissional"],
+      "observacoes": "Audiometria a cada 6 meses para expostos a ruído acima de 85dB",
+      "confianca": "alta"
+    }
+  ],
+  "inventario_riscos": []
+}`;
+  }
+
   const tipoDesc: Record<string, string> = {
     PGR: `inventário de riscos do PGR. Procure tabelas com: Setor, Cargo/Função, GHO, Agente, Fonte Geradora, Probabilidade, Severidade, Medida de Controle.
 Normalize tipo_risco: "fisico"|"quimico"|"biologico"|"ergonomico"|"acidente"|"psicossocial"`,
-    PCMSO: `matriz de exames do PCMSO. Procure tabelas com: Cargo, Risco, Exame, Periodicidade.`,
     LTCAT: `avaliação de agentes nocivos do LTCAT. Foco em concentrações, limites de tolerância, habitualidade e permanência.
 Normalize tipo_risco: "fisico"|"quimico"|"biologico"|"ergonomico"|"acidente"|"psicossocial"`,
     AET: `fatores ergonômicos da AET. Procure: postura, repetitividade, esforço físico, mobiliário.
@@ -336,7 +370,17 @@ Responda SOMENTE em JSON: {"tipo": "PGR", "confianca": 92, "justificativa": "...
       const inventarioRiscosValidos = deduplicarRiscos(
         todosRiscosRaw.filter((r: any) => r && r.risco && String(r.risco).trim() !== "")
       );
-      const matrizExames = deduplicarRiscos(matrizExamesRaw.filter((e: any) => e && e.cargo));
+      // Para PCMSO, deduplicar exames por cargo+setor (não por risco)
+      const deduplicarExames = (exames: any[]): any[] => {
+        const seen = new Set<string>();
+        return exames.filter((e) => {
+          const key = [(e.cargo || "").substring(0, 60).toLowerCase().trim(), (e.setor || "").substring(0, 30).toLowerCase().trim()].join("|");
+          if (seen.has(key)) return false;
+          if (key !== "|") seen.add(key);
+          return true;
+        });
+      };
+      const matrizExames = deduplicarExames(matrizExamesRaw.filter((e: any) => e && e.cargo));
       const fatoresErgonomicos = deduplicarRiscos(fatoresErgonomicosRaw.filter((f: any) => f && f.posto));
 
       // 6. Mesclar e deduplicar ações
