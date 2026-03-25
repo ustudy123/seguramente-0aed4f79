@@ -84,6 +84,9 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
   const [acoesSalvas, setAcoesSalvas] = useState<Set<number>>(new Set());
   const [importandoTodas, setImportandoTodas] = useState(false);
   const [acaoExpandida, setAcaoExpandida] = useState<number | null>(null);
+  // LTCAT: rastreio de ações de folha por índice do risco
+  const [acoesEnquadramentoSalvas, setAcoesEnquadramentoSalvas] = useState<Record<number, string>>({}); // index -> acaoId
+  const [criandoAcaoEnquadramento, setCriandoAcaoEnquadramento] = useState<number | null>(null);
 
   const score = dados.score_qualidade;
   const tipo = dados.tipo_documento || state.tipoDetectado || "PGR";
