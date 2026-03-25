@@ -64,6 +64,7 @@ import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos
 import { MapaConformidade } from "@/components/documentos/MapaConformidade";
 import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
 import { PDCADashboard } from "@/components/documentos/PDCADashboard";
+import { NotificacoesVencimento } from "@/components/documentos/NotificacoesVencimento";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
 const Documentos = () => {
