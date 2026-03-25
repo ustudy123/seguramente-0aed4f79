@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -8,7 +8,6 @@ import {
   ChevronRight, Sparkles, FolderOpen, BarChart2, X
 } from "lucide-react";
 import { EtapaUpload } from "./EtapaUpload";
-import { EtapaClassificacao } from "./EtapaClassificacao";
 import { EtapaExtracao } from "./EtapaExtracao";
 import { EtapaRevisao } from "./EtapaRevisao";
 import { EtapaConsolidacao } from "./EtapaConsolidacao";
@@ -57,9 +56,9 @@ export type ImportacaoState = {
   erro: string | null;
 };
 
+// Etapas visíveis (sem classificação — agora embutida no upload)
 const ETAPAS = [
-  { num: 1, label: "Upload", icon: Upload },
-  { num: 2, label: "Classificação", icon: Brain },
+  { num: 1, label: "Upload + Tipo", icon: Upload },
   { num: 3, label: "Extração", icon: FolderOpen },
   { num: 4, label: "Revisão", icon: FileText },
   { num: 5, label: "Consolidação", icon: CheckCircle2 },
@@ -67,12 +66,30 @@ const ETAPAS = [
 
 const etapaAtualDescricao: Record<number, string> = {
   0: "Importe um documento SST para iniciar",
-  1: "Envie o arquivo PDF ou DOCX do documento",
-  2: "IA identificando tipo e estrutura do documento",
+  1: "Selecione o tipo e envie o arquivo PDF ou DOCX",
   3: "Extraindo e normalizando dados estruturados",
   4: "Revise e ajuste os dados extraídos",
   5: "Documento importado com sucesso",
 };
+
+// Para cálculo do progresso visual (etapa 1→0%, 3→33%, 4→66%, 5→100%)
+function getProgressoPct(etapa: number): number {
+  if (etapa <= 0) return 0;
+  if (etapa === 1) return 10;
+  if (etapa === 3) return 40;
+  if (etapa === 4) return 70;
+  if (etapa === 5) return 100;
+  return 0;
+}
+
+// Para highlight das etapas na barra de progresso
+function getEtapaOrder(etapa: number): number {
+  if (etapa === 1) return 1;
+  if (etapa === 3) return 2;
+  if (etapa === 4) return 3;
+  if (etapa === 5) return 4;
+  return 0;
+}
 
 export function ImportacaoInteligente({ onImportado }: { onImportado?: () => void }) {
   const [state, setState] = useState<ImportacaoState>({
@@ -96,7 +113,8 @@ export function ImportacaoInteligente({ onImportado }: { onImportado?: () => voi
     dadosExtraidos: null, processando: false, erro: null,
   });
 
-  const progressoPct = state.etapa === 0 ? 0 : Math.round(((state.etapa - 1) / 4) * 100);
+  const progressoPct = getProgressoPct(state.etapa);
+  const etapaOrder = getEtapaOrder(state.etapa);
 
   if (state.etapa === 0) {
     return (
@@ -109,13 +127,13 @@ export function ImportacaoInteligente({ onImportado }: { onImportado?: () => voi
             </div>
             <h2 className="text-xl font-bold mb-2">Importação Inteligente de Documentos SST</h2>
             <p className="text-muted-foreground text-sm max-w-lg mb-6">
-              Envie qualquer documento SST (PGR, PCMSO, LTCAT, APR, Laudos) e a IA irá ler, 
-              estruturar e normalizar automaticamente todas as informações — sem digitação manual.
+              Selecione o tipo do documento, envie o arquivo (PGR, PCMSO, LTCAT, APR, Laudos) e a IA 
+              irá aplicar as regras específicas de extração para cada tipo — sem digitação manual.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl mb-6">
               {[
-                { icon: Brain, label: "Classifica automaticamente" },
-                { icon: FolderOpen, label: "Extrai inventário de riscos" },
+                { icon: FileText, label: "Tipo definido por você" },
+                { icon: FolderOpen, label: "Extração especializada" },
                 { icon: BarChart2, label: "Score de qualidade" },
                 { icon: Sparkles, label: "Plano de ação gerado" },
               ].map((item, i) => (
@@ -159,7 +177,7 @@ export function ImportacaoInteligente({ onImportado }: { onImportado?: () => voi
         <CardContent className="pt-5 pb-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium text-foreground">{etapaAtualDescricao[state.etapa]}</p>
-            {state.etapa > 0 && state.etapa < 5 && (
+            {state.etapa < 5 && (
               <Button variant="ghost" size="sm" className="text-muted-foreground h-7 px-2" onClick={resetar}>
                 <X className="w-3.5 h-3.5 mr-1" /> Cancelar
               </Button>
@@ -168,7 +186,8 @@ export function ImportacaoInteligente({ onImportado }: { onImportado?: () => voi
           <Progress value={progressoPct} className="h-1.5 mb-4" />
           <div className="flex items-center gap-1 overflow-x-auto pb-1">
             {ETAPAS.map((etapa, i) => {
-              const isCompleted = state.etapa > etapa.num;
+              const etapaOrd = getEtapaOrder(etapa.num);
+              const isCompleted = etapaOrder > etapaOrd;
               const isCurrent = state.etapa === etapa.num;
               const Icon = etapa.icon;
               return (
@@ -214,9 +233,6 @@ export function ImportacaoInteligente({ onImportado }: { onImportado?: () => voi
       {/* Etapa ativa */}
       {state.etapa === 1 && (
         <EtapaUpload state={state} updateState={updateState} />
-      )}
-      {state.etapa === 2 && (
-        <EtapaClassificacao state={state} updateState={updateState} />
       )}
       {state.etapa === 3 && (
         <EtapaExtracao state={state} updateState={updateState} />
