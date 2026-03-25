@@ -20,6 +20,7 @@ import { EpiConfiguracaoTab } from "@/components/epi/EpiConfiguracaoTab";
 import { EntradasEstoqueTab } from "@/components/epi/EntradasEstoqueTab";
 import { SaldoLocalDashboard } from "@/components/epi/SaldoLocalDashboard";
 import { EpiStatsCards } from "@/components/epi/EpiStatsCards";
+import { GuiaRapidoEpi } from "@/components/epi/GuiaRapidoEpi";
 import type { EpiCompleto } from "@/types/epi";
 
 const Epis = () => {
