@@ -5008,6 +5008,179 @@ export type Database = {
           },
         ]
       }
+      esocial_certificados: {
+        Row: {
+          ambiente: string
+          ativo: boolean | null
+          certificado_nome: string
+          certificado_path: string
+          cnpj: string
+          cnpj_procurador: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          empresa_id: string | null
+          id: string
+          nome_empresa: string
+          nome_procurador: string | null
+          senha_hash: string | null
+          tenant_id: string
+          tipo: string
+          updated_at: string
+          validade: string | null
+        }
+        Insert: {
+          ambiente?: string
+          ativo?: boolean | null
+          certificado_nome: string
+          certificado_path: string
+          cnpj: string
+          cnpj_procurador?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome_empresa: string
+          nome_procurador?: string | null
+          senha_hash?: string | null
+          tenant_id: string
+          tipo?: string
+          updated_at?: string
+          validade?: string | null
+        }
+        Update: {
+          ambiente?: string
+          ativo?: boolean | null
+          certificado_nome?: string
+          certificado_path?: string
+          cnpj?: string
+          cnpj_procurador?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome_empresa?: string
+          nome_procurador?: string | null
+          senha_hash?: string | null
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+          validade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esocial_certificados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "esocial_certificados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esocial_transmissoes: {
+        Row: {
+          certificado_id: string | null
+          codigo_retorno: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          empresa_id: string | null
+          evento_sst_id: string | null
+          id: string
+          mensagem_retorno: string | null
+          numero_recibo: string | null
+          protocolo: string | null
+          status: string
+          tenant_id: string
+          tentativas: number | null
+          tipo_evento: string
+          ultima_tentativa: string | null
+          updated_at: string
+          xml_enviado: string | null
+          xml_retorno: string | null
+        }
+        Insert: {
+          certificado_id?: string | null
+          codigo_retorno?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          empresa_id?: string | null
+          evento_sst_id?: string | null
+          id?: string
+          mensagem_retorno?: string | null
+          numero_recibo?: string | null
+          protocolo?: string | null
+          status?: string
+          tenant_id: string
+          tentativas?: number | null
+          tipo_evento: string
+          ultima_tentativa?: string | null
+          updated_at?: string
+          xml_enviado?: string | null
+          xml_retorno?: string | null
+        }
+        Update: {
+          certificado_id?: string | null
+          codigo_retorno?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          empresa_id?: string | null
+          evento_sst_id?: string | null
+          id?: string
+          mensagem_retorno?: string | null
+          numero_recibo?: string | null
+          protocolo?: string | null
+          status?: string
+          tenant_id?: string
+          tentativas?: number | null
+          tipo_evento?: string
+          ultima_tentativa?: string | null
+          updated_at?: string
+          xml_enviado?: string | null
+          xml_retorno?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esocial_transmissoes_certificado_id_fkey"
+            columns: ["certificado_id"]
+            isOneToOne: false
+            referencedRelation: "esocial_certificados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "esocial_transmissoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "esocial_transmissoes_evento_sst_id_fkey"
+            columns: ["evento_sst_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_sst"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "esocial_transmissoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estrategia_cultura: {
         Row: {
           comportamentos_esperados: Json | null
