@@ -718,6 +718,17 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           </motion.div>
         </TabsContent>
 
+        {/* Notificações Tab */}
+        <TabsContent value="notificacoes" className="flex-1 mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="h-full bg-card rounded-xl border border-border p-6 overflow-auto"
+          >
+            <NotificacoesVencimento documentos={documentos} />
+          </motion.div>
+        </TabsContent>
+
         {/* Audit Tab */}
         <TabsContent value="historico" className="flex-1 mt-4">
           <motion.div
