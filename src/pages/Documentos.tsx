@@ -520,6 +520,15 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               <RefreshCw className="w-4 h-4" />
               PDCA
             </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="gap-2 relative">
+              <Bell className="w-4 h-4" />
+              Notificações
+              {(stats.vencidos > 0 || stats.vencendo > 0) && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                  {stats.vencidos + stats.vencendo}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="historico" className="gap-2">
               <History className="w-4 h-4" />
               Auditoria
