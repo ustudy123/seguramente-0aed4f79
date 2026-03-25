@@ -481,33 +481,30 @@ Responda SOMENTE em JSON:
 
       console.log(`Extracao iniciada. Tipo: ${tipo}, Total chars: ${totalChars}`);
 
-      const { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar } = extractRelevantSegments(textoCompleto, tipo);
+      // Cabeçalho: primeiros 10k chars para dados gerais
+      const cabecalho = textoCompleto.substring(0, 10000);
+      const contextoDadosGerais = cabecalho;
 
-      const contextoDadosGerais = `${cabecalho}\n\n--- CONTEUDO PRINCIPAL ---\n${conteudoPrincipal.substring(0, 6000)}`;
+      // Chunk inteligente: localizar ONDE estão os riscos no documento completo
+      const chunkRiscos = findBestChunkForRiscos(textoCompleto, tipo);
+      const { parte1: planoAcaoParte1, parte2: planoAcaoParte2 } = findBestChunkForPlano(textoCompleto);
 
       const promptDadosGerais = buildDadosGeraisPrompt(tipo);
       const promptConteudo = buildConteudoPrincipalPrompt(tipo);
       const promptPlano = buildPlanoAcaoPrompt(tipo, false);
       const promptPlanoCompl = buildPlanoAcaoPrompt(tipo, true);
 
-      // Para documentos pequenos (< 80k chars), enviar o texto COMPLETO para extração de riscos
-      // Isso garante que nenhuma tabela de riscos seja perdida por segmentação incorreta
-      const MAX_FULL_TEXT = 80000;
-      const textoParaRiscos = totalChars <= MAX_FULL_TEXT
-        ? textoCompleto
-        : conteudoPrincipal;
-
-      console.log(`Texto para riscos: ${textoParaRiscos.length} chars (${totalChars <= MAX_FULL_TEXT ? "texto completo" : "segmento principal"})`);
+      console.log(`Chunks: cabeçalho=${cabecalho.length} riscos=${chunkRiscos.length} plano1=${planoAcaoParte1.length} plano2=${planoAcaoParte2.length} / total=${totalChars}`);
 
       const promises: Promise<any>[] = [
-        callOpenAI(promptDadosGerais, `Documento ${tipo} - Cabecalho e estrutura:\n\n${contextoDadosGerais}`),
-        callOpenAI(promptConteudo, `Documento ${tipo} - TEXTO COMPLETO para extracao de riscos/inventario:\n\n${textoParaRiscos}`),
-        callOpenAI(promptPlano, `Documento ${tipo} - Plano de acao (parte 1):\n\n${planoAcao}`),
+        callOpenAI(promptDadosGerais, `Documento ${tipo} - Cabeçalho:\n\n${contextoDadosGerais}`),
+        callOpenAI(promptConteudo, `Documento ${tipo} - Inventário de Riscos (trecho selecionado por densidade de palavras-chave):\n\n${chunkRiscos}`),
+        callOpenAI(promptPlano, `Documento ${tipo} - Plano de Ação (parte 1):\n\n${planoAcaoParte1}`),
       ];
 
-      if (planoAcaoComplementar.length > 500) {
+      if (planoAcaoParte2.length > 500) {
         promises.push(
-          callOpenAI(promptPlanoCompl, `Documento ${tipo} - Plano de acao (parte 2 - continuacao):\n\n${planoAcaoComplementar}`)
+          callOpenAI(promptPlanoCompl, `Documento ${tipo} - Plano de Ação (parte 2 - continuação):\n\n${planoAcaoParte2}`)
         );
       }
 
