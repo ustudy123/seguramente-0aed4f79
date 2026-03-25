@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -105,6 +107,7 @@ export function EsocialTransmissao({ evento }: Props) {
   const transmitir = useMutation({
     mutationFn: async () => {
       if (!selectedCert) throw new Error("Selecione um certificado");
+      if (!senhaCert) throw new Error("Informe a senha do certificado");
 
       const { data, error } = await supabase.functions.invoke("esocial-transmissao", {
         body: {
@@ -112,21 +115,26 @@ export function EsocialTransmissao({ evento }: Props) {
           certificado_id: selectedCert,
           evento_sst_id: evento.id,
           tipo_evento: tipoEvento,
+          senha_certificado: senhaCert,
         },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["esocial-transmissoes", evento.id] });
       setShowForm(false);
-      if (data.status === "simulado") {
-        toast.success("✅ XML gerado e transmissão simulada (homologação)");
-      } else if (data.status === "pendente_assinatura") {
-        toast.info("📋 XML gerado. Configure a assinatura digital para transmissão real.");
+      setSenhaCert("");
+      if (data.status === "enviado") {
+        toast.success("✅ " + data.mensagem);
+      } else if (data.status === "rejeitado") {
+        toast.error("❌ Rejeitado: " + data.mensagem);
+      } else if (data.status === "erro") {
+        toast.error("⚠️ " + data.mensagem);
       } else {
-        toast.success("Transmissão iniciada: " + data.mensagem);
+        toast.info(data.mensagem);
       }
     },
     onError: (err: any) => toast.error(err.message || "Erro na transmissão"),
