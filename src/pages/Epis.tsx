@@ -217,6 +217,7 @@ const Epis = () => {
         onOpenChange={(open) => { if (!open) setAjustarEstoqueEpi(null); }}
         onConfirm={async (epiId, novaQuantidade, motivo) => { await ajustarEstoque({ epiId, novaQuantidade, motivo }); }}
       />
+      <GuiaRapidoEpi open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 };
