@@ -93,12 +93,42 @@ function extractRelevantSegments(fullText: string, tipo: string): {
   return { cabecalho, conteudoPrincipal, planoAcao, planoAcaoComplementar };
 }
 
-// ── Chamada OpenAI ────────────────────────────────────────────────────────────
-async function callOpenAI(systemPrompt: string, userContent: string, model = "gpt-4o"): Promise<any> {
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+// ── Sanitização de valores "null" string ────────────────────────────────────
+function sanitizeNulls(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj === "string") {
+    const s = obj.trim();
+    if (s === "null" || s === "undefined" || s === "N/A" || s === "n/a" || s === "-") return null;
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj
+      .map(sanitizeNulls)
+      .filter((v) => v !== null && v !== undefined && v !== "");
+  }
+  if (typeof obj === "object") {
+    const result: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = sanitizeNulls(v);
+    }
+    return result;
+  }
+  return obj;
+}
+
+// ── Chamada IA (Lovable AI Gateway com fallback OpenAI) ──────────────────────
+async function callOpenAI(systemPrompt: string, userContent: string, _model = "gpt-4o"): Promise<any> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const apiKey = LOVABLE_API_KEY || OPENAI_API_KEY;
+  const endpoint = LOVABLE_API_KEY
+    ? "https://ai.gateway.lovable.dev/v1/chat/completions"
+    : "https://api.openai.com/v1/chat/completions";
+  const model = LOVABLE_API_KEY ? "google/gemini-2.5-flash" : "gpt-4o";
+
+  const resp = await fetch(endpoint, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -114,13 +144,14 @@ async function callOpenAI(systemPrompt: string, userContent: string, model = "gp
 
   if (!resp.ok) {
     const errText = await resp.text();
-    console.error(`OpenAI error ${resp.status}:`, errText);
-    throw new Error(`OpenAI API retornou ${resp.status}: ${errText.substring(0, 200)}`);
+    console.error(`AI error ${resp.status}:`, errText);
+    throw new Error(`API IA retornou ${resp.status}: ${errText.substring(0, 200)}`);
   }
 
   const data = await resp.json();
-  if (data.error) throw new Error(data.error.message || "Erro na API OpenAI");
-  return JSON.parse(data.choices[0].message.content);
+  if (data.error) throw new Error(data.error.message || "Erro na API IA");
+  const raw = JSON.parse(data.choices[0].message.content);
+  return sanitizeNulls(raw);
 }
 
 // ── Prompts especializados por tipo ──────────────────────────────────────────
