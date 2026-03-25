@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { motion } from "framer-motion";
+import { Bell } from "lucide-react";
 import { 
   FileText, 
   Upload, 
