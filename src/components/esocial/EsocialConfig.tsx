@@ -262,7 +262,7 @@ export function EsocialConfig() {
                             {cert.ambiente === "producao" ? "Produção" : "Homologação"}
                           </Badge>
                           {cert.tipo === "procuracao" && (
-                            <Badge variant="outline" className="text-xs border-purple-300 text-purple-700">
+                            <Badge variant="outline" className="text-xs border-primary/40 text-primary">
                               Procuração
                             </Badge>
                           )}
@@ -302,7 +302,7 @@ export function EsocialConfig() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {vencido && <AlertTriangle className="w-4 h-4 text-destructive" />}
-                      {!vencido && cert.ativo && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                      {!vencido && cert.ativo && <CheckCircle2 className="w-4 h-4 text-primary" />}
                       <Switch
                         checked={cert.ativo}
                         onCheckedChange={(v) => toggleAtivo.mutate({ id: cert.id, ativo: v })}
@@ -458,7 +458,7 @@ export function EsocialConfig() {
               >
                 {certFile ? (
                   <div className="flex items-center justify-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                     <span className="font-medium">{certFile.name}</span>
                     <span className="text-muted-foreground">
                       ({(certFile.size / 1024).toFixed(1)} KB)
