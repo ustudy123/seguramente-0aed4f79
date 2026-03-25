@@ -82,7 +82,7 @@ export function EsocialTransmissao({ evento }: Props) {
         .eq("ativo", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as Certificado[];
+      return (data || []) as unknown as Certificado[];
     },
     enabled: !!tid,
   });
@@ -96,7 +96,7 @@ export function EsocialTransmissao({ evento }: Props) {
         .eq("evento_sst_id", evento.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as Transmissao[];
+      return (data || []) as unknown as Transmissao[];
     },
   });
 

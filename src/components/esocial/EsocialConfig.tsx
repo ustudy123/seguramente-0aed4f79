@@ -66,7 +66,7 @@ export function EsocialConfig() {
         .eq("tenant_id", tid)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as Certificado[];
+      return (data || []) as unknown as Certificado[];
     },
     enabled: !!tid,
   });
