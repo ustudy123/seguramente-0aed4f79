@@ -108,13 +108,13 @@ export function NotificacoesVencimento({ documentos }: Props) {
     }
     if (alerta.status === "critico") {
       return (
-        <Badge className="text-xs shrink-0 bg-orange-100 text-orange-800 border-orange-300">
+        <Badge className="text-xs shrink-0 bg-destructive/20 text-destructive border-destructive/40">
           Crítico — {alerta.diasRestantes}d
         </Badge>
       );
     }
     return (
-      <Badge variant="outline" className="text-xs shrink-0 text-warning border-warning">
+      <Badge variant="outline" className="text-xs shrink-0">
         {alerta.diasRestantes}d restantes
       </Badge>
     );
