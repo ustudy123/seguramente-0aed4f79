@@ -370,7 +370,17 @@ Responda SOMENTE em JSON: {"tipo": "PGR", "confianca": 92, "justificativa": "...
       const inventarioRiscosValidos = deduplicarRiscos(
         todosRiscosRaw.filter((r: any) => r && r.risco && String(r.risco).trim() !== "")
       );
-      const matrizExames = deduplicarRiscos(matrizExamesRaw.filter((e: any) => e && e.cargo));
+      // Para PCMSO, deduplicar exames por cargo+setor (não por risco)
+      const deduplicarExames = (exames: any[]): any[] => {
+        const seen = new Set<string>();
+        return exames.filter((e) => {
+          const key = [(e.cargo || "").substring(0, 60).toLowerCase().trim(), (e.setor || "").substring(0, 30).toLowerCase().trim()].join("|");
+          if (seen.has(key)) return false;
+          if (key !== "|") seen.add(key);
+          return true;
+        });
+      };
+      const matrizExames = deduplicarExames(matrizExamesRaw.filter((e: any) => e && e.cargo));
       const fatoresErgonomicos = deduplicarRiscos(fatoresErgonomicosRaw.filter((f: any) => f && f.posto));
 
       // 6. Mesclar e deduplicar ações
