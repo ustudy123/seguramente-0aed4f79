@@ -284,8 +284,8 @@ export function NotificacoesVencimento({ documentos }: Props) {
           {criticos.length > 0 && (
             <div className="space-y-2 mt-4">
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4 h-4 text-orange-600" />
-                <h3 className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+                <h3 className="text-sm font-semibold text-destructive">
                   Vencimento Crítico — até 7 dias ({criticos.length})
                 </h3>
               </div>
