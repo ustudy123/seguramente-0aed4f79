@@ -122,7 +122,7 @@ export function NotificacoesVencimento({ documentos }: Props) {
 
   const getRowClass = (status: AlertaDocumento["status"]) => {
     if (status === "vencido") return "border-l-4 border-l-destructive bg-destructive/5";
-    if (status === "critico") return "border-l-4 border-l-orange-500 bg-orange-500/5";
+    if (status === "critico") return "border-l-4 border-l-destructive/70 bg-destructive/10";
     return "border-l-4 border-l-warning bg-warning/5";
   };
 
