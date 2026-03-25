@@ -227,6 +227,67 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
     toast.success(`${enviadas} ação(ões) importada(s) para o Plano de Ação!`);
   };
 
+  // Criar ação de enquadramento (insalubridade/periculosidade/aposentadoria especial) na folha
+  const criarAcaoEnquadramento = async (risco: RiscoItem, riscoIndex: number) => {
+    setCriandoAcaoEnquadramento(riscoIndex);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Sessão expirada"); return; }
+      const { data: profile } = await supabase.from("profiles").select("tenant_id").eq("user_id", session.user.id).maybeSingle();
+      if (!profile?.tenant_id) { toast.error("Tenant não encontrado"); return; }
+
+      const enquadramentos: string[] = [];
+      if (risco.enquadramento_insalubridade) enquadramentos.push(`Insalubridade grau ${risco.grau_insalubridade || "a confirmar"}`);
+      if (risco.enquadramento_periculosidade) enquadramentos.push("Periculosidade (30%)");
+      if (risco.enquadramento_aposentadoria_especial) enquadramentos.push(`Aposentadoria especial ${risco.anos_aposentadoria_especial ? risco.anos_aposentadoria_especial + " anos" : ""}`);
+
+      const titulo = `Atualizar folha de pagamento: enquadramento de ${risco.risco} — ${enquadramentos.join(", ")}`;
+      const descricao = `Agente nocivo "${risco.risco}" identificado no LTCAT com enquadramento: ${enquadramentos.join("; ")}. Necessário atualizar o cadastro do cargo/função na folha de pagamento para refletir os adicionais devidos.`;
+      const porque = `Laudo LTCAT (${state.arquivo?.name || "documento SST"}) caracterizou exposição habitual e permanente ao agente "${risco.risco}". Enquadramento: ${enquadramentos.join("; ")}. Fundamentação: NR-15, NR-16, Decreto 3048/99, CLT art. 192 e 193.`;
+      const como = [
+        "1. Verificar cargos/funções expostos ao agente no sistema",
+        "2. Atualizar cadastro do cargo com o enquadramento de insalubridade/periculosidade",
+        "3. Conferir base de cálculo e grau (NR-15 Anexo 1/2/3 ou NR-16)",
+        "4. Incluir adicional na folha do próximo período",
+        "5. Guardar cópia do LTCAT como evidência no prontuário",
+      ].join("\n");
+
+      const prazo = new Date();
+      prazo.setDate(prazo.getDate() + 30);
+
+      const { data: acaoInserida, error } = await supabase.from("plano_acoes").insert([{
+        tenant_id: profile.tenant_id,
+        codigo: `LTCAT-${Date.now().toString(36).toUpperCase()}`,
+        titulo,
+        descricao,
+        porque,
+        onde: risco.setor || "A definir",
+        como,
+        responsavel_nome: "Setor de RH / Folha de Pagamento",
+        prazo: prazo.toISOString().split("T")[0],
+        tipo: "corretiva" as any,
+        prioridade: "urgente" as any,
+        status: "pendente" as any,
+        origem_modulo: "compliance_sst",
+        origem_descricao: `LTCAT — Enquadramento de agente nocivo: ${risco.risco}`,
+        criado_por: session.user.id,
+        criado_por_nome: session.user.email,
+        progresso: 0,
+        exige_evidencia: true,
+        tempo_gasto_minutos: 0,
+      }]).select("id").single();
+
+      if (error) throw error;
+      setAcoesEnquadramentoSalvas(prev => ({ ...prev, [riscoIndex]: acaoInserida?.id || "ok" }));
+      toast.success("Ação criada no Plano de Ação!");
+    } catch (err: any) {
+      console.error("Erro criarAcaoEnquadramento:", err);
+      toast.error("Erro ao criar ação: " + err.message);
+    } finally {
+      setCriandoAcaoEnquadramento(null);
+    }
+  };
+
   const updateDadosGerais = (campo: string, valor: string) => {
     setDados(prev => ({ ...prev, dados_gerais: { ...prev.dados_gerais, [campo]: { ...prev.dados_gerais[campo], valor } } }));
   };
