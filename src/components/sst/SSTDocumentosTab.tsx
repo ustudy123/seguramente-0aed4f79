@@ -4,6 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   FileText, Loader2, Search, Eye, Trash2, Brain,
   CheckCircle2, AlertTriangle, Calendar, User, Building2,
   Download, ChevronRight
@@ -22,6 +32,7 @@ export function SSTDocumentosTab() {
   const [revisaoDoc, setRevisaoDoc] = useState<SSTDocumento | null>(null);
   const [analiseDoc, setAnaliseDoc] = useState<SSTDocumento | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [docToDelete, setDocToDelete] = useState<SSTDocumento | null>(null);
 
   const filtered = documentos.filter(d =>
     !search ||
@@ -31,11 +42,12 @@ export function SSTDocumentosTab() {
     d.profissional_responsavel?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = async (doc: SSTDocumento) => {
-    if (!confirm(`Excluir "${doc.tipo}" — ${doc.arquivo_nome || "documento"}?`)) return;
-    setDeletingId(doc.id);
+  const handleDelete = async () => {
+    if (!docToDelete) return;
+    setDeletingId(docToDelete.id);
+    setDocToDelete(null);
     try {
-      await deleteDocumento.mutateAsync(doc);
+      await deleteDocumento.mutateAsync(docToDelete);
     } finally {
       setDeletingId(null);
     }
@@ -223,7 +235,7 @@ export function SSTDocumentosTab() {
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                         title="Excluir"
                         disabled={deletingId === doc.id}
-                        onClick={() => handleDelete(doc)}
+                        onClick={() => setDocToDelete(doc)}
                       >
                         {deletingId === doc.id
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -250,6 +262,28 @@ export function SSTDocumentosTab() {
         onOpenChange={(open) => !open && setAnaliseDoc(null)}
         documento={analiseDoc}
       />
+
+      {/* Confirmação de exclusão */}
+      <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir documento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a excluir o documento <strong>{docToDelete?.tipo}</strong>
+              {docToDelete?.arquivo_nome ? ` — ${docToDelete.arquivo_nome}` : ""}. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
