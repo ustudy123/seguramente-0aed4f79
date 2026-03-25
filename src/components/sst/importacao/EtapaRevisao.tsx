@@ -8,7 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Building2, Users, Briefcase, AlertTriangle, Target, UserCheck,
   AlertCircle, CheckCircle2, Minus, Info, Sparkles, ArrowUpRight, CheckCheck,
-  Stethoscope, Layers, FlaskConical, Zap, ChevronDown, ChevronRight
+  Stethoscope, Layers, FlaskConical, Zap, ChevronDown, ChevronRight,
+  ShieldAlert, Clock, ExternalLink
 } from "lucide-react";
 import { ImportacaoState, DadosExtraidos } from "./ImportacaoInteligente";
 import { useSSTDocumentos } from "@/hooks/useSSTDocumentos";
@@ -49,6 +50,11 @@ type RiscoItem = DadosExtraidos["inventario_riscos"][0] & {
   grau_insalubridade?: string; conclusao?: string;
   condicao_perigosa?: string; enquadramento_legal?: string; habitualidade?: string;
   fator_ergonomico?: string; nivel_risco?: string; conclusao_previdenciaria?: string; acima_limite?: boolean;
+  // LTCAT específicos
+  enquadramento_insalubridade?: boolean;
+  enquadramento_periculosidade?: boolean;
+  enquadramento_aposentadoria_especial?: boolean;
+  anos_aposentadoria_especial?: number;
 };
 
 function ConfiancaBadge({ confianca }: { confianca: "alta" | "media" | "baixa" }) {
