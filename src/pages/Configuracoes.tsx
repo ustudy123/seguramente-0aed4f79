@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Users, ClipboardList, ShieldCheck, Rocket, ArrowRight } from "lucide-react";
+import { Users, ClipboardList, ShieldCheck, Rocket, ArrowRight, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditoriaTab } from "@/components/configuracoes/AuditoriaTab";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import UsuariosContent from "@/components/configuracoes/UsuariosContent";
 import PerfisContent from "@/components/configuracoes/PerfisContent";
+import { EsocialConfig } from "@/components/esocial/EsocialConfig";
 
 export default function Configuracoes() {
   const { hasMinimumRole, profile, isSuperAdmin } = useAuthContext();
@@ -69,6 +70,12 @@ export default function Configuracoes() {
             </TabsTrigger>
           )}
           {isAdmin && (
+            <TabsTrigger value="esocial" className="flex items-center gap-1.5">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">eSocial</span>
+            </TabsTrigger>
+          )}
+          {isAdmin && (
             <TabsTrigger value="auditoria" className="flex items-center gap-1.5">
               <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">Auditoria</span>
@@ -88,6 +95,14 @@ export default function Configuracoes() {
           <TabsContent value="perfis" className="mt-6">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <PerfisContent />
+            </motion.div>
+          </TabsContent>
+        )}
+
+        {isAdmin && (
+          <TabsContent value="esocial" className="mt-6">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <EsocialConfig />
             </motion.div>
           </TabsContent>
         )}

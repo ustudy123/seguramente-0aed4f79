@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { gerarRelatorioCATpdf } from "./gerarRelatorioCATpdf";
 import { InvestigacaoAssistidaIA } from "./InvestigacaoAssistidaIA";
+import { EsocialTransmissao } from "@/components/esocial/EsocialTransmissao";
 
 interface Props {
   evento: EventoSST;
@@ -410,6 +411,13 @@ export const EventoSSTDetail = ({ evento, onBack }: Props) => {
               await updateEvento.mutateAsync({ id: evento.id, ...data } as any);
             }}
           />
+
+          {/* eSocial Transmission */}
+          <Card>
+            <CardContent className="pt-4">
+              <EsocialTransmissao evento={evento} />
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader><CardTitle className="text-sm">Anexos</CardTitle></CardHeader>
