@@ -537,14 +537,19 @@ Responda SOMENTE em JSON:
         ) === idx;
       });
 
-      console.log(`Conteudo extraido: ${inventarioRiscos.length} riscos, ${matrizExames.length} exames, ${acoesParte1.length}+${acoesParte2.length}=${planoAcaoExtraido.length} acoes (apos dedup)`);
+      // Filtrar riscos sem nome (campo risco null/vazio após sanitização)
+      const inventarioRiscosValidos = inventarioRiscos.filter(
+        (r: any) => r && r.risco && String(r.risco).trim() !== ""
+      );
+
+      console.log(`Conteudo extraido: ${inventarioRiscosValidos.length} riscos validos (${inventarioRiscos.length} brutos), ${matrizExames.length} exames, ${acoesParte1.length}+${acoesParte2.length}=${planoAcaoExtraido.length} acoes (apos dedup)`);
 
       const content: any = {
         tipo_documento: tipo,
         dados_gerais: resultDados?.dados_gerais || {},
         estrutura_organizacional: resultDados?.estrutura_organizacional || { unidades: [], setores: [], departamentos: [] },
         funcoes_atividades: funcoesAtividades,
-        inventario_riscos: inventarioRiscos,
+        inventario_riscos: inventarioRiscosValidos,
         matriz_exames: matrizExames,
         fatores_ergonomicos: fatoresErgonomicos,
         plano_acao: planoAcaoExtraido,
