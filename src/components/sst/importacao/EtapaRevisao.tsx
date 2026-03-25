@@ -387,7 +387,7 @@ export function EtapaRevisao({ state, updateState, resetar }: Props) {
 
             {/* Inventário adaptado por tipo */}
             <TabsContent value="inventario" className="mt-4">
-              <ScrollArea className="h-80">
+              <ScrollArea className="h-[520px]">
                 <div className="space-y-3 pr-2">
 
                   {/* PCMSO: Matriz de Exames */}
