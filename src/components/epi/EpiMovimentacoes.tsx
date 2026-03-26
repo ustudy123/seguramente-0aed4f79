@@ -66,6 +66,7 @@ export function EpiMovimentacoes({
 }: EpiMovimentacoesProps) {
   const [filtroColaborador, setFiltroColaborador] = useState("");
   const [filtroEpi, setFiltroEpi] = useState<string>("all");
+  const [filtroTipo, setFiltroTipo] = useState<string>("all");
   const [dataInicio, setDataInicio] = useState<Date | undefined>();
   const [dataFim, setDataFim] = useState<Date | undefined>();
 
@@ -98,6 +99,13 @@ export function EpiMovimentacoes({
         }
       }
 
+      // Filtro por tipo de movimentação
+      if (filtroTipo && filtroTipo !== "all") {
+        if (mov.tipo !== filtroTipo) {
+          return false;
+        }
+      }
+
       // Filtro por período
       if (dataInicio || dataFim) {
         const dataMovimentacao = new Date(mov.created_at);
@@ -122,16 +130,17 @@ export function EpiMovimentacoes({
 
       return true;
     });
-  }, [movimentacoes, filtroColaborador, filtroEpi, dataInicio, dataFim]);
+  }, [movimentacoes, filtroColaborador, filtroEpi, filtroTipo, dataInicio, dataFim]);
 
   const limparFiltros = () => {
     setFiltroColaborador("");
     setFiltroEpi("all");
+    setFiltroTipo("all");
     setDataInicio(undefined);
     setDataFim(undefined);
   };
 
-  const temFiltrosAtivos = filtroColaborador || (filtroEpi && filtroEpi !== "all") || dataInicio || dataFim;
+  const temFiltrosAtivos = filtroColaborador || (filtroEpi && filtroEpi !== "all") || (filtroTipo && filtroTipo !== "all") || dataInicio || dataFim;
 
   if (isLoading) {
     return (
@@ -169,6 +178,20 @@ export function EpiMovimentacoes({
                     {epi.nome}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-full sm:w-48">
+            <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+              <SelectTrigger>
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="entrada">Entrada</SelectItem>
+                <SelectItem value="saida">Saída</SelectItem>
+                <SelectItem value="ajuste">Ajuste</SelectItem>
+                <SelectItem value="descarte">Descarte</SelectItem>
               </SelectContent>
             </Select>
           </div>

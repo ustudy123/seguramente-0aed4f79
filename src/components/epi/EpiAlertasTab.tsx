@@ -207,7 +207,46 @@ export function EpiAlertasTab({ epis, entregas, tipos }: EpiAlertasTabProps) {
         }
       });
 
-    // 4. Estoque baixo
+    // 4a. Troca periódica atrasada (baseado em periodicidade_troca_dias do tipo)
+    entregas
+      .filter((e) => e.status === "ativa")
+      .forEach((entrega) => {
+        const periodicidade = (entrega.epi?.tipo as any)?.periodicidade_troca_dias;
+        if (periodicidade && periodicidade > 0) {
+          const dataEntrega = new Date(entrega.data_entrega);
+          const dataTroca = new Date(dataEntrega);
+          dataTroca.setDate(dataTroca.getDate() + periodicidade);
+          const diasParaTroca = differenceInDays(dataTroca, hoje);
+
+          if (diasParaTroca < 0) {
+            lista.push({
+              id: `troca-atrasada-${entrega.id}`,
+              tipo: "urgente",
+              categoria: "Troca Atrasada",
+              titulo: `Troca periódica atrasada — ${entrega.colaborador_nome}`,
+              descricao: `${entrega.epi?.tipo?.nome}: troca a cada ${periodicidade} dias, atrasada há ${Math.abs(diasParaTroca)} dias.`,
+              item: entrega.epi?.tipo?.nome || "EPI",
+              colaborador: entrega.colaborador_nome,
+              diasRestantes: diasParaTroca,
+              dataReferencia: format(dataTroca, "yyyy-MM-dd"),
+            });
+          } else if (diasParaTroca <= 15) {
+            lista.push({
+              id: `troca-proxima-${entrega.id}`,
+              tipo: "atencao",
+              categoria: "Troca Próxima",
+              titulo: `Troca periódica em ${diasParaTroca} dias — ${entrega.colaborador_nome}`,
+              descricao: `${entrega.epi?.tipo?.nome}: troca a cada ${periodicidade} dias.`,
+              item: entrega.epi?.tipo?.nome || "EPI",
+              colaborador: entrega.colaborador_nome,
+              diasRestantes: diasParaTroca,
+              dataReferencia: format(dataTroca, "yyyy-MM-dd"),
+            });
+          }
+        }
+      });
+
+    // 5. Estoque baixo
     epis.forEach((epi) => {
       if (epi.quantidade_estoque <= epi.quantidade_minima) {
         lista.push({
