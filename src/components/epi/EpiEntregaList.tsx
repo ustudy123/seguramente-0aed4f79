@@ -484,12 +484,18 @@ export function EpiEntregaList({
               )}
             </div>
             <div className="space-y-2">
-              <Label>Observações (opcional)</Label>
+              <Label>Observações *</Label>
               <Textarea
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
-                placeholder="Estado do EPI, observações sobre a devolução..."
+                placeholder="Descreva o estado do EPI e motivo da devolução (obrigatório)..."
+                className={cn(!observacoes.trim() && "border-destructive/50")}
               />
+              {!observacoes.trim() && (
+                <p className="text-xs text-destructive">
+                  Informe o estado do EPI e o motivo da devolução para manter a rastreabilidade conforme NR-06.
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -501,7 +507,7 @@ export function EpiEntregaList({
             >
               Cancelar
             </Button>
-            <Button onClick={handleDevolucao} disabled={processando}>
+            <Button onClick={handleDevolucao} disabled={processando || !observacoes.trim()}>
               {processando ? "Processando..." : "Confirmar Devolução"}
             </Button>
           </DialogFooter>
