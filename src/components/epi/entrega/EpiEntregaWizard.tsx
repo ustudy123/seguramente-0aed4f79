@@ -201,9 +201,25 @@ export function EpiEntregaWizard({
     setIsLoading(true);
 
     try {
+      // CT-39: Verificar se o colaborador ainda está ativo antes de salvar
+      const { data: admissaoAtual, error: admissaoError } = await supabase
+        .from("admissoes")
+        .select("status, data_desligamento")
+        .eq("id", formData.colaboradorId)
+        .eq("tenant_id", tenantId)
+        .single();
+
+      if (admissaoError) throw admissaoError;
+
+      if (admissaoAtual?.status === "desligado" || admissaoAtual?.data_desligamento) {
+        toast.error("Entrega bloqueada: colaborador está desligado. Não é possível entregar EPI a colaboradores inativos.");
+        return;
+      }
+
       // A tabela epi_entregas referencia `epis.id` (item de estoque),
       // então precisamos resolver o epi_id a partir do tipo selecionado (epi_tipos).
       let epiId: string;
+      let estoqueAnterior: number;
       
       // Buscar EPI existente com estoque suficiente
       const { data: epiRow, error: epiError } = await supabase
@@ -217,8 +233,8 @@ export function EpiEntregaWizard({
       if (epiError) throw epiError;
       
       if (epiRow?.id) {
-        // EPI existe, usar o ID existente
         epiId = epiRow.id;
+        estoqueAnterior = epiRow.quantidade_estoque || 0;
       } else {
         // Não existe EPI para este tipo, criar um automaticamente
         const { data: newEpi, error: createError } = await supabase
@@ -226,15 +242,16 @@ export function EpiEntregaWizard({
           .insert({
             tenant_id: tenantId,
             tipo_id: formData.epiTipoId,
-            quantidade_estoque: 1000, // Estoque inicial padrão
+            quantidade_estoque: 1000,
             quantidade_minima: 10,
             status: "disponivel",
           })
-          .select("id")
+          .select("id, quantidade_estoque")
           .single();
         
         if (createError) throw createError;
         epiId = newEpi.id;
+        estoqueAnterior = newEpi.quantidade_estoque || 1000;
       }
 
       let fotoUrl: string | undefined;
@@ -290,53 +307,83 @@ export function EpiEntregaWizard({
 
       if (error) throw error;
 
-      // RF-EPI-EST-08: Se controle de estoque ativo e local selecionado, baixar estoque do local
+      // CT-46/47: Baixar estoque com controle otimista e rollback em caso de falha
       if (usarControleEstoque && formData.localEstoqueId && status === "entregue") {
-        // Buscar saldo atual no local (considerando tamanho)
-        let queryEstoque = supabase
-          .from("epi_estoque_local")
-          .select("id, quantidade")
-          .eq("epi_id", epiId)
-          .eq("local_estoque_id", formData.localEstoqueId)
-          .eq("tenant_id", tenantId);
+        try {
+          // CT-47: Atualizar estoque global com compare-and-swap
+          const novoEstoqueGlobal = Math.max(0, estoqueAnterior - formData.quantidade);
+          const { data: casResult } = await supabase.rpc("epi_atualizar_estoque_otimista", {
+            p_epi_id: epiId,
+            p_quantidade_esperada: estoqueAnterior,
+            p_nova_quantidade: novoEstoqueGlobal,
+          });
 
-        if (formData.tamanho) {
-          queryEstoque = queryEstoque.eq("tamanho", formData.tamanho);
-        } else {
-          queryEstoque = queryEstoque.is("tamanho", null);
-        }
+          if (!casResult) {
+            // Race condition detectada — rollback da entrega
+            await supabase.from("epi_entregas").delete().eq("id", data.id);
+            throw new Error("Conflito de concorrência: o estoque foi alterado por outro usuário. Tente novamente.");
+          }
 
-        const { data: estoqueLocal } = await queryEstoque.maybeSingle();
-
-        if (estoqueLocal) {
-          const novaQtd = Math.max(0, estoqueLocal.quantidade - formData.quantidade);
-          await supabase
+          // CT-47: Atualizar estoque local com compare-and-swap
+          let queryEstoque = supabase
             .from("epi_estoque_local")
-            .update({ quantidade: novaQtd })
-            .eq("id", estoqueLocal.id);
+            .select("id, quantidade")
+            .eq("epi_id", epiId)
+            .eq("local_estoque_id", formData.localEstoqueId)
+            .eq("tenant_id", tenantId);
+
+          if (formData.tamanho) {
+            queryEstoque = queryEstoque.eq("tamanho", formData.tamanho);
+          } else {
+            queryEstoque = queryEstoque.is("tamanho", null);
+          }
+
+          const { data: estoqueLocal } = await queryEstoque.maybeSingle();
+
+          if (estoqueLocal) {
+            const novaQtdLocal = Math.max(0, estoqueLocal.quantidade - formData.quantidade);
+            const { data: casLocalResult } = await supabase.rpc("epi_atualizar_estoque_local_otimista", {
+              p_estoque_local_id: estoqueLocal.id,
+              p_quantidade_esperada: estoqueLocal.quantidade,
+              p_nova_quantidade: novaQtdLocal,
+            });
+
+            if (!casLocalResult) {
+              // Rollback: reverter estoque global e deletar entrega
+              await supabase.rpc("epi_atualizar_estoque_otimista", {
+                p_epi_id: epiId,
+                p_quantidade_esperada: novoEstoqueGlobal,
+                p_nova_quantidade: estoqueAnterior,
+              });
+              await supabase.from("epi_entregas").delete().eq("id", data.id);
+              throw new Error("Conflito de concorrência no estoque local. Tente novamente.");
+            }
+          }
+
+          // Registrar movimentação
+          await supabase.from("epi_movimentacoes").insert({
+            tenant_id: tenantId,
+            epi_id: epiId,
+            tipo: "saida",
+            subtipo: "entrega",
+            local_estoque_id: formData.localEstoqueId,
+            quantidade: formData.quantidade,
+            quantidade_anterior: estoqueAnterior,
+            quantidade_atual: novoEstoqueGlobal,
+            motivo: `Entrega para ${formData.colaboradorNome}`,
+            tamanho: formData.tamanho || null,
+            realizado_por: user?.id,
+            realizado_por_nome: profile?.nome_completo,
+          });
+        } catch (stockError: any) {
+          // CT-46: Se falhou durante atualização de estoque, reverter entrega
+          if (stockError.message?.includes("Conflito de concorrência")) {
+            throw stockError;
+          }
+          // Para outros erros de estoque, deletar a entrega e propagar o erro
+          await supabase.from("epi_entregas").delete().eq("id", data.id);
+          throw new Error("Erro ao atualizar estoque. A entrega foi revertida. " + stockError.message);
         }
-
-        // Registrar movimentação com local
-        const { data: epiAtual } = await supabase
-          .from("epis")
-          .select("quantidade_estoque")
-          .eq("id", epiId)
-          .single();
-
-        await supabase.from("epi_movimentacoes").insert({
-          tenant_id: tenantId,
-          epi_id: epiId,
-          tipo: "saida",
-          subtipo: "entrega",
-          local_estoque_id: formData.localEstoqueId,
-          quantidade: formData.quantidade,
-          quantidade_anterior: (epiAtual?.quantidade_estoque || 0) + formData.quantidade,
-          quantidade_atual: epiAtual?.quantidade_estoque || 0,
-          motivo: `Entrega para ${formData.colaboradorNome}`,
-          tamanho: formData.tamanho || null,
-          realizado_por: user?.id,
-          realizado_por_nome: profile?.nome_completo,
-        });
       }
 
       setEntregaResult({
