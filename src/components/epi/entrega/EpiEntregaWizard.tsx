@@ -775,6 +775,28 @@ export function EpiEntregaWizard({
                   </div>
                 )}
 
+                {/* CT-26: Sugestões de EPI pela Matriz de Proteção */}
+                {formData.colaboradorId && episSugeridos.length > 0 && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-xs font-medium text-primary flex items-center gap-1.5">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      EPIs recomendados pela Matriz de Proteção para esta função:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {episSugeridos.map((s) => (
+                        <Badge
+                          key={s.epi_tipo_id}
+                          variant={s.obrigatorio ? "default" : "secondary"}
+                          className="cursor-pointer text-xs"
+                          onClick={() => handleEpiChange(s.epi_tipo_id)}
+                        >
+                          {s.nome} {s.obrigatorio && "★"}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Seleção de EPI */}
                 <div className="space-y-2">
                   <Label>Tipo de EPI *</Label>
@@ -795,6 +817,24 @@ export function EpiEntregaWizard({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* CT-34: Alerta de substituição — EPI do mesmo tipo já entregue */}
+                {substituicaoDetectada && (
+                  <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                          Substituição detectada
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Este colaborador já possui uma entrega ativa de <strong>{substituicaoDetectada.epi_tipo_nome}</strong> (entregue em {format(new Date(substituicaoDetectada.data_entrega), "dd/MM/yyyy")}).
+                          Ao confirmar, a entrega anterior será marcada para devolução automaticamente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* CT-13: Alerta de CA vencido — BLOQUEANTE */}
                 {isCAVencido && (
