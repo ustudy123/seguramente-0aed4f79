@@ -523,13 +523,17 @@ export function EpiEntregaWizard({
   const selectedTamanhos = formData.epiTipoId ? getTamanhosForTipo(formData.epiTipoId) : [];
   const requiresTamanho = selectedTamanhos.length > 0;
 
+  // CT-13/32/12: Bloquear avanço se CA vencido, EPI irregular ou saldo insuficiente
   const canProceedFromForm = 
     formData.colaboradorId && 
     formData.epiTipoId && 
     formData.quantidade > 0 && 
     formData.dataEntrega &&
     (!usarControleEstoque || formData.localEstoqueId) &&
-    (!requiresTamanho || formData.tamanho);
+    (!requiresTamanho || formData.tamanho) &&
+    !isCAVencido &&
+    !isEPIIrregular &&
+    !isSaldoInsuficiente;
 
   return (
     <>
