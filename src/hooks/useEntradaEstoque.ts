@@ -31,12 +31,15 @@ export function useEntradaEstoque() {
       const qtdAnterior = epiAtual?.quantidade_estoque || 0;
       const qtdNova = qtdAnterior + dados.quantidade;
 
-      // 2. Atualizar estoque global do EPI
-      const { error: updateError } = await supabase
-        .from("epis")
-        .update({ quantidade_estoque: qtdNova })
-        .eq("id", dados.epi_id);
-      if (updateError) throw updateError;
+      // 2. CT-47: Atualizar estoque global com controle otimista (compare-and-swap)
+      const { data: casResult } = await supabase.rpc("epi_atualizar_estoque_otimista", {
+        p_epi_id: dados.epi_id,
+        p_quantidade_esperada: qtdAnterior,
+        p_nova_quantidade: qtdNova,
+      });
+      if (!casResult) {
+        throw new Error("Conflito de concorrência: o estoque foi alterado por outro usuário. Tente novamente.");
+      }
 
       // 3. Upsert no estoque por local (epi_estoque_local)
       let queryEstoque = supabase
