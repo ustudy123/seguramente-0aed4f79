@@ -429,6 +429,52 @@ export function EpiEntregaWizard({
         colaboradorCargo: colaborador.cargo || "",
         colaboradorDepartamento: colaborador.departamento || "",
       }));
+
+      // CT-26: Buscar EPIs sugeridos pela matriz de proteção para esta função
+      if (colaborador.cargo && tenantId) {
+        supabase
+          .from("funcao_epis")
+          .select("epi_tipo_id, obrigatorio, epi_tipo:epi_tipos(id, nome)")
+          .eq("tenant_id", tenantId)
+          .eq("cargo_id", colaborador.cargo)
+          .then(({ data }) => {
+            if (data && data.length > 0) {
+              setEpisSugeridos(
+                data.map((d: any) => ({
+                  epi_tipo_id: d.epi_tipo_id,
+                  nome: d.epi_tipo?.nome || "—",
+                  obrigatorio: d.obrigatorio,
+                }))
+              );
+            } else {
+              setEpisSugeridos([]);
+            }
+          });
+      }
+
+      // CT-34: Buscar entregas ativas deste colaborador
+      if (tenantId) {
+        supabase
+          .from("epi_entregas")
+          .select("id, epi_id, data_entrega, epi:epis(tipo_id, tipo:epi_tipos(id, nome))")
+          .eq("tenant_id", tenantId)
+          .eq("employee_id", colaboradorId)
+          .eq("status", "ativa")
+          .then(({ data }) => {
+            if (data) {
+              setEntregasAtivas(
+                data.map((d: any) => ({
+                  id: d.id,
+                  epi_tipo_id: d.epi?.tipo_id || "",
+                  epi_tipo_nome: d.epi?.tipo?.nome || "EPI",
+                  data_entrega: d.data_entrega,
+                }))
+              );
+            } else {
+              setEntregasAtivas([]);
+            }
+          });
+      }
     }
   };
 
