@@ -394,6 +394,18 @@ export function EpiEntregaWizard({
         }
       }
 
+      // CT-34: Se é substituição, marcar entrega anterior como devolvida
+      if (substituicaoDetectada && status === "entregue") {
+        await supabase
+          .from("epi_entregas")
+          .update({
+            status: "devolvido",
+            data_devolucao: new Date().toISOString(),
+            observacoes_devolucao: `Devolução automática por substituição. Nova entrega: ${data.id}`,
+          })
+          .eq("id", substituicaoDetectada.id);
+      }
+
       setEntregaResult({
         ...data,
         fotoUrl,
@@ -403,7 +415,10 @@ export function EpiEntregaWizard({
 
       if (status === "entregue") {
         setStep("complete");
-        toast.success("Entrega registrada com sucesso!");
+        const msg = substituicaoDetectada 
+          ? "Entrega registrada e EPI anterior marcado como devolvido!"
+          : "Entrega registrada com sucesso!";
+        toast.success(msg);
       } else {
         toast.warning("Recusa registrada. Uma advertência foi criada.");
         handleClose();
