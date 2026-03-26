@@ -39,6 +39,8 @@ import { Badge } from "@/components/ui/badge";
 import type { EpiTipo, EpiCompleto } from "@/types/epi";
 import { CATEGORIAS_EPI, UNIDADES_MEDIDA, TIPOS_DURABILIDADE } from "@/types/epi";
 import { useEpiLocais } from "@/hooks/useEpiLocais";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const schema = z.object({
@@ -179,7 +181,40 @@ export function EpiForm({
     }
   }, [epi, open]);
 
+  // CT-36: Validar unicidade do CA no cadastro
+  const [caExistente, setCaExistente] = useState<string | null>(null);
+  const caValue = form.watch("ca");
+
+  useEffect(() => {
+    const verificarCA = async () => {
+      if (!caValue || caValue.length < 3) {
+        setCaExistente(null);
+        return;
+      }
+      // Não validar se estiver editando e CA for o mesmo
+      if (epi?.ca === caValue) {
+        setCaExistente(null);
+        return;
+      }
+      const { data: existente } = await supabase
+        .from("epi_tipos")
+        .select("id, nome")
+        .eq("ca_numero", caValue)
+        .limit(1)
+        .maybeSingle();
+      setCaExistente(existente ? existente.nome : null);
+    };
+    const timer = setTimeout(verificarCA, 500);
+    return () => clearTimeout(timer);
+  }, [caValue, epi?.ca]);
+
   const handleSubmit = async (data: FormData) => {
+    // CT-36: Bloquear se CA já existe
+    if (caExistente) {
+      toast.error(`O CA ${data.ca} já está cadastrado para o EPI "${caExistente}".`);
+      return;
+    }
+
     // First create the tipo, then create the EPI record
     const categoria = selectedCategoria || data.categoria;
     
@@ -332,6 +367,11 @@ export function EpiForm({
                 <FormItem>
                   <FormLabel>CA (Certificado de Aprovação)</FormLabel>
                   <FormControl><Input placeholder="Número do CA" {...field} /></FormControl>
+                  {caExistente && (
+                    <p className="text-xs text-destructive font-medium">
+                      ⚠ CA já cadastrado para: {caExistente}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )} />

@@ -55,6 +55,7 @@ import jsPDF from "jspdf";
 import type { EpiTipo } from "@/types/epi";
 import { cn } from "@/lib/utils";
 import { useEpiTamanhos } from "@/hooks/useEpiTamanhos";
+import { Badge } from "@/components/ui/badge";
 
 interface EpiEntregaWizardProps {
   open: boolean;
@@ -110,6 +111,13 @@ export function EpiEntregaWizard({
     );
   }, [colaboradores, colaboradorSearch]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // CT-26: EPIs sugeridos pela matriz de proteção para a função do colaborador
+  const [episSugeridos, setEpisSugeridos] = useState<Array<{ epi_tipo_id: string; nome: string; obrigatorio: boolean }>>([]);
+
+  // CT-34: Entregas ativas do colaborador para verificar substituição
+  const [entregasAtivas, setEntregasAtivas] = useState<Array<{ id: string; epi_tipo_id: string; epi_tipo_nome: string; data_entrega: string }>>([]);
+  const [substituicaoDetectada, setSubstituicaoDetectada] = useState<{ id: string; epi_tipo_nome: string; data_entrega: string } | null>(null);
 
   const [showRecusaDialog, setShowRecusaDialog] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -386,6 +394,18 @@ export function EpiEntregaWizard({
         }
       }
 
+      // CT-34: Se é substituição, marcar entrega anterior como devolvida
+      if (substituicaoDetectada && status === "entregue") {
+        await supabase
+          .from("epi_entregas")
+          .update({
+            status: "devolvido",
+            data_devolucao: new Date().toISOString(),
+            observacoes_devolucao: `Devolução automática por substituição. Nova entrega: ${data.id}`,
+          })
+          .eq("id", substituicaoDetectada.id);
+      }
+
       setEntregaResult({
         ...data,
         fotoUrl,
@@ -395,7 +415,10 @@ export function EpiEntregaWizard({
 
       if (status === "entregue") {
         setStep("complete");
-        toast.success("Entrega registrada com sucesso!");
+        const msg = substituicaoDetectada 
+          ? "Entrega registrada e EPI anterior marcado como devolvido!"
+          : "Entrega registrada com sucesso!";
+        toast.success(msg);
       } else {
         toast.warning("Recusa registrada. Uma advertência foi criada.");
         handleClose();
@@ -421,6 +444,52 @@ export function EpiEntregaWizard({
         colaboradorCargo: colaborador.cargo || "",
         colaboradorDepartamento: colaborador.departamento || "",
       }));
+
+      // CT-26: Buscar EPIs sugeridos pela matriz de proteção para esta função
+      if (colaborador.cargo && tenantId) {
+        supabase
+          .from("funcao_epis")
+          .select("epi_tipo_id, obrigatorio, epi_tipo:epi_tipos(id, nome)")
+          .eq("tenant_id", tenantId)
+          .eq("cargo_id", colaborador.cargo)
+          .then(({ data }) => {
+            if (data && data.length > 0) {
+              setEpisSugeridos(
+                data.map((d: any) => ({
+                  epi_tipo_id: d.epi_tipo_id,
+                  nome: d.epi_tipo?.nome || "—",
+                  obrigatorio: d.obrigatorio,
+                }))
+              );
+            } else {
+              setEpisSugeridos([]);
+            }
+          });
+      }
+
+      // CT-34: Buscar entregas ativas deste colaborador
+      if (tenantId) {
+        supabase
+          .from("epi_entregas")
+          .select("id, epi_id, data_entrega, epi:epis(tipo_id, tipo:epi_tipos(id, nome))")
+          .eq("tenant_id", tenantId)
+          .eq("employee_id", colaboradorId)
+          .eq("status", "ativa")
+          .then(({ data }) => {
+            if (data) {
+              setEntregasAtivas(
+                data.map((d: any) => ({
+                  id: d.id,
+                  epi_tipo_id: d.epi?.tipo_id || "",
+                  epi_tipo_nome: d.epi?.tipo?.nome || "EPI",
+                  data_entrega: d.data_entrega,
+                }))
+              );
+            } else {
+              setEntregasAtivas([]);
+            }
+          });
+      }
     }
   };
 
@@ -438,6 +507,10 @@ export function EpiEntregaWizard({
         epiTipo: tipo,
         dataValidade,
       }));
+
+      // CT-34: Detectar substituição (entrega ativa do mesmo tipo)
+      const entregaExistente = entregasAtivas.find((e) => e.epi_tipo_id === epiTipoId);
+      setSubstituicaoDetectada(entregaExistente || null);
     }
   };
 
@@ -717,6 +790,28 @@ export function EpiEntregaWizard({
                   </div>
                 )}
 
+                {/* CT-26: Sugestões de EPI pela Matriz de Proteção */}
+                {formData.colaboradorId && episSugeridos.length > 0 && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-xs font-medium text-primary flex items-center gap-1.5">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      EPIs recomendados pela Matriz de Proteção para esta função:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {episSugeridos.map((s) => (
+                        <Badge
+                          key={s.epi_tipo_id}
+                          variant={s.obrigatorio ? "default" : "secondary"}
+                          className="cursor-pointer text-xs"
+                          onClick={() => handleEpiChange(s.epi_tipo_id)}
+                        >
+                          {s.nome} {s.obrigatorio && "★"}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Seleção de EPI */}
                 <div className="space-y-2">
                   <Label>Tipo de EPI *</Label>
@@ -737,6 +832,24 @@ export function EpiEntregaWizard({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* CT-34: Alerta de substituição — EPI do mesmo tipo já entregue */}
+                {substituicaoDetectada && (
+                  <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                          Substituição detectada
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Este colaborador já possui uma entrega ativa de <strong>{substituicaoDetectada.epi_tipo_nome}</strong> (entregue em {format(new Date(substituicaoDetectada.data_entrega), "dd/MM/yyyy")}).
+                          Ao confirmar, a entrega anterior será marcada para devolução automaticamente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* CT-13: Alerta de CA vencido — BLOQUEANTE */}
                 {isCAVencido && (
