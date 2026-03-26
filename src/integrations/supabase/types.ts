@@ -18559,6 +18559,22 @@ export type Database = {
         }[]
       }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
+      epi_atualizar_estoque_local_otimista: {
+        Args: {
+          p_estoque_local_id: string
+          p_nova_quantidade: number
+          p_quantidade_esperada: number
+        }
+        Returns: boolean
+      }
+      epi_atualizar_estoque_otimista: {
+        Args: {
+          p_epi_id: string
+          p_nova_quantidade: number
+          p_quantidade_esperada: number
+        }
+        Returns: boolean
+      }
       get_auth_user_email: { Args: never; Returns: string }
       get_user_tenant_id: { Args: never; Returns: string }
       has_minimum_role: {
