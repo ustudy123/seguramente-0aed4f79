@@ -492,6 +492,10 @@ export function EpiEntregaWizard({
         epiTipo: tipo,
         dataValidade,
       }));
+
+      // CT-34: Detectar substituição (entrega ativa do mesmo tipo)
+      const entregaExistente = entregasAtivas.find((e) => e.epi_tipo_id === epiTipoId);
+      setSubstituicaoDetectada(entregaExistente || null);
     }
   };
 
