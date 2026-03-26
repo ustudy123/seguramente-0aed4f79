@@ -394,6 +394,51 @@ export function EpiEntregaWizard({
     }
   };
 
+  // CT-13: Verificar se o CA do EPI selecionado está vencido
+  const isCAVencido = useMemo(() => {
+    if (!formData.epiTipo?.ca_validade) return false;
+    return new Date(formData.epiTipo.ca_validade) < new Date();
+  }, [formData.epiTipo]);
+
+  // CT-32: Verificar se o EPI é irregular (sem CA cadastrado)
+  const isEPIIrregular = useMemo(() => {
+    if (!formData.epiTipo) return false;
+    return !formData.epiTipo.ca_numero;
+  }, [formData.epiTipo]);
+
+  // CT-12: Verificar saldo de estoque disponível
+  const [saldoDisponivel, setSaldoDisponivel] = useState<number | null>(null);
+  const [verificandoSaldo, setVerificandoSaldo] = useState(false);
+
+  useEffect(() => {
+    const verificarSaldo = async () => {
+      if (!formData.epiTipoId || !tenantId) {
+        setSaldoDisponivel(null);
+        return;
+      }
+      setVerificandoSaldo(true);
+      try {
+        const { data: epiRow } = await supabase
+          .from("epis")
+          .select("quantidade_estoque")
+          .eq("tipo_id", formData.epiTipoId)
+          .eq("tenant_id", tenantId)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        
+        setSaldoDisponivel(epiRow?.quantidade_estoque ?? 0);
+      } catch {
+        setSaldoDisponivel(null);
+      } finally {
+        setVerificandoSaldo(false);
+      }
+    };
+    verificarSaldo();
+  }, [formData.epiTipoId, tenantId]);
+
+  const isSaldoInsuficiente = saldoDisponivel !== null && formData.quantidade > saldoDisponivel;
+
   // Gerar PDF e retornar como Blob (para arquivamento)
   const generatePDFBlob = useCallback(async (): Promise<Blob | null> => {
     if (!reciboRef.current) return null;

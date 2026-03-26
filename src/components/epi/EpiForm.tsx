@@ -45,12 +45,16 @@ const schema = z.object({
   nome: z.string().min(2, "Nome do EPI deve ter pelo menos 2 caracteres"),
   categoria: z.string().optional(),
   codigo: z.string().optional(),
-  ca: z.string().optional(),
+  ca: z.string().min(1, "Número do CA é obrigatório (NR-06)").regex(/^\d+$/, "CA deve conter apenas números"),
   marca: z.string().optional(),
   modelo: z.string().optional(),
   tamanho: z.string().optional(),
   data_fabricacao: z.string().optional(),
-  data_validade: z.string().optional(),
+  data_validade: z.string().min(1, "Data de validade do CA é obrigatória").refine((val) => {
+    if (!val) return false;
+    const date = new Date(val);
+    return !isNaN(date.getTime());
+  }, "Data de validade inválida"),
   quantidade_estoque: z.coerce.number().min(0, "Quantidade deve ser maior ou igual a 0"),
   quantidade_minima: z.coerce.number().min(1, "Quantidade mínima deve ser pelo menos 1"),
   custo_unitario: z.coerce.number().min(0).optional(),
