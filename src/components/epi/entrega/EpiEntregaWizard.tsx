@@ -394,6 +394,51 @@ export function EpiEntregaWizard({
     }
   };
 
+  // CT-13: Verificar se o CA do EPI selecionado está vencido
+  const isCAVencido = useMemo(() => {
+    if (!formData.epiTipo?.ca_validade) return false;
+    return new Date(formData.epiTipo.ca_validade) < new Date();
+  }, [formData.epiTipo]);
+
+  // CT-32: Verificar se o EPI é irregular (sem CA cadastrado)
+  const isEPIIrregular = useMemo(() => {
+    if (!formData.epiTipo) return false;
+    return !formData.epiTipo.ca_numero;
+  }, [formData.epiTipo]);
+
+  // CT-12: Verificar saldo de estoque disponível
+  const [saldoDisponivel, setSaldoDisponivel] = useState<number | null>(null);
+  const [verificandoSaldo, setVerificandoSaldo] = useState(false);
+
+  useEffect(() => {
+    const verificarSaldo = async () => {
+      if (!formData.epiTipoId || !tenantId) {
+        setSaldoDisponivel(null);
+        return;
+      }
+      setVerificandoSaldo(true);
+      try {
+        const { data: epiRow } = await supabase
+          .from("epis")
+          .select("quantidade_estoque")
+          .eq("tipo_id", formData.epiTipoId)
+          .eq("tenant_id", tenantId)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        
+        setSaldoDisponivel(epiRow?.quantidade_estoque ?? 0);
+      } catch {
+        setSaldoDisponivel(null);
+      } finally {
+        setVerificandoSaldo(false);
+      }
+    };
+    verificarSaldo();
+  }, [formData.epiTipoId, tenantId]);
+
+  const isSaldoInsuficiente = saldoDisponivel !== null && formData.quantidade > saldoDisponivel;
+
   // Gerar PDF e retornar como Blob (para arquivamento)
   const generatePDFBlob = useCallback(async (): Promise<Blob | null> => {
     if (!reciboRef.current) return null;
@@ -478,13 +523,17 @@ export function EpiEntregaWizard({
   const selectedTamanhos = formData.epiTipoId ? getTamanhosForTipo(formData.epiTipoId) : [];
   const requiresTamanho = selectedTamanhos.length > 0;
 
+  // CT-13/32/12: Bloquear avanço se CA vencido, EPI irregular ou saldo insuficiente
   const canProceedFromForm = 
     formData.colaboradorId && 
     formData.epiTipoId && 
     formData.quantidade > 0 && 
     formData.dataEntrega &&
     (!usarControleEstoque || formData.localEstoqueId) &&
-    (!requiresTamanho || formData.tamanho);
+    (!requiresTamanho || formData.tamanho) &&
+    !isCAVencido &&
+    !isEPIIrregular &&
+    !isSaldoInsuficiente;
 
   return (
     <>
@@ -642,7 +691,62 @@ export function EpiEntregaWizard({
                   </Select>
                 </div>
 
-                {/* RF-EPI-EST-08: Seleção de Local de Estoque (se controle ativo) */}
+                {/* CT-13: Alerta de CA vencido — BLOQUEANTE */}
+                {isCAVencido && (
+                  <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-destructive">CA Vencido — Entrega Bloqueada</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          O Certificado de Aprovação deste EPI expirou em{" "}
+                          <strong>{formData.epiTipo?.ca_validade ? format(new Date(formData.epiTipo.ca_validade), "dd/MM/yyyy") : "—"}</strong>.
+                          Conforme a NR-06, é proibido entregar EPI com CA vencido. Atualize o CA antes de prosseguir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CT-32: Alerta de EPI irregular (sem CA) — BLOQUEANTE */}
+                {isEPIIrregular && !isCAVencido && (
+                  <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-destructive">EPI sem CA — Entrega Bloqueada</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Este EPI não possui Certificado de Aprovação (CA) cadastrado. 
+                          Conforme a NR-06 (6.2), todo EPI deve possuir CA válido. Cadastre o CA antes de prosseguir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CT-12: Alerta de saldo insuficiente — BLOQUEANTE */}
+                {isSaldoInsuficiente && !isCAVencido && !isEPIIrregular && (
+                  <div className="rounded-lg border border-orange-500/50 bg-orange-500/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-orange-700 dark:text-orange-400">Saldo Insuficiente — Entrega Bloqueada</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Estoque disponível: <strong>{saldoDisponivel}</strong> unidade(s). Quantidade solicitada: <strong>{formData.quantidade}</strong>.
+                          Reduza a quantidade ou registre uma entrada de estoque antes de prosseguir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Saldo disponível (informativo, quando não bloqueante) */}
+                {saldoDisponivel !== null && !isSaldoInsuficiente && formData.epiTipoId && !isCAVencido && !isEPIIrregular && (
+                  <p className="text-xs text-muted-foreground">
+                    Saldo em estoque: <strong>{saldoDisponivel}</strong> unidade(s)
+                  </p>
+                )}
+
                 {usarControleEstoque && (
                   <div className="space-y-2">
                     <Label className="flex items-center gap-1.5">
