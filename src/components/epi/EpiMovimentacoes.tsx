@@ -181,6 +181,20 @@ export function EpiMovimentacoes({
               </SelectContent>
             </Select>
           </div>
+          <div className="w-full sm:w-48">
+            <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+              <SelectTrigger>
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="entrada">Entrada</SelectItem>
+                <SelectItem value="saida">Saída</SelectItem>
+                <SelectItem value="ajuste">Ajuste</SelectItem>
+                <SelectItem value="descarte">Descarte</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Filtro por período */}
