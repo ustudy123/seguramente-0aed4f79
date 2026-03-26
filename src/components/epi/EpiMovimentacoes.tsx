@@ -99,6 +99,13 @@ export function EpiMovimentacoes({
         }
       }
 
+      // Filtro por tipo de movimentação
+      if (filtroTipo && filtroTipo !== "all") {
+        if (mov.tipo !== filtroTipo) {
+          return false;
+        }
+      }
+
       // Filtro por período
       if (dataInicio || dataFim) {
         const dataMovimentacao = new Date(mov.created_at);
@@ -123,16 +130,17 @@ export function EpiMovimentacoes({
 
       return true;
     });
-  }, [movimentacoes, filtroColaborador, filtroEpi, dataInicio, dataFim]);
+  }, [movimentacoes, filtroColaborador, filtroEpi, filtroTipo, dataInicio, dataFim]);
 
   const limparFiltros = () => {
     setFiltroColaborador("");
     setFiltroEpi("all");
+    setFiltroTipo("all");
     setDataInicio(undefined);
     setDataFim(undefined);
   };
 
-  const temFiltrosAtivos = filtroColaborador || (filtroEpi && filtroEpi !== "all") || dataInicio || dataFim;
+  const temFiltrosAtivos = filtroColaborador || (filtroEpi && filtroEpi !== "all") || (filtroTipo && filtroTipo !== "all") || dataInicio || dataFim;
 
   if (isLoading) {
     return (
