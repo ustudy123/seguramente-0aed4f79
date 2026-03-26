@@ -691,7 +691,62 @@ export function EpiEntregaWizard({
                   </Select>
                 </div>
 
-                {/* RF-EPI-EST-08: Seleção de Local de Estoque (se controle ativo) */}
+                {/* CT-13: Alerta de CA vencido — BLOQUEANTE */}
+                {isCAVencido && (
+                  <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-destructive">CA Vencido — Entrega Bloqueada</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          O Certificado de Aprovação deste EPI expirou em{" "}
+                          <strong>{formData.epiTipo?.ca_validade ? format(new Date(formData.epiTipo.ca_validade), "dd/MM/yyyy") : "—"}</strong>.
+                          Conforme a NR-06, é proibido entregar EPI com CA vencido. Atualize o CA antes de prosseguir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CT-32: Alerta de EPI irregular (sem CA) — BLOQUEANTE */}
+                {isEPIIrregular && !isCAVencido && (
+                  <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-destructive">EPI sem CA — Entrega Bloqueada</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Este EPI não possui Certificado de Aprovação (CA) cadastrado. 
+                          Conforme a NR-06 (6.2), todo EPI deve possuir CA válido. Cadastre o CA antes de prosseguir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CT-12: Alerta de saldo insuficiente — BLOQUEANTE */}
+                {isSaldoInsuficiente && !isCAVencido && !isEPIIrregular && (
+                  <div className="rounded-lg border border-orange-500/50 bg-orange-500/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-orange-700 dark:text-orange-400">Saldo Insuficiente — Entrega Bloqueada</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Estoque disponível: <strong>{saldoDisponivel}</strong> unidade(s). Quantidade solicitada: <strong>{formData.quantidade}</strong>.
+                          Reduza a quantidade ou registre uma entrada de estoque antes de prosseguir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Saldo disponível (informativo, quando não bloqueante) */}
+                {saldoDisponivel !== null && !isSaldoInsuficiente && formData.epiTipoId && !isCAVencido && !isEPIIrregular && (
+                  <p className="text-xs text-muted-foreground">
+                    Saldo em estoque: <strong>{saldoDisponivel}</strong> unidade(s)
+                  </p>
+                )}
+
                 {usarControleEstoque && (
                   <div className="space-y-2">
                     <Label className="flex items-center gap-1.5">
