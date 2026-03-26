@@ -55,6 +55,7 @@ import jsPDF from "jspdf";
 import type { EpiTipo } from "@/types/epi";
 import { cn } from "@/lib/utils";
 import { useEpiTamanhos } from "@/hooks/useEpiTamanhos";
+import { Badge } from "@/components/ui/badge";
 
 interface EpiEntregaWizardProps {
   open: boolean;
@@ -110,6 +111,13 @@ export function EpiEntregaWizard({
     );
   }, [colaboradores, colaboradorSearch]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // CT-26: EPIs sugeridos pela matriz de proteção para a função do colaborador
+  const [episSugeridos, setEpisSugeridos] = useState<Array<{ epi_tipo_id: string; nome: string; obrigatorio: boolean }>>([]);
+
+  // CT-34: Entregas ativas do colaborador para verificar substituição
+  const [entregasAtivas, setEntregasAtivas] = useState<Array<{ id: string; epi_tipo_id: string; epi_tipo_nome: string; data_entrega: string }>>([]);
+  const [substituicaoDetectada, setSubstituicaoDetectada] = useState<{ id: string; epi_tipo_nome: string; data_entrega: string } | null>(null);
 
   const [showRecusaDialog, setShowRecusaDialog] = useState(false);
   const [formData, setFormData] = useState<FormData>({
