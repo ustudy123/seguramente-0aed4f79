@@ -66,6 +66,7 @@ export function EpiMovimentacoes({
 }: EpiMovimentacoesProps) {
   const [filtroColaborador, setFiltroColaborador] = useState("");
   const [filtroEpi, setFiltroEpi] = useState<string>("all");
+  const [filtroTipo, setFiltroTipo] = useState<string>("all");
   const [dataInicio, setDataInicio] = useState<Date | undefined>();
   const [dataFim, setDataFim] = useState<Date | undefined>();
 
