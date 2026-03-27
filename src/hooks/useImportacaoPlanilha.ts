@@ -134,7 +134,6 @@ export const TIPOS_CONTRATO_OPCOES = [
   "CLT",
   "CLT – Experiência",
   "Pró-labore (Sócio)",
-  "Pessoa Jurídica (PJ)",
   "Estagiário",
   "Temporário",
   "Autônomo",
