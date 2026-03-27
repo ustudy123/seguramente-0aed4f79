@@ -514,7 +514,7 @@ const Ponto = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRegistrarModal(false)}>Cancelar</Button>
-            <Button onClick={handleRegistrarPonto} disabled={!selectedColaborador || registrandoPonto}>
+            <Button onClick={handleRegistrarPonto} disabled={!selectedColaborador || registrandoPonto || tiposJaRegistrados.includes(tipoMarcacao)}>
               {registrandoPonto ? "Registrando..." : "Registrar"}
             </Button>
           </DialogFooter>
