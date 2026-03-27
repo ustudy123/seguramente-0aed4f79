@@ -220,9 +220,10 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
   );
 };
 
-const SidebarLink = ({ item }: { item: MenuItem; isCollapsed: boolean }) => (
+const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolean; onNavigate?: () => void }) => (
   <NavLink
     to={item.path || "/"}
+    onClick={onNavigate}
     className={({ isActive }) =>
       cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
@@ -249,11 +250,13 @@ const CollapsibleSection = ({
   isCollapsed,
   isOpen,
   onToggle,
+  onNavigate,
 }: {
   section: MenuSection;
   isCollapsed: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }) => {
   const location = useLocation();
   const hasActiveChild = section.items.some(
