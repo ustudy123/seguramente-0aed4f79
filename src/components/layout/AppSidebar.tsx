@@ -506,6 +506,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
               isCollapsed={isCollapsed}
               isOpen={!!openSections[section.label]}
               onToggle={() => toggleSection(section.label)}
+              onNavigate={isMobile ? onClose : undefined}
             />
           ))
         )}
@@ -515,6 +516,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       <div className="p-3 border-t border-white/[0.08] space-y-0.5">
         <NavLink
           to="/suporte"
+          onClick={isMobile ? onClose : undefined}
           className={({ isActive }) =>
             cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -529,6 +531,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
         </NavLink>
         <NavLink
           to="/configuracoes"
+          onClick={isMobile ? onClose : undefined}
           className={({ isActive }) =>
             cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
