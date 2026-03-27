@@ -124,13 +124,15 @@ export function ImportPlanilhaModal({
     }
   };
 
+  const REQUIRED_MARKER = " *";
   const COLS = [
-    "Nome", "CPF", "Sexo", "Data Nascimento", "Estado Civil", "Naturalidade", "Nacionalidade",
+    "CNPJ Empresa" + REQUIRED_MARKER,
+    "Nome" + REQUIRED_MARKER, "CPF" + REQUIRED_MARKER, "Sexo", "Data Nascimento" + REQUIRED_MARKER, "Estado Civil", "Naturalidade", "Nacionalidade",
     "Nome Mãe", "Nome Pai", "RG", "PIS/PASEP",
     "E-mail", "Telefone", "Celular",
     "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado",
-    "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo", "Departamento", "Nível",
-    "Tipo Contrato", "Data Admissão", "Salário", "Centro de Custo", "Gestor Imediato",
+    "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo" + REQUIRED_MARKER, "Departamento" + REQUIRED_MARKER, "Nível",
+    "Tipo Contrato", "Data Admissão" + REQUIRED_MARKER, "Salário", "Centro de Custo", "Gestor Imediato",
     "Matrícula eSocial",
     "Banco", "Agência", "Conta", "Tipo Conta", "Chave PIX",
   ];
@@ -138,6 +140,7 @@ export function ImportPlanilhaModal({
   const templateData = [
     COLS,
     [
+      "12.345.678/0001-90",
       "João da Silva", "338.172.580-70", "Masculino", "15/03/1990", "Solteiro", "São Paulo", "Brasileiro",
       "Maria da Silva", "José da Silva", "12.345.678-9", "123.45678.12-3",
       "joao@empresa.com", "(11) 3000-0000", "(11) 99000-0000",
@@ -148,6 +151,7 @@ export function ImportPlanilhaModal({
       "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
     ],
     [
+      "98.765.432/0001-10",
       "Ana Paula Padrão", "987.654.321-00", "Feminino", "22/08/1985", "Casado", "Rio de Janeiro", "Brasileira",
       "Joana Padrão", "", "98.765.432-1", "",
       "ana@empresa.com", "", "(21) 98000-0000",
