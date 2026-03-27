@@ -814,6 +814,8 @@ export function useImportacaoPlanilha() {
 
   return {
     lerArquivo,
+    lerArquivoHeaders,
+    lerArquivoComMapeamento,
     processarImportacao,
     isProcessing,
     progress,
