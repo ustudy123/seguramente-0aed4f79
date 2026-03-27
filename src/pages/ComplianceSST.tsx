@@ -26,6 +26,7 @@ import { SSTAlertasTab } from "@/components/sst/SSTAlertasTab";
 import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
 import { SSTDocumentosTab } from "@/components/sst/SSTDocumentosTab";
 import { ImportacaoInteligente } from "@/components/sst/importacao/ImportacaoInteligente";
+import { GuiaRapidoComplianceSST } from "@/components/sst/GuiaRapidoComplianceSST";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
