@@ -429,7 +429,13 @@ export function useImportacaoPlanilha() {
               cargo,
               departamento,
               nivel: idx["nivel"] != null && idx["nivel"] !== -1 ? parsarNivel(g("nivel")) || "" : "",
-              tipoContrato: g("tipoContrato"),
+              tipoContrato: (() => {
+                const raw = g("tipoContrato");
+                if (!raw) return "";
+                const parsed = parsarTipoContrato(raw);
+                if (!parsed) erros.push(`Tipo Contrato "${raw}" inválido. Use: ${TIPOS_CONTRATO_OPCOES.join(", ")}`);
+                return parsed || raw;
+              })(),
               dataAdmissao: dataAdmissaoRaw,
               salario: g("salario"),
               centroCusto: g("centroCusto"),
@@ -571,7 +577,13 @@ export function useImportacaoPlanilha() {
               cargo,
               departamento,
               nivel: idx.nivel !== -1 ? parsarNivel(g(idx.nivel)) || "" : "",
-              tipoContrato: g(idx.tipoContrato),
+              tipoContrato: (() => {
+                const raw = g(idx.tipoContrato);
+                if (!raw) return "";
+                const parsed = parsarTipoContrato(raw);
+                if (!parsed) erros.push(`Tipo Contrato "${raw}" inválido. Use: ${TIPOS_CONTRATO_OPCOES.join(", ")}`);
+                return parsed || raw;
+              })(),
               dataAdmissao: dataAdmissaoRaw,
               salario: g(idx.salario),
               centroCusto: g(idx.centroCusto),

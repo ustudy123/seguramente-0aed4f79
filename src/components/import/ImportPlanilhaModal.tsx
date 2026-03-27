@@ -261,7 +261,7 @@ export function ImportPlanilhaModal({
       ["Cargo *", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
       ["Departamento *", "SIM", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
-      ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, PJ, Estágio, Temporário, Freelancer", "CLT"],
+      ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, CLT – Experiência, Pró-labore (Sócio), Pessoa Jurídica (PJ), Estagiário, Temporário, Autônomo, Intermitente, Aprendiz", "CLT"],
       ["Data Admissão *", "SIM", "Data de admissão", "DD/MM/AAAA ou AAAA-MM-DD", "01/03/2024"],
       ["Salário", "NÃO", "Salário base bruto", "Número (use . ou , como decimal)", "5000,00"],
       ["Centro de Custo", "NÃO", "Centro de custo", "Texto livre", "RH-01"],
