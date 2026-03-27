@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck } from "lucide-react";
+import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck, BookOpen } from "lucide-react";
 import { useTerceiros } from "@/hooks/useTerceiros";
 import { TerceiroDashboard } from "@/components/terceiros/TerceiroDashboard";
 import { TerceiroList } from "@/components/terceiros/TerceiroList";
@@ -10,6 +10,7 @@ import { TerceiroForm } from "@/components/terceiros/TerceiroForm";
 import { TerceiroDetail } from "@/components/terceiros/TerceiroDetail";
 import { VencimentosPanel } from "@/components/terceiros/VencimentosPanel";
 import { PermissaoTrabalhoPanel } from "@/components/terceiros/PermissaoTrabalhoPanel";
+import { GuiaRapidoTerceiros } from "@/components/terceiros/GuiaRapidoTerceiros";
 import type { Terceiro } from "@/types/terceiros";
 
 export default function Terceiros() {
