@@ -342,7 +342,7 @@ export function ImportPlanilhaModal({
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
                     {COLS.map(col => (
-                      <Badge key={col} variant="secondary" className="text-xs">
+                      <Badge key={col} variant={col.includes("*") ? "default" : "secondary"} className="text-xs">
                         {col}
                       </Badge>
                     ))}
