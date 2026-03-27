@@ -67,7 +67,8 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
 
   const handleStopAndTranscribe = useCallback(async () => {
     recorder.stopRecording();
-    await new Promise((res) => setTimeout(res, 600));
+    // Wait for MediaRecorder.onstop to fire and process chunks
+    await new Promise((res) => setTimeout(res, 1200));
 
     const base64 = await recorder.getBase64();
     if (!base64) {
