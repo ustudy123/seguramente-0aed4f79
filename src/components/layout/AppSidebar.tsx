@@ -347,7 +347,7 @@ const CollapsibleSection = ({
                 item.children ? (
                   <SidebarSubItem key={item.title} item={item} isCollapsed={false} />
                 ) : (
-                  <SidebarLink key={item.title} item={item} isCollapsed={false} />
+                  <SidebarLink key={item.title} item={item} isCollapsed={false} onNavigate={onNavigate} />
                 )
               )}
             </div>
