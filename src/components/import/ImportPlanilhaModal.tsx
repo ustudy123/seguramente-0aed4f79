@@ -52,7 +52,7 @@ export function ImportPlanilhaModal({
   titulo = "Importar Planilha",
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
-  const { lerArquivo, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
+  const { lerArquivo, lerArquivoHeaders, lerArquivoComMapeamento, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
   
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
@@ -60,6 +60,9 @@ export function ImportPlanilhaModal({
   const [dados, setDados] = useState<DadosPlanilha[]>([]);
   const [resultado, setResultado] = useState<ResultadoImportacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [fileHeaders, setFileHeaders] = useState<string[]>([]);
+  const [sampleRows, setSampleRows] = useState<any[][]>([]);
+  const [usarMapeamento, setUsarMapeamento] = useState(false);
 
   const resetar = () => {
     setEtapa("upload");
@@ -67,6 +70,9 @@ export function ImportPlanilhaModal({
     setDados([]);
     setResultado(null);
     setErro(null);
+    setFileHeaders([]);
+    setSampleRows([]);
+    setUsarMapeamento(false);
   };
 
   const fechar = () => {
