@@ -362,13 +362,6 @@ export function ImportPlanilhaModal({
                 exit={{ opacity: 0, y: -20 }}
                 className="flex flex-col gap-4 h-full"
               >
-                {/* Empresa vinculada */}
-                {empresaAtiva && (
-                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm shrink-0">
-                    <Building2 className="w-4 h-4 text-primary shrink-0" />
-                    <span>Os colaboradores serão vinculados à empresa: <strong>{empresaAtiva.nome_fantasia || empresaAtiva.razao_social}</strong></span>
-                  </div>
-                )}
 
                 {/* Arquivo selecionado */}
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg shrink-0">
@@ -408,10 +401,11 @@ export function ImportPlanilhaModal({
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">Linha</TableHead>
+                        <TableHead>CNPJ</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>CPF</TableHead>
                         <TableHead>Função</TableHead>
-                        <TableHead>Departamento</TableHead>
+                        <TableHead>Setor</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -419,6 +413,9 @@ export function ImportPlanilhaModal({
                       {dados.slice(0, 50).map((dado, idx) => (
                         <TableRow key={idx} className={dado.erros.length > 0 ? "bg-destructive/5" : ""}>
                           <TableCell className="font-mono text-xs">{dado.linha}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {dado.cnpjEmpresa ? `${dado.cnpjEmpresa.slice(0,2)}.${dado.cnpjEmpresa.slice(2,5)}.${dado.cnpjEmpresa.slice(5,8)}/${dado.cnpjEmpresa.slice(8,12)}-${dado.cnpjEmpresa.slice(12)}` : "-"}
+                          </TableCell>
                           <TableCell className="font-medium">{dado.nome || "-"}</TableCell>
                           <TableCell className="font-mono text-xs">{dado.cpf || "-"}</TableCell>
                           <TableCell>{dado.cargo || "-"}</TableCell>
