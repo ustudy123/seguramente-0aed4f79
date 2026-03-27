@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
 export interface DadosPlanilha {
+  cnpjEmpresa: string;
   nome: string;
   cpf: string;
   sexo: string;
@@ -45,10 +46,12 @@ export interface DadosPlanilha {
   chavePix: string;
   linha: number;
   erros: string[];
+  empresaId?: string;
 }
 
 // Mapeamento de colunas possíveis
 const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
+  cnpjEmpresa: ["cnpj", "cnpj empresa", "cnpj_empresa", "empresa cnpj", "cnpj da empresa"],
   nome: ["nome", "nome_completo", "nome completo", "funcionario", "funcionário", "colaborador"],
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
