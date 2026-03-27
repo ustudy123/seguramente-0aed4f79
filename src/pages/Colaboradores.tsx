@@ -141,6 +141,7 @@ function AtivosTab() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showNovoModal, setShowNovoModal] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
@@ -256,9 +257,9 @@ function AtivosTab() {
           <Upload className="w-4 h-4 mr-2" />
           Importar Planilha
         </Button>
-        <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
+        <Button className="gradient-primary shadow-glow" onClick={() => setShowNovoModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Novo Colaborador
+          Novo Cadastro
         </Button>
       </div>
 
