@@ -229,10 +229,13 @@ export function ImportPlanilhaModal({
       [""],
       ["OBSERVAÇÕES IMPORTANTES:"],
       [""],
-      ["1. As colunas marcadas como OBRIGATÓRIO devem ser preenchidas para que o registro seja importado."],
-      ["2. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
-      ["3. Departamentos e Cargos não cadastrados serão criados automaticamente."],
-      ["4. A primeira linha deve conter os cabeçalhos (não apagar)."],
+      ["1. Colunas marcadas com * são OBRIGATÓRIAS. O registro será rejeitado se estiverem vazias."],
+      ["2. O CNPJ Empresa vincula cada colaborador à empresa correta, permitindo importar para múltiplas empresas de uma só vez."],
+      ["3. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
+      ["4. Departamentos e Cargos não cadastrados serão criados automaticamente."],
+      ["5. A primeira linha deve conter os cabeçalhos (não apagar)."],
+      ["6. Linhas completamente vazias serão ignoradas."],
+      ["7. Registros com erros serão listados ao final da importação."],
       ["5. Linhas completamente vazias serão ignoradas."],
       ["6. Registros com erros serão listados ao final da importação."],
       [""],
@@ -281,23 +284,37 @@ export function ImportPlanilhaModal({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-4"
               >
-                {!empresaAtiva ? (
-                  <div className="border-2 border-dashed border-orange-400/40 rounded-lg p-8 text-center bg-orange-50 dark:bg-orange-950/20">
+                {(
+                  <div
+                    {...getRootProps()}
+                    className={`
+                      border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+                      transition-colors duration-200
+                      ${isDragActive 
+                        ? "border-primary bg-primary/5" 
+                        : "border-muted-foreground/25 hover:border-primary/50"
+                      }
+                    `}
+                  >
+                    <input {...getInputProps()} />
                     <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 rounded-full bg-orange-100 dark:bg-orange-900/30">
-                        <Building2 className="w-8 h-8 text-orange-500" />
+                      <div className="p-4 rounded-full bg-primary/10">
+                        <Upload className="w-8 h-8 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium text-orange-700 dark:text-orange-400">
-                          Selecione uma empresa antes de importar
+                        <p className="font-medium text-foreground">
+                          {isDragActive ? "Solte o arquivo aqui" : "Arraste uma planilha ou clique para selecionar"}
                         </p>
-                        <p className="text-sm text-orange-600/80 dark:text-orange-400/70 mt-1">
-                          Use o seletor de empresa no cabeçalho para escolher a empresa onde os colaboradores serão cadastrados.
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Inclua o CNPJ da empresa em cada linha para vincular os colaboradores corretamente.
                         </p>
                       </div>
                     </div>
                   </div>
-                ) : (
+                )}
                   <div
                     {...getRootProps()}
                     className={`
