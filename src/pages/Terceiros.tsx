@@ -49,9 +49,14 @@ export default function Terceiros() {
             Compliance, controle documental e prova jurídica de prestadores de serviço.
           </p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Novo Terceiro
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowGuia(true)}>
+            <BookOpen className="w-4 h-4 mr-2" /> Guia Rapido
+          </Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Novo Terceiro
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="dashboard">
