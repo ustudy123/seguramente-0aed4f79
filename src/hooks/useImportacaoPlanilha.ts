@@ -565,15 +565,15 @@ export function useImportacaoPlanilha() {
       });
       
       // Processar cada colaborador
-      const totalColabs = dadosValidos.length;
+      const totalColabs = dadosComEmpresa.length;
       
-      for (let i = 0; i < dadosValidos.length; i++) {
-        const dado = dadosValidos[i];
+      for (let i = 0; i < dadosComEmpresa.length; i++) {
+        const dado = dadosComEmpresa[i];
         const cpfLimpo = dado.cpf.replace(/\D/g, "");
         
         const dadosAdmissao = {
           tenant_id: tenantId,
-          empresa_id: empresaAtivaId || null,
+          empresa_id: dado.empresaId || null,
           nome_completo: dado.nome,
           cpf: dado.cpf,
           genero: dado.sexo || null,
