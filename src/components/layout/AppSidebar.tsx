@@ -358,9 +358,11 @@ const CollapsibleSection = ({
 interface AppSidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  isMobile?: boolean;
+  onClose?: () => void;
 }
 
-export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
+export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
