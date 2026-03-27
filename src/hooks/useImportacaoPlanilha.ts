@@ -437,6 +437,10 @@ export function useImportacaoPlanilha() {
                 const raw = g("tipoContrato");
                 if (!raw) return "";
                 const parsed = parsarTipoContrato(raw);
+                if (parsed === "⚠️ TERCEIRO") {
+                  erros.push(`Tipo "PJ/Pessoa Jurídica" não é permitido em Colaboradores. Cadastre no módulo Terceiros & SST.`);
+                  return raw;
+                }
                 if (!parsed) erros.push(`Tipo Contrato "${raw}" inválido. Use: ${TIPOS_CONTRATO_OPCOES.join(", ")}`);
                 return parsed || raw;
               })(),
