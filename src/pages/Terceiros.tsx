@@ -118,6 +118,8 @@ export default function Terceiros() {
         }}
         isPending={createTerceiro.isPending || updateTerceiro.isPending}
       />
+
+      <GuiaRapidoTerceiros open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 }
