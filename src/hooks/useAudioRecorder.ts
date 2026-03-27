@@ -56,6 +56,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         const blob = new Blob(chunksRef.current, { 
           type: mediaRecorder.mimeType 
         });
+        audioBlobRef.current = blob;
         setAudioBlob(blob);
         
         const url = URL.createObjectURL(blob);
