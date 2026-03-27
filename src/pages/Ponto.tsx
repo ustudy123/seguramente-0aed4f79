@@ -77,6 +77,20 @@ const Ponto = () => {
   // Queries
   const { data: pontosDiarios = [], isLoading: loadingPontos } = usePontoDiario(selectedDate);
   const { data: marcacoesHoje = [] } = useMarcacoesHoje();
+  
+  // Determine which markings the selected collaborator already has today
+  const marcacoesColaboradorHoje = marcacoesHoje.filter(
+    (m: any) => selectedColaborador && m.colaborador_cpf === selectedColaborador.cpf
+  );
+  const tiposJaRegistrados = marcacoesColaboradorHoje.map((m: any) => m.tipo_marcacao);
+  
+  // Auto-detect next tipo_marcacao when collaborator changes
+  useEffect(() => {
+    if (!selectedColaborador) return;
+    const ordem: Array<"entrada" | "saida_almoco" | "retorno_almoco" | "saida"> = ["entrada", "saida_almoco", "retorno_almoco", "saida"];
+    const proximo = ordem.find((t) => !tiposJaRegistrados.includes(t));
+    if (proximo) setTipoMarcacao(proximo);
+  }, [selectedColaborador, tiposJaRegistrados.join(",")]);
   const { data: ajustesPendentes = [] } = useAjustesPendentes();
 
   // Auto-capture geolocation when modal opens
