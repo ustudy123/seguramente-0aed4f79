@@ -546,13 +546,15 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
         </NavLink>
       </div>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={onToggle}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-sidebar-accent border border-white/[0.1] flex items-center justify-center text-sidebar-foreground/70 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-all shadow-lg"
-      >
-        {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-      </button>
+      {/* Collapse toggle - hidden on mobile */}
+      {!isMobile && (
+        <button
+          onClick={onToggle}
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-sidebar-accent border border-white/[0.1] flex items-center justify-center text-sidebar-foreground/70 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-all shadow-lg"
+        >
+          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+        </button>
+      )}
     </motion.aside>
   );
 };
