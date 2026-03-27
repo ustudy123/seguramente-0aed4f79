@@ -208,7 +208,7 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
                 </Button>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0 max-h-[45vh]">
+              <ScrollArea className="flex-1 min-h-0">
                 <div className="space-y-2 pr-3">
                   {atividades.map((at, i) => (
                     <div
