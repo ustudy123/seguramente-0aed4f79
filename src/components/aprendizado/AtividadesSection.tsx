@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAprendizado } from "@/hooks/useAprendizado";
 import { PopSection } from "./PopSection";
 import { AudioAtividadesImport } from "./AudioAtividadesImport";
+import { TextoAtividadesImport } from "./TextoAtividadesImport";
 import type { FuncaoAtividade } from "@/types/aprendizado";
 
 interface AtividadesSectionProps {
