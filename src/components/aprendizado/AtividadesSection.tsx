@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAprendizado } from "@/hooks/useAprendizado";
 import { PopSection } from "./PopSection";
 import { AudioAtividadesImport } from "./AudioAtividadesImport";
+import { TextoAtividadesImport } from "./TextoAtividadesImport";
 import type { FuncaoAtividade } from "@/types/aprendizado";
 
 interface AtividadesSectionProps {
@@ -91,6 +92,20 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
         <h3 className="font-semibold text-foreground">Atividades ({atividades.length})</h3>
         <div className="flex gap-2">
           <AudioAtividadesImport
+            funcaoNome={funcaoNome}
+            onImportar={async (atividades) => {
+              for (const at of atividades) {
+                await criarAtividade({
+                  nome: at.nome,
+                  descricao: at.descricao,
+                  frequencia: at.frequencia as any,
+                  complexidade: at.complexidade as any,
+                  classificacao: at.classificacao as any,
+                });
+              }
+            }}
+          />
+          <TextoAtividadesImport
             funcaoNome={funcaoNome}
             onImportar={async (atividades) => {
               for (const at of atividades) {
