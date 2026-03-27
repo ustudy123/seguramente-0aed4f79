@@ -388,6 +388,37 @@ export function ImportPlanilhaModal({
                   </div>
                 </div>
 
+                {/* Parametrizar arquivo */}
+                <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm flex items-center gap-2">
+                      <Wand2 className="w-4 h-4 text-primary" />
+                      Arquivo em outro formato?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Importe qualquer planilha e mapeie as colunas manualmente
+                    </p>
+                  </div>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) onDropParametrizado([file]);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Button asChild variant="outline" size="sm">
+                      <span>
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        Parametrizar Arquivo
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
@@ -398,6 +429,24 @@ export function ImportPlanilhaModal({
                     ))}
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Etapa: Mapeamento */}
+            {etapa === "mapeamento" && (
+              <motion.div
+                key="mapeamento"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex flex-col h-[60vh]"
+              >
+                <ColumnMappingStep
+                  fileHeaders={fileHeaders}
+                  sampleRows={sampleRows}
+                  onConfirm={handleMapeamentoConfirm}
+                  onBack={resetar}
+                />
               </motion.div>
             )}
 
