@@ -105,6 +105,20 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
               }
             }}
           />
+          <TextoAtividadesImport
+            funcaoNome={funcaoNome}
+            onImportar={async (atividades) => {
+              for (const at of atividades) {
+                await criarAtividade({
+                  nome: at.nome,
+                  descricao: at.descricao,
+                  frequencia: at.frequencia as any,
+                  complexidade: at.complexidade as any,
+                  classificacao: at.classificacao as any,
+                });
+              }
+            }}
+          />
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             <Plus className="w-4 h-4 mr-1" /> Atividade
           </Button>
