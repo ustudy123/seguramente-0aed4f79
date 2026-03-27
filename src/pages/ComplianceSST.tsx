@@ -33,6 +33,7 @@ import { format } from "date-fns";
 const ComplianceSST = () => {
   const [activeTab, setActiveTab] = useState("importacao");
   const [analiseDoc, setAnaliseDoc] = useState<SSTDocumento | null>(null);
+  const [showGuia, setShowGuia] = useState(false);
   const { documentos, isLoading, deleteDocumento } = useSSTDocumentos();
   const navigate = useNavigate();
 
@@ -68,6 +69,9 @@ const ComplianceSST = () => {
             Governança, conformidade e inteligência legal em Saúde e Segurança do Trabalho
           </p>
         </div>
+        <Button variant="outline" onClick={() => setShowGuia(true)}>
+          <BookOpen className="w-4 h-4 mr-2" /> Guia Rapido
+        </Button>
       </div>
 
       {/* Disclaimer */}
