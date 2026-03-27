@@ -9,6 +9,7 @@ import {
   X,
   Download,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
+import { ColumnMappingStep } from "./ColumnMappingStep";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
@@ -41,7 +43,7 @@ interface ImportPlanilhaModalProps {
   descricao?: string;
 }
 
-type Etapa = "upload" | "preview" | "processando" | "resultado";
+type Etapa = "upload" | "mapeamento" | "preview" | "processando" | "resultado";
 
 export function ImportPlanilhaModal({
   open,
