@@ -9,6 +9,7 @@ import {
   X,
   Download,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
+import { ColumnMappingStep } from "./ColumnMappingStep";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
@@ -41,7 +43,7 @@ interface ImportPlanilhaModalProps {
   descricao?: string;
 }
 
-type Etapa = "upload" | "preview" | "processando" | "resultado";
+type Etapa = "upload" | "mapeamento" | "preview" | "processando" | "resultado";
 
 export function ImportPlanilhaModal({
   open,
@@ -50,7 +52,7 @@ export function ImportPlanilhaModal({
   titulo = "Importar Planilha",
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
-  const { lerArquivo, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
+  const { lerArquivo, lerArquivoHeaders, lerArquivoComMapeamento, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
   
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
@@ -58,6 +60,9 @@ export function ImportPlanilhaModal({
   const [dados, setDados] = useState<DadosPlanilha[]>([]);
   const [resultado, setResultado] = useState<ResultadoImportacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [fileHeaders, setFileHeaders] = useState<string[]>([]);
+  const [sampleRows, setSampleRows] = useState<any[][]>([]);
+  const [usarMapeamento, setUsarMapeamento] = useState(false);
 
   const resetar = () => {
     setEtapa("upload");
@@ -65,6 +70,9 @@ export function ImportPlanilhaModal({
     setDados([]);
     setResultado(null);
     setErro(null);
+    setFileHeaders([]);
+    setSampleRows([]);
+    setUsarMapeamento(false);
   };
 
   const fechar = () => {
@@ -80,14 +88,56 @@ export function ImportPlanilhaModal({
     setErro(null);
 
     try {
+      // Try standard auto-detection first
       const dadosLidos = await lerArquivo(file);
       setDados(dadosLidos);
       setEtapa("preview");
     } catch (error: any) {
+      // If auto-detection fails (missing columns), go to mapping step
+      try {
+        const { headers, sampleRows: samples } = await lerArquivoHeaders(file);
+        setFileHeaders(headers);
+        setSampleRows(samples);
+        setUsarMapeamento(true);
+        setEtapa("mapeamento");
+        toast.info("Colunas não reconhecidas automaticamente. Mapeie as colunas do seu arquivo.");
+      } catch (innerError: any) {
+        setErro(innerError.message || "Erro ao ler arquivo");
+        toast.error("Erro ao ler planilha: " + innerError.message);
+      }
+    }
+  }, [lerArquivo, lerArquivoHeaders]);
+
+  const onDropParametrizado = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    setArquivo(file);
+    setErro(null);
+
+    try {
+      const { headers, sampleRows: samples } = await lerArquivoHeaders(file);
+      setFileHeaders(headers);
+      setSampleRows(samples);
+      setUsarMapeamento(true);
+      setEtapa("mapeamento");
+    } catch (error: any) {
       setErro(error.message || "Erro ao ler arquivo");
       toast.error("Erro ao ler planilha: " + error.message);
     }
-  }, [lerArquivo]);
+  }, [lerArquivoHeaders]);
+
+  const handleMapeamentoConfirm = async (mapping: Record<string, string>) => {
+    if (!arquivo) return;
+    try {
+      const dadosLidos = await lerArquivoComMapeamento(arquivo, mapping);
+      setDados(dadosLidos);
+      setEtapa("preview");
+    } catch (error: any) {
+      setErro(error.message || "Erro ao processar com mapeamento");
+      toast.error("Erro ao processar: " + error.message);
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -338,6 +388,37 @@ export function ImportPlanilhaModal({
                   </div>
                 </div>
 
+                {/* Parametrizar arquivo */}
+                <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm flex items-center gap-2">
+                      <Wand2 className="w-4 h-4 text-primary" />
+                      Arquivo em outro formato?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Importe qualquer planilha e mapeie as colunas manualmente
+                    </p>
+                  </div>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) onDropParametrizado([file]);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Button asChild variant="outline" size="sm">
+                      <span>
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        Parametrizar Arquivo
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
@@ -348,6 +429,24 @@ export function ImportPlanilhaModal({
                     ))}
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Etapa: Mapeamento */}
+            {etapa === "mapeamento" && (
+              <motion.div
+                key="mapeamento"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex flex-col h-[60vh]"
+              >
+                <ColumnMappingStep
+                  fileHeaders={fileHeaders}
+                  sampleRows={sampleRows}
+                  onConfirm={handleMapeamentoConfirm}
+                  onBack={resetar}
+                />
               </motion.div>
             )}
 

@@ -269,6 +269,123 @@ export function useImportacaoPlanilha() {
 
   const str = (val: any) => String(val || "").trim();
 
+  // Read only headers and sample rows for mapping step
+  const lerArquivoHeaders = async (file: File): Promise<{ headers: string[]; sampleRows: any[][] }> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array", cellDates: false });
+          const planilha = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
+          if (jsonData.length < 1) { reject(new Error("Planilha vazia")); return; }
+          const headers = jsonData[0].map(h => str(h)).filter(h => h.length > 0);
+          const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows
+          resolve({ headers, sampleRows });
+        } catch (error) { reject(error); }
+      };
+      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  // Parse file using a custom column mapping (fieldKey -> original header name)
+  const lerArquivoComMapeamento = async (file: File, mapping: Record<string, string>): Promise<DadosPlanilha[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array", cellDates: false });
+          const planilha = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
+          if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
+
+          const headers = jsonData[0].map(h => str(h));
+          // Build index from fieldKey -> column index using the user's mapping
+          const idx: Record<string, number> = {};
+          for (const [fieldKey, headerName] of Object.entries(mapping)) {
+            const colIdx = headers.indexOf(headerName);
+            idx[fieldKey] = colIdx;
+          }
+
+          const dados: DadosPlanilha[] = [];
+          for (let i = 1; i < jsonData.length; i++) {
+            const l = jsonData[i];
+            const erros: string[] = [];
+            const g = (key: string) => idx[key] != null && idx[key] !== -1 ? str(l[idx[key]]) : "";
+
+            const cnpjEmpresa = g("cnpjEmpresa").replace(/\D/g, "");
+            const nome = g("nome");
+            const cpfRaw = g("cpf");
+            const cpf = formatarCPF(cpfRaw);
+            const cargo = g("cargo");
+            const departamento = g("departamento");
+            const dataNascimentoRaw = idx["dataNascimento"] != null && idx["dataNascimento"] !== -1 ? parsarData(l[idx["dataNascimento"]]) || "" : "";
+            const dataAdmissaoRaw = idx["dataAdmissao"] != null && idx["dataAdmissao"] !== -1 ? parsarData(l[idx["dataAdmissao"]]) || "" : "";
+
+            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            if (!nome) erros.push("Nome é obrigatório");
+            if (!cpf) erros.push("CPF é obrigatório");
+            else if (!validarCPF(cpf)) erros.push("CPF inválido");
+            if (!cargo) erros.push("Função é obrigatória");
+            if (!departamento) erros.push("Setor é obrigatório");
+            if (!dataNascimentoRaw) erros.push("Data Nascimento é obrigatória");
+            if (!dataAdmissaoRaw) erros.push("Data Admissão é obrigatória");
+            if (!nome && !cpf && !cargo) continue;
+
+            dados.push({
+              cnpjEmpresa,
+              nome,
+              cpf,
+              sexo: idx["sexo"] != null && idx["sexo"] !== -1 ? parsarSexo(g("sexo")) : "",
+              dataNascimento: dataNascimentoRaw,
+              estadoCivil: g("estadoCivil"),
+              naturalidade: g("naturalidade"),
+              nacionalidade: g("nacionalidade"),
+              nomeMae: g("nomeMae"),
+              nomePai: g("nomePai"),
+              rg: g("rg"),
+              pis: g("pis"),
+              email: g("email"),
+              telefone: g("telefone"),
+              celular: g("celular"),
+              cep: g("cep"),
+              endereco: g("endereco"),
+              numero: g("numero"),
+              complemento: g("complemento"),
+              bairro: g("bairro"),
+              cidade: g("cidade"),
+              estado: g("estado"),
+              situacao: idx["situacao"] != null && idx["situacao"] !== -1 ? parsarSituacao(l[idx["situacao"]]) : "concluido",
+              filial: g("filial"),
+              cargo,
+              departamento,
+              nivel: idx["nivel"] != null && idx["nivel"] !== -1 ? parsarNivel(g("nivel")) || "" : "",
+              tipoContrato: g("tipoContrato"),
+              dataAdmissao: dataAdmissaoRaw,
+              salario: g("salario"),
+              centroCusto: g("centroCusto"),
+              gestorImediato: g("gestorImediato"),
+              matriculaEsocial: g("matriculaEsocial"),
+              banco: g("banco"),
+              agencia: g("agencia"),
+              conta: g("conta"),
+              tipoConta: g("tipoConta"),
+              chavePix: g("chavePix"),
+              linha: i + 1,
+              erros,
+            });
+          }
+          resolve(dados);
+        } catch (error) { reject(error); }
+      };
+      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -697,6 +814,8 @@ export function useImportacaoPlanilha() {
 
   return {
     lerArquivo,
+    lerArquivoHeaders,
+    lerArquivoComMapeamento,
     processarImportacao,
     isProcessing,
     progress,
