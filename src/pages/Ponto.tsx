@@ -435,16 +435,32 @@ const Ponto = () => {
             <div className="space-y-2">
               <Label>Tipo de Marcação</Label>
               <div className="grid grid-cols-2 gap-2">
-                {(["entrada", "saida_almoco", "retorno_almoco", "saida"] as const).map((tipo) => (
-                  <Button key={tipo} type="button" variant={tipoMarcacao === tipo ? "default" : "outline"} className="justify-start" onClick={() => setTipoMarcacao(tipo)}>
-                    {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
-                    {tipo === "saida_almoco" && <Utensils className="w-4 h-4 mr-2" />}
-                    {tipo === "retorno_almoco" && <Coffee className="w-4 h-4 mr-2" />}
-                    {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
-                    {TIPO_MARCACAO_LABELS[tipo]}
-                  </Button>
-                ))}
+                {(["entrada", "saida_almoco", "retorno_almoco", "saida"] as const).map((tipo) => {
+                  const jaRegistrado = tiposJaRegistrados.includes(tipo);
+                  return (
+                    <Button
+                      key={tipo}
+                      type="button"
+                      variant={tipoMarcacao === tipo ? "default" : "outline"}
+                      className={cn("justify-start", jaRegistrado && tipoMarcacao !== tipo && "opacity-50")}
+                      onClick={() => setTipoMarcacao(tipo)}
+                      disabled={jaRegistrado}
+                    >
+                      {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
+                      {tipo === "saida_almoco" && <Utensils className="w-4 h-4 mr-2" />}
+                      {tipo === "retorno_almoco" && <Coffee className="w-4 h-4 mr-2" />}
+                      {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
+                      {TIPO_MARCACAO_LABELS[tipo]}
+                      {jaRegistrado && <CheckCircle className="w-3.5 h-3.5 ml-auto text-green-500" />}
+                    </Button>
+                  );
+                })}
               </div>
+              {tiposJaRegistrados.length === 4 && (
+                <p className="text-sm text-muted-foreground text-center py-1">
+                  ✅ Todas as marcações do dia já foram registradas.
+                </p>
+              )}
             </div>
 
             {/* Geolocalização */}
