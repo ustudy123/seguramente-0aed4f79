@@ -14866,6 +14866,7 @@ export type Database = {
           empresa_id: string | null
           entrada: string | null
           escala_id: string | null
+          he_intervalo_suprimido_minutos: number | null
           horas_extras: string | null
           horas_extras_100_minutos: number | null
           horas_extras_50_minutos: number | null
@@ -14893,6 +14894,7 @@ export type Database = {
           empresa_id?: string | null
           entrada?: string | null
           escala_id?: string | null
+          he_intervalo_suprimido_minutos?: number | null
           horas_extras?: string | null
           horas_extras_100_minutos?: number | null
           horas_extras_50_minutos?: number | null
@@ -14920,6 +14922,7 @@ export type Database = {
           empresa_id?: string | null
           entrada?: string | null
           escala_id?: string | null
+          he_intervalo_suprimido_minutos?: number | null
           horas_extras?: string | null
           horas_extras_100_minutos?: number | null
           horas_extras_50_minutos?: number | null
@@ -15559,6 +15562,65 @@ export type Database = {
           },
           {
             foreignKeyName: "ponto_repc_importacoes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_semanal: {
+        Row: {
+          ano: number
+          colaborador_cpf: string
+          colaborador_nome: string
+          created_at: string | null
+          data_fim: string
+          data_inicio: string
+          he_semanal_excedente_minutos: number | null
+          id: string
+          limite_semanal_minutos: number | null
+          semana: number
+          tenant_id: string
+          total_he_diaria_minutos: number | null
+          total_horas_trabalhadas_minutos: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano: number
+          colaborador_cpf: string
+          colaborador_nome: string
+          created_at?: string | null
+          data_fim: string
+          data_inicio: string
+          he_semanal_excedente_minutos?: number | null
+          id?: string
+          limite_semanal_minutos?: number | null
+          semana: number
+          tenant_id: string
+          total_he_diaria_minutos?: number | null
+          total_horas_trabalhadas_minutos?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          colaborador_cpf?: string
+          colaborador_nome?: string
+          created_at?: string | null
+          data_fim?: string
+          data_inicio?: string
+          he_semanal_excedente_minutos?: number | null
+          id?: string
+          limite_semanal_minutos?: number | null
+          semana?: number
+          tenant_id?: string
+          total_he_diaria_minutos?: number | null
+          total_horas_trabalhadas_minutos?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_semanal_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
