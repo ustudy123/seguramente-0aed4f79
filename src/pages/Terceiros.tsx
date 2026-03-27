@@ -19,6 +19,7 @@ export default function Terceiros() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Terceiro | null>(null);
   const [selected, setSelected] = useState<Terceiro | null>(null);
+  const [showGuia, setShowGuia] = useState(false);
 
   const filtered = terceiros.filter(
     (t) =>
