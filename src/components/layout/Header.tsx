@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,7 +16,12 @@ import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
 
-export const Header = () => {
+interface HeaderProps {
+  onMenuToggle?: () => void;
+  isMobile?: boolean;
+}
+
+export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
   const { profile, signOut, isSuperAdmin, user } = useAuthContext();
   const { tenant } = useTenant();
   const navigate = useNavigate();
@@ -36,12 +41,18 @@ export const Header = () => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border px-6 flex items-center justify-between sticky top-0 z-30">
-      {/* Global Search */}
-      <GlobalSearch />
+    <header className="h-16 bg-card border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30">
+      <div className="flex items-center gap-2">
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="mr-1">
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
+        <GlobalSearch />
+      </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Logged in as */}
         <span className="hidden md:inline text-xs text-muted-foreground">
           Logado como <strong className="text-foreground">{user?.email}</strong>
@@ -82,7 +93,7 @@ export const Header = () => {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-3 pl-2 pr-3">
+            <Button variant="ghost" className="flex items-center gap-2 md:gap-3 pl-2 pr-2 md:pr-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={profile?.avatar_url || ""} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm">
@@ -97,7 +108,7 @@ export const Header = () => {
                   {profile?.cargo || "Colaborador"}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

@@ -220,9 +220,10 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
   );
 };
 
-const SidebarLink = ({ item }: { item: MenuItem; isCollapsed: boolean }) => (
+const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolean; onNavigate?: () => void }) => (
   <NavLink
     to={item.path || "/"}
+    onClick={onNavigate}
     className={({ isActive }) =>
       cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
@@ -249,11 +250,13 @@ const CollapsibleSection = ({
   isCollapsed,
   isOpen,
   onToggle,
+  onNavigate,
 }: {
   section: MenuSection;
   isCollapsed: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }) => {
   const location = useLocation();
   const hasActiveChild = section.items.some(
@@ -344,7 +347,7 @@ const CollapsibleSection = ({
                 item.children ? (
                   <SidebarSubItem key={item.title} item={item} isCollapsed={false} />
                 ) : (
-                  <SidebarLink key={item.title} item={item} isCollapsed={false} />
+                  <SidebarLink key={item.title} item={item} isCollapsed={false} onNavigate={onNavigate} />
                 )
               )}
             </div>
@@ -358,9 +361,11 @@ const CollapsibleSection = ({
 interface AppSidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  isMobile?: boolean;
+  onClose?: () => void;
 }
 
-export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
+export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -474,6 +479,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
                   onClick={() => {
                     navigate(item.path);
                     setSearchQuery("");
+                    if (isMobile && onClose) onClose();
                   }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left",
@@ -501,6 +507,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
               isCollapsed={isCollapsed}
               isOpen={!!openSections[section.label]}
               onToggle={() => toggleSection(section.label)}
+              onNavigate={isMobile ? onClose : undefined}
             />
           ))
         )}
@@ -510,6 +517,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
       <div className="p-3 border-t border-white/[0.08] space-y-0.5">
         <NavLink
           to="/suporte"
+          onClick={isMobile ? onClose : undefined}
           className={({ isActive }) =>
             cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -524,6 +532,7 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
         </NavLink>
         <NavLink
           to="/configuracoes"
+          onClick={isMobile ? onClose : undefined}
           className={({ isActive }) =>
             cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -538,13 +547,15 @@ export const AppSidebar = ({ isCollapsed, onToggle }: AppSidebarProps) => {
         </NavLink>
       </div>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={onToggle}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-sidebar-accent border border-white/[0.1] flex items-center justify-center text-sidebar-foreground/70 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-all shadow-lg"
-      >
-        {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-      </button>
+      {/* Collapse toggle - hidden on mobile */}
+      {!isMobile && (
+        <button
+          onClick={onToggle}
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-sidebar-accent border border-white/[0.1] flex items-center justify-center text-sidebar-foreground/70 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-all shadow-lg"
+        >
+          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+        </button>
+      )}
     </motion.aside>
   );
 };
