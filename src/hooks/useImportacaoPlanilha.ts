@@ -305,11 +305,16 @@ function parsarNivel(valor: string): string | null {
 function parsarTipoContrato(valor: string): string | null {
   if (!valor) return null;
   const normalizado = normalizarTexto(valor);
-  // Exact match first
-  if (TIPOS_CONTRATO_VALIDOS[normalizado]) return TIPOS_CONTRATO_VALIDOS[normalizado];
+  // Detect PJ — redirect to Terceiros
+  const mapped = TIPOS_CONTRATO_VALIDOS[normalizado];
+  if (mapped === "⚠️ TERCEIRO") return "⚠️ TERCEIRO";
+  if (mapped) return mapped;
   // Partial match
-  for (const [key, mapped] of Object.entries(TIPOS_CONTRATO_VALIDOS)) {
-    if (normalizado.includes(key) || key.includes(normalizado)) return mapped;
+  for (const [key, val] of Object.entries(TIPOS_CONTRATO_VALIDOS)) {
+    if (normalizado.includes(key) || key.includes(normalizado)) {
+      if (val === "⚠️ TERCEIRO") return "⚠️ TERCEIRO";
+      return val;
+    }
   }
   // Check if already a valid option
   const found = TIPOS_CONTRATO_OPCOES.find(o => normalizarTexto(o) === normalizado);
