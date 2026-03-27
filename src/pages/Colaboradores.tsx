@@ -141,7 +141,6 @@ function AtivosTab() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showNovoModal, setShowNovoModal] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
@@ -257,9 +256,9 @@ function AtivosTab() {
           <Upload className="w-4 h-4 mr-2" />
           Importar Planilha
         </Button>
-        <Button className="gradient-primary shadow-glow" onClick={() => setShowNovoModal(true)}>
+        <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Novo Cadastro
+          Novo Colaborador
         </Button>
       </div>
 
@@ -316,7 +315,7 @@ function AtivosTab() {
       ) : colaboradores.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-xl border border-border">
           <p className="text-muted-foreground mb-4">Nenhum colaborador cadastrado ainda.</p>
-          <Button onClick={() => setShowNovoModal(true)}>
+          <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Cadastrar Primeiro Colaborador
           </Button>
@@ -573,52 +572,6 @@ function AtivosTab() {
           }}
         />
       )}
-
-      {/* Modal de escolha: Colaborador ou Terceiro */}
-      <Dialog open={showNovoModal} onOpenChange={setShowNovoModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>O que deseja cadastrar?</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2">
-            <button
-              className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
-              onClick={() => {
-                setShowNovoModal(false);
-                setShowForm(true);
-              }}
-            >
-              <div className="rounded-full p-2.5 bg-primary/10 text-primary shrink-0 group-hover:bg-primary/20 transition-colors">
-                <UserPlus className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">Colaborador</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  CLT, Estagiário, Temporário, Sócio ou Autônomo — vínculo direto com a empresa.
-                </p>
-              </div>
-            </button>
-
-            <button
-              className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
-              onClick={() => {
-                setShowNovoModal(false);
-                navigate("/terceiros");
-              }}
-            >
-              <div className="rounded-full p-2.5 bg-warning/10 text-warning shrink-0 group-hover:bg-warning/20 transition-colors">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">Empresa Terceira (PJ / Prestador)</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Pessoa Jurídica, prestador de serviço ou empresa contratada — módulo Terceiros & SST.
-                </p>
-              </div>
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
