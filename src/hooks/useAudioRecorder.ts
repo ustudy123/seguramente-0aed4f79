@@ -137,6 +137,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
     }
+    audioBlobRef.current = null;
     setAudioBlob(null);
     setAudioUrl(null);
     setDuration(0);
