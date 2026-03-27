@@ -19,6 +19,7 @@ import {
   Loader2,
   Brain,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
