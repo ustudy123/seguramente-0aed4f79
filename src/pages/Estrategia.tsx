@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Compass, Target, Waves, Heart, Users } from "lucide-react";
+import { Compass, Target, Waves, Heart, Users, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { SwotSection } from "@/components/estrategia/SwotSection";
 import { OceanoAzulSection } from "@/components/estrategia/OceanoAzulSection";
 import { CulturaSection } from "@/components/estrategia/CulturaSection";
 import { OrganogramaSection } from "@/components/estrategia/OrganogramaSection";
 import { EstrategiaEscopoSelector, type EstrategiaEscopo } from "@/components/estrategia/EstrategiaEscopoSelector";
+import { GuiaRapidoEstrategia } from "@/components/estrategia/GuiaRapidoEstrategia";
 
 export default function Estrategia() {
   const [tab, setTab] = useState("swot");
   const [escopo, setEscopo] = useState<EstrategiaEscopo>({ tipo: "empresa", grupoId: null });
+  const [showGuia, setShowGuia] = useState(false);
 
   return (
     <motion.div
@@ -31,7 +34,12 @@ export default function Estrategia() {
             O módulo Estratégia e Governança é essencial para ajudar a planejar e organizar a direção da empresa. Ele fornece ferramentas para melhorar a cultura organizacional e a estrutura interna.
           </p>
         </div>
-        <EstrategiaEscopoSelector escopo={escopo} onChange={setEscopo} />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowGuia(true)}>
+            <BookOpen className="w-4 h-4 mr-2" /> Guia Rapido
+          </Button>
+          <EstrategiaEscopoSelector escopo={escopo} onChange={setEscopo} />
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -66,6 +74,8 @@ export default function Estrategia() {
           <OrganogramaSection escopo={escopo} />
         </TabsContent>
       </Tabs>
+
+      <GuiaRapidoEstrategia open={showGuia} onOpenChange={setShowGuia} />
     </motion.div>
   );
 }
