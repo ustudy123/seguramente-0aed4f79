@@ -303,9 +303,31 @@ export function ImportPlanilhaModal({
     const wsInstrucoes = XLSX.utils.aoa_to_sheet(instrucoesData);
     wsInstrucoes["!cols"] = [{ wch: 20 }, { wch: 14 }, { wch: 45 }, { wch: 50 }, { wch: 30 }];
 
+    // Sheet de valores aceitos para referência
+    const valoresData = [
+      ["TIPOS DE CONTRATO ACEITOS"],
+      [""],
+      ["Valor", "Descrição"],
+      ["CLT", "Contrato CLT prazo indeterminado"],
+      ["CLT – Experiência", "Contrato CLT em período de experiência"],
+      ["Pró-labore (Sócio)", "Remuneração de sócio/proprietário"],
+      ["Pessoa Jurídica (PJ)", "Prestador de serviço PJ"],
+      ["Estagiário", "Contrato de estágio"],
+      ["Temporário", "Contrato temporário (Lei 6.019)"],
+      ["Autônomo", "Trabalhador autônomo/freelancer"],
+      ["Intermitente", "CLT intermitente"],
+      ["Aprendiz", "Jovem aprendiz"],
+      [""],
+      ["DICA: Copie o valor exato da coluna 'Valor' para a planilha de Dados."],
+      ["O sistema também aceita variações como: clt, pj, estagio, temporario, autonomo, etc."],
+    ];
+    const wsValores = XLSX.utils.aoa_to_sheet(valoresData);
+    wsValores["!cols"] = [{ wch: 25 }, { wch: 45 }];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsData, "Dados");
     XLSX.utils.book_append_sheet(wb, wsInstrucoes, "Instruções");
+    XLSX.utils.book_append_sheet(wb, wsValores, "Valores Aceitos");
     
     XLSX.writeFile(wb, "modelo_importacao.xlsx");
   };
