@@ -276,10 +276,10 @@ export function useImportacaoPlanilha() {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const primeiraAba = workbook.SheetNames[0];
           const planilha = workbook.Sheets[primeiraAba];
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: false, defval: "" }) as string[][];
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
           
           if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
           
