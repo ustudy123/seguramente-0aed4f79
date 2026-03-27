@@ -19,6 +19,7 @@ import {
   Loader2,
   Brain,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
@@ -26,12 +27,14 @@ import { SSTAlertasTab } from "@/components/sst/SSTAlertasTab";
 import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
 import { SSTDocumentosTab } from "@/components/sst/SSTDocumentosTab";
 import { ImportacaoInteligente } from "@/components/sst/importacao/ImportacaoInteligente";
+import { GuiaRapidoComplianceSST } from "@/components/sst/GuiaRapidoComplianceSST";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
 const ComplianceSST = () => {
   const [activeTab, setActiveTab] = useState("importacao");
   const [analiseDoc, setAnaliseDoc] = useState<SSTDocumento | null>(null);
+  const [showGuia, setShowGuia] = useState(false);
   const { documentos, isLoading, deleteDocumento } = useSSTDocumentos();
   const navigate = useNavigate();
 
@@ -67,6 +70,9 @@ const ComplianceSST = () => {
             Governança, conformidade e inteligência legal em Saúde e Segurança do Trabalho
           </p>
         </div>
+        <Button variant="outline" onClick={() => setShowGuia(true)}>
+          <BookOpen className="w-4 h-4 mr-2" /> Guia Rapido
+        </Button>
       </div>
 
       {/* Disclaimer */}
@@ -282,6 +288,7 @@ const ComplianceSST = () => {
 
       {/* Modal análise IA individual */}
       <SSTAnaliseIAModal open={!!analiseDoc} onOpenChange={(open) => !open && setAnaliseDoc(null)} documento={analiseDoc} />
+      <GuiaRapidoComplianceSST open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 };
