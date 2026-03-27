@@ -288,6 +288,7 @@ const ComplianceSST = () => {
 
       {/* Modal análise IA individual */}
       <SSTAnaliseIAModal open={!!analiseDoc} onOpenChange={(open) => !open && setAnaliseDoc(null)} documento={analiseDoc} />
+      <GuiaRapidoComplianceSST open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 };
