@@ -263,6 +263,20 @@ export function usePonto() {
         if (error.code === "23505") {
           throw new Error(`Já existe uma marcação de ${TIPO_MARCACAO_LABELS[tipoMarcacao]} para hoje.`);
         }
+        // Parse trigger exceptions for friendly messages
+        const msg = error.message || "";
+        if (msg.includes("Não é possível registrar")) {
+          throw new Error(msg.replace(/^.*?Não é possível/, "Não é possível"));
+        }
+        if (msg.includes("Colaborador desligado")) {
+          throw new Error("Colaborador desligado. Não é possível registrar ponto.");
+        }
+        if (msg.includes("Colaborador afastado")) {
+          throw new Error("Colaborador afastado. Não é possível registrar ponto durante período de afastamento.");
+        }
+        if (msg.includes("está fechado")) {
+          throw new Error("Período fechado. Não é possível registrar marcações. Solicite reabertura ao RH.");
+        }
         throw error;
       }
       return data as PontoMarcacao;

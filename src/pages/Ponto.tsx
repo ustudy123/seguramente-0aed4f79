@@ -437,14 +437,26 @@ const Ponto = () => {
               <div className="grid grid-cols-2 gap-2">
                 {(["entrada", "saida_almoco", "retorno_almoco", "saida"] as const).map((tipo) => {
                   const jaRegistrado = tiposJaRegistrados.includes(tipo);
+                  // GAP 1: Enforce sequential order on frontend
+                  const ordemRequisitos: Record<string, string[]> = {
+                    entrada: [],
+                    saida_almoco: ["entrada"],
+                    retorno_almoco: ["entrada", "saida_almoco"],
+                    saida: ["entrada"],
+                  };
+                  const requisitosAtendidos = ordemRequisitos[tipo].every(req => tiposJaRegistrados.includes(req));
+                  // Saída final precisa de retorno se teve saída almoço
+                  const bloqueadoPorRetorno = tipo === "saida" && tiposJaRegistrados.includes("saida_almoco") && !tiposJaRegistrados.includes("retorno_almoco");
+                  const desabilitado = jaRegistrado || !requisitosAtendidos || bloqueadoPorRetorno;
+                  
                   return (
                     <Button
                       key={tipo}
                       type="button"
                       variant={tipoMarcacao === tipo ? "default" : "outline"}
-                      className={cn("justify-start", jaRegistrado && tipoMarcacao !== tipo && "opacity-50")}
+                      className={cn("justify-start", desabilitado && tipoMarcacao !== tipo && "opacity-50")}
                       onClick={() => setTipoMarcacao(tipo)}
-                      disabled={jaRegistrado}
+                      disabled={desabilitado}
                     >
                       {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
                       {tipo === "saida_almoco" && <Utensils className="w-4 h-4 mr-2" />}
@@ -452,6 +464,7 @@ const Ponto = () => {
                       {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
                       {TIPO_MARCACAO_LABELS[tipo]}
                       {jaRegistrado && <CheckCircle className="w-3.5 h-3.5 ml-auto text-green-500" />}
+                      {!jaRegistrado && !requisitosAtendidos && <Lock className="w-3.5 h-3.5 ml-auto text-muted-foreground" />}
                     </Button>
                   );
                 })}
