@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck } from "lucide-react";
+import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck, BookOpen } from "lucide-react";
 import { useTerceiros } from "@/hooks/useTerceiros";
 import { TerceiroDashboard } from "@/components/terceiros/TerceiroDashboard";
 import { TerceiroList } from "@/components/terceiros/TerceiroList";
@@ -10,6 +10,7 @@ import { TerceiroForm } from "@/components/terceiros/TerceiroForm";
 import { TerceiroDetail } from "@/components/terceiros/TerceiroDetail";
 import { VencimentosPanel } from "@/components/terceiros/VencimentosPanel";
 import { PermissaoTrabalhoPanel } from "@/components/terceiros/PermissaoTrabalhoPanel";
+import { GuiaRapidoTerceiros } from "@/components/terceiros/GuiaRapidoTerceiros";
 import type { Terceiro } from "@/types/terceiros";
 
 export default function Terceiros() {
@@ -18,6 +19,7 @@ export default function Terceiros() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Terceiro | null>(null);
   const [selected, setSelected] = useState<Terceiro | null>(null);
+  const [showGuia, setShowGuia] = useState(false);
 
   const filtered = terceiros.filter(
     (t) =>
@@ -47,9 +49,14 @@ export default function Terceiros() {
             Compliance, controle documental e prova jurídica de prestadores de serviço.
           </p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Novo Terceiro
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowGuia(true)}>
+            <BookOpen className="w-4 h-4 mr-2" /> Guia Rapido
+          </Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Novo Terceiro
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="dashboard">
@@ -111,6 +118,8 @@ export default function Terceiros() {
         }}
         isPending={createTerceiro.isPending || updateTerceiro.isPending}
       />
+
+      <GuiaRapidoTerceiros open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 }
