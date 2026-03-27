@@ -250,6 +250,7 @@ export function useImportacaoPlanilha() {
           const headers = jsonData[0].map(h => str(h));
           
           const idx = {
+            cnpjEmpresa: encontrarColuna(headers, "cnpjEmpresa"),
             nome: encontrarColuna(headers, "nome"),
             cpf: encontrarColuna(headers, "cpf"),
             sexo: encontrarColuna(headers, "sexo"),
@@ -289,9 +290,13 @@ export function useImportacaoPlanilha() {
             chavePix: encontrarColuna(headers, "chavePix"),
           };
           
+          if (idx.cnpjEmpresa === -1) { reject(new Error("Coluna 'CNPJ Empresa' não encontrada na planilha")); return; }
           if (idx.nome === -1) { reject(new Error("Coluna 'Nome' não encontrada na planilha")); return; }
           if (idx.cpf === -1) { reject(new Error("Coluna 'CPF' não encontrada na planilha")); return; }
-          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo' não encontrada na planilha")); return; }
+          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo/Função' não encontrada na planilha")); return; }
+          if (idx.departamento === -1) { reject(new Error("Coluna 'Departamento/Setor' não encontrada na planilha")); return; }
+          if (idx.dataAdmissao === -1) { reject(new Error("Coluna 'Data Admissão' não encontrada na planilha")); return; }
+          if (idx.dataNascimento === -1) { reject(new Error("Coluna 'Data Nascimento' não encontrada na planilha")); return; }
           
           const dados: DadosPlanilha[] = [];
           
@@ -300,22 +305,31 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (i: number) => i !== -1 ? str(l[i]) : "";
             
+            const cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
             const nome = g(idx.nome);
             const cpfRaw = g(idx.cpf);
             const cpf = formatarCPF(cpfRaw);
             const cargo = g(idx.cargo);
+            const departamento = g(idx.departamento);
+            const dataNascimentoRaw = idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "";
+            const dataAdmissaoRaw = idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "";
             
+            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
-            if (!cargo) erros.push("Cargo é obrigatório");
+            if (!cargo) erros.push("Função é obrigatória");
+            if (!departamento) erros.push("Setor é obrigatório");
+            if (!dataNascimentoRaw) erros.push("Data Nascimento é obrigatória");
+            if (!dataAdmissaoRaw) erros.push("Data Admissão é obrigatória");
             if (!nome && !cpf && !cargo) continue;
             
             dados.push({
+              cnpjEmpresa,
               nome,
               cpf,
               sexo: idx.sexo !== -1 ? parsarSexo(g(idx.sexo)) : "",
-              dataNascimento: idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "",
+              dataNascimento: dataNascimentoRaw,
               estadoCivil: g(idx.estadoCivil),
               naturalidade: g(idx.naturalidade),
               nacionalidade: g(idx.nacionalidade),
@@ -336,10 +350,10 @@ export function useImportacaoPlanilha() {
               situacao: idx.situacao !== -1 ? parsarSituacao(l[idx.situacao]) : "concluido",
               filial: g(idx.filial),
               cargo,
-              departamento: g(idx.departamento),
+              departamento,
               nivel: idx.nivel !== -1 ? parsarNivel(g(idx.nivel)) || "" : "",
               tipoContrato: g(idx.tipoContrato),
-              dataAdmissao: idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "",
+              dataAdmissao: dataAdmissaoRaw,
               salario: g(idx.salario),
               centroCusto: g(idx.centroCusto),
               gestorImediato: g(idx.gestorImediato),
