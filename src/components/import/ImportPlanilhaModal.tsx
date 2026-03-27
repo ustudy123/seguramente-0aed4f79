@@ -261,7 +261,7 @@ export function ImportPlanilhaModal({
       ["Cargo *", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
       ["Departamento *", "SIM", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
-      ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, PJ, Estágio, Temporário, Freelancer", "CLT"],
+      ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, CLT – Experiência, Pró-labore (Sócio), Pessoa Jurídica (PJ), Estagiário, Temporário, Autônomo, Intermitente, Aprendiz", "CLT"],
       ["Data Admissão *", "SIM", "Data de admissão", "DD/MM/AAAA ou AAAA-MM-DD", "01/03/2024"],
       ["Salário", "NÃO", "Salário base bruto", "Número (use . ou , como decimal)", "5000,00"],
       ["Centro de Custo", "NÃO", "Centro de custo", "Texto livre", "RH-01"],
@@ -303,9 +303,31 @@ export function ImportPlanilhaModal({
     const wsInstrucoes = XLSX.utils.aoa_to_sheet(instrucoesData);
     wsInstrucoes["!cols"] = [{ wch: 20 }, { wch: 14 }, { wch: 45 }, { wch: 50 }, { wch: 30 }];
 
+    // Sheet de valores aceitos para referência
+    const valoresData = [
+      ["TIPOS DE CONTRATO ACEITOS"],
+      [""],
+      ["Valor", "Descrição"],
+      ["CLT", "Contrato CLT prazo indeterminado"],
+      ["CLT – Experiência", "Contrato CLT em período de experiência"],
+      ["Pró-labore (Sócio)", "Remuneração de sócio/proprietário"],
+      ["Pessoa Jurídica (PJ)", "Prestador de serviço PJ"],
+      ["Estagiário", "Contrato de estágio"],
+      ["Temporário", "Contrato temporário (Lei 6.019)"],
+      ["Autônomo", "Trabalhador autônomo/freelancer"],
+      ["Intermitente", "CLT intermitente"],
+      ["Aprendiz", "Jovem aprendiz"],
+      [""],
+      ["DICA: Copie o valor exato da coluna 'Valor' para a planilha de Dados."],
+      ["O sistema também aceita variações como: clt, pj, estagio, temporario, autonomo, etc."],
+    ];
+    const wsValores = XLSX.utils.aoa_to_sheet(valoresData);
+    wsValores["!cols"] = [{ wch: 25 }, { wch: 45 }];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsData, "Dados");
     XLSX.utils.book_append_sheet(wb, wsInstrucoes, "Instruções");
+    XLSX.utils.book_append_sheet(wb, wsValores, "Valores Aceitos");
     
     XLSX.writeFile(wb, "modelo_importacao.xlsx");
   };
