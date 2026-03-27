@@ -87,7 +87,7 @@ export const MATRIZ_VINCULOS_PADRAO: VinculoConfig[] = [
   { tipo_vinculo: "APRENDIZ", inss_empregado: true, fgts: true, aliquota_fgts: 2, multa_fgts_dispensa: 0, direito_13: true, direito_ferias: true, direito_aviso_previo: false },
   { tipo_vinculo: "ESTAGIO", inss_empregado: false, fgts: false, aliquota_fgts: 0, multa_fgts_dispensa: 0, direito_13: false, direito_ferias: false, direito_aviso_previo: false },
   { tipo_vinculo: "TEMPORARIO_LEI6019", inss_empregado: true, fgts: true, aliquota_fgts: 8, multa_fgts_dispensa: 0, direito_13: true, direito_ferias: true, direito_aviso_previo: false },
-  { tipo_vinculo: "PJ", inss_empregado: false, fgts: false, aliquota_fgts: 0, multa_fgts_dispensa: 0, direito_13: false, direito_ferias: false, direito_aviso_previo: false },
+  // PJ removido — terceiros são geridos no módulo Terceiros & SST
 ];
 
 // ===================== FUNÇÕES DE CÁLCULO =====================

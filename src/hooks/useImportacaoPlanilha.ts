@@ -110,11 +110,11 @@ const TIPOS_CONTRATO_VALIDOS: Record<string, string> = {
   "pró-labore (sócio)": "Pró-labore (Sócio)",
   "socio": "Pró-labore (Sócio)",
   "sócio": "Pró-labore (Sócio)",
-  "pj": "Pessoa Jurídica (PJ)",
-  "pessoa juridica": "Pessoa Jurídica (PJ)",
-  "pessoa jurídica": "Pessoa Jurídica (PJ)",
-  "pessoa juridica (pj)": "Pessoa Jurídica (PJ)",
-  "pessoa jurídica (pj)": "Pessoa Jurídica (PJ)",
+  "pj": "⚠️ TERCEIRO",
+  "pessoa juridica": "⚠️ TERCEIRO",
+  "pessoa jurídica": "⚠️ TERCEIRO",
+  "pessoa juridica (pj)": "⚠️ TERCEIRO",
+  "pessoa jurídica (pj)": "⚠️ TERCEIRO",
   "estagiario": "Estagiário",
   "estagiário": "Estagiário",
   "estagio": "Estagiário",
@@ -134,7 +134,6 @@ export const TIPOS_CONTRATO_OPCOES = [
   "CLT",
   "CLT – Experiência",
   "Pró-labore (Sócio)",
-  "Pessoa Jurídica (PJ)",
   "Estagiário",
   "Temporário",
   "Autônomo",
@@ -306,11 +305,16 @@ function parsarNivel(valor: string): string | null {
 function parsarTipoContrato(valor: string): string | null {
   if (!valor) return null;
   const normalizado = normalizarTexto(valor);
-  // Exact match first
-  if (TIPOS_CONTRATO_VALIDOS[normalizado]) return TIPOS_CONTRATO_VALIDOS[normalizado];
+  // Detect PJ — redirect to Terceiros
+  const mapped = TIPOS_CONTRATO_VALIDOS[normalizado];
+  if (mapped === "⚠️ TERCEIRO") return "⚠️ TERCEIRO";
+  if (mapped) return mapped;
   // Partial match
-  for (const [key, mapped] of Object.entries(TIPOS_CONTRATO_VALIDOS)) {
-    if (normalizado.includes(key) || key.includes(normalizado)) return mapped;
+  for (const [key, val] of Object.entries(TIPOS_CONTRATO_VALIDOS)) {
+    if (normalizado.includes(key) || key.includes(normalizado)) {
+      if (val === "⚠️ TERCEIRO") return "⚠️ TERCEIRO";
+      return val;
+    }
   }
   // Check if already a valid option
   const found = TIPOS_CONTRATO_OPCOES.find(o => normalizarTexto(o) === normalizado);
@@ -433,6 +437,10 @@ export function useImportacaoPlanilha() {
                 const raw = g("tipoContrato");
                 if (!raw) return "";
                 const parsed = parsarTipoContrato(raw);
+                if (parsed === "⚠️ TERCEIRO") {
+                  erros.push(`Tipo "PJ/Pessoa Jurídica" não é permitido em Colaboradores. Cadastre no módulo Terceiros & SST.`);
+                  return raw;
+                }
                 if (!parsed) erros.push(`Tipo Contrato "${raw}" inválido. Use: ${TIPOS_CONTRATO_OPCOES.join(", ")}`);
                 return parsed || raw;
               })(),
@@ -581,6 +589,10 @@ export function useImportacaoPlanilha() {
                 const raw = g(idx.tipoContrato);
                 if (!raw) return "";
                 const parsed = parsarTipoContrato(raw);
+                if (parsed === "⚠️ TERCEIRO") {
+                  erros.push(`Tipo "PJ/Pessoa Jurídica" não é permitido em Colaboradores. Cadastre no módulo Terceiros & SST.`);
+                  return raw;
+                }
                 if (!parsed) erros.push(`Tipo Contrato "${raw}" inválido. Use: ${TIPOS_CONTRATO_OPCOES.join(", ")}`);
                 return parsed || raw;
               })(),

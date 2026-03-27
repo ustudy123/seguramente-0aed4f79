@@ -877,7 +877,6 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
                     <SelectItem value="clt">CLT – Prazo Indeterminado</SelectItem>
                     <SelectItem value="contrato_experiencia">CLT – Contrato de Experiência</SelectItem>
                     <SelectItem value="prolabore">Pró-labore (Sócio)</SelectItem>
-                    <SelectItem value="pj">Pessoa Jurídica (PJ)</SelectItem>
                     <SelectItem value="estagiario">Estagiário</SelectItem>
                     <SelectItem value="temporario">Temporário</SelectItem>
                     <SelectItem value="autonomo">Autônomo</SelectItem>
