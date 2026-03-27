@@ -18,6 +18,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioBlobRef = useRef<Blob | null>(null);
 
   const startRecording = useCallback(async () => {
     try {
