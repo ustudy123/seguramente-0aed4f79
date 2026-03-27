@@ -133,7 +133,7 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
       <input type="file" ref={fileInputRef} className="hidden" accept=".txt,.csv,.md,.text" onChange={handleFileUpload} />
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-2xl h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" /> Importar Atividades por Texto
@@ -208,7 +208,7 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
                 </Button>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0 max-h-[45vh]">
+              <ScrollArea className="flex-1 min-h-0">
                 <div className="space-y-2 pr-3">
                   {atividades.map((at, i) => (
                     <div
