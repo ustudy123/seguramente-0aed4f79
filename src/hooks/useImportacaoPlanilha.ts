@@ -91,6 +91,57 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   chavePix: ["chave pix", "chave_pix", "pix", "chavepix"],
 };
 
+// Tipos de contrato/vínculo válidos (mapeados para valores aceitos pelo sistema)
+const TIPOS_CONTRATO_VALIDOS: Record<string, string> = {
+  "clt": "CLT",
+  "clt prazo indeterminado": "CLT",
+  "clt - prazo indeterminado": "CLT",
+  "clt experiencia": "CLT – Experiência",
+  "clt - experiencia": "CLT – Experiência",
+  "clt experiência": "CLT – Experiência",
+  "clt – experiencia": "CLT – Experiência",
+  "clt – experiência": "CLT – Experiência",
+  "experiencia": "CLT – Experiência",
+  "experiência": "CLT – Experiência",
+  "pro-labore": "Pró-labore (Sócio)",
+  "pro labore": "Pró-labore (Sócio)",
+  "pró-labore": "Pró-labore (Sócio)",
+  "pro-labore (socio)": "Pró-labore (Sócio)",
+  "pró-labore (sócio)": "Pró-labore (Sócio)",
+  "socio": "Pró-labore (Sócio)",
+  "sócio": "Pró-labore (Sócio)",
+  "pj": "Pessoa Jurídica (PJ)",
+  "pessoa juridica": "Pessoa Jurídica (PJ)",
+  "pessoa jurídica": "Pessoa Jurídica (PJ)",
+  "pessoa juridica (pj)": "Pessoa Jurídica (PJ)",
+  "pessoa jurídica (pj)": "Pessoa Jurídica (PJ)",
+  "estagiario": "Estagiário",
+  "estagiário": "Estagiário",
+  "estagio": "Estagiário",
+  "estágio": "Estagiário",
+  "temporario": "Temporário",
+  "temporário": "Temporário",
+  "autonomo": "Autônomo",
+  "autônomo": "Autônomo",
+  "freelancer": "Autônomo",
+  "intermitente": "Intermitente",
+  "clt intermitente": "Intermitente",
+  "aprendiz": "Aprendiz",
+  "jovem aprendiz": "Aprendiz",
+};
+
+export const TIPOS_CONTRATO_OPCOES = [
+  "CLT",
+  "CLT – Experiência",
+  "Pró-labore (Sócio)",
+  "Pessoa Jurídica (PJ)",
+  "Estagiário",
+  "Temporário",
+  "Autônomo",
+  "Intermitente",
+  "Aprendiz",
+];
+
 // Níveis válidos para mapear
 const NIVEIS_VALIDOS: Record<string, string> = {
   "estagiario": "estagiario",
@@ -250,6 +301,21 @@ function parsarNivel(valor: string): string | null {
   if (!valor) return null;
   const normalizado = normalizarTexto(valor);
   return NIVEIS_VALIDOS[normalizado] || null;
+}
+
+function parsarTipoContrato(valor: string): string | null {
+  if (!valor) return null;
+  const normalizado = normalizarTexto(valor);
+  // Exact match first
+  if (TIPOS_CONTRATO_VALIDOS[normalizado]) return TIPOS_CONTRATO_VALIDOS[normalizado];
+  // Partial match
+  for (const [key, mapped] of Object.entries(TIPOS_CONTRATO_VALIDOS)) {
+    if (normalizado.includes(key) || key.includes(normalizado)) return mapped;
+  }
+  // Check if already a valid option
+  const found = TIPOS_CONTRATO_OPCOES.find(o => normalizarTexto(o) === normalizado);
+  if (found) return found;
+  return null;
 }
 
 export interface ResultadoImportacao {
