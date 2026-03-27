@@ -314,34 +314,7 @@ export function ImportPlanilhaModal({
                       </div>
                     </div>
                   </div>
-                )}
-                  <div
-                    {...getRootProps()}
-                    className={`
-                      border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-                      transition-colors duration-200
-                      ${isDragActive 
-                        ? "border-primary bg-primary/5" 
-                        : "border-muted-foreground/25 hover:border-primary/50"
-                      }
-                    `}
-                  >
-                    <input {...getInputProps()} />
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 rounded-full bg-primary/10">
-                        <Upload className="w-8 h-8 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {isDragActive ? "Solte o arquivo aqui" : "Arraste uma planilha ou clique para selecionar"}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                }
 
                 {erro && (
                   <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-lg">
