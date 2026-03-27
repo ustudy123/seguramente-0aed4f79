@@ -257,9 +257,9 @@ function AtivosTab() {
           <Upload className="w-4 h-4 mr-2" />
           Importar Planilha
         </Button>
-        <Button className="gradient-primary shadow-glow" onClick={() => setShowNovoModal(true)}>
+        <Button className="gradient-primary shadow-glow" onClick={() => setShowForm(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Novo Cadastro
+          Novo Colaborador
         </Button>
       </div>
 
