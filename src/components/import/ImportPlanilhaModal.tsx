@@ -88,14 +88,56 @@ export function ImportPlanilhaModal({
     setErro(null);
 
     try {
+      // Try standard auto-detection first
       const dadosLidos = await lerArquivo(file);
       setDados(dadosLidos);
       setEtapa("preview");
     } catch (error: any) {
+      // If auto-detection fails (missing columns), go to mapping step
+      try {
+        const { headers, sampleRows: samples } = await lerArquivoHeaders(file);
+        setFileHeaders(headers);
+        setSampleRows(samples);
+        setUsarMapeamento(true);
+        setEtapa("mapeamento");
+        toast.info("Colunas não reconhecidas automaticamente. Mapeie as colunas do seu arquivo.");
+      } catch (innerError: any) {
+        setErro(innerError.message || "Erro ao ler arquivo");
+        toast.error("Erro ao ler planilha: " + innerError.message);
+      }
+    }
+  }, [lerArquivo, lerArquivoHeaders]);
+
+  const onDropParametrizado = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    setArquivo(file);
+    setErro(null);
+
+    try {
+      const { headers, sampleRows: samples } = await lerArquivoHeaders(file);
+      setFileHeaders(headers);
+      setSampleRows(samples);
+      setUsarMapeamento(true);
+      setEtapa("mapeamento");
+    } catch (error: any) {
       setErro(error.message || "Erro ao ler arquivo");
       toast.error("Erro ao ler planilha: " + error.message);
     }
-  }, [lerArquivo]);
+  }, [lerArquivoHeaders]);
+
+  const handleMapeamentoConfirm = async (mapping: Record<string, string>) => {
+    if (!arquivo) return;
+    try {
+      const dadosLidos = await lerArquivoComMapeamento(arquivo, mapping);
+      setDados(dadosLidos);
+      setEtapa("preview");
+    } catch (error: any) {
+      setErro(error.message || "Erro ao processar com mapeamento");
+      toast.error("Erro ao processar: " + error.message);
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
