@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
 export interface DadosPlanilha {
+  cnpjEmpresa: string;
   nome: string;
   cpf: string;
   sexo: string;
@@ -45,10 +46,12 @@ export interface DadosPlanilha {
   chavePix: string;
   linha: number;
   erros: string[];
+  empresaId?: string;
 }
 
 // Mapeamento de colunas possíveis
 const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
+  cnpjEmpresa: ["cnpj", "cnpj empresa", "cnpj_empresa", "empresa cnpj", "cnpj da empresa"],
   nome: ["nome", "nome_completo", "nome completo", "funcionario", "funcionário", "colaborador"],
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
@@ -247,6 +250,7 @@ export function useImportacaoPlanilha() {
           const headers = jsonData[0].map(h => str(h));
           
           const idx = {
+            cnpjEmpresa: encontrarColuna(headers, "cnpjEmpresa"),
             nome: encontrarColuna(headers, "nome"),
             cpf: encontrarColuna(headers, "cpf"),
             sexo: encontrarColuna(headers, "sexo"),
@@ -286,9 +290,13 @@ export function useImportacaoPlanilha() {
             chavePix: encontrarColuna(headers, "chavePix"),
           };
           
+          if (idx.cnpjEmpresa === -1) { reject(new Error("Coluna 'CNPJ Empresa' não encontrada na planilha")); return; }
           if (idx.nome === -1) { reject(new Error("Coluna 'Nome' não encontrada na planilha")); return; }
           if (idx.cpf === -1) { reject(new Error("Coluna 'CPF' não encontrada na planilha")); return; }
-          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo' não encontrada na planilha")); return; }
+          if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo/Função' não encontrada na planilha")); return; }
+          if (idx.departamento === -1) { reject(new Error("Coluna 'Departamento/Setor' não encontrada na planilha")); return; }
+          if (idx.dataAdmissao === -1) { reject(new Error("Coluna 'Data Admissão' não encontrada na planilha")); return; }
+          if (idx.dataNascimento === -1) { reject(new Error("Coluna 'Data Nascimento' não encontrada na planilha")); return; }
           
           const dados: DadosPlanilha[] = [];
           
@@ -297,22 +305,31 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (i: number) => i !== -1 ? str(l[i]) : "";
             
+            const cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
             const nome = g(idx.nome);
             const cpfRaw = g(idx.cpf);
             const cpf = formatarCPF(cpfRaw);
             const cargo = g(idx.cargo);
+            const departamento = g(idx.departamento);
+            const dataNascimentoRaw = idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "";
+            const dataAdmissaoRaw = idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "";
             
+            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
-            if (!cargo) erros.push("Cargo é obrigatório");
+            if (!cargo) erros.push("Função é obrigatória");
+            if (!departamento) erros.push("Setor é obrigatório");
+            if (!dataNascimentoRaw) erros.push("Data Nascimento é obrigatória");
+            if (!dataAdmissaoRaw) erros.push("Data Admissão é obrigatória");
             if (!nome && !cpf && !cargo) continue;
             
             dados.push({
+              cnpjEmpresa,
               nome,
               cpf,
               sexo: idx.sexo !== -1 ? parsarSexo(g(idx.sexo)) : "",
-              dataNascimento: idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "",
+              dataNascimento: dataNascimentoRaw,
               estadoCivil: g(idx.estadoCivil),
               naturalidade: g(idx.naturalidade),
               nacionalidade: g(idx.nacionalidade),
@@ -333,10 +350,10 @@ export function useImportacaoPlanilha() {
               situacao: idx.situacao !== -1 ? parsarSituacao(l[idx.situacao]) : "concluido",
               filial: g(idx.filial),
               cargo,
-              departamento: g(idx.departamento),
+              departamento,
               nivel: idx.nivel !== -1 ? parsarNivel(g(idx.nivel)) || "" : "",
               tipoContrato: g(idx.tipoContrato),
-              dataAdmissao: idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "",
+              dataAdmissao: dataAdmissaoRaw,
               salario: g(idx.salario),
               centroCusto: g(idx.centroCusto),
               gestorImediato: g(idx.gestorImediato),
@@ -393,97 +410,142 @@ export function useImportacaoPlanilha() {
         return resultado;
       }
       
-      // Passo 1: Criar/buscar departamentos
-      setProgress(10);
-      const departamentosUnicos = [...new Set(dadosValidos.map(d => d.departamento).filter(Boolean))];
-      const mapaDepartamentos: Record<string, string> = {};
+      // Passo 0: Resolver empresa_id por CNPJ
+      setProgress(5);
+      const cnpjsUnicos = [...new Set(dadosValidos.map(d => d.cnpjEmpresa).filter(Boolean))];
+      const mapaEmpresas: Record<string, string> = {}; // cnpj limpo -> empresa_id
       
-      // Buscar departamentos existentes para esta empresa
-      let depQuery = supabase
-        .from("departamentos")
-        .select("id, nome")
-        .eq("tenant_id", tenantId);
-      if (empresaAtivaId) {
-        depQuery = depQuery.eq("empresa_id", empresaAtivaId);
+      if (cnpjsUnicos.length > 0) {
+        const { data: empresas } = await supabase
+          .from("empresa_cadastro")
+          .select("id, cnpj")
+          .eq("tenant_id", tenantId);
+        
+        empresas?.forEach(emp => {
+          const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
+          mapaEmpresas[cnpjLimpo] = emp.id;
+        });
+        
+        // Validar que todos os CNPJs existem
+        for (const cnpj of cnpjsUnicos) {
+          if (!mapaEmpresas[cnpj]) {
+            const cnpjFormatado = `${cnpj.slice(0,2)}.${cnpj.slice(2,5)}.${cnpj.slice(5,8)}/${cnpj.slice(8,12)}-${cnpj.slice(12)}`;
+            // Mark rows with this CNPJ as errors
+            dadosValidos.filter(d => d.cnpjEmpresa === cnpj).forEach(d => {
+              resultado.erros.push({
+                linha: d.linha,
+                mensagem: `CNPJ ${cnpjFormatado} não encontrado no cadastro de empresas`,
+              });
+            });
+          }
+        }
       }
-      const { data: depsExistentes } = await depQuery;
       
-      depsExistentes?.forEach(dep => {
-        mapaDepartamentos[dep.nome.toLowerCase()] = dep.id;
+      // Filter out rows with unresolved CNPJs
+      const dadosComEmpresa = dadosValidos.filter(d => mapaEmpresas[d.cnpjEmpresa]);
+      
+      if (dadosComEmpresa.length === 0) {
+        return resultado;
+      }
+      
+      // Assign empresa_id to each row
+      dadosComEmpresa.forEach(d => {
+        d.empresaId = mapaEmpresas[d.cnpjEmpresa];
       });
       
-      // Criar departamentos que não existem
-      for (const depNome of departamentosUnicos) {
-        if (!mapaDepartamentos[depNome.toLowerCase()]) {
-          const { data: novoDep, error } = await supabase
-            .from("departamentos")
-            .insert({ tenant_id: tenantId, nome: depNome, ativo: true, empresa_id: empresaAtivaId || null })
-            .select("id")
-            .single();
-          
-          if (novoDep) {
-            mapaDepartamentos[depNome.toLowerCase()] = novoDep.id;
-            resultado.departamentosCriados++;
-          }
-          if (error) {
-            console.error("Erro ao criar departamento:", error);
+      // Passo 1: Criar/buscar departamentos (por empresa)
+      setProgress(10);
+      const depPorEmpresa = new Map<string, Set<string>>();
+      dadosComEmpresa.forEach(d => {
+        if (d.departamento && d.empresaId) {
+          if (!depPorEmpresa.has(d.empresaId)) depPorEmpresa.set(d.empresaId, new Set());
+          depPorEmpresa.get(d.empresaId)!.add(d.departamento);
+        }
+      });
+      
+      // key: empresaId|depNome -> depId
+      const mapaDepartamentos: Record<string, string> = {};
+      
+      for (const [empId, depNomes] of depPorEmpresa) {
+        const { data: depsExistentes } = await supabase
+          .from("departamentos")
+          .select("id, nome")
+          .eq("tenant_id", tenantId)
+          .eq("empresa_id", empId);
+        
+        depsExistentes?.forEach(dep => {
+          mapaDepartamentos[`${empId}|${dep.nome.toLowerCase()}`] = dep.id;
+        });
+        
+        for (const depNome of depNomes) {
+          const chave = `${empId}|${depNome.toLowerCase()}`;
+          if (!mapaDepartamentos[chave]) {
+            const { data: novoDep, error } = await supabase
+              .from("departamentos")
+              .insert({ tenant_id: tenantId, nome: depNome, ativo: true, empresa_id: empId })
+              .select("id")
+              .single();
+            
+            if (novoDep) {
+              mapaDepartamentos[chave] = novoDep.id;
+              resultado.departamentosCriados++;
+            }
+            if (error) console.error("Erro ao criar departamento:", error);
           }
         }
       }
       
       setProgress(30);
       
-      // Passo 2: Criar/buscar cargos
-      const cargosUnicos = dadosValidos.reduce((acc, d) => {
+      // Passo 2: Criar/buscar cargos (por empresa)
+      const cargoPorEmpresa = new Map<string, Map<string, { nome: string; departamento: string; nivel: string }>>();
+      dadosComEmpresa.forEach(d => {
+        if (!d.empresaId) return;
+        if (!cargoPorEmpresa.has(d.empresaId)) cargoPorEmpresa.set(d.empresaId, new Map());
         const chave = `${d.cargo}|${d.departamento}|${d.nivel}`.toLowerCase();
-        if (!acc.has(chave)) {
-          acc.set(chave, { nome: d.cargo, departamento: d.departamento, nivel: d.nivel });
+        if (!cargoPorEmpresa.get(d.empresaId)!.has(chave)) {
+          cargoPorEmpresa.get(d.empresaId)!.set(chave, { nome: d.cargo, departamento: d.departamento, nivel: d.nivel });
         }
-        return acc;
-      }, new Map<string, { nome: string; departamento: string; nivel: string }>());
-      
-      const mapaCargos: Record<string, string> = {};
-      
-      // Buscar cargos existentes para esta empresa
-      let cargoQuery = supabase
-        .from("cargos")
-        .select("id, nome")
-        .eq("tenant_id", tenantId);
-      if (empresaAtivaId) {
-        cargoQuery = cargoQuery.eq("empresa_id", empresaAtivaId);
-      }
-      const { data: cargosExistentes } = await cargoQuery;
-      
-      cargosExistentes?.forEach(cargo => {
-        mapaCargos[cargo.nome.toLowerCase()] = cargo.id;
       });
       
-      // Criar cargos que não existem
-      for (const [, cargoInfo] of cargosUnicos) {
-        if (!mapaCargos[cargoInfo.nome.toLowerCase()]) {
-          const departamentoId = cargoInfo.departamento 
-            ? mapaDepartamentos[cargoInfo.departamento.toLowerCase()] 
-            : null;
-          
-          const { data: novoCargo, error } = await supabase
-            .from("cargos")
-            .insert({
-              tenant_id: tenantId,
-              nome: cargoInfo.nome,
-              departamento_id: departamentoId,
-              nivel: cargoInfo.nivel || null,
-              ativo: true,
-              empresa_id: empresaAtivaId || null,
-            })
-            .select("id")
-            .single();
-          
-          if (novoCargo) {
-            mapaCargos[cargoInfo.nome.toLowerCase()] = novoCargo.id;
-            resultado.cargosCriados++;
-          }
-          if (error) {
-            console.error("Erro ao criar cargo:", error);
+      const mapaCargos: Record<string, string> = {}; // empresaId|cargoNome -> cargoId
+      
+      for (const [empId, cargos] of cargoPorEmpresa) {
+        const { data: cargosExistentes } = await supabase
+          .from("cargos")
+          .select("id, nome")
+          .eq("tenant_id", tenantId)
+          .eq("empresa_id", empId);
+        
+        cargosExistentes?.forEach(cargo => {
+          mapaCargos[`${empId}|${cargo.nome.toLowerCase()}`] = cargo.id;
+        });
+        
+        for (const [, cargoInfo] of cargos) {
+          const chave = `${empId}|${cargoInfo.nome.toLowerCase()}`;
+          if (!mapaCargos[chave]) {
+            const departamentoId = cargoInfo.departamento 
+              ? mapaDepartamentos[`${empId}|${cargoInfo.departamento.toLowerCase()}`] 
+              : null;
+            
+            const { data: novoCargo, error } = await supabase
+              .from("cargos")
+              .insert({
+                tenant_id: tenantId,
+                nome: cargoInfo.nome,
+                departamento_id: departamentoId,
+                nivel: cargoInfo.nivel || null,
+                ativo: true,
+                empresa_id: empId,
+              })
+              .select("id")
+              .single();
+            
+            if (novoCargo) {
+              mapaCargos[chave] = novoCargo.id;
+              resultado.cargosCriados++;
+            }
+            if (error) console.error("Erro ao criar cargo:", error);
           }
         }
       }
@@ -503,15 +565,15 @@ export function useImportacaoPlanilha() {
       });
       
       // Processar cada colaborador
-      const totalColabs = dadosValidos.length;
+      const totalColabs = dadosComEmpresa.length;
       
-      for (let i = 0; i < dadosValidos.length; i++) {
-        const dado = dadosValidos[i];
+      for (let i = 0; i < dadosComEmpresa.length; i++) {
+        const dado = dadosComEmpresa[i];
         const cpfLimpo = dado.cpf.replace(/\D/g, "");
         
         const dadosAdmissao = {
           tenant_id: tenantId,
-          empresa_id: empresaAtivaId || null,
+          empresa_id: dado.empresaId || null,
           nome_completo: dado.nome,
           cpf: dado.cpf,
           genero: dado.sexo || null,

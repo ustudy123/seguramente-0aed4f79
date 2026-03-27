@@ -32,8 +32,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
-import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
-import { Building2 } from "lucide-react";
 
 interface ImportPlanilhaModalProps {
   open: boolean;
@@ -53,7 +51,7 @@ export function ImportPlanilhaModal({
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
   const { lerArquivo, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
-  const { empresaAtiva } = useEmpresaAtiva();
+  
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -124,13 +122,15 @@ export function ImportPlanilhaModal({
     }
   };
 
+  const REQUIRED_MARKER = " *";
   const COLS = [
-    "Nome", "CPF", "Sexo", "Data Nascimento", "Estado Civil", "Naturalidade", "Nacionalidade",
+    "CNPJ Empresa" + REQUIRED_MARKER,
+    "Nome" + REQUIRED_MARKER, "CPF" + REQUIRED_MARKER, "Sexo", "Data Nascimento" + REQUIRED_MARKER, "Estado Civil", "Naturalidade", "Nacionalidade",
     "Nome Mãe", "Nome Pai", "RG", "PIS/PASEP",
     "E-mail", "Telefone", "Celular",
     "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "Estado",
-    "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo", "Departamento", "Nível",
-    "Tipo Contrato", "Data Admissão", "Salário", "Centro de Custo", "Gestor Imediato",
+    "SITUAÇÃO (0=Inativo; 1=Ativo)", "Filial", "Cargo" + REQUIRED_MARKER, "Departamento" + REQUIRED_MARKER, "Nível",
+    "Tipo Contrato", "Data Admissão" + REQUIRED_MARKER, "Salário", "Centro de Custo", "Gestor Imediato",
     "Matrícula eSocial",
     "Banco", "Agência", "Conta", "Tipo Conta", "Chave PIX",
   ];
@@ -138,6 +138,7 @@ export function ImportPlanilhaModal({
   const templateData = [
     COLS,
     [
+      "12.345.678/0001-90",
       "João da Silva", "338.172.580-70", "Masculino", "15/03/1990", "Solteiro", "São Paulo", "Brasileiro",
       "Maria da Silva", "José da Silva", "12.345.678-9", "123.45678.12-3",
       "joao@empresa.com", "(11) 3000-0000", "(11) 99000-0000",
@@ -148,6 +149,7 @@ export function ImportPlanilhaModal({
       "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
     ],
     [
+      "98.765.432/0001-10",
       "Ana Paula Padrão", "987.654.321-00", "Feminino", "22/08/1985", "Casado", "Rio de Janeiro", "Brasileira",
       "Joana Padrão", "", "98.765.432-1", "",
       "ana@empresa.com", "", "(21) 98000-0000",
@@ -182,10 +184,11 @@ export function ImportPlanilhaModal({
       [""],
       ["COLUNA", "OBRIGATÓRIO", "DESCRIÇÃO", "VALORES ACEITOS", "EXEMPLOS"],
       [""],
-      ["Nome", "SIM", "Nome completo do colaborador", "Texto livre", "Maria da Silva Santos"],
-      ["CPF", "SIM", "CPF do colaborador (com ou sem pontuação)", "11 dígitos numéricos", "123.456.789-00"],
+      ["CNPJ Empresa *", "SIM", "CNPJ da empresa onde o colaborador será cadastrado", "14 dígitos numéricos (com ou sem pontuação)", "12.345.678/0001-90"],
+      ["Nome *", "SIM", "Nome completo do colaborador", "Texto livre", "Maria da Silva Santos"],
+      ["CPF *", "SIM", "CPF do colaborador (com ou sem pontuação)", "11 dígitos numéricos", "123.456.789-00"],
       ["Sexo", "NÃO", "Gênero do colaborador", "Masculino, Feminino, M, F", "Masculino"],
-      ["Data Nascimento", "NÃO", "Data de nascimento", "DD/MM/AAAA ou AAAA-MM-DD", "15/03/1990"],
+      ["Data Nascimento *", "SIM", "Data de nascimento", "DD/MM/AAAA ou AAAA-MM-DD", "15/03/1990"],
       ["Estado Civil", "NÃO", "Estado civil", "Solteiro, Casado, Divorciado, Viúvo, União Estável", "Casado"],
       ["Naturalidade", "NÃO", "Cidade onde nasceu", "Texto livre", "São Paulo"],
       ["Nacionalidade", "NÃO", "Nacionalidade", "Texto livre", "Brasileiro"],
@@ -205,11 +208,11 @@ export function ImportPlanilhaModal({
       ["Estado", "NÃO", "UF", "Sigla com 2 letras", "SP"],
       ["SITUAÇÃO", "NÃO", "Status do colaborador no sistema", "0 = Inativo (desligado), 1 = Ativo", "1"],
       ["Filial", "NÃO", "Estabelecimento/Unidade do colaborador", "Nome do estabelecimento cadastrado", "Sede"],
-      ["Cargo", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
-      ["Departamento", "NÃO", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
+      ["Cargo *", "SIM", "Função do colaborador", "Nome do cargo/função", "Analista de RH"],
+      ["Departamento *", "SIM", "Departamento/Setor", "Nome do departamento", "Recursos Humanos"],
       ["Nível", "NÃO", "Nível de senioridade", "Estagiário, Junior, Pleno, Senior, Especialista, Coordenador, Gerente, Diretor", "Pleno"],
       ["Tipo Contrato", "NÃO", "Regime de contratação", "CLT, PJ, Estágio, Temporário, Freelancer", "CLT"],
-      ["Data Admissão", "NÃO", "Data de admissão", "DD/MM/AAAA ou AAAA-MM-DD", "01/03/2024"],
+      ["Data Admissão *", "SIM", "Data de admissão", "DD/MM/AAAA ou AAAA-MM-DD", "01/03/2024"],
       ["Salário", "NÃO", "Salário base bruto", "Número (use . ou , como decimal)", "5000,00"],
       ["Centro de Custo", "NÃO", "Centro de custo", "Texto livre", "RH-01"],
       ["Gestor Imediato", "NÃO", "Nome do gestor direto", "Texto livre", "Carlos Souza"],
@@ -224,10 +227,13 @@ export function ImportPlanilhaModal({
       [""],
       ["OBSERVAÇÕES IMPORTANTES:"],
       [""],
-      ["1. As colunas marcadas como OBRIGATÓRIO devem ser preenchidas para que o registro seja importado."],
-      ["2. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
-      ["3. Departamentos e Cargos não cadastrados serão criados automaticamente."],
-      ["4. A primeira linha deve conter os cabeçalhos (não apagar)."],
+      ["1. Colunas marcadas com * são OBRIGATÓRIAS. O registro será rejeitado se estiverem vazias."],
+      ["2. O CNPJ Empresa vincula cada colaborador à empresa correta, permitindo importar para múltiplas empresas de uma só vez."],
+      ["3. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
+      ["4. Departamentos e Cargos não cadastrados serão criados automaticamente."],
+      ["5. A primeira linha deve conter os cabeçalhos (não apagar)."],
+      ["6. Linhas completamente vazias serão ignoradas."],
+      ["7. Registros com erros serão listados ao final da importação."],
       ["5. Linhas completamente vazias serão ignoradas."],
       ["6. Registros com erros serão listados ao final da importação."],
       [""],
@@ -276,50 +282,35 @@ export function ImportPlanilhaModal({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-4"
               >
-                {!empresaAtiva ? (
-                  <div className="border-2 border-dashed border-orange-400/40 rounded-lg p-8 text-center bg-orange-50 dark:bg-orange-950/20">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 rounded-full bg-orange-100 dark:bg-orange-900/30">
-                        <Building2 className="w-8 h-8 text-orange-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-orange-700 dark:text-orange-400">
-                          Selecione uma empresa antes de importar
-                        </p>
-                        <p className="text-sm text-orange-600/80 dark:text-orange-400/70 mt-1">
-                          Use o seletor de empresa no cabeçalho para escolher a empresa onde os colaboradores serão cadastrados.
-                        </p>
-                      </div>
+                <div
+                  {...getRootProps()}
+                  className={`
+                    border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+                    transition-colors duration-200
+                    ${isDragActive 
+                      ? "border-primary bg-primary/5" 
+                      : "border-muted-foreground/25 hover:border-primary/50"
+                    }
+                  `}
+                >
+                  <input {...getInputProps()} />
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-4 rounded-full bg-primary/10">
+                      <Upload className="w-8 h-8 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {isDragActive ? "Solte o arquivo aqui" : "Arraste uma planilha ou clique para selecionar"}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Inclua o CNPJ da empresa em cada linha para vincular os colaboradores corretamente.
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div
-                    {...getRootProps()}
-                    className={`
-                      border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-                      transition-colors duration-200
-                      ${isDragActive 
-                        ? "border-primary bg-primary/5" 
-                        : "border-muted-foreground/25 hover:border-primary/50"
-                      }
-                    `}
-                  >
-                    <input {...getInputProps()} />
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 rounded-full bg-primary/10">
-                        <Upload className="w-8 h-8 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {isDragActive ? "Solte o arquivo aqui" : "Arraste uma planilha ou clique para selecionar"}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
 
                 {erro && (
                   <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-lg">
@@ -351,7 +342,7 @@ export function ImportPlanilhaModal({
                   <p className="font-medium text-sm mb-2">Colunas esperadas:</p>
                   <div className="flex flex-wrap gap-2">
                     {COLS.map(col => (
-                      <Badge key={col} variant="secondary" className="text-xs">
+                      <Badge key={col} variant={col.includes("*") ? "default" : "secondary"} className="text-xs">
                         {col}
                       </Badge>
                     ))}
@@ -369,13 +360,6 @@ export function ImportPlanilhaModal({
                 exit={{ opacity: 0, y: -20 }}
                 className="flex flex-col gap-4 h-full"
               >
-                {/* Empresa vinculada */}
-                {empresaAtiva && (
-                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm shrink-0">
-                    <Building2 className="w-4 h-4 text-primary shrink-0" />
-                    <span>Os colaboradores serão vinculados à empresa: <strong>{empresaAtiva.nome_fantasia || empresaAtiva.razao_social}</strong></span>
-                  </div>
-                )}
 
                 {/* Arquivo selecionado */}
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg shrink-0">
@@ -415,10 +399,11 @@ export function ImportPlanilhaModal({
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">Linha</TableHead>
+                        <TableHead>CNPJ</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>CPF</TableHead>
                         <TableHead>Função</TableHead>
-                        <TableHead>Departamento</TableHead>
+                        <TableHead>Setor</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -426,6 +411,9 @@ export function ImportPlanilhaModal({
                       {dados.slice(0, 50).map((dado, idx) => (
                         <TableRow key={idx} className={dado.erros.length > 0 ? "bg-destructive/5" : ""}>
                           <TableCell className="font-mono text-xs">{dado.linha}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {dado.cnpjEmpresa ? `${dado.cnpjEmpresa.slice(0,2)}.${dado.cnpjEmpresa.slice(2,5)}.${dado.cnpjEmpresa.slice(5,8)}/${dado.cnpjEmpresa.slice(8,12)}-${dado.cnpjEmpresa.slice(12)}` : "-"}
+                          </TableCell>
                           <TableCell className="font-medium">{dado.nome || "-"}</TableCell>
                           <TableCell className="font-mono text-xs">{dado.cpf || "-"}</TableCell>
                           <TableCell>{dado.cargo || "-"}</TableCell>
