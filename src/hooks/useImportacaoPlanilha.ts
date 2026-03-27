@@ -169,7 +169,12 @@ function validarCPF(cpf: string): boolean {
 function parsarData(valor: any): string | null {
   if (!valor) return null;
   
-  // Se for número (Excel armazena datas como números)
+  // Se for objeto Date (cellDates: true pode gerar Date objects)
+  if (valor instanceof Date && !isNaN(valor.getTime())) {
+    return `${valor.getFullYear()}-${String(valor.getMonth() + 1).padStart(2, "0")}-${String(valor.getDate()).padStart(2, "0")}`;
+  }
+  
+  // Se for número (Excel armazena datas como números seriais)
   if (typeof valor === "number") {
     const data = XLSX.SSF.parse_date_code(valor);
     if (data) {
@@ -179,17 +184,48 @@ function parsarData(valor: any): string | null {
   
   // Se for string
   const texto = String(valor).trim();
+  if (!texto) return null;
   
-  // Formato DD/MM/YYYY
+  // Formato DD/MM/YYYY ou DD-MM-YYYY
   const matchDMY = texto.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (matchDMY) {
     return `${matchDMY[3]}-${matchDMY[2].padStart(2, "0")}-${matchDMY[1].padStart(2, "0")}`;
+  }
+  
+  // Formato M/D/YYYY (formato US que XLSX pode gerar com raw:false)
+  const matchMDY = texto.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (matchMDY) {
+    const year = matchMDY[3].length === 2 ? `20${matchMDY[3]}` : matchMDY[3];
+    // Heurística: se o primeiro número > 12, é DD/MM
+    if (parseInt(matchMDY[1]) > 12) {
+      return `${year}-${matchMDY[2].padStart(2, "0")}-${matchMDY[1].padStart(2, "0")}`;
+    }
+    // Se o segundo número > 12, é MM/DD
+    if (parseInt(matchMDY[2]) > 12) {
+      return `${year}-${matchMDY[1].padStart(2, "0")}-${matchMDY[2].padStart(2, "0")}`;
+    }
+    // Ambíguo: assume DD/MM (padrão BR)
+    return `${year}-${matchMDY[2].padStart(2, "0")}-${matchMDY[1].padStart(2, "0")}`;
   }
   
   // Formato YYYY-MM-DD
   const matchYMD = texto.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
   if (matchYMD) {
     return `${matchYMD[1]}-${matchYMD[2].padStart(2, "0")}-${matchYMD[3].padStart(2, "0")}`;
+  }
+  
+  // Excel serial como string (5 dígitos)
+  if (/^\d{5}$/.test(texto)) {
+    const data = XLSX.SSF.parse_date_code(Number(texto));
+    if (data) {
+      return `${data.y}-${String(data.m).padStart(2, "0")}-${String(data.d).padStart(2, "0")}`;
+    }
+  }
+  
+  // Fallback: tentar new Date()
+  const parsed = new Date(texto);
+  if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 1900) {
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
   }
   
   return null;
@@ -240,10 +276,10 @@ export function useImportacaoPlanilha() {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const primeiraAba = workbook.SheetNames[0];
           const planilha = workbook.Sheets[primeiraAba];
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: false, defval: "" }) as string[][];
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
           
           if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
           
