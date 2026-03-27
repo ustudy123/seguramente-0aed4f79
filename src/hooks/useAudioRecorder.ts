@@ -144,13 +144,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   }, [audioUrl]);
 
   const getBase64 = useCallback(async (): Promise<string | null> => {
-    if (!audioBlob) return null;
+    const blob = audioBlobRef.current || audioBlob;
+    if (!blob) return null;
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(new Error("Erro ao converter áudio"));
-      reader.readAsDataURL(audioBlob);
+      reader.readAsDataURL(blob);
     });
   }, [audioBlob]);
 
