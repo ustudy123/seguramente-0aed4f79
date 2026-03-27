@@ -32,8 +32,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
-import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
-import { Building2 } from "lucide-react";
 
 interface ImportPlanilhaModalProps {
   open: boolean;
@@ -53,7 +51,7 @@ export function ImportPlanilhaModal({
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
   const { lerArquivo, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
-  const { empresaAtiva } = useEmpresaAtiva();
+  
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
   const [arquivo, setArquivo] = useState<File | null>(null);
