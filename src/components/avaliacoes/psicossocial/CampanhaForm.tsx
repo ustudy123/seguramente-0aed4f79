@@ -812,7 +812,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                                 <CommandItem
                                   key={d.id}
                                   value={d.nome}
-                                  onSelect={v => { setNovoSetor(v); setSetorPopoverOpen(false); }}
+                                  onSelect={v => { setNovoSetor(v); setNovaFuncao(""); setSetorPopoverOpen(false); }}
                                   className="text-sm"
                                 >
                                   <Check className={cn("mr-2 h-3 w-3", novoSetor === d.nome ? "opacity-100" : "opacity-0")} />
@@ -853,24 +853,30 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                               Pressione + para usar "{novaFuncao}"
                             </span>
                           </CommandEmpty>
-                          {cargos.length > 0 && (
-                            <CommandGroup heading="Funções/Cargos cadastrados">
-                              {cargos.map(c => (
-                                <CommandItem
-                                  key={c.id}
-                                  value={c.nome}
-                                  onSelect={v => { setNovaFuncao(v); setFuncaoPopoverOpen(false); }}
-                                  className="text-sm"
-                                >
-                                  <Check className={cn("mr-2 h-3 w-3", novaFuncao === c.nome ? "opacity-100" : "opacity-0")} />
-                                  {c.nome}
-                                  {c.departamento?.nome && (
-                                    <span className="ml-1 text-xs text-muted-foreground">· {c.departamento.nome}</span>
-                                  )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
+                          {(() => {
+                            const filtered = novoSetor.trim()
+                              ? cargos.filter(c => c.departamento?.nome?.toLowerCase() === novoSetor.trim().toLowerCase())
+                              : cargos;
+                            if (filtered.length === 0) return null;
+                            return (
+                              <CommandGroup heading={novoSetor.trim() ? `Funções de "${novoSetor}"` : "Funções/Cargos cadastrados"}>
+                                {filtered.map(c => (
+                                  <CommandItem
+                                    key={c.id}
+                                    value={c.nome}
+                                    onSelect={v => { setNovaFuncao(v); setFuncaoPopoverOpen(false); }}
+                                    className="text-sm"
+                                  >
+                                    <Check className={cn("mr-2 h-3 w-3", novaFuncao === c.nome ? "opacity-100" : "opacity-0")} />
+                                    {c.nome}
+                                    {c.departamento?.nome && (
+                                      <span className="ml-1 text-xs text-muted-foreground">· {c.departamento.nome}</span>
+                                    )}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            );
+                          })()}
                         </CommandList>
                       </Command>
                     </PopoverContent>
