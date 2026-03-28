@@ -53,6 +53,8 @@ export function AEPGenerator({ onSave, initialData }: AEPGeneratorProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const previewRef = useRef<HTMLDivElement>(null);
 
   const handleNext = () => {
@@ -102,6 +104,22 @@ export function AEPGenerator({ onSave, initialData }: AEPGeneratorProps) {
       pdf.save(fileName);
       
       toast.success("PDF gerado com sucesso!");
+
+      // Auto-archive to Documentos module
+      if (tenantId && user) {
+        const blob = pdf.output("blob");
+        await arquivarDocumento({
+          tenantId,
+          empresaId: empresaAtivaId,
+          userId: user.id,
+          userNome: profile?.nome_completo || "Sistema",
+          file: blob,
+          fileName,
+          tipo: "AEP - Avaliação Ergonômica Preliminar",
+          observacoes: `AEP gerada para ${documento.identificacao.empresa || "empresa"} - ${documento.identificacao.funcao || "função"}`,
+          pastaCategoria: "Ergonomia",
+        });
+      }
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       toast.error("Erro ao gerar PDF");
