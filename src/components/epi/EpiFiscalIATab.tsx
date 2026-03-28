@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEpiFiscalIA } from "@/hooks/useEpiFiscalIA";
 import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import { AuditoriaAcoesSection } from "./AuditoriaAcoesSection";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -16,6 +19,8 @@ import { format } from "date-fns";
 export function EpiFiscalIATab() {
   const { analise, isLoading, error, executarAnalise } = useEpiFiscalIA();
   const { empresas } = useEmpresaCadastro();
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const contentRef = useRef<HTMLDivElement>(null);
 
   const displayContent = analise || "";
@@ -98,8 +103,25 @@ export function EpiFiscalIATab() {
         }
       }
 
-      pdf.save(`auditoria-inteligente-epi-${new Date().toISOString().slice(0, 10)}.pdf`);
+      const pdfFileName = `auditoria-inteligente-epi-${new Date().toISOString().slice(0, 10)}.pdf`;
+      pdf.save(pdfFileName);
       toast.success("PDF baixado com sucesso!");
+
+      // Auto-archive to Documentos module
+      if (tenantId && user) {
+        const blob = pdf.output("blob");
+        await arquivarDocumento({
+          tenantId,
+          empresaId: empresaAtivaId,
+          userId: user.id,
+          userNome: profile?.nome_completo || "Sistema",
+          file: blob,
+          fileName: pdfFileName,
+          tipo: "Auditoria Inteligente EPI",
+          observacoes: "Relatório de auditoria inteligente de EPIs gerado por IA",
+          pastaCategoria: "SST",
+        });
+      }
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
       toast.error("Erro ao gerar o PDF");
