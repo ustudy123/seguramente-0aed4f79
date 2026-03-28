@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -179,73 +180,76 @@ const Ponto = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        className="flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Clock className="w-7 h-7 text-primary" /> Controle de Ponto
+          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+            <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Controle de Ponto
           </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <Shield className="w-4 h-4" /> Registro fiel e auditável da jornada
+          <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Registro fiel e auditável da jornada
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowAjusteModal(true)}>
-            <FileText className="w-4 h-4 mr-2" /> Solicitar Ajuste
+          <Button variant="outline" size="sm" onClick={() => setShowAjusteModal(true)} className="text-xs sm:text-sm">
+            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Solicitar Ajuste
           </Button>
-          <Button onClick={() => setShowRegistrarModal(true)}>
-            <Clock className="w-4 h-4 mr-2" /> Registrar Ponto
+          <Button size="sm" onClick={() => setShowRegistrarModal(true)} className="text-xs sm:text-sm">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Registrar Ponto
           </Button>
         </div>
       </motion.div>
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-12 h-auto">
-          <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs py-2">
-            <BarChart3 className="h-3.5 w-3.5" /> Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="registros" className="flex items-center gap-1.5 text-xs py-2">
-            <Clock className="h-3.5 w-3.5" /> Registros
-          </TabsTrigger>
-          <TabsTrigger value="ajustes" className="flex items-center gap-1.5 text-xs py-2">
-            <FileText className="h-3.5 w-3.5" /> Ajustes
-            {ajustesPendentes.length > 0 && (
-              <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                {ajustesPendentes.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="escalas" className="flex items-center gap-1.5 text-xs py-2">
-            <Settings className="h-3.5 w-3.5" /> Escalas
-          </TabsTrigger>
-          <TabsTrigger value="banco" className="flex items-center gap-1.5 text-xs py-2">
-            <Wallet className="h-3.5 w-3.5" /> Banco Horas
-          </TabsTrigger>
-          <TabsTrigger value="fechamento" className="flex items-center gap-1.5 text-xs py-2">
-            <Lock className="h-3.5 w-3.5" /> Fechamento
-          </TabsTrigger>
-          <TabsTrigger value="alertas" className="flex items-center gap-1.5 text-xs py-2">
-            <Bell className="h-3.5 w-3.5" /> Alertas
-          </TabsTrigger>
-          <TabsTrigger value="links" className="flex items-center gap-1.5 text-xs py-2">
-            <Link2 className="h-3.5 w-3.5" /> Links
-          </TabsTrigger>
-          <TabsTrigger value="repc" className="flex items-center gap-1.5 text-xs py-2">
-            <HardDrive className="h-3.5 w-3.5" /> REP-C
-          </TabsTrigger>
-          <TabsTrigger value="cct" className="flex items-center gap-1.5 text-xs py-2">
-            <Scale className="h-3.5 w-3.5" /> CCT
-          </TabsTrigger>
-          <TabsTrigger value="folha" className="flex items-center gap-1.5 text-xs py-2">
-            <FileSpreadsheet className="h-3.5 w-3.5" /> Folha
-          </TabsTrigger>
-          <TabsTrigger value="relatorios" className="flex items-center gap-1.5 text-xs py-2">
-            <FileDown className="h-3.5 w-3.5" /> Relatórios
-          </TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full">
+          <TabsList className="inline-flex w-max min-w-full h-auto gap-0.5 p-1">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <BarChart3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Dashboard</span><span className="sm:hidden">Dash</span>
+            </TabsTrigger>
+            <TabsTrigger value="registros" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Clock className="h-3.5 w-3.5" /> Registros
+            </TabsTrigger>
+            <TabsTrigger value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <FileText className="h-3.5 w-3.5" /> Ajustes
+              {ajustesPendentes.length > 0 && (
+                <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                  {ajustesPendentes.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Settings className="h-3.5 w-3.5" /> Escalas
+            </TabsTrigger>
+            <TabsTrigger value="banco" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Wallet className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Banco Horas</span><span className="sm:hidden">BH</span>
+            </TabsTrigger>
+            <TabsTrigger value="fechamento" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Lock className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Fechamento</span><span className="sm:hidden">Fech.</span>
+            </TabsTrigger>
+            <TabsTrigger value="alertas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Bell className="h-3.5 w-3.5" /> Alertas
+            </TabsTrigger>
+            <TabsTrigger value="links" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Link2 className="h-3.5 w-3.5" /> Links
+            </TabsTrigger>
+            <TabsTrigger value="repc" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <HardDrive className="h-3.5 w-3.5" /> REP-C
+            </TabsTrigger>
+            <TabsTrigger value="cct" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Scale className="h-3.5 w-3.5" /> CCT
+            </TabsTrigger>
+            <TabsTrigger value="folha" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <FileSpreadsheet className="h-3.5 w-3.5" /> Folha
+            </TabsTrigger>
+            <TabsTrigger value="relatorios" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <FileDown className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Relatórios</span><span className="sm:hidden">Relat.</span>
+            </TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         {/* Dashboard */}
         <TabsContent value="dashboard"><PontoDashboardTab /></TabsContent>
