@@ -422,12 +422,22 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
 
   const handleSubmit = async () => {
     if (!form.data_desligamento || !form.motivo_desligamento) return;
+    // RNDES19 – Validar chave FGTS obrigatória
+    const precisaChaveFgts = ["sem_justa_causa", "acordo_mutuo", "termino_contrato", "rescisao_indireta"].includes(form.motivo_desligamento);
+    if (precisaChaveFgts && !form.chave_conectividade?.trim()) {
+      toast.error("Chave de Conectividade Social (FGTS) é obrigatória para este tipo de rescisão.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Upload ASO se houver arquivo
       if (asoFile) {
         await uploadAsoFile();
       }
+
+      // RNDES30 – Gerar número de protocolo
+      const protocolo = `DESL-${format(new Date(), "yyyyMMdd")}-${admissao.id.slice(0, 8).toUpperCase()}`;
 
       await onConfirmar(admissao.id, {
         ...form,
@@ -450,26 +460,44 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
 
       const competencia = form.data_desligamento.slice(0, 7);
 
-      // ── Gerar verbas rescisórias no módulo Financeiro ──
+      // ── RNDES22: Gerar verbas rescisórias COMPLETAS no módulo Financeiro ──
       if (tenantId) {
         try {
-          // Buscar salário do colaborador
           const { data: admissaoData } = await supabase
             .from("admissoes")
-            .select("salario, cpf, departamento, empresa_id")
+            .select("salario, cpf, departamento, empresa_id, data_admissao, matricula_esocial")
             .eq("id", admissao.id)
             .single();
 
           const salarioBase = admissaoData?.salario || 0;
+          const cpf = admissaoData?.cpf || admissao.cpf || "";
+          const dataAdm = admissaoData?.data_admissao || admissao.data_admissao || "";
+          const dataDesl = form.data_desligamento;
 
-          // Calcular verbas
-          const multaFgtsValor = salarioBase * (temMultaFGTS / 100);
+          // Calcular saldo de salário (dias trabalhados no mês)
+          const diaDesligamento = parseISO(dataDesl).getDate();
+          const saldoSalario = +((salarioBase / 30) * diaDesligamento).toFixed(2);
+
+          // Aviso prévio indenizado
           const avisoPrevioIndenizadoValor =
-            form.tipo_aviso_previo === "indenizado" ? (salarioBase / 30) * diasAvisoPrevio : 0;
+            form.tipo_aviso_previo === "indenizado" && avisoAplicavel ? +((salarioBase / 30) * diasAvisoPrevio).toFixed(2) : 0;
 
-          const totalProventos = salarioBase + avisoPrevioIndenizadoValor;
-          const totalDescontos = 0; // simplificado — INSS/IR calculados à parte
-          const totalLiquido = totalProventos - totalDescontos + multaFgtsValor;
+          // 13º proporcional (meses trabalhados no ano / avos)
+          const mesesNoAno = parseISO(dataDesl).getMonth() + 1;
+          const decimoTerceiroProp = +((salarioBase / 12) * mesesNoAno).toFixed(2);
+
+          // Férias proporcionais + 1/3
+          const mesesDesdeAdmissao = dataAdm ? differenceInMonths(parseISO(dataDesl), parseISO(dataAdm)) : 0;
+          const avosFerias = mesesDesdeAdmissao % 12 || (mesesDesdeAdmissao > 0 ? 12 : 0);
+          const feriasProporcionais = +((salarioBase / 12) * Math.min(avosFerias, 12)).toFixed(2);
+          const tercoFerias = +(feriasProporcionais / 3).toFixed(2);
+
+          // Multa FGTS
+          const multaFgtsValor = +(salarioBase * (temMultaFGTS / 100)).toFixed(2);
+
+          const totalProventos = +(saldoSalario + avisoPrevioIndenizadoValor + decimoTerceiroProp + feriasProporcionais + tercoFerias).toFixed(2);
+          const totalDescontos = 0;
+          const totalLiquido = +(totalProventos - totalDescontos + multaFgtsValor).toFixed(2);
 
           // Buscar ou criar período rescisório
           const { data: periodoExistente } = await supabase
@@ -504,7 +532,17 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
             periodoId = novoPeriodo.id;
           }
 
-          // Inserir item de verba rescisória
+          // Inserir item com verbas completas
+          const detalhesVerbas = [
+            `Saldo salário: R$ ${saldoSalario.toFixed(2)} (${diaDesligamento} dias)`,
+            avisoAplicavel ? `Aviso prévio ${form.tipo_aviso_previo}: ${diasAvisoPrevio}d (R$ ${avisoPrevioIndenizadoValor.toFixed(2)})` : "Aviso prévio: N/A",
+            `13º proporcional: ${mesesNoAno}/12 avos (R$ ${decimoTerceiroProp.toFixed(2)})`,
+            `Férias proporcionais: ${avosFerias}/12 avos (R$ ${feriasProporcionais.toFixed(2)}) + 1/3 (R$ ${tercoFerias.toFixed(2)})`,
+            `Multa FGTS: ${temMultaFGTS}% (R$ ${multaFgtsValor.toFixed(2)})`,
+            `Seguro-desemprego: ${elegibilidadeSeguro ? "Elegível" : "Não elegível"}`,
+            `Protocolo: ${protocolo}`,
+          ].join(" | ");
+
           await supabase
             .from("folha_itens" as never)
             .insert({
@@ -512,7 +550,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               periodo_id: periodoId,
               colaborador_id: admissao.id,
               colaborador_nome: admissao.nome_completo,
-              colaborador_cpf: admissaoData?.cpf || null,
+              colaborador_cpf: cpf || null,
               cargo: admissao.cargo || null,
               departamento: admissaoData?.departamento || null,
               salario_base: salarioBase,
@@ -520,14 +558,62 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               total_descontos: totalDescontos,
               total_liquido: totalLiquido,
               status: "pendente",
-              observacoes: `Rescisão ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | Aviso: ${diasAvisoPrevio}d | Multa FGTS: ${temMultaFGTS}% (R$ ${multaFgtsValor.toFixed(2)}) | Seguro-desemprego: ${elegibilidadeSeguro ? "Elegível" : "Não elegível"}`,
+              observacoes: `Rescisão ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | ${detalhesVerbas}`,
             } as never);
 
           queryClient.invalidateQueries({ queryKey: ["folha-periodos"] });
           queryClient.invalidateQueries({ queryKey: ["folha-itens"] });
-          toast.success("Verbas rescisórias registradas no módulo Financeiro!");
+
+          // RNDES23 – Gerar evento S-2299
+          try {
+            const verbasRescisorias = [
+              { tipo: "salario_base", descricao: "Saldo de salário", valor: saldoSalario },
+              ...(avisoPrevioIndenizadoValor > 0 ? [{ tipo: "aviso_previo_indenizado", descricao: "Aviso prévio indenizado", valor: avisoPrevioIndenizadoValor }] : []),
+              { tipo: "ferias_proporcionais", descricao: "Férias proporcionais + 1/3", valor: feriasProporcionais + tercoFerias },
+              { tipo: "decimo_terceiro", descricao: "13º salário proporcional", valor: decimoTerceiroProp },
+              ...(multaFgtsValor > 0 ? [{ tipo: "multa_fgts", descricao: `Multa FGTS ${temMultaFGTS}%`, valor: multaFgtsValor }] : []),
+            ];
+
+            const eventoS2299 = gerarEventoS2299({
+              cpf,
+              matricula: admissaoData?.matricula_esocial || undefined,
+              dataDesligamento: dataDesl,
+              tipoRescisao: form.motivo_desligamento,
+              verbasRescisorias,
+              observacao: form.observacoes_desligamento || undefined,
+            });
+
+            // Registrar evento no audit_logs para rastreabilidade
+            await supabase
+              .from("audit_logs")
+              .insert({
+                tenant_id: tenantId,
+                action: "esocial_s2299_gerado",
+                module: "desligamento",
+                target_id: admissao.id,
+                target_name: admissao.nome_completo,
+                target_type: "colaborador",
+                user_id: user?.id || null,
+                user_name: profile?.nome_completo || user?.email || null,
+                description: `Evento S-2299 gerado: ${eventoS2299.id} | Motivo: ${eventoS2299.mtvDeslig} | Total verbas: R$ ${totalLiquido.toFixed(2)}`,
+                metadata: eventoS2299 as any,
+              });
+
+            console.log("Evento S-2299 gerado:", eventoS2299);
+          } catch (e) {
+            console.warn("Erro ao gerar S-2299 (não bloqueante):", e);
+          }
+
+          // RNDES24 – Alerta prazo 10 dias
+          const alertaPrazo = gerarAlertaPrazoRescisao({
+            dataDesligamento: dataDesl,
+            colaboradorNome: admissao.nome_completo,
+            valorTotal: totalLiquido,
+          });
+
+          toast.success(`Verbas rescisórias registradas! Protocolo: ${protocolo}`);
+          toast.info(`📅 Prazo rescisório: pagamento até ${format(parseISO(alertaPrazo.dataLimite), "dd/MM/yyyy")} (${alertaPrazo.diasRestantes} dias — CLT art. 477 §6º)`, { duration: 8000 });
         } catch (err: any) {
-          // Não bloqueia o desligamento por erro no financeiro
           console.error("Erro ao gerar verbas rescisórias:", err);
           toast.warning("Desligamento registrado, mas houve erro ao lançar verbas no Financeiro.");
         }
@@ -537,7 +623,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
       await enviarParaHub({
         tipo: "calculo_rescisorio",
         competencia,
-        descricao: `Rescisão — ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento}`,
+        descricao: `Rescisão — ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | Protocolo: ${protocolo}`,
         colaborador_nome: admissao.nome_completo,
       });
 
