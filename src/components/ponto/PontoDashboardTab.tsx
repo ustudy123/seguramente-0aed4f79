@@ -8,7 +8,8 @@ import { usePontoFechamento } from "@/hooks/usePontoFechamento";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Legend } from "recharts";
-import { TrendingUp, Users, AlertTriangle, Clock, FileText, Shield, Wallet } from "lucide-react";
+import { TrendingUp, Users, AlertTriangle, Clock, FileText, Shield, Wallet, Sparkles } from "lucide-react";
+import { CriarAcaoAlertaModal } from "@/components/shared/CriarAcaoAlertaModal";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#ef4444", "#22c55e", "#8b5cf6", "#06b6d4"];
 
