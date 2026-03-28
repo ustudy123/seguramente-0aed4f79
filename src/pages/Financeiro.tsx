@@ -27,10 +27,12 @@ import {
   Settings2,
   Scale,
   Bell,
+  TableProperties,
 } from "lucide-react";
 import { FolhaCCTTab } from "@/components/financeiro/FolhaCCTTab";
 import { FolhaESocialTab } from "@/components/financeiro/FolhaESocialTab";
 import { FolhaAlertasTab } from "@/components/financeiro/FolhaAlertasTab";
+import TabelasFiscaisTab from "@/components/financeiro/TabelasFiscaisTab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -812,8 +814,11 @@ const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
             <TabsTrigger value="esocial">
               <FileCode className="w-4 h-4 mr-2" />eSocial
             </TabsTrigger>
-            <TabsTrigger value="alertas">
+             <TabsTrigger value="alertas">
               <Bell className="w-4 h-4 mr-2" />Alertas
+            </TabsTrigger>
+            <TabsTrigger value="tabelas-fiscais">
+              <TableProperties className="w-4 h-4 mr-2" />Tab. Fiscais
             </TabsTrigger>
           </TabsList>
         </motion.div>
@@ -830,6 +835,7 @@ const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
         <TabsContent value="cct"><FolhaCCTTab /></TabsContent>
         <TabsContent value="esocial"><FolhaESocialTab /></TabsContent>
         <TabsContent value="alertas"><FolhaAlertasTab /></TabsContent>
+        <TabsContent value="tabelas-fiscais"><TabelasFiscaisTab /></TabsContent>
       </Tabs>
     </div>
   );
