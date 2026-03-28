@@ -663,3 +663,8 @@ export type { ConfigInsalubridade, ConfigPericulosidade, ConfigAposentadoriaEspe
 export { calcularHorasExtras, type HorasExtrasResult, type HorasExtrasInput } from "./horas-extras";
 export { calcularAdicionalNoturno, converterHoraNoturna, type AdicionalNoturnoInput, type AdicionalNoturnoResult } from "./adicional-noturno";
 export { calcularDSR, diasPadraoMes, type DSRInput, type DSRResult } from "./dsr";
+
+// Re-export Benefícios, Validações e Integrações Fiscais
+export { calcularBeneficios, calcularValeTransporte, type BeneficioConfig, type BeneficioCalculado, type ResultadoBeneficios } from "./beneficios";
+export { validarSalarioMinimo, validarLimiteDescontos, validarFolhaCompleta, calcularPensaoAlimenticia, aplicarCCT, type ValidacaoAlerta, type PensaoAlimenticia, type ConfigCCT } from "./validacoes";
+export { gerarEventoS1200, gerarEventoS1210, gerarResumoDCTFWeb, gerarResumoFGTSDigital, RUBRICAS_ESOCIAL, type EventoS1200, type EventoS1210, type DCTFWebResumo, type FGTSDigitalResumo } from "./integracoes-fiscais";
