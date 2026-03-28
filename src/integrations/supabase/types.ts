@@ -6675,6 +6675,115 @@ export type Database = {
           },
         ]
       }
+      folha_alertas_prazo: {
+        Row: {
+          competencia: string
+          concluido_em: string | null
+          concluido_por: string | null
+          created_at: string
+          data_limite: string
+          descricao: string
+          id: string
+          status: string
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          competencia: string
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          data_limite: string
+          descricao: string
+          id?: string
+          status?: string
+          tenant_id: string
+          tipo: string
+        }
+        Update: {
+          competencia?: string
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          data_limite?: string
+          descricao?: string
+          id?: string
+          status?: string
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_alertas_prazo_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folha_cct: {
+        Row: {
+          adicional_he_100: number | null
+          adicional_he_50: number | null
+          adicional_noturno: number | null
+          ativo: boolean
+          beneficios_obrigatorios: Json | null
+          created_at: string
+          id: string
+          numero_registro: string | null
+          observacoes: string | null
+          piso_salarial: number | null
+          sindicato: string
+          tenant_id: string
+          updated_at: string
+          vigencia_fim: string
+          vigencia_inicio: string
+        }
+        Insert: {
+          adicional_he_100?: number | null
+          adicional_he_50?: number | null
+          adicional_noturno?: number | null
+          ativo?: boolean
+          beneficios_obrigatorios?: Json | null
+          created_at?: string
+          id?: string
+          numero_registro?: string | null
+          observacoes?: string | null
+          piso_salarial?: number | null
+          sindicato: string
+          tenant_id: string
+          updated_at?: string
+          vigencia_fim: string
+          vigencia_inicio: string
+        }
+        Update: {
+          adicional_he_100?: number | null
+          adicional_he_50?: number | null
+          adicional_noturno?: number | null
+          ativo?: boolean
+          beneficios_obrigatorios?: Json | null
+          created_at?: string
+          id?: string
+          numero_registro?: string | null
+          observacoes?: string | null
+          piso_salarial?: number | null
+          sindicato?: string
+          tenant_id?: string
+          updated_at?: string
+          vigencia_fim?: string
+          vigencia_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folha_cct_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folha_eventos: {
         Row: {
           codigo: string | null
