@@ -22,6 +22,7 @@ import { useMatrizEpi } from "@/hooks/useMatrizEpi";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useCargos } from "@/hooks/useCadastros";
 import { useEpis } from "@/hooks/useEpis";
+import { CriarAcaoAlertaModal } from "@/components/shared/CriarAcaoAlertaModal";
 
 export function MatrizProtecaoTab() {
   const { cets, funcaoEpis, funcaoCets, salvarMatrizFuncao, salvandoMatriz } = useMatrizEpi();
@@ -30,6 +31,7 @@ export function MatrizProtecaoTab() {
   const { tipos, entregas } = useEpis();
   const [search, setSearch] = useState("");
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+  const [acaoModal, setAcaoModal] = useState<{ open: boolean; titulo: string; descricao: string }>({ open: false, titulo: "", descricao: "" });
 
   const selectedCargo = cargos.find((c) => c.id === selectedCargoId) || null;
 
