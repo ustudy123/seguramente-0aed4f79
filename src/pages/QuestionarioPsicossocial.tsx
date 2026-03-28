@@ -320,15 +320,31 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                 </div>
 
                 {/* Política LGPD */}
-                <div className="bg-muted/50 rounded-xl p-4">
+                <div className="bg-muted/50 rounded-xl p-4 max-h-40 overflow-y-auto">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Política de Uso dos Dados (LGPD)</span>
+                    <span className="text-sm font-medium">Termo de Consentimento e Política de Uso dos Dados (LGPD)</span>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {POLITICA_LGPD_OBRIGATORIA}
+                    {campanha?.politica_uso_dados || POLITICA_LGPD_OBRIGATORIA}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2 italic">
+                    Versão do termo: {VERSAO_TERMO_ATUAL}
                   </p>
                 </div>
+
+                {/* RN-002: Aceite explícito obrigatório */}
+                <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/30 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={aceiteLGPD}
+                    onChange={(e) => setAceiteLGPD(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-muted-foreground accent-purple-600"
+                  />
+                  <span className="text-sm text-foreground leading-relaxed">
+                    Li e concordo com a <strong>Política de Uso dos Dados</strong> acima. Compreendo que minhas respostas serão tratadas de forma anônima e agregada, não sendo utilizadas para decisões punitivas.
+                  </span>
+                </label>
 
                 {/* Detalhes */}
                 <div className="flex items-center justify-center gap-6 py-2">
@@ -343,15 +359,26 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
                 </div>
 
                 <Button
-                  onClick={() => setEtapa('verificacao_telefone')}
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md"
+                  onClick={async () => {
+                    // RN-002: Registrar consentimento antes de prosseguir
+                    if (campanha) {
+                      await registrarConsentimento(
+                        campanha.id,
+                        campanha.tenant_id,
+                        sessionHash.current
+                      );
+                    }
+                    setEtapa('verificacao_telefone');
+                  }}
+                  disabled={!aceiteLGPD}
+                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md disabled:opacity-50"
                   size="lg"
                 >
-                  Iniciar Questionário
+                  {aceiteLGPD ? 'Iniciar Questionário' : 'Aceite o termo para continuar'}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  Ao continuar, você concorda com a política de uso dos dados acima.
+                  Seu aceite será registrado com timestamp, versão do termo e dados técnicos (IP/navegador) para fins de conformidade LGPD.
                 </p>
               </CardContent>
             </Card>
