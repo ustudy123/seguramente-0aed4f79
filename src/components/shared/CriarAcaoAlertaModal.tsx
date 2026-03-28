@@ -138,7 +138,6 @@ export function CriarAcaoAlertaModal({
         responsavel_id: user.id,
         responsavel_nome: profile?.nome_completo || user.email || "",
         exige_evidencia: false,
-        codigo: "",
       });
       setCriada(true);
       toast.success("Ação criada no Plano de Ação!");
