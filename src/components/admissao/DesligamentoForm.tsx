@@ -862,7 +862,15 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
             <Button
               variant="destructive"
               onClick={handleSubmit}
-              disabled={!form.data_desligamento || !form.motivo_desligamento || submitting || uploadingAso}
+              disabled={
+                !form.data_desligamento ||
+                !form.motivo_desligamento ||
+                submitting ||
+                uploadingAso ||
+                errosData.length > 0 ||
+                asoObrigatorioNaoPreenchido ||
+                bloqueioEstabilidade
+              }
               className="flex-1"
             >
               {(submitting || uploadingAso) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
