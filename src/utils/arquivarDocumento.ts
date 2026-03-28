@@ -265,16 +265,18 @@ export async function arquivarDocumento(params: ArquivarDocumentoParams): Promis
     }
 
     // 6. Create audit log
-    await supabase.from("documento_audit_logs" as never).insert({
-      tenant_id: tenantId,
-      documento_id: (docData as any).id,
-      documento_nome: fileName,
-      acao: "upload",
-      pasta_destino_id: pastaId,
-      pasta_destino_nome: tipo,
-      usuario_id: userId,
-      usuario_nome: userNome,
-    } as never).then(() => {}).catch(() => {});
+    try {
+      await supabase.from("documento_audit_logs" as never).insert({
+        tenant_id: tenantId,
+        documento_id: (docData as any).id,
+        documento_nome: fileName,
+        acao: "upload",
+        pasta_destino_id: pastaId,
+        pasta_destino_nome: tipo,
+        usuario_id: userId,
+        usuario_nome: userNome,
+      } as never);
+    } catch { /* non-blocking */ }
 
     return { id: (docData as any).id, storagePath };
   } catch (error) {
