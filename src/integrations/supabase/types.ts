@@ -16255,6 +16255,63 @@ export type Database = {
           },
         ]
       }
+      psicossocial_consentimentos: {
+        Row: {
+          aceite_anonimato: boolean
+          campanha_id: string
+          created_at: string
+          id: string
+          identificacao_voluntaria: boolean
+          ip_address: string | null
+          session_hash: string
+          tenant_id: string
+          timestamp_aceite: string
+          user_agent: string | null
+          versao_termo: string
+        }
+        Insert: {
+          aceite_anonimato?: boolean
+          campanha_id: string
+          created_at?: string
+          id?: string
+          identificacao_voluntaria?: boolean
+          ip_address?: string | null
+          session_hash: string
+          tenant_id: string
+          timestamp_aceite?: string
+          user_agent?: string | null
+          versao_termo?: string
+        }
+        Update: {
+          aceite_anonimato?: boolean
+          campanha_id?: string
+          created_at?: string
+          id?: string
+          identificacao_voluntaria?: boolean
+          ip_address?: string | null
+          session_hash?: string
+          tenant_id?: string
+          timestamp_aceite?: string
+          user_agent?: string | null
+          versao_termo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_consentimentos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psicossocial_consentimentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psicossocial_dimensoes: {
         Row: {
           ativo: boolean | null
@@ -16343,6 +16400,84 @@ export type Database = {
             columns: ["campanha_id"]
             isOneToOne: false
             referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psicossocial_indice_confiabilidade: {
+        Row: {
+          calculado_em: string
+          campanha_id: string
+          classificacao: string
+          created_at: string
+          detalhes: Json | null
+          id: string
+          indice_confiabilidade: number
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          score_absenteismo: number | null
+          score_acidentes: number | null
+          score_afastamentos: number | null
+          score_denuncias: number | null
+          score_humor: number | null
+          score_turnover: number | null
+          tenant_id: string
+          total_colaboradores: number | null
+          updated_at: string
+        }
+        Insert: {
+          calculado_em?: string
+          campanha_id: string
+          classificacao?: string
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          indice_confiabilidade?: number
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          score_absenteismo?: number | null
+          score_acidentes?: number | null
+          score_afastamentos?: number | null
+          score_denuncias?: number | null
+          score_humor?: number | null
+          score_turnover?: number | null
+          tenant_id: string
+          total_colaboradores?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calculado_em?: string
+          campanha_id?: string
+          classificacao?: string
+          created_at?: string
+          detalhes?: Json | null
+          id?: string
+          indice_confiabilidade?: number
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          score_absenteismo?: number | null
+          score_acidentes?: number | null
+          score_afastamentos?: number | null
+          score_denuncias?: number | null
+          score_humor?: number | null
+          score_turnover?: number | null
+          tenant_id?: string
+          total_colaboradores?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psicossocial_indice_confiabilidade_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psicossocial_indice_confiabilidade_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]

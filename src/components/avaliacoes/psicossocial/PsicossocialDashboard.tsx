@@ -35,6 +35,7 @@ import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { InventarioPGR } from "./InventarioPGR";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
+import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
 
 import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
@@ -274,6 +275,19 @@ export function PsicossocialDashboard() {
 
         {/* Alertas Psicossociais */}
         <AlertasPsicossociaisPanel />
+
+        {/* RN-016: Índice de Confiabilidade — cruza psicossocial com dados reais */}
+        {campanhasComIPS.length > 0 && ipsConsolidado != null && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {campanhasComIPS.slice(0, 2).map((c) => (
+              <IndiceConfiabilidadeCard
+                key={c.id}
+                campanhaId={c.id}
+                ipsScore={c.ips_score || 50}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Índices Derivados */}
         <IndicesDerivadosDashboard campanhas={campanhas} />
