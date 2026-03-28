@@ -3,6 +3,10 @@
  * Implementa regras CLT para INSS, IRRF, FGTS, Férias, 13º e Rescisão
  */
 
+import { calcularHorasExtras, type HorasExtrasResult } from './horas-extras';
+import { calcularAdicionalNoturno, type AdicionalNoturnoResult } from './adicional-noturno';
+import { calcularDSR, type DSRResult } from './dsr';
+
 // ===================== TIPOS =====================
 
 export interface FaixaINSS {
