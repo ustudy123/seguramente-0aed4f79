@@ -700,38 +700,50 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           {/* Aviso Prévio */}
           <div>
             <h3 className="text-sm font-semibold mb-3">Aviso Prévio</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Tipo de Aviso Prévio</Label>
-                <Select value={form.tipo_aviso_previo} onValueChange={v => set("tipo_aviso_previo", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(TIPOS_AVISO).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {!avisoAplicavel ? (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+                Aviso prévio <strong>não aplicável</strong> para {MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || "este motivo"}.
               </div>
-              <div>
-                <Label>Data do Aviso</Label>
-                <Input type="date" value={form.data_aviso_previo} onChange={e => set("data_aviso_previo", e.target.value)} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-3 p-3 rounded-lg bg-muted/50">
-              <div>
-                <p className="text-sm font-medium">Dias de aviso prévio (Lei 12.506/2011)</p>
-                <p className="text-xs text-muted-foreground">30 dias base + 3 por ano trabalhado, máx. 90 dias</p>
-              </div>
-              <Badge variant="outline" className="text-base font-bold">{diasAvisoPrevio} dias</Badge>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <Switch
-                checked={form.aviso_previo_cumprido}
-                onCheckedChange={v => set("aviso_previo_cumprido", v)}
-                disabled={form.tipo_aviso_previo !== "trabalhado"}
-              />
-              <Label className={`text-sm ${form.tipo_aviso_previo !== "trabalhado" ? "text-muted-foreground" : ""}`}>Aviso prévio cumprido</Label>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Tipo de Aviso Prévio</Label>
+                    <Select value={form.tipo_aviso_previo} onValueChange={v => set("tipo_aviso_previo", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(TIPOS_AVISO).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Data do Aviso</Label>
+                    <Input type="date" value={form.data_aviso_previo} onChange={e => set("data_aviso_previo", e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-3 p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">Dias de aviso prévio (Lei 12.506/2011)</p>
+                    <p className="text-xs text-muted-foreground">
+                      {form.motivo_desligamento === "acordo_mutuo"
+                        ? "Acordo mútuo: metade do aviso (art. 484-A CLT)"
+                        : "30 dias base + 3 por ano trabalhado, máx. 90 dias"}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-base font-bold">{diasAvisoPrevio} dias</Badge>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={form.aviso_previo_cumprido}
+                    onCheckedChange={v => set("aviso_previo_cumprido", v)}
+                    disabled={form.tipo_aviso_previo !== "trabalhado"}
+                  />
+                  <Label className={`text-sm ${form.tipo_aviso_previo !== "trabalhado" ? "text-muted-foreground" : ""}`}>Aviso prévio cumprido</Label>
+                </div>
+              </>
+            )}
           </div>
 
           <Separator />
@@ -946,7 +958,12 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           {/* Chave FGTS e Observações */}
           <div className="space-y-3">
             <div>
-              <Label>Chave de Conectividade Social (FGTS)</Label>
+              <Label>
+                Chave de Conectividade Social (FGTS)
+                {["sem_justa_causa", "acordo_mutuo", "termino_contrato", "rescisao_indireta"].includes(form.motivo_desligamento) && (
+                  <span className="text-destructive ml-1">*</span>
+                )}
+              </Label>
               <Input value={form.chave_conectividade} onChange={e => set("chave_conectividade", e.target.value)} />
             </div>
             <div>
