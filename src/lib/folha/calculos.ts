@@ -658,3 +658,8 @@ export function calcularProvisao(params: {
 // Re-export adicionais engine
 export { calcularAdicionais, gerarProventoAdicional, SALARIO_MINIMO_2025 } from "./adicionais";
 export type { ConfigInsalubridade, ConfigPericulosidade, ConfigAposentadoriaEspecial, ResultadoAdicionais } from "./adicionais";
+
+// Re-export HE, Noturno, DSR engines
+export { calcularHorasExtras, type HorasExtrasResult, type HorasExtrasInput } from "./horas-extras";
+export { calcularAdicionalNoturno, converterHoraNoturna, type AdicionalNoturnoInput, type AdicionalNoturnoResult } from "./adicional-noturno";
+export { calcularDSR, diasPadraoMes, type DSRInput, type DSRResult } from "./dsr";
