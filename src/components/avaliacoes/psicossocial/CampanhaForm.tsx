@@ -857,24 +857,26 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                             const filtered = novoSetor.trim()
                               ? cargos.filter(c => c.departamento?.nome?.toLowerCase() === novoSetor.trim().toLowerCase())
                               : cargos;
-                            return filtered.length > 0 ? (
-                            <CommandGroup heading={novoSetor.trim() ? `Funções de "${novoSetor}"` : "Funções/Cargos cadastrados"}>
-                              {cargos.map(c => (
-                                <CommandItem
-                                  key={c.id}
-                                  value={c.nome}
-                                  onSelect={v => { setNovaFuncao(v); setFuncaoPopoverOpen(false); }}
-                                  className="text-sm"
-                                >
-                                  <Check className={cn("mr-2 h-3 w-3", novaFuncao === c.nome ? "opacity-100" : "opacity-0")} />
-                                  {c.nome}
-                                  {c.departamento?.nome && (
-                                    <span className="ml-1 text-xs text-muted-foreground">· {c.departamento.nome}</span>
-                                  )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
+                            if (filtered.length === 0) return null;
+                            return (
+                              <CommandGroup heading={novoSetor.trim() ? `Funções de "${novoSetor}"` : "Funções/Cargos cadastrados"}>
+                                {filtered.map(c => (
+                                  <CommandItem
+                                    key={c.id}
+                                    value={c.nome}
+                                    onSelect={v => { setNovaFuncao(v); setFuncaoPopoverOpen(false); }}
+                                    className="text-sm"
+                                  >
+                                    <Check className={cn("mr-2 h-3 w-3", novaFuncao === c.nome ? "opacity-100" : "opacity-0")} />
+                                    {c.nome}
+                                    {c.departamento?.nome && (
+                                      <span className="ml-1 text-xs text-muted-foreground">· {c.departamento.nome}</span>
+                                    )}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            );
+                          })()}
                         </CommandList>
                       </Command>
                     </PopoverContent>
