@@ -812,7 +812,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                                 <CommandItem
                                   key={d.id}
                                   value={d.nome}
-                                  onSelect={v => { setNovoSetor(v); setSetorPopoverOpen(false); }}
+                                  onSelect={v => { setNovoSetor(v); setNovaFuncao(""); setSetorPopoverOpen(false); }}
                                   className="text-sm"
                                 >
                                   <Check className={cn("mr-2 h-3 w-3", novoSetor === d.nome ? "opacity-100" : "opacity-0")} />
