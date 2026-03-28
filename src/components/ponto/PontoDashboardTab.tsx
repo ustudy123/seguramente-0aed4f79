@@ -17,6 +17,7 @@ export function PontoDashboardTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const { usePontoDiario } = usePonto();
   const { useFechamentos } = usePontoFechamento();
+  const [acaoModal, setAcaoModal] = useState<{ open: boolean; titulo: string; descricao: string }>({ open: false, titulo: "", descricao: "" });
 
   // Get all days of the month to aggregate
   const startDate = startOfMonth(new Date(competencia + "-01"));
