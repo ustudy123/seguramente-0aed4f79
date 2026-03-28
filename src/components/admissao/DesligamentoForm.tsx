@@ -314,6 +314,8 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
         sindicato_homologacao: form.sindicato_homologacao || null,
         chave_conectividade: form.chave_conectividade || null,
         observacoes_desligamento: form.observacoes_desligamento || null,
+        desligado_por: user?.id || null,
+        desligado_por_nome: profile?.nome_completo || user?.email || null,
       });
 
       const competencia = form.data_desligamento.slice(0, 7);
@@ -410,6 +412,9 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
       });
 
       onOpenChange(false);
+    } catch (err: any) {
+      console.error("Erro ao confirmar desligamento:", err);
+      toast.error(err?.message || "Erro ao processar o desligamento. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
