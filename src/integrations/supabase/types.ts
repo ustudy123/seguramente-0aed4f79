@@ -16711,6 +16711,7 @@ export type Database = {
           data_inicio: string
           departamentos_ids: string[] | null
           descricao: string | null
+          empresa_id: string | null
           escopo: string | null
           escopo_tipo: string | null
           escopo_valores: string[] | null
@@ -16755,6 +16756,7 @@ export type Database = {
           data_inicio: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          empresa_id?: string | null
           escopo?: string | null
           escopo_tipo?: string | null
           escopo_valores?: string[] | null
@@ -16799,6 +16801,7 @@ export type Database = {
           data_inicio?: string
           departamentos_ids?: string[] | null
           descricao?: string | null
+          empresa_id?: string | null
           escopo?: string | null
           escopo_tipo?: string | null
           escopo_valores?: string[] | null
@@ -16837,6 +16840,13 @@ export type Database = {
             columns: ["campanha_anterior_id"]
             isOneToOne: false
             referencedRelation: "questionario_psicossocial_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionario_psicossocial_campanhas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
             referencedColumns: ["id"]
           },
           {
