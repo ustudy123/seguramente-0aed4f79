@@ -177,3 +177,110 @@ export function calcularBeneficios(
     alertas,
   };
 }
+
+// ===================== BENEFÍCIOS FLEXÍVEIS =====================
+
+export interface BeneficioFlexConfig {
+  /** Saldo total mensal concedido ao colaborador */
+  saldoMensal: number;
+  /** Categorias disponíveis para distribuição */
+  categorias: {
+    tipo: string;
+    descricao: string;
+    natureza: NaturezaBeneficio;
+    /** Limite máximo por categoria (opcional) */
+    limiteMaximo?: number;
+    /** Se registrado no PAT (para alimentação) */
+    registroPAT?: boolean;
+  }[];
+  /** Distribuição escolhida pelo colaborador */
+  distribuicao: {
+    tipo: string;
+    valor: number;
+  }[];
+}
+
+export interface ResultadoBeneficioFlex {
+  distribuicao: {
+    tipo: string;
+    descricao: string;
+    valor: number;
+    natureza: NaturezaBeneficio;
+    incide_inss: boolean;
+    incide_irrf: boolean;
+    incide_fgts: boolean;
+  }[];
+  saldoUtilizado: number;
+  saldoRestante: number;
+  totalRemuneratorio: number;
+  totalIndenizatorio: number;
+  alertas: string[];
+  fundamentacao: string;
+}
+
+/**
+ * Calcula benefícios flexíveis com saldo distribuível
+ * Respeita natureza jurídica de cada categoria (CLT art. 458 §2º)
+ */
+export function calcularBeneficiosFlex(config: BeneficioFlexConfig): ResultadoBeneficioFlex {
+  const { saldoMensal, categorias, distribuicao } = config;
+  const alertas: string[] = [];
+  const resultado: ResultadoBeneficioFlex['distribuicao'] = [];
+  let saldoUtilizado = 0;
+  let totalRemuneratorio = 0;
+  let totalIndenizatorio = 0;
+
+  for (const dist of distribuicao) {
+    const cat = categorias.find(c => c.tipo === dist.tipo);
+    if (!cat) {
+      alertas.push(`Categoria "${dist.tipo}" não encontrada nas categorias disponíveis.`);
+      continue;
+    }
+
+    // Verificar limite da categoria
+    if (cat.limiteMaximo && dist.valor > cat.limiteMaximo) {
+      alertas.push(`Valor R$ ${dist.valor.toFixed(2)} excede limite de R$ ${cat.limiteMaximo.toFixed(2)} para ${cat.descricao}.`);
+      continue;
+    }
+
+    // Verificar se não excede saldo
+    if (saldoUtilizado + dist.valor > saldoMensal) {
+      alertas.push(`Distribuição excede saldo mensal de R$ ${saldoMensal.toFixed(2)}.`);
+      break;
+    }
+
+    const isIndenizatorio = cat.natureza === 'indenizatorio';
+    const incide = !isIndenizatorio;
+
+    resultado.push({
+      tipo: dist.tipo,
+      descricao: cat.descricao,
+      valor: dist.valor,
+      natureza: cat.natureza,
+      incide_inss: incide,
+      incide_irrf: incide,
+      incide_fgts: incide,
+    });
+
+    saldoUtilizado += dist.valor;
+    if (incide) {
+      totalRemuneratorio += dist.valor;
+    } else {
+      totalIndenizatorio += dist.valor;
+    }
+  }
+
+  return {
+    distribuicao: resultado,
+    saldoUtilizado: +saldoUtilizado.toFixed(2),
+    saldoRestante: +(saldoMensal - saldoUtilizado).toFixed(2),
+    totalRemuneratorio: +totalRemuneratorio.toFixed(2),
+    totalIndenizatorio: +totalIndenizatorio.toFixed(2),
+    alertas,
+    fundamentacao: `Benefício flexível — saldo mensal R$ ${saldoMensal.toFixed(2)}. `
+      + `Utilizado: R$ ${saldoUtilizado.toFixed(2)}. `
+      + `Remuneratório (integra base): R$ ${totalRemuneratorio.toFixed(2)}. `
+      + `Indenizatório (não integra): R$ ${totalIndenizatorio.toFixed(2)}. `
+      + `CLT art. 458 §2º — parcelas não salariais quando concedidas como ferramenta de trabalho ou em conformidade com PAT.`,
+  };
+}
