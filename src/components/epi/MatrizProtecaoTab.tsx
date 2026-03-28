@@ -288,7 +288,21 @@ export function MatrizProtecaoTab() {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex gap-1 justify-end">
+                    {item.alertas.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary"
+                        onClick={() => setAcaoModal({
+                          open: true,
+                          titulo: `Não conformidade EPI — ${item.nome}`,
+                          descricao: item.alertas.join("; "),
+                        })}
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" /> Ação
+                      </Button>
+                    )}
                     {item.cargoId && (
                       <Button
                         variant="ghost"
@@ -319,6 +333,14 @@ export function MatrizProtecaoTab() {
         funcaoCets={funcaoCets}
         onSave={salvarMatrizFuncao}
         isSaving={salvandoMatriz}
+      />
+
+      <CriarAcaoAlertaModal
+        open={acaoModal.open}
+        onOpenChange={(open) => setAcaoModal(prev => ({ ...prev, open }))}
+        alertaTitulo={acaoModal.titulo}
+        alertaDescricao={acaoModal.descricao}
+        origemModulo="epi"
       />
     </div>
   );
