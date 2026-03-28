@@ -113,7 +113,7 @@ export function FolhaAlertasTab() {
     queryKey: ["folha-alertas", tenantId, competencia],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
+      const { data } = await (supabase
         .from("folha_alertas_prazo" as any)
         .select("*")
         .eq("tenant_id", tenantId)

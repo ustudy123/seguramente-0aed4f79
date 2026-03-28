@@ -60,7 +60,7 @@ export function FolhaCCTTab() {
         .from("folha_cct" as any)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("vigencia_fim", { ascending: false });
+        .order("vigencia_fim", { ascending: false }) as { data: any[] | null };
       return (data || []) as CCT[];
     },
     enabled: !!tenantId,
