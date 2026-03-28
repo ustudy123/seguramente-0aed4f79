@@ -14803,11 +14803,14 @@ export type Database = {
           bloquear_dispositivo_nao_autorizado: boolean
           created_at: string
           exigir_localizacao: boolean
+          exigir_selfie_interno: boolean
+          exigir_selfie_link: boolean
           hora_entrada_padrao: string
           hora_retorno_almoco_padrao: string
           hora_saida_almoco_padrao: string
           hora_saida_padrao: string
           id: string
+          modo_registro: string
           permitir_registro_fora_horario: boolean
           tenant_id: string
           tolerancia_atraso: number
@@ -14818,11 +14821,14 @@ export type Database = {
           bloquear_dispositivo_nao_autorizado?: boolean
           created_at?: string
           exigir_localizacao?: boolean
+          exigir_selfie_interno?: boolean
+          exigir_selfie_link?: boolean
           hora_entrada_padrao?: string
           hora_retorno_almoco_padrao?: string
           hora_saida_almoco_padrao?: string
           hora_saida_padrao?: string
           id?: string
+          modo_registro?: string
           permitir_registro_fora_horario?: boolean
           tenant_id: string
           tolerancia_atraso?: number
@@ -14833,11 +14839,14 @@ export type Database = {
           bloquear_dispositivo_nao_autorizado?: boolean
           created_at?: string
           exigir_localizacao?: boolean
+          exigir_selfie_interno?: boolean
+          exigir_selfie_link?: boolean
           hora_entrada_padrao?: string
           hora_retorno_almoco_padrao?: string
           hora_saida_almoco_padrao?: string
           hora_saida_padrao?: string
           id?: string
+          modo_registro?: string
           permitir_registro_fora_horario?: boolean
           tenant_id?: string
           tolerancia_atraso?: number

@@ -40,6 +40,7 @@ import { PontoRepCTab } from "@/components/ponto/PontoRepCTab";
 import { PontoFolhaTab } from "@/components/ponto/PontoFolhaTab";
 import { PontoCCTTab } from "@/components/ponto/PontoCCTTab";
 import { PontoLinksTab } from "@/components/ponto/PontoLinksTab";
+import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 
 const Ponto = () => {
   const { profile } = useAuth();
@@ -247,6 +248,9 @@ const Ponto = () => {
             <TabsTrigger value="relatorios" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileDown className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Relatórios</span><span className="sm:hidden">Relat.</span>
             </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+              <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Configuração</span><span className="sm:hidden">Config</span>
+            </TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -413,6 +417,9 @@ const Ponto = () => {
 
         {/* Relatórios */}
         <TabsContent value="relatorios"><PontoRelatoriosTab /></TabsContent>
+
+        {/* Configuração */}
+        <TabsContent value="config"><PontoConfigTab /></TabsContent>
       </Tabs>
 
       {/* Modal: Registrar Ponto */}
