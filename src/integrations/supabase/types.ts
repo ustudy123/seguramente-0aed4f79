@@ -2589,6 +2589,7 @@ export type Database = {
           data_execucao: string | null
           data_referencia: string
           descricao: string | null
+          empresa_id: string | null
           id: string
           observacoes: string | null
           responsavel: string | null
@@ -2607,6 +2608,7 @@ export type Database = {
           data_execucao?: string | null
           data_referencia: string
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           observacoes?: string | null
           responsavel?: string | null
@@ -2625,6 +2627,7 @@ export type Database = {
           data_execucao?: string | null
           data_referencia?: string
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           observacoes?: string | null
           responsavel?: string | null
@@ -2644,6 +2647,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cultura_acoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cultura_acoes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -2658,6 +2668,7 @@ export type Database = {
           created_at: string
           dia_profissao_ativo: boolean
           dias_antecedencia_acao: number
+          empresa_id: string | null
           folga_permitida: boolean
           id: string
           limite_valor_presente: number | null
@@ -2672,6 +2683,7 @@ export type Database = {
           created_at?: string
           dia_profissao_ativo?: boolean
           dias_antecedencia_acao?: number
+          empresa_id?: string | null
           folga_permitida?: boolean
           id?: string
           limite_valor_presente?: number | null
@@ -2686,6 +2698,7 @@ export type Database = {
           created_at?: string
           dia_profissao_ativo?: boolean
           dias_antecedencia_acao?: number
+          empresa_id?: string | null
           folga_permitida?: boolean
           id?: string
           limite_valor_presente?: number | null
@@ -2696,6 +2709,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cultura_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cultura_config_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2712,6 +2732,7 @@ export type Database = {
           data_especifica: string | null
           descricao: string | null
           dia: number | null
+          empresa_id: string | null
           filtro_setor: string | null
           filtro_unidade: string | null
           id: string
@@ -2728,6 +2749,7 @@ export type Database = {
           data_especifica?: string | null
           descricao?: string | null
           dia?: number | null
+          empresa_id?: string | null
           filtro_setor?: string | null
           filtro_unidade?: string | null
           id?: string
@@ -2744,6 +2766,7 @@ export type Database = {
           data_especifica?: string | null
           descricao?: string | null
           dia?: number | null
+          empresa_id?: string | null
           filtro_setor?: string | null
           filtro_unidade?: string | null
           id?: string
@@ -2755,6 +2778,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cultura_datas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cultura_datas_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2770,6 +2800,7 @@ export type Database = {
           ativo: boolean
           created_at: string
           descricao: string | null
+          empresa_id: string | null
           id: string
           tenant_id: string
           tipo_celebracao: string
@@ -2780,6 +2811,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           tenant_id: string
           tipo_celebracao?: string
@@ -2790,12 +2822,20 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           tenant_id?: string
           tipo_celebracao?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cultura_marcos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cultura_marcos_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2856,6 +2896,7 @@ export type Database = {
           descricao: string | null
           dia_mes: number | null
           dia_semana: number | null
+          empresa_id: string | null
           frequencia: string
           id: string
           nome: string
@@ -2872,6 +2913,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: number | null
+          empresa_id?: string | null
           frequencia?: string
           id?: string
           nome: string
@@ -2888,6 +2930,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: number | null
+          empresa_id?: string | null
           frequencia?: string
           id?: string
           nome?: string
@@ -2899,6 +2942,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cultura_rituais_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cultura_rituais_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2974,6 +3024,7 @@ export type Database = {
           criado_por_nome: string | null
           data_desvio: string
           descricao: string
+          empresa_id: string | null
           foto_nome: string | null
           foto_url: string | null
           gro_risco_id: string | null
@@ -3007,6 +3058,7 @@ export type Database = {
           criado_por_nome?: string | null
           data_desvio: string
           descricao: string
+          empresa_id?: string | null
           foto_nome?: string | null
           foto_url?: string | null
           gro_risco_id?: string | null
@@ -3040,6 +3092,7 @@ export type Database = {
           criado_por_nome?: string | null
           data_desvio?: string
           descricao?: string
+          empresa_id?: string | null
           foto_nome?: string | null
           foto_url?: string | null
           gro_risco_id?: string | null
@@ -3059,7 +3112,15 @@ export type Database = {
           unidade?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "desvios_seguranca_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documento_audit_log: {
         Row: {
@@ -3186,6 +3247,7 @@ export type Database = {
           created_at: string
           criado_por: string | null
           criado_por_nome: string | null
+          empresa_id: string | null
           filial_id: string | null
           icone: string | null
           id: string
@@ -3206,6 +3268,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           criado_por_nome?: string | null
+          empresa_id?: string | null
           filial_id?: string | null
           icone?: string | null
           id?: string
@@ -3226,6 +3289,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           criado_por_nome?: string | null
+          empresa_id?: string | null
           filial_id?: string | null
           icone?: string | null
           id?: string
@@ -3238,6 +3302,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "documento_pastas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documento_pastas_filial_id_fkey"
             columns: ["filial_id"]
@@ -3322,6 +3393,7 @@ export type Database = {
           criado_por: string | null
           criado_por_nome: string | null
           data_validade: string | null
+          empresa_id: string | null
           funcao_vinculada: string | null
           id: string
           mime_type: string
@@ -3349,6 +3421,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           data_validade?: string | null
+          empresa_id?: string | null
           funcao_vinculada?: string | null
           id?: string
           mime_type: string
@@ -3376,6 +3449,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           data_validade?: string | null
+          empresa_id?: string | null
           funcao_vinculada?: string | null
           id?: string
           mime_type?: string
@@ -3395,6 +3469,13 @@ export type Database = {
           versao_atual?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "documentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documentos_pasta_id_fkey"
             columns: ["pasta_id"]
@@ -6167,6 +6248,7 @@ export type Database = {
           created_at: string
           descricao: string
           descricao_ia: string | null
+          empresa_id: string | null
           enviado_email: boolean | null
           ia_utilizada: boolean | null
           id: string
@@ -6187,6 +6269,7 @@ export type Database = {
           created_at?: string
           descricao: string
           descricao_ia?: string | null
+          empresa_id?: string | null
           enviado_email?: boolean | null
           ia_utilizada?: boolean | null
           id?: string
@@ -6207,6 +6290,7 @@ export type Database = {
           created_at?: string
           descricao?: string
           descricao_ia?: string | null
+          empresa_id?: string | null
           enviado_email?: boolean | null
           ia_utilizada?: boolean | null
           id?: string
@@ -6218,6 +6302,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feedbacks_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feedbacks_pdi_id_fkey"
             columns: ["pdi_id"]
@@ -6389,6 +6480,7 @@ export type Database = {
           departamento: string | null
           dias_abono: number | null
           dias_solicitados: number
+          empresa_id: string | null
           id: string
           inr_nivel_momento: string | null
           inr_score_momento: number | null
@@ -6433,6 +6525,7 @@ export type Database = {
           departamento?: string | null
           dias_abono?: number | null
           dias_solicitados: number
+          empresa_id?: string | null
           id?: string
           inr_nivel_momento?: string | null
           inr_score_momento?: number | null
@@ -6477,6 +6570,7 @@ export type Database = {
           departamento?: string | null
           dias_abono?: number | null
           dias_solicitados?: number
+          empresa_id?: string | null
           id?: string
           inr_nivel_momento?: string | null
           inr_score_momento?: number | null
@@ -6499,6 +6593,13 @@ export type Database = {
           valor_total_bruto?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ferias_solicitacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ferias_solicitacoes_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -11964,6 +12065,7 @@ export type Database = {
           departamento_id: string | null
           departamento_nome: string | null
           descricao: string | null
+          empresa_id: string | null
           id: string
           ierm_calculado_em: string | null
           ierm_nivel: string | null
@@ -11998,6 +12100,7 @@ export type Database = {
           departamento_id?: string | null
           departamento_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           ierm_calculado_em?: string | null
           ierm_nivel?: string | null
@@ -12032,6 +12135,7 @@ export type Database = {
           departamento_id?: string | null
           departamento_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           ierm_calculado_em?: string | null
           ierm_nivel?: string | null
@@ -12059,6 +12163,13 @@ export type Database = {
             columns: ["departamento_id"]
             isOneToOne: false
             referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
             referencedColumns: ["id"]
           },
           {
@@ -18270,6 +18381,7 @@ export type Database = {
           criado_por: string | null
           criado_por_nome: string | null
           descricao: string | null
+          empresa_id: string | null
           id: string
           imagem_url: string | null
           nome: string
@@ -18293,6 +18405,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           imagem_url?: string | null
           nome: string
@@ -18316,6 +18429,7 @@ export type Database = {
           criado_por?: string | null
           criado_por_nome?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           imagem_url?: string | null
           nome?: string
@@ -18333,6 +18447,13 @@ export type Database = {
           visibilidade?: Database["public"]["Enums"]["trilha_visibilidade"]
         }
         Relationships: [
+          {
+            foreignKeyName: "trilhas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trilhas_tenant_id_fkey"
             columns: ["tenant_id"]
