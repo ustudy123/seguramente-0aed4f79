@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Plus, HardHat, Package, Users, History, Shield, AlertTriangle, Wrench, ArrowDownCircle, Warehouse, ShieldCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useEpis } from "@/hooks/useEpis";
 import { useEpiPermissions } from "@/hooks/useEpiPermissions";
 import { EpiList } from "@/components/epi/EpiList";
@@ -62,35 +63,40 @@ const Epis = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col gap-3"
       >
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <HardHat className="w-7 h-7 text-primary" />
-            Gestão de EPIs
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Controle de equipamentos de proteção individual
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+              <HardHat className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
+              Gestão de EPIs
+            </h1>
+            <p className="text-muted-foreground text-xs sm:text-sm">
+              Controle de equipamentos de proteção individual
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => setShowGuia(true)} className="text-primary shrink-0 sm:hidden">
+            <HelpCircle className="h-5 w-5" />
+          </Button>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
+          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5 hidden sm:flex">
             <HelpCircle className="h-4 w-4" />
             Guia Rápido
           </Button>
           {perm.podeCriarTipo && (
-            <Button variant="outline" size="sm" onClick={() => setShowTipoForm(true)}>
-              <Plus className="w-4 h-4 mr-1" /> Categoria
+            <Button variant="outline" size="sm" onClick={() => setShowTipoForm(true)} className="text-xs sm:text-sm">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Categoria
             </Button>
           )}
           {perm.podeCriarEpi && (
-            <Button variant="outline" size="sm" onClick={() => setShowEpiForm(true)}>
-              <Plus className="w-4 h-4 mr-1" /> Novo EPI
+            <Button variant="outline" size="sm" onClick={() => setShowEpiForm(true)} className="text-xs sm:text-sm">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Novo EPI
             </Button>
           )}
           {perm.podeRegistrarEntrega && (
-            <Button onClick={() => setShowEntregaForm(true)} size="sm">
-              <Users className="w-4 h-4 mr-1" /> Registrar Entrega
+            <Button onClick={() => setShowEntregaForm(true)} size="sm" className="text-xs sm:text-sm">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Entrega
             </Button>
           )}
         </div>
@@ -101,43 +107,46 @@ const Epis = () => {
 
       {/* Tabs - Reordered for daily use */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex w-full max-w-6xl flex-wrap">
-          <TabsTrigger value="entregas" className="flex items-center gap-1.5">
-            <Users className="w-4 h-4" /> Entregas
-          </TabsTrigger>
-          <TabsTrigger value="estoque" className="flex items-center gap-1.5">
-            <Package className="w-4 h-4" /> Estoque
-          </TabsTrigger>
-          <TabsTrigger value="saldo-local" className="flex items-center gap-1.5">
-            <Warehouse className="w-4 h-4" /> Por Local
-          </TabsTrigger>
-          {perm.podeMovimentarEstoque && (
-            <TabsTrigger value="entradas" className="flex items-center gap-1.5">
-              <ArrowDownCircle className="w-4 h-4" /> Movimentar
+        <ScrollArea className="w-full">
+          <TabsList className="inline-flex w-max min-w-full sm:flex sm:w-full sm:max-w-6xl sm:flex-wrap gap-0.5">
+            <TabsTrigger value="entregas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Entregas
             </TabsTrigger>
-          )}
-          <TabsTrigger value="alertas" className="flex items-center gap-1.5">
-            <AlertTriangle className="w-4 h-4" /> Alertas
-          </TabsTrigger>
-          {perm.podeGerenciarMatriz && (
-            <TabsTrigger value="matriz" className="flex items-center gap-1.5">
-              <Shield className="w-4 h-4" /> Matriz
+            <TabsTrigger value="estoque" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Estoque
             </TabsTrigger>
-          )}
-          {perm.podeUsarIAFiscal && (
-            <TabsTrigger value="fiscal" className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" /> Auditoria
+            <TabsTrigger value="saldo-local" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Local
             </TabsTrigger>
-          )}
-          <TabsTrigger value="historico" className="flex items-center gap-1.5">
-            <History className="w-4 h-4" /> Histórico
-          </TabsTrigger>
-          {perm.podeConfigurar && (
-            <TabsTrigger value="config" className="flex items-center gap-1.5">
-              <Wrench className="w-4 h-4" /> Config
+            {perm.podeMovimentarEstoque && (
+              <TabsTrigger value="entradas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+                <ArrowDownCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Mov.
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="alertas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Alertas
             </TabsTrigger>
-          )}
-        </TabsList>
+            {perm.podeGerenciarMatriz && (
+              <TabsTrigger value="matriz" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+                <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Matriz
+              </TabsTrigger>
+            )}
+            {perm.podeUsarIAFiscal && (
+              <TabsTrigger value="fiscal" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Auditoria
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="historico" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Histórico
+            </TabsTrigger>
+            {perm.podeConfigurar && (
+              <TabsTrigger value="config" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+                <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Config
+              </TabsTrigger>
+            )}
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         <TabsContent value="entregas" className="mt-6">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border p-6">
