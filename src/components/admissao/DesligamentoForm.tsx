@@ -51,6 +51,8 @@ interface Props {
     cargo: string;
     data_admissao: string | null;
     tipo_contrato: string | null;
+    status?: string;
+    cpf?: string;
   };
   onConfirmar: (id: string, dados: Record<string, any>) => Promise<void>;
 }
@@ -68,7 +70,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
   const [usarAsoAnterior, setUsarAsoAnterior] = useState(false);
   const [asoValidacao, setAsoValidacao] = useState<{
     grauRisco: number | null;
-    limiteValidade: number; // dias
+    limiteValidade: number;
     ultimoAso: { data: string; subtipo: string; resultado: string } | null;
     diasDesdeUltimoAso: number | null;
     asoValido: boolean;
@@ -81,6 +83,10 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     asoValido: false,
     carregando: false,
   });
+
+  // RNDES25 – Estabilidades
+  const [estabilidades, setEstabilidades] = useState<string[]>([]);
+  const [estabilidadesCarregando, setEstabilidadesCarregando] = useState(false);
 
   const [form, setForm] = useState({
     data_desligamento: "",
