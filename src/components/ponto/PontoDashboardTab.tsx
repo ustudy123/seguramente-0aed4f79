@@ -76,54 +76,54 @@ export function PontoDashboardTab() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" /> Dashboard de Risco Trabalhista
+          <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Dashboard de Risco Trabalhista
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Visão geral da jornada — {format(today, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
-        <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[180px]" />
+        <CompetenciaInput value={competencia} onChange={setCompetencia} className="w-[140px] sm:w-[180px]" />
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
         <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-6 h-6 text-primary mx-auto mb-1" />
-            <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">Total Registros</p>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary mx-auto mb-1" />
+            <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Total Registros</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <Clock className="w-6 h-6 text-green-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-green-600">{stats.presentes}</p>
-            <p className="text-xs text-muted-foreground">Presentes</p>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 mx-auto mb-1" />
+            <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.presentes}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Presentes</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <AlertTriangle className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-yellow-600">{stats.atrasos}</p>
-            <p className="text-xs text-muted-foreground">Atrasos</p>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 mx-auto mb-1" />
+            <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.atrasos}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Atrasos</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <Shield className="w-6 h-6 text-red-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-red-600">{stats.ausentes}</p>
-            <p className="text-xs text-muted-foreground">Faltas</p>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 mx-auto mb-1" />
+            <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.ausentes}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Faltas</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <FileText className="w-6 h-6 text-orange-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-orange-600">{stats.incompletos}</p>
-            <p className="text-xs text-muted-foreground">Incompletos</p>
+        <Card className="col-span-2 sm:col-span-1">
+          <CardContent className="p-3 sm:p-4 text-center">
+            <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 mx-auto mb-1" />
+            <p className="text-xl sm:text-2xl font-bold text-orange-600">{stats.incompletos}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Incompletos</p>
           </CardContent>
         </Card>
       </div>
