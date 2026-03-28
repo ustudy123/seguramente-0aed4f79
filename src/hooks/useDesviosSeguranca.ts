@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 
 export interface DesvioSeguranca {
@@ -34,29 +36,33 @@ export interface DesvioSeguranca {
 export type DesvioInsert = Omit<DesvioSeguranca, "id" | "tenant_id" | "codigo" | "created_at" | "updated_at">;
 
 export const useDesviosSeguranca = () => {
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   const { data: desvios = [], isLoading } = useQuery({
-    queryKey: ["desvios_seguranca"],
+    queryKey: ["desvios_seguranca", tenantId, empresaAtivaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!tenantId) return [];
+      let query = supabase
         .from("desvios_seguranca")
         .select("*")
+        .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as DesvioSeguranca[];
     },
+    enabled: !!tenantId,
   });
 
   const createDesvio = useMutation({
     mutationFn: async (payload: DesvioInsert) => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("tenant_id")
-        .maybeSingle();
+      if (!tenantId) throw new Error("Sem tenant");
       const { data, error } = await supabase
         .from("desvios_seguranca")
-        .insert({ ...payload, tenant_id: profile?.tenant_id })
+        .insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null })
         .select()
         .single();
       if (error) throw error;

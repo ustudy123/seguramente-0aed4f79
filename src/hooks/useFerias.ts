@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 
 export interface FeriasSolicitacao {
@@ -78,17 +79,20 @@ export interface CriarFeriasInput {
 
 export function useFerias() {
   const { tenantId, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   const { data: solicitacoes = [], isLoading } = useQuery({
-    queryKey: ["ferias_solicitacoes", tenantId],
+    queryKey: ["ferias_solicitacoes", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("ferias_solicitacoes" as any)
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as unknown as FeriasSolicitacao[];
     },
@@ -108,6 +112,7 @@ export function useFerias() {
         .from("ferias_solicitacoes" as any)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           colaborador_nome: input.colaborador_nome,
           colaborador_cpf: input.colaborador_cpf || null,
           departamento: input.departamento || null,

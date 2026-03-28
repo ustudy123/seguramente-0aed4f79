@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 
 export interface HubProcesso {
@@ -94,6 +95,7 @@ export interface HubContabilidade {
 
 export function useHubProcessos() {
   const { user, profile } = useAuthContext();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [processos, setProcessos] = useState<HubProcesso[]>([]);
   const [contabilidades, setContabilidades] = useState<HubContabilidade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,13 +106,19 @@ export function useHubProcessos() {
     if (!tenantId) return;
     setLoading(true);
     try {
+      let procQuery = supabase
+        .from("hub_processos")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (empresaAtivaId) {
+        procQuery = procQuery.eq("empresa_id", empresaAtivaId);
+      }
+
       const [procRes, contRes] = await Promise.all([
-        supabase
-          .from("hub_processos")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .order("created_at", { ascending: false })
-          .limit(200),
+        procQuery,
         supabase
           .from("hub_contabilidades")
           .select("id, nome, email_principal, responsavel_nome, ativo")
@@ -124,7 +132,7 @@ export function useHubProcessos() {
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, empresaAtivaId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -132,7 +140,7 @@ export function useHubProcessos() {
     if (!tenantId) return null;
     const { data: created, error } = await supabase
       .from("hub_processos")
-      .insert({ tenant_id: tenantId, ...data } as any)
+      .insert({ tenant_id: tenantId, empresa_id: empresaAtivaId || null, ...data } as any)
       .select()
       .single();
     if (error) { toast.error("Erro ao criar processo: " + error.message); return null; }

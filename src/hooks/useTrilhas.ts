@@ -1,23 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
 import type { Trilha, TrilhaModulo, TrilhaQuizPergunta } from "@/types/trilha";
 
 export function useTrilhas() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   const { data: trilhas = [], isLoading } = useQuery({
-    queryKey: ["trilhas", tenantId],
+    queryKey: ["trilhas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Trilha[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("trilhas" as never)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false }) as { data: Trilha[] | null; error: Error | null };
+        .order("created_at", { ascending: false });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId) as any;
+      const { data, error } = await query as { data: Trilha[] | null; error: Error | null };
       if (error) throw error;
       return data || [];
     },
@@ -31,6 +35,7 @@ export function useTrilhas() {
         .from("trilhas" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
           ...input,

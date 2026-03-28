@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 
 export interface SSTDocumento {
@@ -120,17 +121,20 @@ async function findOrCreateSSTFolder(tenantId: string, tipoDocumento?: string): 
 
 export function useSSTDocumentos() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   const { data: documentos = [], isLoading } = useQuery({
-    queryKey: ["sst-documentos", tenantId],
+    queryKey: ["sst-documentos", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("sst_documentos")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as SSTDocumento[];
     },
@@ -170,6 +174,7 @@ export function useSSTDocumentos() {
       // 1. Insert into sst_documentos (SST module's own table)
       const { data: sstDoc, error: sstError } = await supabase.from("sst_documentos").insert({
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
         tipo: params.tipo,
         arquivo_url: storagePath,
         arquivo_nome: params.file.name,

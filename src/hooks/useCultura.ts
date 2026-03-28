@@ -2,23 +2,27 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type { CulturaData, CulturaAcao, CulturaRitual, CulturaConfig, CulturaMarco, CulturaPreferencia } from "@/types/cultura";
 
 export function useCultura() {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
 
   // --- Datas configuráveis ---
   const { data: datas = [], isLoading: isLoadingDatas } = useQuery({
-    queryKey: ["cultura-datas", tenantId],
+    queryKey: ["cultura-datas", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("cultura_datas")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("mes", { ascending: true });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as CulturaData[];
     },
@@ -27,7 +31,7 @@ export function useCultura() {
 
   const createData = async (payload: Partial<CulturaData>) => {
     if (!tenantId) return;
-    const { error } = await supabase.from("cultura_datas").insert({ ...payload, tenant_id: tenantId } as any);
+    const { error } = await supabase.from("cultura_datas").insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any);
     if (error) { toast.error("Erro ao criar data"); throw error; }
     toast.success("Data criada!");
     qc.invalidateQueries({ queryKey: ["cultura-datas"] });
@@ -42,14 +46,16 @@ export function useCultura() {
 
   // --- Ações ---
   const { data: acoes = [], isLoading: isLoadingAcoes } = useQuery({
-    queryKey: ["cultura-acoes", tenantId],
+    queryKey: ["cultura-acoes", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("cultura_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("data_referencia", { ascending: true });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as CulturaAcao[];
     },
@@ -58,7 +64,7 @@ export function useCultura() {
 
   const createAcao = async (payload: Partial<CulturaAcao>) => {
     if (!tenantId) return;
-    const { error } = await supabase.from("cultura_acoes").insert({ ...payload, tenant_id: tenantId } as any);
+    const { error } = await supabase.from("cultura_acoes").insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any);
     if (error) { toast.error("Erro ao criar ação"); throw error; }
     toast.success("Ação criada!");
     qc.invalidateQueries({ queryKey: ["cultura-acoes"] });
@@ -80,14 +86,16 @@ export function useCultura() {
 
   // --- Rituais ---
   const { data: rituais = [], isLoading: isLoadingRituais } = useQuery({
-    queryKey: ["cultura-rituais", tenantId],
+    queryKey: ["cultura-rituais", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("cultura_rituais")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("nome");
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as CulturaRitual[];
     },
@@ -96,7 +104,7 @@ export function useCultura() {
 
   const createRitual = async (payload: Partial<CulturaRitual>) => {
     if (!tenantId) return;
-    const { error } = await supabase.from("cultura_rituais").insert({ ...payload, tenant_id: tenantId } as any);
+    const { error } = await supabase.from("cultura_rituais").insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any);
     if (error) { toast.error("Erro ao criar ritual"); throw error; }
     toast.success("Ritual criado!");
     qc.invalidateQueries({ queryKey: ["cultura-rituais"] });
