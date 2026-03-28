@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle, Search, ChevronRight } from "lucide-react";
+import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle, Search, ChevronRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
