@@ -25,7 +25,12 @@ import {
   PiggyBank,
   Calculator,
   Settings2,
+  Scale,
+  Bell,
 } from "lucide-react";
+import { FolhaCCTTab } from "@/components/financeiro/FolhaCCTTab";
+import { FolhaESocialTab } from "@/components/financeiro/FolhaESocialTab";
+import { FolhaAlertasTab } from "@/components/financeiro/FolhaAlertasTab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -801,6 +806,15 @@ const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
             <TabsTrigger value="tabelas">
               <Settings2 className="w-4 h-4 mr-2" />Tabelas
             </TabsTrigger>
+            <TabsTrigger value="cct">
+              <Scale className="w-4 h-4 mr-2" />CCT
+            </TabsTrigger>
+            <TabsTrigger value="esocial">
+              <FileCode className="w-4 h-4 mr-2" />eSocial
+            </TabsTrigger>
+            <TabsTrigger value="alertas">
+              <Bell className="w-4 h-4 mr-2" />Alertas
+            </TabsTrigger>
           </TabsList>
         </motion.div>
 
@@ -813,6 +827,9 @@ const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
         <TabsContent value="provisoes"><ProvisoesTab /></TabsContent>
         <TabsContent value="beneficios"><BeneficiosTab /></TabsContent>
         <TabsContent value="tabelas"><TabelasLegaisTab /></TabsContent>
+        <TabsContent value="cct"><FolhaCCTTab /></TabsContent>
+        <TabsContent value="esocial"><FolhaESocialTab /></TabsContent>
+        <TabsContent value="alertas"><FolhaAlertasTab /></TabsContent>
       </Tabs>
     </div>
   );
