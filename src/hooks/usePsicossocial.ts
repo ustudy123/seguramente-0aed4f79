@@ -216,6 +216,7 @@ export function usePsicossocial() {
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
+          nome: dados.nome,
           descricao: dados.descricao,
           tipo: dados.tipo || 'regular',
           instrumento: dados.instrumento || 'copsoq',
