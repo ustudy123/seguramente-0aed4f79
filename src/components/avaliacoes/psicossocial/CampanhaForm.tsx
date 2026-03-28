@@ -853,8 +853,12 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                               Pressione + para usar "{novaFuncao}"
                             </span>
                           </CommandEmpty>
-                          {cargos.length > 0 && (
-                            <CommandGroup heading="Funções/Cargos cadastrados">
+                          {(() => {
+                            const filtered = novoSetor.trim()
+                              ? cargos.filter(c => c.departamento?.nome?.toLowerCase() === novoSetor.trim().toLowerCase())
+                              : cargos;
+                            return filtered.length > 0 ? (
+                            <CommandGroup heading={novoSetor.trim() ? `Funções de "${novoSetor}"` : "Funções/Cargos cadastrados"}>
                               {cargos.map(c => (
                                 <CommandItem
                                   key={c.id}
