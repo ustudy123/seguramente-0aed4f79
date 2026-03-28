@@ -574,7 +574,14 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Data do Desligamento *</Label>
-                <Input type="date" value={form.data_desligamento} onChange={e => set("data_desligamento", e.target.value)} />
+                <Input type="date" value={form.data_desligamento} onChange={e => set("data_desligamento", e.target.value)} className={errosData.length > 0 ? "border-destructive" : ""} />
+                {errosData.length > 0 && (
+                  <div className="space-y-1 mt-1">
+                    {errosData.map((e, i) => (
+                      <p key={i} className="text-xs text-destructive">⚠️ {e}</p>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <Label>Motivo *</Label>
