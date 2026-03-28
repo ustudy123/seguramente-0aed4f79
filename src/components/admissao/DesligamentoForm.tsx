@@ -191,7 +191,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           .select("status, nexo_trabalho, data_fim, motivo_principal")
           .eq("tenant_id", tenantId)
           .or(`colaborador_id.eq.${admissao.id},colaborador_nome.eq.${admissao.nome_completo}`)
-          .in("nexo_trabalho", ["confirmado", "presuntivo"]);
+          .in("nexo_trabalho", ["sim"] as any[]);
 
         if (afastamentos) {
           for (const af of afastamentos) {
@@ -200,7 +200,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               if (mesesDesdeRetorno < 12) {
                 found.push(`Estabilidade acidentária: retorno em ${format(parseISO(af.data_fim), "dd/MM/yyyy")} — 12 meses de garantia (art. 118, Lei 8.213/91)`);
               }
-            } else if (af.status === "ativo" || af.status === "em_andamento") {
+            } else if (af.status === "ativo" || af.status === "beneficio_inss") {
               found.push("Colaborador em afastamento previdenciário ativo com nexo de trabalho — desligamento bloqueado");
             }
           }
@@ -212,7 +212,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           .select("status, data_fim")
           .eq("tenant_id", tenantId)
           .or(`colaborador_id.eq.${admissao.id},colaborador_nome.eq.${admissao.nome_completo}`)
-          .in("status", ["ativo", "em_andamento"])
+          .in("status", ["ativo", "beneficio_inss"] as any[])
           .is("data_fim", null);
 
         if (afastAtivos && afastAtivos.length > 0) {
