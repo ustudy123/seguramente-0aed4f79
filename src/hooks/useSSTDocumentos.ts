@@ -121,17 +121,20 @@ async function findOrCreateSSTFolder(tenantId: string, tipoDocumento?: string): 
 
 export function useSSTDocumentos() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   const { data: documentos = [], isLoading } = useQuery({
-    queryKey: ["sst-documentos", tenantId],
+    queryKey: ["sst-documentos", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("sst_documentos")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as SSTDocumento[];
     },

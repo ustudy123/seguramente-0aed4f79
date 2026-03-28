@@ -88,19 +88,24 @@ function calcularStatus(dataValidade: string | null): "valido" | "vencendo" | "v
 
 export function useDocumentos() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // Buscar documentos
   const { data: documentos = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["documentos", tenantId],
+    queryKey: ["documentos", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Documento[]> => {
       if (!tenantId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("documentos" as never)
         .select("*")
         .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false }) as { data: Documento[] | null; error: Error | null };
+        .order("created_at", { ascending: false });
+
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId) as any;
+
+      const { data, error } = await query as { data: Documento[] | null; error: Error | null };
 
       if (error) throw error;
       
