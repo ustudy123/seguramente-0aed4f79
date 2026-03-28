@@ -140,7 +140,7 @@ export function useHubProcessos() {
     if (!tenantId) return null;
     const { data: created, error } = await supabase
       .from("hub_processos")
-      .insert({ tenant_id: tenantId, ...data } as any)
+      .insert({ tenant_id: tenantId, empresa_id: empresaAtivaId || null, ...data } as any)
       .select()
       .single();
     if (error) { toast.error("Erro ao criar processo: " + error.message); return null; }
