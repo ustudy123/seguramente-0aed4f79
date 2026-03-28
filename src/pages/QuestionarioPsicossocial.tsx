@@ -30,7 +30,43 @@ import { supabasePublic } from "@/lib/supabasePublic";
 
 type EtapaQuestionario = 'consentimento' | 'verificacao_telefone' | 'questionario' | 'concluido';
 
+const VERSAO_TERMO_ATUAL = 'v1.0';
+
 const POLITICA_LGPD_OBRIGATORIA = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
+
+/** RN-002: Registra o consentimento explícito do respondente */
+async function registrarConsentimento(
+  campanhaId: string,
+  tenantId: string,
+  sessionHash: string
+) {
+  try {
+    // Obter IP externo (best-effort)
+    let ipAddress = 'desconhecido';
+    try {
+      const ipRes = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+      if (ipRes.ok) {
+        const ipData = await ipRes.json();
+        ipAddress = ipData.ip;
+      }
+    } catch { /* fallback */ }
+
+    await supabasePublic
+      .from('psicossocial_consentimentos')
+      .insert({
+        campanha_id: campanhaId,
+        tenant_id: tenantId,
+        aceite_anonimato: true,
+        identificacao_voluntaria: false,
+        ip_address: ipAddress,
+        user_agent: navigator.userAgent,
+        versao_termo: VERSAO_TERMO_ATUAL,
+        session_hash: sessionHash,
+      });
+  } catch (err) {
+    console.warn('Erro ao registrar consentimento (não bloqueante):', err);
+  }
+}
 
 function getInstrumentoLabel(instrumento?: string) {
   switch (instrumento) {
