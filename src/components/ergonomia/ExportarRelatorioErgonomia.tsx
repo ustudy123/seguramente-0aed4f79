@@ -20,6 +20,9 @@ import {
   GRO_PROBABILIDADE_LABELS,
   GRO_SEVERIDADE_LABELS,
 } from "@/types/gro";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
 
 interface ExportarRelatorioErgonomiaProps {
   riscos: GRORisco[];
@@ -75,6 +78,8 @@ function calcNivel(p: string, s: string): GRONivelRisco {
 
 export function ExportarRelatorioErgonomia({ riscos, empresaNome }: ExportarRelatorioErgonomiaProps) {
   const [exportando, setExportando] = useState(false);
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   const handleExportar = async () => {
     if (riscos.length === 0) {
@@ -421,6 +426,22 @@ export function ExportarRelatorioErgonomia({ riscos, empresaNome }: ExportarRela
       const nomeArq = `Relatorio_GRO_Ergonomia_${format(new Date(), "yyyy-MM-dd")}.pdf`;
       doc.save(nomeArq);
       toast.success("Relatório de Metodologia exportado!");
+
+      // Auto-archive to Documentos module
+      if (tenantId && user) {
+        const blob = doc.output("blob");
+        await arquivarDocumento({
+          tenantId,
+          empresaId: empresaAtivaId,
+          userId: user.id,
+          userNome: profile?.nome_completo || "Sistema",
+          file: blob,
+          fileName: nomeArq,
+          tipo: "Relatório GRO Ergonômico",
+          observacoes: `Relatório de metodologia GRO ergonômico - ${empresaNome || "empresa"}`,
+          pastaCategoria: "Ergonomia",
+        });
+      }
     } catch (err) {
       console.error(err);
       toast.error("Erro ao gerar PDF.");

@@ -9,8 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { usePontoFechamento, type PontoEspelho } from "@/hooks/usePontoFechamento";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import { format } from "date-fns";
-import { Lock, Unlock, FileText, CheckCircle, AlertTriangle, Download } from "lucide-react";
+import { Lock, Unlock, FileText, CheckCircle, AlertTriangle, Download, Archive } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 
@@ -29,6 +32,8 @@ const STATUS_ESPELHO: Record<string, { label: string; color: string }> = {
 
 export function PontoFechamentoTab() {
   const { useFechamentos, useEspelhos, fecharPeriodo, fechandoPeriodo, confirmarEspelho, confirmandoEspelho } = usePontoFechamento();
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const [showFechar, setShowFechar] = useState(false);
   const [showRessalva, setShowRessalva] = useState(false);
@@ -65,7 +70,7 @@ export function PontoFechamentoTab() {
     setSelectedEspelho(null);
   };
 
-  const gerarEspelhoPDF = (espelho: PontoEspelho) => {
+  const gerarEspelhoPDF = async (espelho: PontoEspelho) => {
     const pdf = new jsPDF();
     pdf.setFontSize(16);
     pdf.text("Espelho de Ponto", 20, 20);
@@ -93,8 +98,29 @@ export function PontoFechamentoTab() {
       }
     }
 
+    // Download local
     pdf.save(`espelho-ponto-${espelho.colaborador_nome}-${espelho.competencia}.pdf`);
     toast.success("PDF gerado!");
+
+    // Auto-archive to Documentos module
+    if (tenantId && user) {
+      const blob = pdf.output("blob");
+      const fileName = `Espelho de Ponto - ${espelho.colaborador_nome} - ${espelho.competencia}.pdf`;
+      await arquivarDocumento({
+        tenantId,
+        empresaId: empresaAtivaId,
+        userId: user.id,
+        userNome: profile?.nome_completo || "Sistema",
+        file: blob,
+        fileName,
+        tipo: "Espelho de Ponto",
+        observacoes: `Espelho de ponto competência ${espelho.competencia}`,
+        colaboradorId: espelho.colaborador_id || null,
+        colaboradorNome: espelho.colaborador_nome,
+        colaboradorCpf: espelho.colaborador_cpf,
+        subpastaColaborador: "Vida Funcional",
+      });
+    }
   };
 
   return (

@@ -25,6 +25,9 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
 
 import { AEPConfigInicial } from "./AEPConfigInicial";
 import { AEPEvidenciaForm } from "./AEPEvidenciaForm";
@@ -64,6 +67,8 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
     updateAssinaturas,
   } = useAEPMulti();
 
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -137,6 +142,22 @@ export function AEPGeneratorMulti({ onSave }: AEPGeneratorMultiProps) {
       pdf.save(fileName);
       
       toast.success("PDF gerado com sucesso!");
+
+      // Auto-archive to Documentos module
+      if (tenantId && user) {
+        const blob = pdf.output("blob");
+        await arquivarDocumento({
+          tenantId,
+          empresaId: empresaAtivaId,
+          userId: user.id,
+          userNome: profile?.nome_completo || "Sistema",
+          file: blob,
+          fileName,
+          tipo: "AEP - Avaliação Ergonômica Preliminar",
+          observacoes: `AEP gerada para ${state.empresa.nome || "empresa"}`,
+          pastaCategoria: "Ergonomia",
+        });
+      }
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       toast.error("Erro ao gerar PDF");

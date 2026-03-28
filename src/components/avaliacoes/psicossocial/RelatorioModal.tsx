@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
 import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RISCO_LABELS } from "@/types/gro";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -38,6 +41,8 @@ const NIVEL_BADGE: Record<string, string> = {
 
 export function RelatorioModal({ open, onClose, campanhas, empresaNome }: RelatorioModalProps) {
   const [exportando, setExportando] = useState(false);
+  const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
 
   const campanhasValidas = campanhas.filter(c =>
     c.ips_score != null &&
@@ -249,7 +254,24 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         alternateRowStyles: { fillColor: [248, 245, 255] },
       });
 
-      doc.save(`Relatorio_Psicossocial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
+      const pdfFileName = `Relatorio_Psicossocial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
+      doc.save(pdfFileName);
+
+      // Auto-archive to Documentos module
+      if (tenantId && user) {
+        const blob = doc.output("blob");
+        await arquivarDocumento({
+          tenantId,
+          empresaId: empresaAtivaId,
+          userId: user.id,
+          userNome: profile?.nome_completo || "Sistema",
+          file: blob,
+          fileName: pdfFileName,
+          tipo: "Relatório Psicossocial",
+          observacoes: `Relatório psicossocial - ${campanha.nome} - ${empresaNome || "N/D"}`,
+          pastaCategoria: "Psicossocial",
+        });
+      }
     } catch (err) {
       console.error(err);
     } finally {
