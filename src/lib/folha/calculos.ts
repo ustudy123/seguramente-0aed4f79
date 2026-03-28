@@ -168,6 +168,7 @@ export function calcularFGTS(base: number, aliquota: number = 8): number {
 
 /**
  * Calcula folha mensal completa para um colaborador
+ * Inclui: HE, Adicional Noturno e DSR sobre variáveis
  */
 export function calcularFolhaMensal(params: {
   salarioBase: number;
@@ -179,6 +180,26 @@ export function calcularFolhaMensal(params: {
   tetoINSS?: number;
   tabelaIRRF?: FaixaIRRF[];
   deducaoDependente?: number;
+  // --- Novos inputs para HE, Noturno e DSR ---
+  horasExtras?: {
+    quantidadeHE50?: number;
+    quantidadeHE100?: number;
+    percentualHE50?: number;
+    percentualHE100?: number;
+    jornadaMensalHoras?: number;
+  };
+  adicionalNoturno?: {
+    horasNoturnasTrabalhadas?: number;
+    percentualAdicional?: number;
+    aplicarHoraReduzida?: boolean;
+    horasProrrogacao?: number;
+    jornadaMensalHoras?: number;
+  };
+  dsr?: {
+    diasUteisMes?: number;
+    domingosFeriadosMes?: number;
+  };
+  comissoes?: number;
 }): ResultadoCalculo {
   const {
     salarioBase,
@@ -190,15 +211,84 @@ export function calcularFolhaMensal(params: {
     tetoINSS = TETO_INSS_2025,
     tabelaIRRF = TABELA_IRRF_2025,
     deducaoDependente = DEDUCAO_DEPENDENTE_IRRF_2025,
+    horasExtras,
+    adicionalNoturno,
+    dsr,
+    comissoes = 0,
   } = params;
 
+  // ========== HORAS EXTRAS ==========
+  let resultHE: HorasExtrasResult | null = null;
+  const heTotal = (horasExtras?.quantidadeHE50 || 0) + (horasExtras?.quantidadeHE100 || 0);
+  if (horasExtras && heTotal > 0) {
+    resultHE = calcularHorasExtras({
+      salarioBase,
+      jornadaMensalHoras: horasExtras.jornadaMensalHoras,
+      quantidadeHE50: horasExtras.quantidadeHE50 || 0,
+      quantidadeHE100: horasExtras.quantidadeHE100 || 0,
+      percentualHE50: horasExtras.percentualHE50,
+      percentualHE100: horasExtras.percentualHE100,
+    });
+  }
+  const valorHE = resultHE?.totalHorasExtras || 0;
+
+  // ========== ADICIONAL NOTURNO ==========
+  let resultNoturno: AdicionalNoturnoResult | null = null;
+  if (adicionalNoturno && (adicionalNoturno.horasNoturnasTrabalhadas || 0) > 0) {
+    resultNoturno = calcularAdicionalNoturno({
+      salarioBase,
+      jornadaMensalHoras: adicionalNoturno.jornadaMensalHoras,
+      horasNoturnasTrabalhadas: adicionalNoturno.horasNoturnasTrabalhadas || 0,
+      percentualAdicional: adicionalNoturno.percentualAdicional,
+      aplicarHoraReduzida: adicionalNoturno.aplicarHoraReduzida,
+      horasProrrogacao: adicionalNoturno.horasProrrogacao,
+    });
+  }
+  const valorNoturno = resultNoturno?.totalAdicionalNoturno || 0;
+
+  // ========== DSR SOBRE VARIÁVEIS ==========
+  let resultDSR: DSRResult | null = null;
+  const variaveisDSR: { descricao: string; valor: number }[] = [];
+  if (valorHE > 0) variaveisDSR.push({ descricao: 'Horas Extras', valor: valorHE });
+  if (valorNoturno > 0) variaveisDSR.push({ descricao: 'Adicional Noturno', valor: valorNoturno });
+  if (comissoes > 0) variaveisDSR.push({ descricao: 'Comissões', valor: comissoes });
+
+  if (dsr && variaveisDSR.length > 0 && (dsr.diasUteisMes || 0) > 0) {
+    resultDSR = calcularDSR({
+      valoresVariaveis: variaveisDSR,
+      diasUteisMes: dsr.diasUteisMes || 26,
+      domingosFeriadosMes: dsr.domingosFeriadosMes || 4,
+    });
+  }
+  const valorDSR = resultDSR?.valorDSR || 0;
+
+  // ========== MONTAR PROVENTOS ==========
+  const proventosCompletos = [...proventosVariaveis];
+  if (valorHE > 0) {
+    if (resultHE!.he50.valorTotal > 0) {
+      proventosCompletos.push({ descricao: `HE 50% (${resultHE!.he50.quantidade}h)`, valor: resultHE!.he50.valorTotal, incide_inss: true, incide_irrf: true, incide_fgts: true });
+    }
+    if (resultHE!.he100.valorTotal > 0) {
+      proventosCompletos.push({ descricao: `HE 100% (${resultHE!.he100.quantidade}h)`, valor: resultHE!.he100.valorTotal, incide_inss: true, incide_irrf: true, incide_fgts: true });
+    }
+  }
+  if (valorNoturno > 0) {
+    proventosCompletos.push({ descricao: `Adicional Noturno (${resultNoturno!.horasRelogio}h)`, valor: valorNoturno, incide_inss: true, incide_irrf: true, incide_fgts: true });
+  }
+  if (comissoes > 0) {
+    proventosCompletos.push({ descricao: 'Comissões', valor: comissoes, incide_inss: true, incide_irrf: true, incide_fgts: true });
+  }
+  if (valorDSR > 0) {
+    proventosCompletos.push({ descricao: 'DSR s/ Variáveis', valor: valorDSR, incide_inss: true, incide_irrf: true, incide_fgts: true });
+  }
+
   // 1. Total de proventos
-  const totalProventosVar = proventosVariaveis.reduce((s, p) => s + p.valor, 0);
+  const totalProventosVar = proventosCompletos.reduce((s, p) => s + p.valor, 0);
   const totalProventos = salarioBase + totalProventosVar;
 
-  // 2. Base INSS (proventos que incidem)
+  // 2. Base INSS
   let baseINSS = salarioBase;
-  proventosVariaveis.forEach(p => {
+  proventosCompletos.forEach(p => {
     if (p.incide_inss !== false) baseINSS += p.valor;
   });
 
@@ -213,7 +303,7 @@ export function calcularFolhaMensal(params: {
 
   // 4. Base FGTS
   let baseFGTS = salarioBase;
-  proventosVariaveis.forEach(p => {
+  proventosCompletos.forEach(p => {
     if (p.incide_fgts !== false) baseFGTS += p.valor;
   });
 
@@ -223,7 +313,7 @@ export function calcularFolhaMensal(params: {
 
   // 6. Base IRRF = total proventos - INSS
   let baseIRRF = salarioBase - valorINSS;
-  proventosVariaveis.forEach(p => {
+  proventosCompletos.forEach(p => {
     if (p.incide_irrf !== false) baseIRRF += p.valor;
   });
 
@@ -252,12 +342,15 @@ export function calcularFolhaMensal(params: {
       inss: inssDetalhes,
       irrf: resultIRRF,
       fgts: { base: baseFGTS, aliquota: aliquotaFGTS, valor: valorFGTS },
-      proventos: [{ descricao: "Salário Base", valor: salarioBase }, ...proventosVariaveis],
+      proventos: [{ descricao: "Salário Base", valor: salarioBase }, ...proventosCompletos],
       descontos: [
         { descricao: "INSS", valor: valorINSS },
         { descricao: "IRRF", valor: valorIRRF },
         ...descontosExtras,
       ],
+      horas_extras: resultHE,
+      adicional_noturno: resultNoturno,
+      dsr: resultDSR,
     },
   };
 }
