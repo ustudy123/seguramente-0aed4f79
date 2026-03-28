@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { format, differenceInYears, differenceInDays, parseISO } from "date-fns";
-import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2, CheckCircle2, Info } from "lucide-react";
+import { format, differenceInYears, differenceInDays, differenceInMonths, parseISO, addDays } from "date-fns";
+import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2, CheckCircle2, Info, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
+import { gerarEventoS2299, gerarAlertaPrazoRescisao } from "@/lib/folha/integracoes-fiscais";
 
 const MOTIVOS_DESLIGAMENTO: Record<string, string> = {
   sem_justa_causa: "Dispensa sem justa causa",
@@ -252,12 +253,23 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     }
   }, [usarAsoAnterior]);
 
-  // Calcular dias de aviso prévio (Lei 12.506/2011)
+  // RNDES05 – Aviso prévio por motivo + RNDES07 cálculo automático
+  const avisoAplicavel = useMemo(() => {
+    const motivo = form.motivo_desligamento;
+    // Não se aplica
+    if (["com_justa_causa", "termino_contrato", "falecimento", "culpa_reciproca", "aposentadoria"].includes(motivo)) return false;
+    return true;
+  }, [form.motivo_desligamento]);
+
   const diasAvisoPrevio = useMemo(() => {
+    if (!avisoAplicavel) return 0;
     if (!admissao.data_admissao || !form.data_desligamento) return 30;
     const anos = differenceInYears(new Date(form.data_desligamento), new Date(admissao.data_admissao));
-    return Math.min(30 + Math.max(0, anos) * 3, 90);
-  }, [admissao.data_admissao, form.data_desligamento]);
+    const diasBase = Math.min(30 + Math.max(0, anos) * 3, 90);
+    // Acordo mútuo: metade do aviso
+    if (form.motivo_desligamento === "acordo_mutuo") return Math.ceil(diasBase / 2);
+    return diasBase;
+  }, [admissao.data_admissao, form.data_desligamento, avisoAplicavel, form.motivo_desligamento]);
 
   // Elegibilidade seguro desemprego
   const elegibilidadeSeguro = useMemo(() => {
@@ -410,12 +422,22 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
 
   const handleSubmit = async () => {
     if (!form.data_desligamento || !form.motivo_desligamento) return;
+    // RNDES19 – Validar chave FGTS obrigatória
+    const precisaChaveFgts = ["sem_justa_causa", "acordo_mutuo", "termino_contrato", "rescisao_indireta"].includes(form.motivo_desligamento);
+    if (precisaChaveFgts && !form.chave_conectividade?.trim()) {
+      toast.error("Chave de Conectividade Social (FGTS) é obrigatória para este tipo de rescisão.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Upload ASO se houver arquivo
       if (asoFile) {
         await uploadAsoFile();
       }
+
+      // RNDES30 – Gerar número de protocolo
+      const protocolo = `DESL-${format(new Date(), "yyyyMMdd")}-${admissao.id.slice(0, 8).toUpperCase()}`;
 
       await onConfirmar(admissao.id, {
         ...form,
@@ -438,26 +460,44 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
 
       const competencia = form.data_desligamento.slice(0, 7);
 
-      // ── Gerar verbas rescisórias no módulo Financeiro ──
+      // ── RNDES22: Gerar verbas rescisórias COMPLETAS no módulo Financeiro ──
       if (tenantId) {
         try {
-          // Buscar salário do colaborador
           const { data: admissaoData } = await supabase
             .from("admissoes")
-            .select("salario, cpf, departamento, empresa_id")
+            .select("salario, cpf, departamento, empresa_id, data_admissao, matricula_esocial")
             .eq("id", admissao.id)
             .single();
 
           const salarioBase = admissaoData?.salario || 0;
+          const cpf = admissaoData?.cpf || admissao.cpf || "";
+          const dataAdm = admissaoData?.data_admissao || admissao.data_admissao || "";
+          const dataDesl = form.data_desligamento;
 
-          // Calcular verbas
-          const multaFgtsValor = salarioBase * (temMultaFGTS / 100);
+          // Calcular saldo de salário (dias trabalhados no mês)
+          const diaDesligamento = parseISO(dataDesl).getDate();
+          const saldoSalario = +((salarioBase / 30) * diaDesligamento).toFixed(2);
+
+          // Aviso prévio indenizado
           const avisoPrevioIndenizadoValor =
-            form.tipo_aviso_previo === "indenizado" ? (salarioBase / 30) * diasAvisoPrevio : 0;
+            form.tipo_aviso_previo === "indenizado" && avisoAplicavel ? +((salarioBase / 30) * diasAvisoPrevio).toFixed(2) : 0;
 
-          const totalProventos = salarioBase + avisoPrevioIndenizadoValor;
-          const totalDescontos = 0; // simplificado — INSS/IR calculados à parte
-          const totalLiquido = totalProventos - totalDescontos + multaFgtsValor;
+          // 13º proporcional (meses trabalhados no ano / avos)
+          const mesesNoAno = parseISO(dataDesl).getMonth() + 1;
+          const decimoTerceiroProp = +((salarioBase / 12) * mesesNoAno).toFixed(2);
+
+          // Férias proporcionais + 1/3
+          const mesesDesdeAdmissao = dataAdm ? differenceInMonths(parseISO(dataDesl), parseISO(dataAdm)) : 0;
+          const avosFerias = mesesDesdeAdmissao % 12 || (mesesDesdeAdmissao > 0 ? 12 : 0);
+          const feriasProporcionais = +((salarioBase / 12) * Math.min(avosFerias, 12)).toFixed(2);
+          const tercoFerias = +(feriasProporcionais / 3).toFixed(2);
+
+          // Multa FGTS
+          const multaFgtsValor = +(salarioBase * (temMultaFGTS / 100)).toFixed(2);
+
+          const totalProventos = +(saldoSalario + avisoPrevioIndenizadoValor + decimoTerceiroProp + feriasProporcionais + tercoFerias).toFixed(2);
+          const totalDescontos = 0;
+          const totalLiquido = +(totalProventos - totalDescontos + multaFgtsValor).toFixed(2);
 
           // Buscar ou criar período rescisório
           const { data: periodoExistente } = await supabase
@@ -492,7 +532,17 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
             periodoId = novoPeriodo.id;
           }
 
-          // Inserir item de verba rescisória
+          // Inserir item com verbas completas
+          const detalhesVerbas = [
+            `Saldo salário: R$ ${saldoSalario.toFixed(2)} (${diaDesligamento} dias)`,
+            avisoAplicavel ? `Aviso prévio ${form.tipo_aviso_previo}: ${diasAvisoPrevio}d (R$ ${avisoPrevioIndenizadoValor.toFixed(2)})` : "Aviso prévio: N/A",
+            `13º proporcional: ${mesesNoAno}/12 avos (R$ ${decimoTerceiroProp.toFixed(2)})`,
+            `Férias proporcionais: ${avosFerias}/12 avos (R$ ${feriasProporcionais.toFixed(2)}) + 1/3 (R$ ${tercoFerias.toFixed(2)})`,
+            `Multa FGTS: ${temMultaFGTS}% (R$ ${multaFgtsValor.toFixed(2)})`,
+            `Seguro-desemprego: ${elegibilidadeSeguro ? "Elegível" : "Não elegível"}`,
+            `Protocolo: ${protocolo}`,
+          ].join(" | ");
+
           await supabase
             .from("folha_itens" as never)
             .insert({
@@ -500,7 +550,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               periodo_id: periodoId,
               colaborador_id: admissao.id,
               colaborador_nome: admissao.nome_completo,
-              colaborador_cpf: admissaoData?.cpf || null,
+              colaborador_cpf: cpf || null,
               cargo: admissao.cargo || null,
               departamento: admissaoData?.departamento || null,
               salario_base: salarioBase,
@@ -508,14 +558,62 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               total_descontos: totalDescontos,
               total_liquido: totalLiquido,
               status: "pendente",
-              observacoes: `Rescisão ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | Aviso: ${diasAvisoPrevio}d | Multa FGTS: ${temMultaFGTS}% (R$ ${multaFgtsValor.toFixed(2)}) | Seguro-desemprego: ${elegibilidadeSeguro ? "Elegível" : "Não elegível"}`,
+              observacoes: `Rescisão ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | ${detalhesVerbas}`,
             } as never);
 
           queryClient.invalidateQueries({ queryKey: ["folha-periodos"] });
           queryClient.invalidateQueries({ queryKey: ["folha-itens"] });
-          toast.success("Verbas rescisórias registradas no módulo Financeiro!");
+
+          // RNDES23 – Gerar evento S-2299
+          try {
+            const verbasRescisorias = [
+              { tipo: "salario_base", descricao: "Saldo de salário", valor: saldoSalario },
+              ...(avisoPrevioIndenizadoValor > 0 ? [{ tipo: "aviso_previo_indenizado", descricao: "Aviso prévio indenizado", valor: avisoPrevioIndenizadoValor }] : []),
+              { tipo: "ferias_proporcionais", descricao: "Férias proporcionais + 1/3", valor: feriasProporcionais + tercoFerias },
+              { tipo: "decimo_terceiro", descricao: "13º salário proporcional", valor: decimoTerceiroProp },
+              ...(multaFgtsValor > 0 ? [{ tipo: "multa_fgts", descricao: `Multa FGTS ${temMultaFGTS}%`, valor: multaFgtsValor }] : []),
+            ];
+
+            const eventoS2299 = gerarEventoS2299({
+              cpf,
+              matricula: admissaoData?.matricula_esocial || undefined,
+              dataDesligamento: dataDesl,
+              tipoRescisao: form.motivo_desligamento,
+              verbasRescisorias,
+              observacao: form.observacoes_desligamento || undefined,
+            });
+
+            // Registrar evento no audit_logs para rastreabilidade
+            await supabase
+              .from("audit_logs")
+              .insert({
+                tenant_id: tenantId,
+                action: "esocial_s2299_gerado",
+                module: "desligamento",
+                target_id: admissao.id,
+                target_name: admissao.nome_completo,
+                target_type: "colaborador",
+                user_id: user?.id || null,
+                user_name: profile?.nome_completo || user?.email || null,
+                description: `Evento S-2299 gerado: ${eventoS2299.id} | Motivo: ${eventoS2299.mtvDeslig} | Total verbas: R$ ${totalLiquido.toFixed(2)}`,
+                metadata: eventoS2299 as any,
+              });
+
+            console.log("Evento S-2299 gerado:", eventoS2299);
+          } catch (e) {
+            console.warn("Erro ao gerar S-2299 (não bloqueante):", e);
+          }
+
+          // RNDES24 – Alerta prazo 10 dias
+          const alertaPrazo = gerarAlertaPrazoRescisao({
+            dataDesligamento: dataDesl,
+            colaboradorNome: admissao.nome_completo,
+            valorTotal: totalLiquido,
+          });
+
+          toast.success(`Verbas rescisórias registradas! Protocolo: ${protocolo}`);
+          toast.info(`📅 Prazo rescisório: pagamento até ${format(parseISO(alertaPrazo.dataLimite), "dd/MM/yyyy")} (${alertaPrazo.diasRestantes} dias — CLT art. 477 §6º)`, { duration: 8000 });
         } catch (err: any) {
-          // Não bloqueia o desligamento por erro no financeiro
           console.error("Erro ao gerar verbas rescisórias:", err);
           toast.warning("Desligamento registrado, mas houve erro ao lançar verbas no Financeiro.");
         }
@@ -525,7 +623,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
       await enviarParaHub({
         tipo: "calculo_rescisorio",
         competencia,
-        descricao: `Rescisão — ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento}`,
+        descricao: `Rescisão — ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | Protocolo: ${protocolo}`,
         colaborador_nome: admissao.nome_completo,
       });
 
@@ -602,38 +700,50 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           {/* Aviso Prévio */}
           <div>
             <h3 className="text-sm font-semibold mb-3">Aviso Prévio</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Tipo de Aviso Prévio</Label>
-                <Select value={form.tipo_aviso_previo} onValueChange={v => set("tipo_aviso_previo", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(TIPOS_AVISO).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {!avisoAplicavel ? (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+                Aviso prévio <strong>não aplicável</strong> para {MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || "este motivo"}.
               </div>
-              <div>
-                <Label>Data do Aviso</Label>
-                <Input type="date" value={form.data_aviso_previo} onChange={e => set("data_aviso_previo", e.target.value)} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-3 p-3 rounded-lg bg-muted/50">
-              <div>
-                <p className="text-sm font-medium">Dias de aviso prévio (Lei 12.506/2011)</p>
-                <p className="text-xs text-muted-foreground">30 dias base + 3 por ano trabalhado, máx. 90 dias</p>
-              </div>
-              <Badge variant="outline" className="text-base font-bold">{diasAvisoPrevio} dias</Badge>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <Switch
-                checked={form.aviso_previo_cumprido}
-                onCheckedChange={v => set("aviso_previo_cumprido", v)}
-                disabled={form.tipo_aviso_previo !== "trabalhado"}
-              />
-              <Label className={`text-sm ${form.tipo_aviso_previo !== "trabalhado" ? "text-muted-foreground" : ""}`}>Aviso prévio cumprido</Label>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Tipo de Aviso Prévio</Label>
+                    <Select value={form.tipo_aviso_previo} onValueChange={v => set("tipo_aviso_previo", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(TIPOS_AVISO).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Data do Aviso</Label>
+                    <Input type="date" value={form.data_aviso_previo} onChange={e => set("data_aviso_previo", e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-3 p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">Dias de aviso prévio (Lei 12.506/2011)</p>
+                    <p className="text-xs text-muted-foreground">
+                      {form.motivo_desligamento === "acordo_mutuo"
+                        ? "Acordo mútuo: metade do aviso (art. 484-A CLT)"
+                        : "30 dias base + 3 por ano trabalhado, máx. 90 dias"}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-base font-bold">{diasAvisoPrevio} dias</Badge>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={form.aviso_previo_cumprido}
+                    onCheckedChange={v => set("aviso_previo_cumprido", v)}
+                    disabled={form.tipo_aviso_previo !== "trabalhado"}
+                  />
+                  <Label className={`text-sm ${form.tipo_aviso_previo !== "trabalhado" ? "text-muted-foreground" : ""}`}>Aviso prévio cumprido</Label>
+                </div>
+              </>
+            )}
           </div>
 
           <Separator />
@@ -848,7 +958,12 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           {/* Chave FGTS e Observações */}
           <div className="space-y-3">
             <div>
-              <Label>Chave de Conectividade Social (FGTS)</Label>
+              <Label>
+                Chave de Conectividade Social (FGTS)
+                {["sem_justa_causa", "acordo_mutuo", "termino_contrato", "rescisao_indireta"].includes(form.motivo_desligamento) && (
+                  <span className="text-destructive ml-1">*</span>
+                )}
+              </Label>
               <Input value={form.chave_conectividade} onChange={e => set("chave_conectividade", e.target.value)} />
             </div>
             <div>
