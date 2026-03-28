@@ -360,7 +360,10 @@ function AtivosTab() {
                         Documentos
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDesligarColab(colab)}>
+                      <DropdownMenuItem className="text-destructive" onClick={() => {
+                        if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
+                        setDesligarColab(colab);
+                      }}>
                         Desligar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -459,7 +462,10 @@ function AtivosTab() {
                           Documentos
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDesligarColab(colab)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => {
+                          if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
+                          setDesligarColab(colab);
+                        }}>
                           Desligar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -559,6 +565,8 @@ function AtivosTab() {
             cargo: desligarColab.cargo,
             data_admissao: desligarColab.data_admissao,
             tipo_contrato: desligarColab.tipo_contrato,
+            status: desligarColab.status,
+            cpf: desligarColab.cpf,
           }}
           onConfirmar={async (id, dados) => {
             const { error } = await supabase
