@@ -19,6 +19,7 @@ import type {
 
 export function useMetas() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // =============================================
@@ -26,11 +27,11 @@ export function useMetas() {
   // =============================================
 
   const { data: metas = [], isLoading: isLoadingMetas } = useQuery({
-    queryKey: ["metas", tenantId],
+    queryKey: ["metas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Meta[]> => {
       if (!tenantId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("metas")
         .select(`
           *,
@@ -38,6 +39,10 @@ export function useMetas() {
         `)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       
@@ -75,6 +80,7 @@ export function useMetas() {
           peso: data.peso,
           vinculo_ciclo_id: data.vinculo_ciclo_id,
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo,
         };
