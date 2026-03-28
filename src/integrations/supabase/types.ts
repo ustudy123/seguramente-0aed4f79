@@ -6677,6 +6677,8 @@ export type Database = {
       }
       folha_alertas_prazo: {
         Row: {
+          colaborador_id: string | null
+          colaborador_nome: string | null
           competencia: string
           concluido_em: string | null
           concluido_por: string | null
@@ -6687,8 +6689,11 @@ export type Database = {
           status: string
           tenant_id: string
           tipo: string
+          valor_referencia: number | null
         }
         Insert: {
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
           competencia: string
           concluido_em?: string | null
           concluido_por?: string | null
@@ -6699,8 +6704,11 @@ export type Database = {
           status?: string
           tenant_id: string
           tipo: string
+          valor_referencia?: number | null
         }
         Update: {
+          colaborador_id?: string | null
+          colaborador_nome?: string | null
           competencia?: string
           concluido_em?: string | null
           concluido_por?: string | null
@@ -6711,6 +6719,7 @@ export type Database = {
           status?: string
           tenant_id?: string
           tipo?: string
+          valor_referencia?: number | null
         }
         Relationships: [
           {
@@ -17103,6 +17112,59 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      tabelas_fiscais: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          deducao_por_dependente: number | null
+          faixas: Json
+          id: string
+          observacoes: string | null
+          tenant_id: string
+          teto: number | null
+          tipo: string
+          updated_at: string
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          deducao_por_dependente?: number | null
+          faixas?: Json
+          id?: string
+          observacoes?: string | null
+          tenant_id: string
+          teto?: number | null
+          tipo: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          deducao_por_dependente?: number | null
+          faixas?: Json
+          id?: string
+          observacoes?: string | null
+          tenant_id?: string
+          teto?: number | null
+          tipo?: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tabelas_fiscais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {

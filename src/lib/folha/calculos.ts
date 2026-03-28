@@ -667,4 +667,68 @@ export { calcularDSR, diasPadraoMes, type DSRInput, type DSRResult } from "./dsr
 // Re-export Benefícios, Validações e Integrações Fiscais
 export { calcularBeneficios, calcularValeTransporte, type BeneficioConfig, type BeneficioCalculado, type ResultadoBeneficios } from "./beneficios";
 export { validarSalarioMinimo, validarLimiteDescontos, validarFolhaCompleta, calcularPensaoAlimenticia, aplicarCCT, type ValidacaoAlerta, type PensaoAlimenticia, type ConfigCCT } from "./validacoes";
-export { gerarEventoS1200, gerarEventoS1210, gerarResumoDCTFWeb, gerarResumoFGTSDigital, RUBRICAS_ESOCIAL, type EventoS1200, type EventoS1210, type DCTFWebResumo, type FGTSDigitalResumo } from "./integracoes-fiscais";
+export { gerarEventoS1200, gerarEventoS1210, gerarResumoDCTFWeb, gerarResumoFGTSDigital, gerarEventoS2299, gerarAlertaPrazoRescisao, RUBRICAS_ESOCIAL, type EventoS1200, type EventoS1210, type EventoS2299, type DCTFWebResumo, type FGTSDigitalResumo } from "./integracoes-fiscais";
+
+// ===================== FOLHA INTERMITENTE =====================
+
+/**
+ * Calcula pagamento de contrato intermitente com proporcionais imediatos
+ * CLT art. 452-A §6º — cada pagamento deve incluir férias+1/3 e 13º proporcionais
+ */
+export function calcularFolhaIntermitente(params: {
+  valorConvocacao: number;       // remuneração do período trabalhado
+  diasTrabalhados: number;
+  dependentesIRRF?: number;
+}): {
+  remuneracao: number;
+  ferias_proporcionais: number;
+  terco_ferias: number;
+  decimo_terceiro_proporcional: number;
+  total_bruto: number;
+  valor_inss: number;
+  valor_irrf: number;
+  valor_fgts: number;
+  total_descontos: number;
+  total_liquido: number;
+  fundamentacao: string;
+} {
+  const { valorConvocacao, diasTrabalhados, dependentesIRRF = 0 } = params;
+
+  // Proporcionais sobre o valor da convocação
+  const feriasProporcionais = +(valorConvocacao / 12).toFixed(2);
+  const tercoFerias = +(feriasProporcionais / 3).toFixed(2);
+  const decimoTerceiro = +(valorConvocacao / 12).toFixed(2);
+
+  const totalBruto = +(valorConvocacao + feriasProporcionais + tercoFerias + decimoTerceiro).toFixed(2);
+
+  // INSS sobre total
+  const { valor: valorINSS } = calcularINSS(totalBruto);
+
+  // FGTS 8%
+  const valorFGTS = calcularFGTS(totalBruto, 8);
+
+  // IRRF
+  const baseIRRF = totalBruto - valorINSS;
+  const { valor: valorIRRF } = calcularIRRF(baseIRRF, dependentesIRRF);
+
+  const totalDescontos = +(valorINSS + valorIRRF).toFixed(2);
+  const totalLiquido = +(totalBruto - totalDescontos).toFixed(2);
+
+  return {
+    remuneracao: valorConvocacao,
+    ferias_proporcionais: feriasProporcionais,
+    terco_ferias: tercoFerias,
+    decimo_terceiro_proporcional: decimoTerceiro,
+    total_bruto: totalBruto,
+    valor_inss: valorINSS,
+    valor_irrf: valorIRRF,
+    valor_fgts: valorFGTS,
+    total_descontos: totalDescontos,
+    total_liquido: totalLiquido,
+    fundamentacao: `Pagamento intermitente (CLT art. 452-A §6º). `
+      + `Remuneração: R$ ${valorConvocacao.toFixed(2)} (${diasTrabalhados} dias). `
+      + `Férias prop.: R$ ${feriasProporcionais.toFixed(2)} + 1/3: R$ ${tercoFerias.toFixed(2)}. `
+      + `13º prop.: R$ ${decimoTerceiro.toFixed(2)}. `
+      + `FGTS depositado: R$ ${valorFGTS.toFixed(2)}.`,
+  };
+}

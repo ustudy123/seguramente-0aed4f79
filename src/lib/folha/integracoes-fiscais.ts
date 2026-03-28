@@ -84,6 +84,13 @@ export const RUBRICAS_ESOCIAL: Record<string, { codRubr: string; natRubr: 1 | 2 
   'ferias_gozadas':       { codRubr: '1200', natRubr: 1, codIncCP: 11, codIncIRRF: 11, codIncFGTS: 11 },
   'terco_ferias':         { codRubr: '1201', natRubr: 1, codIncCP: 11, codIncIRRF: 11, codIncFGTS: 11 },
   '13_salario':           { codRubr: '1300', natRubr: 1, codIncCP: 11, codIncIRRF: 11, codIncFGTS: 11 },
+  // Rescisão (S-2299)
+  'saldo_salario':        { codRubr: '1000', natRubr: 1, codIncCP: 11, codIncIRRF: 11, codIncFGTS: 11 },
+  'aviso_previo_indenizado': { codRubr: '1800', natRubr: 1, codIncCP: 11, codIncIRRF: 91, codIncFGTS: 11 },
+  'ferias_vencidas':      { codRubr: '1200', natRubr: 1, codIncCP: 91, codIncIRRF: 91, codIncFGTS: 91 },
+  'ferias_proporcionais': { codRubr: '1202', natRubr: 1, codIncCP: 91, codIncIRRF: 91, codIncFGTS: 91 },
+  '13_proporcional':      { codRubr: '1302', natRubr: 1, codIncCP: 11, codIncIRRF: 11, codIncFGTS: 11 },
+  'multa_fgts':           { codRubr: '3500', natRubr: 3, codIncCP: 91, codIncIRRF: 91, codIncFGTS: 91 },
   'desc_inss':            { codRubr: '9201', natRubr: 2, codIncCP: 31, codIncIRRF: 91, codIncFGTS: 91 },
   'desc_irrf':            { codRubr: '9202', natRubr: 2, codIncCP: 91, codIncIRRF: 31, codIncFGTS: 91 },
   'desc_vt':              { codRubr: '9210', natRubr: 2, codIncCP: 91, codIncIRRF: 91, codIncFGTS: 91 },
@@ -287,5 +294,127 @@ export function gerarResumoFGTSDigital(params: {
     valorTotal: +totalValor.toFixed(2),
     guias,
     status: 'apurado',
+  };
+}
+
+// ===================== S-2299 — DESLIGAMENTO =====================
+
+export interface EventoS2299 {
+  id: string;
+  tpAmb: 1 | 2;
+  cpfTrab: string;
+  matricula?: string;
+  /** Data do desligamento (YYYY-MM-DD) */
+  dtDeslig: string;
+  /** Motivo eSocial (tabela 19) */
+  mtvDeslig: string;
+  /** Período de apuração final (YYYY-MM) */
+  perApur: string;
+  /** Pensão alimentícia percentual */
+  percAliment?: number;
+  /** Verbas rescisórias */
+  verbasRescisórias: ItemRemun[];
+  /** Info complementar */
+  infoCompl?: {
+    observacao: string;
+    novaData?: string; // data de novo desligamento se retificação
+  };
+}
+
+/** Mapeamento tipo rescisão → motivo eSocial tabela 19 */
+const MOTIVO_DESLIGAMENTO_ESOCIAL: Record<string, string> = {
+  'DISPENSA_SEM_JUSTA_CAUSA': '02',
+  'DISPENSA_COM_JUSTA_CAUSA': '01',
+  'PEDIDO_DEMISSAO': '07',
+  'ACORDO_484A': '33',
+  'RESCISAO_INDIRETA': '05',
+  'TERMINO_CONTRATO': '03',
+  'FALECIMENTO': '09',
+  'APOSENTADORIA': '31',
+  'EXTINÇÃO_EMPRESA': '25',
+  'RESCISAO_ANTECIPADA_EMPREGADOR': '04',
+};
+
+/**
+ * Gera evento S-2299 (Desligamento) para envio ao eSocial
+ */
+export function gerarEventoS2299(params: {
+  cpf: string;
+  matricula?: string;
+  dataDesligamento: string;
+  tipoRescisao: string;
+  verbasRescisorias: {
+    tipo: string;
+    descricao: string;
+    valor: number;
+    quantidade?: number;
+  }[];
+  observacao?: string;
+  tpAmb?: 1 | 2;
+}): EventoS2299 {
+  const { cpf, matricula, dataDesligamento, tipoRescisao, verbasRescisorias, observacao, tpAmb = 2 } = params;
+  const cpfLimpo = cpf.replace(/\D/g, '');
+  const perApur = dataDesligamento.slice(0, 7); // YYYY-MM
+
+  const itens: ItemRemun[] = verbasRescisorias.map(v => {
+    const rubrica = RUBRICAS_ESOCIAL[v.tipo] || RUBRICAS_ESOCIAL['salario_base'];
+    return {
+      codRubr: rubrica.codRubr,
+      ideTabRubr: 'TAB01',
+      qtdRubr: v.quantidade,
+      vrRubr: v.valor,
+      natRubr: rubrica.natRubr,
+    };
+  });
+
+  return {
+    id: `S2299-${cpfLimpo}-${dataDesligamento}`,
+    tpAmb,
+    cpfTrab: cpfLimpo,
+    matricula,
+    dtDeslig: dataDesligamento,
+    mtvDeslig: MOTIVO_DESLIGAMENTO_ESOCIAL[tipoRescisao] || '99',
+    perApur,
+    verbasRescisórias: itens,
+    infoCompl: observacao ? { observacao } : undefined,
+  };
+}
+
+// ===================== VALIDAÇÃO PRAZO RESCISÃO =====================
+
+/**
+ * Gera alerta de prazo para pagamento rescisório (10 dias corridos - CLT art. 477 §6º)
+ */
+export function gerarAlertaPrazoRescisao(params: {
+  dataDesligamento: string;
+  colaboradorNome: string;
+  valorTotal: number;
+}): {
+  dataLimite: string;
+  diasRestantes: number;
+  atrasado: boolean;
+  mensagem: string;
+  fundamentacao: string;
+} {
+  const dtDeslig = new Date(params.dataDesligamento);
+  const dtLimite = new Date(dtDeslig);
+  dtLimite.setDate(dtLimite.getDate() + 10);
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  dtLimite.setHours(0, 0, 0, 0);
+
+  const diffMs = dtLimite.getTime() - hoje.getTime();
+  const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const atrasado = diasRestantes < 0;
+
+  return {
+    dataLimite: dtLimite.toISOString().slice(0, 10),
+    diasRestantes,
+    atrasado,
+    mensagem: atrasado
+      ? `⚠️ ATRASO: Pagamento rescisório de ${params.colaboradorNome} (R$ ${params.valorTotal.toFixed(2)}) está ${Math.abs(diasRestantes)} dia(s) atrasado. Multa do art. 477 §8º CLT pode ser aplicada.`
+      : `Prazo rescisório de ${params.colaboradorNome}: ${diasRestantes} dia(s) restante(s) (até ${dtLimite.toLocaleDateString('pt-BR')}).`,
+    fundamentacao: 'CLT art. 477 §6º — o pagamento das verbas rescisórias deve ser efetuado até 10 dias corridos contados do término do contrato.',
   };
 }
