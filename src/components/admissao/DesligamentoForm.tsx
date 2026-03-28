@@ -177,6 +177,73 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     buscarDadosNR07();
   }, [open, admissao.id, tenantId]);
 
+  // RNDES25 – Verificar estabilidades do colaborador
+  useEffect(() => {
+    if (!open || !tenantId) return;
+
+    const verificarEstabilidades = async () => {
+      setEstabilidadesCarregando(true);
+      const found: string[] = [];
+      try {
+        // Verificar afastamento por acidente de trabalho (estabilidade 12 meses após retorno)
+        const { data: afastamentos } = await supabase
+          .from("afastamentos")
+          .select("status, nexo_trabalho, data_fim, motivo_principal")
+          .eq("tenant_id", tenantId)
+          .or(`colaborador_id.eq.${admissao.id},colaborador_nome.eq.${admissao.nome_completo}`)
+          .in("nexo_trabalho", ["confirmado", "presuntivo"]);
+
+        if (afastamentos) {
+          for (const af of afastamentos) {
+            if (af.data_fim) {
+              const mesesDesdeRetorno = differenceInDays(new Date(), parseISO(af.data_fim)) / 30;
+              if (mesesDesdeRetorno < 12) {
+                found.push(`Estabilidade acidentária: retorno em ${format(parseISO(af.data_fim), "dd/MM/yyyy")} — 12 meses de garantia (art. 118, Lei 8.213/91)`);
+              }
+            } else if (af.status === "ativo" || af.status === "em_andamento") {
+              found.push("Colaborador em afastamento previdenciário ativo com nexo de trabalho — desligamento bloqueado");
+            }
+          }
+        }
+
+        // Verificar afastamento previdenciário ativo (RNDES26)
+        const { data: afastAtivos } = await supabase
+          .from("afastamentos")
+          .select("status, data_fim")
+          .eq("tenant_id", tenantId)
+          .or(`colaborador_id.eq.${admissao.id},colaborador_nome.eq.${admissao.nome_completo}`)
+          .in("status", ["ativo", "em_andamento"])
+          .is("data_fim", null);
+
+        if (afastAtivos && afastAtivos.length > 0) {
+          found.push("Colaborador em afastamento previdenciário ativo — necessário retorno formal antes do desligamento (RNDES26)");
+        }
+
+        // Verificar gestante (buscar nos eventos de saúde ou atestados com CID relacionado)
+        const { data: atestadosGestante } = await supabase
+          .from("atestados")
+          .select("cid_codigo, data_emissao")
+          .eq("tenant_id", tenantId)
+          .or(`colaborador_id.eq.${admissao.id},colaborador_nome.eq.${admissao.nome_completo}`)
+          .like("cid_codigo", "O%")
+          .order("data_emissao", { ascending: false })
+          .limit(1);
+
+        if (atestadosGestante && atestadosGestante.length > 0) {
+          found.push("Possível estabilidade gestante (CID obstétrico encontrado) — confirmação da CIPA/5 meses pós-parto (art. 10, II, b, ADCT)");
+        }
+
+        setEstabilidades(found);
+      } catch {
+        // silently fail
+      } finally {
+        setEstabilidadesCarregando(false);
+      }
+    };
+
+    verificarEstabilidades();
+  }, [open, admissao.id, admissao.nome_completo, tenantId]);
+
   // Se ativar "usar ASO anterior", limpar campos do exame demissional novo
   useEffect(() => {
     if (usarAsoAnterior) {
@@ -189,14 +256,12 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
   const diasAvisoPrevio = useMemo(() => {
     if (!admissao.data_admissao || !form.data_desligamento) return 30;
     const anos = differenceInYears(new Date(form.data_desligamento), new Date(admissao.data_admissao));
-    // 30 dias base + 3 dias por ano trabalhado, máximo 90 dias
     return Math.min(30 + Math.max(0, anos) * 3, 90);
   }, [admissao.data_admissao, form.data_desligamento]);
 
   // Elegibilidade seguro desemprego
   const elegibilidadeSeguro = useMemo(() => {
     const motivo = form.motivo_desligamento;
-    // Apenas sem justa causa e rescisão indireta geram direito
     return motivo === "sem_justa_causa" || motivo === "rescisao_indireta";
   }, [form.motivo_desligamento]);
 
@@ -208,12 +273,56 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     return 0;
   }, [form.motivo_desligamento]);
 
+  // RNDES02 – Validação de data
+  const errosData = useMemo(() => {
+    const erros: string[] = [];
+    if (!form.data_desligamento) return erros;
+    const dataDesl = parseISO(form.data_desligamento);
+    if (admissao.data_admissao) {
+      const dataAdm = parseISO(admissao.data_admissao);
+      if (dataDesl < dataAdm) {
+        erros.push("Data de desligamento não pode ser anterior à data de admissão");
+      }
+    }
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+    if (dataDesl > hoje) {
+      erros.push("Data de desligamento não pode ser futura (salvo desligamento programado)");
+    }
+    return erros;
+  }, [form.data_desligamento, admissao.data_admissao]);
+
+  // RNDES16 – ASO obrigatório não preenchido = bloqueio
+  const asoObrigatorioNaoPreenchido = useMemo(() => {
+    // Se está usando ASO anterior válido, não bloqueia
+    if (usarAsoAnterior && asoValidacao.asoValido) return false;
+    // Se não tem ASO anterior válido, exame demissional é obrigatório
+    if (!asoValidacao.asoValido && !form.data_exame_demissional) return true;
+    // Se não está usando ASO anterior e não preencheu o exame
+    if (!usarAsoAnterior && !form.data_exame_demissional) return true;
+    return false;
+  }, [usarAsoAnterior, asoValidacao.asoValido, form.data_exame_demissional]);
+
+  // RNDES25 – Estabilidade ativa bloqueia (a menos que justa causa)
+  const bloqueioEstabilidade = useMemo(() => {
+    if (estabilidades.length === 0) return false;
+    // Justa causa pode desligar mesmo com estabilidade
+    if (form.motivo_desligamento === "com_justa_causa") return false;
+    // Falecimento também
+    if (form.motivo_desligamento === "falecimento") return false;
+    return true;
+  }, [estabilidades, form.motivo_desligamento]);
+
   // Alertas
   const alertas = useMemo(() => {
     const items: string[] = [];
-    // Só exige exame demissional se não estiver usando ASO anterior válido
-    if (!usarAsoAnterior && !form.data_exame_demissional) {
-      items.push("Exame demissional é obrigatório (NR-7, item 7.5.11)");
+    // Erros de data (RNDES02)
+    items.push(...errosData);
+    // Estabilidades (RNDES25)
+    items.push(...estabilidades);
+    // ASO
+    if (asoObrigatorioNaoPreenchido) {
+      items.push("🚫 ASO demissional obrigatório não preenchido — confirmação bloqueada (NR-7, RNDES16)");
     }
     if (usarAsoAnterior && !asoValidacao.asoValido) {
       items.push(`ASO anterior fora do prazo de validade (${asoValidacao.limiteValidade} dias para GR ${asoValidacao.grauRisco ?? "desconhecido"}).`);
@@ -226,6 +335,9 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     }
     if (form.motivo_desligamento === "com_justa_causa") {
       items.push("Justa causa requer documentação comprobatória robusta");
+    }
+    if (bloqueioEstabilidade) {
+      items.push("🚫 Desligamento bloqueado por estabilidade ativa — apenas justa causa ou falecimento permitidos");
     }
     return items;
   }, [form, admissao, usarAsoAnterior, asoValidacao]);
