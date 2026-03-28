@@ -217,6 +217,7 @@ export function useDocumentos() {
         .from("documentos" as never)
         .insert({
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           colaborador_id: colaboradorId || null,
           colaborador_nome: colaboradorNome,
           colaborador_cpf: colaboradorCpf || null,

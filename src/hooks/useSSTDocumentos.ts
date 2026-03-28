@@ -174,6 +174,7 @@ export function useSSTDocumentos() {
       // 1. Insert into sst_documentos (SST module's own table)
       const { data: sstDoc, error: sstError } = await supabase.from("sst_documentos").insert({
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
         tipo: params.tipo,
         arquivo_url: storagePath,
         arquivo_nome: params.file.name,
