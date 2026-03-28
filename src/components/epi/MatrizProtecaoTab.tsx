@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle, Search, ChevronRight } from "lucide-react";
+import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle, Search, ChevronRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +22,7 @@ import { useMatrizEpi } from "@/hooks/useMatrizEpi";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { useCargos } from "@/hooks/useCadastros";
 import { useEpis } from "@/hooks/useEpis";
+import { CriarAcaoAlertaModal } from "@/components/shared/CriarAcaoAlertaModal";
 
 export function MatrizProtecaoTab() {
   const { cets, funcaoEpis, funcaoCets, salvarMatrizFuncao, salvandoMatriz } = useMatrizEpi();
@@ -30,6 +31,7 @@ export function MatrizProtecaoTab() {
   const { tipos, entregas } = useEpis();
   const [search, setSearch] = useState("");
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+  const [acaoModal, setAcaoModal] = useState<{ open: boolean; titulo: string; descricao: string }>({ open: false, titulo: "", descricao: "" });
 
   const selectedCargo = cargos.find((c) => c.id === selectedCargoId) || null;
 
@@ -286,7 +288,21 @@ export function MatrizProtecaoTab() {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex gap-1 justify-end">
+                    {item.alertas.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary"
+                        onClick={() => setAcaoModal({
+                          open: true,
+                          titulo: `Não conformidade EPI — ${item.nome}`,
+                          descricao: item.alertas.join("; "),
+                        })}
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" /> Ação
+                      </Button>
+                    )}
                     {item.cargoId && (
                       <Button
                         variant="ghost"
@@ -317,6 +333,14 @@ export function MatrizProtecaoTab() {
         funcaoCets={funcaoCets}
         onSave={salvarMatrizFuncao}
         isSaving={salvandoMatriz}
+      />
+
+      <CriarAcaoAlertaModal
+        open={acaoModal.open}
+        onOpenChange={(open) => setAcaoModal(prev => ({ ...prev, open }))}
+        alertaTitulo={acaoModal.titulo}
+        alertaDescricao={acaoModal.descricao}
+        origemModulo="epi"
       />
     </div>
   );

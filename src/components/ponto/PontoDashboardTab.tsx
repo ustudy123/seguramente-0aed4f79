@@ -8,7 +8,8 @@ import { usePontoFechamento } from "@/hooks/usePontoFechamento";
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Legend } from "recharts";
-import { TrendingUp, Users, AlertTriangle, Clock, FileText, Shield, Wallet } from "lucide-react";
+import { TrendingUp, Users, AlertTriangle, Clock, FileText, Shield, Wallet, Sparkles } from "lucide-react";
+import { CriarAcaoAlertaModal } from "@/components/shared/CriarAcaoAlertaModal";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#ef4444", "#22c55e", "#8b5cf6", "#06b6d4"];
 
@@ -16,6 +17,7 @@ export function PontoDashboardTab() {
   const [competencia, setCompetencia] = useState(format(new Date(), "yyyy-MM"));
   const { usePontoDiario } = usePonto();
   const { useFechamentos } = usePontoFechamento();
+  const [acaoModal, setAcaoModal] = useState<{ open: boolean; titulo: string; descricao: string }>({ open: false, titulo: "", descricao: "" });
 
   // Get all days of the month to aggregate
   const startDate = startOfMonth(new Date(competencia + "-01"));
@@ -158,8 +160,18 @@ export function PontoDashboardTab() {
                   <p className="font-medium text-sm">{item.label}</p>
                   <p className="text-xs text-muted-foreground">{item.desc}</p>
                 </div>
-                <div className="text-right">
-                  <p className={`text-xl font-bold ${item.count > 0 ? (item.severity === "alta" ? "text-red-600" : item.severity === "media" ? "text-yellow-600" : "text-muted-foreground") : "text-green-600"}`}>
+                <div className="flex items-center gap-2">
+                  {item.count > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary h-7 text-xs"
+                      onClick={() => setAcaoModal({ open: true, titulo: `Risco: ${item.label}`, descricao: `${item.desc} — ${item.count} ocorrências na competência ${competencia}` })}
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" /> Ação
+                    </Button>
+                  )}
+                  <p className={`text-xl font-bold ${item.count > 0 ? (item.severity === "alta" ? "text-destructive" : item.severity === "media" ? "text-warning" : "text-muted-foreground") : "text-green-600"}`}>
                     {item.count}
                   </p>
                 </div>
@@ -194,6 +206,14 @@ export function PontoDashboardTab() {
           )}
         </CardContent>
       </Card>
+
+      <CriarAcaoAlertaModal
+        open={acaoModal.open}
+        onOpenChange={(open) => setAcaoModal(prev => ({ ...prev, open }))}
+        alertaTitulo={acaoModal.titulo}
+        alertaDescricao={acaoModal.descricao}
+        origemModulo="ponto"
+      />
     </div>
   );
 }

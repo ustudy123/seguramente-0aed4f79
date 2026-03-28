@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePontoAlertas, ALERTA_TIPOS } from "@/hooks/usePontoAlertas";
-import { Bell, CheckCircle, AlertTriangle, AlertOctagon, Info } from "lucide-react";
+import { Bell, CheckCircle, AlertTriangle, AlertOctagon, Info, Sparkles } from "lucide-react";
+import { CriarAcaoAlertaModal } from "@/components/shared/CriarAcaoAlertaModal";
 
 const SEVERIDADE_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   baixa: { label: "Baixa", color: "bg-blue-100 text-blue-800", icon: <Info className="w-4 h-4" /> },
@@ -16,6 +17,7 @@ const SEVERIDADE_CONFIG: Record<string, { label: string; color: string; icon: Re
 export function PontoAlertasTab() {
   const { alertas, loadingAlertas, resolverAlerta } = usePontoAlertas();
   const [filtroTipo, setFiltroTipo] = useState<string>("all");
+  const [acaoModal, setAcaoModal] = useState<{ open: boolean; titulo: string; descricao: string; id?: string }>({ open: false, titulo: "", descricao: "" });
 
   const alertasFiltrados = filtroTipo === "all" ? alertas : alertas.filter(a => a.tipo === filtroTipo);
 
@@ -110,9 +112,17 @@ export function PontoAlertasTab() {
                     <TableCell className="font-medium">{a.titulo}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{a.descricao || "-"}</TableCell>
                     <TableCell>{a.data_referencia || "-"}</TableCell>
-                    <TableCell>
+                    <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => resolverAlerta(a.id)}>
                         <CheckCircle className="w-3 h-3 mr-1" /> Resolver
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-primary"
+                        onClick={() => setAcaoModal({ open: true, titulo: a.titulo, descricao: a.descricao || `${a.colaborador_nome || "Geral"} - ${a.titulo}`, id: a.id })}
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" /> Ação
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -122,6 +132,15 @@ export function PontoAlertasTab() {
           </Table>
         </CardContent>
       </Card>
+
+      <CriarAcaoAlertaModal
+        open={acaoModal.open}
+        onOpenChange={(open) => setAcaoModal(prev => ({ ...prev, open }))}
+        alertaTitulo={acaoModal.titulo}
+        alertaDescricao={acaoModal.descricao}
+        origemModulo="ponto"
+        origemId={acaoModal.id}
+      />
     </div>
   );
 }
