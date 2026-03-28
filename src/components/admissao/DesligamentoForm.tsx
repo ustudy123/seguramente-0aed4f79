@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { format, differenceInYears, differenceInDays, parseISO } from "date-fns";
-import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2, CheckCircle2, Info } from "lucide-react";
+import { format, differenceInYears, differenceInDays, differenceInMonths, parseISO, addDays } from "date-fns";
+import { UserMinus, AlertTriangle, Shield, FileCheck, Upload, X, FileText, Loader2, CheckCircle2, Info, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
+import { gerarEventoS2299, gerarAlertaPrazoRescisao } from "@/lib/folha/integracoes-fiscais";
 
 const MOTIVOS_DESLIGAMENTO: Record<string, string> = {
   sem_justa_causa: "Dispensa sem justa causa",
@@ -252,12 +253,23 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
     }
   }, [usarAsoAnterior]);
 
-  // Calcular dias de aviso prévio (Lei 12.506/2011)
+  // RNDES05 – Aviso prévio por motivo + RNDES07 cálculo automático
+  const avisoAplicavel = useMemo(() => {
+    const motivo = form.motivo_desligamento;
+    // Não se aplica
+    if (["com_justa_causa", "termino_contrato", "falecimento", "culpa_reciproca", "aposentadoria"].includes(motivo)) return false;
+    return true;
+  }, [form.motivo_desligamento]);
+
   const diasAvisoPrevio = useMemo(() => {
+    if (!avisoAplicavel) return 0;
     if (!admissao.data_admissao || !form.data_desligamento) return 30;
     const anos = differenceInYears(new Date(form.data_desligamento), new Date(admissao.data_admissao));
-    return Math.min(30 + Math.max(0, anos) * 3, 90);
-  }, [admissao.data_admissao, form.data_desligamento]);
+    const diasBase = Math.min(30 + Math.max(0, anos) * 3, 90);
+    // Acordo mútuo: metade do aviso
+    if (form.motivo_desligamento === "acordo_mutuo") return Math.ceil(diasBase / 2);
+    return diasBase;
+  }, [admissao.data_admissao, form.data_desligamento, avisoAplicavel, form.motivo_desligamento]);
 
   // Elegibilidade seguro desemprego
   const elegibilidadeSeguro = useMemo(() => {
