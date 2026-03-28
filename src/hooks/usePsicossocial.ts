@@ -173,21 +173,28 @@ export function calcularIndicadores(
 
 export function usePsicossocial() {
   const { tenantId, user, profile } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // ==================== CAMPANHAS ====================
 
-  // Buscar todas as campanhas
+  // Buscar todas as campanhas (filtradas por empresa ativa)
   const { data: campanhas = [], isLoading: isLoadingCampanhas, refetch: refetchCampanhas } = useQuery({
-    queryKey: ["psicossocial-campanhas", tenantId],
+    queryKey: ["psicossocial-campanhas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<CampanhaPsicossocial[]> => {
       if (!tenantId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("questionario_psicossocial_campanhas")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data || []).map(c => ({
