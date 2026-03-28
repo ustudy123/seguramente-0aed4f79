@@ -215,7 +215,7 @@ export function usePsicossocial() {
         .from("questionario_psicossocial_campanhas")
         .insert({
           tenant_id: tenantId,
-          nome: dados.nome,
+          empresa_id: empresaAtivaId || null,
           descricao: dados.descricao,
           tipo: dados.tipo || 'regular',
           instrumento: dados.instrumento || 'copsoq',
