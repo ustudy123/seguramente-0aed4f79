@@ -15,6 +15,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
 
 import { AEPFormIdentificacao } from "./AEPFormIdentificacao";
 import { AEPFormDescricao } from "./AEPFormDescricao";
