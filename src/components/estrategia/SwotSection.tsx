@@ -23,10 +23,10 @@ export function SwotSection({ escopo }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
 
-  // Reset selected SWOT when company/scope changes
+  // Reset selected SWOT when scope changes
   useEffect(() => {
     setSelectedSwot(null);
-  }, [escopo?.empresaId, escopo?.grupoId]);
+  }, [escopo?.tipo, escopo?.grupoId]);
 
   if (selectedSwot) {
     return <SwotDetail swot={selectedSwot} onBack={() => setSelectedSwot(null)} />;
