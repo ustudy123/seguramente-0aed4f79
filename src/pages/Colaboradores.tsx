@@ -140,6 +140,7 @@ function AtivosTab() {
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
+  const [showNovoChoice, setShowNovoChoice] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
   const [showDetail, setShowDetail] = useState(false);
