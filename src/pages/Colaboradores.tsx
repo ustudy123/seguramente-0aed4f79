@@ -479,6 +479,47 @@ function AtivosTab() {
         </div>
       )}
 
+      {/* Choice Dialog: Colaborador vs Terceiro */}
+      <Dialog open={showNovoChoice} onOpenChange={setShowNovoChoice}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>O que deseja cadastrar?</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-3 pt-2">
+            <button
+              onClick={() => {
+                setShowNovoChoice(false);
+                setShowForm(true);
+              }}
+              className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+            >
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <UserPlus className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground group-hover:text-primary transition-colors">Colaborador</p>
+                <p className="text-xs text-muted-foreground">CLT, Estagiário, Temporário — vínculo direto</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setShowNovoChoice(false);
+                navigate("/terceiros");
+              }}
+              className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-accent-foreground/40 hover:bg-accent/30 transition-all text-left group"
+            >
+              <div className="w-12 h-12 rounded-lg bg-accent/30 flex items-center justify-center shrink-0">
+                <Building2 className="w-6 h-6 text-accent-foreground" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground group-hover:text-accent-foreground transition-colors">Empresa Terceira (PJ / Prestador)</p>
+                <p className="text-xs text-muted-foreground">Pessoa Jurídica, empresa prestadora de serviço — módulo Terceiros & SST</p>
+              </div>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Form Modal */}
       <ColaboradorForm open={showForm} onOpenChange={handleCloseForm} onSuccess={() => refetch()} colaborador={editingColaborador} />
 
