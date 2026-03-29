@@ -76,6 +76,18 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
         {/* Empresa Selector */}
         <EmpresaSelector />
 
+        {/* Humor indicator */}
+        {humorHoje && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-xl cursor-default select-none" title={humorHoje.humor}>
+                {humorHoje.emoji}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Humor: {humorHoje.humor}</TooltipContent>
+          </Tooltip>
+        )}
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
