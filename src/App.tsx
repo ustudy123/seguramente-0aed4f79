@@ -84,7 +84,16 @@ import ManualSistema from "./pages/admin/ManualSistema";
 import QADashboard from "./pages/admin/QADashboard";
 import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 min — dados ficam "frescos" e não re-buscam ao voltar na página
+      gcTime: 1000 * 60 * 5,    // 5 min — cache mantido em memória
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <ErrorBoundary>
