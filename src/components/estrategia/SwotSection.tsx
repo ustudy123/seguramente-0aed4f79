@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Plus, Trash2, ChevronRight, Target, BarChart3 } from "lucide-react";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useEstrategia } from "@/hooks/useEstrategia";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { SwotDetail } from "./SwotDetail";
 import type { EstrategiaSwot } from "@/types/estrategia";
 import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
@@ -19,9 +20,15 @@ interface Props { escopo: EstrategiaEscopo; }
 
 export function SwotSection({ escopo }: Props) {
   const { swots, loadingSwots, createSwot, deleteSwot } = useEstrategia(escopo);
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [selectedSwot, setSelectedSwot] = useState<EstrategiaSwot | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
+
+  // Reset selected SWOT when company or scope changes
+  useEffect(() => {
+    setSelectedSwot(null);
+  }, [empresaAtivaId, escopo?.tipo, escopo?.grupoId]);
 
   if (selectedSwot) {
     return <SwotDetail swot={selectedSwot} onBack={() => setSelectedSwot(null)} />;
