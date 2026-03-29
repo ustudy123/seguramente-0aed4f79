@@ -26,6 +26,7 @@ interface HeaderProps {
 export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
   const { profile, signOut, isSuperAdmin, user } = useAuthContext();
   const { tenant } = useTenant();
+  const { humorHoje } = useHumorDiario();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
