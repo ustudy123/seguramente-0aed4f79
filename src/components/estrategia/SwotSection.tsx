@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Plus, Trash2, ChevronRight, Target, BarChart3 } from "lucide-react";
@@ -22,6 +22,11 @@ export function SwotSection({ escopo }: Props) {
   const [selectedSwot, setSelectedSwot] = useState<EstrategiaSwot | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
+
+  // Reset selected SWOT when company/scope changes
+  useEffect(() => {
+    setSelectedSwot(null);
+  }, [escopo?.empresaId, escopo?.grupoId]);
 
   if (selectedSwot) {
     return <SwotDetail swot={selectedSwot} onBack={() => setSelectedSwot(null)} />;
