@@ -75,6 +75,7 @@ export const MainLayout = forwardRef<HTMLDivElement>((_, ref) => {
         </motion.div>
 
         <OnboardingGate />
+        <HumorCheckInPopup />
       </div>
     </EmpresaAtivaProvider>
   );
