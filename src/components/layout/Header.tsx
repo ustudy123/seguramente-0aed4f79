@@ -15,6 +15,8 @@ import { useTenant } from "@/hooks/useTenant";
 import { useNavigate } from "react-router-dom";
 import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
+import { useHumorDiario } from "@/hooks/useHumorDiario";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -24,6 +26,7 @@ interface HeaderProps {
 export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
   const { profile, signOut, isSuperAdmin, user } = useAuthContext();
   const { tenant } = useTenant();
+  const { humorHoje } = useHumorDiario();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -72,6 +75,18 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
 
         {/* Empresa Selector */}
         <EmpresaSelector />
+
+        {/* Humor indicator */}
+        {humorHoje && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-xl cursor-default select-none" title={humorHoje.humor}>
+                {humorHoje.emoji}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Humor: {humorHoje.humor}</TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Notifications */}
         <DropdownMenu>
