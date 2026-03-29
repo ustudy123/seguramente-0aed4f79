@@ -316,9 +316,10 @@ function AtivosTab() {
       ) : colaboradores.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-xl border border-border">
           <p className="text-muted-foreground mb-4">Nenhum colaborador cadastrado ainda.</p>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowNovoChoice(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Cadastrar Primeiro Colaborador
+          </Button>
           </Button>
         </div>
       ) : viewMode === "cards" ? (
