@@ -7,6 +7,7 @@ import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 import { useIframeNavigation } from "@/hooks/useIframeNavigation";
 import { OnboardingGate } from "@/components/auth/OnboardingGate";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { HumorCheckInPopup } from "@/components/humor/HumorCheckInPopup";
 
 export const MainLayout = forwardRef<HTMLDivElement>((_, ref) => {
   useIframeNavigation();
@@ -74,6 +75,7 @@ export const MainLayout = forwardRef<HTMLDivElement>((_, ref) => {
         </motion.div>
 
         <OnboardingGate />
+        <HumorCheckInPopup />
       </div>
     </EmpresaAtivaProvider>
   );
