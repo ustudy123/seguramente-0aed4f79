@@ -198,9 +198,30 @@ export function useFeedbackOcorrencias() {
       if (error) throw error;
       return data as AdvertenciaLink;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
       toast.success("Link de advertência enviado!");
+
+      // Enviar email ao destinatário com link da advertência
+      if (data) {
+        try {
+          const advData = data as AdvertenciaLink;
+          const advUrl = `https://seguramente.lovable.app/advertencia?token=${advData.token}`;
+          sendEmail({
+            templateName: "generico",
+            recipientEmail: advData.destinatario_email,
+            templateData: {
+              assunto: "Advertência — Documento para Ciência",
+              titulo: "📋 Advertência Formal",
+              mensagem: `${advData.destinatario_nome ? `Prezado(a) ${advData.destinatario_nome}, v` : 'V'}ocê recebeu uma advertência formal. Acesse o link abaixo para visualizar e assinar o documento.`,
+              actionUrl: advUrl,
+              actionLabel: "Visualizar Advertência",
+            },
+          }).catch(console.error);
+        } catch (e) {
+          console.error("Erro ao enviar email de advertência:", e);
+        }
+      }
     },
     onError: (error: Error) => toast.error("Erro ao enviar advertência: " + error.message),
   });
