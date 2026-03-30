@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
+import { sendEmail } from "@/utils/sendEmail";
 import type {
   PlanoAcao,
   PlanoTarefa,
