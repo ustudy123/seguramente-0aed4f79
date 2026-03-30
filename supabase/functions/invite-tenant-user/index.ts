@@ -13,6 +13,65 @@ type Payload = {
   password?: string;
 };
 
+function buildInviteHtml(nomeCompleto: string, confirmationUrl: string, method: string) {
+  return `
+    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
+      <div style="text-align: center; margin-bottom: 8px;">
+        <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ Seguramente</p>
+      </div>
+      <hr style="border-color: #e8e5f0; margin: 16px 0;" />
+      <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">Olá, ${nomeCompleto}!</h1>
+      <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
+        Você foi convidado(a) para acessar a plataforma <strong>Seguramente</strong>, a solução completa em Saúde e Segurança do Trabalho.
+      </p>
+      <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
+        ${method === "invite"
+          ? "Clique no botão abaixo para aceitar o convite e configurar sua conta:"
+          : "Suas credenciais foram criadas. Acesse a plataforma para começar:"}
+      </p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${confirmationUrl}" style="background-color: hsl(262, 52%, 50%); color: #ffffff; font-size: 14px; font-weight: 600; border-radius: 10px; padding: 14px 28px; text-decoration: none; display: inline-block;">
+          ${method === "invite" ? "Aceitar Convite" : "Acessar Plataforma"}
+        </a>
+      </div>
+      <p style="font-size: 12px; color: #999999; margin: 24px 0 0;">
+        Se você não esperava este convite, pode ignorar este e-mail com segurança.
+      </p>
+      <hr style="border-color: #e8e5f0; margin: 16px 0;" />
+      <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">Seguramente — Plataforma de SST</p>
+    </div>
+  `;
+}
+
+async function sendViaResend(email: string, subject: string, html: string) {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) {
+    console.error("RESEND_API_KEY not configured");
+    return;
+  }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Seguramente <noreply@seguramente.app.br>",
+        to: [email],
+        subject,
+        html,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Resend error:", err);
+    }
+  } catch (e) {
+    console.error("Email send error:", e);
+  }
+}
+
 serve(async (req) => {
   const corsHeaders: Record<string, string> = {
     "Access-Control-Allow-Origin": "*",
@@ -38,27 +97,20 @@ serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Validate caller using admin.auth.getUser with the JWT
+  // Validate caller
   let callerId: string;
   try {
-    const { data: callerUser, error: callerError } = await admin.auth.admin.getUserById(
-      // First decode the JWT to get the sub
-      JSON.parse(atob(jwt.split('.')[1])).sub
-    );
-    if (callerError || !callerUser?.user) {
-      console.error("Caller validation error:", callerError?.message);
-      return json({ error: "Invalid token" }, 401);
-    }
+    const sub = JSON.parse(atob(jwt.split('.')[1])).sub;
+    const { data: callerUser, error: callerError } = await admin.auth.admin.getUserById(sub);
+    if (callerError || !callerUser?.user) return json({ error: "Invalid token" }, 401);
     callerId = callerUser.user.id;
-  } catch (e) {
-    console.error("JWT decode error:", e);
+  } catch {
     return json({ error: "Invalid token" }, 401);
   }
 
-  // Get full user data for audit logs
   const { data: userData } = await admin.auth.admin.getUserById(callerId);
 
-  // Get caller's tenant and role
+  // Get caller's tenant
   const { data: callerProfile } = await admin
     .from("profiles")
     .select("tenant_id")
@@ -67,7 +119,7 @@ serve(async (req) => {
 
   if (!callerProfile?.tenant_id) return json({ error: "Caller has no tenant" }, 403);
 
-  // Check caller is at least admin
+  // Check permissions
   const { data: callerRoles } = await admin
     .from("user_roles")
     .select("role")
@@ -75,7 +127,7 @@ serve(async (req) => {
 
   const roles = callerRoles?.map((r) => r.role) || [];
   const isOwnerOrAdmin = roles.includes("owner") || roles.includes("admin");
-  // Also check superadmin
+
   const { data: superCheck } = await admin
     .from("superadmins")
     .select("id")
@@ -100,28 +152,15 @@ serve(async (req) => {
     return json({ error: "Campos obrigatórios: email, nomeCompleto, role" }, 400);
   }
 
-  // Owners can only be created by superadmin (via the other function)
   if (role === "owner") {
     return json({ error: "Não é possível criar owners por esta função" }, 400);
   }
 
   const tenantId = callerProfile.tenant_id;
 
-  // Check if email already exists - use listUsers with filter instead of loading all
+  // Check if email already exists
   let existingUser: any = null;
   try {
-    const { data: listData } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1,
-    });
-    // Search by email using a targeted approach
-    const { data: userByEmail } = await admin
-      .from("profiles")
-      .select("user_id")
-      .eq("tenant_id", tenantId)
-      .limit(1);
-    
-    // Try to find user by email directly
     const { data: allUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
     existingUser = allUsers?.users?.find(
       (u) => u.email?.toLowerCase() === email.toLowerCase()
@@ -131,7 +170,6 @@ serve(async (req) => {
   }
 
   if (existingUser) {
-    // Check if already in this tenant
     const { data: existingProfile } = await admin
       .from("profiles")
       .select("id")
@@ -140,7 +178,6 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingProfile) {
-      // User already exists in this tenant — return their id so frontend can just link them
       return json({
         ok: true,
         userId: existingUser.id,
@@ -154,23 +191,32 @@ serve(async (req) => {
 
   try {
     if (method === "invite") {
-      const { data: invitedUser, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+      // Use generateLink instead of inviteUserByEmail to avoid default Supabase email
+      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+        type: "invite",
         email,
-        {
+        options: {
           data: { tenant_id: tenantId, nome_completo: nomeCompleto },
           redirectTo: `${SITE_URL}/login`,
-        }
-      );
-      if (inviteError || !invitedUser?.user) {
-        console.error("Invite error:", inviteError?.message);
-        // If user already exists in auth but not in this tenant, reuse
-        if (inviteError?.message?.includes("already been registered") && existingUser) {
+        },
+      });
+
+      if (linkError || !linkData?.user) {
+        console.error("generateLink error:", linkError?.message);
+        if (linkError?.message?.includes("already been registered") && existingUser) {
           newUserId = existingUser.id;
         } else {
-          return json({ error: inviteError?.message ?? "Falha ao enviar convite" }, 500);
+          return json({ error: linkError?.message ?? "Falha ao gerar convite" }, 500);
         }
       } else {
-        newUserId = invitedUser.user.id;
+        newUserId = linkData.user.id;
+        // Send branded email via Resend with the confirmation URL
+        const confirmationUrl = linkData.properties?.action_link || `${SITE_URL}/login`;
+        await sendViaResend(
+          email,
+          "Você foi convidado para o Seguramente",
+          buildInviteHtml(nomeCompleto, confirmationUrl, "invite")
+        );
       }
     } else {
       if (!password || password.length < 6) {
@@ -190,6 +236,12 @@ serve(async (req) => {
         }
       } else {
         newUserId = newUser.user.id;
+        // Send welcome email via Resend
+        await sendViaResend(
+          email,
+          "Bem-vindo ao Seguramente",
+          buildInviteHtml(nomeCompleto, `${SITE_URL}/login`, "password")
+        );
       }
     }
   } catch (e: any) {
@@ -206,7 +258,6 @@ serve(async (req) => {
 
   if (profileError) {
     console.error("Profile error:", profileError.message);
-    // If profile already exists, it's ok (user exists in another tenant scenario)
     if (!profileError.message.includes("duplicate")) {
       await admin.auth.admin.deleteUser(newUserId!);
       return json({ error: profileError.message }, 500);
@@ -221,7 +272,6 @@ serve(async (req) => {
 
   if (roleError) {
     console.error("Role error:", roleError.message);
-    // Ignore duplicate role errors
     if (!roleError.message.includes("duplicate")) {
       return json({ error: roleError.message }, 500);
     }
@@ -243,51 +293,6 @@ serve(async (req) => {
     target_name: nomeCompleto,
     metadata: { email, role, method },
   });
-
-  // Enviar email de boas-vindas via Resend (não bloqueia o fluxo)
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-  if (RESEND_API_KEY) {
-    try {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Seguramente <noreply@seguramente.app.br>",
-          to: [email],
-          subject: "Você foi convidado para o Seguramente",
-          html: `
-            <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
-              <div style="text-align: center; margin-bottom: 8px;">
-                <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ Seguramente</p>
-              </div>
-              <hr style="border-color: #e8e5f0; margin: 16px 0;" />
-              <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">Olá, ${nomeCompleto}!</h1>
-              <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
-                Você foi convidado(a) para acessar a plataforma <strong>Seguramente</strong>, a solução completa em Saúde e Segurança do Trabalho.
-              </p>
-              <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
-                ${method === "invite" 
-                  ? "Verifique seu e-mail para o link de ativação da sua conta."
-                  : "Suas credenciais foram criadas. Acesse a plataforma para começar."}
-              </p>
-              <div style="text-align: center; margin: 24px 0;">
-                <a href="${SITE_URL}/login" style="background-color: hsl(262, 52%, 50%); color: #ffffff; font-size: 14px; font-weight: 600; border-radius: 10px; padding: 14px 28px; text-decoration: none; display: inline-block;">
-                  Acessar Plataforma
-                </a>
-              </div>
-              <hr style="border-color: #e8e5f0; margin: 16px 0;" />
-              <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">Seguramente — Plataforma de SST</p>
-            </div>
-          `,
-        }),
-      });
-    } catch (emailErr) {
-      console.error("Erro ao enviar email via Resend:", emailErr);
-    }
-  }
 
   return json({
     ok: true,

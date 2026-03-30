@@ -120,23 +120,69 @@ serve(async (req) => {
     let newUserId: string;
 
     if (inviteMode) {
-      // Mode 1a: Invite user by email (magic link)
-      const { data: invitedUser, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+      // Mode 1a: Invite user by email using generateLink (avoids default Supabase email)
+      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+        type: "invite",
         email,
-        {
+        options: {
           data: {
             tenant_id: existingTenantId,
             nome_completo: nomeCompleto,
           },
           redirectTo: `${SITE_URL}/login`,
-        }
-      );
+        },
+      });
 
-      if (inviteError || !invitedUser?.user) {
-        return json({ error: inviteError?.message ?? "Failed to invite user" }, 500);
+      if (linkError || !linkData?.user) {
+        return json({ error: linkError?.message ?? "Failed to invite user" }, 500);
       }
 
-      newUserId = invitedUser.user.id;
+      newUserId = linkData.user.id;
+
+      // Send branded invite email via Resend
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      const confirmationUrl = linkData.properties?.action_link || `${SITE_URL}/login`;
+      if (RESEND_API_KEY) {
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Seguramente <noreply@seguramente.app.br>",
+              to: [email],
+              subject: "Você foi convidado para o Seguramente",
+              html: `
+                <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
+                  <div style="text-align: center; margin-bottom: 8px;">
+                    <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ Seguramente</p>
+                  </div>
+                  <hr style="border-color: #e8e5f0; margin: 16px 0;" />
+                  <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">Olá, ${nomeCompleto}!</h1>
+                  <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
+                    Você foi convidado(a) para acessar a plataforma <strong>Seguramente</strong>, a solução completa em Saúde e Segurança do Trabalho.
+                  </p>
+                  <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
+                    Clique no botão abaixo para aceitar o convite e configurar sua conta:
+                  </p>
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="${confirmationUrl}" style="background-color: hsl(262, 52%, 50%); color: #ffffff; font-size: 14px; font-weight: 600; border-radius: 10px; padding: 14px 28px; text-decoration: none; display: inline-block;">
+                      Aceitar Convite
+                    </a>
+                  </div>
+                  <p style="font-size: 12px; color: #999999; margin: 24px 0 0;">Se você não esperava este convite, pode ignorar este e-mail.</p>
+                  <hr style="border-color: #e8e5f0; margin: 16px 0;" />
+                  <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">Seguramente — Plataforma de SST</p>
+                </div>
+              `,
+            }),
+          });
+        } catch (e) {
+          console.error("Resend error:", e);
+        }
+      }
     } else {
       // Mode 1b: Create user with password
       if (!password) {

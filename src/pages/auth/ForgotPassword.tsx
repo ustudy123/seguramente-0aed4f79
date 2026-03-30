@@ -38,23 +38,30 @@ export default function ForgotPassword() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast.error("Erro ao enviar e-mail", {
-        description: translateError(error.message),
+    try {
+      const { error } = await supabase.functions.invoke("send-recovery-email", {
+        body: { email: data.email },
       });
-      return;
+
+      if (error) {
+        toast.error("Erro ao enviar e-mail", {
+          description: translateError(error.message),
+        });
+        setLoading(false);
+        return;
+      }
+
+      setEmailSent(true);
+      toast.success("E-mail enviado!", {
+        description: "Verifique sua caixa de entrada.",
+      });
+    } catch (err: any) {
+      toast.error("Erro ao enviar e-mail", {
+        description: "Tente novamente mais tarde.",
+      });
     }
 
-    setEmailSent(true);
-    toast.success("E-mail enviado!", {
-      description: "Verifique sua caixa de entrada.",
-    });
+    setLoading(false);
   };
 
   if (emailSent) {
