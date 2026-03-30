@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
+import { sendEmail } from "@/utils/sendEmail";
 import type { Feedback, Ocorrencia, AdvertenciaLink, FeedbackCategoria, OcorrenciaTipo } from "@/types/feedback";
 
 export function useFeedbackOcorrencias() {
