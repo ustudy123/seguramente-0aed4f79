@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
+import { sendEmail } from "@/utils/sendEmail";
 import type { Feedback, Ocorrencia, AdvertenciaLink, FeedbackCategoria, OcorrenciaTipo } from "@/types/feedback";
 
 export function useFeedbackOcorrencias() {
@@ -54,9 +55,38 @@ export function useFeedbackOcorrencias() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
       toast.success("Feedback registrado com sucesso!");
+
+      // Notificar colaborador por email
+      if (data) {
+        try {
+          const colaboradorId = (data as any).colaborador_id;
+          if (colaboradorId) {
+            const { data: userRecord } = await (supabase as any)
+              .from("tenant_usuarios")
+              .select("email_principal")
+              .eq("auth_user_id", colaboradorId)
+              .maybeSingle();
+
+            if (userRecord?.email_principal) {
+              sendEmail({
+                templateName: "feedback",
+                recipientEmail: userRecord.email_principal,
+                templateData: {
+                  colaborador: (data as any).colaborador_nome,
+                  categoria: (data as any).categoria,
+                  descricao: (data as any).descricao_ia || (data as any).descricao,
+                  registradoPor: (data as any).registrado_por_nome,
+                },
+              }).catch(console.error);
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao enviar email de feedback:", e);
+        }
+      }
     },
     onError: (error: Error) => toast.error("Erro ao registrar feedback: " + error.message),
   });
@@ -143,6 +173,37 @@ export function useFeedbackOcorrencias() {
           } as any);
         }
       }
+
+      // Notificar gestores sobre ocorrência negativa por email
+      if (data && (data as any).tipo === "negativa") {
+        try {
+          // Buscar gestores (admins e managers do tenant)
+          const { data: gestores } = await (supabase as any)
+            .from("tenant_usuarios")
+            .select("email_principal, nome_completo")
+            .eq("tenant_id", tenantId)
+            .in("tipo_usuario", ["admin", "gestor", "rh"]);
+
+          if (gestores?.length) {
+            for (const gestor of gestores.slice(0, 5)) {
+              if (gestor.email_principal) {
+                sendEmail({
+                  templateName: "ocorrencia",
+                  recipientEmail: gestor.email_principal,
+                  templateData: {
+                    colaborador: (data as any).colaborador_nome,
+                    tipo: "Negativa",
+                    descricao: (data as any).descricao,
+                    dataOcorrencia: new Date().toLocaleDateString("pt-BR"),
+                  },
+                }).catch(console.error);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao enviar email de ocorrência:", e);
+        }
+      }
     },
     onError: (error: Error) => toast.error("Erro ao registrar ocorrência: " + error.message),
   });
@@ -168,9 +229,30 @@ export function useFeedbackOcorrencias() {
       if (error) throw error;
       return data as AdvertenciaLink;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
       toast.success("Link de advertência enviado!");
+
+      // Enviar email ao destinatário com link da advertência
+      if (data) {
+        try {
+          const advData = data as AdvertenciaLink;
+          const advUrl = `https://seguramente.lovable.app/advertencia?token=${advData.token}`;
+          sendEmail({
+            templateName: "generico",
+            recipientEmail: advData.destinatario_email,
+            templateData: {
+              assunto: "Advertência — Documento para Ciência",
+              titulo: "📋 Advertência Formal",
+              mensagem: `${advData.destinatario_nome ? `Prezado(a) ${advData.destinatario_nome}, v` : 'V'}ocê recebeu uma advertência formal. Acesse o link abaixo para visualizar e assinar o documento.`,
+              actionUrl: advUrl,
+              actionLabel: "Visualizar Advertência",
+            },
+          }).catch(console.error);
+        } catch (e) {
+          console.error("Erro ao enviar email de advertência:", e);
+        }
+      }
     },
     onError: (error: Error) => toast.error("Erro ao enviar advertência: " + error.message),
   });
