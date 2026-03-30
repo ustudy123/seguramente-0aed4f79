@@ -12054,22 +12054,38 @@ export type Database = {
       metas: {
         Row: {
           ano: number
+          aprovador_id: string | null
+          aprovador_nome: string | null
           categoria_meta: string | null
+          ciclo_avaliacao_id: string | null
           colaborador_id: string | null
           colaborador_nome: string | null
+          compartilhada: boolean | null
           created_at: string
           criado_por: string | null
           criado_por_nome: string | null
+          data_aprovacao: string | null
           data_fim: string | null
           data_inicio: string | null
           departamento_id: string | null
           departamento_nome: string | null
           descricao: string | null
           empresa_id: string | null
+          formula_medicao: string | null
           id: string
           ierm_calculado_em: string | null
           ierm_nivel: string | null
           ierm_score: number | null
+          indicador_direcao:
+            | Database["public"]["Enums"]["indicador_direcao"]
+            | null
+          indicador_nome: string | null
+          indicador_tipo: Database["public"]["Enums"]["indicador_tipo"] | null
+          indicador_unidade: string | null
+          justificativa_aprovacao: string | null
+          meta_pai_id: string | null
+          nivel: Database["public"]["Enums"]["meta_nivel"] | null
+          objetivo_estrategico: string | null
           origem_meta: string | null
           origem_referencia_id: string | null
           periodo: Database["public"]["Enums"]["meta_periodo"]
@@ -12079,32 +12095,69 @@ export type Database = {
           premiacao_tipo: string | null
           premiacao_valor: number | null
           progresso: number
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          risco_descricao: string | null
+          risco_ia: string | null
+          risco_nivel: string | null
+          setor_id: string | null
+          setor_nome: string | null
           status: Database["public"]["Enums"]["meta_status"]
+          sugestao_ia: Json | null
+          swot_id: string | null
+          tags: string[] | null
           tenant_id: string
           tipo: string
           titulo: string
           trimestre: number | null
+          unidade_id: string | null
+          unidade_nome: string | null
           updated_at: string
+          valor_alvo: number | null
+          valor_atual: number | null
+          valor_baseline: number | null
+          valor_maximo: number | null
+          valor_minimo: number | null
+          versao: number | null
           vinculo_ciclo_id: string | null
+          workflow_status:
+            | Database["public"]["Enums"]["meta_workflow_status"]
+            | null
         }
         Insert: {
           ano: number
+          aprovador_id?: string | null
+          aprovador_nome?: string | null
           categoria_meta?: string | null
+          ciclo_avaliacao_id?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string | null
+          compartilhada?: boolean | null
           created_at?: string
           criado_por?: string | null
           criado_por_nome?: string | null
+          data_aprovacao?: string | null
           data_fim?: string | null
           data_inicio?: string | null
           departamento_id?: string | null
           departamento_nome?: string | null
           descricao?: string | null
           empresa_id?: string | null
+          formula_medicao?: string | null
           id?: string
           ierm_calculado_em?: string | null
           ierm_nivel?: string | null
           ierm_score?: number | null
+          indicador_direcao?:
+            | Database["public"]["Enums"]["indicador_direcao"]
+            | null
+          indicador_nome?: string | null
+          indicador_tipo?: Database["public"]["Enums"]["indicador_tipo"] | null
+          indicador_unidade?: string | null
+          justificativa_aprovacao?: string | null
+          meta_pai_id?: string | null
+          nivel?: Database["public"]["Enums"]["meta_nivel"] | null
+          objetivo_estrategico?: string | null
           origem_meta?: string | null
           origem_referencia_id?: string | null
           periodo?: Database["public"]["Enums"]["meta_periodo"]
@@ -12114,32 +12167,69 @@ export type Database = {
           premiacao_tipo?: string | null
           premiacao_valor?: number | null
           progresso?: number
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          risco_descricao?: string | null
+          risco_ia?: string | null
+          risco_nivel?: string | null
+          setor_id?: string | null
+          setor_nome?: string | null
           status?: Database["public"]["Enums"]["meta_status"]
+          sugestao_ia?: Json | null
+          swot_id?: string | null
+          tags?: string[] | null
           tenant_id: string
           tipo?: string
           titulo: string
           trimestre?: number | null
+          unidade_id?: string | null
+          unidade_nome?: string | null
           updated_at?: string
+          valor_alvo?: number | null
+          valor_atual?: number | null
+          valor_baseline?: number | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+          versao?: number | null
           vinculo_ciclo_id?: string | null
+          workflow_status?:
+            | Database["public"]["Enums"]["meta_workflow_status"]
+            | null
         }
         Update: {
           ano?: number
+          aprovador_id?: string | null
+          aprovador_nome?: string | null
           categoria_meta?: string | null
+          ciclo_avaliacao_id?: string | null
           colaborador_id?: string | null
           colaborador_nome?: string | null
+          compartilhada?: boolean | null
           created_at?: string
           criado_por?: string | null
           criado_por_nome?: string | null
+          data_aprovacao?: string | null
           data_fim?: string | null
           data_inicio?: string | null
           departamento_id?: string | null
           departamento_nome?: string | null
           descricao?: string | null
           empresa_id?: string | null
+          formula_medicao?: string | null
           id?: string
           ierm_calculado_em?: string | null
           ierm_nivel?: string | null
           ierm_score?: number | null
+          indicador_direcao?:
+            | Database["public"]["Enums"]["indicador_direcao"]
+            | null
+          indicador_nome?: string | null
+          indicador_tipo?: Database["public"]["Enums"]["indicador_tipo"] | null
+          indicador_unidade?: string | null
+          justificativa_aprovacao?: string | null
+          meta_pai_id?: string | null
+          nivel?: Database["public"]["Enums"]["meta_nivel"] | null
+          objetivo_estrategico?: string | null
           origem_meta?: string | null
           origem_referencia_id?: string | null
           periodo?: Database["public"]["Enums"]["meta_periodo"]
@@ -12149,15 +12239,43 @@ export type Database = {
           premiacao_tipo?: string | null
           premiacao_valor?: number | null
           progresso?: number
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          risco_descricao?: string | null
+          risco_ia?: string | null
+          risco_nivel?: string | null
+          setor_id?: string | null
+          setor_nome?: string | null
           status?: Database["public"]["Enums"]["meta_status"]
+          sugestao_ia?: Json | null
+          swot_id?: string | null
+          tags?: string[] | null
           tenant_id?: string
           tipo?: string
           titulo?: string
           trimestre?: number | null
+          unidade_id?: string | null
+          unidade_nome?: string | null
           updated_at?: string
+          valor_alvo?: number | null
+          valor_atual?: number | null
+          valor_baseline?: number | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+          versao?: number | null
           vinculo_ciclo_id?: string | null
+          workflow_status?:
+            | Database["public"]["Enums"]["meta_workflow_status"]
+            | null
         }
         Relationships: [
+          {
+            foreignKeyName: "metas_ciclo_avaliacao_id_fkey"
+            columns: ["ciclo_avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacao_ciclos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "metas_departamento_id_fkey"
             columns: ["departamento_id"]
@@ -12173,6 +12291,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "metas_meta_pai_id_fkey"
+            columns: ["meta_pai_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "metas_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -12180,10 +12312,390 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "metas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "metas_vinculo_ciclo_id_fkey"
             columns: ["vinculo_ciclo_id"]
             isOneToOne: false
             referencedRelation: "avaliacao_ciclos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_checkins: {
+        Row: {
+          bloqueios: string | null
+          created_at: string
+          id: string
+          meta_id: string
+          observacao: string | null
+          previsao_atingimento: string | null
+          progresso_anterior: number | null
+          progresso_novo: number | null
+          realizado_por: string | null
+          realizado_por_nome: string | null
+          tenant_id: string
+          valor_anterior: number | null
+          valor_novo: number | null
+        }
+        Insert: {
+          bloqueios?: string | null
+          created_at?: string
+          id?: string
+          meta_id: string
+          observacao?: string | null
+          previsao_atingimento?: string | null
+          progresso_anterior?: number | null
+          progresso_novo?: number | null
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id: string
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Update: {
+          bloqueios?: string | null
+          created_at?: string
+          id?: string
+          meta_id?: string
+          observacao?: string | null
+          previsao_atingimento?: string | null
+          progresso_anterior?: number | null
+          progresso_novo?: number | null
+          realizado_por?: string | null
+          realizado_por_nome?: string | null
+          tenant_id?: string
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_checkins_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_checkins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_configuracao: {
+        Row: {
+          created_at: string
+          dias_alerta_prazo: number | null
+          escala_max: number | null
+          escala_min: number | null
+          exigir_aprovacao_estrategica: boolean | null
+          exigir_aprovacao_individual: boolean | null
+          exigir_aprovacao_setor: boolean | null
+          exigir_aprovacao_unidade: boolean | null
+          exigir_indicador: boolean | null
+          exigir_objetivo_estrategico: boolean | null
+          frequencia_checkin: string | null
+          id: string
+          integrar_avaliacao_desempenho: boolean | null
+          modelo_avaliacao: string | null
+          niveis_habilitados: string[] | null
+          permitir_desdobramento: boolean | null
+          permitir_metas_compartilhadas: boolean | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dias_alerta_prazo?: number | null
+          escala_max?: number | null
+          escala_min?: number | null
+          exigir_aprovacao_estrategica?: boolean | null
+          exigir_aprovacao_individual?: boolean | null
+          exigir_aprovacao_setor?: boolean | null
+          exigir_aprovacao_unidade?: boolean | null
+          exigir_indicador?: boolean | null
+          exigir_objetivo_estrategico?: boolean | null
+          frequencia_checkin?: string | null
+          id?: string
+          integrar_avaliacao_desempenho?: boolean | null
+          modelo_avaliacao?: string | null
+          niveis_habilitados?: string[] | null
+          permitir_desdobramento?: boolean | null
+          permitir_metas_compartilhadas?: boolean | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dias_alerta_prazo?: number | null
+          escala_max?: number | null
+          escala_min?: number | null
+          exigir_aprovacao_estrategica?: boolean | null
+          exigir_aprovacao_individual?: boolean | null
+          exigir_aprovacao_setor?: boolean | null
+          exigir_aprovacao_unidade?: boolean | null
+          exigir_indicador?: boolean | null
+          exigir_objetivo_estrategico?: boolean | null
+          frequencia_checkin?: string | null
+          id?: string
+          integrar_avaliacao_desempenho?: boolean | null
+          modelo_avaliacao?: string | null
+          niveis_habilitados?: string[] | null
+          permitir_desdobramento?: boolean | null
+          permitir_metas_compartilhadas?: boolean | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_configuracao_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_evidencias: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          id: string
+          link_externo: string | null
+          meta_id: string
+          periodo_referencia: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          link_externo?: string | null
+          meta_id: string
+          periodo_referencia?: string | null
+          tenant_id: string
+          tipo?: string
+          titulo?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          id?: string
+          link_externo?: string | null
+          meta_id?: string
+          periodo_referencia?: string | null
+          tenant_id?: string
+          tipo?: string
+          titulo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_evidencias_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_evidencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_indicadores: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          descricao: string | null
+          direcao: Database["public"]["Enums"]["indicador_direcao"]
+          formula: string | null
+          frequencia_atualizacao: string | null
+          id: string
+          nome: string
+          origem_dados: string | null
+          tenant_id: string
+          tipo: Database["public"]["Enums"]["indicador_tipo"]
+          unidade_medida: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          direcao?: Database["public"]["Enums"]["indicador_direcao"]
+          formula?: string | null
+          frequencia_atualizacao?: string | null
+          id?: string
+          nome: string
+          origem_dados?: string | null
+          tenant_id: string
+          tipo?: Database["public"]["Enums"]["indicador_tipo"]
+          unidade_medida?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          descricao?: string | null
+          direcao?: Database["public"]["Enums"]["indicador_direcao"]
+          formula?: string | null
+          frequencia_atualizacao?: string | null
+          id?: string
+          nome?: string
+          origem_dados?: string | null
+          tenant_id?: string
+          tipo?: Database["public"]["Enums"]["indicador_tipo"]
+          unidade_medida?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_indicadores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_participantes: {
+        Row: {
+          created_at: string
+          id: string
+          meta_id: string
+          papel: string | null
+          participante_id: string
+          participante_nome: string
+          peso: number | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meta_id: string
+          papel?: string | null
+          participante_id: string
+          participante_nome: string
+          peso?: number | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meta_id?: string
+          papel?: string | null
+          participante_id?: string
+          participante_nome?: string
+          peso?: number | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_participantes_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_participantes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_workflow_log: {
+        Row: {
+          acao: string
+          created_at: string
+          id: string
+          justificativa: string | null
+          meta_id: string
+          status_anterior:
+            | Database["public"]["Enums"]["meta_workflow_status"]
+            | null
+          status_novo: Database["public"]["Enums"]["meta_workflow_status"]
+          tenant_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          id?: string
+          justificativa?: string | null
+          meta_id: string
+          status_anterior?:
+            | Database["public"]["Enums"]["meta_workflow_status"]
+            | null
+          status_novo: Database["public"]["Enums"]["meta_workflow_status"]
+          tenant_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          id?: string
+          justificativa?: string | null
+          meta_id?: string
+          status_anterior?:
+            | Database["public"]["Enums"]["meta_workflow_status"]
+            | null
+          status_novo?: Database["public"]["Enums"]["meta_workflow_status"]
+          tenant_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_workflow_log_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_workflow_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -19328,6 +19840,18 @@ export type Database = {
         | "cat"
         | "ppp_ltcat"
         | "pro_labore"
+      indicador_direcao:
+        | "maior_melhor"
+        | "menor_melhor"
+        | "igual_melhor"
+        | "faixa"
+      indicador_tipo:
+        | "quantitativo"
+        | "qualitativo"
+        | "percentual"
+        | "financeiro"
+        | "marco"
+        | "hibrido"
       marketplace_contratacao_status:
         | "solicitada"
         | "aceita"
@@ -19342,6 +19866,7 @@ export type Database = {
         | "suspenso"
         | "bloqueado"
       marketplace_servico_modalidade: "presencial" | "online" | "hibrido"
+      meta_nivel: "estrategica" | "unidade" | "setor" | "individual"
       meta_periodo: "mensal" | "trimestral" | "semestral" | "anual"
       meta_status:
         | "nao_iniciada"
@@ -19349,6 +19874,14 @@ export type Database = {
         | "concluida"
         | "cancelada"
         | "atrasada"
+      meta_workflow_status:
+        | "rascunho"
+        | "em_aprovacao"
+        | "ativa"
+        | "em_revisao"
+        | "suspensa"
+        | "encerrada"
+        | "cancelada"
       nexo_trabalho: "nao" | "em_analise" | "sim"
       obrigatoriedade_epi: "obrigatorio" | "recomendado" | "condicional"
       oceano_quadrante: "eliminar" | "reduzir" | "elevar" | "criar"
@@ -19871,6 +20404,20 @@ export const Constants = {
         "ppp_ltcat",
         "pro_labore",
       ],
+      indicador_direcao: [
+        "maior_melhor",
+        "menor_melhor",
+        "igual_melhor",
+        "faixa",
+      ],
+      indicador_tipo: [
+        "quantitativo",
+        "qualitativo",
+        "percentual",
+        "financeiro",
+        "marco",
+        "hibrido",
+      ],
       marketplace_contratacao_status: [
         "solicitada",
         "aceita",
@@ -19887,6 +20434,7 @@ export const Constants = {
         "bloqueado",
       ],
       marketplace_servico_modalidade: ["presencial", "online", "hibrido"],
+      meta_nivel: ["estrategica", "unidade", "setor", "individual"],
       meta_periodo: ["mensal", "trimestral", "semestral", "anual"],
       meta_status: [
         "nao_iniciada",
@@ -19894,6 +20442,15 @@ export const Constants = {
         "concluida",
         "cancelada",
         "atrasada",
+      ],
+      meta_workflow_status: [
+        "rascunho",
+        "em_aprovacao",
+        "ativa",
+        "em_revisao",
+        "suspensa",
+        "encerrada",
+        "cancelada",
       ],
       nexo_trabalho: ["nao", "em_analise", "sim"],
       obrigatoriedade_epi: ["obrigatorio", "recomendado", "condicional"],

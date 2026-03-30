@@ -1,0 +1,307 @@
+import { useState } from "react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Target, TrendingUp, FileText, History, AlertTriangle,
+  Sparkles, Loader2, MessageSquare, CheckCircle2,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { MetaCompleta, MetaCheckin } from "@/types/metas-module";
+import {
+  NIVEL_LABELS, NIVEL_CORES, WORKFLOW_STATUS_LABELS, WORKFLOW_STATUS_CORES,
+  STATUS_LABELS, STATUS_CORES, PERIODO_LABELS,
+} from "@/types/metas-module";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+
+interface MetaDetailModuleDialogProps {
+  meta: MetaCompleta | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCheckin?: (data: { meta_id: string; valor_novo?: number; progresso_novo: number; observacao?: string }) => Promise<void>;
+}
+
+export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin }: MetaDetailModuleDialogProps) {
+  const { tenantId } = useAuth();
+  const [checkinValue, setCheckinValue] = useState("");
+  const [checkinProgress, setCheckinProgress] = useState("");
+  const [checkinObs, setCheckinObs] = useState("");
+  const [isAnalysing, setIsAnalysing] = useState(false);
+  const [riskAnalysis, setRiskAnalysis] = useState<any>(null);
+
+  const { data: checkins = [] } = useQuery({
+    queryKey: ["meta-checkins-detail", meta?.id],
+    queryFn: async () => {
+      if (!meta?.id) return [];
+      const { data } = await supabase
+        .from("metas_checkins")
+        .select("*")
+        .eq("meta_id", meta.id)
+        .order("created_at", { ascending: false });
+      return (data || []) as MetaCheckin[];
+    },
+    enabled: !!meta?.id,
+  });
+
+  const { data: workflowLogs = [] } = useQuery({
+    queryKey: ["meta-workflow-detail", meta?.id],
+    queryFn: async () => {
+      if (!meta?.id) return [];
+      const { data } = await supabase
+        .from("metas_workflow_log")
+        .select("*")
+        .eq("meta_id", meta.id)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!meta?.id,
+  });
+
+  const { data: evidencias = [] } = useQuery({
+    queryKey: ["meta-evidencias-detail", meta?.id],
+    queryFn: async () => {
+      if (!meta?.id) return [];
+      const { data } = await supabase
+        .from("metas_evidencias")
+        .select("*")
+        .eq("meta_id", meta.id)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!meta?.id,
+  });
+
+  const handleCheckin = async () => {
+    if (!meta || !onCheckin) return;
+    const prog = parseInt(checkinProgress);
+    if (isNaN(prog)) { toast.error("Informe o progresso"); return; }
+    await onCheckin({
+      meta_id: meta.id,
+      valor_novo: checkinValue ? parseFloat(checkinValue) : undefined,
+      progresso_novo: prog,
+      observacao: checkinObs || undefined,
+    });
+    setCheckinValue("");
+    setCheckinProgress("");
+    setCheckinObs("");
+    toast.success("Check-in registrado!");
+  };
+
+  const handleAnaliseRisco = async () => {
+    if (!meta) return;
+    setIsAnalysing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-metas", {
+        body: { acao: "analisar_risco", meta },
+      });
+      if (error) throw error;
+      setRiskAnalysis(data);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsAnalysing(false);
+    }
+  };
+
+  if (!meta) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+          <div className="space-y-2">
+            <DialogTitle className="text-lg">{meta.titulo}</DialogTitle>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge className={`${NIVEL_CORES[meta.nivel]} text-[10px]`}>
+                {NIVEL_LABELS[meta.nivel]}
+              </Badge>
+              <Badge className={`${WORKFLOW_STATUS_CORES[meta.workflow_status]} text-[10px]`}>
+                {WORKFLOW_STATUS_LABELS[meta.workflow_status]}
+              </Badge>
+              <Badge className={`${STATUS_CORES[meta.status]} text-[10px]`}>
+                {STATUS_LABELS[meta.status]}
+              </Badge>
+              <Badge variant="outline" className="text-[10px]">
+                {PERIODO_LABELS[meta.periodo]} {meta.ano}
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Progresso</span>
+                <span className="font-medium">{meta.progresso}%</span>
+              </div>
+              <Progress value={meta.progresso} className="h-2" />
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto">
+          <Tabs defaultValue="checkin" className="w-full">
+            <TabsList className="w-full justify-start rounded-none border-b bg-transparent px-6">
+              <TabsTrigger value="checkin" className="gap-1 text-xs">
+                <TrendingUp className="h-3.5 w-3.5" /> Check-in
+              </TabsTrigger>
+              <TabsTrigger value="evidencias" className="gap-1 text-xs">
+                <FileText className="h-3.5 w-3.5" /> Evidências
+              </TabsTrigger>
+              <TabsTrigger value="risco" className="gap-1 text-xs">
+                <AlertTriangle className="h-3.5 w-3.5" /> Análise IA
+              </TabsTrigger>
+              <TabsTrigger value="historico" className="gap-1 text-xs">
+                <History className="h-3.5 w-3.5" /> Histórico
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="px-6 py-4">
+              {/* Check-in */}
+              <TabsContent value="checkin" className="mt-0 space-y-4">
+                {meta.descricao && (
+                  <p className="text-sm text-muted-foreground">{meta.descricao}</p>
+                )}
+                {meta.indicador_nome && (
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                    <strong>Indicador:</strong> {meta.indicador_nome} — Atual: {meta.valor_atual ?? 0} / Alvo: {meta.valor_alvo ?? "—"} {meta.indicador_unidade || ""}
+                  </div>
+                )}
+
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <h4 className="text-sm font-semibold">Registrar Check-in</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Valor Atual</Label>
+                        <Input type="number" value={checkinValue} onChange={e => setCheckinValue(e.target.value)} placeholder={String(meta.valor_atual || 0)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Progresso (%)</Label>
+                        <Input type="number" value={checkinProgress} onChange={e => setCheckinProgress(e.target.value)} placeholder={String(meta.progresso)} />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Observação</Label>
+                      <Textarea value={checkinObs} onChange={e => setCheckinObs(e.target.value)} rows={2} />
+                    </div>
+                    <Button size="sm" onClick={handleCheckin} className="gap-1">
+                      <CheckCircle2 className="h-4 w-4" /> Salvar Check-in
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {checkins.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold">Histórico de Check-ins</h4>
+                    {checkins.map(c => (
+                      <div key={c.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{c.realizado_por_nome}</span>
+                          <span className="text-muted-foreground">{new Date(c.created_at).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                        <div>
+                          Progresso: {c.progresso_anterior}% → {c.progresso_novo}%
+                          {c.valor_novo !== null && ` | Valor: ${c.valor_novo}`}
+                        </div>
+                        {c.observacao && <p className="text-muted-foreground">{c.observacao}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Evidências */}
+              <TabsContent value="evidencias" className="mt-0 space-y-3">
+                {evidencias.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Nenhuma evidência anexada.</p>
+                ) : (
+                  evidencias.map((e: any) => (
+                    <div key={e.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{e.titulo || e.arquivo_nome || "Evidência"}</span>
+                        <span className="text-muted-foreground">{new Date(e.created_at).toLocaleDateString("pt-BR")}</span>
+                      </div>
+                      {e.descricao && <p>{e.descricao}</p>}
+                    </div>
+                  ))
+                )}
+              </TabsContent>
+
+              {/* Análise IA */}
+              <TabsContent value="risco" className="mt-0 space-y-4">
+                <Button variant="outline" onClick={handleAnaliseRisco} disabled={isAnalysing} className="gap-1.5">
+                  {isAnalysing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  Analisar Risco com IA
+                </Button>
+
+                {riskAnalysis && (
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={riskAnalysis.nivel_risco === "baixo" ? "secondary" : "destructive"}>
+                          Risco: {riskAnalysis.nivel_risco}
+                        </Badge>
+                        <span className="text-sm">Probabilidade: {riskAnalysis.probabilidade_atingimento}%</span>
+                      </div>
+                      <p className="text-sm">{riskAnalysis.resumo}</p>
+                      {riskAnalysis.fatores_risco?.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-semibold mb-1">Fatores de Risco</h5>
+                          <ul className="text-xs space-y-1">
+                            {riskAnalysis.fatores_risco.map((f: string, i: number) => (
+                              <li key={i} className="flex gap-1"><AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />{f}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {riskAnalysis.recomendacoes?.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-semibold mb-1">Recomendações</h5>
+                          <ul className="text-xs space-y-1">
+                            {riskAnalysis.recomendacoes.map((r: string, i: number) => (
+                              <li key={i} className="flex gap-1"><Sparkles className="h-3 w-3 text-primary shrink-0 mt-0.5" />{r}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" /> Conteúdo gerado por IA — sujeito a revisão humana
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Histórico */}
+              <TabsContent value="historico" className="mt-0 space-y-2">
+                {workflowLogs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Sem histórico de workflow.</p>
+                ) : (
+                  workflowLogs.map((log: any) => (
+                    <div key={log.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{log.usuario_nome || "Sistema"}</span>
+                        <span className="text-muted-foreground">{new Date(log.created_at).toLocaleDateString("pt-BR")}</span>
+                      </div>
+                      <p>
+                        {log.acao === "criacao" ? "Meta criada" : `${log.status_anterior || "—"} → ${log.status_novo}`}
+                      </p>
+                      {log.justificativa && <p className="text-muted-foreground">{log.justificativa}</p>}
+                    </div>
+                  ))
+                )}
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
