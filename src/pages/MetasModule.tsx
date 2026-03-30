@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Target, BarChart3, Layers, Building2, Users, User,
-  Plus, Settings, Sparkles,
+  Plus, Settings, Sparkles, MessageSquare, Calculator,
+  BarChart3 as IndicatorIcon,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -16,12 +17,16 @@ import { MetaFormModule } from "@/components/metas/MetaFormModule";
 import { MetaDetailModuleDialog } from "@/components/metas/MetaDetailModuleDialog";
 import { DesdobramentoDialog } from "@/components/metas/DesdobramentoDialog";
 import { MetasConfig } from "@/components/metas/MetasConfig";
+import { MetasIndicadoresConfig } from "@/components/metas/MetasIndicadoresConfig";
+import { MetasConsistenciaPanel } from "@/components/metas/MetasConsistenciaPanel";
+import { MetasConsolidacaoPanel } from "@/components/metas/MetasConsolidacaoPanel";
+import { MetasChatAssistente } from "@/components/metas/MetasChatAssistente";
 import type { MetaCompleta, MetaNivel } from "@/types/metas-module";
 import { useAvaliacaoPermissoes } from "@/hooks/useAvaliacaoPermissoes";
 
 export default function Metas() {
   const [tab, setTab] = useState("dashboard");
-  const { metas, isLoading, createMeta, updateMeta, deleteMeta, alterarWorkflow, criarCheckin, desdobrarMeta, isDesdobrando, configuracao, salvarConfig, stats, isCreating } = useMetasModule();
+  const { metas, isLoading, createMeta, updateMeta, deleteMeta, alterarWorkflow, criarCheckin, criarEvidencia, desdobrarMeta, isDesdobrando, configuracao, salvarConfig, stats, isCreating } = useMetasModule();
   const [showForm, setShowForm] = useState(false);
   const [formNivel, setFormNivel] = useState<MetaNivel>("individual");
   const [editingMeta, setEditingMeta] = useState<MetaCompleta | null>(null);
@@ -85,7 +90,7 @@ export default function Metas() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={() => openForm(tab === "dashboard" ? "estrategica" : (tab as MetaNivel))} className="gap-1.5">
+          <Button onClick={() => openForm(tab === "dashboard" || tab === "consolidacao" || tab === "chat" || tab === "indicadores" || tab === "config" ? "estrategica" : (tab as MetaNivel))} className="gap-1.5">
             <Plus className="h-4 w-4" />
             Nova Meta
           </Button>
@@ -108,16 +113,30 @@ export default function Metas() {
               )}
             </TabsTrigger>
           ))}
+          <TabsTrigger value="consolidacao" className="gap-1">
+            <Calculator className="w-4 h-4" /> Consolidação
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="gap-1">
+            <MessageSquare className="w-4 h-4" /> Assistente IA
+          </TabsTrigger>
           {podeVerConfiguracoes && (
-            <TabsTrigger value="config" className="gap-1">
-              <Settings className="w-4 h-4" /> Configurações
-            </TabsTrigger>
+            <>
+              <TabsTrigger value="indicadores" className="gap-1">
+                <BarChart3 className="w-4 h-4" /> Indicadores
+              </TabsTrigger>
+              <TabsTrigger value="config" className="gap-1">
+                <Settings className="w-4 h-4" /> Configurações
+              </TabsTrigger>
+            </>
           )}
         </TabsList>
 
         {/* Dashboard */}
         <TabsContent value="dashboard">
-          <MetasDashboard metas={metas} stats={stats} />
+          <div className="space-y-6">
+            <MetasDashboard metas={metas} stats={stats} />
+            <MetasConsistenciaPanel metas={metas} />
+          </div>
         </TabsContent>
 
         {/* Tabs por nível */}
@@ -135,6 +154,21 @@ export default function Metas() {
             />
           </TabsContent>
         ))}
+
+        {/* Consolidação */}
+        <TabsContent value="consolidacao">
+          <MetasConsolidacaoPanel metas={metas} />
+        </TabsContent>
+
+        {/* Chat IA */}
+        <TabsContent value="chat">
+          <MetasChatAssistente metas={metas} />
+        </TabsContent>
+
+        {/* Indicadores */}
+        <TabsContent value="indicadores">
+          <MetasIndicadoresConfig />
+        </TabsContent>
 
         {/* Configurações */}
         <TabsContent value="config">
@@ -169,6 +203,7 @@ export default function Metas() {
         open={!!detailMeta}
         onOpenChange={(open) => !open && setDetailMeta(null)}
         onCheckin={criarCheckin}
+        onAddEvidencia={criarEvidencia}
       />
 
       {/* Desdobramento Dialog */}

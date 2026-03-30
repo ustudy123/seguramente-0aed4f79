@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Target, TrendingUp, FileText, History, AlertTriangle,
-  Sparkles, Loader2, MessageSquare, CheckCircle2,
+  TrendingUp, FileText, History, AlertTriangle,
+  Sparkles, Loader2, CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,15 +23,17 @@ import {
 } from "@/types/metas-module";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { MetaEvidenciaForm } from "./MetaEvidenciaForm";
 
 interface MetaDetailModuleDialogProps {
   meta: MetaCompleta | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCheckin?: (data: { meta_id: string; valor_novo?: number; progresso_novo: number; observacao?: string }) => Promise<void>;
+  onAddEvidencia?: (data: any) => Promise<void>;
 }
 
-export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin }: MetaDetailModuleDialogProps) {
+export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, onAddEvidencia }: MetaDetailModuleDialogProps) {
   const { tenantId } = useAuth();
   const [checkinValue, setCheckinValue] = useState("");
   const [checkinProgress, setCheckinProgress] = useState("");
@@ -67,7 +69,7 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin }: 
     enabled: !!meta?.id,
   });
 
-  const { data: evidencias = [] } = useQuery({
+  const { data: evidencias = [], refetch: refetchEvidencias } = useQuery({
     queryKey: ["meta-evidencias-detail", meta?.id],
     queryFn: async () => {
       if (!meta?.id) return [];
@@ -95,6 +97,12 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin }: 
     setCheckinProgress("");
     setCheckinObs("");
     toast.success("Check-in registrado!");
+  };
+
+  const handleAddEvidencia = async (data: any) => {
+    if (!onAddEvidencia) return;
+    await onAddEvidencia(data);
+    refetchEvidencias();
   };
 
   const handleAnaliseRisco = async () => {
@@ -219,16 +227,28 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin }: 
 
               {/* Evidências */}
               <TabsContent value="evidencias" className="mt-0 space-y-3">
+                <MetaEvidenciaForm metaId={meta.id} onSave={handleAddEvidencia} />
+
                 {evidencias.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">Nenhuma evidência anexada.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma evidência anexada.</p>
                 ) : (
                   evidencias.map((e: any) => (
                     <div key={e.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-1">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{e.titulo || e.arquivo_nome || "Evidência"}</span>
-                        <span className="text-muted-foreground">{new Date(e.created_at).toLocaleDateString("pt-BR")}</span>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">{e.tipo}</Badge>
+                          <span className="font-medium">{e.titulo || e.arquivo_nome || "Evidência"}</span>
+                        </div>
+                        <span className="text-muted-foreground shrink-0">{new Date(e.created_at).toLocaleDateString("pt-BR")}</span>
                       </div>
-                      {e.descricao && <p>{e.descricao}</p>}
+                      {e.descricao && <p className="text-muted-foreground">{e.descricao}</p>}
+                      {e.link_externo && (
+                        <a href={e.link_externo} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
+                          🔗 {e.link_externo}
+                        </a>
+                      )}
+                      {e.periodo_referencia && <span className="text-muted-foreground">📅 {e.periodo_referencia}</span>}
+                      {e.criado_por_nome && <span className="text-muted-foreground">👤 {e.criado_por_nome}</span>}
                     </div>
                   ))
                 )}
