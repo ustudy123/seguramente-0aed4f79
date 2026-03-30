@@ -410,7 +410,7 @@ serve(async (req) => {
       cnpj: tipoPessoa === "pj" ? documento : null,
       poc_nome: nomeCompleto,
       poc_email: email || null,
-      fase: "configuracao",
+      fase: "ativo",
       tipo_cliente: "tester",
       conta_ativada: true,
       conta_ativada_em: new Date().toISOString(),
