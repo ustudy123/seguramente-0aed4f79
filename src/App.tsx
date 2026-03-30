@@ -37,6 +37,7 @@ import ComplianceSST from "./pages/ComplianceSST";
 import PlanoAcao from "./pages/PlanoAcao";
 import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
 import Avaliacoes from "./pages/Avaliacoes";
+import MetasModule from "./pages/MetasModule";
 import Atestados from "./pages/Atestados";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import Pdi from "./pages/Pdi";
