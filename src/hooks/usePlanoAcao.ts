@@ -334,11 +334,48 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
       return created as PlanoAcao;
     },
-    onSuccess: () => {
+    onSuccess: async (created) => {
       queryClient.invalidateQueries({ queryKey: ["plano-acoes"] });
       queryClient.invalidateQueries({ queryKey: ["plano-acoes-stats"] });
       queryClient.invalidateQueries({ queryKey: ["plano-minhas-acoes"] });
       toast.success("Ação criada com sucesso!");
+
+      // Notificar responsável por email (se for diferente do criador)
+      if (created.responsavel_id && created.responsavel_id !== user?.id) {
+        try {
+          const { data: responsavelProfile } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", created.responsavel_id)
+            .single();
+
+          if (responsavelProfile) {
+            // Buscar email via tenant_usuarios
+            const { data: userRecord } = await (supabase as any)
+              .from("tenant_usuarios")
+              .select("email_principal")
+              .eq("auth_user_id", created.responsavel_id)
+              .maybeSingle();
+
+            if (userRecord?.email_principal) {
+              sendEmail({
+                templateName: "plano-acao",
+                recipientEmail: userRecord.email_principal,
+                templateData: {
+                  titulo: created.titulo,
+                  responsavel: created.responsavel_nome,
+                  prazo: created.prazo,
+                  prioridade: created.prioridade,
+                  descricao: created.descricao,
+                  actionUrl: "https://seguramente.lovable.app/plano-acao",
+                },
+              }).catch(console.error);
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao enviar email de plano de ação:", e);
+        }
+      }
     },
     onError: (error) => {
       console.error("Erro ao criar ação:", error);
