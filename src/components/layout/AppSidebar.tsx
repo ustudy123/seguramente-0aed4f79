@@ -92,6 +92,7 @@ const menuSections: MenuSection[] = [
     color: "text-emerald-400",
     sectionIcon: Target,
     items: [
+      { title: "Metas", icon: Target, path: "/metas" },
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
       { title: "PDI", icon: Target, path: "/pdi" },

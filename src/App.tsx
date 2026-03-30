@@ -188,6 +188,7 @@ const App = () => (
               <Route path="/admissao" element={<Navigate to="/colaboradores" replace />} />
               <Route path="/ferias" element={<Ferias />} />
               <Route path="/avaliacoes" element={<Avaliacoes />} />
+              <Route path="/metas" element={<MetasModule />} />
               <Route path="/atestados" element={<Atestados />} />
               <Route path="/plano-acao" element={<PlanoAcao />} />
               <Route path="/plano-acao/:id" element={<PlanoAcaoDetalhe />} />
