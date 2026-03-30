@@ -173,6 +173,37 @@ export function useFeedbackOcorrencias() {
           } as any);
         }
       }
+
+      // Notificar gestores sobre ocorrência negativa por email
+      if (data && (data as any).tipo === "negativa") {
+        try {
+          // Buscar gestores (admins e managers do tenant)
+          const { data: gestores } = await (supabase as any)
+            .from("tenant_usuarios")
+            .select("email_principal, nome_completo")
+            .eq("tenant_id", tenantId)
+            .in("tipo_usuario", ["admin", "gestor", "rh"]);
+
+          if (gestores?.length) {
+            for (const gestor of gestores.slice(0, 5)) {
+              if (gestor.email_principal) {
+                sendEmail({
+                  templateName: "ocorrencia",
+                  recipientEmail: gestor.email_principal,
+                  templateData: {
+                    colaborador: (data as any).colaborador_nome,
+                    tipo: "Negativa",
+                    descricao: (data as any).descricao,
+                    dataOcorrencia: new Date().toLocaleDateString("pt-BR"),
+                  },
+                }).catch(console.error);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao enviar email de ocorrência:", e);
+        }
+      }
     },
     onError: (error: Error) => toast.error("Erro ao registrar ocorrência: " + error.message),
   });
