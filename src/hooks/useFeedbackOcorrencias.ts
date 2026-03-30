@@ -55,9 +55,38 @@ export function useFeedbackOcorrencias() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
       toast.success("Feedback registrado com sucesso!");
+
+      // Notificar colaborador por email
+      if (data) {
+        try {
+          const colaboradorId = (data as any).colaborador_id;
+          if (colaboradorId) {
+            const { data: userRecord } = await (supabase as any)
+              .from("tenant_usuarios")
+              .select("email_principal")
+              .eq("auth_user_id", colaboradorId)
+              .maybeSingle();
+
+            if (userRecord?.email_principal) {
+              sendEmail({
+                templateName: "feedback",
+                recipientEmail: userRecord.email_principal,
+                templateData: {
+                  colaborador: (data as any).colaborador_nome,
+                  categoria: (data as any).categoria,
+                  descricao: (data as any).descricao_ia || (data as any).descricao,
+                  registradoPor: (data as any).registrado_por_nome,
+                },
+              }).catch(console.error);
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao enviar email de feedback:", e);
+        }
+      }
     },
     onError: (error: Error) => toast.error("Erro ao registrar feedback: " + error.message),
   });
