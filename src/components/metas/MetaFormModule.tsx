@@ -15,6 +15,7 @@ import type { MetaCompleta, MetaNivel } from "@/types/metas-module";
 import {
   NIVEL_LABELS, PERIODO_LABELS, INDICADOR_TIPO_LABELS, INDICADOR_DIRECAO_LABELS,
 } from "@/types/metas-module";
+import { MetaParticipantesEditor } from "./MetaParticipantesEditor";
 
 interface MetaFormModuleProps {
   nivel?: MetaNivel;
@@ -41,6 +42,8 @@ export function MetaFormModule({
     workflow_status: "rascunho",
     status: "nao_iniciada",
     progresso: 0,
+    compartilhada: initialData?.compartilhada ?? Boolean(initialData?.participantes?.length),
+    participantes: initialData?.participantes || [],
     ...initialData,
     ...(metaPai ? { meta_pai_id: metaPai.id, objetivo_estrategico: metaPai.objetivo_estrategico } : {}),
   });
@@ -274,6 +277,19 @@ export function MetaFormModule({
           <Input value={form.unidade_nome || ""} onChange={e => set("unidade_nome", e.target.value)} placeholder="Nome da unidade" />
         </div>
       </div>
+
+      <MetaParticipantesEditor
+        compartilhada={Boolean(form.compartilhada)}
+        onCompartilhadaChange={(value) => set("compartilhada", value)}
+        participantes={form.participantes || []}
+        onParticipantesChange={(participantes) => {
+          setForm((prev) => ({
+            ...prev,
+            compartilhada: participantes.length > 0 ? true : Boolean(prev.compartilhada),
+            participantes,
+          }));
+        }}
+      />
 
       {metaPai && (
         <div className="p-3 bg-muted/50 rounded-lg text-sm">
