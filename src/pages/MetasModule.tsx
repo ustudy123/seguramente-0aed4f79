@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Target, BarChart3, Layers, Building2, Users, User,
-  Plus, Settings, Sparkles, MessageSquare, Calculator,
+  Plus, Settings, Sparkles, MessageSquare, Calculator, BookOpen,
   BarChart3 as IndicatorIcon,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +21,7 @@ import { MetasIndicadoresConfig } from "@/components/metas/MetasIndicadoresConfi
 import { MetasConsistenciaPanel } from "@/components/metas/MetasConsistenciaPanel";
 import { MetasConsolidacaoPanel } from "@/components/metas/MetasConsolidacaoPanel";
 import { MetasChatAssistente } from "@/components/metas/MetasChatAssistente";
+import { MetasGuidePanel } from "@/components/metas/MetasGuidePanel";
 import type { MetaCompleta, MetaNivel } from "@/types/metas-module";
 import { useAvaliacaoPermissoes } from "@/hooks/useAvaliacaoPermissoes";
 
@@ -119,6 +120,9 @@ export default function Metas() {
           <TabsTrigger value="chat" className="gap-1">
             <MessageSquare className="w-4 h-4" /> Assistente IA
           </TabsTrigger>
+          <TabsTrigger value="guia" className="gap-1">
+            <BookOpen className="w-4 h-4" /> Guia Completo
+          </TabsTrigger>
           {podeVerConfiguracoes && (
             <>
               <TabsTrigger value="indicadores" className="gap-1">
@@ -163,6 +167,11 @@ export default function Metas() {
         {/* Chat IA */}
         <TabsContent value="chat">
           <MetasChatAssistente metas={metas} />
+        </TabsContent>
+
+        {/* Guia Completo */}
+        <TabsContent value="guia">
+          <MetasGuidePanel />
         </TabsContent>
 
         {/* Indicadores */}
