@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
-  Target, Plus, MoreVertical, TrendingUp, Eye, Trash2, Edit,
-  ChevronDown, ChevronRight, AlertTriangle, CheckCircle2, Clock,
-  Building2, Users, User, Layers, Sparkles, GitBranch,
+  Target, MoreVertical, TrendingUp, Eye, Trash2, Edit,
+  AlertTriangle, CheckCircle2,
+  Building2, Users, User, Layers, GitBranch,
   Send, Pause, XCircle, RotateCcw, Archive,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -188,15 +188,30 @@ export function MetasListView({
                     </div>
 
                     {/* Indicador + Progresso */}
-                    <div className="flex items-center gap-4">
+                    <div className="space-y-2">
                       {meta.indicador_nome && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground block">
                           📊 {meta.indicador_nome}: {meta.valor_atual ?? 0} / {meta.valor_alvo ?? "—"} {meta.indicador_unidade || ""}
                         </span>
                       )}
-                      <div className="flex-1 flex items-center gap-2">
+
+                      <div className="flex items-center gap-2">
                         <Progress value={meta.progresso} className="h-1.5 flex-1" />
                         <span className="text-xs font-medium w-8 text-right">{meta.progresso}%</span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] text-muted-foreground">
+                          Para avançar a meta, registre um check-in de progresso.
+                        </span>
+                        <Button
+                          size="sm"
+                          onClick={() => onCheckin?.(meta)}
+                          className="gap-1.5"
+                        >
+                          <TrendingUp className="h-4 w-4" />
+                          Atualizar progresso
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -213,7 +228,7 @@ export function MetasListView({
                         <Eye className="h-4 w-4" /> Detalhar
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onCheckin?.(meta)} className="gap-2">
-                        <TrendingUp className="h-4 w-4" /> Check-in
+                        <TrendingUp className="h-4 w-4" /> Atualizar progresso
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit?.(meta)} className="gap-2">
                         <Edit className="h-4 w-4" /> Editar
