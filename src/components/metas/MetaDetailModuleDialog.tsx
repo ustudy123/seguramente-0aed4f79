@@ -340,7 +340,7 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                           <h5 className="text-xs font-semibold mb-1">Fatores de Risco</h5>
                           <ul className="text-xs space-y-1">
                             {riskAnalysis.fatores_risco.map((f: string, i: number) => (
-                              <li key={i} className="flex gap-1"><AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />{f}</li>
+                              <li key={i} className="flex gap-1"><AlertTriangle className="h-3 w-3 text-warning shrink-0 mt-0.5" />{f}</li>
                             ))}
                           </ul>
                         </div>

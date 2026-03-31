@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { MetaCompleta, MetaNivel } from "@/types/metas-module";
+import type { MetaCompleta, MetaNivel, MetaParticipante } from "@/types/metas-module";
 import {
   NIVEL_LABELS, PERIODO_LABELS, INDICADOR_TIPO_LABELS, INDICADOR_DIRECAO_LABELS,
 } from "@/types/metas-module";
@@ -26,10 +26,14 @@ interface MetaFormModuleProps {
   isSaving?: boolean;
 }
 
+type MetaFormState = Partial<Omit<MetaCompleta, "participantes">> & {
+  participantes?: Partial<MetaParticipante>[];
+};
+
 export function MetaFormModule({
   nivel: defaultNivel, metaPai, initialData, onSave, onCancel, isSaving,
 }: MetaFormModuleProps) {
-  const [form, setForm] = useState<Partial<MetaCompleta>>({
+  const [form, setForm] = useState<MetaFormState>({
     titulo: "",
     descricao: "",
     nivel: defaultNivel || "individual",
@@ -95,7 +99,7 @@ export function MetaFormModule({
       toast.error("Informe o título da meta");
       return;
     }
-    await onSave(form);
+    await onSave(form as Partial<MetaCompleta>);
   };
 
   return (
