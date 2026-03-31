@@ -107,6 +107,10 @@ export interface HumorDiario {
 const humorDiarioTable = () => (supabase as any).from('humor_diario');
 const humorHistoricoTable = () => (supabase as any).from('humor_historico');
 
+const EMAILS_COM_POPUP_HUMOR_DESATIVADO = new Set([
+  "renata_sophia_cortereal@cafefrossard.com",
+]);
+
 // Intervalo em horas para solicitar novo registro de humor (check-in meio de jornada)
 const INTERVALO_HORAS = 5;
 
@@ -145,6 +149,9 @@ export function useHumorDiario() {
   const queryClient = useQueryClient();
 
   const today = new Date().toISOString().split('T')[0];
+  const popupHumorDesativado = EMAILS_COM_POPUP_HUMOR_DESATIVADO.has(
+    user?.email?.toLowerCase() ?? ""
+  );
 
   // Só buscar humor quando auth estiver pronto E profile carregado
   const isReady = !!user?.id && !!profile?.id && !authLoading;
@@ -292,7 +299,7 @@ export function useHumorDiario() {
     passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS) && 
     !middayJaMostrado;
 
-  const precisaRegistrarHumor = precisaMorning || precisaMidday;
+  const precisaRegistrarHumor = !popupHumorDesativado && (precisaMorning || precisaMidday);
 
   // Flag para saber se é atualização (já tem registro) ou primeiro do dia
   const isAtualizacao = !!humorHoje;
