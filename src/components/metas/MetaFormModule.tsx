@@ -11,10 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { MetaCompleta, MetaNivel } from "@/types/metas-module";
+import type { MetaCompleta, MetaNivel, MetaParticipante } from "@/types/metas-module";
 import {
   NIVEL_LABELS, PERIODO_LABELS, INDICADOR_TIPO_LABELS, INDICADOR_DIRECAO_LABELS,
 } from "@/types/metas-module";
+import { MetaParticipantesEditor } from "./MetaParticipantesEditor";
 
 interface MetaFormModuleProps {
   nivel?: MetaNivel;
@@ -25,10 +26,14 @@ interface MetaFormModuleProps {
   isSaving?: boolean;
 }
 
+type MetaFormState = Partial<Omit<MetaCompleta, "participantes">> & {
+  participantes?: Partial<MetaParticipante>[];
+};
+
 export function MetaFormModule({
   nivel: defaultNivel, metaPai, initialData, onSave, onCancel, isSaving,
 }: MetaFormModuleProps) {
-  const [form, setForm] = useState<Partial<MetaCompleta>>({
+  const [form, setForm] = useState<MetaFormState>({
     titulo: "",
     descricao: "",
     nivel: defaultNivel || "individual",
@@ -41,6 +46,8 @@ export function MetaFormModule({
     workflow_status: "rascunho",
     status: "nao_iniciada",
     progresso: 0,
+    compartilhada: initialData?.compartilhada ?? Boolean(initialData?.participantes?.length),
+    participantes: initialData?.participantes || [],
     ...initialData,
     ...(metaPai ? { meta_pai_id: metaPai.id, objetivo_estrategico: metaPai.objetivo_estrategico } : {}),
   });
@@ -92,7 +99,7 @@ export function MetaFormModule({
       toast.error("Informe o título da meta");
       return;
     }
-    await onSave(form);
+    await onSave(form as Partial<MetaCompleta>);
   };
 
   return (
@@ -274,6 +281,19 @@ export function MetaFormModule({
           <Input value={form.unidade_nome || ""} onChange={e => set("unidade_nome", e.target.value)} placeholder="Nome da unidade" />
         </div>
       </div>
+
+      <MetaParticipantesEditor
+        compartilhada={Boolean(form.compartilhada)}
+        onCompartilhadaChange={(value) => set("compartilhada", value)}
+        participantes={form.participantes || []}
+        onParticipantesChange={(participantes) => {
+          setForm((prev) => ({
+            ...prev,
+            compartilhada: participantes.length > 0 ? true : Boolean(prev.compartilhada),
+            participantes,
+          }));
+        }}
+      />
 
       {metaPai && (
         <div className="p-3 bg-muted/50 rounded-lg text-sm">

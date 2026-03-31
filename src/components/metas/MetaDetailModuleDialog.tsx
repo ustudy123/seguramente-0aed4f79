@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   TrendingUp, FileText, History, AlertTriangle,
-  Sparkles, Loader2, CheckCircle2,
+  Sparkles, Loader2, CheckCircle2, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -81,6 +81,23 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
       return data || [];
     },
     enabled: !!meta?.id,
+  });
+
+  const { data: participantes = [] } = useQuery({
+    queryKey: ["meta-participantes-detail", meta?.id, tenantId],
+    queryFn: async () => {
+      if (!meta?.id || !tenantId) return [];
+      const { data, error } = await supabase
+        .from("metas_participantes")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .eq("meta_id", meta.id)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!meta?.id && !!tenantId,
   });
 
   const handleCheckin = async () => {
@@ -161,6 +178,9 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
               </TabsTrigger>
               <TabsTrigger value="evidencias" className="gap-1 text-xs">
                 <FileText className="h-3.5 w-3.5" /> Evidências
+              </TabsTrigger>
+              <TabsTrigger value="participantes" className="gap-1 text-xs">
+                <Users className="h-3.5 w-3.5" /> Participantes
               </TabsTrigger>
               <TabsTrigger value="risco" className="gap-1 text-xs">
                 <AlertTriangle className="h-3.5 w-3.5" /> Análise IA
@@ -254,6 +274,50 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                 )}
               </TabsContent>
 
+              <TabsContent value="participantes" className="mt-0 space-y-4">
+                <Card>
+                  <CardContent className="space-y-3 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-semibold">Responsabilidade da meta</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {meta.compartilhada
+                            ? "Meta compartilhada com co-responsáveis definidos."
+                            : "Meta individual, sem co-responsáveis adicionais."}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {participantes.length} participante{participantes.length === 1 ? "" : "s"}
+                      </Badge>
+                    </div>
+
+                    <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                      <span className="text-muted-foreground">Responsável principal:</span>{" "}
+                      <span className="font-medium">{meta.responsavel_nome || "Não definido"}</span>
+                    </div>
+
+                    {participantes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum participante adicional vinculado.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {participantes.map((participante: any) => (
+                          <div key={participante.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
+                            <div>
+                              <p className="font-medium">{participante.participante_nome}</p>
+                              <p className="text-xs text-muted-foreground">ID: {participante.participante_id}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{participante.papel || "co_responsavel"}</Badge>
+                              <Badge variant="secondary">Peso {participante.peso ?? 1}</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               {/* Análise IA */}
               <TabsContent value="risco" className="mt-0 space-y-4">
                 <Button variant="outline" onClick={handleAnaliseRisco} disabled={isAnalysing} className="gap-1.5">
@@ -276,7 +340,7 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                           <h5 className="text-xs font-semibold mb-1">Fatores de Risco</h5>
                           <ul className="text-xs space-y-1">
                             {riskAnalysis.fatores_risco.map((f: string, i: number) => (
-                              <li key={i} className="flex gap-1"><AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />{f}</li>
+                              <li key={i} className="flex gap-1"><AlertTriangle className="h-3 w-3 text-warning shrink-0 mt-0.5" />{f}</li>
                             ))}
                           </ul>
                         </div>

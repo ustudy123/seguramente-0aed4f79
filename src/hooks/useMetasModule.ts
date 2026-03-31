@@ -8,16 +8,64 @@ import type {
   MetaNivel,
   MetaCheckin,
   MetaEvidencia,
+  MetaParticipante,
   MetaWorkflowLog,
   MetaConfiguracao,
   MetaIndicadorConfig,
   MetaWorkflowStatus,
 } from "@/types/metas-module";
 
+function normalizeParticipantes(participantes: Partial<MetaParticipante>[] = []): Partial<MetaParticipante>[] {
+  const seen = new Set<string>();
+
+  return participantes
+    .filter((participante) => participante.participante_id && participante.participante_nome)
+    .filter((participante) => {
+      if (seen.has(participante.participante_id!)) return false;
+      seen.add(participante.participante_id!);
+      return true;
+    })
+    .map((participante) => ({
+      participante_id: participante.participante_id,
+      participante_nome: participante.participante_nome,
+      papel: participante.papel || "co_responsavel",
+      peso: typeof participante.peso === "number" ? participante.peso : 1,
+    }));
+}
+
 export function useMetasModule(filtroNivel?: MetaNivel) {
   const { tenantId, user, profile } = useAuth();
   const { empresaAtivaId } = useEmpresaAtiva();
   const qc = useQueryClient();
+
+  const syncParticipantes = async (metaId: string, participantes?: Partial<MetaParticipante>[]) => {
+    if (!tenantId || participantes === undefined) return;
+
+    const participantesNormalizados = normalizeParticipantes(participantes);
+
+    const { error: deleteError } = await supabase
+      .from("metas_participantes")
+      .delete()
+      .eq("tenant_id", tenantId)
+      .eq("meta_id", metaId);
+
+    if (deleteError) throw deleteError;
+
+    if (participantesNormalizados.length === 0) return;
+
+    const { error: insertError } = await supabase.from("metas_participantes").insert(
+      participantesNormalizados.map((participante) => ({
+        tenant_id: tenantId,
+        meta_id: metaId,
+        participante_id: participante.participante_id!,
+        participante_nome: participante.participante_nome!,
+        papel: participante.papel || "co_responsavel",
+        peso: typeof participante.peso === "number" ? participante.peso : 1,
+      })),
+    );
+
+    if (insertError) throw insertError;
+  };
 
   // =============================================
   // METAS
@@ -37,7 +85,31 @@ export function useMetasModule(filtroNivel?: MetaNivel) {
 
       const { data, error } = await q;
       if (error) throw error;
-      return (data || []) as unknown as MetaCompleta[];
+
+      const metasData = (data || []) as unknown as MetaCompleta[];
+      if (metasData.length === 0) return [];
+
+      const { data: participantesData, error: participantesError } = await supabase
+        .from("metas_participantes")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .in("meta_id", metasData.map((meta) => meta.id))
+        .order("created_at", { ascending: true });
+
+      if (participantesError) throw participantesError;
+
+      const participantesByMeta = new Map<string, MetaParticipante[]>();
+      for (const participante of (participantesData || []) as MetaParticipante[]) {
+        const current = participantesByMeta.get(participante.meta_id) || [];
+        current.push(participante);
+        participantesByMeta.set(participante.meta_id, current);
+      }
+
+      return metasData.map((meta) => ({
+        ...meta,
+        compartilhada: meta.compartilhada ?? Boolean(participantesByMeta.get(meta.id)?.length),
+        participantes: participantesByMeta.get(meta.id) || [],
+      }));
     },
     enabled: !!tenantId,
   });
@@ -46,8 +118,10 @@ export function useMetasModule(filtroNivel?: MetaNivel) {
   const createMeta = useMutation({
     mutationFn: async (data: Partial<MetaCompleta>) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
+      const participantes = normalizeParticipantes(data.participantes || []);
       const insertData = {
         ...data,
+        compartilhada: data.compartilhada ?? participantes.length > 0,
         tenant_id: tenantId,
         empresa_id: empresaAtivaId || null,
         criado_por: user?.id,
@@ -69,6 +143,8 @@ export function useMetasModule(filtroNivel?: MetaNivel) {
         .select()
         .single();
       if (error) throw error;
+
+      await syncParticipantes(newMeta.id, participantes);
 
       // Registrar no workflow
       await supabase.from("metas_workflow_log").insert({
@@ -92,18 +168,35 @@ export function useMetasModule(filtroNivel?: MetaNivel) {
   // Atualizar meta
   const updateMeta = useMutation({
     mutationFn: async ({ id, ...data }: { id: string } & Partial<MetaCompleta>) => {
+      const participantes = data.participantes;
+      const updatePayload = {
+        ...data,
+        ...(Array.isArray(participantes)
+          ? { compartilhada: data.compartilhada ?? participantes.length > 0 }
+          : {}),
+      };
+
+      delete (updatePayload as any).participantes;
       delete (data as any).created_at;
       delete (data as any).updated_at;
       delete (data as any).okrs;
       delete (data as any).checkins;
       delete (data as any).evidencias;
-      delete (data as any).participantes;
-      delete (data as any).meta_pai;
-      delete (data as any).metas_filhas;
-      delete (data as any).tenant_id;
+      delete (updatePayload as any).created_at;
+      delete (updatePayload as any).updated_at;
+      delete (updatePayload as any).okrs;
+      delete (updatePayload as any).checkins;
+      delete (updatePayload as any).evidencias;
+      delete (updatePayload as any).meta_pai;
+      delete (updatePayload as any).metas_filhas;
+      delete (updatePayload as any).tenant_id;
 
-      const { error } = await supabase.from("metas").update(data as any).eq("id", id);
+      const { error } = await supabase.from("metas").update(updatePayload as any).eq("id", id);
       if (error) throw error;
+
+      if (participantes !== undefined) {
+        await syncParticipantes(id, participantes);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metas-module"] });

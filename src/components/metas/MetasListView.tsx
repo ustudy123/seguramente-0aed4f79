@@ -162,6 +162,11 @@ export function MetasListView({
                       {meta.compartilhada && (
                         <Badge variant="outline" className="text-[10px]">👥 Compartilhada</Badge>
                       )}
+                      {!!meta.participantes?.length && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {meta.participantes.length} participante{meta.participantes.length === 1 ? "" : "s"}
+                        </Badge>
+                      )}
                     </div>
 
                     {/* Título e descrição */}
