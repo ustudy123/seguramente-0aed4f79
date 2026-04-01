@@ -36,7 +36,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function goToEstrategia() {
-    cy.visit(`${baseUrl}/estrategia-governanca`);
+    cy.visit(`${baseUrl}/estrategia`);
     closeEmpresaModalIfNeeded();
     cy.contains(/Estratégia|Governança/i, { timeout: 20000 }).should("be.visible");
   }
