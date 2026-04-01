@@ -19596,6 +19596,7 @@ export type Database = {
         Returns: boolean
       }
       get_auth_user_email: { Args: never; Returns: string }
+      get_current_user_tipo: { Args: never; Returns: string }
       get_user_tenant_id: { Args: never; Returns: string }
       has_minimum_role: {
         Args: {
@@ -19665,6 +19666,10 @@ export type Database = {
           p_user_agent: string
         }
         Returns: undefined
+      }
+      user_has_empresa_vinculo: {
+        Args: { _empresa_id: string }
+        Returns: boolean
       }
       validar_token_participacao: { Args: { p_token: string }; Returns: Json }
     }
