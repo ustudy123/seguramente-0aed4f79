@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
+import { useUsuarioVinculos } from "@/hooks/useUsuarioVinculos";
 import type { EmpresaCadastro } from "@/types/empresa";
 
 interface EmpresaAtivaContextType {
@@ -10,6 +11,10 @@ interface EmpresaAtivaContextType {
   setEmpresaAtiva: (empresa: EmpresaCadastro | null) => void;
   empresas: EmpresaCadastro[];
   isLoading: boolean;
+  /** true quando o usuário é profissional e tem restrição por vínculo */
+  isProfissional: boolean;
+  /** true quando profissional não tem nenhum vínculo ativo */
+  semVinculos: boolean;
 }
 
 const EmpresaAtivaContext = createContext<EmpresaAtivaContextType | undefined>(undefined);
@@ -19,7 +24,9 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [empresaAtiva, setEmpresaAtivaState] = useState<EmpresaCadastro | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  const { data: empresas = [], isLoading } = useQuery({
+  const { isProfissional, empresaIdsPermitidas, isLoading: loadingVinculos } = useUsuarioVinculos();
+
+  const { data: todasEmpresas = [], isLoading: loadingEmpresas } = useQuery({
     queryKey: ["empresa_cadastro_list_ativa", tenantId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,10 +41,23 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
     enabled: !!tenantId,
   });
 
+  // Filtra empresas para profissionais com vínculos
+  const empresas = useMemo(() => {
+    if (!isProfissional || empresaIdsPermitidas.length === 0) {
+      return todasEmpresas;
+    }
+    return todasEmpresas.filter((e) => empresaIdsPermitidas.includes(e.id));
+  }, [todasEmpresas, isProfissional, empresaIdsPermitidas]);
+
+  const isLoading = loadingEmpresas || loadingVinculos;
+
+  const semVinculos = isProfissional && !loadingVinculos && empresaIdsPermitidas.length === 0;
+
   // Restore from localStorage or auto-select single company
   useEffect(() => {
     if (!tenantId || isLoading || initialized) return;
     if (empresas.length === 0) {
+      setEmpresaAtivaState(null);
       setInitialized(true);
       return;
     }
@@ -56,6 +76,17 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
     localStorage.setItem(storageKey, empresas[0].id);
     setInitialized(true);
   }, [tenantId, empresas, isLoading, initialized]);
+
+  // Se a empresa ativa não está mais na lista filtrada, resetar
+  useEffect(() => {
+    if (!initialized || isLoading) return;
+    if (empresaAtiva && empresas.length > 0 && !empresas.find((e) => e.id === empresaAtiva.id)) {
+      setEmpresaAtivaState(empresas[0]);
+      if (tenantId) {
+        localStorage.setItem(`empresa_ativa_${tenantId}`, empresas[0].id);
+      }
+    }
+  }, [empresas, empresaAtiva, initialized, isLoading, tenantId]);
 
   const setEmpresaAtiva = useCallback(
     (empresa: EmpresaCadastro | null) => {
@@ -80,6 +111,8 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setEmpresaAtiva,
         empresas,
         isLoading,
+        isProfissional,
+        semVinculos,
       }}
     >
       {children}
