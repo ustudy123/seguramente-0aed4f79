@@ -6,43 +6,47 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   const baseUrl = Cypress.config("baseUrl") || "https://seguramente.app.br";
   const uniqueId = Date.now();
 
+  function closeEmpresaModalIfNeeded() {
+    cy.get("body", { timeout: 15000 }).then(($body) => {
+      const pageText = $body.text();
+
+      if (/Acesso Restrito/i.test(pageText)) {
+        throw new Error("Usuário de teste sem empresa vinculada. Vincule ao menos uma empresa antes de rodar o Cypress.");
+      }
+
+      if (!/Selecione a Empresa/i.test(pageText)) return;
+
+      cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("be.visible");
+      cy.get("button.text-left:visible").first().click({ force: true });
+      cy.contains("button", /Acessar|Continuar|Confirmar|Entrar/i, { timeout: 10000 })
+        .should("be.visible")
+        .and("not.be.disabled")
+        .click({ force: true });
+      cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("not.exist");
+    });
+  }
+
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]').should("be.visible").clear().type(email);
-    cy.get('input[autocomplete="current-password"]').should("be.visible").clear().type(password, { log: false });
-    cy.contains("button", /^Entrar$/).click();
+    cy.get('input[type="email"]', { timeout: 20000 }).should("be.visible").clear().type(email);
+    cy.get('input[autocomplete="current-password"]', { timeout: 20000 }).should("be.visible").clear().type(password, { log: false });
+    cy.contains("button", /^Entrar$/).should("be.visible").click();
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
-
-    // Se a tela de seleção obrigatória de empresa aparecer, selecionar a primeira
-    cy.wait(3000);
-    cy.get("body").then(($body) => {
-      if ($body.find(':contains("Selecione a empresa")').length > 0) {
-        // Clica na primeira empresa disponível
-        cy.get('[class*="Card"], [class*="card"]').filter(':visible').first().click();
-        // Confirma a seleção
-        cy.contains("button", /Continuar|Confirmar|Entrar/i).should("be.visible").click();
-        cy.wait(2000);
-      }
-    });
+    closeEmpresaModalIfNeeded();
   }
 
   function goToEstrategia() {
     cy.visit(`${baseUrl}/estrategia-governanca`);
-    cy.wait(3000);
-    // Se a tela de seleção obrigatória aparecer novamente, lidar com ela
-    cy.get("body").then(($body) => {
-      if ($body.find(':contains("Selecione a empresa")').length > 0) {
-        cy.get('[class*="Card"], [class*="card"]').filter(':visible').first().click();
-        cy.contains("button", /Continuar|Confirmar|Entrar/i).should("be.visible").click();
-        cy.wait(2000);
-      }
-    });
+    closeEmpresaModalIfNeeded();
     cy.contains(/Estratégia|Governança/i, { timeout: 20000 }).should("be.visible");
   }
 
   function openSwotTab() {
-    cy.contains('[role="tab"]', "SWOT").should("be.visible").click();
-    cy.contains('[role="tab"]', "SWOT").should("have.attr", "aria-selected", "true");
+    cy.contains('[role="tab"]', /^SWOT$/i, { timeout: 20000 })
+      .scrollIntoView()
+      .should("be.visible")
+      .click({ force: true });
+    cy.contains('[role="tab"]', /^SWOT$/i).should("have.attr", "aria-selected", "true");
   }
 
   function openNewSwotModal() {
