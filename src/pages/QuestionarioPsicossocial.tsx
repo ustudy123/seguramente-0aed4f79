@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { calcularIndicadores } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
 import { VerificacaoTelefone } from "@/components/avaliacoes/psicossocial/VerificacaoTelefone";
 import {
@@ -115,7 +115,50 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
     setor?: string; cargo?: string; unidade?: string; turno?: string;
   }>({});
 
-  const { buscarCampanhaPorTokenPublico, salvarRespostaAnonimaCampanha, calcularIndicadores } = usePsicossocial();
+  // Funções públicas inlined (não dependem de EmpresaAtivaProvider)
+  const buscarCampanhaPorTokenPublico = async (tk: string): Promise<CampanhaPsicossocial | null> => {
+    const { data, error: rpcErr } = await supabasePublic
+      .rpc('buscar_campanha_por_token_publico', { p_token: tk });
+    if (rpcErr || !data || (data as any[]).length === 0) return null;
+    const row = (data as any[])[0];
+    return {
+      id: row.campanha_id,
+      tenant_id: row.tenant_id,
+      nome: row.campanha_nome,
+      descricao: row.campanha_descricao,
+      status: row.campanha_status,
+      tipo: 'regular',
+      instrumento: (row.campanha_instrumento || 'sipro') as InstrumentoPsicossocial,
+      data_inicio: row.campanha_data_inicio,
+      data_fim: row.campanha_data_fim,
+      anonimo: row.campanha_anonimo,
+      mensagem_institucional: row.campanha_mensagem_institucional,
+      politica_uso_dados: row.campanha_politica_uso_dados,
+      blocos_dinamicos: row.campanha_blocos_dinamicos,
+      created_at: '',
+      updated_at: '',
+    } as CampanhaPsicossocial;
+  };
+
+  const salvarRespostaAnonimaCampanha = async (
+    tokenPublico: string,
+    camp: CampanhaPsicossocial,
+    resps: Record<string, number>,
+    tempoSeg: number,
+  ): Promise<void> => {
+    const inst = (camp.instrumento || 'sipro') as InstrumentoPsicossocial;
+    const blocos = (camp.blocos_dinamicos as string[] | undefined) ?? [];
+    const indicadores = calcularIndicadores(resps, inst, blocos);
+    const { error: rpcErr } = await supabasePublic
+      .rpc('salvar_resposta_anonima_campanha', {
+        p_token_publico: tokenPublico,
+        p_respostas: JSON.parse(JSON.stringify(resps)),
+        p_indicadores: JSON.parse(JSON.stringify(indicadores)),
+        p_tempo_segundos: tempoSeg,
+        p_user_agent: navigator.userAgent,
+      });
+    if (rpcErr) throw rpcErr;
+  };
 
   useEffect(() => {
     const loadCampanha = async () => {
