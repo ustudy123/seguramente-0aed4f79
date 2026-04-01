@@ -12,10 +12,31 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('input[autocomplete="current-password"]').should("be.visible").clear().type(password, { log: false });
     cy.contains("button", /^Entrar$/).click();
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+
+    // Se a tela de seleção obrigatória de empresa aparecer, selecionar a primeira
+    cy.wait(3000);
+    cy.get("body").then(($body) => {
+      if ($body.find(':contains("Selecione a empresa")').length > 0) {
+        // Clica na primeira empresa disponível
+        cy.get('[class*="Card"], [class*="card"]').filter(':visible').first().click();
+        // Confirma a seleção
+        cy.contains("button", /Continuar|Confirmar|Entrar/i).should("be.visible").click();
+        cy.wait(2000);
+      }
+    });
   }
 
   function goToEstrategia() {
     cy.visit(`${baseUrl}/estrategia-governanca`);
+    cy.wait(3000);
+    // Se a tela de seleção obrigatória aparecer novamente, lidar com ela
+    cy.get("body").then(($body) => {
+      if ($body.find(':contains("Selecione a empresa")').length > 0) {
+        cy.get('[class*="Card"], [class*="card"]').filter(':visible').first().click();
+        cy.contains("button", /Continuar|Confirmar|Entrar/i).should("be.visible").click();
+        cy.wait(2000);
+      }
+    });
     cy.contains(/Estratégia|Governança/i, { timeout: 20000 }).should("be.visible");
   }
 
