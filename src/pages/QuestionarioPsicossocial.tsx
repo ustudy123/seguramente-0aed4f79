@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { usePsicossocial } from "@/hooks/usePsicossocial";
+import { calcularIndicadores } from "@/hooks/usePsicossocial";
 import { QuestionarioResponder } from "@/components/avaliacoes/psicossocial/QuestionarioResponder";
 import { VerificacaoTelefone } from "@/components/avaliacoes/psicossocial/VerificacaoTelefone";
 import {
