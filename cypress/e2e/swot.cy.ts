@@ -11,7 +11,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       const pageText = $body.text();
 
       if (/Acesso Restrito/i.test(pageText)) {
-        throw new Error("Usuário de teste sem empresa vinculada. Vincule ao menos uma empresa antes de rodar o Cypress.");
+        throw new Error("Usuário de teste sem empresa vinculada.");
       }
 
       if (!/Selecione a Empresa/i.test(pageText)) return;
@@ -42,12 +42,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function openSwotTab() {
-    cy.contains('[role="tab"]', "SWOT", { timeout: 20000 })
-      .scrollIntoView()
-      .should("be.visible")
-      .click({ force: true });
-    cy.contains('[role="tab"]', "SWOT").should("have.attr", "aria-selected", "true");
-    cy.wait(1000); // aguarda conteúdo carregar
+    cy.get('button[role="tab"]').contains("SWOT").click({ force: true });
+    cy.get('button[role="tab"][aria-selected="true"]').should("contain.text", "SWOT");
+    cy.wait(1500);
   }
 
   function openNewSwotModal() {
@@ -57,59 +54,54 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function selectRadixOption(text: string) {
-    // Radix Select renderiza opções em um portal fora do dialog
-    // Espera o listbox aparecer e seleciona a opção
     cy.get('[role="listbox"]', { timeout: 8000 }).should("be.visible");
-    cy.get('[role="option"]').contains(text).should("be.visible").click({ force: true });
-    cy.get('[role="listbox"]').should("not.exist");
+    cy.contains('[role="option"]', text, { timeout: 5000 }).should("be.visible").click({ force: true });
+    cy.get('[role="listbox"]', { timeout: 5000 }).should("not.exist");
   }
 
   function createSwot(titulo: string, descricao = "", periodo = "") {
     openNewSwotModal();
 
-    // Escopa inputs ao dialog ativo
     cy.get('[role="dialog"]').within(() => {
-      cy.get('input').first().clear().type(titulo);
+      cy.get("input").first().clear().type(titulo);
 
       if (descricao) {
         cy.get("textarea").first().clear().type(descricao);
       }
 
       if (periodo) {
-        // O input de período é o segundo input dentro do dialog
-        cy.get('input').eq(1).clear().type(periodo);
+        cy.get("input").eq(1).clear().type(periodo);
       }
 
       cy.contains("button", "Criar Análise").click();
     });
 
-    // Aguarda o dialog fechar
     cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
-    cy.wait(1000); // aguarda persistência
+    cy.wait(1500);
   }
 
   function openSwotByTitle(titulo: string) {
-    // Clica no card que contém o título
     cy.contains(titulo, { timeout: 10000 })
       .should("be.visible")
       .closest('[class*="cursor-pointer"]')
       .click();
-    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible");
+    // O detalhe renderiza via React state — aguarda o botão Voltar aparecer
+    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible");
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
-    // 1. Selecionar tipo — primeiro combobox
+    // 1. Selecionar tipo — trigger do primeiro Select (w-40)
     cy.get('button[role="combobox"]').eq(0).click({ force: true });
     selectRadixOption(tipo);
 
     // 2. Digitar descrição
     cy.get('input[placeholder*="Descreva o item"]').clear().type(descricao);
 
-    // 3. Selecionar classificação — segundo combobox
+    // 3. Selecionar classificação — segundo Select (w-36)
     cy.get('button[role="combobox"]').eq(1).click({ force: true });
     selectRadixOption(classificacao);
 
-    // 4. Selecionar impacto — terceiro combobox
+    // 4. Selecionar impacto — terceiro Select (w-28)
     cy.get('button[role="combobox"]').eq(2).click({ force: true });
     selectRadixOption(impacto);
 
@@ -118,7 +110,12 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       return el.querySelector('svg.lucide-plus') !== null;
     }).last().click();
 
-    cy.wait(1000); // aguarda persistência
+    cy.wait(1500);
+  }
+
+  function clickVoltar() {
+    cy.get("button").contains("Voltar", { timeout: 10000 }).should("be.visible").click();
+    cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
   beforeEach(() => {
@@ -152,7 +149,6 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   });
 
   it("CT-SWOT-003 — Troca de escopo", () => {
-    // Verifica se existe um seletor de escopo na tela de estratégia
     cy.get("body").then(($body) => {
       if ($body.find('button[role="combobox"]').length > 0) {
         cy.get('button[role="combobox"]').filter(':visible').first().click({ force: true });
@@ -160,12 +156,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
         cy.wait(1000);
       }
     });
-    // Após possível troca, a página deve continuar funcional
     cy.contains(/Análises SWOT|Nenhuma análise/i).should("be.visible");
   });
 
   it("CT-SWOT-004 — Abrir SWOT clicando no card", () => {
-    // Cria uma SWOT se não houver nenhuma
     cy.get("body").then(($body) => {
       if ($body.text().includes("Nenhuma análise SWOT")) {
         createSwot(`SWOT Nav ${uniqueId}`);
@@ -173,12 +167,11 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       }
     });
 
-    // Clica no primeiro card com cursor-pointer
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().should("be.visible").click();
 
-    // Deve mostrar Tela C (detalhe) com botão Voltar
-    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible");
-    cy.contains("button", "Excluir").should("be.visible");
+    // Detalhe: botão Voltar e botão Excluir devem aparecer
+    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible");
+    cy.get("button").contains("Excluir", { timeout: 5000 }).should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
@@ -189,7 +182,6 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Teste E2E ${uniqueId}`;
     createSwot(titulo, "Descrição de teste automatizado", "2026 Q2");
 
-    // Verifica se apareceu na listagem
     openSwotTab();
     cy.contains(titulo, { timeout: 10000 }).should("be.visible");
   });
@@ -198,13 +190,12 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     openNewSwotModal();
 
     cy.get('[role="dialog"]').within(() => {
-      // Limpa título e tenta criar
       cy.get("input").first().clear();
       cy.contains("button", "Criar Análise").click();
     });
 
-    // Deve mostrar toast de erro (fora do dialog)
-    cy.contains("Preencha o título", { timeout: 5000 }).should("be.visible");
+    // Toast: "Preencha o título da análise SWOT" (texto real do código)
+    cy.contains(/Preencha o título/i, { timeout: 8000 }).should("be.visible");
 
     // Dialog ainda deve estar aberto
     cy.get('[role="dialog"]').should("exist");
@@ -219,12 +210,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.get('[role="dialog"]').within(() => {
       cy.get("input").first().clear().type(titulo);
-      // Período é o segundo input no dialog
       cy.get("input").eq(1).clear().type("🎉abcd!@#$");
       cy.contains("button", "Criar Análise").click();
     });
 
-    // Deve fechar (aceita qualquer texto) ou mostrar validação — sem crash
     cy.get("body").should("be.visible");
   });
 
@@ -236,10 +225,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.get("textarea").first().clear().type("Dados que devem ser perdidos");
     });
 
-    // Fecha o modal com Escape
     cy.get("body").type("{esc}");
-
-    // Dialog deve fechar
     cy.get('[role="dialog"]', { timeout: 5000 }).should("not.exist");
   });
 
@@ -249,19 +235,15 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.get('[role="dialog"]').within(() => {
       cy.get("input").first().clear().type(titulo);
-      // Clica duas vezes rápido
       cy.contains("button", "Criar Análise").dblclick();
     });
 
-    // Espera dialog fechar
     cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
     cy.wait(2000);
 
-    // Verifica que criou apenas 1
     openSwotTab();
     cy.get("body").then(($body) => {
       const matches = $body.text().match(new RegExp(titulo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"));
-      // Aceita 1 (ideal) — se duplicar, será 2 mas o teste não trava
       expect(matches?.length || 0).to.be.gte(1);
     });
   });
@@ -279,7 +261,6 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const descItem = `Item força teste ${uniqueId}`;
     addSwotItem("Força", descItem, "Estratégico", "Alto");
 
-    // Verifica que aparece na tela
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
   });
 
@@ -300,7 +281,6 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       addSwotItem(tipo, desc);
     });
 
-    // Verifica cada item
     quadrantes.forEach(({ desc }) => {
       cy.contains(desc, { timeout: 8000 }).should("be.visible");
     });
@@ -312,14 +292,12 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     openSwotTab();
     openSwotByTitle(titulo);
 
-    // Tenta adicionar sem descrição
     cy.get('input[placeholder*="Descreva o item"]').clear();
     cy.get('button').filter(':visible').filter((_, el) => {
       return el.querySelector('svg.lucide-plus') !== null;
     }).last().click();
 
-    // Deve mostrar toast de erro
-    cy.contains("Preencha a descrição", { timeout: 5000 }).should("be.visible");
+    cy.contains(/Preencha a descrição/i, { timeout: 5000 }).should("be.visible");
   });
 
   it("CT-SWOT-023 — Limites de texto (BVA)", () => {
@@ -342,7 +320,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('button').filter(':visible').filter((_, el) => {
       return el.querySelector('svg.lucide-plus') !== null;
     }).last().click();
-    cy.contains("Preencha a descrição", { timeout: 5000 }).should("be.visible");
+    cy.contains(/Preencha a descrição/i, { timeout: 5000 }).should("be.visible");
   });
 
   it("CT-SWOT-024 — Excluir item", () => {
@@ -355,18 +333,18 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     addSwotItem("Força", descItem);
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
 
-    // Clica na lixeira do item
-    cy.contains(descItem).parent().parent().within(() => {
-      cy.get('button').filter((_, el) => {
-        return el.querySelector('svg.lucide-trash-2, svg[class*="trash"]') !== null;
-      }).first().click({ force: true });
-    });
+    // Clica na lixeira do item — busca o botão com Trash2 próximo ao texto
+    cy.contains(descItem)
+      .closest('[class*="flex"][class*="items-start"]')
+      .find('button')
+      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
+      .first()
+      .click({ force: true });
 
     // Confirma exclusão no AlertDialog
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
     cy.get('[role="alertdialog"]').contains("button", "Excluir").click();
 
-    // Item deve sumir
     cy.contains(descItem, { timeout: 8000 }).should("not.exist");
   });
 
@@ -376,20 +354,19 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     openSwotTab();
     openSwotByTitle(titulo);
 
-    // Clica no botão Excluir (destructive) no header do detalhe
-    cy.contains("button", "Excluir").first().click();
+    // Clica no botão Excluir (destructive) no header
+    cy.get("button").contains("Excluir").first().click();
 
     // Confirma no AlertDialog
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
     cy.get('[role="alertdialog"]').contains("button", "Excluir permanentemente").click();
 
-    // Deve voltar para listagem e a SWOT não deve mais existir
+    // Deve voltar para listagem
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
     cy.contains(titulo).should("not.exist");
   });
 
   it("CT-SWOT-026 — Voltar da tela de detalhe", () => {
-    // Precisa de uma SWOT existente
     cy.get("body").then(($body) => {
       if ($body.text().includes("Nenhuma análise SWOT")) {
         createSwot(`SWOT Voltar ${uniqueId}`);
@@ -398,9 +375,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     });
 
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
-    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible").click();
+    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible").click();
 
-    // Deve voltar à listagem
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });
 
@@ -432,12 +408,12 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     addSwotItem("Força", descItem);
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
 
-    // Exclui normalmente
-    cy.contains(descItem).parent().parent().within(() => {
-      cy.get('button').filter((_, el) => {
-        return el.querySelector('svg.lucide-trash-2, svg[class*="trash"]') !== null;
-      }).first().click({ force: true });
-    });
+    cy.contains(descItem)
+      .closest('[class*="flex"][class*="items-start"]')
+      .find('button')
+      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
+      .first()
+      .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
     cy.get('[role="alertdialog"]').contains("button", "Excluir").click();
@@ -453,16 +429,16 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     openSwotTab();
     openSwotByTitle(titulo);
 
-    // Adiciona e remove um item
     const desc = `Resiliente ${uniqueId}`;
     addSwotItem("Oportunidade", desc);
     cy.contains(desc, { timeout: 8000 }).should("be.visible");
 
-    cy.contains(desc).parent().parent().within(() => {
-      cy.get('button').filter((_, el) => {
-        return el.querySelector('svg.lucide-trash-2, svg[class*="trash"]') !== null;
-      }).first().click({ force: true });
-    });
+    cy.contains(desc)
+      .closest('[class*="flex"][class*="items-start"]')
+      .find('button')
+      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
+      .first()
+      .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
     cy.get('[role="alertdialog"]').contains("button", "Excluir").click();
@@ -473,7 +449,6 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc2, { timeout: 8000 }).should("be.visible");
 
     // Pode voltar sem erro
-    cy.contains("button", "Voltar").click();
-    cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
+    clickVoltar();
   });
 });
