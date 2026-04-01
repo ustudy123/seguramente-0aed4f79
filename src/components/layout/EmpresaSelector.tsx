@@ -41,6 +41,16 @@ export const EmpresaSelector = () => {
 
   }
 
+  // Profissional sem vínculos: mensagem de erro
+  if (semVinculos) {
+    return (
+      <div className="hidden md:flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-1.5">
+        <Building2 className="w-4 h-4" />
+        <span className="text-xs font-medium">Nenhuma empresa vinculada — contate o administrador</span>
+      </div>
+    );
+  }
+
   // Fallback: show tenant name when no companies registered
   if (empresas.length === 0) {
     return (
@@ -51,7 +61,6 @@ export const EmpresaSelector = () => {
           <p className="text-sm font-medium">{tenant?.nome || "—"}</p>
         </div>
       </div>);
-
   }
 
   return (
