@@ -29,7 +29,7 @@ const formatCnpj = (cnpj: string | null) => {
 
 export const EmpresaSelector = () => {
   const [open, setOpen] = useState(false);
-  const { empresaAtiva, setEmpresaAtiva, empresas, isLoading } = useEmpresaAtiva();
+  const { empresaAtiva, setEmpresaAtiva, empresas, isLoading, isProfissional, semVinculos } = useEmpresaAtiva();
   const { tenant } = useTenant();
 
   if (isLoading) {
@@ -39,6 +39,16 @@ export const EmpresaSelector = () => {
         <span>Carregando...</span>
       </div>);
 
+  }
+
+  // Profissional sem vínculos: mensagem de erro
+  if (semVinculos) {
+    return (
+      <div className="hidden md:flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-1.5">
+        <Building2 className="w-4 h-4" />
+        <span className="text-xs font-medium">Nenhuma empresa vinculada — contate o administrador</span>
+      </div>
+    );
   }
 
   // Fallback: show tenant name when no companies registered
@@ -51,7 +61,6 @@ export const EmpresaSelector = () => {
           <p className="text-sm font-medium">{tenant?.nome || "—"}</p>
         </div>
       </div>);
-
   }
 
   return (
@@ -75,25 +84,26 @@ export const EmpresaSelector = () => {
           <CommandInput placeholder="Buscar empresa..." />
           <CommandList>
             <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
-            <CommandGroup>
-              <CommandItem
-                onSelect={() => {
-                  setEmpresaAtiva(null);
-                  setOpen(false);
-                }}
-                className="flex items-center gap-2">
-
-                <Check
-                  className={cn(
-                    "w-4 h-4 shrink-0",
-                    !empresaAtiva ? "opacity-100" : "opacity-0"
-                  )} />
-
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-                <span className="font-medium">Todas as empresas</span>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
+            {/* Profissionais não podem ver "Todas as empresas" */}
+            {!isProfissional && (
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    setEmpresaAtiva(null);
+                    setOpen(false);
+                  }}
+                  className="flex items-center gap-2">
+                  <Check
+                    className={cn(
+                      "w-4 h-4 shrink-0",
+                      !empresaAtiva ? "opacity-100" : "opacity-0"
+                    )} />
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-medium">Todas as empresas</span>
+                </CommandItem>
+              </CommandGroup>
+            )}
+            {!isProfissional && <CommandSeparator />}
             <CommandGroup heading="Empresas">
               {empresas.map((empresa) =>
               <CommandItem
