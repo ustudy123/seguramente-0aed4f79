@@ -42,11 +42,11 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function openSwotTab() {
-    cy.contains('[role="tab"]', /^SWOT$/i, { timeout: 20000 })
+    cy.contains('[role="tab"]', "SWOT", { timeout: 20000 })
       .scrollIntoView()
       .should("be.visible")
       .click({ force: true });
-    cy.contains('[role="tab"]', /^SWOT$/i).should("have.attr", "aria-selected", "true");
+    cy.contains('[role="tab"]', "SWOT").should("have.attr", "aria-selected", "true");
   }
 
   function openNewSwotModal() {
