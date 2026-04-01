@@ -43,8 +43,12 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Filtra empresas para profissionais com vínculos
   const empresas = useMemo(() => {
-    if (!isProfissional || empresaIdsPermitidas.length === 0) {
+    if (!isProfissional) {
       return todasEmpresas;
+    }
+    // Profissional: filtrar apenas empresas vinculadas (pode ser lista vazia)
+    if (empresaIdsPermitidas.length === 0) {
+      return [];
     }
     return todasEmpresas.filter((e) => empresaIdsPermitidas.includes(e.id));
   }, [todasEmpresas, isProfissional, empresaIdsPermitidas]);
