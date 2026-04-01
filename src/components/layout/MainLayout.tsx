@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import { EmpresaAtivaProvider } from "@/contexts/EmpresaAtivaContext";
 import { useIframeNavigation } from "@/hooks/useIframeNavigation";
 import { OnboardingGate } from "@/components/auth/OnboardingGate";
+import { EmpresaSelecaoObrigatoria } from "@/components/auth/EmpresaSelecaoObrigatoria";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HumorCheckInPopup } from "@/components/humor/HumorCheckInPopup";
 
@@ -75,6 +76,7 @@ export const MainLayout = forwardRef<HTMLDivElement>((_, ref) => {
         </motion.div>
 
         <OnboardingGate />
+        <EmpresaSelecaoObrigatoria />
         <HumorCheckInPopup />
       </div>
     </EmpresaAtivaProvider>
