@@ -97,22 +97,25 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
-    // 1. Selecionar tipo — trigger do primeiro Select (w-40)
-    cy.get('button[role="combobox"]').eq(0).click({ force: true });
+    // Os 3 Selects do formulário de item ficam dentro do form com a classe flex gap-2
+    // Usamos os SelectTriggers com larguras específicas: w-40 (tipo), w-36 (classificação), w-28 (impacto)
+
+    // 1. Selecionar tipo (w-40)
+    cy.get('button[role="combobox"].w-40', { timeout: 8000 }).should("be.visible").click({ force: true });
     selectRadixOption(tipo);
 
     // 2. Digitar descrição
     cy.get('input[placeholder*="Descreva o item"]').clear().type(descricao);
 
-    // 3. Selecionar classificação — segundo Select (w-36)
-    cy.get('button[role="combobox"]').eq(1).click({ force: true });
+    // 3. Selecionar classificação (w-36)
+    cy.get('button[role="combobox"].w-36', { timeout: 8000 }).should("be.visible").click({ force: true });
     selectRadixOption(classificacao);
 
-    // 4. Selecionar impacto — terceiro Select (w-28)
-    cy.get('button[role="combobox"]').eq(2).click({ force: true });
+    // 4. Selecionar impacto (w-28)
+    cy.get('button[role="combobox"].w-28', { timeout: 8000 }).should("be.visible").click({ force: true });
     selectRadixOption(impacto);
 
-    // 5. Clicar no botão de adicionar (botão com ícone Plus)
+    // 5. Clicar no botão de adicionar (ícone Plus)
     cy.get('button').filter(':visible').filter((_, el) => {
       return el.querySelector('svg.lucide-plus') !== null;
     }).last().click();
