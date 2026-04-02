@@ -54,18 +54,15 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function selectRadixOption(text: string) {
-    // Radix Select renderiza options em portal — aguarda listbox visível
-    cy.wait(500);
-    cy.get('body').then(($body) => {
-      const listbox = $body.find('[data-radix-select-viewport], [role="listbox"]');
-      if (listbox.length === 0) {
-        // Se o listbox não apareceu, tenta novamente
-        cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 10000 }).should("exist");
-      }
-    });
-    // Clica na opção pelo texto — usa contains com seletor composto
-    cy.contains('[role="option"]', text, { timeout: 8000 }).click({ force: true });
+    // Aguarda o portal do Radix Select renderizar com listbox/viewport
+    cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 10000 })
+      .should("be.visible");
     cy.wait(300);
+    // Clica na opção pelo texto
+    cy.contains('[role="option"]', text, { timeout: 8000 })
+      .should("be.visible")
+      .click({ force: true });
+    cy.wait(500);
   }
 
   function createSwot(titulo: string, descricao = "", periodo = "") {
