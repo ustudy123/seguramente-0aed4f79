@@ -243,7 +243,12 @@ export function QuestionarioResponder({
                         )}
                       </p>
                       <div className="grid grid-cols-5 gap-1.5">
-                        {(dimensaoAtual?.tipo === 'protetor' ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => (
+                        {((() => {
+                          const isProtetor = dimensaoAtual?.tipo === 'protetor';
+                          const isInvertida = !!pergunta.invertida;
+                          // Se a dimensão é risco mas a pergunta é invertida (frase positiva), usa escala protetora e vice-versa
+                          return (isProtetor !== isInvertida) ? ESCALA_PROTETOR : ESCALA_RISCO;
+                        })()).map(op => (
                           <button
                             key={op.valor}
                             onClick={() => onRespostaChange(pergunta.id, op.valor)}
