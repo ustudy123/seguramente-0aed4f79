@@ -53,7 +53,7 @@ export function VerificacaoTelefone({
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 
         (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').split('.')[0];
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`,
