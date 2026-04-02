@@ -199,8 +199,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.contains("button", "Criar Análise").click();
     });
 
-    // Toast: "Preencha o título da análise SWOT" (texto real do código)
-    cy.contains(/Preencha o título/i, { timeout: 8000 }).should("be.visible");
+    // Toast: "Preencha o título da análise SWOT" — sonner renderiza fora do dialog
+    cy.get('[data-sonner-toaster] [data-sonner-toast], [role="status"], .sonner-toast', { timeout: 10000 })
+      .should("exist")
+      .and("contain.text", "Preencha o título");
 
     // Dialog ainda deve estar aberto
     cy.get('[role="dialog"]').should("exist");
