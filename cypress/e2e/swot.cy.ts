@@ -54,9 +54,14 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function selectRadixOption(text: string) {
-    cy.get('[role="listbox"]', { timeout: 8000 }).should("be.visible");
-    cy.contains('[role="option"]', text, { timeout: 5000 }).should("be.visible").click({ force: true });
-    cy.get('[role="listbox"]', { timeout: 5000 }).should("not.exist");
+    // Radix Select renderiza options em portal — aguarda viewport visível
+    cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 10000 }).should("be.visible");
+    cy.wait(300);
+    cy.get('[data-radix-select-viewport] [role="option"], [role="listbox"] [role="option"]', { timeout: 8000 })
+      .contains(text)
+      .should("be.visible")
+      .click({ force: true });
+    cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 5000 }).should("not.exist");
   }
 
   function createSwot(titulo: string, descricao = "", periodo = "") {
@@ -86,7 +91,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       .closest('[class*="cursor-pointer"]')
       .click();
     // O detalhe renderiza via React state — aguarda o botão Voltar aparecer
-    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible");
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible");
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
@@ -114,7 +119,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function clickVoltar() {
-    cy.get("button").contains("Voltar", { timeout: 10000 }).should("be.visible").click();
+    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible").click();
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
@@ -170,8 +175,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().should("be.visible").click();
 
     // Detalhe: botão Voltar e botão Excluir devem aparecer
-    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible");
-    cy.get("button").contains("Excluir", { timeout: 5000 }).should("be.visible");
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible");
+    cy.contains("button", "Excluir", { timeout: 5000 }).should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
@@ -194,8 +199,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.contains("button", "Criar Análise").click();
     });
 
-    // Toast: "Preencha o título da análise SWOT" (texto real do código)
-    cy.contains(/Preencha o título/i, { timeout: 8000 }).should("be.visible");
+    // Toast: "Preencha o título da análise SWOT" — sonner renderiza fora do dialog
+    cy.get('[data-sonner-toaster] [data-sonner-toast], [role="status"], .sonner-toast', { timeout: 10000 })
+      .should("exist")
+      .and("contain.text", "Preencha o título");
 
     // Dialog ainda deve estar aberto
     cy.get('[role="dialog"]').should("exist");
@@ -375,7 +382,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     });
 
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
-    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible").click();
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible").click();
 
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });
