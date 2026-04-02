@@ -54,18 +54,15 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function selectRadixOption(text: string) {
-    // Radix Select renderiza options em portal — aguarda listbox visível
-    cy.wait(500);
-    cy.get('body').then(($body) => {
-      const listbox = $body.find('[data-radix-select-viewport], [role="listbox"]');
-      if (listbox.length === 0) {
-        // Se o listbox não apareceu, tenta novamente
-        cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 10000 }).should("exist");
-      }
-    });
-    // Clica na opção pelo texto — usa contains com seletor composto
-    cy.contains('[role="option"]', text, { timeout: 8000 }).click({ force: true });
+    // Aguarda o portal do Radix Select renderizar com listbox/viewport
+    cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 10000 })
+      .should("be.visible");
     cy.wait(300);
+    // Clica na opção pelo texto
+    cy.contains('[role="option"]', text, { timeout: 8000 })
+      .should("be.visible")
+      .click({ force: true });
+    cy.wait(500);
   }
 
   function createSwot(titulo: string, descricao = "", periodo = "") {
@@ -94,28 +91,31 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       .should("be.visible")
       .closest('[class*="cursor-pointer"]')
       .click();
-    // Aguarda a tela de detalhe renderizar — busca pelo texto "Voltar" em qualquer lugar
+    // Aguarda a tela de detalhe renderizar
     cy.wait(2000);
-    cy.get("button", { timeout: 15000 }).contains("Voltar").should("exist");
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("exist");
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
-    // 1. Selecionar tipo — trigger do primeiro Select (w-40)
-    cy.get('button[role="combobox"]').eq(0).click({ force: true });
+    // Os 3 Selects do formulário de item ficam dentro do form com a classe flex gap-2
+    // Usamos os SelectTriggers com larguras específicas: w-40 (tipo), w-36 (classificação), w-28 (impacto)
+
+    // 1. Selecionar tipo (w-40)
+    cy.get('button[role="combobox"].w-40', { timeout: 8000 }).should("be.visible").click({ force: true });
     selectRadixOption(tipo);
 
     // 2. Digitar descrição
     cy.get('input[placeholder*="Descreva o item"]').clear().type(descricao);
 
-    // 3. Selecionar classificação — segundo Select (w-36)
-    cy.get('button[role="combobox"]').eq(1).click({ force: true });
+    // 3. Selecionar classificação (w-36)
+    cy.get('button[role="combobox"].w-36', { timeout: 8000 }).should("be.visible").click({ force: true });
     selectRadixOption(classificacao);
 
-    // 4. Selecionar impacto — terceiro Select (w-28)
-    cy.get('button[role="combobox"]').eq(2).click({ force: true });
+    // 4. Selecionar impacto (w-28)
+    cy.get('button[role="combobox"].w-28', { timeout: 8000 }).should("be.visible").click({ force: true });
     selectRadixOption(impacto);
 
-    // 5. Clicar no botão de adicionar (botão com ícone Plus)
+    // 5. Clicar no botão de adicionar (ícone Plus)
     cy.get('button').filter(':visible').filter((_, el) => {
       return el.querySelector('svg.lucide-plus') !== null;
     }).last().click();
@@ -124,7 +124,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function clickVoltar() {
-    cy.get("button").contains("Voltar", { timeout: 10000 }).should("exist").click({ force: true });
+    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible").click({ force: true });
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
@@ -181,8 +181,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.wait(2000);
 
     // Detalhe: botão Voltar e botão Excluir devem aparecer
-    cy.get("button").contains("Voltar", { timeout: 15000 }).should("exist");
-    cy.get("button").contains("Excluir", { timeout: 5000 }).should("exist");
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("exist");
+    cy.contains("button", "Excluir", { timeout: 5000 }).should("exist");
   });
 
   // ═══════════════════════════════════════════════
@@ -368,7 +368,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     openSwotByTitle(titulo);
 
     // Clica no botão Excluir (destructive) no header
-    cy.get("button").contains("Excluir").first().click();
+    cy.contains("button", "Excluir").first().click();
 
     // Confirma no AlertDialog
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
@@ -389,7 +389,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
     cy.wait(2000);
-    cy.get("button").contains("Voltar", { timeout: 15000 }).should("exist").click({ force: true });
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible").click({ force: true });
 
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });
