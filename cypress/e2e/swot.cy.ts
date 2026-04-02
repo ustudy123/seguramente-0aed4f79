@@ -368,7 +368,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     openSwotByTitle(titulo);
 
     // Clica no botão Excluir (destructive) no header
-    cy.get("button").contains("Excluir").first().click();
+    cy.contains("button", "Excluir").first().click();
 
     // Confirma no AlertDialog
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
