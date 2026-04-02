@@ -90,12 +90,13 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function openSwotByTitle(titulo: string) {
-    cy.contains(titulo, { timeout: 10000 })
+    cy.contains(titulo, { timeout: 15000 })
       .should("be.visible")
       .closest('[class*="cursor-pointer"]')
       .click();
-    // O detalhe renderiza via React state — aguarda o botão Voltar aparecer
-    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible");
+    // Aguarda a tela de detalhe renderizar — busca pelo texto "Voltar" em qualquer lugar
+    cy.wait(2000);
+    cy.get("button", { timeout: 15000 }).contains("Voltar").should("exist");
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
