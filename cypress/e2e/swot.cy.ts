@@ -91,9 +91,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       .should("be.visible")
       .closest('[class*="cursor-pointer"]')
       .click();
-    // Aguarda a tela de detalhe renderizar — busca pelo texto "Voltar" em qualquer lugar
+    // Aguarda a tela de detalhe renderizar
     cy.wait(2000);
-    cy.get("button", { timeout: 15000 }).contains("Voltar").should("exist");
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("exist");
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
