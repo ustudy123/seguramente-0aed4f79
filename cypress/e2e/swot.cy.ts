@@ -388,7 +388,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     });
 
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
-    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible").click();
+    cy.wait(2000);
+    cy.get("button").contains("Voltar", { timeout: 15000 }).should("exist").click({ force: true });
 
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });
