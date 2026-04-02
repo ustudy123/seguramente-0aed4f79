@@ -119,7 +119,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function clickVoltar() {
-    cy.get("button").contains("Voltar", { timeout: 10000 }).should("be.visible").click();
+    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible").click();
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
