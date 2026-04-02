@@ -175,8 +175,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().should("be.visible").click();
 
     // Detalhe: botão Voltar e botão Excluir devem aparecer
-    cy.get("button").contains("Voltar", { timeout: 15000 }).should("be.visible");
-    cy.get("button").contains("Excluir", { timeout: 5000 }).should("be.visible");
+    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible");
+    cy.contains("button", "Excluir", { timeout: 5000 }).should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
