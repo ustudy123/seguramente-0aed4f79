@@ -53,16 +53,35 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('[role="dialog"]').contains("Nova Análise SWOT").should("be.visible");
   }
 
+  /**
+   * Seleciona uma opção de um Radix Select que já está aberto.
+   * Usa force click no portal do select.
+   */
   function selectRadixOption(text: string) {
-    // Aguarda o portal do Radix Select renderizar com listbox/viewport
-    cy.get('[data-radix-select-viewport], [role="listbox"]', { timeout: 10000 })
-      .should("be.visible");
-    cy.wait(300);
-    // Clica na opção pelo texto
-    cy.contains('[role="option"]', text, { timeout: 8000 })
+    // Aguarda o conteúdo do select renderizar (portal)
+    cy.get('[data-radix-select-content], [data-radix-select-viewport], [role="listbox"]', { timeout: 10000 })
+      .should("exist");
+    cy.wait(400);
+    // Busca a opção pelo texto e clica
+    cy.get('[role="option"]', { timeout: 8000 })
+      .contains(text)
       .should("be.visible")
       .click({ force: true });
     cy.wait(500);
+  }
+
+  /**
+   * Clica em um SelectTrigger pelo índice dentro do formulário de adicionar item.
+   * Os selects ficam dentro de um Card com classe flex gap-2.
+   */
+  function clickSelectTrigger(index: number) {
+    // Encontra todos os triggers de select no formulário de itens
+    cy.get('button[data-radix-collection-item]', { timeout: 8000 })
+      .should("have.length.gte", index + 1)
+      .eq(index)
+      .scrollIntoView()
+      .click({ force: true });
+    cy.wait(300);
   }
 
   function createSwot(titulo: string, descricao = "", periodo = "") {
@@ -91,28 +110,25 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       .should("be.visible")
       .closest('[class*="cursor-pointer"]')
       .click();
-    // Aguarda a tela de detalhe renderizar
-    cy.wait(2000);
-    cy.contains("button", "Voltar", { timeout: 15000 }).should("exist");
+    // Aguarda a tela de detalhe renderizar — busca o ícone ChevronLeft que acompanha "Voltar"
+    cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
+    cy.wait(1000);
   }
 
   function addSwotItem(tipo: string, descricao: string, classificacao = "Estratégico", impacto = "Médio") {
-    // Os 3 Selects do formulário de item ficam dentro do form com a classe flex gap-2
-    // Usamos os SelectTriggers com larguras específicas: w-40 (tipo), w-36 (classificação), w-28 (impacto)
-
-    // 1. Selecionar tipo (w-40)
-    cy.get('button[role="combobox"].w-40', { timeout: 8000 }).should("be.visible").click({ force: true });
+    // 1. Selecionar tipo (primeiro select trigger)
+    clickSelectTrigger(0);
     selectRadixOption(tipo);
 
     // 2. Digitar descrição
     cy.get('input[placeholder*="Descreva o item"]').clear().type(descricao);
 
-    // 3. Selecionar classificação (w-36)
-    cy.get('button[role="combobox"].w-36', { timeout: 8000 }).should("be.visible").click({ force: true });
+    // 3. Selecionar classificação (segundo select trigger)
+    clickSelectTrigger(1);
     selectRadixOption(classificacao);
 
-    // 4. Selecionar impacto (w-28)
-    cy.get('button[role="combobox"].w-28', { timeout: 8000 }).should("be.visible").click({ force: true });
+    // 4. Selecionar impacto (terceiro select trigger)
+    clickSelectTrigger(2);
     selectRadixOption(impacto);
 
     // 5. Clicar no botão de adicionar (ícone Plus)
@@ -124,7 +140,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
   }
 
   function clickVoltar() {
-    cy.contains("button", "Voltar", { timeout: 10000 }).should("be.visible").click({ force: true });
+    // Busca o botão que contém o ícone ChevronLeft (botão Voltar)
+    cy.get('svg.lucide-chevron-left', { timeout: 10000 })
+      .closest('button')
+      .click({ force: true });
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   }
 
@@ -180,8 +199,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().should("be.visible").click();
     cy.wait(2000);
 
-    // Detalhe: botão Voltar e botão Excluir devem aparecer
-    cy.contains("button", "Voltar", { timeout: 15000 }).should("exist");
+    // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
+    cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
     cy.contains("button", "Excluir", { timeout: 5000 }).should("exist");
   });
 
@@ -205,15 +224,11 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.contains("button", "Criar Análise").click();
     });
 
-    // Toast: "Preencha o título da análise SWOT" — sonner renderiza fora do dialog
     cy.get('[data-sonner-toaster] [data-sonner-toast], [role="status"], .sonner-toast', { timeout: 10000 })
       .should("exist")
       .and("contain.text", "Preencha o título");
 
-    // Dialog ainda deve estar aberto
     cy.get('[role="dialog"]').should("exist");
-
-    // Fecha o dialog
     cy.get("body").type("{esc}");
   });
 
@@ -346,7 +361,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     addSwotItem("Força", descItem);
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
 
-    // Clica na lixeira do item — busca o botão com Trash2 próximo ao texto
+    // Clica na lixeira do item
     cy.contains(descItem)
       .closest('[class*="flex"][class*="items-start"]')
       .find('button')
@@ -389,7 +404,12 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().click();
     cy.wait(2000);
-    cy.contains("button", "Voltar", { timeout: 15000 }).should("be.visible").click({ force: true });
+
+    // Clica no botão Voltar usando o ícone ChevronLeft
+    cy.get('svg.lucide-chevron-left', { timeout: 15000 })
+      .closest('button')
+      .should("be.visible")
+      .click({ force: true });
 
     cy.contains("Análises SWOT", { timeout: 10000 }).should("be.visible");
   });
