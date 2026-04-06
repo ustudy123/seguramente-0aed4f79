@@ -107,7 +107,11 @@ export function SwotSection({ escopo }: Props) {
         <div className="grid gap-3 md:grid-cols-2">
           {swots.map((swot, i) => (
             <motion.div key={swot.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group" onClick={() => setSelectedSwot(swot)}>
+              <Card
+                data-testid="swot-card"
+                className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group"
+                onClick={() => setSelectedSwot(swot)}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">{swot.titulo}</CardTitle>
