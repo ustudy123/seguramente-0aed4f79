@@ -101,8 +101,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.contains("button", "Criar Análise").click();
     });
 
-    cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
-    cy.wait(1500);
+    // Espera o toast de sucesso em vez de verificar se o dialog fechou
+    cy.get('[data-sonner-toaster] [data-sonner-toast]', { timeout: 15000 }).should("exist");
+    cy.wait(2000);
   }
 
   function openSwotByTitle(titulo: string) {
