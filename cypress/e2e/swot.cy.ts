@@ -468,9 +468,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc, { timeout: 8000 }).should("be.visible");
 
     cy.contains(desc)
-      .closest('.flex.items-start')
-      .find('svg.lucide-trash-2')
-      .closest('button')
+      .parents('[class*="items-start"]')
+      .first()
+      .find('button')
+      .first()
       .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
