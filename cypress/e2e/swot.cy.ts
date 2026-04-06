@@ -469,7 +469,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc)
       .closest('.flex.items-start')
       .find('button')
-      .first()
+      .eq(0)
       .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
