@@ -168,10 +168,11 @@ function transformarScore(mediaBruta: number): number {
 }
 
 function classificarNivelIRPS(score: number): NivelIRPS {
-  if (score <= 24) return 'favoravel';
-  if (score <= 49) return 'atencao';
-  if (score <= 74) return 'moderado';
-  return 'elevado';
+  if (score <= 20) return 'saudavel';
+  if (score <= 35) return 'estavel';
+  if (score <= 50) return 'atencao';
+  if (score <= 65) return 'risco';
+  return 'critico';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
