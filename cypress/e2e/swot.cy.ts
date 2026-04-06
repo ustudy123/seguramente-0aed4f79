@@ -200,9 +200,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().should("be.visible").click();
     cy.wait(2000);
 
-    // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
-    cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.get('button').filter(':has(svg[class*="trash"])').first().should("be.visible");
+    // Detalhe: botão Voltar e botão Excluir devem aparecer (por ID)
+    cy.get('#btn-voltar-swot', { timeout: 15000 }).should("be.visible");
+    cy.get('#btn-excluir-swot', { timeout: 15000 }).should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
