@@ -202,9 +202,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
     cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.get('button[variant="destructive"], button.bg-destructive, button.text-destructive-foreground', { timeout: 15000 })
-      .filter(':visible')
-      .should("exist");
+    cy.get('svg.lucide-trash-2', { timeout: 15000 }).closest('button').should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
