@@ -443,9 +443,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
 
     cy.contains(descItem)
-      .closest('[class*="flex"][class*="items-start"]')
+      .closest('.flex.items-start')
       .find('button')
-      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
       .first()
       .click({ force: true });
 
@@ -468,9 +467,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc, { timeout: 8000 }).should("be.visible");
 
     cy.contains(desc)
-      .closest('[class*="flex"][class*="items-start"]')
+      .closest('.flex.items-start')
       .find('button')
-      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
       .first()
       .click({ force: true });
 
