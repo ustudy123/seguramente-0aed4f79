@@ -1,9 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
   calcularIPSClassificacao,
+  calcularIRPSClassificacao,
   getIPSColor,
   getIPSBgColor,
   getIPSLabel,
+  getIRPSColor,
+  getIRPSBgColor,
+  getIRPSLabel,
   INSTRUMENTOS,
   ESCALA_RESPOSTAS,
   BLOCOS_PSICOSSOCIAL,
@@ -30,6 +34,27 @@ describe("calcularIPSClassificacao (types)", () => {
   });
 });
 
+describe("calcularIRPSClassificacao (espelhado do IPS)", () => {
+  const cases: [number, string][] = [
+    [0, "saudavel"],
+    [20, "saudavel"],
+    [21, "estavel"],
+    [35, "estavel"],
+    [36, "atencao"],
+    [50, "atencao"],
+    [51, "risco"],
+    [65, "risco"],
+    [66, "critico"],
+    [100, "critico"],
+  ];
+
+  cases.forEach(([score, expected]) => {
+    it(`${score} → ${expected}`, () => {
+      expect(calcularIRPSClassificacao(score)).toBe(expected);
+    });
+  });
+});
+
 describe("getIPSColor", () => {
   it("retorna classe CSS para cada classificação", () => {
     expect(getIPSColor("saudavel")).toContain("emerald");
@@ -51,6 +76,30 @@ describe("getIPSLabel", () => {
   it("retorna label em português", () => {
     expect(getIPSLabel("saudavel")).toBe("Ambiente Saudável");
     expect(getIPSLabel("critico")).toBe("Risco Crítico");
+  });
+});
+
+describe("getIRPSColor", () => {
+  it("retorna classe CSS para cada classificação IRP-S", () => {
+    expect(getIRPSColor("saudavel")).toContain("emerald");
+    expect(getIRPSColor("estavel")).toContain("blue");
+    expect(getIRPSColor("atencao")).toContain("amber");
+    expect(getIRPSColor("risco")).toContain("orange");
+    expect(getIRPSColor("critico")).toContain("red");
+  });
+});
+
+describe("getIRPSBgColor", () => {
+  it("retorna background para cada classificação IRP-S", () => {
+    expect(getIRPSBgColor("saudavel")).toContain("bg-");
+    expect(getIRPSBgColor("critico")).toContain("bg-");
+  });
+});
+
+describe("getIRPSLabel", () => {
+  it("retorna label em português para IRP-S", () => {
+    expect(getIRPSLabel("saudavel")).toBe("Ambiente Saudável");
+    expect(getIRPSLabel("critico")).toBe("Risco Crítico");
   });
 });
 

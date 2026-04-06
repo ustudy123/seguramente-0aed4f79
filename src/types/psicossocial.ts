@@ -26,40 +26,44 @@ export function calcularIPSClassificacao(score: number): IPSClassificacao {
 }
 
 // IRP-S — Índice de Risco Psicossocial Seguramente (0-100, higher = more risk)
-// Escala científica do SIPRO conforme matriz teórica do instrumento
-export type IRPSClassificacao = 'saudavel' | 'atencao' | 'risco' | 'risco_elevado';
+// Faixas espelham o IPS: IRP-S = 100 - IPS
+export type IRPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 
 export function calcularIRPSClassificacao(score: number): IRPSClassificacao {
-  if (score <= 24) return 'saudavel';
-  if (score <= 49) return 'atencao';
-  if (score <= 74) return 'risco';
-  return 'risco_elevado';
+  if (score <= 20) return 'saudavel';
+  if (score <= 35) return 'estavel';
+  if (score <= 50) return 'atencao';
+  if (score <= 65) return 'risco';
+  return 'critico';
 }
 
 export function getIRPSColor(classificacao: IRPSClassificacao): string {
   switch (classificacao) {
     case 'saudavel': return 'text-emerald-600';
+    case 'estavel': return 'text-blue-600';
     case 'atencao': return 'text-amber-600';
     case 'risco': return 'text-orange-600';
-    case 'risco_elevado': return 'text-red-600';
+    case 'critico': return 'text-red-600';
   }
 }
 
 export function getIRPSBgColor(classificacao: IRPSClassificacao): string {
   switch (classificacao) {
     case 'saudavel': return 'bg-emerald-100';
+    case 'estavel': return 'bg-blue-100';
     case 'atencao': return 'bg-amber-100';
     case 'risco': return 'bg-orange-100';
-    case 'risco_elevado': return 'bg-red-100';
+    case 'critico': return 'bg-red-100';
   }
 }
 
 export function getIRPSLabel(classificacao: IRPSClassificacao): string {
   switch (classificacao) {
     case 'saudavel': return 'Ambiente Saudável';
+    case 'estavel': return 'Estável';
     case 'atencao': return 'Atenção';
     case 'risco': return 'Risco Psicossocial';
-    case 'risco_elevado': return 'Risco Elevado';
+    case 'critico': return 'Risco Crítico';
   }
 }
 

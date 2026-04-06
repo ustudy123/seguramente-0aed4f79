@@ -134,9 +134,10 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
   const isForte = (media: number) => isSipro ? media <= limiarForte : media >= limiarForte;
 
   const getNivelScore = (score: number): { label: string; cls: IPSClassificacao } => {
-    // Para SIPRO usa lógica invertida: alto = ruim
+    // Para SIPRO usa lógica invertida (IRP-S): alto = ruim
+    // Faixas espelhadas do IPS: 0-20 saudável, 21-35 estável, 36-50 atenção, 51-65 risco, 66-100 crítico
     const cls = isSipro
-      ? (score >= 75 ? 'critico' : score >= 50 ? 'atencao' : score >= 25 ? 'estavel' : 'saudavel') as IPSClassificacao
+      ? (score >= 66 ? 'critico' : score >= 51 ? 'risco' : score >= 36 ? 'atencao' : score >= 21 ? 'estavel' : 'saudavel') as IPSClassificacao
       : calcularIPSClassificacao(score);
     const labels: Record<IPSClassificacao, string> = {
       saudavel: 'Saudável',
