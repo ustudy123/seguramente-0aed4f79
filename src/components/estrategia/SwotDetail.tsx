@@ -134,7 +134,7 @@ export function SwotDetail({ swot, onBack }: Props) {
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                          <Button data-testid="btn-excluir-item" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </AlertDialogTrigger>
