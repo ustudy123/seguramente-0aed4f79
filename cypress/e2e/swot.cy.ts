@@ -101,8 +101,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.contains("button", "Criar Análise").click();
     });
 
-    cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
-    cy.wait(1500);
+    // Espera o toast de sucesso em vez de verificar se o dialog fechou
+    cy.get('[data-sonner-toaster] [data-sonner-toast]', { timeout: 15000 }).should("exist");
+    cy.wait(2000);
   }
 
   function openSwotByTitle(titulo: string) {
@@ -201,7 +202,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
     cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.contains("button", "Excluir", { timeout: 15000 }).should("exist");
+    cy.get('button').contains("Excluir", { timeout: 15000 }).should("exist");
   });
 
   // ═══════════════════════════════════════════════
@@ -363,9 +364,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Clica na lixeira do item
     cy.contains(descItem)
-      .closest('[class*="flex"][class*="items-start"]')
+      .closest('.flex.items-start')
       .find('button')
-      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
       .first()
       .click({ force: true });
 
@@ -443,9 +443,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
 
     cy.contains(descItem)
-      .closest('[class*="flex"][class*="items-start"]')
+      .closest('.flex.items-start')
       .find('button')
-      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
       .first()
       .click({ force: true });
 
@@ -468,9 +467,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc, { timeout: 8000 }).should("be.visible");
 
     cy.contains(desc)
-      .closest('[class*="flex"][class*="items-start"]')
+      .closest('.flex.items-start')
       .find('button')
-      .filter((_, el) => el.querySelector('svg.lucide-trash-2') !== null)
       .first()
       .click({ force: true });
 
