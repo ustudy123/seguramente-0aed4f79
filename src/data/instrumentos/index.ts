@@ -98,7 +98,7 @@ export function calcularIndicePonderado(
 // Tipos do SIPRO
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type NivelIRPS = 'favoravel' | 'atencao' | 'moderado' | 'elevado';
+export type NivelIRPS = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 
 export interface DimensaoIRPS {
   id: string;
