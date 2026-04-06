@@ -55,7 +55,7 @@ export function SwotDetail({ swot, onBack }: Props) {
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
+            <Button id="btn-excluir-swot" variant="destructive" size="sm">
               <Trash2 className="w-4 h-4 mr-1" /> Excluir
             </Button>
           </AlertDialogTrigger>
