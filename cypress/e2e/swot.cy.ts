@@ -477,8 +477,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.contains(desc)
       .closest('[class*="rounded-lg"][class*="border"]')
-      .find('button')
-      .first()
+      .find('[data-testid="btn-excluir-item"]')
       .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
