@@ -514,6 +514,33 @@ export function ImportPlanilhaModal({
                   </div>
                 </div>
 
+                {/* Filtro de visualização */}
+                {dadosComErros.length > 0 && (
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      variant={previewFilter === "todos" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewFilter("todos")}
+                    >
+                      Todos ({dados.length})
+                    </Button>
+                    <Button
+                      variant={previewFilter === "erros" ? "destructive" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewFilter("erros")}
+                    >
+                      Com erros ({dadosComErros.length})
+                    </Button>
+                    <Button
+                      variant={previewFilter === "validos" ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewFilter("validos")}
+                    >
+                      Válidos ({dadosValidos.length})
+                    </Button>
+                  </div>
+                )}
+
                 {/* Preview da tabela */}
                 <ScrollArea className="flex-1 border rounded-lg min-h-0">
                   <Table>
@@ -529,7 +556,7 @@ export function ImportPlanilhaModal({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {dados.slice(0, 50).map((dado, idx) => (
+                      {dadosFiltrados.map((dado, idx) => (
                         <TableRow key={idx} className={dado.erros.length > 0 ? "bg-destructive/5" : ""}>
                           <TableCell className="font-mono text-xs">{dado.linha}</TableCell>
                           <TableCell className="font-mono text-xs">
@@ -541,9 +568,13 @@ export function ImportPlanilhaModal({
                           <TableCell>{dado.departamento || "-"}</TableCell>
                           <TableCell>
                             {dado.erros.length > 0 ? (
-                              <Badge variant="destructive" className="text-xs">
-                                {dado.erros[0]}
-                              </Badge>
+                              <div className="space-y-1">
+                                {dado.erros.map((erro, ei) => (
+                                  <Badge key={ei} variant="destructive" className="text-xs block w-fit">
+                                    {erro}
+                                  </Badge>
+                                ))}
+                              </div>
                             ) : (
                               <Badge variant="secondary" className="text-xs">
                                 {dado.situacao === "concluido" ? "Ativo" : "Inativo"}
@@ -554,11 +585,6 @@ export function ImportPlanilhaModal({
                       ))}
                     </TableBody>
                   </Table>
-                  {dados.length > 50 && (
-                    <p className="text-center text-sm text-muted-foreground py-2">
-                      ... e mais {dados.length - 50} registros
-                    </p>
-                  )}
                 </ScrollArea>
 
                 {/* Ações — sempre visíveis no rodapé */}
