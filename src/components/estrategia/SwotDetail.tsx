@@ -50,12 +50,12 @@ export function SwotDetail({ swot, onBack }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4 mr-1" /> Voltar</Button>
+          <Button id="btn-voltar-swot" variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4 mr-1" /> Voltar</Button>
           <h3 className="text-lg font-semibold">{swot.titulo}</h3>
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
+            <Button id="btn-excluir-swot" variant="destructive" size="sm">
               <Trash2 className="w-4 h-4 mr-1" /> Excluir
             </Button>
           </AlertDialogTrigger>
@@ -134,7 +134,7 @@ export function SwotDetail({ swot, onBack }: Props) {
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                          <Button data-testid="btn-excluir-item" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </AlertDialogTrigger>

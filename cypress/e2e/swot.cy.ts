@@ -200,9 +200,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.get('[class*="cursor-pointer"]', { timeout: 10000 }).first().should("be.visible").click();
     cy.wait(2000);
 
-    // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
-    cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.get('button').filter(':has(svg[class*="trash"])').first().should("be.visible");
+    // Detalhe: botão Voltar e botão Excluir devem aparecer (por ID)
+    cy.get('#btn-voltar-swot', { timeout: 15000 }).should("be.visible");
+    cy.get('#btn-excluir-swot', { timeout: 15000 }).should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
@@ -370,8 +370,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     // Clica na lixeira do item
     cy.contains(descItem)
       .closest('[class*="rounded-lg"][class*="border"]')
-      .find('button')
-      .first()
+      .find('[data-testid="btn-excluir-item"]')
       .click({ force: true });
 
     // Confirma exclusão no AlertDialog
@@ -477,8 +476,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     cy.contains(desc)
       .closest('[class*="rounded-lg"][class*="border"]')
-      .find('button')
-      .first()
+      .find('[data-testid="btn-excluir-item"]')
       .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
