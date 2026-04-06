@@ -50,7 +50,7 @@ export function SwotDetail({ swot, onBack }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4 mr-1" /> Voltar</Button>
+          <Button id="btn-voltar-swot" variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4 mr-1" /> Voltar</Button>
           <h3 className="text-lg font-semibold">{swot.titulo}</h3>
         </div>
         <AlertDialog>
