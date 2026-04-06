@@ -58,16 +58,12 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
    * Usa force click no portal do select.
    */
   function selectRadixOption(text: string) {
-    // Aguarda o conteúdo do select renderizar (portal)
-    cy.get('[data-radix-select-content], [data-radix-select-viewport], [role="listbox"]', { timeout: 10000 })
-      .should("exist");
-    cy.wait(400);
-    // Busca a opção pelo texto e clica
-    cy.get('[role="option"]', { timeout: 8000 })
-      .contains(text)
+    cy.get('[role="listbox"]', { timeout: 10000 }).should("be.visible");
+    cy.contains('[role="option"]', text, { timeout: 10000 })
+      .scrollIntoView()
       .should("be.visible")
       .click({ force: true });
-    cy.wait(500);
+    cy.get('[role="listbox"]', { timeout: 10000 }).should("not.exist");
   }
 
   /**
@@ -75,13 +71,17 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
    * Os selects ficam dentro de um Card com classe flex gap-2.
    */
   function clickSelectTrigger(index: number) {
-    // Encontra todos os triggers de select no formulário de itens
-    cy.get('button[data-radix-collection-item]', { timeout: 8000 })
+    cy.get('input[placeholder*="Descreva o item"]', { timeout: 10000 })
+      .should("be.visible")
+      .closest('div.flex.gap-2.flex-wrap')
+      .find('button[role="combobox"]', { timeout: 10000 })
       .should("have.length.gte", index + 1)
       .eq(index)
       .scrollIntoView()
+      .should("be.visible")
       .click({ force: true });
-    cy.wait(300);
+
+    cy.get('[role="listbox"]', { timeout: 10000 }).should("be.visible");
   }
 
   function createSwot(titulo: string, descricao = "", periodo = "") {
