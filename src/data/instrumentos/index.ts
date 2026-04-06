@@ -98,7 +98,7 @@ export function calcularIndicePonderado(
 // Tipos do SIPRO
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type NivelIRPS = 'favoravel' | 'atencao' | 'moderado' | 'elevado';
+export type NivelIRPS = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 
 export interface DimensaoIRPS {
   id: string;
@@ -168,10 +168,11 @@ function transformarScore(mediaBruta: number): number {
 }
 
 function classificarNivelIRPS(score: number): NivelIRPS {
-  if (score <= 24) return 'favoravel';
-  if (score <= 49) return 'atencao';
-  if (score <= 74) return 'moderado';
-  return 'elevado';
+  if (score <= 20) return 'saudavel';
+  if (score <= 35) return 'estavel';
+  if (score <= 50) return 'atencao';
+  if (score <= 65) return 'risco';
+  return 'critico';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -352,10 +353,11 @@ export function getTotalPerguntasByInstrumento(instrumento: 'copsoq' | 'hse' | '
 /** Retorna label de classificação IRP-S em português */
 export function getLabelNivelIRPS(nivel: NivelIRPS): string {
   const labels: Record<NivelIRPS, string> = {
-    favoravel: 'Condição Favorável',
-    atencao: 'Atenção Leve',
-    moderado: 'Risco Moderado',
-    elevado: 'Risco Elevado',
+    saudavel: 'Ambiente Saudável',
+    estavel: 'Estável',
+    atencao: 'Atenção',
+    risco: 'Risco Psicossocial',
+    critico: 'Risco Crítico',
   };
   return labels[nivel];
 }
@@ -363,10 +365,11 @@ export function getLabelNivelIRPS(nivel: NivelIRPS): string {
 /** Retorna cor Tailwind para o nível IRP-S */
 export function getCorNivelIRPS(nivel: NivelIRPS): string {
   const cores: Record<NivelIRPS, string> = {
-    favoravel: 'text-emerald-600',
-    atencao: 'text-yellow-600',
-    moderado: 'text-orange-600',
-    elevado: 'text-red-600',
+    saudavel: 'text-emerald-600',
+    estavel: 'text-blue-600',
+    atencao: 'text-amber-600',
+    risco: 'text-orange-600',
+    critico: 'text-red-600',
   };
   return cores[nivel];
 }
@@ -374,10 +377,11 @@ export function getCorNivelIRPS(nivel: NivelIRPS): string {
 /** Retorna cor de fundo Tailwind para o nível IRP-S */
 export function getBgNivelIRPS(nivel: NivelIRPS): string {
   const cores: Record<NivelIRPS, string> = {
-    favoravel: 'bg-emerald-50 border-emerald-200',
-    atencao: 'bg-yellow-50 border-yellow-200',
-    moderado: 'bg-orange-50 border-orange-200',
-    elevado: 'bg-red-50 border-red-200',
+    saudavel: 'bg-emerald-50 border-emerald-200',
+    estavel: 'bg-blue-50 border-blue-200',
+    atencao: 'bg-amber-50 border-amber-200',
+    risco: 'bg-orange-50 border-orange-200',
+    critico: 'bg-red-50 border-red-200',
   };
   return cores[nivel];
 }
