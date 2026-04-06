@@ -202,7 +202,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
     cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.contains('button', 'Excluir', { timeout: 15000 }).should("exist");
+    cy.get('svg.lucide-trash-2', { timeout: 15000 }).closest('button').should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
@@ -364,7 +364,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Clica na lixeira do item
     cy.contains(descItem)
-      .closest('.flex.items-start')
+      .parents('[class*="items-start"]')
+      .first()
       .find('button')
       .first()
       .click({ force: true });
@@ -467,9 +468,10 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc, { timeout: 8000 }).should("be.visible");
 
     cy.contains(desc)
-      .closest('.flex.items-start')
-      .find('svg.lucide-trash-2')
-      .closest('button')
+      .parents('[class*="items-start"]')
+      .first()
+      .find('button')
+      .first()
       .click({ force: true });
 
     cy.get('[role="alertdialog"]', { timeout: 5000 }).should("be.visible");
