@@ -370,8 +370,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     // Clica na lixeira do item
     cy.contains(descItem)
       .closest('[class*="rounded-lg"][class*="border"]')
-      .find('button')
-      .first()
+      .find('[data-testid="btn-excluir-item"]')
       .click({ force: true });
 
     // Confirma exclusão no AlertDialog
