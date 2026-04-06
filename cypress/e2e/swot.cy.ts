@@ -364,7 +364,8 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Clica na lixeira do item
     cy.contains(descItem)
-      .closest('.flex.items-start')
+      .parents('[class*="items-start"]')
+      .first()
       .find('button')
       .first()
       .click({ force: true });
