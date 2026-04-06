@@ -63,6 +63,11 @@ export function ImportPlanilhaModal({
   const [fileHeaders, setFileHeaders] = useState<string[]>([]);
   const [sampleRows, setSampleRows] = useState<any[][]>([]);
   const [usarMapeamento, setUsarMapeamento] = useState(false);
+  const [previewFilter, setPreviewFilter] = useState<"todos" | "erros" | "validos">("todos");
+
+  const dadosComErros = dados.filter(d => d.erros.length > 0);
+  const dadosValidos = dados.filter(d => d.erros.length === 0);
+  const dadosFiltrados = previewFilter === "erros" ? dadosComErros : previewFilter === "validos" ? dadosValidos : dados;
 
   const resetar = () => {
     setEtapa("upload");
