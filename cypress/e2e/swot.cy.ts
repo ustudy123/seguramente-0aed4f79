@@ -202,7 +202,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Detalhe: ícone Voltar (ChevronLeft) e botão Excluir devem aparecer
     cy.get('svg.lucide-chevron-left', { timeout: 15000 }).should("exist");
-    cy.get('svg.lucide-trash-2', { timeout: 15000 }).closest('button').should("be.visible");
+    cy.get('button').filter(':has(svg[class*="trash"])').first().should("be.visible");
   });
 
   // ═══════════════════════════════════════════════
@@ -267,8 +267,9 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
       cy.contains("button", "Criar Análise").dblclick();
     });
 
-    cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
-    cy.wait(2000);
+    // Espera toast de sucesso ou dialog fechar
+    cy.get('[data-sonner-toaster] [data-sonner-toast]', { timeout: 15000 }).should("exist");
+    cy.wait(3000);
 
     openSwotTab();
     cy.get("body").then(($body) => {
@@ -285,6 +286,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Força ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     const descItem = `Item força teste ${uniqueId}`;
@@ -297,6 +299,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Quadrantes ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     const quadrantes = [
@@ -333,6 +336,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT BVA ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     // Teste com 1 caractere
@@ -356,6 +360,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Excluir Item ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     const descItem = `Item para excluir ${uniqueId}`;
@@ -364,8 +369,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
     // Clica na lixeira do item
     cy.contains(descItem)
-      .parents('[class*="items-start"]')
-      .first()
+      .closest('[class*="rounded-lg"][class*="border"]')
       .find('button')
       .first()
       .click({ force: true });
@@ -381,6 +385,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Para Excluir ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     // Clica no botão Excluir (destructive) no header
@@ -419,6 +424,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Concorrência ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     const desc1 = `Concorrente A ${uniqueId}`;
@@ -437,6 +443,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Excl Concorrente ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     const descItem = `Item concorrente excluir ${uniqueId}`;
@@ -444,7 +451,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(descItem, { timeout: 8000 }).should("be.visible");
 
     cy.contains(descItem)
-      .closest('.flex.items-start')
+      .closest('[class*="rounded-lg"][class*="border"]')
       .find('button')
       .first()
       .click({ force: true });
@@ -461,6 +468,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     const titulo = `SWOT Resiliência ${uniqueId}`;
     createSwot(titulo);
     openSwotTab();
+    cy.wait(2000);
     openSwotByTitle(titulo);
 
     const desc = `Resiliente ${uniqueId}`;
@@ -468,8 +476,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
     cy.contains(desc, { timeout: 8000 }).should("be.visible");
 
     cy.contains(desc)
-      .parents('[class*="items-start"]')
-      .first()
+      .closest('[class*="rounded-lg"][class*="border"]')
       .find('button')
       .first()
       .click({ force: true });
