@@ -337,8 +337,6 @@ export function ImportPlanilhaModal({
     XLSX.writeFile(wb, "modelo_importacao.xlsx");
   };
 
-  const dadosValidos = dados.filter(d => d.erros.length === 0);
-  const dadosComErros = dados.filter(d => d.erros.length > 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
