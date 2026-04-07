@@ -385,7 +385,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     
     // Add direct links
     items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Início" });
-    items.push({ title: "Pendências", path: "/pendencias", icon: ClipboardList, sectionLabel: "Pendências" });
     items.push({ title: "Estratégia & Governança", path: "/estrategia", icon: Compass, sectionLabel: "Estratégia" });
 
     filteredSections.forEach((section) => {
@@ -396,6 +395,9 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           items.push({ title: child.title, path: child.path, icon: item.icon, sectionLabel: section.label });
         });
       });
+      if (section.label === "PESSOAS") {
+        items.push({ title: "PENDÊNCIAS", path: "/pendencias", icon: ClipboardList, sectionLabel: section.label });
+      }
     });
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
     items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
@@ -530,21 +532,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
               {!isCollapsed && <span className="text-[13px]">Início</span>}
             </NavLink>
 
-            <NavLink
-              to="/pendencias"
-              onClick={isMobile ? onClose : undefined}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20 font-medium"
-                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                )
-              }
-            >
-              <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-              {!isCollapsed && <span className="text-[13px]">Pendências</span>}
-            </NavLink>
+
             <NavLink
               to="/estrategia"
               onClick={isMobile ? onClose : undefined}
@@ -562,14 +550,32 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
             </NavLink>
 
             {filteredSections.map((section) => (
-              <CollapsibleSection
-                key={section.label}
-                section={section}
-                isCollapsed={isCollapsed}
-                isOpen={!!openSections[section.label]}
-                onToggle={() => toggleSection(section.label)}
-                onNavigate={isMobile ? onClose : undefined}
-              />
+              <div key={section.label}>
+                <CollapsibleSection
+                  section={section}
+                  isCollapsed={isCollapsed}
+                  isOpen={!!openSections[section.label]}
+                  onToggle={() => toggleSection(section.label)}
+                  onNavigate={isMobile ? onClose : undefined}
+                />
+                {section.label === "PESSOAS" && (
+                  <NavLink
+                    to="/pendencias"
+                    onClick={isMobile ? onClose : undefined}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 mt-1",
+                        isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20 font-medium"
+                          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                      )
+                    }
+                  >
+                    <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
+                    {!isCollapsed && <span className="text-[13px]">PENDÊNCIAS</span>}
+                  </NavLink>
+                )}
+              </div>
             ))}
           </div>
         )}
