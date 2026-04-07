@@ -81,6 +81,8 @@ const menuSections: MenuSection[] = [
           { title: "Colaboradores", path: "/colaboradores" },
         ],
       },
+      { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
+      { title: "Cultura", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
     ],
   },
