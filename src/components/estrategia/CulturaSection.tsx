@@ -128,6 +128,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           ...form,
           empresa_nome: profile?.nome_completo || "Nossa Empresa",
           organograma: organograma || [],
+          tenantId,
         },
       });
 
