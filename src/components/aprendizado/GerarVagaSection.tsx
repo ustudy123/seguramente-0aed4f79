@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface GerarVagaSectionProps {
   cargoId: string;
@@ -20,9 +21,11 @@ interface GerarVagaSectionProps {
 }
 
 export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsabilidade }: GerarVagaSectionProps) {
+  const { empresaAtiva } = useEmpresaAtiva();
   const [gerando, setGerando] = useState(false);
   const [anuncio, setAnuncio] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
 
   // Additional fields
   const [contato, setContato] = useState("");
@@ -34,6 +37,8 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
   const [requisitosDesejaveis, setRequisitosDesejaveis] = useState("");
   const [beneficios, setBeneficios] = useState("");
   const [prazoInscricao, setPrazoInscricao] = useState("");
+
+  const empresaNome = (empresaAtiva as any)?.razao_social || (empresaAtiva as any)?.nome_fantasia || (empresaAtiva as any)?.nome || "";
 
   const handleGerar = async () => {
     setGerando(true);
@@ -53,6 +58,7 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
           requisitosDesejaveis,
           beneficios,
           prazoInscricao,
+          nomeEmpresa: empresaNome,
         },
       });
       if (error) throw new Error(error.message);
@@ -83,8 +89,21 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadPdf = () => {
-    exportTextToPdf(anuncio, `Vaga_${cargoNome.replace(/\s+/g, "_")}.pdf`, `Anuncio de Vaga - ${cargoNome}`);
+  const handleDownloadPdf = async () => {
+    setGerandoPdf(true);
+    try {
+      await exportTextToPdf(
+        anuncio,
+        `Vaga_${cargoNome.replace(/\s+/g, "_")}.pdf`,
+        `Anúncio de Vaga - ${cargoNome}`,
+        empresaNome
+      );
+      toast.success("PDF gerado com sucesso!");
+    } catch {
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setGerandoPdf(false);
+    }
   };
 
   return (
@@ -97,6 +116,12 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {empresaNome && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Empresa: {empresaNome}</span>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> Contato para Envio do Currículo</Label>
@@ -176,8 +201,9 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" /> Baixar .txt
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-                  <FileDown className="w-4 h-4 mr-1" /> Baixar PDF
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={gerandoPdf}>
+                  {gerandoPdf ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />}
+                  Baixar PDF
                 </Button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Sparkles, Loader2, Copy, Download, Check, Calendar, DollarSign, Gift, Clock, Building2, FileDown } from "lucide-react";
 import { exportTextToPdf } from "@/utils/pdfExport";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface GerarPropostaSectionProps {
   cargoId: string;
@@ -18,9 +19,13 @@ interface GerarPropostaSectionProps {
 }
 
 export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, responsabilidade }: GerarPropostaSectionProps) {
+  const { empresaAtiva } = useEmpresaAtiva();
   const [gerando, setGerando] = useState(false);
   const [proposta, setProposta] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+
+  const empresaNome = (empresaAtiva as any)?.razao_social || (empresaAtiva as any)?.nome_fantasia || (empresaAtiva as any)?.nome || "";
 
   // Proposal fields
   const [nomeEmpresa, setNomeEmpresa] = useState("");
@@ -33,6 +38,13 @@ export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, respo
   const [periodoExperiencia, setPeriodoExperiencia] = useState("90");
   const [localTrabalho, setLocalTrabalho] = useState("");
   const [observacoes, setObservacoes] = useState("");
+
+  // Auto-fill company name
+  useEffect(() => {
+    if (empresaNome && !nomeEmpresa) {
+      setNomeEmpresa(empresaNome);
+    }
+  }, [empresaNome]);
 
   const handleGerar = async () => {
     setGerando(true);
@@ -84,8 +96,21 @@ export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, respo
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadPdf = () => {
-    exportTextToPdf(proposta, `Proposta_${cargoNome.replace(/\s+/g, "_")}.pdf`, `Proposta de Oportunidade - ${cargoNome}`);
+  const handleDownloadPdf = async () => {
+    setGerandoPdf(true);
+    try {
+      await exportTextToPdf(
+        proposta,
+        `Proposta_${cargoNome.replace(/\s+/g, "_")}.pdf`,
+        `Proposta de Oportunidade - ${cargoNome}`,
+        nomeEmpresa || empresaNome
+      );
+      toast.success("PDF gerado com sucesso!");
+    } catch {
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setGerandoPdf(false);
+    }
   };
 
   return (
@@ -179,8 +204,9 @@ export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, respo
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" /> Baixar .txt
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-                  <FileDown className="w-4 h-4 mr-1" /> Baixar PDF
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={gerandoPdf}>
+                  {gerandoPdf ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />}
+                  Baixar PDF
                 </Button>
               </div>
             </div>
