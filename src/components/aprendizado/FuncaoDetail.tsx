@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Brain, Shield, Briefcase, FileText } from "lucide-react";
+import { ClipboardList, Brain, Shield, Briefcase, FileText, BarChart3 } from "lucide-react";
 import { AtividadesSection } from "./AtividadesSection";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { EpisSection } from "./EpisSection";
+import { IndicadoresSection } from "./IndicadoresSection";
 import { TreinamentosSection } from "./TreinamentosSection";
 import { ResponsabilidadeField } from "./ResponsabilidadeField";
 import { GerarVagaSection } from "./GerarVagaSection";
