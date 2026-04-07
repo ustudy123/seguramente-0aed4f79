@@ -218,7 +218,7 @@ export const PilaresSummaryLive = () => {
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${Math.max(score, 2)}%` }}
+                      animate={{ width: `${pilarHasData ? Math.max(score, 2) : 0}%` }}
                       transition={{ duration: 0.7, delay: 0.2 + index * 0.08 }}
                       className={cn("h-full rounded-full", pilar.bgColor)}
                     />
