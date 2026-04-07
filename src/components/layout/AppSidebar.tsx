@@ -84,7 +84,6 @@ const menuSections: MenuSection[] = [
     color: "text-blue-400",
     sectionIcon: Compass,
     items: [
-      { title: "Início", icon: Home, path: "/" },
       { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
     ],
   },
