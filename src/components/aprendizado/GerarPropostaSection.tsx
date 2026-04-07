@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FileText, Sparkles, Loader2, Copy, Download, Check, Calendar, DollarSign, Gift, Clock, Building2 } from "lucide-react";
+import { FileText, Sparkles, Loader2, Copy, Download, Check, Calendar, DollarSign, Gift, Clock, Building2, FileDown } from "lucide-react";
+import { exportTextToPdf } from "@/utils/pdfExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
