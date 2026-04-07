@@ -173,8 +173,8 @@ export default function Filiais() {
                     <Building2 className="w-4 h-4 text-primary" />
                     Estabelecimento
                   </p>
-                  <p className="text-sm">Locais fixos da empresa como sedes, filiais, escritórios ou armazéns.</p>
-                  <p className="text-xs italic text-primary/70">Ex: Escritório Central, Filial Shopping, Galpão Logístico.</p>
+                  <p className="text-sm">Locais fixos da empresa como sedes, unidades, escritórios ou armazéns.</p>
+                  <p className="text-xs italic text-primary/70">Ex: Escritório Central, Unidade Operacional, Galpão Logístico.</p>
                 </div>
                 <div className="space-y-1">
                   <p className="font-bold text-foreground flex items-center gap-2">
