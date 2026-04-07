@@ -25,6 +25,7 @@ type Payload = {
   // Company pre-registration
   tipoPessoa?: string;
   documento?: string;
+  telefone?: string;
   // Fallback userId for signup flow (no session)
   userId?: string;
 };
@@ -102,6 +103,7 @@ serve(async (req) => {
   const plano = (payload.plano ?? "starter").trim();
   const tipoPessoa = (payload.tipoPessoa ?? "").trim();
   const documento = (payload.documento ?? "").trim();
+  const telefone = (payload.telefone ?? "").trim();
 
   // Mode 1: Superadmin creating owner for existing tenant (with password or invite)
   if (existingTenantId && email && nomeCompleto) {
@@ -310,6 +312,7 @@ serve(async (req) => {
     user_id: userId,
     tenant_id: tenant.id,
     nome_completo: nomeCompleto,
+    telefone: telefone || null,
   });
 
   if (profileError) {
@@ -410,6 +413,7 @@ serve(async (req) => {
       cnpj: tipoPessoa === "pj" ? documento : null,
       poc_nome: nomeCompleto,
       poc_email: email || null,
+      poc_telefone: telefone || null,
       fase: "ativo",
       tipo_cliente: "tester",
       conta_ativada: true,
