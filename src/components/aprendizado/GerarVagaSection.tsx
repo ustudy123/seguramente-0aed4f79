@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Briefcase, Sparkles, Loader2, Copy, Download, Check, Building2, Mail, MapPin, DollarSign, Clock } from "lucide-react";
+import { Briefcase, Sparkles, Loader2, Copy, Download, Check, Building2, Mail, MapPin, DollarSign, Clock, FileDown } from "lucide-react";
+import { exportTextToPdf } from "@/utils/pdfExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
