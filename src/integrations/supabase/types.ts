@@ -8472,6 +8472,50 @@ export type Database = {
           },
         ]
       }
+      funcao_indicadores: {
+        Row: {
+          cargo_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          meta: string | null
+          nome: string
+          periodicidade: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          meta?: string | null
+          nome: string
+          periodicidade?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          meta?: string | null
+          nome?: string
+          periodicidade?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcao_indicadores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcao_pop_versoes: {
         Row: {
           alterado_por: string | null

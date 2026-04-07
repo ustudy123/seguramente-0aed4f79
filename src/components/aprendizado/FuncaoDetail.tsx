@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Brain, Shield, Briefcase, FileText } from "lucide-react";
+import { ClipboardList, Brain, Shield, Briefcase, FileText, BarChart3 } from "lucide-react";
 import { AtividadesSection } from "./AtividadesSection";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { EpisSection } from "./EpisSection";
+import { IndicadoresSection } from "./IndicadoresSection";
 import { TreinamentosSection } from "./TreinamentosSection";
 import { ResponsabilidadeField } from "./ResponsabilidadeField";
 import { GerarVagaSection } from "./GerarVagaSection";
@@ -66,6 +67,9 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <TabsTrigger value="competencias" className="gap-1">
             <Brain className="w-4 h-4" /> Competências
           </TabsTrigger>
+          <TabsTrigger value="indicadores" className="gap-1">
+            <BarChart3 className="w-4 h-4" /> Indicadores
+          </TabsTrigger>
           <TabsTrigger value="epis" className="gap-1">
             <Shield className="w-4 h-4" /> EPIs & Treinamento
           </TabsTrigger>
@@ -82,6 +86,9 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
         </TabsContent>
         <TabsContent value="competencias" className="mt-4">
           <CompetenciasSection cargoId={cargo.id} funcaoNome={cargo.nome} />
+        </TabsContent>
+        <TabsContent value="indicadores" className="mt-4">
+          <IndicadoresSection cargoId={cargo.id} />
         </TabsContent>
         <TabsContent value="epis" className="mt-4">
           <div className="space-y-6">
