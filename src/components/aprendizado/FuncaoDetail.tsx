@@ -67,6 +67,10 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <TabsTrigger value="competencias" className="gap-1">
             <Brain className="w-4 h-4" /> Competências
           </TabsTrigger>
+          <TabsTrigger value="indicadores" className="gap-1">
+            <BarChart3 className="w-4 h-4" /> Indicadores
+          </TabsTrigger>
+          </TabsTrigger>
           <TabsTrigger value="epis" className="gap-1">
             <Shield className="w-4 h-4" /> EPIs & Treinamento
           </TabsTrigger>
