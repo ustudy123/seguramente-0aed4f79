@@ -87,7 +87,24 @@ export const PilaresSummaryLive = () => {
       )
     : 0;
 
+  const hasData = data ? (
+    data.organizacao.cargosDefinidos > 0 ||
+    data.organizacao.departamentos > 0 ||
+    data.organizacao.admissoesAndamento > 0 ||
+    data.condicoes.itensNr17Total > 0 ||
+    data.condicoes.episDisponiveis > 0 ||
+    data.condicoes.riscosAtivos > 0 ||
+    data.experiencia.humorTotal > 0 ||
+    data.experiencia.ouvidoriaPendente > 0 ||
+    data.experiencia.feedPostsHoje > 0 ||
+    data.governanca.acoesTotal > 0 ||
+    data.governanca.evidenciasEnviadas > 0 ||
+    data.governanca.terceirosAtivos > 0 ||
+    data.governanca.ptsBloqueadas > 0
+  ) : false;
+
   const getOverallLabel = (score: number) => {
+    if (!hasData) return null;
     if (score >= 80) return { label: "Cultura Saudável", icon: Trophy, color: "text-success", bgColor: "bg-success/10" };
     if (score >= 60) return { label: "Estratégico", icon: TrendingUp, color: "text-primary", bgColor: "bg-primary/10" };
     if (score >= 40) return { label: "Preventivo", icon: ShieldCheck, color: "text-info", bgColor: "bg-info/10" };
