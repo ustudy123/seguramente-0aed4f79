@@ -96,14 +96,6 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Visão Geral & Estratégia",
-    color: "text-blue-400",
-    sectionIcon: Compass,
-    items: [
-      { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
-    ],
-  },
-  {
     label: "Saúde & Segurança",
     color: "text-amber-400",
     sectionIcon: HeartPulse,
@@ -391,8 +383,10 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const allItems = useMemo(() => {
     const items: { title: string; path: string; icon: React.ElementType; sectionLabel: string }[] = [];
     
-    // Search items from sections
-
+    // Add direct links
+    items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Início" });
+    items.push({ title: "Pendências", path: "/pendencias", icon: ClipboardList, sectionLabel: "Pendências" });
+    items.push({ title: "Estratégia & Governança", path: "/estrategia", icon: Compass, sectionLabel: "Estratégia" });
 
     filteredSections.forEach((section) => {
       section.items.forEach((item) => {
@@ -550,6 +544,21 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
             >
               <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
               {!isCollapsed && <span className="text-[13px]">Pendências</span>}
+            </NavLink>
+            <NavLink
+              to="/estrategia"
+              onClick={isMobile ? onClose : undefined}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20 font-medium"
+                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                )
+              }
+            >
+              <Compass className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
+              {!isCollapsed && <span className="text-[13px]">Estratégia & Governança</span>}
             </NavLink>
 
             {filteredSections.map((section) => (
