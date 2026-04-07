@@ -101,7 +101,8 @@ export function useDocumentoPastas() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []).map((d: DocumentoRow) => ({
+
+      const documentosMapeados = (data || []).map((d: DocumentoRow) => ({
         id: d.id,
         nome_original: d.nome_original,
         tipo: d.tipo,
@@ -114,6 +115,48 @@ export function useDocumentoPastas() {
         colaborador_id: d.colaborador_id,
         colaborador_nome: d.colaborador_nome,
       }));
+
+      let reparouDocumentosOrfaos = false;
+
+      for (const doc of documentosMapeados) {
+        if (!doc.colaborador_id || doc.pasta_id) continue;
+
+        const pastaColaboradorId = await criarPastaColaborador({
+          tenantId,
+          colaboradorId: doc.colaborador_id,
+          colaboradorNome: doc.colaborador_nome || "Colaborador",
+          colaboradorCpf: null,
+        });
+
+        if (!pastaColaboradorId) continue;
+
+        const nomeSubpasta = inferirSubpastaColaboradorPorTipo(doc.tipo);
+        const { data: subpasta } = await supabase
+          .from("documento_pastas")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .eq("pasta_pai_id", pastaColaboradorId)
+          .eq("nome", nomeSubpasta)
+          .maybeSingle();
+
+        const pastaDestinoId = subpasta?.id || pastaColaboradorId;
+
+        const { error: repairError } = await supabase
+          .from("documentos")
+          .update({ pasta_id: pastaDestinoId })
+          .eq("id", doc.id);
+
+        if (!repairError) {
+          doc.pasta_id = pastaDestinoId;
+          reparouDocumentosOrfaos = true;
+        }
+      }
+
+      if (reparouDocumentosOrfaos) {
+        queryClient.invalidateQueries({ queryKey: ["documento-pastas"] });
+      }
+
+      return documentosMapeados;
     },
     enabled: !!tenantId,
   });
