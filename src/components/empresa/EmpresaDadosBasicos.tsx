@@ -117,11 +117,11 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
             value={tipoPessoa}
             onValueChange={(v) => onChange({
               tipo_pessoa: v as 'pf' | 'pj',
-              // Limpar campos ao trocar tipo
               ...(v === 'pf' ? { cnpj: null } : { cpf: null, cei: null, caepf: null }),
             })}
+            disabled={!!data.id && !!(data.cnpj || data.cpf)}
           >
-            <SelectTrigger>
+            <SelectTrigger className={!!data.id && !!(data.cnpj || data.cpf) ? 'bg-muted cursor-not-allowed' : ''}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
