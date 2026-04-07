@@ -168,6 +168,7 @@ export function useDocumentos() {
       observacoes,
       documentoExistenteId,
       motivoRevisao,
+      pastaId,
     }: {
       file: File;
       colaboradorNome: string;
@@ -178,6 +179,7 @@ export function useDocumentos() {
       observacoes?: string;
       documentoExistenteId?: string;   // se preenchido → nova versão
       motivoRevisao?: string;
+      pastaId?: string;               // pasta selecionada na UI
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
@@ -251,9 +253,9 @@ export function useDocumentos() {
       }
 
       // ── NOVO DOCUMENTO ───────────────────────────────────────────────────
-      let pastaId: string | null = null;
+      let resolvedPastaId: string | null = pastaId || null;
 
-      if (colaboradorId) {
+      if (colaboradorId && !resolvedPastaId) {
         const pastaColaboradorId = await criarPastaColaborador({
           tenantId,
           colaboradorId,
@@ -273,7 +275,7 @@ export function useDocumentos() {
             .maybeSingle();
 
           if (subpastaError) throw subpastaError;
-          pastaId = subpasta?.id || pastaColaboradorId;
+          resolvedPastaId = subpasta?.id || pastaColaboradorId;
         }
       }
 
@@ -296,7 +298,7 @@ export function useDocumentos() {
           observacoes: observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
-          pasta_id: pastaId,
+          pasta_id: resolvedPastaId,
           versao_atual: 1,
           total_versoes: 1,
         } as never)
