@@ -56,7 +56,10 @@ export const PilaresSummary = () => {
     pilares.reduce((acc, p) => acc + p.score, 0) / pilares.length
   );
 
+  const hasData = pilares.some(p => p.score > 0);
+
   const getOverallLabel = (score: number) => {
+    if (!hasData) return null;
     if (score >= 80) return { label: "Cultura Saudável", emoji: "🏆" };
     if (score >= 60) return { label: "Estratégico", emoji: "📈" };
     if (score >= 40) return { label: "Preventivo", emoji: "🛡️" };
