@@ -39,15 +39,35 @@ export default function Estrategia() {
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Compass className="w-7 h-7 text-primary" />
-            Estratégia & Governança
+            {tab === "organograma" ? (
+              <>
+                <Users className="w-7 h-7 text-primary" />
+                Organograma
+              </>
+            ) : tab === "cultura" ? (
+              <>
+                <Heart className="w-7 h-7 text-primary" />
+                Cultura
+              </>
+            ) : (
+              <>
+                <Compass className="w-7 h-7 text-primary" />
+                Estratégia & Governança
+              </>
+            )}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Planejamento estratégico, cultura organizacional e estrutura que viram ação
+            {tab === "organograma" 
+              ? "Estrutura hierárquica e organizacional da empresa" 
+              : tab === "cultura"
+              ? "Identidade, valores e cultura organizacional"
+              : "Planejamento estratégico, cultura organizacional e estrutura que viram ação"}
           </p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            O módulo Estratégia e Governança é essencial para ajudar a planejar e organizar a direção da empresa. Ele fornece ferramentas para melhorar a cultura organizacional e a estrutura interna.
-          </p>
+          {tab !== "organograma" && tab !== "cultura" && (
+            <p className="text-muted-foreground mt-1 text-sm">
+              O módulo Estratégia e Governança é essencial para ajudar a planejar e organizar a direção da empresa. Ele fornece ferramentas para melhorar a cultura organizacional e a estrutura interna.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setShowGuia(true)}>
@@ -57,38 +77,34 @@ export default function Estrategia() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="swot" className="gap-1">
-            <Target className="w-4 h-4" /> SWOT
-          </TabsTrigger>
-          <TabsTrigger value="oceano" className="gap-1">
-            <Waves className="w-4 h-4" /> Oceano Azul
-          </TabsTrigger>
-          <TabsTrigger value="cultura" className="gap-1">
-            <Heart className="w-4 h-4" /> Cultura
-          </TabsTrigger>
-          <TabsTrigger value="organograma" className="gap-1">
-            <Users className="w-4 h-4" /> Organograma
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="swot" className="mt-4">
-          <SwotSection escopo={escopo} />
-        </TabsContent>
-
-        <TabsContent value="oceano" className="mt-4">
-          <OceanoAzulSection escopo={escopo} />
-        </TabsContent>
-
-        <TabsContent value="cultura" className="mt-4">
-          <CulturaSection escopo={escopo} />
-        </TabsContent>
-
-        <TabsContent value="organograma" className="mt-4">
+      {tab === "organograma" ? (
+        <div className="mt-4">
           <OrganogramaSection escopo={escopo} />
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : tab === "cultura" ? (
+        <div className="mt-4">
+          <CulturaSection escopo={escopo} />
+        </div>
+      ) : (
+        <Tabs value={tab} onValueChange={handleTabChange}>
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="swot" className="gap-1">
+              <Target className="w-4 h-4" /> SWOT
+            </TabsTrigger>
+            <TabsTrigger value="oceano" className="gap-1">
+              <Waves className="w-4 h-4" /> Oceano Azul
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="swot" className="mt-4">
+            <SwotSection escopo={escopo} />
+          </TabsContent>
+
+          <TabsContent value="oceano" className="mt-4">
+            <OceanoAzulSection escopo={escopo} />
+          </TabsContent>
+        </Tabs>
+      )}
 
       <GuiaRapidoEstrategia open={showGuia} onOpenChange={setShowGuia} />
     </motion.div>

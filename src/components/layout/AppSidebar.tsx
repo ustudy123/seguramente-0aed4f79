@@ -64,6 +64,20 @@ const normalizeSearchText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const checkIsActive = (path: string, pathname: string, search: string) => {
+  if (!path) return false;
+  const fullPath = pathname + search;
+  if (path.includes("?")) {
+    return fullPath === path;
+  }
+  if (path === "/estrategia") {
+    const params = new URLSearchParams(search);
+    const tab = params.get("tab");
+    return pathname === "/estrategia" && (!tab || (tab !== "organograma" && tab !== "cultura"));
+  }
+  return pathname === path;
+};
+
 const menuSections: MenuSection[] = [
   {
     label: "Estrutura Organizacional",
@@ -159,6 +173,7 @@ const menuSections: MenuSection[] = [
 
 const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <div>
@@ -193,22 +208,23 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
             className="overflow-hidden"
           >
             <div className="ml-7 mt-1 space-y-0.5 border-l-2 border-white/[0.08] pl-3">
-              {item.children?.map((child) => (
-                <NavLink
-                  key={child.path}
-                  to={child.path}
-                  className={({ isActive }) =>
-                    cn(
+              {item.children?.map((child) => {
+                const isActive = checkIsActive(child.path, location.pathname, location.search);
+                return (
+                  <NavLink
+                    key={child.path}
+                    to={child.path}
+                    className={cn(
                       "block px-3 py-2 rounded-lg text-[13px] transition-all duration-200",
                       isActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
                         : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                    )
-                  }
-                >
-                  {child.title}
-                </NavLink>
-              ))}
+                    )}
+                  >
+                    {child.title}
+                  </NavLink>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -217,30 +233,29 @@ const SidebarSubItem = ({ item, isCollapsed }: { item: MenuItem; isCollapsed: bo
   );
 };
 
-const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolean; onNavigate?: () => void }) => (
-  <NavLink
-    to={item.path || "/"}
-    onClick={onNavigate}
-    className={({ isActive }) =>
-      cn(
+const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolean; onNavigate?: () => void }) => {
+  const location = useLocation();
+  const isActive = checkIsActive(item.path || "/", location.pathname, location.search);
+
+  return (
+    <NavLink
+      to={item.path || "/"}
+      onClick={onNavigate}
+      className={cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
         isActive
           ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
           : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-      )
-    }
-  >
-    {({ isActive }: { isActive: boolean }) => (
-      <>
-        <item.icon
-          className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors", !isActive && "opacity-75")}
-          strokeWidth={1.75}
-        />
-        <span className="text-[13px]">{item.title}</span>
-      </>
-    )}
-  </NavLink>
-);
+      )}
+    >
+      <item.icon
+        className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors", !isActive && "opacity-75")}
+        strokeWidth={1.75}
+      />
+      <span className="text-[13px]">{item.title}</span>
+    </NavLink>
+  );
+};
 
 const CollapsibleSection = ({
   section,
@@ -256,10 +271,11 @@ const CollapsibleSection = ({
   onNavigate?: () => void;
 }) => {
   const location = useLocation();
+
   const hasActiveChild = section.items.some(
     (item) =>
-      item.path === location.pathname ||
-      item.children?.some((c) => c.path === location.pathname)
+      checkIsActive(item.path || "/", location.pathname, location.search) ||
+      item.children?.some((c) => checkIsActive(c.path, location.pathname, location.search))
   );
 
   if (isCollapsed) {
@@ -271,26 +287,25 @@ const CollapsibleSection = ({
             strokeWidth={1.75}
           />
         </div>
-        {section.items.map((item) =>
-          item.children ? (
+        {section.items.map((item) => {
+          const isActive = checkIsActive(item.path || "/", location.pathname, location.search);
+          return item.children ? (
             <SidebarSubItem key={item.title} item={item} isCollapsed={isCollapsed} />
           ) : (
             <NavLink
               key={item.title}
               to={item.path || "/"}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                )
-              }
+              className={cn(
+                "flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                  : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+              )}
             >
               <item.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
             </NavLink>
-          )
-        )}
+          );
+        })}
       </div>
     );
   }
@@ -387,7 +402,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
     items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
     return items;
-  }, []);
+  }, [filteredSections]);
 
   const normalizedQuery = useMemo(() => normalizeSearchText(searchQuery), [searchQuery]);
 
@@ -407,8 +422,8 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     filteredSections.forEach((section) => {
       const hasActive = section.items.some(
         (item) =>
-          item.path === location.pathname ||
-          item.children?.some((c) => c.path === location.pathname)
+          checkIsActive(item.path || "/", location.pathname, location.search) ||
+          item.children?.some((c) => checkIsActive(c.path, location.pathname, location.search))
       );
       initial[section.label] = hasActive;
     });
@@ -470,30 +485,33 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                 Nenhum resultado encontrado
               </p>
             ) : (
-              searchResults.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setSearchQuery("");
-                    if (isMobile && onClose) onClose();
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left",
-                    location.pathname === item.path
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
-                      : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                  )}
-                >
-                  <item.icon className="w-[18px] h-[18px] flex-shrink-0 opacity-75" strokeWidth={1.75} />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[13px] truncate">{item.title}</span>
-                    <span className="text-[10px] text-sidebar-foreground/30 truncate">
-                      {item.sectionLabel}
-                    </span>
-                  </div>
-                </button>
-              ))
+              searchResults.map((item) => {
+                const isActive = checkIsActive(item.path, location.pathname, location.search);
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      navigate(item.path);
+                      setSearchQuery("");
+                      if (isMobile && onClose) onClose();
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left",
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
+                        : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <item.icon className="w-[18px] h-[18px] flex-shrink-0 opacity-75" strokeWidth={1.75} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[13px] truncate">{item.title}</span>
+                      <span className="text-[10px] text-sidebar-foreground/30 truncate">
+                        {item.sectionLabel}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         ) : (
@@ -543,16 +561,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           {!isCollapsed && <span className="text-[13px]">Configurações</span>}
         </NavLink>
       </div>
-
-      {/* Collapse toggle - hidden on mobile */}
-      {!isMobile && (
-        <button
-          onClick={onToggle}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-sidebar-accent border border-white/[0.1] flex items-center justify-center text-sidebar-foreground/70 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-all shadow-lg"
-        >
-          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-        </button>
-      )}
     </motion.aside>
   );
 };
