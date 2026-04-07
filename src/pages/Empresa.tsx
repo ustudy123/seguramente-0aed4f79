@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers } from 'lucide-react';
+import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers, Brain } from 'lucide-react';
 import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 import { EmpresaDadosBasicos } from '@/components/empresa/EmpresaDadosBasicos';
 import { EmpresaEnquadramentoLegal } from '@/components/empresa/EmpresaEnquadramentoLegal';
@@ -12,6 +12,7 @@ import { EmpresaJornadaCondicoes } from '@/components/empresa/EmpresaJornadaCond
 import { EmpresaObrigacoesTab } from '@/components/empresa/EmpresaObrigacoesTab';
 import { EmpresaImportExport } from '@/components/empresa/EmpresaImportExport';
 import { EmpresaList } from '@/components/empresa/EmpresaList';
+import { EmpresaAIContext } from '@/components/empresa/EmpresaAIContext';
 import { GruposEconomicosManager } from '@/components/empresa/GruposEconomicosManager';
 import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import type { EmpresaCadastro } from '@/types/empresa';
