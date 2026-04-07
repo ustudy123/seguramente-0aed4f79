@@ -192,7 +192,7 @@ export default function Filiais() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por CNPJ, razão social ou nome fantasia..."
+            placeholder="Buscar por CNPJ da empresa..."
             value={cnpjSearch}
             onChange={(e) => setCnpjSearch(e.target.value)}
             className="pl-10 max-w-lg"
