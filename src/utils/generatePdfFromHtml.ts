@@ -88,30 +88,49 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imageWidth = pdfWidth;
-    const imageHeight = (canvas.height * imageWidth) / canvas.width;
 
-    let heightLeft = imageHeight;
-    let position = 0;
-    let pageIndex = 0;
+    const MARGIN = 15; // mm
+    const contentWidth = pdfWidth - MARGIN * 2;
+    const contentHeight = pdfHeight - MARGIN * 2;
 
-    pdf.addImage(imageData, "JPEG", 0, position, imageWidth, imageHeight);
-    heightLeft -= pdfHeight;
+    // Scale factor: how many mm per canvas pixel
+    const scaleFactor = contentWidth / (canvas.width / 2); // scale:2 was used
+    const totalImageHeightMm = (canvas.height / 2) * scaleFactor;
 
-    while (heightLeft > 0) {
-      pageIndex += 1;
-      position = -(pdfHeight * pageIndex);
-      pdf.addPage();
-      pdf.addImage(imageData, "JPEG", 0, position, imageWidth, imageHeight);
-      heightLeft -= pdfHeight;
+    // How many pixels (at scale 2) fit in one page's content area
+    const pageContentHeightPx = contentHeight / scaleFactor * 2;
+
+    const totalPages = Math.ceil((canvas.height) / pageContentHeightPx);
+
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) pdf.addPage();
+
+      // Create a sub-canvas for this page slice
+      const sliceY = page * pageContentHeightPx;
+      const sliceH = Math.min(pageContentHeightPx, canvas.height - sliceY);
+
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceH;
+      const ctx = pageCanvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, sliceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      }
+
+      const sliceData = pageCanvas.toDataURL("image/jpeg", 0.98);
+      const sliceHeightMm = (sliceH / 2) * scaleFactor;
+
+      pdf.addImage(sliceData, "JPEG", MARGIN, MARGIN, contentWidth, sliceHeightMm);
     }
 
-    const totalPages = pdf.getNumberOfPages();
-    for (let page = 1; page <= totalPages; page += 1) {
+    const finalTotalPages = pdf.getNumberOfPages();
+    for (let page = 1; page <= finalTotalPages; page++) {
       pdf.setPage(page);
       pdf.setFontSize(8);
       pdf.setTextColor(140);
-      pdf.text(`Página ${page}/${totalPages}`, pdfWidth - 24, pdfHeight - 5);
+      pdf.text(`Página ${page}/${finalTotalPages}`, pdfWidth - 28, pdfHeight - 5);
     }
 
     const filename = `${sanitizeFilename(filenamePrefix || "manual") || "manual"}-${Date.now()}.pdf`;
