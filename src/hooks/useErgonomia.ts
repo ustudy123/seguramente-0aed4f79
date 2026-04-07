@@ -298,7 +298,8 @@ export function useErgonomia() {
     : 0;
 
   // Calcular nível de maturidade
-  const calcularMaturidade = (): ErgonomiaMaturidade['nivel'] => {
+  const calcularMaturidade = (): ErgonomiaMaturidade['nivel'] | null => {
+    if (estatisticas.total === 0) return null;
     if (percentualConformidade < 20) return 'reativo';
     if (percentualConformidade < 40) return 'corretivo';
     if (percentualConformidade < 60) return 'preventivo';
