@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Compass, Target, Waves, Heart, Users, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,9 +12,23 @@ import { EstrategiaEscopoSelector, type EstrategiaEscopo } from "@/components/es
 import { GuiaRapidoEstrategia } from "@/components/estrategia/GuiaRapidoEstrategia";
 
 export default function Estrategia() {
-  const [tab, setTab] = useState("swot");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get("tab") || "swot");
   const [escopo, setEscopo] = useState<EstrategiaEscopo>({ tipo: "empresa", grupoId: null });
   const [showGuia, setShowGuia] = useState(false);
+
+  useEffect(() => {
+    const currentTab = searchParams.get("tab");
+    if (currentTab && currentTab !== tab) {
+      setTab(currentTab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setTab(value);
+    setSearchParams({ tab: value });
+  };
+
 
   return (
     <motion.div
