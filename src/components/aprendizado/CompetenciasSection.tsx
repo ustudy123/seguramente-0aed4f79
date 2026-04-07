@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
+import { useAuth } from "@/hooks/useAuth";
 import { AudioCompetenciasImport } from "./AudioCompetenciasImport";
 import { TextoCompetenciasImport } from "./TextoCompetenciasImport";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,7 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
     competencias, criarCompetencia, excluirCompetencia,
     competenciaRecursos, criarCompetenciaRecurso, excluirCompetenciaRecurso,
   } = useAprendizado(cargoId);
+  const { tenantId } = useAuth();
 
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState("");
@@ -56,6 +58,7 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
           cargoNome: funcaoNome || "",
           competenciaNome: nome,
           competenciaTipo: tipo,
+          tenantId,
         },
       });
       if (error) throw new Error(error.message);

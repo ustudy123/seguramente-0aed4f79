@@ -110,7 +110,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
       setManualTitulo(titulo);
 
       const { data, error } = await supabase.functions.invoke("ai-manual-funcao", {
-        body: { cargo_ids: cargoIds },
+        body: { cargo_ids: cargoIds, tenantId },
       });
 
       if (error) throw error;

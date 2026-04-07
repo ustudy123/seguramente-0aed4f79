@@ -17,7 +17,7 @@ type ListField = "valores" | "principios" | "comportamentos_esperados" | "compor
 
 export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia(escopo);
-  const { profile } = useAuth();
+  const { profile, tenantId } = useAuth();
   const [form, setForm] = useState({
     missao: "",
     visao: "",
@@ -76,7 +76,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       if (campo === "comportamentos_nao_tolerados") contexto.existentes = form.comportamentos_nao_tolerados;
 
       const { data, error } = await supabase.functions.invoke("ai-cultura-sugestao", {
-        body: { campo, contexto },
+        body: { campo, contexto, tenantId },
       });
 
       if (error) throw error;
@@ -128,6 +128,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           ...form,
           empresa_nome: profile?.nome_completo || "Nossa Empresa",
           organograma: organograma || [],
+          tenantId,
         },
       });
 

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getCompanyContext } from '../_shared/ai-helper.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,8 @@ Deno.serve(async (req) => {
 
     const tenantId = profile.tenant_id;
     const { cargo_ids, empresa_nome } = await req.json();
+
+    const companyContext = await getCompanyContext(supabase, tenantId);
 
     const { data: tenant } = await supabase
       .from("tenants")
@@ -178,6 +181,8 @@ ${popsText}`;
     }).length;
 
     const prompt = `Você é um consultor sênior de RH e Gestão de Pessoas. Com base nos dados abaixo, gere um MANUAL DE FUNÇÕES E COMPETÊNCIAS completo, profissional e visualmente rico em HTML.
+
+${companyContext}
 
 TÍTULO: ${tituloManual}
 EMPRESA: ${nomeEmpresa}

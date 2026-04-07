@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +31,7 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(!initialValue);
   const queryClient = useQueryClient();
+  const { tenantId } = useAuth();
 
   useEffect(() => {
     setValue(initialValue || "");
@@ -110,6 +112,7 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
           descricao: cargoDescricao || "",
           textoAtual: value,
           acao,
+          tenantId,
         },
       });
 

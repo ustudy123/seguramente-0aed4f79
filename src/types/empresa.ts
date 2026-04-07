@@ -83,6 +83,7 @@ export interface EmpresaCadastro {
   grupo_economico_id: string | null;
   tipo_unidade: 'matriz' | 'filial';
   matriz_id: string | null;
+  ai_context: string | null;
 
   total_colaboradores: number;
   ativo: boolean;

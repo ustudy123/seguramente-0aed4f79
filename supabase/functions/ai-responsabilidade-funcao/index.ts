@@ -1,4 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getCompanyContext } from '../_shared/ai-helper.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +13,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { cargoNome, descricao, textoAtual, acao, competenciaNome, competenciaTipo } = await req.json();
+    const { cargoNome, descricao, textoAtual, acao, competenciaNome, competenciaTipo, tenantId } = await req.json();
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const companyContext = await getCompanyContext(supabase, tenantId);
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
@@ -20,7 +29,9 @@ Deno.serve(async (req) => {
     let userPrompt = "";
 
     if (acao === "sugerir_descricao_competencia") {
-      systemPrompt = "Você é um especialista em gestão de competências e RH. Gere descrições curtas e objetivas para competências profissionais. Retorne apenas o texto da descrição (1-2 frases), sem explicações adicionais.";
+      systemPrompt = `Você é um especialista em gestão de competências e RH. Gere descrições curtas e objetivas para competências profissionais. Retorne apenas o texto da descrição (1-2 frases), sem explicações adicionais.
+      
+${companyContext}`;
       userPrompt = `Gere uma descrição curta e objetiva para a seguinte competência:
 
 Competência: ${competenciaNome}
@@ -29,7 +40,9 @@ ${cargoNome ? `Função: ${cargoNome}` : ""}
 
 A descrição deve explicar o que essa competência significa no contexto da função e como ela se aplica no dia a dia. Seja conciso (1-2 frases).`;
     } else if (acao === "melhorar") {
-      systemPrompt = "Você é um especialista em descrição de cargos e gestão de pessoas. Melhore textos de responsabilidade de função tornando-os mais profissionais, claros e completos. Retorne apenas o texto melhorado, sem explicações ou formatação adicional.";
+      systemPrompt = `Você é um especialista em descrição de cargos e gestão de pessoas. Melhore textos de responsabilidade de função tornando-os mais profissionais, claros e completos. Retorne apenas o texto melhorado, sem explicações ou formatação adicional.
+      
+${companyContext}`;
       userPrompt = `Cargo: ${cargoNome}${descricao ? `\nDescrição: ${descricao}` : ""}
 
 Texto atual de responsabilidade:
@@ -38,7 +51,9 @@ ${textoAtual}
 Melhore este texto tornando-o mais profissional, claro e completo. Mantenha o mesmo tom e escopo, mas melhore a clareza, objetividade e completude. Retorne apenas o texto melhorado.`;
     } else {
       // acao === "gerar"
-      systemPrompt = "Você é um especialista em descrição de cargos, RH e gestão de pessoas. Gere textos profissionais de responsabilidade de função que descrevam objetivos, impacto no negócio e área de atuação. Retorne apenas o texto gerado, sem explicações ou formatação adicional.";
+      systemPrompt = `Você é um especialista em descrição de cargos, RH e gestão de pessoas. Gere textos profissionais de responsabilidade de função que descrevam objetivos, impacto no negócio e área de atuação. Retorne apenas o texto gerado, sem explicações ou formatação adicional.
+      
+${companyContext}`;
       userPrompt = `Cargo: ${cargoNome}${descricao ? `\nDescrição: ${descricao}` : ""}${textoAtual ? `\nContexto adicional: ${textoAtual}` : ""}
 
 Gere um texto profissional de responsabilidade para este cargo. O texto deve descrever:

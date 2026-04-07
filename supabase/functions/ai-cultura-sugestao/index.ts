@@ -1,4 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { getCompanyContext } from '../_shared/ai-helper.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +13,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { campo, contexto } = await req.json();
+    const { campo, contexto, tenantId } = await req.json();
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const companyContext = await getCompanyContext(supabase, tenantId);
 
     if (!campo) {
       return new Response(JSON.stringify({ error: "Campo é obrigatório" }), {
@@ -54,7 +63,9 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Você é um consultor de cultura organizacional. Responda apenas com o conteúdo solicitado, sem explicações adicionais." },
+          { role: "system", content: `Você é um consultor de cultura organizacional. Responda apenas com o conteúdo solicitado, sem explicações adicionais. 
+          
+${companyContext}` },
           { role: "user", content: prompt }
         ],
       }),

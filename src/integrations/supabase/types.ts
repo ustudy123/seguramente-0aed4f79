@@ -3494,6 +3494,7 @@ export type Database = {
       }
       empresa_cadastro: {
         Row: {
+          ai_context: string | null
           aposentadoria_especial: boolean | null
           aprendiz_quantidade_atual: number | null
           aprendiz_quantidade_maxima: number | null
@@ -3561,6 +3562,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          ai_context?: string | null
           aposentadoria_especial?: boolean | null
           aprendiz_quantidade_atual?: number | null
           aprendiz_quantidade_maxima?: number | null
@@ -3628,6 +3630,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          ai_context?: string | null
           aposentadoria_especial?: boolean | null
           aprendiz_quantidade_atual?: number | null
           aprendiz_quantidade_maxima?: number | null

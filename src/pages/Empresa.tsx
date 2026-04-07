@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers } from 'lucide-react';
+import { Loader2, Building2, Save, Shield, Users, TrendingUp, Clock, Target, Upload, ArrowLeft, Layers, Brain } from 'lucide-react';
 import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 import { EmpresaDadosBasicos } from '@/components/empresa/EmpresaDadosBasicos';
 import { EmpresaEnquadramentoLegal } from '@/components/empresa/EmpresaEnquadramentoLegal';
@@ -12,6 +12,7 @@ import { EmpresaJornadaCondicoes } from '@/components/empresa/EmpresaJornadaCond
 import { EmpresaObrigacoesTab } from '@/components/empresa/EmpresaObrigacoesTab';
 import { EmpresaImportExport } from '@/components/empresa/EmpresaImportExport';
 import { EmpresaList } from '@/components/empresa/EmpresaList';
+import { EmpresaAIContext } from '@/components/empresa/EmpresaAIContext';
 import { GruposEconomicosManager } from '@/components/empresa/GruposEconomicosManager';
 import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
 import type { EmpresaCadastro } from '@/types/empresa';
@@ -24,7 +25,7 @@ export default function Empresa() {
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('dados');
 
-  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'importar'];
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai', 'importar'];
   const currentTabIndex = TABS.indexOf(activeTab);
   const isFirstTab = currentTabIndex === 0;
   const isLastTab = currentTabIndex === TABS.length - 1;
@@ -191,7 +192,7 @@ export default function Empresa() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
           <TabsTrigger value="dados" className="text-xs">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Dados
@@ -215,6 +216,10 @@ export default function Empresa() {
           <TabsTrigger value="obrigacoes" className="text-xs">
             <Target className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Obrigações
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="text-xs">
+            <Brain className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+            Contexto I.A.
           </TabsTrigger>
           <TabsTrigger value="importar" className="text-xs">
             <Upload className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
@@ -287,6 +292,18 @@ export default function Empresa() {
             </CardHeader>
             <CardContent>
               <EmpresaObrigacoesTab cadastro={viewMode === 'edit' ? cadastro : null} />
+            </CardContent>
+          </TabsContent>
+
+          <TabsContent value="ai" className="mt-0">
+            <CardHeader>
+              <CardTitle className="text-lg">Contexto para Inteligência Artificial</CardTitle>
+              <CardDescription>
+                Configure as informações que guiarão a I.A. nas sugestões para esta empresa
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmpresaAIContext data={formData} onChange={handleChange} />
             </CardContent>
           </TabsContent>
 

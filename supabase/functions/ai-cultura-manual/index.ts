@@ -1,4 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { getCompanyContext } from '../_shared/ai-helper.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +13,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { missao, visao, valores, principios, comportamentos_esperados, comportamentos_nao_tolerados, empresa_nome, organograma } = await req.json();
+    const { missao, visao, valores, principios, comportamentos_esperados, comportamentos_nao_tolerados, empresa_nome, organograma, tenantId } = await req.json();
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const companyContext = await getCompanyContext(supabase, tenantId);
 
     // Build organogram HTML section from tree data
     function buildOrgHtml(nodes: any[], level = 0): string {
@@ -71,7 +80,9 @@ Deno.serve(async (req) => {
 
     const prompt = `Você é um consultor sênior de cultura organizacional e employer branding. Com base nos dados culturais abaixo, gere um MANUAL DE CULTURA ORGANIZACIONAL completo, profissional e visualmente rico em HTML.
 
-DADOS DA EMPRESA:
+${companyContext}
+
+DADOS DA ESTRATÉGIA:
 - Nome da empresa: ${empresa_nome || "Nossa Empresa"}
 - Missão: ${missao || "(não informada)"}
 - Visão: ${visao || "(não informada)"}
