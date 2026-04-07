@@ -59,23 +59,33 @@ export default function Empresa() {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
+    const docClean = cliente?.cnpj?.replace(/\D/g, '') || '';
+    const onboardingIsCnpj = docClean.length === 14;
+    const onboardingIsCpf = docClean.length === 11;
+
     if (viewMode === 'edit' && cadastro) {
-      setFormData(cadastro);
+      setFormData({
+        ...cadastro,
+        razao_social: cadastro.razao_social || cliente?.nome_empresa || '',
+        cnpj: cadastro.cnpj || (onboardingIsCnpj ? cliente?.cnpj : '') || '',
+        cpf: cadastro.cpf || (onboardingIsCpf ? cliente?.cnpj : '') || '',
+        email: cadastro.email || cliente?.poc_email || '',
+        telefone: cadastro.telefone || cliente?.poc_telefone || '',
+        total_colaboradores: cadastro.total_colaboradores || cliente?.quantidade_colaboradores || 0,
+        tipo_pessoa: cadastro.tipo_pessoa || (onboardingIsCpf ? 'pf' : 'pj'),
+      });
     }
+    
     if (viewMode === 'new') {
       if (cliente) {
-        const docClean = cliente.cnpj?.replace(/\D/g, '') || '';
-        const isCnpj = docClean.length === 14;
-        const isCpf = docClean.length === 11;
-
         setFormData({
           razao_social: cliente.nome_empresa || '',
-          cnpj: isCnpj ? cliente.cnpj : '',
-          cpf: isCpf ? cliente.cnpj : '',
+          cnpj: onboardingIsCnpj ? cliente.cnpj : '',
+          cpf: onboardingIsCpf ? cliente.cnpj : '',
           email: cliente.poc_email || '',
           telefone: cliente.poc_telefone || '',
           total_colaboradores: cliente.quantidade_colaboradores || 0,
-          tipo_pessoa: isCpf ? 'pf' : 'pj',
+          tipo_pessoa: onboardingIsCpf ? 'pf' : 'pj',
         });
       } else {
         setFormData({});
