@@ -80,6 +80,16 @@ const checkIsActive = (path: string, pathname: string, search: string) => {
 
 const menuSections: MenuSection[] = [
   {
+    label: "Minha Gestão",
+    color: "text-amber-400",
+    sectionIcon: ClipboardList,
+    items: [
+      { title: "Início", icon: Home, path: "/" },
+      { title: "Pendências", icon: ClipboardList, path: "/pendencias" },
+    ],
+  },
+
+  {
     label: "Estrutura Organizacional",
     color: "text-cyan-400",
     sectionIcon: Building2,
