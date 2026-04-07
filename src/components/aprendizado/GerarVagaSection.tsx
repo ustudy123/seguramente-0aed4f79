@@ -176,6 +176,9 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" /> Baixar .txt
                 </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+                  <FileDown className="w-4 h-4 mr-1" /> Baixar PDF
+                </Button>
               </div>
             </div>
           </CardHeader>
