@@ -29,6 +29,7 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
     competencias, criarCompetencia, excluirCompetencia,
     competenciaRecursos, criarCompetenciaRecurso, excluirCompetenciaRecurso,
   } = useAprendizado(cargoId);
+  const { tenantId } = useAuth();
 
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState("");
