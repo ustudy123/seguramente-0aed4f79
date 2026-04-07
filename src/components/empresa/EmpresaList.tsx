@@ -386,12 +386,16 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                         variant="ghost"
                         size="icon"
                         onClick={() => onToggleAtivo(emp.id, !emp.ativo)}
-                        title={emp.ativo ? 'Inativar' : 'Ativar'}
+                        title={emp.ativo ? 'Desativar Empresa' : 'Ativar Empresa'}
+                        className={emp.ativo 
+                          ? "text-success hover:text-destructive hover:bg-destructive/10" 
+                          : "text-destructive hover:text-success hover:bg-success/10"
+                        }
                       >
                         {emp.ativo ? (
-                          <ToggleLeft className="w-4 h-4 text-muted-foreground" />
+                          <ToggleRight className="w-5 h-5" />
                         ) : (
-                          <ToggleRight className="w-4 h-4 text-emerald-600" />
+                          <ToggleLeft className="w-5 h-5" />
                         )}
                       </Button>
                     </div>
