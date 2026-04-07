@@ -50,15 +50,17 @@ export default function Filiais() {
     telefone: "", email: "", ativo: true, tipo: "estabelecimento" as string, cno: "",
   });
 
-  // Filter companies by CNPJ or name
+  // Filter only companies (Matriz) and search by CNPJ
   const filteredEmpresas = useMemo(() => {
-    if (!cnpjSearch.trim()) return empresas.filter(e => e.ativo);
+    // We only want to show companies (Matriz), never branches (Filiais)
+    const baseEmpresas = empresas.filter(e => e.ativo && (e.tipo_unidade === 'matriz' || !e.tipo_unidade));
+    
+    if (!cnpjSearch.trim()) return baseEmpresas;
+    
     const term = cnpjSearch.toLowerCase().replace(/\D/g, "");
-    return empresas.filter(e => e.ativo && (
-      (e.cnpj?.replace(/\D/g, "").includes(term)) ||
-      (e.razao_social?.toLowerCase().includes(cnpjSearch.toLowerCase())) ||
-      (e.nome_fantasia?.toLowerCase().includes(cnpjSearch.toLowerCase()))
-    ));
+    return baseEmpresas.filter(e => 
+      e.cnpj?.replace(/\D/g, "").includes(term)
+    );
   }, [empresas, cnpjSearch]);
 
   // Filter establishments by selected company
@@ -171,8 +173,8 @@ export default function Filiais() {
                     <Building2 className="w-4 h-4 text-primary" />
                     Estabelecimento
                   </p>
-                  <p className="text-sm">Locais fixos da empresa como sedes, filiais, escritórios ou armazéns.</p>
-                  <p className="text-xs italic text-primary/70">Ex: Escritório Central, Filial Shopping, Galpão Logístico.</p>
+                  <p className="text-sm">Locais fixos da empresa como sedes, unidades, escritórios ou armazéns.</p>
+                  <p className="text-xs italic text-primary/70">Ex: Escritório Central, Unidade Operacional, Galpão Logístico.</p>
                 </div>
                 <div className="space-y-1">
                   <p className="font-bold text-foreground flex items-center gap-2">
@@ -190,7 +192,7 @@ export default function Filiais() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por CNPJ, razão social ou nome fantasia..."
+            placeholder="Buscar por CNPJ da empresa..."
             value={cnpjSearch}
             onChange={(e) => setCnpjSearch(e.target.value)}
             className="pl-10 max-w-lg"
@@ -204,7 +206,7 @@ export default function Filiais() {
             <div className="text-center py-12">
               <Building2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
-                {cnpjSearch ? "Nenhuma empresa encontrada com este CNPJ" : "Nenhuma empresa cadastrada"}
+                {cnpjSearch ? "Nenhuma empresa (Matriz) encontrada com este CNPJ" : "Nenhuma empresa (Matriz) cadastrada"}
               </p>
             </div>
           ) : (
@@ -279,7 +281,7 @@ export default function Filiais() {
           <AlertTitle className="text-primary font-semibold text-sm">Entenda os tipos de registro</AlertTitle>
           <AlertDescription className="text-xs text-muted-foreground grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
             <div>
-              <span className="font-bold text-foreground">Estabelecimento:</span> Locais fixos (Sede, Filial, Depósito).
+              <span className="font-bold text-foreground">Estabelecimento:</span> Locais fixos (Sede, Unidade, Depósito).
             </div>
             <div>
               <span className="font-bold text-foreground">Obra:</span> Locais temporários (Canteiros, Reformas, Prestação de serviços).
