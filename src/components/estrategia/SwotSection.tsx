@@ -98,10 +98,33 @@ export function SwotSection({ escopo }: Props) {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Período</Label>
-                  <Input value={form.periodo} onChange={(e) => setForm({ ...form, periodo: e.target.value })} placeholder="Ex: 2026 Q1" />
+                  <Label>Data Início</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataInicio && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataInicio ? format(dataInicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecione..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={dataInicio} onSelect={setDataInicio} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              </div>
+                <div className="space-y-1">
+                  <Label>Data Fim</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataFim && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataFim ? format(dataFim, "dd/MM/yyyy", { locale: ptBR }) : "Selecione..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={dataFim} onSelect={setDataFim} disabled={(date) => dataInicio ? date < dataInicio : false} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               <Button onClick={handleCreate} disabled={createSwot.isPending} className="w-full">
                 {createSwot.isPending ? "Criando..." : "Criar Análise"}
               </Button>
