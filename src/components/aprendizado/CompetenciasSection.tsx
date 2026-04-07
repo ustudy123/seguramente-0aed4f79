@@ -58,6 +58,7 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
           cargoNome: funcaoNome || "",
           competenciaNome: nome,
           competenciaTipo: tipo,
+          tenantId,
         },
       });
       if (error) throw new Error(error.message);
