@@ -182,9 +182,19 @@ export function useDocumentoPastas() {
       }
     });
 
-    // Ordenar por ordem
+    // Ordenar por ordem, depois alfabeticamente para mesmo nível
     const sortNodes = (nodes: DocumentoPastaNode[]) => {
-      nodes.sort((a, b) => a.ordem - b.ordem);
+      nodes.sort((a, b) => {
+        // First sort by type priority: root > unidade > categoria > colaborador > custom
+        const typePriority: Record<string, number> = { root: 0, unidade: 1, ano: 2, mes: 3, categoria: 4, colaborador: 5, custom: 6 };
+        const tA = typePriority[a.tipo] ?? 9;
+        const tB = typePriority[b.tipo] ?? 9;
+        if (tA !== tB) return tA - tB;
+        // Then by ordem
+        if (a.ordem !== b.ordem) return a.ordem - b.ordem;
+        // Then alphabetically
+        return a.nome.localeCompare(b.nome, 'pt-BR');
+      });
       nodes.forEach(node => sortNodes(node.children));
     };
     sortNodes(roots);
