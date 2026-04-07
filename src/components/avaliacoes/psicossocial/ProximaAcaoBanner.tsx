@@ -69,6 +69,7 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
           </div>
         </div>
         <Button
+          id="btn-enviar-link-banner"
           size="sm"
           variant="outline"
           className="border-blue-300 text-blue-700 hover:bg-blue-100 gap-2 shrink-0"
@@ -102,6 +103,7 @@ export function ProximaAcaoBanner({ campanhas, onDistribuir, onVerResultados }: 
           </div>
         </div>
         <Button
+          id="btn-ver-resultados-banner"
           size="sm"
           className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shrink-0"
           onClick={() => onVerResultados(ativaComRespostas)}
