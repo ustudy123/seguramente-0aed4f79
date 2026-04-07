@@ -11,6 +11,7 @@ import type {
 import { useFiliais, type Filial } from "./useCadastros";
 import { useColaboradores, type Colaborador } from "./useColaboradores";
 import { autoGenerateFolderStructure } from "@/utils/autoGenerateFolderStructure";
+import { criarPastasColaboradoresEmLote } from "@/utils/criarPastaColaborador";
 
 interface DocumentoRow {
   id: string;
