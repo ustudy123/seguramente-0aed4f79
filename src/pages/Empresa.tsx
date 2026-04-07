@@ -192,7 +192,7 @@ export default function Empresa() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
           <TabsTrigger value="dados" className="text-xs">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Dados
@@ -216,6 +216,10 @@ export default function Empresa() {
           <TabsTrigger value="obrigacoes" className="text-xs">
             <Target className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Obrigações
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="text-xs">
+            <Brain className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+            Contexto I.A.
           </TabsTrigger>
           <TabsTrigger value="importar" className="text-xs">
             <Upload className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
