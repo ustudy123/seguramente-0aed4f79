@@ -11003,6 +11003,66 @@ export type Database = {
           },
         ]
       }
+      manuais_gerados: {
+        Row: {
+          created_at: string
+          documento_id: string | null
+          empresa_id: string | null
+          gerado_por: string | null
+          gerado_por_nome: string | null
+          html: string
+          id: string
+          referencia_id: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          documento_id?: string | null
+          empresa_id?: string | null
+          gerado_por?: string | null
+          gerado_por_nome?: string | null
+          html: string
+          id?: string
+          referencia_id?: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          documento_id?: string | null
+          empresa_id?: string | null
+          gerado_por?: string | null
+          gerado_por_nome?: string | null
+          html?: string
+          id?: string
+          referencia_id?: string | null
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manuais_gerados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manuais_gerados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_afiliados_comissoes: {
         Row: {
           created_at: string
