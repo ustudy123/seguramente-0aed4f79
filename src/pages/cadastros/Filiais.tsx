@@ -36,14 +36,9 @@ export default function Filiais() {
 
   // State: company search & selection
   const [cnpjSearch, setCnpjSearch] = useState("");
-  const [selectedEmpresa, setSelectedEmpresa] = useState<EmpresaCadastro | null>(empresaAtiva);
+  const [selectedEmpresa, setSelectedEmpresa] = useState<EmpresaCadastro | null>(null);
 
-  // Sync with global active company
-  useEffect(() => {
-    if (empresaAtiva) {
-      setSelectedEmpresa(empresaAtiva);
-    }
-  }, [empresaAtiva]);
+  const currentEmpresa = useMemo(() => empresaAtiva || selectedEmpresa, [empresaAtiva, selectedEmpresa]);
 
   // State: establishment form
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,9 +63,9 @@ export default function Filiais() {
 
   // Filter establishments by selected company
   const estabelecimentos = useMemo(() => {
-    if (!selectedEmpresa) return [];
-    return filiais.filter(f => f.empresa_id === selectedEmpresa.id);
-  }, [filiais, selectedEmpresa]);
+    if (!currentEmpresa) return [];
+    return filiais.filter(f => f.empresa_id === currentEmpresa.id);
+  }, [filiais, currentEmpresa]);
 
   const filteredEstabelecimentos = useMemo(() => {
     if (!searchTerm) return estabelecimentos;
@@ -120,11 +115,11 @@ export default function Filiais() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmpresa) return;
+    if (!currentEmpresa) return;
 
     const payload = {
       ...formData,
-      cnpj: selectedEmpresa.cnpj || null,
+      cnpj: currentEmpresa.cnpj || null,
       endereco: formData.endereco || null,
       cidade: formData.cidade || null,
       estado: formData.estado || null,
@@ -133,7 +128,7 @@ export default function Filiais() {
       email: formData.email || null,
       cno: formData.tipo === "obra" ? (formData.cno || null) : null,
       responsavel_id: null,
-      empresa_id: selectedEmpresa.id,
+      empresa_id: currentEmpresa.id,
     };
 
     if (selectedFilial) {
@@ -157,7 +152,7 @@ export default function Filiais() {
   };
 
   // ── STEP 1: Company selection ──
-  if (!selectedEmpresa) {
+  if (!currentEmpresa) {
     return (
       <div className="space-y-6">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
@@ -257,18 +252,20 @@ export default function Filiais() {
     <div className="space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-        <Button variant="ghost" size="sm" onClick={handleBack} className="gap-1 text-muted-foreground -ml-2">
-          <ChevronRight className="w-4 h-4 rotate-180" />
-          Voltar para seleção de empresa
-        </Button>
+        {!empresaAtiva && (
+          <Button variant="ghost" size="sm" onClick={handleBack} className="gap-1 text-muted-foreground -ml-2">
+            <ChevronRight className="w-4 h-4 rotate-180" />
+            Voltar para seleção de empresa
+          </Button>
+        )}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
               Estabelecimento ou Obra
             </h1>
             <p className="text-muted-foreground">
-              {selectedEmpresa.razao_social || selectedEmpresa.nome_fantasia}
-              {selectedEmpresa.cnpj && ` · CNPJ: ${formatCnpj(selectedEmpresa.cnpj)}`}
+              {currentEmpresa.razao_social || currentEmpresa.nome_fantasia}
+              {currentEmpresa.cnpj && ` · CNPJ: ${formatCnpj(currentEmpresa.cnpj)}`}
             </p>
           </div>
           <Button onClick={handleOpenCreate} className="gap-2">
@@ -378,7 +375,7 @@ export default function Filiais() {
             <DialogDescription>
               {selectedFilial ? "Edite as informações" : "Preencha os dados do novo estabelecimento ou obra"}
               {" · "}
-              {selectedEmpresa.razao_social || selectedEmpresa.nome_fantasia}
+              {currentEmpresa.razao_social || currentEmpresa.nome_fantasia}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
