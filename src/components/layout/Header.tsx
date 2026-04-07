@@ -24,7 +24,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
-  const { profile, signOut, isSuperAdmin, user } = useAuthContext();
+  const { profile, signOut, isSuperAdmin, user, roles } = useAuthContext();
   const { tenant } = useTenant();
   const { humorHoje } = useHumorDiario();
   const navigate = useNavigate();
@@ -120,7 +120,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
                   {profile?.nome_completo?.split(" ")[0] || "Usuário"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {profile?.cargo || "Colaborador"}
+                  {profile?.cargo || (isSuperAdmin ? "Super Admin" : getRoleLabel(roles))}
                 </p>
               </div>
               <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
