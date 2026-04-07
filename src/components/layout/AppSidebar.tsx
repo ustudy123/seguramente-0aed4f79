@@ -256,10 +256,24 @@ const CollapsibleSection = ({
   onNavigate?: () => void;
 }) => {
   const location = useLocation();
+
+  const checkIsActive = (path: string) => {
+    const fullPath = location.pathname + location.search;
+    if (path.includes("?")) {
+      return fullPath === path;
+    }
+    if (path === "/estrategia") {
+      const params = new URLSearchParams(location.search);
+      const tab = params.get("tab");
+      return location.pathname === "/estrategia" && (!tab || (tab !== "organograma" && tab !== "cultura"));
+    }
+    return location.pathname === path;
+  };
+
   const hasActiveChild = section.items.some(
     (item) =>
-      item.path === location.pathname ||
-      item.children?.some((c) => c.path === location.pathname)
+      checkIsActive(item.path || "/") ||
+      item.children?.some((c) => checkIsActive(c.path))
   );
 
   if (isCollapsed) {
@@ -271,26 +285,25 @@ const CollapsibleSection = ({
             strokeWidth={1.75}
           />
         </div>
-        {section.items.map((item) =>
-          item.children ? (
+        {section.items.map((item) => {
+          const isActive = checkIsActive(item.path || "/");
+          return item.children ? (
             <SidebarSubItem key={item.title} item={item} isCollapsed={isCollapsed} />
           ) : (
             <NavLink
               key={item.title}
               to={item.path || "/"}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                )
-              }
+              className={cn(
+                "flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                  : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+              )}
             >
               <item.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
             </NavLink>
-          )
-        )}
+          );
+        })}
       </div>
     );
   }
