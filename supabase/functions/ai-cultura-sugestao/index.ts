@@ -63,7 +63,9 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Você é um consultor de cultura organizacional. Responda apenas com o conteúdo solicitado, sem explicações adicionais." },
+          { role: "system", content: `Você é um consultor de cultura organizacional. Responda apenas com o conteúdo solicitado, sem explicações adicionais. 
+          
+${companyContext}` },
           { role: "user", content: prompt }
         ],
       }),
