@@ -84,6 +84,10 @@ export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, respo
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadPdf = () => {
+    exportTextToPdf(proposta, `Proposta_${cargoNome.replace(/\s+/g, "_")}.pdf`, `Proposta de Oportunidade - ${cargoNome}`);
+  };
+
   return (
     <div className="space-y-4">
       <Card>
