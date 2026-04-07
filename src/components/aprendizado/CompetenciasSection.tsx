@@ -60,7 +60,7 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      setDescricao(data.resultado || data.descricao || data.result || "");
+      setDescricao(data.texto || data.resultado || data.descricao || "");
     } catch (err: any) {
       toast.error("Erro ao sugerir descrição: " + err.message);
     } finally {
