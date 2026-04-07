@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Plus, Trash2, ChevronRight, Target, BarChart3 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Plus, Trash2, ChevronRight, Target, BarChart3, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { SwotDetail } from "./SwotDetail";
@@ -24,6 +29,8 @@ export function SwotSection({ escopo }: Props) {
   const [selectedSwot, setSelectedSwot] = useState<EstrategiaSwot | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
+  const [dataInicio, setDataInicio] = useState<Date | undefined>();
+  const [dataFim, setDataFim] = useState<Date | undefined>();
 
   // Reset selected SWOT when company or scope changes
   useEffect(() => {
@@ -39,7 +46,19 @@ export function SwotSection({ escopo }: Props) {
       toast.error("Preencha o título da análise SWOT");
       return;
     }
-    createSwot.mutate(form, { onSuccess: () => { setShowNew(false); setForm({ titulo: "", descricao: "", escopo: "empresa", periodo: "" }); } });
+    const periodo = dataInicio && dataFim
+      ? `${format(dataInicio, "dd/MM/yyyy")} a ${format(dataFim, "dd/MM/yyyy")}`
+      : dataInicio
+      ? `A partir de ${format(dataInicio, "dd/MM/yyyy")}`
+      : "";
+    createSwot.mutate({ ...form, periodo }, {
+      onSuccess: () => {
+        setShowNew(false);
+        setForm({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
+        setDataInicio(undefined);
+        setDataFim(undefined);
+      },
+    });
   };
 
   return (
@@ -79,8 +98,32 @@ export function SwotSection({ escopo }: Props) {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Período</Label>
-                  <Input value={form.periodo} onChange={(e) => setForm({ ...form, periodo: e.target.value })} placeholder="Ex: 2026 Q1" />
+                  <Label>Data Início</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataInicio && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataInicio ? format(dataInicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecione..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={dataInicio} onSelect={setDataInicio} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1">
+                  <Label>Data Fim</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataFim && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataFim ? format(dataFim, "dd/MM/yyyy", { locale: ptBR }) : "Selecione..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={dataFim} onSelect={setDataFim} disabled={(date) => dataInicio ? date < dataInicio : false} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               <Button onClick={handleCreate} disabled={createSwot.isPending} className="w-full">
