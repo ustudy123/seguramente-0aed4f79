@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "todos", label: "Todos os status" },
