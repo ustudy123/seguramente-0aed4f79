@@ -373,7 +373,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                   </TableCell>
                   <TableCell className="text-center">{grauRiscoBadge(emp.grau_risco)}</TableCell>
                   <TableCell>
-                    <Badge variant={emp.ativo ? 'default' : 'secondary'}>
+                    <Badge className={emp.ativo ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}>
                       {emp.ativo ? 'Ativa' : 'Inativa'}
                     </Badge>
                   </TableCell>
