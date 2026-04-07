@@ -76,7 +76,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       if (campo === "comportamentos_nao_tolerados") contexto.existentes = form.comportamentos_nao_tolerados;
 
       const { data, error } = await supabase.functions.invoke("ai-cultura-sugestao", {
-        body: { campo, contexto },
+        body: { campo, contexto, tenantId },
       });
 
       if (error) throw error;
