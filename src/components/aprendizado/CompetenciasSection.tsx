@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { Plus, Trash2, ExternalLink, GraduationCap } from "lucide-react";
+import { Plus, Trash2, ExternalLink, GraduationCap, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
+import { AudioCompetenciasImport } from "./AudioCompetenciasImport";
+import { TextoCompetenciasImport } from "./TextoCompetenciasImport";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const TIPO_LABELS: Record<string, string> = { tecnica: "Técnica", comportamental: "Comportamental", cognitiva: "Cognitiva" };
 const TIPO_COLORS: Record<string, string> = { tecnica: "bg-blue-100 text-blue-800", comportamental: "bg-green-100 text-green-800", cognitiva: "bg-purple-100 text-purple-800" };
@@ -14,9 +20,10 @@ const CONTEUDO_LABELS: Record<string, string> = { manual: "Manual", pop: "POP", 
 
 interface CompetenciasSectionProps {
   cargoId: string;
+  funcaoNome?: string;
 }
 
-export function CompetenciasSection({ cargoId }: CompetenciasSectionProps) {
+export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSectionProps) {
   const {
     competencias, criarCompetencia, excluirCompetencia,
     competenciaRecursos, criarCompetenciaRecurso, excluirCompetenciaRecurso,
@@ -26,6 +33,7 @@ export function CompetenciasSection({ cargoId }: CompetenciasSectionProps) {
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState("tecnica");
   const [descricao, setDescricao] = useState("");
+  const [aiLoadingDesc, setAiLoadingDesc] = useState(false);
 
   const [recursoForm, setRecursoForm] = useState<{ compId: string; tipo: string; titulo: string; url: string } | null>(null);
 
@@ -33,6 +41,41 @@ export function CompetenciasSection({ cargoId }: CompetenciasSectionProps) {
     if (!nome.trim()) return;
     await criarCompetencia({ nome, tipo, descricao: descricao || undefined });
     setNome(""); setDescricao(""); setShowForm(false);
+  };
+
+  const handleAiSuggestDescription = async () => {
+    if (!nome.trim()) {
+      toast.error("Preencha o nome da competência primeiro.");
+      return;
+    }
+    setAiLoadingDesc(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-responsabilidade", {
+        body: {
+          action: "sugerir_descricao_competencia",
+          competenciaNome: nome,
+          competenciaTipo: tipo,
+          funcaoNome: funcaoNome || "",
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      setDescricao(data.resultado || data.descricao || data.result || "");
+    } catch (err: any) {
+      toast.error("Erro ao sugerir descrição: " + err.message);
+    } finally {
+      setAiLoadingDesc(false);
+    }
+  };
+
+  const handleImportCompetencias = async (items: Array<{ nome: string; tipo: string; descricao: string }>) => {
+    for (const item of items) {
+      await criarCompetencia({
+        nome: item.nome,
+        tipo: item.tipo,
+        descricao: item.descricao || undefined,
+      });
+    }
   };
 
   const grouped = {
@@ -45,9 +88,13 @@ export function CompetenciasSection({ cargoId }: CompetenciasSectionProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">Competências ({competencias.length})</h3>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 mr-1" /> Competência
-        </Button>
+        <div className="flex gap-2">
+          <AudioCompetenciasImport funcaoNome={funcaoNome} onImportar={handleImportCompetencias} />
+          <TextoCompetenciasImport funcaoNome={funcaoNome} onImportar={handleImportCompetencias} />
+          <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            <Plus className="w-4 h-4 mr-1" /> Competência
+          </Button>
+        </div>
       </div>
 
       {showForm && (
@@ -68,8 +115,27 @@ export function CompetenciasSection({ cargoId }: CompetenciasSectionProps) {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>Descrição</Label>
-                <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Breve descrição" />
+                <Label className="flex items-center gap-1">
+                  Descrição
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 ml-1"
+                          onClick={handleAiSuggestDescription}
+                          disabled={aiLoadingDesc || !nome.trim()}
+                        >
+                          {aiLoadingDesc ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-primary" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Sugerir descrição com IA</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Breve descrição da competência" rows={2} />
               </div>
             </div>
             <div className="flex gap-2 justify-end">

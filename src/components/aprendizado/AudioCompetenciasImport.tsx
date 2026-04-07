@@ -57,17 +57,16 @@ export function AudioCompetenciasImport({ funcaoNome, onImportar }: AudioCompete
     }
   };
 
-  const handleStopRecording = async () => {
-    recorder.stopRecording();
-    // Audio will be available via recorder state after stop
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith("audio/")) {
+      toast.error("Selecione um arquivo de áudio");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = async () => {
-      const base64 = (reader.result as string).split(",")[1];
+      const base64 = reader.result as string;
       await processarAudio(base64);
     };
     reader.readAsDataURL(file);
@@ -81,9 +80,7 @@ export function AudioCompetenciasImport({ funcaoNome, onImportar }: AudioCompete
     try {
       await onImportar(selecionadas.map(({ selecionada, ...rest }) => rest));
       toast.success(`${selecionadas.length} competência(s) importada(s)!`);
-      setOpen(false);
-      setStep("gravar");
-      setCompetencias([]);
+      handleClose();
     } catch {
       toast.error("Erro ao importar competências.");
     } finally {
@@ -91,43 +88,90 @@ export function AudioCompetenciasImport({ funcaoNome, onImportar }: AudioCompete
     }
   };
 
+  const handleClose = () => {
+    setOpen(false);
+    setStep("gravar");
+    setCompetencias([]);
+    setTranscricao("");
+    recorder.clearRecording();
+  };
+
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Mic className="w-4 h-4 mr-1" /> Áudio
+      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+        <Mic className="w-4 h-4" /> Importar por Áudio
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v) { setOpen(false); setStep("gravar"); setCompetencias([]); recorder.isRecording && recorder.stopRecording(); } else setOpen(true); }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+      <input type="file" ref={fileInputRef} className="hidden" accept="audio/*" onChange={handleFileUpload} />
+
+      <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><FileAudio className="w-5 h-5" /> Importar Competências por Áudio</DialogTitle>
             <DialogDescription>Grave ou envie um áudio descrevendo as competências da função.</DialogDescription>
           </DialogHeader>
 
           {step === "gravar" && (
-            <div className="space-y-4 py-4">
-              <div className="flex flex-col items-center gap-4">
-                {recorder.isRecording ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center animate-pulse">
-                      <Mic className="w-8 h-8 text-destructive" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Gravando... {Math.floor(recorder.duration / 60)}:{String(recorder.duration % 60).padStart(2, "0")}</p>
-                    <Button variant="destructive" onClick={handleStopRecording}><Square className="w-4 h-4 mr-1" /> Parar</Button>
+            <div className="flex flex-col items-center gap-6 py-6">
+              <div className="bg-warning/10 border border-warning/40 rounded-lg p-4 w-full">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                  <div className="space-y-1.5">
+                    <p className="font-semibold text-sm text-foreground">Dicas para uma boa transcrição:</p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Use um <strong>microfone de boa qualidade</strong></li>
+                      <li>Grave em um <strong>ambiente silencioso</strong></li>
+                      <li>Fale de forma <strong>clara e pausada</strong></li>
+                    </ul>
                   </div>
-                ) : (
-                  <>
-                    <Button size="lg" onClick={() => recorder.startRecording()}><Mic className="w-5 h-5 mr-2" /> Iniciar Gravação</Button>
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs"><span>ou</span></div>
-                    <Button variant="outline" onClick={() => fileInputRef.current?.click()}><Upload className="w-4 h-4 mr-1" /> Enviar Arquivo de Áudio</Button>
-                    <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileUpload} />
-                  </>
-                )}
+                </div>
               </div>
-              <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
-                <Info className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>Descreva as competências necessárias para a função. Ex: "Precisa saber operar máquinas CNC, ter boa comunicação..."</span>
-              </div>
+
+              {!recorder.isRecording && !recorder.audioUrl && (
+                <div className="flex flex-col items-center gap-4">
+                  <p className="text-sm text-muted-foreground text-center max-w-md">
+                    Descreva as competências necessárias para a função. Ex: "Precisa saber operar máquinas, ter boa comunicação..."
+                  </p>
+                  <div className="flex gap-3">
+                    <Button size="lg" className="gap-2" onClick={recorder.startRecording}>
+                      <Mic className="w-5 h-5" /> Gravar Áudio
+                    </Button>
+                    <Button size="lg" variant="outline" className="gap-2" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="w-5 h-5" /> Importar Arquivo
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {recorder.isRecording && (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-24 h-24 rounded-full bg-destructive/10 flex items-center justify-center animate-pulse">
+                    <MicOff className="w-10 h-10 text-destructive" />
+                  </div>
+                  <div className="text-2xl font-mono font-bold text-foreground">{recorder.formattedDuration}</div>
+                  <p className="text-sm text-muted-foreground">Gravando...</p>
+                  <Button variant="destructive" size="lg" className="gap-2" onClick={() => recorder.stopRecording()}>
+                    <Square className="w-4 h-4" /> Parar Gravação
+                  </Button>
+                </div>
+              )}
+
+              {recorder.audioUrl && !recorder.isRecording && (
+                <div className="flex flex-col items-center gap-4 w-full max-w-md">
+                  <audio controls src={recorder.audioUrl} className="w-full" />
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => recorder.clearRecording()}>Descartar</Button>
+                    <Button className="gap-2" onClick={async () => {
+                      const base64 = await recorder.getBase64();
+                      if (base64) await processarAudio(base64);
+                    }}>
+                      Processar com IA
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {recorder.error && <p className="text-sm text-destructive">{recorder.error}</p>}
             </div>
           )}
 

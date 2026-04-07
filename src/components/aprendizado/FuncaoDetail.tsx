@@ -1,10 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Brain, Shield, BookOpen } from "lucide-react";
+import { ClipboardList, Brain, Shield, Briefcase, FileText } from "lucide-react";
 import { AtividadesSection } from "./AtividadesSection";
 import { CompetenciasSection } from "./CompetenciasSection";
 import { EpisSection } from "./EpisSection";
 import { TreinamentosSection } from "./TreinamentosSection";
 import { ResponsabilidadeField } from "./ResponsabilidadeField";
+import { GerarVagaSection } from "./GerarVagaSection";
+import { GerarPropostaSection } from "./GerarPropostaSection";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -64,8 +66,14 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <TabsTrigger value="competencias" className="gap-1">
             <Brain className="w-4 h-4" /> Competências
           </TabsTrigger>
-        <TabsTrigger value="epis" className="gap-1">
+          <TabsTrigger value="epis" className="gap-1">
             <Shield className="w-4 h-4" /> EPIs & Treinamento
+          </TabsTrigger>
+          <TabsTrigger value="vaga" className="gap-1">
+            <Briefcase className="w-4 h-4" /> Gerar Vaga
+          </TabsTrigger>
+          <TabsTrigger value="proposta" className="gap-1">
+            <FileText className="w-4 h-4" /> Gerar Proposta
           </TabsTrigger>
         </TabsList>
 
@@ -73,7 +81,7 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
           <AtividadesSection cargoId={cargo.id} funcaoNome={cargo.nome} nivel={cargo.nivel || undefined} />
         </TabsContent>
         <TabsContent value="competencias" className="mt-4">
-          <CompetenciasSection cargoId={cargo.id} />
+          <CompetenciasSection cargoId={cargo.id} funcaoNome={cargo.nome} />
         </TabsContent>
         <TabsContent value="epis" className="mt-4">
           <div className="space-y-6">
@@ -81,6 +89,22 @@ export function FuncaoDetail({ cargo }: FuncaoDetailProps) {
             <Separator />
             <EpisSection cargoId={cargo.id} />
           </div>
+        </TabsContent>
+        <TabsContent value="vaga" className="mt-4">
+          <GerarVagaSection
+            cargoId={cargo.id}
+            cargoNome={cargo.nome}
+            cargoDescricao={cargo.descricao}
+            responsabilidade={cargo.responsabilidade}
+          />
+        </TabsContent>
+        <TabsContent value="proposta" className="mt-4">
+          <GerarPropostaSection
+            cargoId={cargo.id}
+            cargoNome={cargo.nome}
+            cargoDescricao={cargo.descricao}
+            responsabilidade={cargo.responsabilidade}
+          />
         </TabsContent>
       </Tabs>
     </div>
