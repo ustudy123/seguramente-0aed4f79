@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Pencil, Trash2, MapPin, Search, Building2, ChevronRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFiliais, Filial } from "@/hooks/useCadastros";
-import { useEmpresaCadastro } from "@/hooks/useEmpresaCadastro";
+// ... keep existing code
 import { buscarEnderecoPorCep, formatCep, cleanCep, validateCep } from "@/lib/viacep";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import type { EmpresaCadastro } from "@/types/empresa";
 
 const ESTADOS = [
@@ -32,11 +33,18 @@ const ESTADOS = [
 
 export default function Filiais() {
   const { filiais, isLoading, createFilial, updateFilial, deleteFilial } = useFiliais();
-  const { empresas, isLoadingList: isLoadingEmpresas } = useEmpresaCadastro();
+  const { empresaAtiva, empresas, isLoading: isLoadingEmpresas } = useEmpresaAtiva();
 
   // State: company search & selection
   const [cnpjSearch, setCnpjSearch] = useState("");
-  const [selectedEmpresa, setSelectedEmpresa] = useState<EmpresaCadastro | null>(null);
+  const [selectedEmpresa, setSelectedEmpresa] = useState<EmpresaCadastro | null>(empresaAtiva);
+
+  // Sync with global active company
+  useEffect(() => {
+    if (empresaAtiva) {
+      setSelectedEmpresa(empresaAtiva);
+    }
+  }, [empresaAtiva]);
 
   // State: establishment form
   const [searchTerm, setSearchTerm] = useState("");
