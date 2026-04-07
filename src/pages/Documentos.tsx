@@ -564,7 +564,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
                         </div>
                       ) : (
                         <PastaTreeView
-                          tree={tree}
+                          tree={searchTerm ? filterTree(tree, searchTerm) : tree}
                           selectedPastaId={selectedPasta?.id || null}
                           onSelectPasta={setSelectedPasta}
                           onCreateSubfolder={handleCreateSubfolder}
