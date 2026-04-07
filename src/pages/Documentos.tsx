@@ -65,6 +65,22 @@ import { PDCADashboard } from "@/components/documentos/PDCADashboard";
 import { NotificacoesVencimento } from "@/components/documentos/NotificacoesVencimento";
 import type { DocumentoPastaNode, DocumentoItem } from "@/types/documentoPasta";
 
+function filterTree(nodes: DocumentoPastaNode[], term: string): DocumentoPastaNode[] {
+  const normalized = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  function matches(node: DocumentoPastaNode): boolean {
+    const name = node.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return name.includes(normalized);
+  }
+  function filterNode(node: DocumentoPastaNode): DocumentoPastaNode | null {
+    const filteredChildren = node.children.map(filterNode).filter(Boolean) as DocumentoPastaNode[];
+    if (matches(node) || filteredChildren.length > 0) {
+      return { ...node, children: matches(node) ? node.children : filteredChildren };
+    }
+    return null;
+  }
+  return nodes.map(filterNode).filter(Boolean) as DocumentoPastaNode[];
+}
+
 const Documentos = () => {
   const [searchParams] = useSearchParams();
   const colaboradorIdFromUrl = searchParams.get("colaborador");
