@@ -22,6 +22,7 @@ interface PilarCardProps {
   color: "navy" | "green" | "purple" | "amber";
   delay?: number;
   pilarIndicator?: IndicatorType;
+  hasData?: boolean;
 }
 
 const colorClasses = {
