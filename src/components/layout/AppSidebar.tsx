@@ -385,7 +385,6 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     
     // Add direct links
     items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Início" });
-    items.push({ title: "Pendências", path: "/pendencias", icon: ClipboardList, sectionLabel: "Pendências" });
     items.push({ title: "Estratégia & Governança", path: "/estrategia", icon: Compass, sectionLabel: "Estratégia" });
 
     filteredSections.forEach((section) => {
@@ -396,6 +395,9 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           items.push({ title: child.title, path: child.path, icon: item.icon, sectionLabel: section.label });
         });
       });
+      if (section.label === "PESSOAS") {
+        items.push({ title: "PENDÊNCIAS", path: "/pendencias", icon: ClipboardList, sectionLabel: section.label });
+      }
     });
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
     items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
