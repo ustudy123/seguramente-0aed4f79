@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { generatePdfFromHtml } from "@/utils/generatePdfFromHtml";
+import { generatePdfFromHtml, normalizeManualHtml } from "@/utils/generatePdfFromHtml";
 
 interface ManualFuncaoModalProps {
   open: boolean;
@@ -16,12 +16,13 @@ interface ManualFuncaoModalProps {
 
 export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfGenerated }: ManualFuncaoModalProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
+  const normalizedHtml = useMemo(() => normalizeManualHtml(html), [html]);
 
   const handleGeneratePdf = async () => {
     setPdfLoading(true);
     try {
       const { blob, filename, pdf } = await generatePdfFromHtml({
-        html,
+        html: normalizedHtml,
         filenamePrefix: titulo || "manual-funcao",
       });
 
@@ -37,7 +38,7 @@ export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfG
   };
 
   const handleDownloadHtml = () => {
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const blob = new Blob([normalizedHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -55,7 +56,7 @@ export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfG
               {titulo || "Manual de Funções e Competências"}
             </DialogTitle>
             <div className="flex items-center gap-2">
-              {!loading && html && (
+              {!loading && normalizedHtml && (
                 <>
                   <Button
                     variant="outline"
@@ -90,9 +91,9 @@ export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfG
                 </p>
               </div>
             </div>
-          ) : html ? (
+          ) : normalizedHtml ? (
             <iframe
-              srcDoc={html}
+              srcDoc={normalizedHtml}
               className="w-full h-full border-0"
               title="Manual de Funções"
               sandbox="allow-same-origin allow-popups allow-scripts"

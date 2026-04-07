@@ -6,6 +6,9 @@ interface GeneratePdfFromHtmlOptions {
   filenamePrefix: string;
 }
 
+const PDF_MARGIN_MM = 15;
+const PDF_RENDER_SCALE = 3;
+const LONG_TEXT_MIN_LENGTH = 80;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 function sanitizeFilename(value: string) {
@@ -18,11 +21,95 @@ function sanitizeFilename(value: string) {
     .toLowerCase();
 }
 
+function appendInlineStyle(element: Element, styleToAppend: string) {
+  const existingStyle = element.getAttribute("style")?.trim() || "";
+  const normalizedExisting = existingStyle
+    ? `${existingStyle}${existingStyle.endsWith(";") ? "" : ";"}`
+    : "";
+
+  element.setAttribute("style", `${normalizedExisting}${styleToAppend}`);
+}
+
+function hasCenteredAncestor(element: Element | null) {
+  let current = element;
+
+  while (current) {
+    const style = current.getAttribute("style") || "";
+    if (/text-align\s*:\s*center/i.test(style)) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+
+  return false;
+}
+
+export function normalizeManualHtml(html: string) {
+  if (!html.trim()) return html;
+
+  const parser = new DOMParser();
+  const documentNode = parser.parseFromString(html, "text/html");
+
+  const existingNormalizer = documentNode.head.querySelector("style[data-manual-normalizer='true']");
+  existingNormalizer?.remove();
+
+  const baseStyle = documentNode.createElement("style");
+  baseStyle.setAttribute("data-manual-normalizer", "true");
+  baseStyle.textContent = `
+    html, body {
+      background: #ffffff !important;
+    }
+
+    body {
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+      font-kerning: normal;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    img, svg, canvas {
+      max-width: 100%;
+    }
+  `;
+  documentNode.head.appendChild(baseStyle);
+
+  const textElements = documentNode.body.querySelectorAll("p, li, td, blockquote");
+
+  textElements.forEach((element) => {
+    const text = element.textContent?.replace(/\s+/g, " ").trim() || "";
+
+    if (text.length < LONG_TEXT_MIN_LENGTH || hasCenteredAncestor(element)) {
+      return;
+    }
+
+    appendInlineStyle(
+      element,
+      [
+        "text-align: justify !important",
+        "text-justify: inter-word",
+        "white-space: normal !important",
+        "word-break: normal !important",
+        "overflow-wrap: break-word !important",
+        "word-spacing: 0.05em !important",
+        "letter-spacing: normal !important",
+        "line-height: 1.65",
+        "hyphens: none !important",
+      ].join(";") + ";"
+    );
+  });
+
+  return `<!DOCTYPE html>\n${documentNode.documentElement.outerHTML}`;
+}
+
 export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfFromHtmlOptions) {
   if (!html.trim()) {
     throw new Error("O manual está vazio.");
   }
 
+  const preparedHtml = normalizeManualHtml(html);
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.position = "fixed";
@@ -41,13 +128,12 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     await new Promise<void>((resolve, reject) => {
       iframe.onload = () => resolve();
       iframe.onerror = () => reject(new Error("Falha ao preparar o manual para PDF."));
-      iframe.srcdoc = html;
+      iframe.srcdoc = preparedHtml;
     });
 
-    const iframeWindow = iframe.contentWindow;
     const iframeDocument = iframe.contentDocument;
 
-    if (!iframeWindow || !iframeDocument?.body) {
+    if (!iframeDocument?.body) {
       throw new Error("Não foi possível acessar o conteúdo do manual.");
     }
 
@@ -55,7 +141,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       await iframeDocument.fonts.ready;
     }
 
-    await wait(400);
+    await wait(500);
 
     const root = iframeDocument.documentElement;
     const body = iframeDocument.body;
@@ -65,10 +151,10 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     iframe.style.width = `${captureWidth}px`;
     iframe.style.height = `${captureHeight}px`;
 
-    await wait(150);
+    await wait(200);
 
     const canvas = await html2canvas(body, {
-      scale: 2,
+      scale: PDF_RENDER_SCALE,
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
@@ -84,49 +170,43 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       throw new Error("Falha ao renderizar o conteúdo do manual.");
     }
 
-    const imageData = canvas.toDataURL("image/jpeg", 0.98);
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
+    const contentWidth = pdfWidth - PDF_MARGIN_MM * 2;
+    const contentHeight = pdfHeight - PDF_MARGIN_MM * 2;
+    const pageContentHeightPx = Math.max(1, Math.floor((canvas.width * contentHeight) / contentWidth));
+    const totalPages = Math.ceil(canvas.height / pageContentHeightPx);
 
-    const MARGIN = 15; // mm
-    const contentWidth = pdfWidth - MARGIN * 2;
-    const contentHeight = pdfHeight - MARGIN * 2;
-
-    // Scale factor: how many mm per canvas pixel
-    const scaleFactor = contentWidth / (canvas.width / 2); // scale:2 was used
-    const totalImageHeightMm = (canvas.height / 2) * scaleFactor;
-
-    // How many pixels (at scale 2) fit in one page's content area
-    const pageContentHeightPx = contentHeight / scaleFactor * 2;
-
-    const totalPages = Math.ceil((canvas.height) / pageContentHeightPx);
-
-    for (let page = 0; page < totalPages; page++) {
+    for (let page = 0; page < totalPages; page += 1) {
       if (page > 0) pdf.addPage();
 
-      // Create a sub-canvas for this page slice
       const sliceY = page * pageContentHeightPx;
       const sliceH = Math.min(pageContentHeightPx, canvas.height - sliceY);
 
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = canvas.width;
       pageCanvas.height = sliceH;
+
       const ctx = pageCanvas.getContext("2d");
-      if (ctx) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(canvas, 0, sliceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      if (!ctx) {
+        throw new Error("Falha ao preparar a página do PDF.");
       }
 
-      const sliceData = pageCanvas.toDataURL("image/jpeg", 0.98);
-      const sliceHeightMm = (sliceH / 2) * scaleFactor;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(canvas, 0, sliceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
 
-      pdf.addImage(sliceData, "JPEG", MARGIN, MARGIN, contentWidth, sliceHeightMm);
+      const sliceData = pageCanvas.toDataURL("image/png");
+      const sliceHeightMm = (sliceH * contentWidth) / canvas.width;
+
+      pdf.addImage(sliceData, "PNG", PDF_MARGIN_MM, PDF_MARGIN_MM, contentWidth, sliceHeightMm);
     }
 
     const finalTotalPages = pdf.getNumberOfPages();
-    for (let page = 1; page <= finalTotalPages; page++) {
+    for (let page = 1; page <= finalTotalPages; page += 1) {
       pdf.setPage(page);
       pdf.setFontSize(8);
       pdf.setTextColor(140);
