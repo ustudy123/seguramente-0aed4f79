@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { cargoNome, descricao, textoAtual, acao } = await req.json();
+    const { cargoNome, descricao, textoAtual, acao, competenciaNome, competenciaTipo } = await req.json();
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
@@ -19,7 +19,16 @@ Deno.serve(async (req) => {
     let systemPrompt = "";
     let userPrompt = "";
 
-    if (acao === "melhorar") {
+    if (acao === "sugerir_descricao_competencia") {
+      systemPrompt = "Você é um especialista em gestão de competências e RH. Gere descrições curtas e objetivas para competências profissionais. Retorne apenas o texto da descrição (1-2 frases), sem explicações adicionais.";
+      userPrompt = `Gere uma descrição curta e objetiva para a seguinte competência:
+
+Competência: ${competenciaNome}
+Tipo: ${competenciaTipo || "técnica"}
+${cargoNome ? `Função: ${cargoNome}` : ""}
+
+A descrição deve explicar o que essa competência significa no contexto da função e como ela se aplica no dia a dia. Seja conciso (1-2 frases).`;
+    } else if (acao === "melhorar") {
       systemPrompt = "Você é um especialista em descrição de cargos e gestão de pessoas. Melhore textos de responsabilidade de função tornando-os mais profissionais, claros e completos. Retorne apenas o texto melhorado, sem explicações ou formatação adicional.";
       userPrompt = `Cargo: ${cargoNome}${descricao ? `\nDescrição: ${descricao}` : ""}
 
