@@ -295,6 +295,18 @@ export default function Empresa() {
             </CardContent>
           </TabsContent>
 
+          <TabsContent value="ai" className="mt-0">
+            <CardHeader>
+              <CardTitle className="text-lg">Contexto para Inteligência Artificial</CardTitle>
+              <CardDescription>
+                Configure as informações que guiarão a I.A. nas sugestões para esta empresa
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmpresaAIContext data={formData} onChange={handleChange} />
+            </CardContent>
+          </TabsContent>
+
           <TabsContent value="importar" className="mt-0">
             <CardHeader>
               <CardTitle className="text-lg">Importação de Empresas</CardTitle>
