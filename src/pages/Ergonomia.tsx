@@ -177,19 +177,19 @@ export default function Ergonomia() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowGuiaRapido(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
+          <Button id="btn-ergo-guia-rapido" variant="outline" size="sm" onClick={() => setShowGuiaRapido(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5">
             <HelpCircle className="h-4 w-4" />
             Guia Rápido
           </Button>
-          <Button variant="outline" size="sm" onClick={() => refetchItens()}>
+          <Button id="btn-ergo-atualizar" variant="outline" size="sm" onClick={() => refetchItens()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowRiscoForm(true)}>
+          <Button id="btn-ergo-novo-risco" variant="outline" size="sm" onClick={() => setShowRiscoForm(true)}>
             <AlertTriangle className="h-4 w-4 mr-2" />
             Novo Risco
           </Button>
-          <Button size="sm" onClick={() => setShowAcaoForm(true)}>
+          <Button id="btn-ergo-nova-acao" size="sm" onClick={() => setShowAcaoForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Ação
           </Button>
@@ -343,13 +343,13 @@ export default function Ergonomia() {
               </p>
               <TabsList className="flex-wrap h-auto gap-1">
                 {/* 1. Entrada */}
-                <TabsTrigger value="aep" className="gap-2">
+                <TabsTrigger id="tab-ergo-aep" value="aep" className="gap-2">
                   <Search className="h-4 w-4" />
                   <span className="hidden sm:inline">1.</span> Avaliar Riscos (AEP)
                 </TabsTrigger>
 
                 {/* 2. Identificação + Avaliação → Inventário GRO */}
-                <TabsTrigger value="inventario_gro" className="gap-2">
+                <TabsTrigger id="tab-ergo-inventario" value="inventario_gro" className="gap-2">
                   <ListChecks className="h-4 w-4" />
                   <span className="hidden sm:inline">2.</span> Inventário GRO
                   {groRiscos.length > 0 && (
@@ -358,7 +358,7 @@ export default function Ergonomia() {
                 </TabsTrigger>
 
                 {/* 3. Riscos Prioritários */}
-                <TabsTrigger value="prioritarios" className="gap-2">
+                <TabsTrigger id="tab-ergo-prioritarios" value="prioritarios" className="gap-2">
                   <AlertTriangle className="h-4 w-4" />
                   <span className="hidden sm:inline">3.</span> Riscos Prioritários
                   {riscosCriticosAltos.length > 0 && (
@@ -367,7 +367,7 @@ export default function Ergonomia() {
                 </TabsTrigger>
 
                 {/* 4. Plano de Ação */}
-                <TabsTrigger value="acoes" className="gap-2">
+                <TabsTrigger id="tab-ergo-acoes" value="acoes" className="gap-2">
                   <Wrench className="h-4 w-4" />
                   <span className="hidden sm:inline">4.</span> Plano de Ação
                   {acoes.length > 0 && (
@@ -376,7 +376,7 @@ export default function Ergonomia() {
                 </TabsTrigger>
 
                 {/* 5. Monitoramento */}
-                <TabsTrigger value="monitoramento" className="gap-2">
+                <TabsTrigger id="tab-ergo-monitoramento" value="monitoramento" className="gap-2">
                   <Eye className="h-4 w-4" />
                   <span className="hidden sm:inline">5.</span> Monitoramento
                   {stats.totalAnalises > 0 && (
@@ -385,11 +385,11 @@ export default function Ergonomia() {
                 </TabsTrigger>
 
                 {/* Suporte */}
-                <TabsTrigger value="analise_ia" className="gap-2">
+                <TabsTrigger id="tab-ergo-analise-ia" value="analise_ia" className="gap-2">
                   <Brain className="h-4 w-4" />
                   Análise por IA
                 </TabsTrigger>
-                <TabsTrigger value="base_ergonomica" className="gap-2">
+                <TabsTrigger id="tab-ergo-base" value="base_ergonomica" className="gap-2">
                   <Database className="h-4 w-4" />
                   Base Ergonômica
                   {stats.totalAnalises > 0 && (

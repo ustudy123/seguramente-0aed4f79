@@ -91,7 +91,7 @@ export default function Metas() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={() => openForm(tab === "dashboard" || tab === "consolidacao" || tab === "chat" || tab === "indicadores" || tab === "config" ? "estrategica" : (tab as MetaNivel))} className="gap-1.5">
+          <Button id="btn-nova-meta" onClick={() => openForm(tab === "dashboard" || tab === "consolidacao" || tab === "chat" || tab === "indicadores" || tab === "config" ? "estrategica" : (tab as MetaNivel))} className="gap-1.5">
             <Plus className="h-4 w-4" />
             Nova Meta
           </Button>
@@ -101,11 +101,11 @@ export default function Metas() {
       {/* Tabs */}
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
-          <TabsTrigger value="dashboard" className="gap-1">
+          <TabsTrigger id="tab-metas-dashboard" value="dashboard" className="gap-1">
             <BarChart3 className="w-4 h-4" /> Dashboard
           </TabsTrigger>
           {nivelTabs.map(t => (
-            <TabsTrigger key={t.value} value={t.value} className="gap-1">
+            <TabsTrigger key={t.value} id={`tab-metas-${t.value}`} value={t.value} className="gap-1">
               <t.icon className="w-4 h-4" /> {t.label}
               {filteredByNivel(t.nivel).length > 0 && (
                 <span className="ml-1 text-[10px] bg-muted px-1.5 rounded-full">
@@ -114,21 +114,21 @@ export default function Metas() {
               )}
             </TabsTrigger>
           ))}
-          <TabsTrigger value="consolidacao" className="gap-1">
+          <TabsTrigger id="tab-metas-consolidacao" value="consolidacao" className="gap-1">
             <Calculator className="w-4 h-4" /> Consolidação
           </TabsTrigger>
-          <TabsTrigger value="chat" className="gap-1">
+          <TabsTrigger id="tab-metas-chat" value="chat" className="gap-1">
             <MessageSquare className="w-4 h-4" /> Assistente IA
           </TabsTrigger>
-          <TabsTrigger value="guia" className="gap-1">
+          <TabsTrigger id="tab-metas-guia" value="guia" className="gap-1">
             <BookOpen className="w-4 h-4" /> Guia Completo
           </TabsTrigger>
           {podeVerConfiguracoes && (
             <>
-              <TabsTrigger value="indicadores" className="gap-1">
+              <TabsTrigger id="tab-metas-indicadores" value="indicadores" className="gap-1">
                 <BarChart3 className="w-4 h-4" /> Indicadores
               </TabsTrigger>
-              <TabsTrigger value="config" className="gap-1">
+              <TabsTrigger id="tab-metas-config" value="config" className="gap-1">
                 <Settings className="w-4 h-4" /> Configurações
               </TabsTrigger>
             </>

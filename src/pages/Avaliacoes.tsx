@@ -116,7 +116,7 @@ export default function Avaliacoes() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="overflow-x-auto">
           <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
-            <TabsTrigger value="inbox" className="flex items-center gap-1.5">
+            <TabsTrigger id="tab-aval-inbox" value="inbox" className="flex items-center gap-1.5">
               <ClipboardCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Minha Caixa</span>
               {avaliacoesPendentes > 0 && (
@@ -126,39 +126,39 @@ export default function Avaliacoes() {
               )}
             </TabsTrigger>
             {podeVerCiclos && (
-              <TabsTrigger value="ciclos" className="flex items-center gap-1.5">
+              <TabsTrigger id="tab-aval-ciclos" value="ciclos" className="flex items-center gap-1.5">
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Ciclos</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="formulario" className="flex items-center gap-1.5">
+            <TabsTrigger id="tab-aval-formulario" value="formulario" className="flex items-center gap-1.5">
               <PenTool className="h-4 w-4" />
               <span className="hidden sm:inline">Formulário</span>
             </TabsTrigger>
-            <TabsTrigger value="metas" className="flex items-center gap-1.5">
+            <TabsTrigger id="tab-aval-metas" value="metas" className="flex items-center gap-1.5">
               <Target className="h-4 w-4" />
               <span className="hidden sm:inline">Metas</span>
             </TabsTrigger>
             {podeVerTemplates && (
-              <TabsTrigger value="templates" className="flex items-center gap-1.5">
+              <TabsTrigger id="tab-aval-templates" value="templates" className="flex items-center gap-1.5">
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Templates</span>
               </TabsTrigger>
             )}
             {podeVerResultados && (
-              <TabsTrigger value="resultados" className="flex items-center gap-1.5">
+              <TabsTrigger id="tab-aval-resultados" value="resultados" className="flex items-center gap-1.5">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Resultados</span>
               </TabsTrigger>
             )}
             {podeVerResultados && (
-              <TabsTrigger value="9box" className="flex items-center gap-1.5">
+              <TabsTrigger id="tab-aval-9box" value="9box" className="flex items-center gap-1.5">
                 <LayoutGrid className="h-4 w-4" />
                 <span className="hidden sm:inline">9-Box</span>
               </TabsTrigger>
             )}
             {podeVerConfiguracoes && (
-              <TabsTrigger value="config" className="flex items-center gap-1.5">
+              <TabsTrigger id="tab-aval-config" value="config" className="flex items-center gap-1.5">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Config</span>
               </TabsTrigger>

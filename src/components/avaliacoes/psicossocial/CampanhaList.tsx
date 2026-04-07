@@ -136,7 +136,7 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
           <p className="text-muted-foreground text-center mb-4">
             Crie sua primeira campanha de avaliação psicossocial
           </p>
-          <Button onClick={onNovaCampanha}>
+          <Button id="btn-criar-campanha" onClick={onNovaCampanha}>
             Criar Campanha
           </Button>
         </CardContent>
@@ -292,6 +292,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
         {campanha.status === 'ativa' && (
           <>
             <Button
+              id={`btn-participacao-${campanha.id}`}
               variant={isExpanded ? "default" : "outline"}
               size="sm"
               onClick={onGerenciarParticipacao}
@@ -299,11 +300,11 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
               <UserPlus className="h-4 w-4 mr-1" />
               Participação
             </Button>
-            <Button variant="outline" size="sm" onClick={onDistribuir}>
+            <Button id={`btn-link-geral-${campanha.id}`} variant="outline" size="sm" onClick={onDistribuir}>
               <LinkIcon className="h-4 w-4 mr-1" />
               Link Geral
             </Button>
-            <Button variant="outline" size="sm" onClick={onVerResultados}>
+            <Button id={`btn-resultados-${campanha.id}`} variant="outline" size="sm" onClick={onVerResultados}>
               <BarChart3 className="h-4 w-4 mr-1" />
               Resultados
             </Button>
@@ -312,11 +313,11 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
         
         {campanha.status === 'encerrada' && (
           <>
-            <Button variant="outline" size="sm" onClick={onGerenciarParticipacao}>
+            <Button id={`btn-participacao-enc-${campanha.id}`} variant="outline" size="sm" onClick={onGerenciarParticipacao}>
               <Users className="h-4 w-4 mr-1" />
               Participação
             </Button>
-            <Button variant="outline" size="sm" onClick={onVerResultados}>
+            <Button id={`btn-ver-resultados-${campanha.id}`} variant="outline" size="sm" onClick={onVerResultados}>
               <BarChart3 className="h-4 w-4 mr-1" />
               Ver Resultados
             </Button>
@@ -325,40 +326,40 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button id={`btn-menu-campanha-${campanha.id}`} variant="ghost" size="icon">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {campanha.status === 'rascunho' && (
-              <DropdownMenuItem onClick={onAtivar}>
+              <DropdownMenuItem id={`menu-ativar-campanha-${campanha.id}`} onClick={onAtivar}>
                 <Play className="h-4 w-4 mr-2" />
                 Ativar Campanha
               </DropdownMenuItem>
             )}
             {campanha.status === 'ativa' && (
               <>
-                <DropdownMenuItem onClick={onGerenciarParticipacao}>
+                <DropdownMenuItem id={`menu-participacao-${campanha.id}`} onClick={onGerenciarParticipacao}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Controle de Participação
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDistribuir}>
+                <DropdownMenuItem id={`menu-link-geral-${campanha.id}`} onClick={onDistribuir}>
                   <LinkIcon className="h-4 w-4 mr-2" />
                   Link Geral Anônimo
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onVerResultados}>
+                <DropdownMenuItem id={`menu-ver-resultados-${campanha.id}`} onClick={onVerResultados}>
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Ver Resultados
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onEncerrar} className="text-destructive">
+                <DropdownMenuItem id={`menu-encerrar-campanha-${campanha.id}`} onClick={onEncerrar} className="text-destructive">
                   <Pause className="h-4 w-4 mr-2" />
                   Encerrar Campanha
                 </DropdownMenuItem>
               </>
             )}
             {campanha.status === 'encerrada' && (
-              <DropdownMenuItem onClick={onVerResultados}>
+              <DropdownMenuItem id={`menu-ver-resultados-enc-${campanha.id}`} onClick={onVerResultados}>
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Ver Resultados
               </DropdownMenuItem>

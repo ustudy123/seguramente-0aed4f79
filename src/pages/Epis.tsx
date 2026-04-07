@@ -75,27 +75,27 @@ const Epis = () => {
               Controle de equipamentos de proteção individual
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setShowGuia(true)} className="text-primary shrink-0 sm:hidden">
+          <Button id="btn-epi-guia-mobile" variant="ghost" size="icon" onClick={() => setShowGuia(true)} className="text-primary shrink-0 sm:hidden">
             <HelpCircle className="h-5 w-5" />
           </Button>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => setShowGuia(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5 hidden sm:flex">
+          <Button id="btn-epi-guia-rapido" variant="outline" size="sm" onClick={() => setShowGuia(true)} className="gap-2 text-primary border-primary/30 hover:bg-primary/5 hidden sm:flex">
             <HelpCircle className="h-4 w-4" />
             Guia Rápido
           </Button>
           {perm.podeCriarTipo && (
-            <Button variant="outline" size="sm" onClick={() => setShowTipoForm(true)} className="text-xs sm:text-sm">
+            <Button id="btn-epi-nova-categoria" variant="outline" size="sm" onClick={() => setShowTipoForm(true)} className="text-xs sm:text-sm">
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Categoria
             </Button>
           )}
           {perm.podeCriarEpi && (
-            <Button variant="outline" size="sm" onClick={() => setShowEpiForm(true)} className="text-xs sm:text-sm">
+            <Button id="btn-epi-novo" variant="outline" size="sm" onClick={() => setShowEpiForm(true)} className="text-xs sm:text-sm">
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Novo EPI
             </Button>
           )}
           {perm.podeRegistrarEntrega && (
-            <Button onClick={() => setShowEntregaForm(true)} size="sm" className="text-xs sm:text-sm">
+            <Button id="btn-epi-entrega" onClick={() => setShowEntregaForm(true)} size="sm" className="text-xs sm:text-sm">
               <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Entrega
             </Button>
           )}
@@ -109,38 +109,38 @@ const Epis = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <ScrollArea className="w-full">
           <TabsList className="inline-flex w-max min-w-full sm:flex sm:w-full sm:max-w-6xl sm:flex-wrap gap-0.5">
-            <TabsTrigger value="entregas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+            <TabsTrigger id="tab-epi-entregas" value="entregas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
               <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Entregas
             </TabsTrigger>
-            <TabsTrigger value="estoque" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+            <TabsTrigger id="tab-epi-estoque" value="estoque" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
               <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Estoque
             </TabsTrigger>
-            <TabsTrigger value="saldo-local" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+            <TabsTrigger id="tab-epi-saldo-local" value="saldo-local" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
               <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Local
             </TabsTrigger>
             {perm.podeMovimentarEstoque && (
-              <TabsTrigger value="entradas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <TabsTrigger id="tab-epi-entradas" value="entradas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
                 <ArrowDownCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Mov.
               </TabsTrigger>
             )}
-            <TabsTrigger value="alertas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+            <TabsTrigger id="tab-epi-alertas" value="alertas" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Alertas
             </TabsTrigger>
             {perm.podeGerenciarMatriz && (
-              <TabsTrigger value="matriz" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <TabsTrigger id="tab-epi-matriz" value="matriz" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
                 <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Matriz
               </TabsTrigger>
             )}
             {perm.podeUsarIAFiscal && (
-              <TabsTrigger value="fiscal" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <TabsTrigger id="tab-epi-fiscal" value="fiscal" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Auditoria
               </TabsTrigger>
             )}
-            <TabsTrigger value="historico" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+            <TabsTrigger id="tab-epi-historico" value="historico" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
               <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Histórico
             </TabsTrigger>
             {perm.podeConfigurar && (
-              <TabsTrigger value="config" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
+              <TabsTrigger id="tab-epi-config" value="config" className="flex items-center gap-1 text-xs sm:text-sm sm:gap-1.5">
                 <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Config
               </TabsTrigger>
             )}

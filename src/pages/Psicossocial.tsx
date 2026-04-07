@@ -25,6 +25,7 @@ export default function Psicossocial() {
           </p>
         </div>
         <Button
+          id="btn-guia-rapido-psicossocial"
           variant="outline"
           size="sm"
           onClick={() => setShowGuia(true)}
