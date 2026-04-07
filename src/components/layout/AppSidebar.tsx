@@ -70,17 +70,11 @@ const menuSections: MenuSection[] = [
     color: "text-cyan-400",
     sectionIcon: Building2,
     items: [
-      {
-        title: "Cadastros",
-        icon: FolderOpen,
-        children: [
-          { title: "Empresa", path: "/empresa" },
-          { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" },
-          { title: "Departamentos", path: "/cadastros/departamentos" },
-          { title: "Funções", path: "/cadastros/cargos" },
-          { title: "Colaboradores", path: "/colaboradores" },
-        ],
-      },
+      { title: "Empresa", icon: Building2, path: "/empresa" },
+      { title: "Estabelecimento ou Obra", icon: Building2, path: "/cadastros/filiais" },
+      { title: "Departamentos", icon: Building2, path: "/cadastros/departamentos" },
+      { title: "Funções", icon: Users, path: "/cadastros/cargos" },
+      { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
       { title: "Cultura", icon: Heart, path: "/estrategia?tab=cultura" },
       { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
