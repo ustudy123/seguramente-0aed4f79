@@ -11,6 +11,7 @@ import type {
 import { useFiliais, type Filial } from "./useCadastros";
 import { useColaboradores, type Colaborador } from "./useColaboradores";
 import { autoGenerateFolderStructure } from "@/utils/autoGenerateFolderStructure";
+import { criarPastasColaboradoresEmLote } from "@/utils/criarPastaColaborador";
 
 interface DocumentoRow {
   id: string;
@@ -102,14 +103,7 @@ export function useDocumentoPastas() {
   // Sincronizar colaboradores que não possuem pasta
   const syncMissingColaboradores = useMutation({
     mutationFn: async () => {
-      if (!tenantId || !user || pastas.length === 0) return 0;
-
-      // Encontrar pasta raiz de colaboradores
-      const prontuariosRoot = pastas.find(p => p.tipo === "root" && (p.nome === "Documentos de Colaboradores" || p.nome === "Prontuários de Colaboradores"));
-      if (!prontuariosRoot) return 0;
-
-      // Encontrar pastas de unidade
-      const unidadePastas = pastas.filter(p => p.tipo === "unidade" && p.pasta_pai_id === prontuariosRoot.id);
+      if (!tenantId || !user) return 0;
 
       // Colaboradores que já têm pasta
       const colabsComPasta = new Set(
@@ -120,87 +114,11 @@ export function useDocumentoPastas() {
       const colabsSemPasta = colaboradores.filter((c: Colaborador) => !colabsComPasta.has(c.id));
       if (colabsSemPasta.length === 0) return 0;
 
-      type PastaInsert = {
-        id: string;
-        nome: string;
-        tipo: string;
-        ordem: number;
-        icone: string | null;
-        pasta_pai_id: string | null;
-        filial_id: string | null;
-        colaborador_id: string | null;
-        colaborador_cpf: string | null;
-        colaborador_nome: string | null;
-        ano: number | null;
-        tenant_id: string;
-        criado_por: string;
-        criado_por_nome: string | null;
-      };
-
-      const pastasToCreate: PastaInsert[] = [];
-
-      colabsSemPasta.forEach((colab: Colaborador) => {
-        // Encontrar a unidade correta
-        let unidadePasta = unidadePastas.find((u) => {
-          const filial = filiais.find((f: Filial) => f.id === u.filial_id);
-          return filial ? filial.nome === colab.filial : !u.filial_id;
-        });
-
-        // Se não encontrou, usar a primeira (geralmente "Matriz")
-        if (!unidadePasta && unidadePastas.length > 0) {
-          unidadePasta = unidadePastas[0];
-        }
-
-        if (!unidadePasta) return;
-
-        const colabPastaId = crypto.randomUUID();
-        const existingColabs = pastas.filter(p => p.tipo === "colaborador" && p.pasta_pai_id === unidadePasta!.id);
-
-        pastasToCreate.push({
-          id: colabPastaId,
-          nome: colab.nome_completo,
-          tipo: "colaborador",
-          pasta_pai_id: unidadePasta.id,
-          colaborador_id: colab.id,
-          colaborador_cpf: colab.cpf,
-          colaborador_nome: colab.nome_completo,
-          ordem: existingColabs.length + pastasToCreate.filter(p => p.pasta_pai_id === unidadePasta!.id).length,
-          icone: "User",
-          filial_id: null,
-          ano: null,
-          tenant_id: tenantId,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo || null,
-        });
-
-        // Criar pasta do ano atual
-        const ano = new Date().getFullYear();
-        pastasToCreate.push({
-          id: crypto.randomUUID(),
-          nome: String(ano),
-          tipo: "ano",
-          pasta_pai_id: colabPastaId,
-          ano: ano,
-          ordem: 0,
-          icone: null,
-          filial_id: null,
-          colaborador_id: null,
-          colaborador_cpf: null,
-          colaborador_nome: null,
-          tenant_id: tenantId,
-          criado_por: user.id,
-          criado_por_nome: profile?.nome_completo || null,
-        });
-      });
-
-      if (pastasToCreate.length === 0) return 0;
-
-      const { error } = await supabase
-        .from("documento_pastas")
-        .insert(pastasToCreate);
-
-      if (error) throw error;
-      return colabsSemPasta.length;
+      const count = await criarPastasColaboradoresEmLote(
+        tenantId,
+        colabsSemPasta.map((c: Colaborador) => ({ id: c.id, nome: c.nome_completo, cpf: c.cpf }))
+      );
+      return count;
     },
     onSuccess: (count) => {
       if (count && count > 0) {

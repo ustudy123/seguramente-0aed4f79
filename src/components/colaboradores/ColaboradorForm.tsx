@@ -200,7 +200,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         }
         toast.success("Colaborador atualizado com sucesso!");
       } else {
-        const { error } = await supabase.from("admissoes").insert({
+        const { data: insertData, error } = await supabase.from("admissoes").insert({
           tenant_id: tenantId,
           nome_completo: data.nome_completo,
           cpf: cleanCpf(data.cpf),
@@ -217,7 +217,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           status: "concluido",
           criado_por: user?.id,
           matricula_esocial: data.matricula_esocial || null,
-        });
+        }).select("id").single();
 
         if (error) {
           if (error.code === "23505") {
@@ -227,6 +227,20 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           }
           return;
         }
+
+        // Create collaborator folder in Documents module
+        if (insertData?.id) {
+          try {
+            const { criarPastaColaborador } = await import("@/utils/criarPastaColaborador");
+            await criarPastaColaborador({
+              tenantId,
+              colaboradorId: insertData.id,
+              colaboradorNome: data.nome_completo,
+              colaboradorCpf: cleanCpf(data.cpf),
+            });
+          } catch { /* non-blocking */ }
+        }
+
         toast.success("Colaborador cadastrado com sucesso!");
       }
 

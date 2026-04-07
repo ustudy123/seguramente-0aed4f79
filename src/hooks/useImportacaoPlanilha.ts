@@ -4,6 +4,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { criarPastaColaborador } from "@/utils/criarPastaColaborador";
 
 export interface DadosPlanilha {
   cnpjEmpresa: string;
@@ -857,10 +858,11 @@ export function useImportacaoPlanilha() {
         try {
           if (cpfsExistentes.has(cpfLimpo)) {
             // Atualizar existente
+            const admId = cpfsExistentes.get(cpfLimpo)!;
             const { error } = await supabase
               .from("admissoes")
               .update(dadosAdmissao)
-              .eq("id", cpfsExistentes.get(cpfLimpo)!);
+              .eq("id", admId);
             
             if (error) {
               resultado.erros.push({
@@ -869,12 +871,23 @@ export function useImportacaoPlanilha() {
               });
             } else {
               resultado.colaboradoresAtualizados++;
+              // Create collaborator folder in Documents module
+              try {
+                await criarPastaColaborador({
+                  tenantId,
+                  colaboradorId: admId,
+                  colaboradorNome: dado.nome,
+                  colaboradorCpf: dado.cpf,
+                });
+              } catch { /* non-blocking */ }
             }
           } else {
             // Inserir novo
-            const { error } = await supabase
+            const { data: insertData, error } = await supabase
               .from("admissoes")
-              .insert(dadosAdmissao);
+              .insert(dadosAdmissao)
+              .select("id")
+              .single();
             
             if (error) {
               resultado.erros.push({
@@ -883,6 +896,17 @@ export function useImportacaoPlanilha() {
               });
             } else {
               resultado.colaboradoresInseridos++;
+              // Create collaborator folder in Documents module
+              if (insertData?.id) {
+                try {
+                  await criarPastaColaborador({
+                    tenantId,
+                    colaboradorId: insertData.id,
+                    colaboradorNome: dado.nome,
+                    colaboradorCpf: dado.cpf,
+                  });
+                } catch { /* non-blocking */ }
+              }
             }
           }
         } catch (err: any) {
