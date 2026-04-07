@@ -70,11 +70,12 @@ const menuSections: MenuSection[] = [
     color: "text-cyan-400",
     sectionIcon: Building2,
     items: [
-      { title: "Empresa", icon: Building2, path: "/empresa" },
       {
         title: "Cadastros",
         icon: FolderOpen,
         children: [
+          { title: "Empresa", path: "/empresa" },
+          { title: "Colaboradores", path: "/colaboradores" },
           { title: "Departamentos", path: "/cadastros/departamentos" },
           { title: "Funções", path: "/cadastros/cargos" },
           { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" },
@@ -121,7 +122,6 @@ const menuSections: MenuSection[] = [
     color: "text-violet-400",
     sectionIcon: Users,
     items: [
-      { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
       { title: "Onboarding", icon: UserPlus, path: "/onboarding-rh" },
       { title: "Férias", icon: Calendar, path: "/ferias" },
