@@ -25,7 +25,7 @@ export default function Empresa() {
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('dados');
 
-  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'importar'];
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai', 'importar'];
   const currentTabIndex = TABS.indexOf(activeTab);
   const isFirstTab = currentTabIndex === 0;
   const isLastTab = currentTabIndex === TABS.length - 1;
