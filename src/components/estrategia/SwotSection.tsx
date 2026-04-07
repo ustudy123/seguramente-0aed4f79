@@ -46,7 +46,19 @@ export function SwotSection({ escopo }: Props) {
       toast.error("Preencha o título da análise SWOT");
       return;
     }
-    createSwot.mutate(form, { onSuccess: () => { setShowNew(false); setForm({ titulo: "", descricao: "", escopo: "empresa", periodo: "" }); } });
+    const periodo = dataInicio && dataFim
+      ? `${format(dataInicio, "dd/MM/yyyy")} a ${format(dataFim, "dd/MM/yyyy")}`
+      : dataInicio
+      ? `A partir de ${format(dataInicio, "dd/MM/yyyy")}`
+      : "";
+    createSwot.mutate({ ...form, periodo }, {
+      onSuccess: () => {
+        setShowNew(false);
+        setForm({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
+        setDataInicio(undefined);
+        setDataFim(undefined);
+      },
+    });
   };
 
   return (
