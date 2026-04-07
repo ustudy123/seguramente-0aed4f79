@@ -154,7 +154,7 @@ interface AgentFlow {
 const AGENT_FLOW_CATEGORIES = [
   { id: "infra", label: "🔧 Infraestrutura & Auth" },
   { id: "estrutura", label: "🏢 Estrutura Organizacional" },
-  { id: "pessoas", label: "👥 Pessoas & Cultura" },
+  { id: "pessoas", label: "👥 PESSOAS" },
   { id: "sst", label: "🛡️ Saúde & Segurança" },
   { id: "estrategia", label: "📊 Estratégia & Planos" },
   { id: "docs_fin", label: "📁 Documentos & Financeiro" },
