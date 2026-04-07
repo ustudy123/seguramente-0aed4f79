@@ -169,7 +169,7 @@ export default function UsuariosContent() {
         <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
           <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todas as empresas</SelectItem>
+            
             {empresas.map((e: any) => (
               <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>
             ))}
