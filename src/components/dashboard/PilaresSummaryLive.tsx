@@ -184,6 +184,7 @@ export const PilaresSummaryLive = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
           {pilares.map((pilar, index) => {
             const score = getScore(pilar.scoreKey);
+            const pilarHasData = getPilarHasData(pilar.scoreKey);
             return (
               <motion.button
                 key={pilar.id}
