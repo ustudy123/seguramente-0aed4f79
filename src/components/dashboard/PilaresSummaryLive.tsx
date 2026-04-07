@@ -211,8 +211,8 @@ export const PilaresSummaryLive = () => {
                 <div className="mb-1.5">
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-xs text-muted-foreground">Maturidade</span>
-                    <span className={cn("text-xl font-extrabold tabular-nums", pilar.color)}>
-                      {score}%
+                    <span className={cn("text-xl font-extrabold tabular-nums", pilarHasData ? pilar.color : "text-muted-foreground")}>
+                      {pilarHasData ? `${score}%` : "—"}
                     </span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
