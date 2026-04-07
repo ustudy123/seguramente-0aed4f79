@@ -57,7 +57,7 @@ export default function Estrategia() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={handleTabChange}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="swot" className="gap-1">
             <Target className="w-4 h-4" /> SWOT
