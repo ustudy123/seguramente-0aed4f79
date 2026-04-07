@@ -17,6 +17,23 @@ import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { AppRole } from "@/types/database";
+
+const roleLabels: Record<string, string> = {
+  superadmin: "Super Admin",
+  owner: "Proprietário",
+  admin: "Administrador",
+  manager: "Gestor",
+  user: "Colaborador",
+};
+
+function getRoleLabel(roles: AppRole[]): string {
+  const hierarchy: AppRole[] = ["superadmin", "owner", "admin", "manager", "user"];
+  for (const r of hierarchy) {
+    if (roles.includes(r)) return roleLabels[r] || r;
+  }
+  return "Administrador";
+}
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -24,7 +41,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
-  const { profile, signOut, isSuperAdmin, user } = useAuthContext();
+  const { profile, signOut, isSuperAdmin, user, roles } = useAuthContext();
   const { tenant } = useTenant();
   const { humorHoje } = useHumorDiario();
   const navigate = useNavigate();
@@ -120,7 +137,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
                   {profile?.nome_completo?.split(" ")[0] || "Usuário"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {profile?.cargo || "Colaborador"}
+                  {profile?.cargo || (isSuperAdmin ? "Super Admin" : getRoleLabel(roles))}
                 </p>
               </div>
               <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
