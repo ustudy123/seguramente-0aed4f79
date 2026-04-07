@@ -117,11 +117,11 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
             value={tipoPessoa}
             onValueChange={(v) => onChange({
               tipo_pessoa: v as 'pf' | 'pj',
-              // Limpar campos ao trocar tipo
               ...(v === 'pf' ? { cnpj: null } : { cpf: null, cei: null, caepf: null }),
             })}
+            disabled={!!data.id && !!(data.cnpj || data.cpf)}
           >
-            <SelectTrigger>
+            <SelectTrigger className={!!data.id && !!(data.cnpj || data.cpf) ? 'bg-muted cursor-not-allowed' : ''}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -141,13 +141,15 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   value={data.cnpj || ''}
                   onChange={handleCnpjChange}
                   maxLength={18}
+                  disabled={!!data.id && !!data.cnpj}
+                  className={!!data.id && !!data.cnpj ? 'bg-muted cursor-not-allowed' : ''}
                 />
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   onClick={handleBuscarCnpj}
-                  disabled={cnpjLoading || !validateCnpj(data.cnpj || '')}
+                  disabled={cnpjLoading || !validateCnpj(data.cnpj || '') || (!!data.id && !!data.cnpj)}
                   title="Buscar dados na Receita Federal"
                 >
                   {cnpjLoading ? (
@@ -157,9 +159,15 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Clique na lupa para preencher automaticamente
-              </p>
+              {!!data.id && !!data.cnpj ? (
+                <p className="text-xs text-muted-foreground">
+                  CNPJ informado no cadastro inicial. Não pode ser alterado.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Clique na lupa para preencher automaticamente
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Inscrição Estadual</Label>
@@ -177,7 +185,14 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               <CpfInput
                 value={data.cpf || ''}
                 onChange={(value) => onChange({ cpf: value })}
+                disabled={!!data.id && !!data.cpf}
+                className={!!data.id && !!data.cpf ? 'bg-muted cursor-not-allowed' : ''}
               />
+              {!!data.id && !!data.cpf && (
+                <p className="text-xs text-muted-foreground">
+                  CPF informado no cadastro inicial. Não pode ser alterado.
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>CEI</Label>
