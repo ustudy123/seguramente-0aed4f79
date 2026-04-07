@@ -80,14 +80,6 @@ const checkIsActive = (path: string, pathname: string, search: string) => {
 
 const menuSections: MenuSection[] = [
   {
-    label: "Visão Geral & Estratégia",
-    color: "text-blue-400",
-    sectionIcon: Compass,
-    items: [
-      { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
-    ],
-  },
-  {
     label: "Estrutura Organizacional",
     color: "text-cyan-400",
     sectionIcon: Building2,
@@ -101,6 +93,14 @@ const menuSections: MenuSection[] = [
       { title: "Cultura", icon: Heart, path: "/estrategia?tab=cultura" },
       { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
+    ],
+  },
+  {
+    label: "Visão Geral & Estratégia",
+    color: "text-blue-400",
+    sectionIcon: Compass,
+    items: [
+      { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
     ],
   },
   {
