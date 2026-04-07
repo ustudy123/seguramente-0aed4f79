@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FileText, Sparkles, Loader2, Copy, Download, Check, Calendar, DollarSign, Gift, Clock, Building2 } from "lucide-react";
+import { FileText, Sparkles, Loader2, Copy, Download, Check, Calendar, DollarSign, Gift, Clock, Building2, FileDown } from "lucide-react";
+import { exportTextToPdf } from "@/utils/pdfExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +82,10 @@ export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, respo
     a.download = `Proposta_${cargoNome.replace(/\s+/g, "_")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    exportTextToPdf(proposta, `Proposta_${cargoNome.replace(/\s+/g, "_")}.pdf`, `Proposta de Oportunidade - ${cargoNome}`);
   };
 
   return (
@@ -173,6 +178,9 @@ export function GerarPropostaSection({ cargoId, cargoNome, cargoDescricao, respo
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" /> Baixar .txt
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+                  <FileDown className="w-4 h-4 mr-1" /> Baixar PDF
                 </Button>
               </div>
             </div>

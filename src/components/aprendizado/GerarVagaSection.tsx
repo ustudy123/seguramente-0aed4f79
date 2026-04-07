@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Briefcase, Sparkles, Loader2, Copy, Download, Check, Building2, Mail, MapPin, DollarSign, Clock } from "lucide-react";
+import { Briefcase, Sparkles, Loader2, Copy, Download, Check, Building2, Mail, MapPin, DollarSign, Clock, FileDown } from "lucide-react";
+import { exportTextToPdf } from "@/utils/pdfExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,6 +81,10 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
     a.download = `Vaga_${cargoNome.replace(/\s+/g, "_")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    exportTextToPdf(anuncio, `Vaga_${cargoNome.replace(/\s+/g, "_")}.pdf`, `Anuncio de Vaga - ${cargoNome}`);
   };
 
   return (
@@ -170,6 +175,9 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" /> Baixar .txt
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+                  <FileDown className="w-4 h-4 mr-1" /> Baixar PDF
                 </Button>
               </div>
             </div>
