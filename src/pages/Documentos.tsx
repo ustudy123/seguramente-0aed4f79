@@ -143,15 +143,14 @@ const Documentos = () => {
     }
   }, [needsSync, syncing, syncColaboradores]);
 
-  // Auto-gerar estrutura padrão silenciosamente quando não há pastas
+  // Auto-gerar estrutura padrão silenciosamente (idempotente — cria apenas pastas faltantes)
   useEffect(() => {
     if (!tenantId || loading || initializing) return;
-    if (pastas.length > 0 || tree.length > 0) return;
     const initKey = `${tenantId}_${empresaAtivaId || 'default'}`;
     if (autoInitDone === initKey) return;
     setAutoInitDone(initKey);
     initializeDefaultStructure(undefined).catch(() => {});
-  }, [tenantId, loading, pastas.length, tree.length, initializing, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tenantId, loading, initializing, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
