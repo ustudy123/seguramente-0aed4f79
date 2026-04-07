@@ -79,7 +79,7 @@ export const EmpresaSelector = () => {
           {isProfissional && <Shield className="w-3.5 h-3.5 shrink-0 text-amber-500" />}
           <Building2 className="w-4 h-4 shrink-0 text-primary" />
           <span className="truncate text-sm font-medium text-secondary-foreground">
-            {empresaAtiva?.razao_social || empresaAtiva?.nome_fantasia || "Todas as empresas"}
+            {empresaAtiva?.razao_social || empresaAtiva?.nome_fantasia || "Selecionar empresa"}
           </span>
           {isProfissional && (
             <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0 border-amber-400/50 text-amber-600 bg-amber-50">
