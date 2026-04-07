@@ -10,12 +10,13 @@ interface CriarPastaColaboradorParams {
   colaboradorId: string;
   colaboradorNome: string;
   colaboradorCpf?: string | null;
+  empresaId?: string | null;
 }
 
 const SUBPASTAS_PADRAO = ["Admissão", "Vida Funcional", "Saúde Ocupacional", "Desligamento"];
 
 export async function criarPastaColaborador(params: CriarPastaColaboradorParams): Promise<string | null> {
-  const { tenantId, colaboradorId, colaboradorNome, colaboradorCpf } = params;
+  const { tenantId, colaboradorId, colaboradorNome, colaboradorCpf, empresaId } = params;
 
   try {
     // 1. Check if collaborator folder already exists
@@ -39,7 +40,6 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
       .select("id")
       .eq("tenant_id", tenantId)
       .eq("nome", "Gestão de Pessoas")
-      .is("pasta_pai_id", null)
       .maybeSingle();
 
     let parentId = gestaoPessoas?.id || null;
@@ -54,6 +54,7 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
           tipo: "root" as const,
           ordem: 5,
           icone: "Users",
+          empresa_id: empresaId || null,
         })
         .select("id")
         .single();
@@ -75,6 +76,7 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
         colaborador_nome: colaboradorNome,
         ordem: 0,
         icone: "User",
+          empresa_id: empresaId || null,
       })
       .select("id")
       .single();
@@ -93,7 +95,7 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
   }
 }
 
-async function ensureSubfolders(tenantId: string, pastaColaboradorId: string) {
+async function ensureSubfolders(tenantId: string, pastaColaboradorId: string, _empresaId?: string | null) {
   const { data: existingSubs } = await supabase
     .from("documento_pastas")
     .select("nome")
@@ -121,7 +123,8 @@ async function ensureSubfolders(tenantId: string, pastaColaboradorId: string) {
  */
 export async function criarPastasColaboradoresEmLote(
   tenantId: string,
-  colaboradores: Array<{ id: string; nome: string; cpf?: string | null }>
+  colaboradores: Array<{ id: string; nome: string; cpf?: string | null }>,
+  empresaId?: string | null
 ): Promise<number> {
   let criadas = 0;
   for (const colab of colaboradores) {
@@ -130,6 +133,7 @@ export async function criarPastasColaboradoresEmLote(
       colaboradorId: colab.id,
       colaboradorNome: colab.nome,
       colaboradorCpf: colab.cpf,
+      empresaId,
     });
     if (result) criadas++;
   }
