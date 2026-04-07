@@ -84,7 +84,6 @@ const menuSections: MenuSection[] = [
     color: "text-blue-400",
     sectionIcon: Compass,
     items: [
-      { title: "Início", icon: Home, path: "/" },
       { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
     ],
   },
@@ -390,6 +389,10 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
 
   const allItems = useMemo(() => {
     const items: { title: string; path: string; icon: React.ElementType; sectionLabel: string }[] = [];
+    
+    // Add Início as first item
+    items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Principal" });
+
     filteredSections.forEach((section) => {
       section.items.forEach((item) => {
         if (item.path)
@@ -515,16 +518,34 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
             )}
           </div>
         ) : (
-          filteredSections.map((section) => (
-            <CollapsibleSection
-              key={section.label}
-              section={section}
-              isCollapsed={isCollapsed}
-              isOpen={!!openSections[section.label]}
-              onToggle={() => toggleSection(section.label)}
-              onNavigate={isMobile ? onClose : undefined}
-            />
-          ))
+          <div className="space-y-1">
+            <NavLink
+              to="/"
+              onClick={isMobile ? onClose : undefined}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20 font-medium"
+                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                )
+              }
+            >
+              <Home className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
+              {!isCollapsed && <span className="text-[13px]">Início</span>}
+            </NavLink>
+
+            {filteredSections.map((section) => (
+              <CollapsibleSection
+                key={section.label}
+                section={section}
+                isCollapsed={isCollapsed}
+                isOpen={!!openSections[section.label]}
+                onToggle={() => toggleSection(section.label)}
+                onNavigate={isMobile ? onClose : undefined}
+              />
+            ))}
+          </div>
         )}
       </nav>
 
