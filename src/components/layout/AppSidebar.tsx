@@ -96,6 +96,14 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
+    label: "Visão Geral & Estratégia",
+    color: "text-blue-400",
+    sectionIcon: Compass,
+    items: [
+      { title: "Estratégia & Governança", icon: Compass, path: "/estrategia" },
+    ],
+  },
+  {
     label: "Saúde & Segurança",
     color: "text-amber-400",
     sectionIcon: HeartPulse,
