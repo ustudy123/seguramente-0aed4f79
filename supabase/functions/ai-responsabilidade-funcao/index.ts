@@ -13,7 +13,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { cargoNome, descricao, textoAtual, acao, competenciaNome, competenciaTipo } = await req.json();
+    const { cargoNome, descricao, textoAtual, acao, competenciaNome, competenciaTipo, tenantId } = await req.json();
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const companyContext = await getCompanyContext(supabase, tenantId);
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
