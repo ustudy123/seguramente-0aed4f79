@@ -878,6 +878,7 @@ export function useImportacaoPlanilha() {
                   colaboradorId: admId,
                   colaboradorNome: dado.nome,
                   colaboradorCpf: dado.cpf,
+                  empresaId: empresaAtivaId || null,
                 });
               } catch { /* non-blocking */ }
             }
@@ -904,6 +905,7 @@ export function useImportacaoPlanilha() {
                     colaboradorId: insertData.id,
                     colaboradorNome: dado.nome,
                     colaboradorCpf: dado.cpf,
+                    empresaId: empresaAtivaId || null,
                   });
                 } catch { /* non-blocking */ }
               }

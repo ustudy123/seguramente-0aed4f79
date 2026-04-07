@@ -259,6 +259,7 @@ export function useDocumentos() {
           colaboradorId,
           colaboradorNome,
           colaboradorCpf: colaboradorCpf || null,
+          empresaId: empresaAtivaId || null,
         });
 
         if (pastaColaboradorId) {

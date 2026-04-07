@@ -39,13 +39,15 @@ async function findOrCreateColaboradorPasta(
   colaboradorId: string,
   colaboradorNome: string,
   colaboradorCpf?: string | null,
-  subpasta?: string | null
+  subpasta?: string | null,
+  empresaId?: string | null
 ): Promise<string | null> {
   const colabPastaId = await criarPastaColaborador({
     tenantId,
     colaboradorId,
     colaboradorNome,
     colaboradorCpf,
+    empresaId,
   });
 
   // If subpasta requested, find it inside the collaborator folder
@@ -146,7 +148,8 @@ export async function arquivarDocumento(params: ArquivarDocumentoParams): Promis
         colaboradorId,
         colaboradorNome,
         colaboradorCpf,
-        subpastaColaborador
+        subpastaColaborador,
+        empresaId
       );
     } else if (pastaCategoria) {
       pastaId = await findCategoriaPasta(tenantId, pastaCategoria);

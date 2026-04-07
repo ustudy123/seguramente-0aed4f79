@@ -107,7 +107,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         if (error) throw error;
         // Auto-gerar estrutura de pastas para a nova empresa
         try {
-          await autoGenerateFolderStructure(tenantId!, user!.id, user?.email || null);
+          await autoGenerateFolderStructure(tenantId!, user!.id, user?.email || null, data.id);
         } catch (e) {
           console.error('Erro ao gerar estrutura de pastas:', e);
         }
