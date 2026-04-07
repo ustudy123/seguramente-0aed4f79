@@ -50,12 +50,12 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
     }
     setAiLoadingDesc(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-responsabilidade", {
+      const { data, error } = await supabase.functions.invoke("ai-responsabilidade-funcao", {
         body: {
-          action: "sugerir_descricao_competencia",
+          acao: "sugerir_descricao_competencia",
+          cargoNome: funcaoNome || "",
           competenciaNome: nome,
           competenciaTipo: tipo,
-          funcaoNome: funcaoNome || "",
         },
       });
       if (error) throw new Error(error.message);
