@@ -112,6 +112,7 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
           descricao: cargoDescricao || "",
           textoAtual: value,
           acao,
+          tenantId,
         },
       });
 
