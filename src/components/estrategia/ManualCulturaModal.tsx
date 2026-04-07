@@ -1,25 +1,96 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Printer, X } from "lucide-react";
+import { Loader2, Download, FileText } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 interface ManualCulturaModalProps {
   open: boolean;
   onClose: () => void;
   html: string;
   loading: boolean;
+  onPdfGenerated?: (blob: Blob, filename: string) => void;
 }
 
-export function ManualCulturaModal({ open, onClose, html, loading }: ManualCulturaModalProps) {
+export function ManualCulturaModal({ open, onClose, html, loading, onPdfGenerated }: ManualCulturaModalProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  const handlePrint = () => {
+  const handleGeneratePdf = async () => {
     const iframe = iframeRef.current;
-    if (!iframe?.contentWindow) return;
-    iframe.contentWindow.print();
+    if (!iframe?.contentDocument?.body) return;
+
+    setPdfLoading(true);
+    try {
+      const body = iframe.contentDocument.body;
+      const clone = body.cloneNode(true) as HTMLElement;
+      clone.style.width = "794px";
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "0";
+      clone.style.background = "white";
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width: 794,
+        windowWidth: 794,
+      });
+
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      let page = 1;
+
+      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = -(pdfHeight * page);
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+        page++;
+      }
+
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150);
+        pdf.text(`Página ${i}/${totalPages}`, pdfWidth - 25, pdfHeight - 5);
+      }
+
+      const filename = `manual-cultura-${Date.now()}.pdf`;
+      pdf.save(filename);
+
+      if (onPdfGenerated) {
+        const blob = pdf.output("blob");
+        onPdfGenerated(blob, filename);
+      }
+
+      toast.success("PDF gerado com sucesso!");
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast.error("Erro ao gerar PDF. Tente novamente.");
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
-  const handleDownload = () => {
+  const handleDownloadHtml = () => {
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -38,10 +109,20 @@ export function ManualCulturaModal({ open, onClose, html, loading }: ManualCultu
             <div className="flex items-center gap-2">
               {!loading && html && (
                 <>
-                  <Button variant="outline" size="sm" onClick={handlePrint}>
-                    <Printer className="w-4 h-4 mr-1" /> Imprimir / PDF
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGeneratePdf}
+                    disabled={pdfLoading}
+                  >
+                    {pdfLoading ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4 mr-1" />
+                    )}
+                    {pdfLoading ? "Gerando PDF..." : "Baixar PDF"}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownload}>
+                  <Button variant="outline" size="sm" onClick={handleDownloadHtml}>
                     <Download className="w-4 h-4 mr-1" /> Baixar HTML
                   </Button>
                 </>
