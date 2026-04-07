@@ -29,7 +29,9 @@ Deno.serve(async (req) => {
     let userPrompt = "";
 
     if (acao === "sugerir_descricao_competencia") {
-      systemPrompt = "Você é um especialista em gestão de competências e RH. Gere descrições curtas e objetivas para competências profissionais. Retorne apenas o texto da descrição (1-2 frases), sem explicações adicionais.";
+      systemPrompt = `Você é um especialista em gestão de competências e RH. Gere descrições curtas e objetivas para competências profissionais. Retorne apenas o texto da descrição (1-2 frases), sem explicações adicionais.
+      
+${companyContext}`;
       userPrompt = `Gere uma descrição curta e objetiva para a seguinte competência:
 
 Competência: ${competenciaNome}
