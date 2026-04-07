@@ -80,7 +80,9 @@ Deno.serve(async (req) => {
 
     const prompt = `Você é um consultor sênior de cultura organizacional e employer branding. Com base nos dados culturais abaixo, gere um MANUAL DE CULTURA ORGANIZACIONAL completo, profissional e visualmente rico em HTML.
 
-DADOS DA EMPRESA:
+${companyContext}
+
+DADOS DA ESTRATÉGIA:
 - Nome da empresa: ${empresa_nome || "Nossa Empresa"}
 - Missão: ${missao || "(não informada)"}
 - Visão: ${visao || "(não informada)"}
