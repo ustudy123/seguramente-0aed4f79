@@ -85,17 +85,19 @@ export const PilaresSummary = () => {
             Visão integrada dos 4 pilares estratégicos
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3">
-          <span className="text-2xl">{overall.emoji}</span>
-          <div>
-            <p className="text-xs text-muted-foreground">Nível de Maturidade</p>
-            <p className="font-bold text-foreground">{overall.label}</p>
+        {overall && (
+          <div className="flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3">
+            <span className="text-2xl">{overall.emoji}</span>
+            <div>
+              <p className="text-xs text-muted-foreground">Nível de Maturidade</p>
+              <p className="font-bold text-foreground">{overall.label}</p>
+            </div>
+            <div className="ml-4 pl-4 border-l border-border">
+              <p className="text-xs text-muted-foreground">Score Geral</p>
+              <p className="text-2xl font-bold text-foreground">{averageScore}%</p>
+            </div>
           </div>
-          <div className="ml-4 pl-4 border-l border-border">
-            <p className="text-xs text-muted-foreground">Score Geral</p>
-            <p className="text-2xl font-bold text-foreground">{averageScore}%</p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Pilares Progress */}
