@@ -123,6 +123,16 @@ export const PilaresSummaryLive = () => {
     });
   };
 
+  const getPilarHasData = (key: PilarSummary["scoreKey"]) => {
+    if (!data) return false;
+    const p = data[key] as any;
+    if (key === "organizacao") return p.cargosDefinidos > 0 || p.departamentos > 0 || p.admissoesAndamento > 0;
+    if (key === "condicoes") return p.itensNr17Total > 0 || p.episDisponiveis > 0 || p.riscosAtivos > 0;
+    if (key === "experiencia") return p.humorTotal > 0 || p.ouvidoriaPendente > 0 || p.feedPostsHoje > 0;
+    if (key === "governanca") return p.acoesTotal > 0 || p.evidenciasEnviadas > 0 || p.terceirosAtivos > 0;
+    return false;
+  };
+
   if (isLoading) {
     return (
       <div className="bg-card rounded-xl border border-border p-8 shadow-sm">
