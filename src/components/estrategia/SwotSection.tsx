@@ -125,6 +125,7 @@ export function SwotSection({ escopo }: Props) {
                     </PopoverContent>
                   </Popover>
                 </div>
+              </div>
               <Button onClick={handleCreate} disabled={createSwot.isPending} className="w-full">
                 {createSwot.isPending ? "Criando..." : "Criar Análise"}
               </Button>
