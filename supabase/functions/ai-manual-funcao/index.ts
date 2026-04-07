@@ -67,64 +67,39 @@ Deno.serve(async (req) => {
 
     const cargoIds = cargos.map((c: any) => c.id);
 
-    // Fetch ALL related data in parallel (including POPs and conteúdos)
-    const [atividadesRes, competenciasRes, episRes, responsabilidadesRes, popsRes, conteudosRes] = await Promise.all([
+    // Fetch related data (WITHOUT POPs and conteúdos - manual focuses on structure only)
+    const [atividadesRes, competenciasRes, episRes, responsabilidadesRes, indicadoresRes] = await Promise.all([
       supabase.from("funcao_atividades").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
       supabase.from("funcao_competencias").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
       supabase.from("funcao_epi_vinculacoes").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
       supabase.from("funcao_responsabilidades").select("*").eq("tenant_id", tenantId),
-      supabase.from("funcao_pops").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds).neq("status", "desatualizado"),
-      supabase.from("funcao_conteudos").select("*").eq("tenant_id", tenantId),
+      supabase.from("funcao_indicadores").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
     ]);
 
     const atividades = atividadesRes.data || [];
     const competencias = competenciasRes.data || [];
     const epis = episRes.data || [];
     const responsabilidades = responsabilidadesRes.data || [];
-    const pops = popsRes.data || [];
-    const conteudos = conteudosRes.data || [];
+    const indicadores = indicadoresRes.data || [];
 
     // Build per-cargo sections
     const cargoSections = cargos.map((cargo: any) => {
       const cargoAtividades = atividades.filter((a: any) => a.cargo_id === cargo.id);
       const cargoCompetencias = competencias.filter((c: any) => c.cargo_id === cargo.id);
       const cargoEpis = epis.filter((e: any) => e.cargo_id === cargo.id);
-      const cargoPops = pops.filter((p: any) => p.cargo_id === cargo.id);
+      const cargoIndicadores = indicadores.filter((i: any) => i.cargo_id === cargo.id);
 
       const atividadeIds = cargoAtividades.map((a: any) => a.id);
       const cargoResponsabilidades = responsabilidades.filter((r: any) => atividadeIds.includes(r.atividade_id));
-      const cargoConteudos = conteudos.filter((c: any) => atividadeIds.includes(c.atividade_id));
 
-      // Atividades com responsabilidades, POPs e conteúdos vinculados
+      // Atividades resumidas (SEM passo a passo, SEM POPs)
       const atividadesText = cargoAtividades.map((a: any) => {
         const resp = cargoResponsabilidades.find((r: any) => r.atividade_id === a.id);
-        const pop = cargoPops.find((p: any) => p.atividade_id === a.id);
-        const atConteudos = cargoConteudos.filter((c: any) => c.atividade_id === a.id);
 
         let text = `  - ${a.nome} (Frequência: ${a.frequencia}, Complexidade: ${a.complexidade}, Classificação: ${a.classificacao})`;
         if (a.descricao) text += `\n    Descrição: ${a.descricao}`;
         if (resp?.responsavel_direto) text += `\n    Responsável Direto: ${resp.responsavel_direto}`;
-        if (resp?.consequencia_erro) text += `\n    Consequência de Erro: ${resp.consequencia_erro}`;
-        if (resp?.ferramentas) text += `\n    Ferramentas/Recursos: ${resp.ferramentas}`;
         if (resp?.interfaces) text += `\n    Interfaces: ${resp.interfaces}`;
-
-        // POP vinculado
-        if (pop) {
-          text += `\n    📋 POP: ${pop.codigo || "S/C"} — ${pop.titulo} (Status: ${pop.status})`;
-          if (pop.objetivo) text += `\n      Objetivo: ${pop.objetivo}`;
-          if (pop.materiais) text += `\n      Materiais: ${pop.materiais}`;
-          if (pop.etapas) text += `\n      Etapas: ${pop.etapas}`;
-          if (pop.observacoes) text += `\n      Observações: ${pop.observacoes}`;
-          if (pop.pontos_atencao) text += `\n      Pontos de Atenção: ${pop.pontos_atencao}`;
-        }
-
-        // Conteúdos de treinamento vinculados
-        if (atConteudos.length > 0) {
-          text += `\n    📚 Materiais de Treinamento (${atConteudos.length}):`;
-          atConteudos.forEach((c: any) => {
-            text += `\n      - [${c.tipo || "material"}] ${c.titulo}${c.url ? ` (${c.url})` : ""}${c.descricao ? ` — ${c.descricao}` : ""}`;
-          });
-        }
 
         return text;
       }).join("\n\n") || "  (nenhuma atividade cadastrada)";
@@ -141,94 +116,103 @@ Deno.serve(async (req) => {
       const competenciasText = `  Técnicas (${compTecnicas.length}):\n${formatComp(compTecnicas)}\n  Comportamentais (${compComportamentais.length}):\n${formatComp(compComportamentais)}\n  Cognitivas (${compCognitivas.length}):\n${formatComp(compCognitivas)}`;
 
       const episText = cargoEpis.map((e: any) =>
-        `  - ${e.epi_tipo_nome || "EPI"} (${e.obrigatoriedade})${e.epi_tipo_categoria ? ` — Categoria: ${e.epi_tipo_categoria}` : ""}${e.conteudo_treinamento ? ` | Treinamento: ${e.conteudo_treinamento}` : ""}`
+        `  - ${e.epi_tipo_nome || "EPI"} (${e.obrigatoriedade})${e.epi_tipo_categoria ? ` — Categoria: ${e.epi_tipo_categoria}` : ""}`
       ).join("\n") || "  (nenhum EPI vinculado)";
 
-      // Resumo POPs
-      const popsText = cargoPops.length > 0
-        ? cargoPops.map((p: any) => `  - ${p.codigo || "S/C"}: ${p.titulo} (Atividade: ${cargoAtividades.find((a: any) => a.id === p.atividade_id)?.nome || "N/A"}, Status: ${p.status})`).join("\n")
-        : "  (nenhum POP cadastrado)";
+      // Indicadores
+      const indicadoresText = cargoIndicadores.length > 0
+        ? cargoIndicadores.map((i: any) =>
+          `  - ${i.nome}${i.meta ? ` | Meta: ${i.meta}` : ""}${i.periodicidade ? ` | Periodicidade: ${i.periodicidade}` : ""}${i.descricao ? ` — ${i.descricao}` : ""}`
+        ).join("\n")
+        : "  (nenhum indicador definido)";
+
+      // Interfaces consolidadas
+      const interfacesSet = new Set<string>();
+      cargoResponsabilidades.forEach((r: any) => {
+        if (r.interfaces) {
+          r.interfaces.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => interfacesSet.add(s));
+        }
+      });
+      const interfacesText = interfacesSet.size > 0
+        ? Array.from(interfacesSet).map(i => `  - ${i}`).join("\n")
+        : "  (nenhuma interface definida)";
 
       return `
 ══════════════════════════════════════════════════════
 FUNÇÃO: ${cargo.nome}${cargo.nivel ? ` (Nível: ${cargo.nivel})` : ""}
 ══════════════════════════════════════════════════════
 ${cargo.descricao ? `Descrição: ${cargo.descricao}` : ""}
-${cargo.responsabilidade ? `\nRESPONSABILIDADE DA FUNÇÃO:\n${cargo.responsabilidade}` : ""}
+${cargo.responsabilidade ? `\nRESPONSABILIDADE & ESCOPO:\n${cargo.responsabilidade}` : ""}
 
-ATIVIDADES E PROCEDIMENTOS (${cargoAtividades.length}):
+ATIVIDADES (${cargoAtividades.length}):
 ${atividadesText}
 
 COMPETÊNCIAS (${cargoCompetencias.length}):
 ${competenciasText}
 
-EPIs E TREINAMENTO (${cargoEpis.length}):
-${episText}
+INDICADORES DE DESEMPENHO (${cargoIndicadores.length}):
+${indicadoresText}
 
-POPs - PROCEDIMENTOS OPERACIONAIS PADRÃO (${cargoPops.length}):
-${popsText}`;
+INTERFACES (${interfacesSet.size}):
+${interfacesText}
+
+EPIs (${cargoEpis.length}):
+${episText}`;
     }).join("\n\n");
 
     const isGlobal = !cargo_ids || cargo_ids.length === 0 || cargo_ids.length > 1;
     const tituloManual = isGlobal
-      ? `Manual de Funções e Competências — ${nomeEmpresa}`
+      ? `Manual de Funções — ${nomeEmpresa}`
       : `Manual da Função: ${cargos[0].nome} — ${nomeEmpresa}`;
 
-    const totalPops = pops.length;
-    const totalConteudos = conteudos.filter((c: any) => {
-      const atIds = atividades.filter((a: any) => cargoIds.includes(a.cargo_id)).map((a: any) => a.id);
-      return atIds.includes(c.atividade_id);
-    }).length;
-
-    const prompt = `Você é um consultor sênior de RH e Gestão de Pessoas. Com base nos dados abaixo, gere um MANUAL DE FUNÇÕES E COMPETÊNCIAS completo, profissional e visualmente rico em HTML.
+    const prompt = `Você é um consultor sênior de RH e Gestão de Pessoas. Com base nos dados abaixo, gere um MANUAL DE FUNÇÕES conciso, profissional e visualmente rico em HTML.
 
 ${companyContext}
 
 TÍTULO: ${tituloManual}
 EMPRESA: ${nomeEmpresa}
 TOTAL DE FUNÇÕES: ${cargos.length}
-TOTAL DE POPs: ${totalPops}
-TOTAL DE MATERIAIS DE TREINAMENTO: ${totalConteudos}
 
 ${cargoSections}
 
 INSTRUÇÕES OBRIGATÓRIAS:
 
-1. O manual DEVE conter:
+1. O manual DEVE conter APENAS:
    - Capa com título "${tituloManual}" e data de geração
    - Sumário com links para cada função
-   - Para CADA função, uma seção completa com:
+   - Para CADA função, uma seção com:
      * Nome e nível do cargo em header destacado
-     * Descrição da função (expanda se necessário com contexto profissional)
-     * Se houver RESPONSABILIDADE DA FUNÇÃO, incluir seção destacada "Responsabilidade & Escopo" logo após a descrição, com caixa visual diferenciada
-     * Tabela de Atividades com colunas: Nome, Frequência, Complexidade, Classificação, Responsável, Ferramentas, Consequência de Erro
-     * Para cada atividade que tenha POP vinculado, incluir uma subseção "Procedimento Operacional Padrão" com objetivo, materiais, etapas e pontos de atenção formatados como checklist visual
-     * Se houver materiais de treinamento, incluir uma subseção "Materiais de Referência" com links e descrições
-     * Cards de Competências organizados por tipo (Técnica, Comportamental, Cognitiva) com ícones coloridos
-     * Lista de EPIs obrigatórios/recomendados com indicação visual de obrigatoriedade e informações de treinamento
-     * Matriz de Responsabilidade resumida (quem executa, interfaces, ferramentas)
-   ${isGlobal ? "- Quadro comparativo consolidado no final (resumo de todas as funções com contagem de atividades, competências, EPIs e POPs)" : ""}
+     * Descrição do cargo (expanda brevemente se necessário)
+     * Responsabilidade & Escopo (se houver), em caixa visual destacada
+     * Tabela de Atividades RESUMIDA com colunas: Nome, Frequência, Complexidade, Classificação, Responsável
+     * Cards de Competências organizados por tipo (Técnica, Comportamental, Cognitiva) com ícones
+     * Indicadores de Desempenho em tabela ou cards
+     * Interfaces (áreas/cargos com os quais interage)
+     * EPIs obrigatórios/recomendados
+   ${isGlobal ? "- Quadro comparativo consolidado no final (resumo de todas as funções)" : ""}
    - Rodapé com data de geração e nome da empresa
 
-2. FORMATAÇÃO HTML:
+2. NÃO INCLUIR:
+   - POPs (Procedimentos Operacionais Padrão)
+   - Passos detalhados ou etapas de execução
+   - Materiais de treinamento ou links de conteúdo
+   - Checklists de procedimento
+   - O manual deve ser CONCISO e OBJETIVO
+
+3. FORMATAÇÃO HTML:
    - CSS inline em cada elemento
    - Paleta: primário #1e3a5f, secundário #2d8a6e, accent #f4a261, fundo #f8f9fa, texto #1a1a2e
    - Fonte: font-family: 'Segoe UI', 'Inter', system-ui, sans-serif
    - Cards com border-radius: 12px, box-shadow, padding 24px+
    - Tabelas estilizadas com cabeçalho colorido e linhas zebradas
    - Badges coloridos para frequência, complexidade e tipo de competência
-   - POPs devem ter destaque visual especial: borda lateral colorida, ícone 📋, etapas numeradas
-   - Materiais de treinamento com ícone 📚 e links clicáveis
-   - Ícones emoji relevantes (📋 🎯 🧠 🛡️ ⚙️ 👤 📊 📚 ⚠️ ✅)
+   - Ícones emoji relevantes (🎯 🧠 🛡️ ⚙️ 👤 📊)
    - Divisores visuais entre funções
    - Tamanho mínimo: 15px corpo, 28px títulos, 42px capa
-   - Espaçamento generoso: margin 40px+, padding 32px+
    - @media print para impressão
 
-3. HTML SELF-CONTAINED, sem referências externas, começando com <!DOCTYPE html>.
-4. Aspecto de manual corporativo premium.
-5. Expanda descrições curtas com contexto profissional.
-6. Se um POP tiver etapas, formate como lista numerada com checkbox visual (□).
+4. HTML SELF-CONTAINED, sem referências externas, começando com <!DOCTYPE html>.
+5. Aspecto de manual corporativo premium e conciso.
 
 Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
 
@@ -244,7 +228,7 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "Você é um designer e consultor de RH. Gere apenas HTML completo e profissional para manuais de funções. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
+          { role: "system", content: "Você é um designer e consultor de RH. Gere apenas HTML completo e profissional para manuais de funções. O manual deve ser CONCISO — sem POPs, sem passos detalhados, sem materiais de treinamento. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
           { role: "user", content: prompt }
         ],
       }),
