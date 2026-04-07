@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, BarChart3, Loader2, Target } from "lucide-react";
+import { Plus, Trash2, BarChart3, Loader2, Target, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface IndicadoresSectionProps {
@@ -37,6 +37,7 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [meta, setMeta] = useState("");
@@ -58,6 +59,24 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
     enabled: !!tenantId,
   });
 
+  const resetForm = () => {
+    setNome("");
+    setDescricao("");
+    setMeta("");
+    setPeriodicidade("mensal");
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  const startEdit = (ind: Indicador) => {
+    setEditingId(ind.id);
+    setNome(ind.nome);
+    setDescricao(ind.descricao || "");
+    setMeta(ind.meta || "");
+    setPeriodicidade(ind.periodicidade);
+    setShowForm(true);
+  };
+
   const addMutation = useMutation({
     mutationFn: async () => {
       if (!tenantId || !nome.trim()) throw new Error("Preencha o nome");
@@ -73,12 +92,29 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["funcao_indicadores", cargoId] });
-      setNome("");
-      setDescricao("");
-      setMeta("");
-      setPeriodicidade("mensal");
-      setShowForm(false);
+      resetForm();
       toast.success("Indicador adicionado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingId || !nome.trim()) throw new Error("Preencha o nome");
+      const { error } = await supabase.from("funcao_indicadores" as never)
+        .update({
+          nome: nome.trim(),
+          descricao: descricao.trim() || null,
+          meta: meta.trim() || null,
+          periodicidade,
+        } as never)
+        .eq("id", editingId) as { error: Error | null };
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["funcao_indicadores", cargoId] });
+      resetForm();
+      toast.success("Indicador atualizado");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -95,6 +131,16 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const handleSave = () => {
+    if (editingId) {
+      updateMutation.mutate();
+    } else {
+      addMutation.mutate();
+    }
+  };
+
+  const isSaving = addMutation.isPending || updateMutation.isPending;
+
   const periodicidadeLabel = (v: string) =>
     periodicidadeOptions.find((o) => o.value === v)?.label || v;
 
@@ -107,8 +153,8 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
           <BarChart3 className="w-5 h-5 text-primary" />
           Indicadores de Desempenho ({indicadores.length})
         </h3>
-        <Button size="sm" variant="outline" onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 mr-1" /> Adicionar
+        <Button size="sm" variant="outline" onClick={() => { if (showForm) resetForm(); else setShowForm(true); }}>
+          {showForm ? <><X className="w-4 h-4 mr-1" /> Cancelar</> : <><Plus className="w-4 h-4 mr-1" /> Adicionar</>}
         </Button>
       </div>
 
@@ -129,10 +175,10 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
               </Select>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button size="sm" onClick={() => addMutation.mutate()} disabled={addMutation.isPending || !nome.trim()}>
-                {addMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-                Salvar
+              <Button variant="ghost" size="sm" onClick={resetForm}>Cancelar</Button>
+              <Button size="sm" onClick={handleSave} disabled={isSaving || !nome.trim()}>
+                {isSaving && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+                {editingId ? "Atualizar" : "Salvar"}
               </Button>
             </div>
           </CardContent>
@@ -157,14 +203,24 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
                     <Badge variant="secondary" className="text-xs">{periodicidadeLabel(ind.periodicidade)}</Badge>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                  onClick={() => deleteMutation.mutate(ind.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => startEdit(ind)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => deleteMutation.mutate(ind.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

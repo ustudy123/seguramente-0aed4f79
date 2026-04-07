@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, ExternalLink, GraduationCap, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, ExternalLink, GraduationCap, Sparkles, Loader2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,12 +26,13 @@ interface CompetenciasSectionProps {
 
 export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSectionProps) {
   const {
-    competencias, criarCompetencia, excluirCompetencia,
+    competencias, criarCompetencia, atualizarCompetencia, excluirCompetencia,
     competenciaRecursos, criarCompetenciaRecurso, excluirCompetenciaRecurso,
   } = useAprendizado(cargoId);
   const { tenantId } = useAuth();
 
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState("tecnica");
   const [descricao, setDescricao] = useState("");
@@ -39,10 +40,30 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
 
   const [recursoForm, setRecursoForm] = useState<{ compId: string; tipo: string; titulo: string; url: string } | null>(null);
 
-  const handleCreate = async () => {
+  const resetForm = () => {
+    setNome("");
+    setTipo("tecnica");
+    setDescricao("");
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  const startEdit = (comp: { id: string; nome: string; tipo: string; descricao?: string | null }) => {
+    setEditingId(comp.id);
+    setNome(comp.nome);
+    setTipo(comp.tipo);
+    setDescricao(comp.descricao || "");
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
     if (!nome.trim()) return;
-    await criarCompetencia({ nome, tipo, descricao: descricao || undefined });
-    setNome(""); setDescricao(""); setShowForm(false);
+    if (editingId) {
+      await atualizarCompetencia({ id: editingId, nome, tipo, descricao: descricao || undefined });
+    } else {
+      await criarCompetencia({ nome, tipo, descricao: descricao || undefined });
+    }
+    resetForm();
   };
 
   const handleAiSuggestDescription = async () => {
@@ -94,8 +115,8 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
         <div className="flex gap-2">
           <AudioCompetenciasImport funcaoNome={funcaoNome} onImportar={handleImportCompetencias} />
           <TextoCompetenciasImport funcaoNome={funcaoNome} onImportar={handleImportCompetencias} />
-          <Button size="sm" onClick={() => setShowForm(!showForm)}>
-            <Plus className="w-4 h-4 mr-1" /> Competência
+          <Button size="sm" onClick={() => { if (showForm) resetForm(); else setShowForm(true); }}>
+            {showForm ? <><X className="w-4 h-4 mr-1" /> Cancelar</> : <><Plus className="w-4 h-4 mr-1" /> Competência</>}
           </Button>
         </div>
       </div>
@@ -142,8 +163,10 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button size="sm" onClick={handleCreate} disabled={!nome.trim()}>Salvar</Button>
+              <Button variant="ghost" size="sm" onClick={resetForm}>Cancelar</Button>
+              <Button size="sm" onClick={handleSave} disabled={!nome.trim()}>
+                {editingId ? "Atualizar" : "Salvar"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -174,9 +197,14 @@ export function CompetenciasSection({ cargoId, funcaoNome }: CompetenciasSection
                         <span className="font-medium text-sm">{comp.nome}</span>
                         <Badge className={`text-xs ${TIPO_COLORS[comp.tipo]}`}>{TIPO_LABELS[comp.tipo]}</Badge>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => excluirCompetencia(comp.id)}>
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(comp)}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => excluirCompetencia(comp.id)}>
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                     {comp.descricao && <p className="text-xs text-muted-foreground">{comp.descricao}</p>}
 
