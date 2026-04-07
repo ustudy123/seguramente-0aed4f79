@@ -60,7 +60,7 @@ import { PastaDocumentosList } from "@/components/documentos/PastaDocumentosList
 import { CreatePastaModal } from "@/components/documentos/CreatePastaModal";
 import { DocumentoAuditLog } from "@/components/documentos/DocumentoAuditLog";
 import { DocumentoUploadForm } from "@/components/documentos/DocumentoUploadForm";
-import { GerarEstruturaWizard, type WizardParams } from "@/components/documentos/GerarEstruturaWizard";
+
 import { MapaConformidade } from "@/components/documentos/MapaConformidade";
 import { RadarGovernanca } from "@/components/documentos/RadarGovernanca";
 import { PDCADashboard } from "@/components/documentos/PDCADashboard";
@@ -87,13 +87,7 @@ const Documentos = () => {
   const [pastaToRename, setPastaToRename] = useState<DocumentoPastaNode | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renaming, setRenaming] = useState(false);
-  const [showWizard, setShowWizard] = useState(false);
-  // Key is per-empresa to correctly detect when a company has no structure yet
-  const wizardDismissedKey = tenantId && empresaAtivaId
-    ? `wizard_estrutura_dismissed_${tenantId}_${empresaAtivaId}`
-    : tenantId
-    ? `wizard_estrutura_dismissed_${tenantId}`
-    : null;
+  const [autoInitDone, setAutoInitDone] = useState<string | null>(null);
   const [dragContext, setDragContext] = useState<{
     documentoId: string;
     documentoNome: string;
@@ -151,28 +145,15 @@ const Documentos = () => {
     }
   }, [needsSync, syncing, syncColaboradores]);
 
-  // Reset wizard state when empresa changes so check runs fresh
+  // Auto-gerar estrutura padrão silenciosamente quando não há pastas
   useEffect(() => {
-    setShowWizard(false);
-  }, [empresaAtivaId]);
-
-  // Auto-abrir wizard quando não há estrutura de pastas para esta empresa
-  useEffect(() => {
-    // Aguardar tenantId e carregamento completo antes de qualquer decisão
     if (!tenantId || loading || initializing) return;
-    // Se já tem estrutura, marcar como dispensado e nunca mostrar automaticamente
-    if (pastas.length > 0 || tree.length > 0) {
-      if (wizardDismissedKey) {
-        localStorage.setItem(wizardDismissedKey, "1");
-      }
-      return;
-    }
-    // Só mostra se nunca foi dispensado para esta empresa
-    if (wizardDismissedKey && localStorage.getItem(wizardDismissedKey)) return;
-    // Pequeno delay extra para garantir que os dados foram totalmente carregados
-    const timer = setTimeout(() => setShowWizard(true), 1200);
-    return () => clearTimeout(timer);
-  }, [tenantId, loading, pastas.length, tree.length, initializing, wizardDismissedKey, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (pastas.length > 0 || tree.length > 0) return;
+    const initKey = `${tenantId}_${empresaAtivaId || 'default'}`;
+    if (autoInitDone === initKey) return;
+    setAutoInitDone(initKey);
+    initializeDefaultStructure().catch(() => {});
+  }, [tenantId, loading, pastas.length, tree.length, initializing, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
     setUploadForPastaId(pastaId);
@@ -408,17 +389,6 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
     });
   };
 
-  const handleInitialize = async (params: WizardParams) => {
-    try {
-      await initializeDefaultStructure(params);
-      // Mark wizard as permanently dismissed for this tenant
-      if (wizardDismissedKey) {
-        localStorage.setItem(wizardDismissedKey, "1");
-      }
-    } catch (error) {
-      // Error handled in hook
-    }
-  };
 
   const showEmptyState = !loading && pastas.length === 0;
 
@@ -436,10 +406,6 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           <p className="text-muted-foreground">Gestão hierárquica de arquivos e prontuários</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowWizard(true)} disabled={initializing}>
-            <Sparkles className="w-4 h-4 mr-2" />
-            Gerar Estrutura Padrão
-          </Button>
           <Button variant="outline" onClick={() => setShowCreatePasta(true)}>
             <FolderPlus className="w-4 h-4 mr-2" />
             Nova Pasta
@@ -544,33 +510,10 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center justify-center h-full bg-card rounded-xl border border-border border-dashed p-12"
             >
-              <div className="relative mb-6">
-                <Building2 className="w-16 h-16 text-muted-foreground/30" />
-                <div className="absolute -top-1 -right-1 bg-primary rounded-full p-1">
-                  <Sparkles className="w-4 h-4 text-primary-foreground" />
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Preparando sua estrutura…</h3>
-              <p className="text-muted-foreground text-center max-w-md mb-6">
-                O assistente está abrindo para configurar automaticamente suas pastas com base no perfil da empresa.
-                Revise os dados e confirme para gerar a estrutura completa.
-              </p>
-              <Button
-                size="lg"
-                onClick={() => setShowWizard(true)}
-                disabled={initializing}
-                variant="outline"
-                className="gap-2"
-              >
-                {initializing ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-5 h-5 text-primary" />
-                )}
-                Abrir assistente de estrutura
-              </Button>
-              <p className="text-xs text-muted-foreground mt-4">
-                8 categorias: Governança, Processos, Riscos, SST, Pessoas, Incidentes, Auditorias e mais
+              <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Gerando estrutura de pastas…</h3>
+              <p className="text-muted-foreground text-center max-w-md">
+                A estrutura padrão está sendo criada automaticamente para esta empresa.
               </p>
             </motion.div>
           ) : (
@@ -749,13 +692,6 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
       </Tabs>
 
       {/* Modals */}
-      <GerarEstruturaWizard
-        open={showWizard}
-        onOpenChange={setShowWizard}
-        onGerar={handleInitialize}
-        gerando={initializing}
-        jaTemEstrutura={pastas.length > 0}
-      />
 
       <DocumentoUploadForm
         open={showUploadForm}
