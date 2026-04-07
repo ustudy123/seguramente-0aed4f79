@@ -252,5 +252,6 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     updateObrigacao,
     deleteObrigacao,
     criarAcaoDeObrigacao,
+    cliente,
   };
 }
