@@ -260,6 +260,21 @@ export function useAprendizado(cargoId?: string) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const atualizarCompetenciaMut = useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; nome?: string; tipo?: string; descricao?: string }) => {
+      const { error } = await supabase
+        .from("funcao_competencias" as never)
+        .update(updates as never)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["funcao_competencias", cargoId] });
+      toast.success("Competência atualizada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const excluirCompetenciaMut = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("funcao_competencias" as never).delete().eq("id", id);
@@ -557,6 +572,7 @@ export function useAprendizado(cargoId?: string) {
     competencias,
     loadingCompetencias,
     criarCompetencia: criarCompetenciaMut.mutateAsync,
+    atualizarCompetencia: atualizarCompetenciaMut.mutateAsync,
     excluirCompetencia: excluirCompetenciaMut.mutateAsync,
 
     competenciaRecursos,
