@@ -237,6 +237,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               colaboradorId: insertData.id,
               colaboradorNome: data.nome_completo,
               colaboradorCpf: cleanCpf(data.cpf),
+              empresaId: empresaAtivaId || null,
             });
           } catch { /* non-blocking */ }
         }
