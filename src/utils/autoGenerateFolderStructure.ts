@@ -1,145 +1,168 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type PastaInsert = {
-  id: string;
+interface FolderNode {
   nome: string;
   tipo: string;
   ordem: number;
   icone: string | null;
-  pasta_pai_id: string | null;
-  filial_id: string | null;
-  colaborador_id: string | null;
-  colaborador_cpf: string | null;
-  colaborador_nome: string | null;
-  ano: number | null;
-  tenant_id: string;
-  criado_por: string;
-  criado_por_nome: string | null;
-};
+  children?: FolderNode[];
+}
 
-const mk = (
-  id: string, nome: string, tipo: string, ordem: number, icone: string | null,
-  pai: string | null, tenantId: string, userId: string, userName: string | null
-): PastaInsert => ({
-  id, nome, tipo, ordem, icone, pasta_pai_id: pai,
-  filial_id: null, colaborador_id: null, colaborador_cpf: null,
-  colaborador_nome: null, ano: null, tenant_id: tenantId,
-  criado_por: userId, criado_por_nome: userName,
-});
+const STANDARD_STRUCTURE: FolderNode[] = [
+  {
+    nome: "Governança e Administração", tipo: "root", ordem: 0, icone: "Scale",
+    children: [
+      { nome: "Contrato Social e Estatuto", tipo: "categoria", ordem: 0, icone: "Building2" },
+      { nome: "Políticas e Diretrizes", tipo: "categoria", ordem: 1, icone: "Target" },
+      { nome: "Licenças e Autorizações", tipo: "categoria", ordem: 2, icone: "FileCheck" },
+      { nome: "Certidões", tipo: "categoria", ordem: 3, icone: "Award" },
+      { nome: "Registros em Conselhos", tipo: "categoria", ordem: 4, icone: "Shield" },
+    ],
+  },
+  {
+    nome: "Sistema de Gestão", tipo: "root", ordem: 1, icone: "BookOpen",
+    children: [
+      { nome: "Procedimentos e Instruções de Trabalho", tipo: "categoria", ordem: 0, icone: "FileText" },
+      { nome: "Registros da Qualidade", tipo: "categoria", ordem: 1, icone: "CheckSquare" },
+    ],
+  },
+  {
+    nome: "Gestão de Riscos", tipo: "root", ordem: 2, icone: "AlertTriangle",
+    children: [
+      { nome: "Inventário de Riscos", tipo: "categoria", ordem: 0, icone: "List" },
+      { nome: "Análise de Riscos (APR / HAZOP)", tipo: "categoria", ordem: 1, icone: "Search" },
+      { nome: "Planos de Emergência", tipo: "categoria", ordem: 2, icone: "ShieldAlert" },
+    ],
+  },
+  {
+    nome: "SST", tipo: "root", ordem: 3, icone: "Shield",
+    children: [
+      {
+        nome: "Programas Legais", tipo: "categoria", ordem: 0, icone: "FileCheck",
+        children: [
+          { nome: "PGR", tipo: "custom", ordem: 0, icone: null },
+          { nome: "PCMSO", tipo: "custom", ordem: 1, icone: null },
+          { nome: "LTCAT", tipo: "custom", ordem: 2, icone: null },
+        ],
+      },
+      {
+        nome: "Treinamentos", tipo: "categoria", ordem: 1, icone: "GraduationCap",
+        children: [
+          { nome: "NR-01 — Disposições Gerais e Gerenciamento de Riscos", tipo: "custom", ordem: 0, icone: null },
+          { nome: "NR-05 — CIPA", tipo: "custom", ordem: 1, icone: null },
+          { nome: "NR-06 — EPIs", tipo: "custom", ordem: 2, icone: null },
+        ],
+      },
+      {
+        nome: "Registros e Evidências", tipo: "categoria", ordem: 2, icone: "ClipboardList",
+        children: [
+          { nome: "CAT — Comunicação de Acidente", tipo: "custom", ordem: 0, icone: null },
+          { nome: "Inspeções de Segurança", tipo: "custom", ordem: 1, icone: null },
+          { nome: "Permissões de Trabalho", tipo: "custom", ordem: 2, icone: null },
+        ],
+      },
+    ],
+  },
+  { nome: "Gestão de Pessoas", tipo: "root", ordem: 5, icone: "Users" },
+  {
+    nome: "Investigação de Incidentes", tipo: "root", ordem: 6, icone: "SearchX",
+    children: [
+      { nome: "Acidentes de Trabalho", tipo: "categoria", ordem: 0, icone: null },
+      { nome: "Quase Acidentes", tipo: "categoria", ordem: 1, icone: null },
+      { nome: "Não Conformidades", tipo: "categoria", ordem: 2, icone: null },
+    ],
+  },
+  {
+    nome: "Auditorias e Melhoria Contínua", tipo: "root", ordem: 7, icone: "CheckSquare",
+    children: [
+      { nome: "Auditorias Internas", tipo: "categoria", ordem: 0, icone: "ClipboardCheck" },
+      { nome: "Auditorias Externas e Certificações", tipo: "categoria", ordem: 1, icone: "Award" },
+      { nome: "Ações Corretivas e Preventivas", tipo: "categoria", ordem: 2, icone: "RefreshCw" },
+    ],
+  },
+];
 
 export async function autoGenerateFolderStructure(
   tenantId: string,
   userId: string,
   userName: string | null
 ) {
-  const pastasToCreate: PastaInsert[] = [];
-  const m = (id: string, nome: string, tipo: string, ordem: number, icone: string | null, pai: string | null) =>
-    mk(id, nome, tipo, ordem, icone, pai, tenantId, userId, userName);
-
-  // 1. GOVERNANÇA E ADMINISTRAÇÃO
-  const govId = crypto.randomUUID();
-  pastasToCreate.push(m(govId, "Governança e Administração", "root", 0, "Scale", null));
-  [
-    ["Contrato Social e Estatuto", "Building2"],
-    ["Políticas e Diretrizes", "Target"],
-    ["Licenças e Autorizações", "FileCheck"],
-    ["Certidões", "Award"],
-    ["Registros em Conselhos", "Shield"],
-  ].forEach(([nome, icone], i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), nome, "categoria", i, icone, govId));
-  });
-
-  // 2. SISTEMA DE GESTÃO
-  const sgId = crypto.randomUUID();
-  pastasToCreate.push(m(sgId, "Sistema de Gestão", "root", 1, "BookOpen", null));
-  [
-    ["Procedimentos e Instruções de Trabalho", "FileText"],
-    ["Registros da Qualidade", "CheckSquare"],
-  ].forEach(([nome, icone], i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), nome, "categoria", i, icone, sgId));
-  });
-
-  // 3. GESTÃO DE RISCOS
-  const riscosId = crypto.randomUUID();
-  pastasToCreate.push(m(riscosId, "Gestão de Riscos", "root", 2, "AlertTriangle", null));
-  [
-    ["Inventário de Riscos", "List"],
-    ["Análise de Riscos (APR / HAZOP)", "Search"],
-    ["Planos de Emergência", "ShieldAlert"],
-  ].forEach(([nome, icone], i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), nome, "categoria", i, icone, riscosId));
-  });
-
-  // 4. SST
-  const sstId = crypto.randomUUID();
-  pastasToCreate.push(m(sstId, "SST", "root", 3, "Shield", null));
-  const sstProgramasId = crypto.randomUUID();
-  pastasToCreate.push(m(sstProgramasId, "Programas Legais", "categoria", 0, "FileCheck", sstId));
-  ["PGR", "PCMSO", "LTCAT"].forEach((n, i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), n, "custom", i, null, sstProgramasId));
-  });
-  const treiId = crypto.randomUUID();
-  pastasToCreate.push(m(treiId, "Treinamentos", "categoria", 1, "GraduationCap", sstId));
-  [
-    "NR-01 — Disposições Gerais e Gerenciamento de Riscos",
-    "NR-05 — CIPA",
-    "NR-06 — EPIs",
-  ].forEach((n, i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), n, "custom", i, null, treiId));
-  });
-  const regSSTId = crypto.randomUUID();
-  pastasToCreate.push(m(regSSTId, "Registros e Evidências", "categoria", 2, "ClipboardList", sstId));
-  ["CAT — Comunicação de Acidente", "Inspeções de Segurança", "Permissões de Trabalho"].forEach((n, i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), n, "custom", i, null, regSSTId));
-  });
-
-  // 5. GESTÃO DE PESSOAS
-  const pessoasId = crypto.randomUUID();
-  pastasToCreate.push(m(pessoasId, "Gestão de Pessoas", "root", 5, "Users", null));
-
-  // 6. INVESTIGAÇÃO DE INCIDENTES
-  const incId = crypto.randomUUID();
-  pastasToCreate.push(m(incId, "Investigação de Incidentes", "root", 6, "SearchX", null));
-  ["Acidentes de Trabalho", "Quase Acidentes", "Não Conformidades"].forEach((n, i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), n, "categoria", i, null, incId));
-  });
-
-  // 7. AUDITORIAS E MELHORIA CONTÍNUA
-  const audId = crypto.randomUUID();
-  pastasToCreate.push(m(audId, "Auditorias e Melhoria Contínua", "root", 7, "CheckSquare", null));
-  [
-    ["Auditorias Internas", "ClipboardCheck"],
-    ["Auditorias Externas e Certificações", "Award"],
-    ["Ações Corretivas e Preventivas", "RefreshCw"],
-  ].forEach(([nome, icone], i) => {
-    pastasToCreate.push(m(crypto.randomUUID(), nome, "categoria", i, icone, audId));
-  });
-
-  // Verificar pastas existentes e criar apenas as faltantes
+  // Fetch ALL existing folders for this tenant
   const { data: existentes } = await supabase
     .from("documento_pastas")
-    .select("nome, pasta_pai_id")
+    .select("id, nome, pasta_pai_id")
     .eq("tenant_id", tenantId);
 
-  const existingSet = new Set(
-    (existentes || []).map((p: { nome: string; pasta_pai_id: string | null }) =>
-      `${p.nome}||${p.pasta_pai_id ?? "null"}`
-    )
-  );
+  const existing = existentes || [];
 
-  const novas = pastasToCreate.filter((p) => {
-    const key = `${p.nome}||${p.pasta_pai_id ?? "null"}`;
-    return !existingSet.has(key);
-  });
+  // Build a lookup: for a given (nome, pasta_pai_id) -> existing id
+  const existingMap = new Map<string, string>();
+  for (const p of existing) {
+    existingMap.set(`${p.nome}||${p.pasta_pai_id ?? "null"}`, p.id);
+  }
 
-  if (novas.length === 0) return 0;
+  const toInsert: Array<{
+    id: string;
+    nome: string;
+    tipo: string;
+    ordem: number;
+    icone: string | null;
+    pasta_pai_id: string | null;
+    filial_id: null;
+    colaborador_id: null;
+    colaborador_cpf: null;
+    colaborador_nome: null;
+    ano: null;
+    tenant_id: string;
+    criado_por: string;
+    criado_por_nome: string | null;
+  }> = [];
+
+  const processNode = (node: FolderNode, parentId: string | null) => {
+    const key = `${node.nome}||${parentId ?? "null"}`;
+    let folderId = existingMap.get(key);
+
+    if (!folderId) {
+      // Folder doesn't exist — create it
+      folderId = crypto.randomUUID();
+      toInsert.push({
+        id: folderId,
+        nome: node.nome,
+        tipo: node.tipo,
+        ordem: node.ordem,
+        icone: node.icone,
+        pasta_pai_id: parentId,
+        filial_id: null,
+        colaborador_id: null,
+        colaborador_cpf: null,
+        colaborador_nome: null,
+        ano: null,
+        tenant_id: tenantId,
+        criado_por: userId,
+        criado_por_nome: userName,
+      });
+    }
+
+    // Process children using the resolved (existing or new) folderId
+    if (node.children) {
+      for (const child of node.children) {
+        processNode(child, folderId);
+      }
+    }
+  };
+
+  for (const root of STANDARD_STRUCTURE) {
+    processNode(root, null);
+  }
+
+  if (toInsert.length === 0) return 0;
 
   const chunkSize = 100;
-  for (let i = 0; i < novas.length; i += chunkSize) {
-    const chunk = novas.slice(i, i + chunkSize);
+  for (let i = 0; i < toInsert.length; i += chunkSize) {
+    const chunk = toInsert.slice(i, i + chunkSize);
     const { error } = await supabase.from("documento_pastas").insert(chunk);
     if (error) throw error;
   }
 
-  return novas.length;
+  return toInsert.length;
 }
