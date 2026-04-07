@@ -366,6 +366,11 @@ export default function Filiais() {
                   <option value="estabelecimento">Estabelecimento</option>
                   <option value="obra">Obra</option>
                 </select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {formData.tipo === "estabelecimento" 
+                    ? "Locais fixos (Sede, Filiais, Depósitos)." 
+                    : "Locais temporários (Canteiros, Reformas)."}
+                </p>
               </div>
               {formData.tipo === "obra" && (
                 <div className="space-y-2">
