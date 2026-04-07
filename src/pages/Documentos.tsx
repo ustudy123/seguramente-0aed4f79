@@ -11,8 +11,6 @@ import {
   FolderPlus,
   Loader2,
   AlertCircle,
-  Building2,
-  Sparkles,
   ShieldCheck,
   Radar,
   RefreshCw,
