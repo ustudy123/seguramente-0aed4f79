@@ -245,8 +245,8 @@ const Pendencias = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge 
-                          variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'warning' : 'secondary'}
-                          className="hidden sm:inline-flex"
+                          variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'secondary' : 'outline'}
+                          className={cn("hidden sm:inline-flex", task.priority === 'medium' && "bg-warning text-warning-foreground hover:bg-warning/80")}
                         >
                           {task.priority === 'high' ? 'Urgente' : task.priority === 'medium' ? 'Médio' : 'Baixo'}
                         </Badge>
