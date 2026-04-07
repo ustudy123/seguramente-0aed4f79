@@ -10,6 +10,7 @@ import type {
 } from "@/types/documentoPasta";
 import { useFiliais, type Filial } from "./useCadastros";
 import { useColaboradores, type Colaborador } from "./useColaboradores";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { autoGenerateFolderStructure } from "@/utils/autoGenerateFolderStructure";
 import { criarPastaColaborador, criarPastasColaboradoresEmLote } from "@/utils/criarPastaColaborador";
 
@@ -68,19 +69,26 @@ export function useDocumentoPastas() {
   const { tenantId, user, profile } = useAuth();
   const { filiais } = useFiliais();
   const { colaboradores } = useColaboradores();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const queryClient = useQueryClient();
 
   // Buscar pastas
   const { data: pastas = [], isLoading: loadingPastas, refetch: refetchPastas } = useQuery({
-    queryKey: ["documento-pastas", tenantId],
+    queryKey: ["documento-pastas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<DocumentoPasta[]> => {
       if (!tenantId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("documento_pastas")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("ordem", { ascending: true });
+
+      if (empresaAtivaId) {
+        query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data || []) as DocumentoPasta[];
@@ -90,15 +98,21 @@ export function useDocumentoPastas() {
 
   // Buscar documentos com pasta_id
   const { data: documentos = [], isLoading: loadingDocs } = useQuery({
-    queryKey: ["documentos-com-pasta", tenantId],
+    queryKey: ["documentos-com-pasta", tenantId, empresaAtivaId],
     queryFn: async (): Promise<(DocumentoItem & { pasta_id: string | null; colaborador_id: string | null; colaborador_nome: string })[]> => {
       if (!tenantId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("documentos")
         .select("id, nome_original, tipo, tamanho, status, data_validade, storage_path, created_at, pasta_id, colaborador_id, colaborador_nome")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
+
+      if (empresaAtivaId) {
+        query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -115,46 +129,6 @@ export function useDocumentoPastas() {
         colaborador_id: d.colaborador_id,
         colaborador_nome: d.colaborador_nome,
       }));
-
-      let reparouDocumentosOrfaos = false;
-
-      for (const doc of documentosMapeados) {
-        if (!doc.colaborador_id || doc.pasta_id) continue;
-
-        const pastaColaboradorId = await criarPastaColaborador({
-          tenantId,
-          colaboradorId: doc.colaborador_id,
-          colaboradorNome: doc.colaborador_nome || "Colaborador",
-          colaboradorCpf: null,
-        });
-
-        if (!pastaColaboradorId) continue;
-
-        const nomeSubpasta = inferirSubpastaColaboradorPorTipo(doc.tipo);
-        const { data: subpasta } = await supabase
-          .from("documento_pastas")
-          .select("id")
-          .eq("tenant_id", tenantId)
-          .eq("pasta_pai_id", pastaColaboradorId)
-          .eq("nome", nomeSubpasta)
-          .maybeSingle();
-
-        const pastaDestinoId = subpasta?.id || pastaColaboradorId;
-
-        const { error: repairError } = await supabase
-          .from("documentos")
-          .update({ pasta_id: pastaDestinoId })
-          .eq("id", doc.id);
-
-        if (!repairError) {
-          doc.pasta_id = pastaDestinoId;
-          reparouDocumentosOrfaos = true;
-        }
-      }
-
-      if (reparouDocumentosOrfaos) {
-        queryClient.invalidateQueries({ queryKey: ["documento-pastas"] });
-      }
 
       return documentosMapeados;
     },
@@ -303,6 +277,7 @@ export function useDocumentoPastas() {
           icone: data.icone || null,
           cor: data.cor || null,
           tenant_id: tenantId,
+          empresa_id: empresaAtivaId || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || null,
         })
@@ -433,7 +408,7 @@ export function useDocumentoPastas() {
       atividadeEconomica?: string;
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
-      return autoGenerateFolderStructure(tenantId, user.id, profile?.nome_completo || null);
+      return autoGenerateFolderStructure(tenantId, user.id, profile?.nome_completo || null, empresaAtivaId);
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ["documento-pastas"] });
@@ -461,6 +436,7 @@ export function useDocumentoPastas() {
       .from("documento_pastas")
       .insert({
         tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
         nome: monthNames[month - 1],
         tipo: "mes",
         pasta_pai_id: parentPastaId,
