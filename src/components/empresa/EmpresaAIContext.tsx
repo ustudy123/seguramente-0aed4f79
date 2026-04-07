@@ -38,12 +38,18 @@ export function EmpresaAIContext({ data, onChange }: EmpresaAIContextProps) {
             id="ai_context"
             placeholder="Ex: Empresa focada em inovação no setor têxtil, com forte cultura de segurança e sustentabilidade. Atualmente revisando processos de NR-12 e buscando certificação ISO 45001. Referência interna: Manual de Conduta v2.0..."
             className="min-h-[300px] resize-y"
+            maxLength={3000}
             value={data.ai_context || ''}
             onChange={(e) => onChange({ ai_context: e.target.value })}
           />
-          <p className="text-xs text-muted-foreground">
-            Dica: Inclua informações sobre o setor, porte, objetivos estratégicos, referências a documentos internos e qualquer detalhe que ajude a I.A. a entender melhor sua empresa.
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Dica: Inclua informações sobre o setor, porte, objetivos estratégicos, referências a documentos internos e qualquer detalhe que ajude a I.A. a entender melhor sua empresa.
+            </p>
+            <span className={`text-xs shrink-0 ml-2 ${(data.ai_context?.length || 0) >= 2800 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {data.ai_context?.length || 0}/3.000
+            </span>
+          </div>
         </div>
       </div>
     </div>
