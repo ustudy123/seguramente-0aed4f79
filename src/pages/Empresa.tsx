@@ -98,7 +98,7 @@ export default function Empresa() {
           });
         }
     }
-  }, [cadastro, viewMode, cliente]);
+  }, [cadastro, viewMode, cliente, user, profile]);
 
   const handleChange = (updates: Partial<EmpresaCadastro>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
