@@ -40,6 +40,7 @@ export const DashboardPilares = () => {
         color="navy"
         delay={0.1}
         pilarIndicator="organizacao"
+        hasData={data.organizacao.cargosDefinidos > 0 || data.organizacao.departamentos > 0 || data.organizacao.admissoesAndamento > 0}
         metrics={[
           {
             label: "Funções Definidas",
