@@ -1,4 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getCompanyContext } from '../_shared/ai-helper.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
