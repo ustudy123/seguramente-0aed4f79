@@ -396,7 +396,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
         });
       });
       if (section.label === "PESSOAS") {
-        items.push({ title: "PENDÊNCIAS", path: "/pendencias", icon: ClipboardList, sectionLabel: section.label });
+        items.push({ title: "Pendências", path: "/pendencias", icon: ClipboardList, sectionLabel: section.label });
       }
     });
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
@@ -572,7 +572,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                     }
                   >
                     <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-                    {!isCollapsed && <span className="text-[13px]">PENDÊNCIAS</span>}
+                    {!isCollapsed && <span className="text-[13px]">Pendências</span>}
                   </NavLink>
                 )}
               </div>
