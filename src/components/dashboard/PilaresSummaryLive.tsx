@@ -153,13 +153,15 @@ export const PilaresSummaryLive = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className={cn("flex items-center gap-2 rounded-lg px-4 py-2.5", overall.bgColor)}>
-                <overall.icon className={cn("w-5 h-5", overall.color)} />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Nível</p>
-                  <p className={cn("text-sm font-bold -mt-0.5", overall.color)}>{overall.label}</p>
+              {overall && (
+                <div className={cn("flex items-center gap-2 rounded-lg px-4 py-2.5", overall.bgColor)}>
+                  <overall.icon className={cn("w-5 h-5", overall.color)} />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Nível</p>
+                    <p className={cn("text-sm font-bold -mt-0.5", overall.color)}>{overall.label}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="bg-muted/60 rounded-lg px-4 py-2.5 text-center min-w-[72px]">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Score</p>
                 <p className="text-2xl font-extrabold text-foreground -mt-0.5 tabular-nums">{averageScore}%</p>
