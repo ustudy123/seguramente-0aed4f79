@@ -366,6 +366,8 @@ serve(async (req) => {
       tipo_pessoa: tipoPessoa === "pf" ? "pf" : "pj",
       cnpj: tipoPessoa === "pj" ? documento : null,
       cpf: tipoPessoa === "pf" ? documento : null,
+      email: email || null,
+      telefone: telefone || null,
       tipo_unidade: "matriz",
       ativo: true,
       total_colaboradores: 0,
