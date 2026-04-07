@@ -31,6 +31,7 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(!initialValue);
   const queryClient = useQueryClient();
+  const { tenantId } = useAuth();
 
   useEffect(() => {
     setValue(initialValue || "");
