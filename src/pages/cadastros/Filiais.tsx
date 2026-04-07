@@ -50,15 +50,17 @@ export default function Filiais() {
     telefone: "", email: "", ativo: true, tipo: "estabelecimento" as string, cno: "",
   });
 
-  // Filter companies by CNPJ or name
+  // Filter only companies (Matriz) and search by CNPJ
   const filteredEmpresas = useMemo(() => {
-    if (!cnpjSearch.trim()) return empresas.filter(e => e.ativo);
+    // We only want to show companies (Matriz), never branches (Filiais)
+    const baseEmpresas = empresas.filter(e => e.ativo && e.tipo_unidade === 'matriz');
+    
+    if (!cnpjSearch.trim()) return baseEmpresas;
+    
     const term = cnpjSearch.toLowerCase().replace(/\D/g, "");
-    return empresas.filter(e => e.ativo && (
-      (e.cnpj?.replace(/\D/g, "").includes(term)) ||
-      (e.razao_social?.toLowerCase().includes(cnpjSearch.toLowerCase())) ||
-      (e.nome_fantasia?.toLowerCase().includes(cnpjSearch.toLowerCase()))
-    ));
+    return baseEmpresas.filter(e => 
+      e.cnpj?.replace(/\D/g, "").includes(term)
+    );
   }, [empresas, cnpjSearch]);
 
   // Filter establishments by selected company
