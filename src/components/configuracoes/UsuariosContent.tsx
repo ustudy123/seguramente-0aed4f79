@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 const STATUS_OPTIONS = [
   { value: "todos", label: "Todos os status" },
@@ -31,11 +32,12 @@ const TIPO_OPTIONS = [
 
 export default function UsuariosContent() {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const { usuarios, isLoading } = useUsuarios();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterTipo, setFilterTipo] = useState("todos");
-  const [filterEmpresa, setFilterEmpresa] = useState("todos");
+  const [filterEmpresa, setFilterEmpresa] = useState(empresaAtivaId || "todos");
   const [showNovo, setShowNovo] = useState(false);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const selecionado = selecionadoId ? usuarios.find(u => u.id === selecionadoId) || null : null;
