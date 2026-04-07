@@ -40,6 +40,7 @@ export default function Empresa() {
     isLoading,
     upsertCadastro,
     toggleAtivoEmpresa,
+    cliente,
   } = useEmpresaCadastro(viewMode === 'edit' ? selectedEmpresaId : undefined);
 
   const { grupos } = useGruposEconomicos();
@@ -58,13 +59,41 @@ export default function Empresa() {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
+    const docClean = cliente?.cnpj?.replace(/\D/g, '') || '';
+    const onboardingIsCnpj = docClean.length === 14;
+    const onboardingIsCpf = docClean.length === 11;
+
     if (viewMode === 'edit' && cadastro) {
-      setFormData(cadastro);
+      setFormData({
+        ...cadastro,
+        razao_social: cadastro.razao_social || cliente?.nome_empresa || '',
+        cnpj: cadastro.cnpj || (onboardingIsCnpj ? cliente?.cnpj : '') || '',
+        cpf: cadastro.cpf || (onboardingIsCpf ? cliente?.cnpj : '') || '',
+        email: cadastro.email || cliente?.poc_email || '',
+        telefone: cadastro.telefone || cliente?.poc_telefone || '',
+        total_colaboradores: cadastro.total_colaboradores || cliente?.quantidade_colaboradores || 0,
+        tipo_pessoa: cadastro.tipo_pessoa || (onboardingIsCpf ? 'pf' : 'pj'),
+        endereco: cadastro.endereco || cliente?.endereco || '',
+      });
     }
+    
     if (viewMode === 'new') {
-      setFormData({});
+      if (cliente) {
+        setFormData({
+          razao_social: cliente.nome_empresa || '',
+          cnpj: onboardingIsCnpj ? cliente.cnpj : '',
+          cpf: onboardingIsCpf ? cliente.cnpj : '',
+          email: cliente.poc_email || '',
+          telefone: cliente.poc_telefone || '',
+          total_colaboradores: cliente.quantidade_colaboradores || 0,
+          tipo_pessoa: onboardingIsCpf ? 'pf' : 'pj',
+          endereco: cliente.endereco || '',
+        });
+      } else {
+        setFormData({});
+      }
     }
-  }, [cadastro, viewMode]);
+  }, [cadastro, viewMode, cliente]);
 
   const handleChange = (updates: Partial<EmpresaCadastro>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
