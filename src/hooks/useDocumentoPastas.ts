@@ -11,7 +11,7 @@ import type {
 import { useFiliais, type Filial } from "./useCadastros";
 import { useColaboradores, type Colaborador } from "./useColaboradores";
 import { autoGenerateFolderStructure } from "@/utils/autoGenerateFolderStructure";
-import { criarPastasColaboradoresEmLote } from "@/utils/criarPastaColaborador";
+import { criarPastaColaborador, criarPastasColaboradoresEmLote } from "@/utils/criarPastaColaborador";
 
 interface DocumentoRow {
   id: string;
@@ -25,6 +25,43 @@ interface DocumentoRow {
   pasta_id: string | null;
   colaborador_id: string | null;
   colaborador_nome: string;
+}
+
+type SubpastaColaborador = "Admissão" | "Vida Funcional" | "Saúde Ocupacional" | "Desligamento";
+
+function inferirSubpastaColaboradorPorTipo(tipo: string): SubpastaColaborador {
+  const tipoNormalizado = tipo.toLowerCase();
+
+  if (
+    tipoNormalizado.includes("aso") ||
+    tipoNormalizado.includes("atestado") ||
+    tipoNormalizado.includes("epi") ||
+    tipoNormalizado.includes("ordem de serviço") ||
+    tipoNormalizado.includes("treinamento nr")
+  ) {
+    return "Saúde Ocupacional";
+  }
+
+  if (tipoNormalizado.includes("deslig")) {
+    return "Desligamento";
+  }
+
+  if (
+    tipoNormalizado.includes("ficha de registro") ||
+    tipoNormalizado.includes("contrato") ||
+    tipoNormalizado.includes("ctps") ||
+    tipoNormalizado.includes("rg") ||
+    tipoNormalizado.includes("cpf") ||
+    tipoNormalizado.includes("resid") ||
+    tipoNormalizado.includes("eleitor") ||
+    tipoNormalizado.includes("reservista") ||
+    tipoNormalizado.includes("cnh") ||
+    tipoNormalizado.includes("certificado")
+  ) {
+    return "Admissão";
+  }
+
+  return "Vida Funcional";
 }
 
 export function useDocumentoPastas() {
