@@ -270,11 +270,11 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border">
           <span className="text-sm font-medium">{selectedIds.size} selecionada(s)</span>
-          <Button variant="outline" size="sm" onClick={() => handleBatchToggle(true)}>
+          <Button variant="outline" size="sm" onClick={() => handleBatchToggle(true)} className="text-success hover:text-success hover:bg-success/10 border-success/30">
             <ToggleRight className="w-4 h-4 mr-1" />
             Ativar
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleBatchToggle(false)}>
+          <Button variant="outline" size="sm" onClick={() => handleBatchToggle(false)} className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30">
             <ToggleLeft className="w-4 h-4 mr-1" />
             Inativar
           </Button>
