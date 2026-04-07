@@ -53,7 +53,7 @@ export default function Filiais() {
   // Filter only companies (Matriz) and search by CNPJ
   const filteredEmpresas = useMemo(() => {
     // We only want to show companies (Matriz), never branches (Filiais)
-    const baseEmpresas = empresas.filter(e => e.ativo && e.tipo_unidade === 'matriz');
+    const baseEmpresas = empresas.filter(e => e.ativo && (e.tipo_unidade === 'matriz' || !e.tipo_unidade));
     
     if (!cnpjSearch.trim()) return baseEmpresas;
     
