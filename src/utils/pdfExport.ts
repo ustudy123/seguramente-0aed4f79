@@ -1,145 +1,196 @@
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
-function sanitize(text: string): string {
-  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, (match) => {
-    const map: Record<string, string> = {
-      '\u0301': "'", '\u0300': "'", '\u0302': "^", '\u0303': "~", '\u0327': "c",
-    };
-    return map[match] || "";
-  }).replace(/[^\x00-\x7F]/g, (ch) => {
-    const map: Record<string, string> = {
-      'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
-      'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-      'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-      'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
-      'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-      'ç': 'c', 'ñ': 'n',
-      'Á': 'A', 'À': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A',
-      'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
-      'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
-      'Ó': 'O', 'Ò': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O',
-      'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
-      'Ç': 'C', 'Ñ': 'N',
-      '\u2013': '-', '\u2014': '-', '\u201C': '"', '\u201D': '"', '\u2018': "'", '\u2019': "'",
-      '\u2022': '-', '\u2026': '...', '\u00B0': 'o',
-    };
-    return map[ch] || ch;
-  });
-}
+/**
+ * Renders markdown-like text into a styled hidden HTML element,
+ * captures it with html2canvas, and exports as a well-formatted PDF.
+ */
+export async function exportTextToPdf(
+  text: string,
+  filename: string,
+  title?: string,
+  empresaNome?: string
+) {
+  // Create a hidden container with styled HTML
+  const container = document.createElement("div");
+  container.id = "pdf-render-container";
+  container.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 700px;
+    background: #ffffff;
+    padding: 48px 56px;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    text-align: justify;
+    box-sizing: border-box;
+  `;
 
-export function exportTextToPdf(text: string, filename: string, title?: string) {
-  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pageWidth = 210;
-  const pageHeight = 297;
-  const margin = 20;
-  const contentWidth = pageWidth - margin * 2;
-  const lineHeight = 6;
-  const maxY = pageHeight - margin;
+  // Build HTML content
+  let html = "";
 
-  let currentY = margin;
+  // Company header
+  if (empresaNome) {
+    html += `<div style="text-align: center; margin-bottom: 8px; padding-bottom: 12px; border-bottom: 2px solid #2563eb;">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; margin-bottom: 4px;">Empresa Contratante</div>
+      <div style="font-size: 18px; font-weight: 700; color: #1e40af;">${escapeHtml(empresaNome)}</div>
+    </div>`;
+  }
 
   // Title
   if (title) {
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(16);
-    const safeTitle = sanitize(title);
-    const titleLines = pdf.splitTextToSize(safeTitle, contentWidth);
-    for (const line of titleLines) {
-      if (currentY + 8 > maxY) {
-        pdf.addPage();
-        currentY = margin;
-      }
-      // Center title
-      const tw = pdf.getTextWidth(line);
-      pdf.text(line, margin + (contentWidth - tw) / 2, currentY);
-      currentY += 8;
-    }
-    currentY += 4;
+    html += `<h1 style="text-align: center; font-size: 20px; font-weight: 700; color: #111827; margin: 24px 0 20px 0; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(title)}</h1>`;
   }
 
-  // Body
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(11);
+  // Process text into formatted HTML
+  html += convertTextToHtml(text);
 
-  const safeText = sanitize(text);
-  const paragraphs = safeText.split("\n");
+  // Footer
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  html += `<div style="margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 10px; color: #9ca3af;">
+    Documento gerado em ${dateStr}
+  </div>`;
 
-  for (const paragraph of paragraphs) {
-    if (paragraph.trim() === "") {
-      currentY += lineHeight * 0.6;
-      if (currentY > maxY) {
-        pdf.addPage();
-        currentY = margin;
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const pdfWidth = 210;
+    const pdfHeight = 297;
+    const margin = 10;
+    const contentWidth = pdfWidth - margin * 2;
+    const imgRatio = canvas.height / canvas.width;
+    const contentHeight = contentWidth * imgRatio;
+
+    if (contentHeight <= pdfHeight - margin * 2) {
+      // Fits on one page
+      pdf.addImage(imgData, "PNG", margin, margin, contentWidth, contentHeight);
+    } else {
+      // Multi-page: slice the canvas
+      const pageContentHeight = pdfHeight - margin * 2;
+      const scaleFactor = contentWidth / canvas.width;
+      const sliceHeightPx = pageContentHeight / scaleFactor;
+      let srcY = 0;
+      let pageNum = 0;
+
+      while (srcY < canvas.height) {
+        if (pageNum > 0) pdf.addPage();
+        
+        const remainingPx = canvas.height - srcY;
+        const thisSlicePx = Math.min(sliceHeightPx, remainingPx);
+        const thisSliceMm = thisSlicePx * scaleFactor;
+
+        // Create slice canvas
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = thisSlicePx;
+        const ctx = sliceCanvas.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, srcY, canvas.width, thisSlicePx,
+          0, 0, canvas.width, thisSlicePx
+        );
+
+        const sliceData = sliceCanvas.toDataURL("image/png");
+        pdf.addImage(sliceData, "PNG", margin, margin, contentWidth, thisSliceMm);
+
+        srcY += thisSlicePx;
+        pageNum++;
       }
+
+      // Add page numbers
+      const totalPages = pdf.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        pdf.setFontSize(8);
+        pdf.setTextColor(180);
+        const pageText = `${p} / ${totalPages}`;
+        const tw = pdf.getTextWidth(pageText);
+        pdf.text(pageText, pdfWidth - margin - tw, pdfHeight - 5);
+      }
+    }
+
+    pdf.save(filename);
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function convertTextToHtml(text: string): string {
+  const lines = text.split("\n");
+  let html = "";
+  let inList = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (trimmed === "") {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += '<div style="height: 8px;"></div>';
       continue;
     }
 
-    // Detect headers (lines in ALL CAPS or starting with numbers followed by .)
-    const isHeader = /^[A-Z0-9\s\-:]{5,}$/.test(paragraph.trim()) || /^\d+[\.\)]\s/.test(paragraph.trim());
-
-    if (isHeader) {
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-    } else {
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
+    // Bold headers: **text** on its own line
+    if (/^\*\*(.+)\*\*$/.test(trimmed)) {
+      if (inList) { html += "</ul>"; inList = false; }
+      const content = trimmed.replace(/^\*\*(.+)\*\*$/, "$1");
+      html += `<h2 style="font-size: 15px; font-weight: 700; color: #1e3a5f; margin: 16px 0 6px 0; text-align: left;">${escapeHtml(content)}</h2>`;
+      continue;
     }
 
-    const lines = pdf.splitTextToSize(paragraph.trim(), contentWidth);
+    // Inline bold within text
+    let processed = escapeHtml(trimmed);
+    // Re-apply bold after escaping
+    processed = trimmed
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, '<strong style="color: #1e3a5f;">$1</strong>');
 
-    for (let i = 0; i < lines.length; i++) {
-      if (currentY + lineHeight > maxY) {
-        pdf.addPage();
-        currentY = margin;
-      }
-
-      const line = lines[i];
-
-      // Justify: stretch words to fill line width (except last line of paragraph)
-      if (!isHeader && i < lines.length - 1 && line.trim().length > 0) {
-        justifyLine(pdf, line, margin, currentY, contentWidth);
-      } else {
-        pdf.text(line, margin, currentY);
-      }
-
-      currentY += lineHeight;
+    // Bullet points
+    if (/^[\*\-•]\s/.test(trimmed)) {
+      if (!inList) { html += '<ul style="margin: 6px 0; padding-left: 24px;">'; inList = true; }
+      const content = processed.replace(/^[\*\-•]\s/, "");
+      html += `<li style="margin-bottom: 4px;">${content}</li>`;
+      continue;
     }
 
-    if (isHeader) {
-      currentY += 1;
+    // Numbered items
+    if (/^\d+[\.\)]\s/.test(trimmed)) {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<p style="margin: 4px 0; padding-left: 8px;">${processed}</p>`;
+      continue;
     }
+
+    // Regular paragraph
+    if (inList) { html += "</ul>"; inList = false; }
+    html += `<p style="margin: 4px 0; text-align: justify;">${processed}</p>`;
   }
 
-  // Footer on all pages
-  const totalPages = pdf.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    pdf.setPage(p);
-    pdf.setFont("helvetica", "italic");
-    pdf.setFontSize(8);
-    pdf.setTextColor(150);
-    const footerText = `Pagina ${p} de ${totalPages}`;
-    const fw = pdf.getTextWidth(footerText);
-    pdf.text(footerText, pageWidth - margin - fw, pageHeight - 10);
-    pdf.setTextColor(0);
-  }
-
-  pdf.save(filename);
-}
-
-function justifyLine(pdf: jsPDF, line: string, x: number, y: number, maxWidth: number) {
-  const words = line.split(/\s+/).filter(w => w.length > 0);
-  if (words.length <= 1) {
-    pdf.text(line, x, y);
-    return;
-  }
-
-  const totalWordsWidth = words.reduce((sum, w) => sum + pdf.getTextWidth(w), 0);
-  const totalSpacing = maxWidth - totalWordsWidth;
-  const spaceWidth = totalSpacing / (words.length - 1);
-
-  let cx = x;
-  for (let i = 0; i < words.length; i++) {
-    pdf.text(words[i], cx, y);
-    cx += pdf.getTextWidth(words[i]) + spaceWidth;
-  }
+  if (inList) html += "</ul>";
+  return html;
 }
