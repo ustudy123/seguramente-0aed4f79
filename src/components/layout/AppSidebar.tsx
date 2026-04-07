@@ -401,8 +401,8 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const allItems = useMemo(() => {
     const items: { title: string; path: string; icon: React.ElementType; sectionLabel: string }[] = [];
     
-    // Add Início as first item
-    items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Principal" });
+    // Search items from sections
+
 
     filteredSections.forEach((section) => {
       section.items.forEach((item) => {

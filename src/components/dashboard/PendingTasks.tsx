@@ -51,13 +51,22 @@ export const PendingTasks = () => {
       className="bg-card rounded-xl border border-border shadow-sm h-full"
     >
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <Link to="/pendencias" className="flex items-center gap-2 group">
+          <ClipboardList className="w-4 h-4 text-warning group-hover:scale-110 transition-transform" />
+          <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">Pendências</h2>
+        </Link>
         <div className="flex items-center gap-2">
-          <ClipboardList className="w-4 h-4 text-warning" />
-          <h2 className="text-sm font-semibold text-foreground">Pendências</h2>
+          <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5">
+            {isLoading ? "…" : total}
+          </Badge>
+          <Link 
+            to="/pendencias" 
+            className="text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5"
+          >
+            Ver tudo
+            <ArrowRight className="w-2.5 h-2.5" />
+          </Link>
         </div>
-        <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5">
-          {isLoading ? "…" : total}
-        </Badge>
       </div>
 
       {isLoading ? (
