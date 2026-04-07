@@ -281,7 +281,7 @@ export default function Filiais() {
           <AlertTitle className="text-primary font-semibold text-sm">Entenda os tipos de registro</AlertTitle>
           <AlertDescription className="text-xs text-muted-foreground grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
             <div>
-              <span className="font-bold text-foreground">Estabelecimento:</span> Locais fixos (Sede, Filial, Depósito).
+              <span className="font-bold text-foreground">Estabelecimento:</span> Locais fixos (Sede, Unidade, Depósito).
             </div>
             <div>
               <span className="font-bold text-foreground">Obra:</span> Locais temporários (Canteiros, Reformas, Prestação de serviços).
