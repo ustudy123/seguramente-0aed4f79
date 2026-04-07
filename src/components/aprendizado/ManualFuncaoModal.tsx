@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, FileText } from "lucide-react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { toast } from "sonner";
+import { generatePdfFromHtml } from "@/utils/generatePdfFromHtml";
 
 interface ManualFuncaoModalProps {
   open: boolean;
@@ -12,81 +11,22 @@ interface ManualFuncaoModalProps {
   html: string;
   loading: boolean;
   titulo?: string;
-  onPdfGenerated?: (blob: Blob, filename: string) => void;
+  onPdfGenerated?: (blob: Blob, filename: string) => Promise<void> | void;
 }
 
 export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfGenerated }: ManualFuncaoModalProps) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
 
   const handleGeneratePdf = async () => {
-    const iframe = iframeRef.current;
-    if (!iframe?.contentDocument?.body) return;
-
     setPdfLoading(true);
     try {
-      const body = iframe.contentDocument.body;
-      // Temporarily make body visible for html2canvas
-      const clone = body.cloneNode(true) as HTMLElement;
-      clone.style.width = "794px"; // A4 width at 96dpi
-      clone.style.position = "absolute";
-      clone.style.left = "-9999px";
-      clone.style.top = "0";
-      clone.style.background = "white";
-      document.body.appendChild(clone);
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        width: 794,
-        windowWidth: 794,
+      const { blob, filename, pdf } = await generatePdfFromHtml({
+        html,
+        filenamePrefix: titulo || "manual-funcao",
       });
 
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-      let page = 1;
-
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position = -(pdfHeight * page);
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-        page++;
-      }
-
-      // Add page numbers
-      const totalPages = pdf.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(8);
-        pdf.setTextColor(150);
-        pdf.text(`Página ${i}/${totalPages}`, pdfWidth - 25, pdfHeight - 5);
-      }
-
-      const filename = `manual-funcao-${Date.now()}.pdf`;
-      
-      // Save locally
       pdf.save(filename);
-
-      // Also provide blob for archiving
-      if (onPdfGenerated) {
-        const blob = pdf.output("blob");
-        onPdfGenerated(blob, filename);
-      }
-
+      await onPdfGenerated?.(blob, filename);
       toast.success("PDF gerado com sucesso!");
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
@@ -152,7 +92,6 @@ export function ManualFuncaoModal({ open, onClose, html, loading, titulo, onPdfG
             </div>
           ) : html ? (
             <iframe
-              ref={iframeRef}
               srcDoc={html}
               className="w-full h-full border-0"
               title="Manual de Funções"
