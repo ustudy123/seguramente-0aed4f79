@@ -171,7 +171,7 @@ export default function Usuarios() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todas as empresas</SelectItem>
+            
             {empresas.map((e: any) => (
               <SelectItem key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</SelectItem>
             ))}
