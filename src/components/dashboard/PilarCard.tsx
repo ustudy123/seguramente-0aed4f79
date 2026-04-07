@@ -22,6 +22,7 @@ interface PilarCardProps {
   color: "navy" | "green" | "purple" | "amber";
   delay?: number;
   pilarIndicator?: IndicatorType;
+  hasData?: boolean;
 }
 
 const colorClasses = {
@@ -64,6 +65,7 @@ export const PilarCard = forwardRef<HTMLDivElement, PilarCardProps>(({
   color,
   delay = 0,
   pilarIndicator,
+  hasData = true,
 }, ref) => {
   const colors = colorClasses[color];
   const [selectedIndicator, setSelectedIndicator] = useState<{
@@ -71,8 +73,9 @@ export const PilarCard = forwardRef<HTMLDivElement, PilarCardProps>(({
     title: string;
     value: string | number;
   } | null>(null);
-
-  const getScoreLabel = (score: number) => {
+  
+  const getScoreLabel = (score: number, hasData: boolean) => {
+    if (!hasData) return "—";
     if (score >= 80) return "Excelente";
     if (score >= 60) return "Bom";
     if (score >= 40) return "Regular";
@@ -128,7 +131,7 @@ export const PilarCard = forwardRef<HTMLDivElement, PilarCardProps>(({
           </div>
           <div className="flex items-center gap-2">
             <div className={cn("px-2.5 py-1 rounded-full text-xs font-medium", colors.badge)}>
-              {getScoreLabel(score)}
+              {getScoreLabel(score, hasData)}
             </div>
             <Expand className="w-4 h-4 text-white/50 group-hover:text-white transition-colors" />
           </div>

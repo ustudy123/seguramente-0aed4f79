@@ -87,7 +87,24 @@ export const PilaresSummaryLive = () => {
       )
     : 0;
 
+  const hasData = data ? (
+    data.organizacao.cargosDefinidos > 0 ||
+    data.organizacao.departamentos > 0 ||
+    data.organizacao.admissoesAndamento > 0 ||
+    data.condicoes.itensNr17Total > 0 ||
+    data.condicoes.episDisponiveis > 0 ||
+    data.condicoes.riscosAtivos > 0 ||
+    data.experiencia.humorTotal > 0 ||
+    data.experiencia.ouvidoriaPendente > 0 ||
+    data.experiencia.feedPostsHoje > 0 ||
+    data.governanca.acoesTotal > 0 ||
+    data.governanca.evidenciasEnviadas > 0 ||
+    data.governanca.terceirosAtivos > 0 ||
+    data.governanca.ptsBloqueadas > 0
+  ) : false;
+
   const getOverallLabel = (score: number) => {
+    if (!hasData) return null;
     if (score >= 80) return { label: "Cultura Saudável", icon: Trophy, color: "text-success", bgColor: "bg-success/10" };
     if (score >= 60) return { label: "Estratégico", icon: TrendingUp, color: "text-primary", bgColor: "bg-primary/10" };
     if (score >= 40) return { label: "Preventivo", icon: ShieldCheck, color: "text-info", bgColor: "bg-info/10" };
@@ -104,6 +121,16 @@ export const PilaresSummaryLive = () => {
       title: pilar.title,
       value: `${score}%`,
     });
+  };
+
+  const getPilarHasData = (key: PilarSummary["scoreKey"]) => {
+    if (!data) return false;
+    const p = data[key] as any;
+    if (key === "organizacao") return p.cargosDefinidos > 0 || p.departamentos > 0 || p.admissoesAndamento > 0;
+    if (key === "condicoes") return p.itensNr17Total > 0 || p.episDisponiveis > 0 || p.riscosAtivos > 0;
+    if (key === "experiencia") return p.humorTotal > 0 || p.ouvidoriaPendente > 0 || p.feedPostsHoje > 0;
+    if (key === "governanca") return p.acoesTotal > 0 || p.evidenciasEnviadas > 0 || p.terceirosAtivos > 0;
+    return false;
   };
 
   if (isLoading) {
@@ -136,13 +163,15 @@ export const PilaresSummaryLive = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className={cn("flex items-center gap-2 rounded-lg px-4 py-2.5", overall.bgColor)}>
-                <overall.icon className={cn("w-5 h-5", overall.color)} />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Nível</p>
-                  <p className={cn("text-sm font-bold -mt-0.5", overall.color)}>{overall.label}</p>
+              {overall && (
+                <div className={cn("flex items-center gap-2 rounded-lg px-4 py-2.5", overall.bgColor)}>
+                  <overall.icon className={cn("w-5 h-5", overall.color)} />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Nível</p>
+                    <p className={cn("text-sm font-bold -mt-0.5", overall.color)}>{overall.label}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="bg-muted/60 rounded-lg px-4 py-2.5 text-center min-w-[72px]">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Score</p>
                 <p className="text-2xl font-extrabold text-foreground -mt-0.5 tabular-nums">{averageScore}%</p>
@@ -155,6 +184,7 @@ export const PilaresSummaryLive = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
           {pilares.map((pilar, index) => {
             const score = getScore(pilar.scoreKey);
+            const pilarHasData = getPilarHasData(pilar.scoreKey);
             return (
               <motion.button
                 key={pilar.id}
@@ -181,14 +211,14 @@ export const PilaresSummaryLive = () => {
                 <div className="mb-1.5">
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-xs text-muted-foreground">Maturidade</span>
-                    <span className={cn("text-xl font-extrabold tabular-nums", pilar.color)}>
-                      {score}%
+                    <span className={cn("text-xl font-extrabold tabular-nums", pilarHasData ? pilar.color : "text-muted-foreground")}>
+                      {pilarHasData ? `${score}%` : "—"}
                     </span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${Math.max(score, 2)}%` }}
+                      animate={{ width: `${pilarHasData ? Math.max(score, 2) : 0}%` }}
                       transition={{ duration: 0.7, delay: 0.2 + index * 0.08 }}
                       className={cn("h-full rounded-full", pilar.bgColor)}
                     />

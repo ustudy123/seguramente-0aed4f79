@@ -40,6 +40,7 @@ export const DashboardPilares = () => {
         color="navy"
         delay={0.1}
         pilarIndicator="organizacao"
+        hasData={data.organizacao.cargosDefinidos > 0 || data.organizacao.departamentos > 0 || data.organizacao.admissoesAndamento > 0}
         metrics={[
           {
             label: "Funções Definidas",
@@ -71,6 +72,7 @@ export const DashboardPilares = () => {
         color="green"
         delay={0.2}
         pilarIndicator="condicoes"
+        hasData={data.condicoes.itensNr17Total > 0 || data.condicoes.episDisponiveis > 0 || data.condicoes.riscosAtivos > 0}
         metrics={[
           {
             label: "NR-17 Atendidos",
@@ -102,6 +104,7 @@ export const DashboardPilares = () => {
         color="purple"
         delay={0.3}
         pilarIndicator="experiencia"
+        hasData={data.experiencia.humorTotal > 0 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0}
         metrics={[
           {
             label: "Humor Positivo (7d)",
@@ -135,6 +138,7 @@ export const DashboardPilares = () => {
         color="amber"
         delay={0.4}
         pilarIndicator="governanca"
+        hasData={data.governanca.acoesTotal > 0 || data.governanca.evidenciasEnviadas > 0 || data.governanca.terceirosAtivos > 0}
         metrics={[
           {
             label: "Ações em Andamento",
