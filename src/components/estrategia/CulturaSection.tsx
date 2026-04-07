@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Plus, X, Save, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Heart, Plus, X, Save, Loader2, Sparkles, Wand2, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,17 +7,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ManualCulturaModal } from "./ManualCulturaModal";
+import { arquivarDocumento } from "@/utils/arquivarDocumento";
+import { useQuery } from "@tanstack/react-query";
 
 type ListField = "valores" | "principios" | "comportamentos_esperados" | "comportamentos_nao_tolerados";
 
 export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia(escopo);
-  const { profile, tenantId } = useAuth();
+  const { profile, tenantId, user } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [form, setForm] = useState({
     missao: "",
     visao: "",
@@ -31,6 +35,23 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const [manualHtml, setManualHtml] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+
+  // Load cached manual
+  const { data: cachedManual, refetch: refetchCached } = useQuery({
+    queryKey: ["manuais_gerados", tenantId, "cultura"],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      const { data } = await supabase
+        .from("manuais_gerados" as never)
+        .select("id, titulo, html, created_at")
+        .eq("tenant_id", tenantId)
+        .eq("tipo", "cultura")
+        .order("created_at", { ascending: false })
+        .limit(1) as { data: any[] | null };
+      return data?.[0] || null;
+    },
+    enabled: !!tenantId,
+  });
 
   useEffect(() => {
     if (cultura) {
@@ -111,6 +132,53 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     }
   };
 
+  const saveManualCache = async (html: string) => {
+    if (!tenantId || !user) return;
+    try {
+      await supabase
+        .from("manuais_gerados" as never)
+        .delete()
+        .eq("tenant_id", tenantId)
+        .eq("tipo", "cultura");
+
+      await supabase.from("manuais_gerados" as never).insert({
+        tenant_id: tenantId,
+        empresa_id: empresaAtivaId || null,
+        tipo: "cultura",
+        referencia_id: null,
+        titulo: "Manual de Cultura Organizacional",
+        html,
+        gerado_por: user.id,
+        gerado_por_nome: profile?.nome_completo || "",
+      } as never);
+
+      refetchCached();
+    } catch (err) {
+      console.error("Erro ao salvar cache:", err);
+    }
+  };
+
+  const archiveManual = async (html: string) => {
+    if (!tenantId || !user) return;
+    try {
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      await arquivarDocumento({
+        tenantId,
+        empresaId: empresaAtivaId,
+        userId: user.id,
+        userNome: profile?.nome_completo || "",
+        file: blob,
+        fileName: `manual-cultura-${Date.now()}.html`,
+        mimeType: "text/html",
+        tipo: "Manual de Cultura",
+        observacoes: "Manual de Cultura Organizacional gerado por IA",
+        pastaCategoria: null,
+      });
+    } catch (err) {
+      console.error("Erro ao arquivar:", err);
+    }
+  };
+
   const handleGenerateManual = async () => {
     const hasContent = form.missao || form.visao || form.valores.length > 0 || form.principios.length > 0;
     if (!hasContent) {
@@ -139,13 +207,46 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         return;
       }
 
-      setManualHtml(data.html || "");
+      const html = data.html || "";
+      setManualHtml(html);
+
+      await saveManualCache(html);
+      await archiveManual(html);
+
+      toast.success("Manual gerado e arquivado com sucesso!");
     } catch (err: any) {
       console.error("Erro ao gerar manual:", err);
       toast.error("Erro ao gerar o manual. Tente novamente.");
       setManualOpen(false);
     } finally {
       setManualLoading(false);
+    }
+  };
+
+  const handleViewCached = () => {
+    if (!cachedManual) return;
+    setManualHtml(cachedManual.html);
+    setManualOpen(true);
+  };
+
+  const handlePdfArchive = async (blob: Blob, filename: string) => {
+    if (!tenantId || !user) return;
+    try {
+      await arquivarDocumento({
+        tenantId,
+        empresaId: empresaAtivaId,
+        userId: user.id,
+        userNome: profile?.nome_completo || "",
+        file: blob,
+        fileName: filename,
+        mimeType: "application/pdf",
+        tipo: "Manual de Cultura (PDF)",
+        observacoes: "PDF do Manual de Cultura Organizacional",
+        pastaCategoria: null,
+      });
+      toast.success("PDF arquivado no módulo Documentos!");
+    } catch (err) {
+      console.error("Erro ao arquivar PDF:", err);
     }
   };
 
@@ -187,8 +288,13 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           <p className="text-sm text-muted-foreground">Formalize a identidade cultural da empresa</p>
         </div>
         <div className="flex items-center gap-2">
+          {cachedManual && (
+            <Button variant="outline" onClick={handleViewCached}>
+              <Eye className="w-4 h-4 mr-1" /> Ver Manual
+            </Button>
+          )}
           <Button variant="outline" onClick={handleGenerateManual} disabled={manualLoading}>
-            <Sparkles className="w-4 h-4 mr-1" /> Gerar Manual com IA
+            <Sparkles className="w-4 h-4 mr-1" /> {cachedManual ? "Regerar Manual" : "Gerar Manual com IA"}
           </Button>
           <Button onClick={handleSave} disabled={upsertCultura.isPending}>
             <Save className="w-4 h-4 mr-1" /> {upsertCultura.isPending ? "Salvando..." : "Salvar"}
@@ -251,6 +357,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         onClose={() => setManualOpen(false)}
         html={manualHtml}
         loading={manualLoading}
+        onPdfGenerated={handlePdfArchive}
       />
     </div>
   );
