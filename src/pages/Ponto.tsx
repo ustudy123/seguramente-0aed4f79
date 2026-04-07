@@ -194,10 +194,10 @@ const Ponto = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowAjusteModal(true)} className="text-xs sm:text-sm">
+          <Button id="btn-solicitar-ajuste" variant="outline" size="sm" onClick={() => setShowAjusteModal(true)} className="text-xs sm:text-sm">
             <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Solicitar Ajuste
           </Button>
-          <Button size="sm" onClick={() => setShowRegistrarModal(true)} className="text-xs sm:text-sm">
+          <Button id="btn-registrar-ponto" size="sm" onClick={() => setShowRegistrarModal(true)} className="text-xs sm:text-sm">
             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Registrar Ponto
           </Button>
         </div>
@@ -207,13 +207,13 @@ const Ponto = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <ScrollArea className="w-full">
           <TabsList className="inline-flex w-max min-w-full h-auto gap-0.5 p-1">
-            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-dashboard" value="dashboard" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <BarChart3 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Dashboard</span><span className="sm:hidden">Dash</span>
             </TabsTrigger>
-            <TabsTrigger value="registros" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-registros" value="registros" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Clock className="h-3.5 w-3.5" /> Registros
             </TabsTrigger>
-            <TabsTrigger value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-ajustes" value="ajustes" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileText className="h-3.5 w-3.5" /> Ajustes
               {ajustesPendentes.length > 0 && (
                 <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
@@ -221,34 +221,34 @@ const Ponto = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-escalas" value="escalas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Settings className="h-3.5 w-3.5" /> Escalas
             </TabsTrigger>
-            <TabsTrigger value="banco" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-banco" value="banco" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Wallet className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Banco Horas</span><span className="sm:hidden">BH</span>
             </TabsTrigger>
-            <TabsTrigger value="fechamento" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-fechamento" value="fechamento" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Lock className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Fechamento</span><span className="sm:hidden">Fech.</span>
             </TabsTrigger>
-            <TabsTrigger value="alertas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-alertas" value="alertas" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Bell className="h-3.5 w-3.5" /> Alertas
             </TabsTrigger>
-            <TabsTrigger value="links" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-links" value="links" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Link2 className="h-3.5 w-3.5" /> Links
             </TabsTrigger>
-            <TabsTrigger value="repc" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-repc" value="repc" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <HardDrive className="h-3.5 w-3.5" /> REP-C
             </TabsTrigger>
-            <TabsTrigger value="cct" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-cct" value="cct" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Scale className="h-3.5 w-3.5" /> CCT
             </TabsTrigger>
-            <TabsTrigger value="folha" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-folha" value="folha" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileSpreadsheet className="h-3.5 w-3.5" /> Folha
             </TabsTrigger>
-            <TabsTrigger value="relatorios" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-relatorios" value="relatorios" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <FileDown className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Relatórios</span><span className="sm:hidden">Relat.</span>
             </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
+            <TabsTrigger id="tab-ponto-config" value="config" className="flex items-center gap-1 text-xs py-2 px-2 sm:px-3">
               <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Configuração</span><span className="sm:hidden">Config</span>
             </TabsTrigger>
           </TabsList>
@@ -263,12 +263,12 @@ const Ponto = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={handlePrevDay}><ChevronLeft className="w-4 h-4" /></Button>
+                <Button id="btn-ponto-prev-dia" variant="outline" size="icon" onClick={handlePrevDay}><ChevronLeft className="w-4 h-4" /></Button>
                 <div className="px-4 py-2 bg-muted rounded-lg min-w-[180px] text-center">
                   <span className="font-medium">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                 </div>
-                <Button variant="outline" size="icon" onClick={handleNextDay}><ChevronRight className="w-4 h-4" /></Button>
-                <Button variant="outline" size="sm" onClick={handleToday}>Hoje</Button>
+                <Button id="btn-ponto-next-dia" variant="outline" size="icon" onClick={handleNextDay}><ChevronRight className="w-4 h-4" /></Button>
+                <Button id="btn-ponto-hoje" variant="outline" size="sm" onClick={handleToday}>Hoje</Button>
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar status" /></SelectTrigger>
@@ -374,11 +374,11 @@ const Ponto = () => {
                     <TableCell>{ajuste.created_by_nome}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
-                        <Button size="sm" variant="outline" className="text-green-600 hover:text-green-600 hover:bg-green-50"
+                        <Button id={`btn-aprovar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-green-600 hover:text-green-600 hover:bg-green-50"
                           onClick={() => handleProcessarAjuste(ajuste.id, true)} disabled={processandoAjuste}>
                           <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
                         </Button>
-                        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        <Button id={`btn-rejeitar-ajuste-${ajuste.id}`} size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => handleProcessarAjuste(ajuste.id, false)} disabled={processandoAjuste}>
                           <XCircle className="w-4 h-4 mr-1" /> Rejeitar
                         </Button>

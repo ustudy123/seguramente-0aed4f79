@@ -781,43 +781,43 @@ const Financeiro = ({ defaultTab = "dashboard" }: { defaultTab?: string }) => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <TabsList className="bg-muted/50 flex-wrap h-auto gap-1">
-            <TabsTrigger value="dashboard">
+            <TabsTrigger id="tab-folha-dashboard" value="dashboard">
               <TrendingUp className="w-4 h-4 mr-2" />Painel
             </TabsTrigger>
-            <TabsTrigger value="folha">
+            <TabsTrigger id="tab-folha-folha" value="folha">
               <FileText className="w-4 h-4 mr-2" />Folha
             </TabsTrigger>
-            <TabsTrigger value="rubricas">
+            <TabsTrigger id="tab-folha-rubricas" value="rubricas">
               <FileCode className="w-4 h-4 mr-2" />Rubricas
             </TabsTrigger>
-            <TabsTrigger value="ferias">
+            <TabsTrigger id="tab-folha-ferias" value="ferias">
               <Sun className="w-4 h-4 mr-2" />Férias
             </TabsTrigger>
-            <TabsTrigger value="13salario">
+            <TabsTrigger id="tab-folha-13salario" value="13salario">
               <Gift className="w-4 h-4 mr-2" />13º
             </TabsTrigger>
-            <TabsTrigger value="rescisao">
+            <TabsTrigger id="tab-folha-rescisao" value="rescisao">
               <Calculator className="w-4 h-4 mr-2" />Rescisão
             </TabsTrigger>
-            <TabsTrigger value="provisoes">
+            <TabsTrigger id="tab-folha-provisoes" value="provisoes">
               <PiggyBank className="w-4 h-4 mr-2" />Provisões
             </TabsTrigger>
-            <TabsTrigger value="beneficios">
+            <TabsTrigger id="tab-folha-beneficios" value="beneficios">
               <Heart className="w-4 h-4 mr-2" />Benefícios
             </TabsTrigger>
-            <TabsTrigger value="tabelas">
+            <TabsTrigger id="tab-folha-tabelas" value="tabelas">
               <Settings2 className="w-4 h-4 mr-2" />Tabelas
             </TabsTrigger>
-            <TabsTrigger value="cct">
+            <TabsTrigger id="tab-folha-cct" value="cct">
               <Scale className="w-4 h-4 mr-2" />CCT
             </TabsTrigger>
-            <TabsTrigger value="esocial">
+            <TabsTrigger id="tab-folha-esocial" value="esocial">
               <FileCode className="w-4 h-4 mr-2" />eSocial
             </TabsTrigger>
-             <TabsTrigger value="alertas">
+             <TabsTrigger id="tab-folha-alertas" value="alertas">
               <Bell className="w-4 h-4 mr-2" />Alertas
             </TabsTrigger>
-            <TabsTrigger value="tabelas-fiscais">
+            <TabsTrigger id="tab-folha-tabelas-fiscais" value="tabelas-fiscais">
               <TableProperties className="w-4 h-4 mr-2" />Tab. Fiscais
             </TabsTrigger>
           </TabsList>
