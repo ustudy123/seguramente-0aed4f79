@@ -388,8 +388,8 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                         onClick={() => onToggleAtivo(emp.id, !emp.ativo)}
                         title={emp.ativo ? 'Desativar Empresa' : 'Ativar Empresa'}
                         className={emp.ativo 
-                          ? "text-success hover:text-destructive hover:bg-destructive/10" 
-                          : "text-destructive hover:text-success hover:bg-success/10"
+                          ? "text-success bg-success/10 hover:text-destructive hover:bg-destructive/10" 
+                          : "text-destructive bg-destructive/10 hover:text-success hover:bg-success/10"
                         }
                       >
                         {emp.ativo ? (
