@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
 import type { Json } from '@/integrations/supabase/types';
+import { autoGenerateFolderStructure } from '@/utils/autoGenerateFolderStructure';
 
 export function useEmpresaCadastro(empresaId?: string | null) {
   const { tenantId } = useTenant();
@@ -104,6 +105,12 @@ export function useEmpresaCadastro(empresaId?: string | null) {
           .select()
           .single();
         if (error) throw error;
+        // Auto-gerar estrutura de pastas para a nova empresa
+        try {
+          await autoGenerateFolderStructure(tenantId!, user!.id, user?.email || null);
+        } catch (e) {
+          console.error('Erro ao gerar estrutura de pastas:', e);
+        }
         return data;
       }
     },
