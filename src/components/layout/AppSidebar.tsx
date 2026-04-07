@@ -128,10 +128,11 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Pessoas & Cultura",
+    label: "PESSOAS",
     color: "text-violet-400",
     sectionIcon: Users,
     items: [
+      { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
       { title: "Onboarding", icon: UserPlus, path: "/onboarding-rh" },
       { title: "Férias", icon: Calendar, path: "/ferias" },
