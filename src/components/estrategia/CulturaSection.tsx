@@ -17,7 +17,7 @@ type ListField = "valores" | "principios" | "comportamentos_esperados" | "compor
 
 export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { cultura, loadingCultura, upsertCultura, organograma } = useEstrategia(escopo);
-  const { profile } = useAuth();
+  const { profile, tenantId } = useAuth();
   const [form, setForm] = useState({
     missao: "",
     visao: "",
