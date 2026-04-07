@@ -97,7 +97,7 @@ export function TextoCompetenciasImport({ funcaoNome, onImportar }: TextoCompete
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <FileText className="w-4 h-4 mr-1" /> Texto
+        <FileText className="w-4 h-4 mr-1" /> Importar por Texto
       </Button>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) { setOpen(false); setStep("input"); setCompetencias([]); setTexto(""); } else setOpen(true); }}>
