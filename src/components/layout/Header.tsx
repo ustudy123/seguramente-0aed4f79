@@ -17,6 +17,23 @@ import { EmpresaSelector } from "@/components/layout/EmpresaSelector";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
 import { useHumorDiario } from "@/hooks/useHumorDiario";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { AppRole } from "@/types/database";
+
+const roleLabels: Record<string, string> = {
+  superadmin: "Super Admin",
+  owner: "Proprietário",
+  admin: "Administrador",
+  manager: "Gestor",
+  user: "Colaborador",
+};
+
+function getRoleLabel(roles: AppRole[]): string {
+  const hierarchy: AppRole[] = ["superadmin", "owner", "admin", "manager", "user"];
+  for (const r of hierarchy) {
+    if (roles.includes(r)) return roleLabels[r] || r;
+  }
+  return "Administrador";
+}
 
 interface HeaderProps {
   onMenuToggle?: () => void;
