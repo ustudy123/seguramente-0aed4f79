@@ -77,38 +77,34 @@ export default function Estrategia() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="swot" className="gap-1">
-            <Target className="w-4 h-4" /> SWOT
-          </TabsTrigger>
-          <TabsTrigger value="oceano" className="gap-1">
-            <Waves className="w-4 h-4" /> Oceano Azul
-          </TabsTrigger>
-          <TabsTrigger value="cultura" className="gap-1">
-            <Heart className="w-4 h-4" /> Cultura
-          </TabsTrigger>
-          <TabsTrigger value="organograma" className="gap-1">
-            <Users className="w-4 h-4" /> Organograma
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="swot" className="mt-4">
-          <SwotSection escopo={escopo} />
-        </TabsContent>
-
-        <TabsContent value="oceano" className="mt-4">
-          <OceanoAzulSection escopo={escopo} />
-        </TabsContent>
-
-        <TabsContent value="cultura" className="mt-4">
-          <CulturaSection escopo={escopo} />
-        </TabsContent>
-
-        <TabsContent value="organograma" className="mt-4">
+      {tab === "organograma" ? (
+        <div className="mt-4">
           <OrganogramaSection escopo={escopo} />
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : tab === "cultura" ? (
+        <div className="mt-4">
+          <CulturaSection escopo={escopo} />
+        </div>
+      ) : (
+        <Tabs value={tab} onValueChange={handleTabChange}>
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="swot" className="gap-1">
+              <Target className="w-4 h-4" /> SWOT
+            </TabsTrigger>
+            <TabsTrigger value="oceano" className="gap-1">
+              <Waves className="w-4 h-4" /> Oceano Azul
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="swot" className="mt-4">
+            <SwotSection escopo={escopo} />
+          </TabsContent>
+
+          <TabsContent value="oceano" className="mt-4">
+            <OceanoAzulSection escopo={escopo} />
+          </TabsContent>
+        </Tabs>
+      )}
 
       <GuiaRapidoEstrategia open={showGuia} onOpenChange={setShowGuia} />
     </motion.div>
