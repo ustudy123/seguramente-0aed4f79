@@ -22,35 +22,35 @@ const PASSOS = [
     icon: Compass,
     color: "text-blue-700",
     bgColor: "bg-blue-50",
-    titulo: "O que e esse modulo?",
-    subtitulo: "Visao geral — planejamento e governanca",
+    titulo: "O que é esse módulo?",
+    subtitulo: "Visão geral — planejamento e governança",
     descricao:
-      "O modulo de Estrategia & Governanca do Seguramente fornece ferramentas para diagnostico estrategico (SWOT), inovacao (Oceano Azul), gestao de cultura organizacional e estrutura hierarquica (Organograma). Tudo com escopo configuravel por empresa ou grupo economico.",
+      "O módulo de Estratégia & Governança do Seguramente fornece ferramentas para diagnóstico estratégico (SWOT), inovação (Oceano Azul), gestão de cultura organizacional e estrutura hierárquica (Organograma). Tudo com escopo configurável por empresa ou grupo econômico.",
     destaques: [
-      { icon: Target, label: "Analise SWOT com acoes vinculadas" },
-      { icon: Waves, label: "Estrategia Oceano Azul" },
+      { icon: Target, label: "Análise SWOT com ações vinculadas" },
+      { icon: Waves, label: "Estratégia Oceano Azul" },
       { icon: Heart, label: "Cultura organizacional mapeada" },
-      { icon: Users, label: "Organograma automatico" },
+      { icon: Users, label: "Organograma automático" },
     ],
-    dica: "Este modulo transforma planejamento em acao. Cada analise estrategica pode gerar acoes concretas com responsavel, prazo e acompanhamento.",
+    dica: "Este módulo transforma planejamento em ação. Cada análise estratégica pode gerar ações concretas com responsável, prazo e acompanhamento.",
   },
   {
     id: "swot",
     icon: Target,
     color: "text-blue-700",
     bgColor: "bg-blue-50",
-    titulo: "Passo 1 — Analise SWOT",
-    subtitulo: "Diagnostico estrategico",
+    titulo: "Passo 1 — Análise SWOT",
+    subtitulo: "Diagnóstico estratégico",
     descricao:
-      "A analise SWOT mapeia Forcas, Fraquezas, Oportunidades e Ameacas. Cadastre itens em cada quadrante com prioridade e descricao para construir o diagnostico estrategico da empresa.",
+      "A análise SWOT mapeia Forças, Fraquezas, Oportunidades e Ameaças. Cadastre itens em cada quadrante com prioridade e descrição para construir o diagnóstico estratégico da empresa.",
     acoes: [
-      "Acesse a aba **SWOT** no modulo",
+      "Acesse a aba **SWOT** no módulo",
       "Clique em **+ Novo Item** no quadrante desejado",
-      "Preencha **titulo, descricao e prioridade**",
-      "Vincule **acoes estrategicas** a cada item",
+      "Preencha **título, descrição e prioridade**",
+      "Vincule **ações estratégicas** a cada item",
       "Revise e atualize a SWOT **trimestralmente**",
     ],
-    dica: "A SWOT pode ser aplicada por empresa ou grupo economico. Use o seletor de escopo para alternar entre visoes.",
+    dica: "A SWOT pode ser aplicada por empresa ou grupo econômico. Use o seletor de escopo para alternar entre visões.",
   },
   {
     id: "oceano",
@@ -58,17 +58,17 @@ const PASSOS = [
     color: "text-cyan-600",
     bgColor: "bg-cyan-50",
     titulo: "Passo 2 — Oceano Azul",
-    subtitulo: "Inovacao e diferenciacao",
+    subtitulo: "Inovação e diferenciação",
     descricao:
-      "O Oceano Azul organiza a estrategia em 4 acoes: Eliminar, Reduzir, Elevar e Criar. Cada item pode ter acoes vinculadas com responsavel e prazo para execucao.",
+      "O Oceano Azul organiza a estratégia em 4 ações: Eliminar, Reduzir, Elevar e Criar. Cada item pode ter ações vinculadas com responsável e prazo para execução.",
     acoes: [
       "Acesse a aba **Oceano Azul**",
       "Cadastre itens nos quadrantes: **Eliminar, Reduzir, Elevar, Criar**",
-      "Para cada item, clique em **+ Acao** para vincular iniciativas",
-      "Defina **responsavel, prazo e status** da acao",
+      "Para cada item, clique em **+ Ação** para vincular iniciativas",
+      "Defina **responsável, prazo e status** da ação",
       "Acompanhe o **progresso** de cada iniciativa",
     ],
-    dica: "Foque em itens que os concorrentes consideram obvios. A inovacao real surge ao eliminar custos desnecessarios e criar valor unico.",
+    dica: "Foque em itens que os concorrentes consideram óbvios. A inovação real surge ao eliminar custos desnecessários e criar valor único.",
   },
   {
     id: "cultura",
@@ -78,15 +78,15 @@ const PASSOS = [
     titulo: "Passo 3 — Cultura Organizacional",
     subtitulo: "Valores e comportamentos",
     descricao:
-      "Mapeie os pilares da cultura organizacional: missao, visao, valores, comportamentos esperados e rituais. Identifique gaps entre a cultura desejada e a praticada.",
+      "Mapeie os pilares da cultura organizacional: missão, visão, valores, comportamentos esperados e rituais. Identifique gaps entre a cultura desejada e a praticada.",
     acoes: [
       "Acesse a aba **Cultura**",
-      "Defina **missao, visao e valores** da organizacao",
+      "Defina **missão, visão e valores** da organização",
       "Cadastre **comportamentos esperados** por valor",
       "Identifique **gaps culturais** e crie iniciativas",
-      "Vincule acoes a **prazos e responsaveis**",
+      "Vincule ações a **prazos e responsáveis**",
     ],
-    dica: "A cultura organizacional impacta diretamente a seguranca do trabalho. Empresas com cultura forte de prevencao apresentam menos acidentes.",
+    dica: "A cultura organizacional impacta diretamente a segurança do trabalho. Empresas com cultura forte de prevenção apresentam menos acidentes.",
   },
   {
     id: "organograma",
@@ -94,17 +94,17 @@ const PASSOS = [
     color: "text-green-600",
     bgColor: "bg-green-50",
     titulo: "Passo 4 — Organograma",
-    subtitulo: "Estrutura hierarquica e funcional",
+    subtitulo: "Estrutura hierárquica e funcional",
     descricao:
-      "Visualize e gerencie a estrutura da empresa. O sistema gera automaticamente a hierarquia baseada no 'Gestor Imediato' dos colaboradores. A opcao 'Limpar e Gerar' reconstroi vinculos orfaos.",
+      "Visualize e gerencie a estrutura da empresa. O sistema gera automaticamente a hierarquia baseada no 'Gestor Imediato' dos colaboradores. A opção 'Limpar e Gerar' reconstrói vínculos órfãos.",
     acoes: [
       "Acesse a aba **Organograma**",
       "Clique em **Gerar Automaticamente** para criar a hierarquia",
       "O sistema usa o campo **Gestor Imediato** dos colaboradores",
-      "Use **Limpar e Gerar** para corrigir vinculos orfaos",
-      "A selecao de funcoes lista **todos os cargos do tenant**",
+      "Use **Limpar e Gerar** para corrigir vínculos órfãos",
+      "A seleção de funções lista **todos os cargos do tenant**",
     ],
-    dica: "Mantenha o organograma atualizado. Ele alimenta avaliacoes de desempenho, fluxos de aprovacao e identificacao de gestores em diversos modulos.",
+    dica: "Mantenha o organograma atualizado. Ele alimenta avaliações de desempenho, fluxos de aprovação e identificação de gestores em diversos módulos.",
   },
   {
     id: "escopo",
@@ -112,17 +112,17 @@ const PASSOS = [
     color: "text-blue-700",
     bgColor: "bg-blue-50",
     titulo: "Passo 5 — Seletor de Escopo",
-    subtitulo: "Empresa ou grupo economico",
+    subtitulo: "Empresa ou grupo econômico",
     descricao:
-      "O seletor de escopo permite alternar entre a visao de uma empresa individual e a visao consolidada do grupo economico. Todas as ferramentas respeitam o escopo selecionado.",
+      "O seletor de escopo permite alternar entre a visão de uma empresa individual e a visão consolidada do grupo econômico. Todas as ferramentas respeitam o escopo selecionado.",
     acoes: [
-      "Localize o **seletor de escopo** no topo da pagina",
-      "Selecione **Empresa** para visao individual",
-      "Selecione **Grupo** para visao consolidada",
+      "Localize o **seletor de escopo** no topo da página",
+      "Selecione **Empresa** para visão individual",
+      "Selecione **Grupo** para visão consolidada",
       "Ao trocar empresa ativa, o escopo **reseta automaticamente**",
-      "Use o escopo de grupo para **reunioes de diretoria**",
+      "Use o escopo de grupo para **reuniões de diretoria**",
     ],
-    dica: "O escopo se sincroniza reativamente com a empresa ativa. Se o grupo selecionado nao for valido para a nova empresa, ele reseta para 'Empresa'.",
+    dica: "O escopo se sincroniza reativamente com a empresa ativa. Se o grupo selecionado não for válido para a nova empresa, ele reseta para 'Empresa'.",
   },
   {
     id: "recursos",
@@ -130,17 +130,17 @@ const PASSOS = [
     color: "text-blue-700",
     bgColor: "bg-blue-50",
     titulo: "Documentos e Recursos",
-    subtitulo: "Material de referencia offline",
+    subtitulo: "Material de referência offline",
     descricao:
-      "O Seguramente registra todas as analises estrategicas com historico e rastreabilidade. Baixe o Manual Completo em PDF para ter um guia de referencia offline.",
+      "O Seguramente registra todas as análises estratégicas com histórico e rastreabilidade. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
     acoes: [
-      "**Analise SWOT** — diagnostico com acoes vinculadas",
-      "**Oceano Azul** — inovacao com acompanhamento de iniciativas",
+      "**Análise SWOT** — diagnóstico com ações vinculadas",
+      "**Oceano Azul** — inovação com acompanhamento de iniciativas",
       "**Cultura** — mapeamento de valores e comportamentos",
-      "**Organograma** — estrutura hierarquica exportavel",
-      "**Manual do modulo** — baixe abaixo em PDF para referencia offline",
+      "**Organograma** — estrutura hierárquica exportável",
+      "**Manual do módulo** — baixe abaixo em PDF para referência offline",
     ],
-    dica: "Documente decisoes estrategicas e justificativas. Em auditorias e due diligences, a rastreabilidade demonstra maturidade de governanca.",
+    dica: "Documente decisões estratégicas e justificativas. Em auditorias e due diligences, a rastreabilidade demonstra maturidade de governança.",
   },
 ];
 
@@ -170,7 +170,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
               <BookOpen className="h-5 w-5 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-foreground">Guia do Modulo Estrategia & Governanca</h2>
+              <h2 className="font-bold text-base text-foreground">Guia do Módulo Estratégia & Governança</h2>
               <p className="text-xs text-muted-foreground">
                 {passo + 1} de {PASSOS.length} — {atual.titulo}
               </p>
@@ -226,7 +226,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
             })}
           </div>
 
-          {/* Conteudo */}
+          {/* Conteúdo */}
           <div className="flex-1 overflow-y-auto">
             <AnimatePresence mode="wait">
               <motion.div
@@ -237,7 +237,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
                 transition={{ duration: 0.2 }}
                 className="p-6 space-y-5"
               >
-                {/* Cabecalho */}
+                {/* Cabeçalho */}
                 <div className="flex items-start gap-4">
                   <div className={cn("p-3 rounded-xl shrink-0", atual.bgColor)}>
                     <IconeAtual className={cn("h-6 w-6", atual.color)} />
@@ -252,7 +252,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
                   </div>
                 </div>
 
-                {/* Descricao */}
+                {/* Descrição */}
                 <p className="text-sm text-foreground/80 leading-relaxed">{atual.descricao}</p>
 
                 {/* Destaques (overview) */}
@@ -270,7 +270,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
                   </div>
                 )}
 
-                {/* Acoes */}
+                {/* Ações */}
                 {atual.acoes && (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -302,11 +302,11 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
                   </div>
                 )}
 
-                {/* CTA Manual PDF — ultima etapa */}
+                {/* CTA Manual PDF — última etapa */}
                 {passo === PASSOS.length - 1 && (
                   <div className="flex flex-col items-center gap-3 pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground text-center">
-                      Quer um guia de referencia para consultar offline?
+                      Quer um guia de referência para consultar offline?
                     </p>
                     <ManualEstrategia />
                   </div>
@@ -352,7 +352,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange }: GuiaRapidoEstrategi
 
           {passo < PASSOS.length - 1 ? (
             <Button size="sm" onClick={() => irPara(passo + 1)} className="gap-1.5 bg-blue-700 hover:bg-blue-800">
-              Proximo <ChevronRight className="h-4 w-4" />
+              Próximo <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button size="sm" onClick={handleClose} className="gap-1.5 bg-blue-700 hover:bg-blue-800">
