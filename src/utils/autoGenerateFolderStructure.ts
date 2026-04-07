@@ -85,13 +85,20 @@ const STANDARD_STRUCTURE: FolderNode[] = [
 export async function autoGenerateFolderStructure(
   tenantId: string,
   userId: string,
-  userName: string | null
+  userName: string | null,
+  empresaId?: string | null
 ) {
   // Fetch ALL existing folders for this tenant
-  const { data: existentes } = await supabase
+  let existentesQuery = supabase
     .from("documento_pastas")
     .select("id, nome, pasta_pai_id")
     .eq("tenant_id", tenantId);
+
+  existentesQuery = empresaId
+    ? existentesQuery.eq("empresa_id", empresaId)
+    : existentesQuery.is("empresa_id", null);
+
+  const { data: existentes } = await existentesQuery;
 
   const existing = existentes || [];
 
@@ -114,6 +121,7 @@ export async function autoGenerateFolderStructure(
     colaborador_nome: null;
     ano: null;
     tenant_id: string;
+    empresa_id: string | null;
     criado_por: string;
     criado_por_nome: string | null;
   }> = [];
@@ -138,6 +146,7 @@ export async function autoGenerateFolderStructure(
         colaborador_nome: null,
         ano: null,
         tenant_id: tenantId,
+        empresa_id: empresaId || null,
         criado_por: userId,
         criado_por_nome: userName,
       });
