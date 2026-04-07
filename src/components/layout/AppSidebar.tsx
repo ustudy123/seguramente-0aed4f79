@@ -75,10 +75,10 @@ const menuSections: MenuSection[] = [
         icon: FolderOpen,
         children: [
           { title: "Empresa", path: "/empresa" },
-          { title: "Colaboradores", path: "/colaboradores" },
+          { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" },
           { title: "Departamentos", path: "/cadastros/departamentos" },
           { title: "Funções", path: "/cadastros/cargos" },
-          { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" },
+          { title: "Colaboradores", path: "/colaboradores" },
         ],
       },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
