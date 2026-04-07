@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
 import type { Json } from '@/integrations/supabase/types';
+import { autoGenerateFolderStructure } from '@/utils/autoGenerateFolderStructure';
 
 export function useEmpresaCadastro(empresaId?: string | null) {
   const { tenantId } = useTenant();
