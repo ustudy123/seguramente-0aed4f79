@@ -165,7 +165,7 @@ const Documentos = () => {
     const initKey = `${tenantId}_${empresaAtivaId || 'default'}`;
     if (autoInitDone === initKey) return;
     setAutoInitDone(initKey);
-    initializeDefaultStructure().catch(() => {});
+    initializeDefaultStructure(undefined).catch(() => {});
   }, [tenantId, loading, initializing, empresaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenUpload = useCallback((pastaId?: string) => {
