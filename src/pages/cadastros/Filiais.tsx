@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, MapPin, Search, Building2, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Search, Building2, ChevronRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -11,6 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -157,6 +158,17 @@ export default function Filiais() {
           <p className="text-muted-foreground">Selecione a empresa para gerenciar seus estabelecimentos ou obras</p>
         </motion.div>
 
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Alert className="bg-primary/5 border-primary/20">
+            <Info className="w-4 h-4 text-primary" />
+            <AlertTitle className="text-primary font-semibold">O que é Estabelecimento ou Obra?</AlertTitle>
+            <AlertDescription className="text-muted-foreground">
+              <p>Estabelecimentos são locais fixos como sedes, filiais ou armazéns. Obras são locais temporários de prestação de serviços.</p>
+              <p className="mt-1 font-medium">Exemplos: Escritório Central, Filial Shopping, Galpão Logístico, Canteiro de Obras Residencial.</p>
+            </AlertDescription>
+          </Alert>
+        </motion.div>
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -241,6 +253,14 @@ export default function Filiais() {
             Novo Registro
           </Button>
         </div>
+
+        <Alert className="bg-primary/5 border-primary/20">
+          <Info className="w-4 h-4 text-primary" />
+          <AlertTitle className="text-primary font-semibold text-sm">Entenda os tipos de registro</AlertTitle>
+          <AlertDescription className="text-xs text-muted-foreground">
+            <p><strong>Estabelecimento:</strong> Unidades fixas (Sede, Filial, Depósito). <strong>Obra:</strong> Locais temporários (Canteiro de obras, reformas).</p>
+          </AlertDescription>
+        </Alert>
       </motion.div>
 
       {/* Search */}
@@ -346,6 +366,11 @@ export default function Filiais() {
                   <option value="estabelecimento">Estabelecimento</option>
                   <option value="obra">Obra</option>
                 </select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {formData.tipo === "estabelecimento" 
+                    ? "Locais fixos (Sede, Filiais, Depósitos)." 
+                    : "Locais temporários (Canteiros, Reformas)."}
+                </p>
               </div>
               {formData.tipo === "obra" && (
                 <div className="space-y-2">
