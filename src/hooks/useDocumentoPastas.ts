@@ -170,7 +170,8 @@ export function useDocumentoPastas() {
 
       const count = await criarPastasColaboradoresEmLote(
         tenantId,
-        colabsSemPasta.map((c: Colaborador) => ({ id: c.id, nome: c.nome_completo, cpf: c.cpf }))
+        colabsSemPasta.map((c: Colaborador) => ({ id: c.id, nome: c.nome_completo, cpf: c.cpf })),
+        empresaAtivaId
       );
       return count;
     },
