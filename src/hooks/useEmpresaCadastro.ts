@@ -11,6 +11,26 @@ export function useEmpresaCadastro(empresaId?: string | null) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Carrega dados do cliente (onboarding) para preenchimento automático
+  const { data: cliente } = useQuery({
+    queryKey: ['cliente_onboarding', tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      const { data, error } = await supabase
+        .from('programa_validador_clientes')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao buscar dados do cliente:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!tenantId,
+  });
+
   // Lista todas as empresas do tenant
   const { data: empresas = [], isLoading: isLoadingList } = useQuery({
     queryKey: ['empresa_cadastro_list', tenantId],
