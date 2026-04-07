@@ -83,6 +83,10 @@ export function GerarVagaSection({ cargoId, cargoNome, cargoDescricao, responsab
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadPdf = () => {
+    exportTextToPdf(anuncio, `Vaga_${cargoNome.replace(/\s+/g, "_")}.pdf`, `Anuncio de Vaga - ${cargoNome}`);
+  };
+
   return (
     <div className="space-y-4">
       <Card>
