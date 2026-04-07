@@ -63,9 +63,25 @@ export default function Empresa() {
       setFormData(cadastro);
     }
     if (viewMode === 'new') {
-      setFormData({});
+      if (cliente) {
+        const docClean = cliente.cnpj?.replace(/\D/g, '') || '';
+        const isCnpj = docClean.length === 14;
+        const isCpf = docClean.length === 11;
+
+        setFormData({
+          razao_social: cliente.nome_empresa || '',
+          cnpj: isCnpj ? cliente.cnpj : '',
+          cpf: isCpf ? cliente.cnpj : '',
+          email: cliente.poc_email || '',
+          telefone: cliente.poc_telefone || '',
+          total_colaboradores: cliente.quantidade_colaboradores || 0,
+          tipo_pessoa: isCpf ? 'pf' : 'pj',
+        });
+      } else {
+        setFormData({});
+      }
     }
-  }, [cadastro, viewMode]);
+  }, [cadastro, viewMode, cliente]);
 
   const handleChange = (updates: Partial<EmpresaCadastro>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
