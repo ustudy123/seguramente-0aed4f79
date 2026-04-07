@@ -29,6 +29,8 @@ export function SwotSection({ escopo }: Props) {
   const [selectedSwot, setSelectedSwot] = useState<EstrategiaSwot | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", escopo: "empresa", periodo: "" });
+  const [dataInicio, setDataInicio] = useState<Date | undefined>();
+  const [dataFim, setDataFim] = useState<Date | undefined>();
 
   // Reset selected SWOT when company or scope changes
   useEffect(() => {
