@@ -206,7 +206,7 @@ export default function Filiais() {
             <div className="text-center py-12">
               <Building2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
-                {cnpjSearch ? "Nenhuma empresa encontrada com este CNPJ" : "Nenhuma empresa cadastrada"}
+                {cnpjSearch ? "Nenhuma empresa (Matriz) encontrada com este CNPJ" : "Nenhuma empresa (Matriz) cadastrada"}
               </p>
             </div>
           ) : (
