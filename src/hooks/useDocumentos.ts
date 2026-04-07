@@ -168,6 +168,7 @@ export function useDocumentos() {
       observacoes,
       documentoExistenteId,
       motivoRevisao,
+      pastaId,
     }: {
       file: File;
       colaboradorNome: string;
@@ -252,7 +253,7 @@ export function useDocumentos() {
       }
 
       // ── NOVO DOCUMENTO ───────────────────────────────────────────────────
-      let resolvedPastaId: string | null = vars.pastaId || null;
+      let resolvedPastaId: string | null = pastaId || null;
 
       if (colaboradorId && !resolvedPastaId) {
         const pastaColaboradorId = await criarPastaColaborador({
