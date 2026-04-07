@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { criarPastaColaborador } from "@/utils/criarPastaColaborador";
 import { toast } from "sonner";
 import { addDays, isBefore, isAfter } from "date-fns";
 
@@ -84,6 +85,43 @@ function calcularStatus(dataValidade: string | null): "valido" | "vencendo" | "v
   if (isBefore(validade, hoje)) return "vencido";
   if (isAfter(hoje, trintaDiasAntes)) return "vencendo";
   return "valido";
+}
+
+type SubpastaColaborador = "Admissão" | "Vida Funcional" | "Saúde Ocupacional" | "Desligamento";
+
+function inferirSubpastaColaboradorPorTipo(tipo: string): SubpastaColaborador {
+  const tipoNormalizado = tipo.toLowerCase();
+
+  if (
+    tipoNormalizado.includes("aso") ||
+    tipoNormalizado.includes("atestado") ||
+    tipoNormalizado.includes("epi") ||
+    tipoNormalizado.includes("ordem de serviço") ||
+    tipoNormalizado.includes("treinamento nr")
+  ) {
+    return "Saúde Ocupacional";
+  }
+
+  if (tipoNormalizado.includes("deslig")) {
+    return "Desligamento";
+  }
+
+  if (
+    tipoNormalizado.includes("ficha de registro") ||
+    tipoNormalizado.includes("contrato") ||
+    tipoNormalizado.includes("ctps") ||
+    tipoNormalizado.includes("rg") ||
+    tipoNormalizado.includes("cpf") ||
+    tipoNormalizado.includes("resid") ||
+    tipoNormalizado.includes("eleitor") ||
+    tipoNormalizado.includes("reservista") ||
+    tipoNormalizado.includes("cnh") ||
+    tipoNormalizado.includes("certificado")
+  ) {
+    return "Admissão";
+  }
+
+  return "Vida Funcional";
 }
 
 export function useDocumentos() {
@@ -213,6 +251,31 @@ export function useDocumentos() {
       }
 
       // ── NOVO DOCUMENTO ───────────────────────────────────────────────────
+      let pastaId: string | null = null;
+
+      if (colaboradorId) {
+        const pastaColaboradorId = await criarPastaColaborador({
+          tenantId,
+          colaboradorId,
+          colaboradorNome,
+          colaboradorCpf: colaboradorCpf || null,
+        });
+
+        if (pastaColaboradorId) {
+          const nomeSubpasta = inferirSubpastaColaboradorPorTipo(tipo);
+          const { data: subpasta, error: subpastaError } = await supabase
+            .from("documento_pastas")
+            .select("id")
+            .eq("tenant_id", tenantId)
+            .eq("pasta_pai_id", pastaColaboradorId)
+            .eq("nome", nomeSubpasta)
+            .maybeSingle();
+
+          if (subpastaError) throw subpastaError;
+          pastaId = subpasta?.id || pastaColaboradorId;
+        }
+      }
+
       const { data, error } = await supabase
         .from("documentos" as never)
         .insert({
@@ -232,6 +295,7 @@ export function useDocumentos() {
           observacoes: observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
+          pasta_id: pastaId,
           versao_atual: 1,
           total_versoes: 1,
         } as never)
@@ -247,6 +311,8 @@ export function useDocumentos() {
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
+      queryClient.invalidateQueries({ queryKey: ["documento-pastas"] });
       queryClient.invalidateQueries({ queryKey: ["documento-versoes"] });
       if (vars.documentoExistenteId) {
         toast.success("Nova versão salva com sucesso! Versão anterior preservada no histórico.");
@@ -281,6 +347,8 @@ export function useDocumentos() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["documentos-com-pasta"] });
+      queryClient.invalidateQueries({ queryKey: ["documento-pastas"] });
       toast.success("Documento excluído com sucesso!");
     },
     onError: (error: Error) => {
