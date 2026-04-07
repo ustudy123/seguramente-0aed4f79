@@ -182,6 +182,8 @@ ${popsText}`;
 
     const prompt = `Você é um consultor sênior de RH e Gestão de Pessoas. Com base nos dados abaixo, gere um MANUAL DE FUNÇÕES E COMPETÊNCIAS completo, profissional e visualmente rico em HTML.
 
+${companyContext}
+
 TÍTULO: ${tituloManual}
 EMPRESA: ${nomeEmpresa}
 TOTAL DE FUNÇÕES: ${cargos.length}
