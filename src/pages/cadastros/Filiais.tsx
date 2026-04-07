@@ -162,9 +162,25 @@ export default function Filiais() {
           <Alert className="bg-primary/5 border-primary/20">
             <Info className="w-4 h-4 text-primary" />
             <AlertTitle className="text-primary font-semibold">O que é Estabelecimento ou Obra?</AlertTitle>
-            <AlertDescription className="text-muted-foreground">
-              <p>Estabelecimentos são locais fixos como sedes, filiais ou armazéns. Obras são locais temporários de prestação de serviços.</p>
-              <p className="mt-1 font-medium">Exemplos: Escritório Central, Filial Shopping, Galpão Logístico, Canteiro de Obras Residencial.</p>
+            <AlertDescription className="text-muted-foreground space-y-4 pt-2">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="font-bold text-foreground flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    Estabelecimento
+                  </p>
+                  <p className="text-sm">Locais fixos da empresa como sedes, filiais, escritórios ou armazéns.</p>
+                  <p className="text-xs italic text-primary/70">Ex: Escritório Central, Filial Shopping, Galpão Logístico.</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-foreground flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    Obra
+                  </p>
+                  <p className="text-sm">Locais temporários de prestação de serviços, construções ou reformas.</p>
+                  <p className="text-xs italic text-primary/70">Ex: Canteiro de Obras Residencial, Reforma Unidade X.</p>
+                </div>
+              </div>
             </AlertDescription>
           </Alert>
         </motion.div>
@@ -254,11 +270,16 @@ export default function Filiais() {
           </Button>
         </div>
 
-        <Alert className="bg-primary/5 border-primary/20">
-          <Info className="w-4 h-4 text-primary" />
+        <Alert className="bg-primary/5 border-primary/20 py-3">
+          <Info className="w-4 h-4 text-primary mt-1" />
           <AlertTitle className="text-primary font-semibold text-sm">Entenda os tipos de registro</AlertTitle>
-          <AlertDescription className="text-xs text-muted-foreground">
-            <p><strong>Estabelecimento:</strong> Unidades fixas (Sede, Filial, Depósito). <strong>Obra:</strong> Locais temporários (Canteiro de obras, reformas).</p>
+          <AlertDescription className="text-xs text-muted-foreground grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            <div>
+              <span className="font-bold text-foreground">Estabelecimento:</span> Locais fixos (Sede, Filial, Depósito).
+            </div>
+            <div>
+              <span className="font-bold text-foreground">Obra:</span> Locais temporários (Canteiros, Reformas, Prestação de serviços).
+            </div>
           </AlertDescription>
         </Alert>
       </motion.div>
@@ -366,10 +387,10 @@ export default function Filiais() {
                   <option value="estabelecimento">Estabelecimento</option>
                   <option value="obra">Obra</option>
                 </select>
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
                   {formData.tipo === "estabelecimento" 
-                    ? "Locais fixos (Sede, Filiais, Depósitos)." 
-                    : "Locais temporários (Canteiros, Reformas)."}
+                    ? "Locais fixos como sedes, filiais e escritórios." 
+                    : "Locais temporários como canteiros de obras e reformas."}
                 </p>
               </div>
               {formData.tipo === "obra" && (
