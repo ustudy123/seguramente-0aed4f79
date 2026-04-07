@@ -35,6 +35,8 @@ Deno.serve(async (req) => {
     const tenantId = profile.tenant_id;
     const { cargo_ids, empresa_nome } = await req.json();
 
+    const companyContext = await getCompanyContext(supabase, tenantId);
+
     const { data: tenant } = await supabase
       .from("tenants")
       .select("nome")
