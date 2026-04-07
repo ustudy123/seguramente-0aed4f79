@@ -63,6 +63,19 @@ const normalizeSearchText = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+const checkIsActive = (path: string, pathname: string, search: string) => {
+  if (!path) return false;
+  const fullPath = pathname + search;
+  if (path.includes("?")) {
+    return fullPath === path;
+  }
+  if (path === "/estrategia") {
+    const params = new URLSearchParams(search);
+    const tab = params.get("tab");
+    return pathname === "/estrategia" && (!tab || (tab !== "organograma" && tab !== "cultura"));
+  }
+  return pathname === path;
+};
 
 const menuSections: MenuSection[] = [
   {
