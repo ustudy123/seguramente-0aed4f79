@@ -92,7 +92,6 @@ const menuSections: MenuSection[] = [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
       { title: "Cultura", icon: Heart, path: "/estrategia?tab=cultura" },
-      { title: "Cultura & Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
     ],
   },
@@ -129,10 +128,11 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Pessoas & Cultura",
+    label: "PESSOAS",
     color: "text-violet-400",
     sectionIcon: Users,
     items: [
+      { title: "Cultura e Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
       { title: "Onboarding", icon: UserPlus, path: "/onboarding-rh" },
       { title: "Férias", icon: Calendar, path: "/ferias" },

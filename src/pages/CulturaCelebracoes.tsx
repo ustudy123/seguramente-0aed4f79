@@ -18,7 +18,7 @@ const CulturaCelebracoes = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Sparkles className="w-7 h-7 text-primary" />
-            Cultura & Celebrações
+            PESSOAS
           </h1>
           <p className="text-muted-foreground mt-1">
             Cultura não se improvisa. Se planeja, se executa e se acompanha.
