@@ -74,7 +74,7 @@ import Usuarios from "./pages/Usuarios";
 import PerfisAcesso from "./pages/PerfisAcesso";
 import MeuPerfil from "./pages/MeuPerfil";
 
-// Cadastros Pages
+import Pendencias from "./pages/Pendencias";
 import Departamentos from "./pages/cadastros/Departamentos";
 import Cargos from "./pages/cadastros/Cargos";
 import Filiais from "./pages/cadastros/Filiais";
@@ -175,6 +175,7 @@ const App = () => (
               }
             >
               <Route path="/" element={<Dashboard />} />
+              <Route path="/pendencias" element={<Pendencias />} />
               <Route path="/feed" element={<Feed />} />
               <Route path="/colaboradores" element={<Colaboradores />} />
               <Route path="/contratos-experiencia" element={<ContratosExperiencia />} />

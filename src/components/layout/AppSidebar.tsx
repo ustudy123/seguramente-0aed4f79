@@ -6,6 +6,7 @@ import {
   Home,
   Users,
   MessageSquareHeart,
+  ClipboardList,
   Clock,
   Calendar,
   Star,
@@ -79,6 +80,16 @@ const checkIsActive = (path: string, pathname: string, search: string) => {
 };
 
 const menuSections: MenuSection[] = [
+  {
+    label: "Minha Gestão",
+    color: "text-amber-400",
+    sectionIcon: ClipboardList,
+    items: [
+      { title: "Início", icon: Home, path: "/" },
+      { title: "Pendências", icon: ClipboardList, path: "/pendencias" },
+    ],
+  },
+
   {
     label: "Estrutura Organizacional",
     color: "text-cyan-400",
@@ -390,8 +401,8 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const allItems = useMemo(() => {
     const items: { title: string; path: string; icon: React.ElementType; sectionLabel: string }[] = [];
     
-    // Add Início as first item
-    items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Principal" });
+    // Search items from sections
+
 
     filteredSections.forEach((section) => {
       section.items.forEach((item) => {
