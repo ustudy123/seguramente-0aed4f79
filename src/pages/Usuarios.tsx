@@ -32,11 +32,12 @@ const TIPO_OPTIONS: { value: string; label: string }[] = [
 
 export default function Usuarios() {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const { usuarios, isLoading } = useUsuarios();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterTipo, setFilterTipo] = useState("todos");
-  const [filterEmpresa, setFilterEmpresa] = useState("todos");
+  const [filterEmpresa, setFilterEmpresa] = useState(empresaAtivaId || "todos");
   const [showNovo, setShowNovo] = useState(false);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const selecionado = selecionadoId ? usuarios.find(u => u.id === selecionadoId) || null : null;
