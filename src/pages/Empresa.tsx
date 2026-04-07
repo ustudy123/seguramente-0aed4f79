@@ -73,6 +73,7 @@ export default function Empresa() {
         telefone: cadastro.telefone || cliente?.poc_telefone || '',
         total_colaboradores: cadastro.total_colaboradores || cliente?.quantidade_colaboradores || 0,
         tipo_pessoa: cadastro.tipo_pessoa || (onboardingIsCpf ? 'pf' : 'pj'),
+        endereco: cadastro.endereco || cliente?.endereco || '',
       });
     }
     
@@ -86,6 +87,7 @@ export default function Empresa() {
           telefone: cliente.poc_telefone || '',
           total_colaboradores: cliente.quantidade_colaboradores || 0,
           tipo_pessoa: onboardingIsCpf ? 'pf' : 'pj',
+          endereco: cliente.endereco || '',
         });
       } else {
         setFormData({});
