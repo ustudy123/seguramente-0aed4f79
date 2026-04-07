@@ -386,28 +386,6 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
     });
   };
 
-function filterTree(nodes: DocumentoPastaNode[], term: string): DocumentoPastaNode[] {
-  const normalized = term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  function matches(node: DocumentoPastaNode): boolean {
-    const name = node.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return name.includes(normalized);
-  }
-
-  function filterNode(node: DocumentoPastaNode): DocumentoPastaNode | null {
-    const filteredChildren = node.children
-      .map(filterNode)
-      .filter(Boolean) as DocumentoPastaNode[];
-    
-    if (matches(node) || filteredChildren.length > 0) {
-      return { ...node, children: filteredChildren };
-    }
-    return null;
-  }
-
-  return nodes.map(filterNode).filter(Boolean) as DocumentoPastaNode[];
-}
-
   const showEmptyState = !loading && pastas.length === 0;
 
   return (
