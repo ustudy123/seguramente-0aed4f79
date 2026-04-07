@@ -58,8 +58,8 @@ export function AudioCompetenciasImport({ funcaoNome, onImportar }: AudioCompete
   };
 
   const handleStopRecording = async () => {
-    const audioBase64 = await recorder.stopRecording();
-    if (audioBase64) await processarAudio(audioBase64);
+    recorder.stopRecording();
+    // Audio will be available via recorder state after stop
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
