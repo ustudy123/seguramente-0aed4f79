@@ -205,6 +205,7 @@ export default function Register() {
           documento: cleanDoc,
           userId: authData.user.id,
           email: data.email,
+          telefone: data.whatsapp,
         },
       });
 

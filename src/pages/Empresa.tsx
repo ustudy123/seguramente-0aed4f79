@@ -15,6 +15,7 @@ import { EmpresaList } from '@/components/empresa/EmpresaList';
 import { EmpresaAIContext } from '@/components/empresa/EmpresaAIContext';
 import { GruposEconomicosManager } from '@/components/empresa/GruposEconomicosManager';
 import { useGruposEconomicos } from '@/hooks/useGruposEconomicos';
+import { useAuth } from '@/hooks/useAuth';
 import type { EmpresaCadastro } from '@/types/empresa';
 import { toast } from 'sonner';
 
@@ -24,6 +25,7 @@ export default function Empresa() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('dados');
+  const { user, profile } = useAuth();
 
   const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai', 'importar'];
   const currentTabIndex = TABS.indexOf(activeTab);
@@ -69,8 +71,8 @@ export default function Empresa() {
         razao_social: cadastro.razao_social || cliente?.nome_empresa || '',
         cnpj: cadastro.cnpj || (onboardingIsCnpj ? cliente?.cnpj : '') || '',
         cpf: cadastro.cpf || (onboardingIsCpf ? cliente?.cnpj : '') || '',
-        email: cadastro.email || cliente?.poc_email || '',
-        telefone: cadastro.telefone || cliente?.poc_telefone || '',
+        email: cadastro.email || cliente?.poc_email || user?.email || '',
+        telefone: cadastro.telefone || cliente?.poc_telefone || profile?.telefone || '',
         total_colaboradores: cadastro.total_colaboradores || cliente?.quantidade_colaboradores || 0,
         tipo_pessoa: cadastro.tipo_pessoa || (onboardingIsCpf ? 'pf' : 'pj'),
         endereco: cadastro.endereco || cliente?.endereco || '',
@@ -83,17 +85,20 @@ export default function Empresa() {
           razao_social: cliente.nome_empresa || '',
           cnpj: onboardingIsCnpj ? cliente.cnpj : '',
           cpf: onboardingIsCpf ? cliente.cnpj : '',
-          email: cliente.poc_email || '',
-          telefone: cliente.poc_telefone || '',
+          email: cliente.poc_email || user?.email || '',
+          telefone: cliente.poc_telefone || profile?.telefone || '',
           total_colaboradores: cliente.quantidade_colaboradores || 0,
           tipo_pessoa: onboardingIsCpf ? 'pf' : 'pj',
           endereco: cliente.endereco || '',
         });
-      } else {
-        setFormData({});
-      }
+        } else {
+          setFormData({
+            email: user?.email || '',
+            telefone: profile?.telefone || '',
+          });
+        }
     }
-  }, [cadastro, viewMode, cliente]);
+  }, [cadastro, viewMode, cliente, user, profile]);
 
   const handleChange = (updates: Partial<EmpresaCadastro>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
