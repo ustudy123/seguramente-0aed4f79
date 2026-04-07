@@ -4,6 +4,7 @@
  * Creates audit log entries for traceability.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { criarPastaColaborador } from "./criarPastaColaborador";
 
 interface ArquivarDocumentoParams {
   tenantId: string;
@@ -30,7 +31,8 @@ interface ArquivarDocumentoParams {
 
 /**
  * Finds or creates the appropriate folder for a collaborator under "Gestão de Pessoas".
- * Returns the pasta_id or null.
+ * Delegates to the shared criarPastaColaborador utility.
+ * Returns the pasta_id (or subfolder id if subpasta is specified).
  */
 async function findOrCreateColaboradorPasta(
   tenantId: string,
@@ -39,83 +41,14 @@ async function findOrCreateColaboradorPasta(
   colaboradorCpf?: string | null,
   subpasta?: string | null
 ): Promise<string | null> {
-  // 1. Find existing collaborator folder
-  const { data: existing } = await supabase
-    .from("documento_pastas")
-    .select("id")
-    .eq("tenant_id", tenantId)
-    .eq("colaborador_id", colaboradorId)
-    .eq("tipo", "colaborador")
-    .maybeSingle();
+  const colabPastaId = await criarPastaColaborador({
+    tenantId,
+    colaboradorId,
+    colaboradorNome,
+    colaboradorCpf,
+  });
 
-  let colabPastaId = existing?.id || null;
-
-  // 2. If not found, create under "Gestão de Pessoas"
-  if (!colabPastaId) {
-    // Find "Gestão de Pessoas" root
-    const { data: gestaoPessoas } = await supabase
-      .from("documento_pastas")
-      .select("id")
-      .eq("tenant_id", tenantId)
-      .eq("nome", "Gestão de Pessoas")
-      .is("pasta_pai_id", null)
-      .maybeSingle();
-
-    let parentId = gestaoPessoas?.id || null;
-
-    // If root doesn't exist, create it
-    if (!parentId) {
-      const { data: created } = await supabase
-        .from("documento_pastas")
-        .insert({
-          tenant_id: tenantId,
-          nome: "Gestão de Pessoas",
-          tipo: "root" as const,
-          ordem: 5,
-          icone: "Users",
-        })
-        .select("id")
-        .single();
-      parentId = created?.id || null;
-    }
-
-    if (parentId) {
-      // Create collaborator folder
-      const { data: colabPasta } = await supabase
-        .from("documento_pastas")
-        .insert({
-          tenant_id: tenantId,
-          nome: colaboradorNome,
-          tipo: "colaborador" as const,
-          pasta_pai_id: parentId,
-          colaborador_id: colaboradorId,
-          colaborador_cpf: colaboradorCpf || null,
-          colaborador_nome: colaboradorNome,
-          ordem: 0,
-          icone: "User",
-        })
-        .select("id")
-        .single();
-
-      colabPastaId = colabPasta?.id || null;
-
-      // Create standard subfolders
-      if (colabPastaId) {
-        const subfolders = ["Admissão", "Vida Funcional", "Saúde Ocupacional", "Desligamento"];
-        for (let i = 0; i < subfolders.length; i++) {
-          await supabase.from("documento_pastas").insert({
-            tenant_id: tenantId,
-            nome: subfolders[i],
-            tipo: "categoria" as const,
-            pasta_pai_id: colabPastaId,
-            ordem: i,
-          });
-        }
-      }
-    }
-  }
-
-  // 3. If subpasta requested, find it inside the collaborator folder
+  // If subpasta requested, find it inside the collaborator folder
   if (colabPastaId && subpasta) {
     const { data: sub } = await supabase
       .from("documento_pastas")
