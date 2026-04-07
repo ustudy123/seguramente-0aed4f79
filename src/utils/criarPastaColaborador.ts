@@ -19,28 +19,38 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
   const { tenantId, colaboradorId, colaboradorNome, colaboradorCpf, empresaId } = params;
 
   try {
-    // 1. Check if collaborator folder already exists
-    const { data: existing } = await supabase
+    // 1. Check if collaborator folder already exists (scoped by empresa_id)
+    let existingQuery = supabase
       .from("documento_pastas")
       .select("id")
       .eq("tenant_id", tenantId)
       .eq("colaborador_id", colaboradorId)
-      .eq("tipo", "colaborador")
-      .maybeSingle();
+      .eq("tipo", "colaborador");
+
+    existingQuery = empresaId
+      ? existingQuery.eq("empresa_id", empresaId)
+      : existingQuery.is("empresa_id", null);
+
+    const { data: existing } = await existingQuery.maybeSingle();
 
     if (existing?.id) {
       // Ensure subfolders exist
-      await ensureSubfolders(tenantId, existing.id);
+      await ensureSubfolders(tenantId, existing.id, empresaId);
       return existing.id;
     }
 
-    // 2. Find "Gestão de Pessoas" root folder
-    const { data: gestaoPessoas } = await supabase
+    // 2. Find "Gestão de Pessoas" root folder (scoped by empresa_id)
+    let gpQuery = supabase
       .from("documento_pastas")
       .select("id")
       .eq("tenant_id", tenantId)
-      .eq("nome", "Gestão de Pessoas")
-      .maybeSingle();
+      .eq("nome", "Gestão de Pessoas");
+
+    gpQuery = empresaId
+      ? gpQuery.eq("empresa_id", empresaId)
+      : gpQuery.is("empresa_id", null);
+
+    const { data: gestaoPessoas } = await gpQuery.maybeSingle();
 
     let parentId = gestaoPessoas?.id || null;
 
@@ -85,7 +95,7 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
 
     // 4. Create standard subfolders
     if (colabPastaId) {
-      await ensureSubfolders(tenantId, colabPastaId);
+      await ensureSubfolders(tenantId, colabPastaId, empresaId);
     }
 
     return colabPastaId;
@@ -95,7 +105,7 @@ export async function criarPastaColaborador(params: CriarPastaColaboradorParams)
   }
 }
 
-async function ensureSubfolders(tenantId: string, pastaColaboradorId: string, _empresaId?: string | null) {
+async function ensureSubfolders(tenantId: string, pastaColaboradorId: string, empresaId?: string | null) {
   const { data: existingSubs } = await supabase
     .from("documento_pastas")
     .select("nome")
@@ -112,6 +122,7 @@ async function ensureSubfolders(tenantId: string, pastaColaboradorId: string, _e
         tipo: "categoria" as const,
         pasta_pai_id: pastaColaboradorId,
         ordem: i,
+        empresa_id: empresaId || null,
       });
     }
   }

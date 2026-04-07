@@ -56,9 +56,10 @@ interface DocumentoUploadFormProps {
   onOpenChange: (open: boolean) => void;
   preSelectedColaboradorId?: string;
   documentoExistenteId?: string;
+  pastaId?: string;
 }
 
-export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, documentoExistenteId }: DocumentoUploadFormProps) {
+export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaboradorId, documentoExistenteId, pastaId }: DocumentoUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +142,7 @@ export function DocumentoUploadForm({ open, onOpenChange, preSelectedColaborador
         observacoes: data.observacoes || undefined,
         documentoExistenteId: documentoExistenteId,
         motivoRevisao: documentoExistenteId ? "Nova versão enviada pelo usuário" : undefined,
+        pastaId: pastaId,
       });
       
       // Reset form

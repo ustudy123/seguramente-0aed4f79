@@ -85,7 +85,7 @@ export function useDocumentoPastas() {
         .order("ordem", { ascending: true });
 
       if (empresaAtivaId) {
-        query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+        query = query.eq("empresa_id", empresaAtivaId);
       }
 
       const { data, error } = await query;
@@ -109,7 +109,7 @@ export function useDocumentoPastas() {
         .order("created_at", { ascending: false });
 
       if (empresaAtivaId) {
-        query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
+        query = query.eq("empresa_id", empresaAtivaId);
       }
 
       const { data, error } = await query;
