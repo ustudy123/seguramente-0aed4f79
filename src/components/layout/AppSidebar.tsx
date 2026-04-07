@@ -66,6 +66,24 @@ const normalizeSearchText = (value: string) =>
 
 const menuSections: MenuSection[] = [
   {
+    label: "Estrutura Organizacional",
+    color: "text-cyan-400",
+    sectionIcon: Building2,
+    items: [
+      { title: "Empresa", icon: Building2, path: "/empresa" },
+      {
+        title: "Cadastros",
+        icon: FolderOpen,
+        children: [
+          { title: "Departamentos", path: "/cadastros/departamentos" },
+          { title: "Funções", path: "/cadastros/cargos" },
+          { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" },
+        ],
+      },
+      { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
+    ],
+  },
+  {
     label: "Visão Geral & Estratégia",
     color: "text-blue-400",
     sectionIcon: Compass,
@@ -117,24 +135,6 @@ const menuSections: MenuSection[] = [
       { title: "Mural Interno", icon: Newspaper, path: "/feed" },
       { title: "Ponto", icon: Clock, path: "/ponto" },
       { title: "Análise de Jornada", icon: BarChart3, path: "/analise-jornada" },
-    ],
-  },
-  {
-    label: "Estrutura Organizacional",
-    color: "text-cyan-400",
-    sectionIcon: Building2,
-    items: [
-      { title: "Empresa", icon: Building2, path: "/empresa" },
-      {
-        title: "Cadastros",
-        icon: FolderOpen,
-        children: [
-          { title: "Departamentos", path: "/cadastros/departamentos" },
-          { title: "Funções", path: "/cadastros/cargos" },
-          { title: "Estabelecimento ou Obra", path: "/cadastros/filiais" },
-        ],
-      },
-      { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
     ],
   },
   {
