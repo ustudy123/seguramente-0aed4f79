@@ -40,6 +40,7 @@ export default function Empresa() {
     isLoading,
     upsertCadastro,
     toggleAtivoEmpresa,
+    cliente,
   } = useEmpresaCadastro(viewMode === 'edit' ? selectedEmpresaId : undefined);
 
   const { grupos } = useGruposEconomicos();
