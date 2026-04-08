@@ -295,7 +295,7 @@ export function PsicossocialDashboard() {
         {/* Tabs principais — Campanhas primeiro */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full sm:w-auto flex-wrap h-auto">
-            <TabsTrigger value="campanhas" className="gap-2">
+            <TabsTrigger id="tab-psicossocial-campanhas" value="campanhas" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Campanhas
               {campanhasAtivas > 0 && (
@@ -304,23 +304,23 @@ export function PsicossocialDashboard() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="burnout-boreout" className="gap-2">
+            <TabsTrigger id="tab-psicossocial-burnout" value="burnout-boreout" className="gap-2">
               <Flame className="h-4 w-4" />
               Burnout & Boreout
             </TabsTrigger>
-            <TabsTrigger value="historico" className="gap-2">
+            <TabsTrigger id="tab-psicossocial-historico" value="historico" className="gap-2">
               <TrendingUp className="h-4 w-4" />
               Histórico IPS
             </TabsTrigger>
-            <TabsTrigger value="pgr" className="gap-2">
+            <TabsTrigger id="tab-psicossocial-pgr" value="pgr" className="gap-2">
               <ClipboardList className="h-4 w-4" />
               Inventário PGR
             </TabsTrigger>
-            <TabsTrigger value="instrumentos" className="gap-2">
+            <TabsTrigger id="tab-psicossocial-instrumentos" value="instrumentos" className="gap-2">
               <FileText className="h-4 w-4" />
               Instrumentos
             </TabsTrigger>
-            <TabsTrigger value="indicadores" className="gap-2">
+            <TabsTrigger id="tab-psicossocial-indicadores" value="indicadores" className="gap-2">
               <Activity className="h-4 w-4" />
               Índices
             </TabsTrigger>

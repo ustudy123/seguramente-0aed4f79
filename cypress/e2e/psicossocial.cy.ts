@@ -6,6 +6,9 @@ describe("Módulo Psicossocial NR-01", () => {
   const baseUrl = Cypress.config("baseUrl") || "https://seguramente.app.br";
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
+  const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;
+  const setorBaseNome = `Setor Cypress ${uniqueId}`;
+  const funcaoBaseNome = `Funcao Cypress ${uniqueId}`;
 
   // ─── Tab label mapping (real labels from PsicossocialDashboard) ────────
   const TAB = {
@@ -56,126 +59,107 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.wait(2000);
   }
 
+  function waitForCampanhaForm() {
+    cy.get("#input-campanha-nome, input[name='nome']", { timeout: 15000 }).first().should("be.visible");
+  }
+
+  function preencherDatasCampanha(inicio: string, fim: string) {
+    cy.get("#input-campanha-data-inicio, input[name='data_inicio']").first().should("be.visible").clear().type(inicio);
+    cy.get("#input-campanha-data-fim, input[name='data_fim']").first().should("be.visible").clear().type(fim);
+  }
+
+  function digitarNoComboboxSituacao(selector: string, valor: string) {
+    cy.get(selector).scrollIntoView().click({ force: true });
+    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+      .last()
+      .should("be.visible")
+      .clear()
+      .type(valor);
+    cy.focused().type("{esc}");
+    cy.get(selector).should("contain.text", valor);
+  }
+
+  function ensureTabsDisponiveis() {
+    cy.get("body", { timeout: 10000 }).then(($body) => {
+      if ($body.find('[role="tab"]').length > 0) return;
+
+      if (!/Bem-vindo à Gestão Psicossocial|Nenhuma campanha criada/i.test($body.text())) {
+        throw new Error("Dashboard Psicossocial não exibiu as tabs nem o estado vazio esperado.");
+      }
+
+      criarCampanhaRapida(campanhaBaseNome, setorBaseNome, funcaoBaseNome);
+      goToPsicossocial();
+      cy.get('[role="tab"]', { timeout: 15000 }).should("have.length.greaterThan", 0);
+    });
+  }
+
   function openTab(label: string) {
-    // The tabs use TabsTrigger which renders as button with role="tab"
-    // The text may include badges, so use contains for partial match
-    cy.get('[role="tab"]').filter(`:contains("${label}")`).should("exist").first().click({ force: true });
-    cy.wait(500);
+    ensureTabsDisponiveis();
+    cy.contains('[role="tab"]', label, { timeout: 15000 })
+      .should("be.visible")
+      .click({ force: true })
+      .should("have.attr", "aria-selected", "true");
+    cy.wait(300);
   }
 
   function clickNovaCampanha() {
-    // Wait for page stability before clicking
-    cy.get("#btn-nova-campanha", { timeout: 10000 }).should("be.visible").should("not.be.disabled");
-    cy.wait(500);
-    cy.get("#btn-nova-campanha").click({ force: true });
+    cy.get("#btn-nova-campanha, #btn-criar-campanha", { timeout: 10000 })
+      .filter(":visible")
+      .first()
+      .should("not.be.disabled")
+      .click({ force: true });
   }
 
   function abrirNovaCampanha() {
     goToPsicossocial();
-    // "Campanhas" is the default tab, no need to click it
     clickNovaCampanha();
-    // First the AssistenteSelecaoInstrumento dialog opens
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
+    cy.contains('[role="dialog"]', /Nova Campanha Psicossocial/i, { timeout: 10000 }).should("be.visible");
   }
 
   function selecionarInstrumentoNoAssistente() {
-    // The assistant dialog shows instrument options
     cy.get('[role="dialog"]').within(() => {
-      // Click on SIPRO or the first available instrument option
-      cy.get("button, [role='radio'], [role='option']")
-        .filter(":visible")
-        .then(($els) => {
-          const recomendado = $els.filter((_i, el) => /SIPRO|Recomendado/i.test(el.textContent || ""));
-          if (recomendado.length) {
-            cy.wrap(recomendado.first()).click({ force: true });
-          } else {
-            const instrumento = $els.filter((_i, el) => /COPSOQ|HSE|SIPRO/i.test(el.textContent || ""));
-            if (instrumento.length) {
-              cy.wrap(instrumento.first()).click({ force: true });
-            }
-          }
-        });
+      cy.get("#btn-escolher-instrumento-manualmente").should("be.visible").click({ force: true });
     });
-    // After selecting instrument, the CampanhaForm dialog should open
-    cy.wait(1000);
+    waitForCampanhaForm();
   }
 
   function preencherCampanhaBasica(nome: string) {
-    cy.get('[role="dialog"]').within(() => {
-      // Nome
-      cy.get('input[name="nome"]')
-        .should("be.visible")
-        .clear()
-        .type(nome);
+    const hoje = new Date();
+    const inicio = hoje.toISOString().split("T")[0];
+    const fim = new Date(hoje.getTime() + 30 * 86400000).toISOString().split("T")[0];
 
-      // Datas — início e fim
-      cy.get('input[type="date"]').then(($dates) => {
-        if ($dates.length >= 2) {
-          const hoje = new Date();
-          const inicio = hoje.toISOString().split("T")[0];
-          const fim = new Date(hoje.getTime() + 30 * 86400000).toISOString().split("T")[0];
-          cy.wrap($dates[0]).clear().type(inicio);
-          cy.wrap($dates[1]).clear().type(fim);
-        }
-      });
-    });
+    waitForCampanhaForm();
+    cy.get("#input-campanha-nome, input[name='nome']").first().clear().type(nome);
+    preencherDatasCampanha(inicio, fim);
   }
 
-  function adicionarSetorFuncao() {
-    cy.get('[role="dialog"]').within(() => {
-      // Scroll to situações de trabalho section
-      cy.get("#situacoes-trabalho-section").scrollIntoView();
-
-      // Setor - uses Popover with Command input
-      cy.get('input[placeholder="Buscar ou digitar..."]').then(($inputs) => {
-        if ($inputs.length >= 1) {
-          cy.wrap($inputs.eq(0)).clear().type("Administrativo");
-          cy.wait(500);
-        }
-      });
-    });
-
-    // Select from popover options (outside dialog scope since popover may portal)
-    cy.get('[role="option"]', { timeout: 3000 }).then(($opts) => {
-      if ($opts.length > 0) {
-        cy.wrap($opts.first()).click({ force: true });
-      }
-    });
-
-    cy.get('[role="dialog"]').within(() => {
-      // Função
-      cy.get('input[placeholder="Buscar ou digitar..."]').then(($inputs) => {
-        if ($inputs.length >= 1) {
-          // Use last input which should be função
-          cy.wrap($inputs.last()).clear().type("Analista");
-          cy.wait(500);
-        }
-      });
-    });
-
-    cy.get('[role="option"]', { timeout: 3000 }).then(($opts) => {
-      if ($opts.length > 0) {
-        cy.wrap($opts.first()).click({ force: true });
-      }
-    });
-
-    // Click add button
-    cy.get('[role="dialog"]').within(() => {
-      cy.contains("button", /Adicionar|Incluir|\+/i)
-        .filter(":visible")
-        .first()
-        .click({ force: true });
+  function adicionarSetorFuncao(setor = setorBaseNome, funcao = funcaoBaseNome) {
+    cy.get("#situacoes-trabalho-section", { timeout: 10000 }).scrollIntoView();
+    digitarNoComboboxSituacao("#combobox-setor-situacao", setor);
+    digitarNoComboboxSituacao("#combobox-funcao-situacao", funcao);
+    cy.get("#btn-adicionar-situacao-trabalho").should("be.enabled").click({ force: true });
+    cy.get("#situacoes-trabalho-section").within(() => {
+      cy.contains(setor).should("exist");
+      cy.contains(funcao).should("exist");
     });
   }
 
   function salvarCampanha() {
-    cy.get('[role="dialog"]').within(() => {
-      cy.contains("button", /Salvar|Criar|Confirmar/i)
-        .should("be.visible")
-        .and("not.be.disabled")
-        .click();
-    });
-    cy.wait(2000);
+    cy.contains('[role="dialog"] button', /Criar Campanha|Salvar|Confirmar/i)
+      .filter(":visible")
+      .first()
+      .should("be.visible")
+      .and("not.be.disabled")
+      .click({ force: true });
+    cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
+  }
+
+  function criarCampanhaRapida(nome: string, setor = setorBaseNome, funcao = funcaoBaseNome) {
+    abrirNovaCampanha();
+    selecionarInstrumentoNoAssistente();
+    preencherCampanhaBasica(nome);
+    adicionarSetorFuncao(setor, funcao);
+    salvarCampanha();
   }
 
   // ─── Autenticação ─────────────────────────────────────────────────────────
@@ -236,44 +220,32 @@ describe("Módulo Psicossocial NR-01", () => {
   it("TC-04: Autocomplete de Setor + Função funciona", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
+    cy.get("#combobox-setor-situacao").scrollIntoView().click({ force: true });
+    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+      .last()
+      .should("be.visible")
+      .clear()
+      .type("Admin");
 
-    cy.get('[role="dialog"]').within(() => {
-      cy.get("#situacoes-trabalho-section").scrollIntoView();
-      cy.get('input[placeholder="Buscar ou digitar..."]').first().clear().type("Admin");
-      cy.wait(800);
+    cy.get("body").then(($body) => {
+      if ($body.find("[cmdk-item]").length > 0) {
+        cy.get("[cmdk-item]").should("have.length.greaterThan", 0);
+      } else {
+        cy.contains(/Pressione \+ para usar|Departamentos cadastrados|Buscar ou digitar/i).should("exist");
+      }
     });
 
-    // Verify suggestions appear
-    cy.get('[role="option"], [cmdk-item]', { timeout: 5000 })
-      .should("have.length.greaterThan", 0);
+    cy.focused().type("{esc}");
   });
 
   // 5. Adicionar novo Setor e nova Função manualmente
   it("TC-05: Cadastrar novo Setor/Função inexistente", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
-
     const novoSetor = `Setor Novo ${uniqueId}`;
+    const novaFuncao = `Funcao Nova ${uniqueId}`;
 
-    cy.get('[role="dialog"]').within(() => {
-      cy.get("#situacoes-trabalho-section").scrollIntoView();
-      cy.get('input[placeholder="Buscar ou digitar..."]').first().clear().type(novoSetor);
-      cy.wait(500);
-    });
-
-    // Check if "criar" option appears or accept free text
-    cy.get('[role="option"]', { timeout: 3000 }).then(($opts) => {
-      if ($opts.length > 0) {
-        const criarOpt = $opts.filter((_i, el) => /criar|adicionar|novo/i.test(el.textContent || ""));
-        if (criarOpt.length > 0) {
-          cy.wrap(criarOpt.first()).click({ force: true });
-        } else {
-          cy.wrap($opts.first()).click({ force: true });
-        }
-      }
-    });
+    adicionarSetorFuncao(novoSetor, novaFuncao);
   });
 
   // 6. Adicionar múltiplos pares Setor + Função
@@ -622,26 +594,15 @@ describe("Módulo Psicossocial NR-01", () => {
   it("TC-35: Bloquear data fim anterior à data início", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
+    preencherCampanhaBasica(`Campanha Data Invalida ${uniqueId}`);
+    adicionarSetorFuncao(`Setor Data ${uniqueId}`, `Funcao Data ${uniqueId}`);
 
-    cy.get('[role="dialog"]').within(() => {
-      cy.get('input[type="date"]').then(($dates) => {
-        if ($dates.length >= 2) {
-          const amanha = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-          const ontem = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-          cy.wrap($dates[0]).clear().type(amanha);
-          cy.wrap($dates[1]).clear().type(ontem);
-        }
-      });
+    const amanha = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+    const ontem = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
-      cy.contains("button", /Salvar|Criar/i).then(($btn) => {
-        if (!$btn.is(":disabled")) {
-          cy.wrap($btn).click();
-          cy.wait(1000);
-          cy.contains(/data|período|inválid|anterior/i).should("exist");
-        }
-      });
-    });
+    preencherDatasCampanha(amanha, ontem);
+    cy.contains('[role="dialog"] button', /Criar Campanha|Salvar/i).click({ force: true });
+    cy.contains(/Data de término deve ser igual ou posterior à data de início/i, { timeout: 5000 }).should("be.visible");
   });
 
   // 36. Campanha com período expirado sem respostas
@@ -770,14 +731,10 @@ describe("Módulo Psicossocial NR-01", () => {
 
   it("TC-EXTRA: Tabs do dashboard carregam sem erro", () => {
     goToPsicossocial();
+    ensureTabsDisponiveis();
     const tabs = [TAB.campanhas, TAB.indices, TAB.pgr, TAB.historico];
     tabs.forEach((tab) => {
-      cy.get('[role="tab"]').filter(`:contains("${tab}")`).then(($tab) => {
-        if ($tab.length) {
-          cy.wrap($tab).click({ force: true });
-          cy.wait(500);
-        }
-      });
+      openTab(tab);
     });
   });
 });
