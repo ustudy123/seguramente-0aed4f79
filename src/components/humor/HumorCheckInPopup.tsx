@@ -49,6 +49,7 @@ export function HumorCheckInPopup() {
       }
       toast.success("Humor registrado! 💛");
       setOpen(false);
+      setForceOpen(false);
     } catch {
       toast.error("Erro ao registrar humor");
     } finally {
@@ -60,6 +61,7 @@ export function HumorCheckInPopup() {
     if (isAtualizacao) marcarMiddayVisto();
     else marcarMorningVisto();
     setOpen(false);
+    setForceOpen(false);
   };
 
   return (
