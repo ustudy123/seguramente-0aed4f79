@@ -295,7 +295,7 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.get("button").filter(":visible").then(($btns) => {
       const distribuir = $btns.filter((_i, el) =>
         /distribuir|compartilhar|link/i.test(el.textContent || "") ||
-        el.querySelector('svg.lucide-share-2, svg.lucide-link, svg.lucide-send')
+        !!el.querySelector('svg.lucide-share-2, svg.lucide-link, svg.lucide-send')
       );
       if (distribuir.length > 0) {
         cy.wrap(distribuir.first()).click({ force: true });
@@ -394,7 +394,7 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.get("button").filter(":visible").then(($btns) => {
       const resultados = $btns.filter((_i, el) =>
         /resultado|ver resultado/i.test(el.textContent || "") ||
-        el.querySelector('svg.lucide-bar-chart, svg.lucide-eye')
+        !!el.querySelector('svg.lucide-bar-chart, svg.lucide-eye')
       );
       if (resultados.length > 0) {
         cy.wrap(resultados.first()).click({ force: true });
@@ -473,7 +473,7 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.get("button").filter(":visible").then(($btns) => {
       const exportar = $btns.filter((_i, el) =>
         /exportar|pdf|relatório/i.test(el.textContent || "") ||
-        el.querySelector('svg.lucide-file-text, svg.lucide-download')
+        !!el.querySelector('svg.lucide-file-text, svg.lucide-download')
       );
       if (exportar.length > 0) {
         cy.log("Botão de exportação PDF encontrado");
