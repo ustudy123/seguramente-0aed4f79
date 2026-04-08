@@ -120,6 +120,52 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEd
         Função
       </Badge>
 
+      {/* Edit button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute -top-2 -left-2 h-6 w-6 rounded-full bg-background border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditTitulo(node.titulo);
+          setEditOcupante(node.nome_ocupante || "");
+          setEditOpen(true);
+        }}
+      >
+        <Pencil className="w-3 h-3" />
+      </Button>
+
+      {/* Edit dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Editar Posição</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>Nome da função</Label>
+              <Input value={editTitulo} onChange={(e) => setEditTitulo(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Ocupante</Label>
+              <Input value={editOcupante} onChange={(e) => setEditOcupante(e.target.value)} placeholder="Nome (opcional)" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button
+              disabled={!editTitulo.trim()}
+              onClick={() => {
+                onEdit?.(node.id, { titulo: editTitulo.trim(), nome_ocupante: editOcupante.trim() || undefined });
+                setEditOpen(false);
+              }}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete button */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
