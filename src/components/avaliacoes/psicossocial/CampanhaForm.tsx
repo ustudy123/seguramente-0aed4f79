@@ -105,7 +105,13 @@ const formSchema = z.object({
   motivo_extraordinaria: z.string().optional(),
   evento_gatilho_tipo: z.enum(['acidente', 'denuncia', 'reestruturacao', 'conflito', 'ia_sugestao', 'solicitacao_colaborador']).optional(),
   campanha_anterior_id: z.string().optional(),
-});
+}).refine(
+  (data) => !data.data_inicio || !data.data_fim || data.data_fim >= data.data_inicio,
+  {
+    message: "Data de término deve ser igual ou posterior à data de início",
+    path: ["data_fim"],
+  }
+);
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -537,6 +543,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                   <FormLabel>Nome da Campanha *</FormLabel>
                   <FormControl>
                     <Input
+                      id="input-campanha-nome"
                       placeholder="Ex: Avaliação Psicossocial Q1 2026"
                       {...field}
                     />
@@ -573,7 +580,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                   <FormItem>
                     <FormLabel>Data de Início *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                       <Input id="input-campanha-data-inicio" type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -586,7 +593,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                   <FormItem>
                     <FormLabel>Data de Término *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                       <Input id="input-campanha-data-fim" type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -781,8 +788,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                 <div className="grid grid-cols-2 gap-2">
                   {/* ── Combobox Setor ── */}
                   <Popover open={setorPopoverOpen} onOpenChange={setSetorPopoverOpen}>
-                    <PopoverTrigger asChild>
+                      <PopoverTrigger asChild>
                       <Button
+                          id="combobox-setor-situacao"
                         type="button"
                         variant="outline"
                         role="combobox"
@@ -828,8 +836,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
 
                   {/* ── Combobox Função ── */}
                   <Popover open={funcaoPopoverOpen} onOpenChange={setFuncaoPopoverOpen}>
-                    <PopoverTrigger asChild>
+                      <PopoverTrigger asChild>
                       <Button
+                          id="combobox-funcao-situacao"
                         type="button"
                         variant="outline"
                         role="combobox"
@@ -883,6 +892,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                   </Popover>
                 </div>
                 <Button
+                  id="btn-adicionar-situacao-trabalho"
                   type="button"
                   variant="outline"
                   size="sm"

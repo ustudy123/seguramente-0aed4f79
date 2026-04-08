@@ -529,6 +529,7 @@ export function AssistenteSelecaoInstrumento({
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Assistente Inteligente */}
                 <button
+                  id="btn-assistente-inteligente-psicossocial"
                   onClick={loadSystemData}
                   className="group text-left p-5 rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-background hover:border-purple-400 hover:shadow-md transition-all"
                 >
@@ -552,6 +553,7 @@ export function AssistenteSelecaoInstrumento({
 
                 {/* Escolha manual */}
                 <button
+                  id="btn-escolher-instrumento-manualmente"
                   onClick={() => { onSelectInstrumento('sipro', true); onOpenChange(false); }}
                   className="group text-left p-5 rounded-xl border-2 border-border hover:border-foreground/30 hover:shadow-sm transition-all"
                 >
