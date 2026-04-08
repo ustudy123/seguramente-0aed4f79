@@ -69,7 +69,7 @@ function buildOrgSuggestion(colaboradores: { nome_completo: string; cargo: strin
 }
 
 export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
-  const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode } = useEstrategia(escopo);
+  const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode, updateOrgNode } = useEstrategia(escopo);
   const { cargos, createCargo } = useCargos({ skipEmpresaFilter: true });
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
@@ -457,6 +457,28 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             onDelete={(id) => deleteOrgNode.mutate(id)}
             onAddChild={openDialogForParent}
             onAddSibling={(parentId) => openDialogForParent(parentId || "")}
+            onMove={(draggedId, targetId, position) => {
+              // Prevent dropping onto self or own descendant
+              const isDescendant = (parentId: string, checkId: string): boolean => {
+                const node = organograma.find(n => n.id === checkId);
+                if (!node?.parent_id) return false;
+                if (node.parent_id === parentId) return true;
+                return isDescendant(parentId, node.parent_id);
+              };
+              if (isDescendant(draggedId, targetId)) {
+                toast.error("Não é possível mover para um subordinado");
+                return;
+              }
+              const targetNode = organograma.find(n => n.id === targetId);
+              if (position === "child") {
+                updateOrgNode.mutate({ id: draggedId, parent_id: targetId });
+                toast.success("Posição movida como subordinado");
+              } else {
+                // sibling = same parent as target
+                updateOrgNode.mutate({ id: draggedId, parent_id: targetNode?.parent_id || null });
+                toast.success("Posição movida ao lado");
+              }
+            }}
           />
         </OrgCanvas>
       )}
