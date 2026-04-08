@@ -1,4 +1,5 @@
-import { Plus, Trash2, User, Briefcase, ArrowRight } from "lucide-react";
+import { useState, type DragEvent } from "react";
+import { Plus, Trash2, User, Briefcase, ArrowRight, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,23 +13,87 @@ const CARD_STYLE = {
   badge: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
 };
 
+type DropPosition = "child" | "sibling" | null;
+
 interface OrgCardProps {
   node: EstrategiaOrganograma;
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
+  onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
 }
 
-export function OrgCard({ node, onDelete, onAddChild, onAddSibling }: OrgCardProps) {
+export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove }: OrgCardProps) {
+  const [dropPosition, setDropPosition] = useState<DropPosition>(null);
+
+  const handleDragStart = (e: DragEvent) => {
+    e.dataTransfer.setData("text/plain", node.id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const draggedId = e.dataTransfer.types.includes("text/plain") ? true : false;
+    if (!draggedId) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const threshold = rect.height * 0.6;
+
+    setDropPosition(y > threshold ? "child" : "sibling");
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDragLeave = () => {
+    setDropPosition(null);
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (!draggedId || draggedId === node.id) {
+      setDropPosition(null);
+      return;
+    }
+    if (onMove && dropPosition) {
+      onMove(draggedId, node.id, dropPosition);
+    }
+    setDropPosition(null);
+  };
+
   return (
     <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className={cn(
-        "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] text-center transition-all hover:shadow-lg",
+        "relative group rounded-xl border-2 shadow-md px-5 py-4 min-w-[180px] max-w-[240px] text-center transition-all hover:shadow-lg cursor-grab active:cursor-grabbing",
         CARD_STYLE.gradient,
-        CARD_STYLE.border
+        CARD_STYLE.border,
+        dropPosition === "child" && "ring-2 ring-primary ring-offset-2 border-primary/50",
+        dropPosition === "sibling" && "ring-2 ring-secondary ring-offset-2 border-secondary/50",
       )}
       onMouseDown={(e) => e.stopPropagation()}
     >
+      {/* Drop indicator */}
+      {dropPosition && (
+        <div className={cn(
+          "absolute inset-x-0 text-[10px] font-medium pointer-events-none z-10",
+          dropPosition === "child" ? "-bottom-5 text-primary" : "-top-5 text-secondary-foreground"
+        )}>
+          {dropPosition === "child" ? "↓ Mover como subordinado" : "→ Mover ao lado"}
+        </div>
+      )}
+
+      {/* Drag handle */}
+      <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-60 transition-opacity">
+        <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+      </div>
+
       <div className="flex justify-center mb-2">
         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", CARD_STYLE.badge)}>
           <Briefcase className="w-5 h-5" />
