@@ -27,8 +27,11 @@ interface OrgCardProps {
   onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
 }
 
-export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove }: OrgCardProps) {
+export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgCardProps) {
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTitulo, setEditTitulo] = useState(node.titulo);
+  const [editOcupante, setEditOcupante] = useState(node.nome_ocupante || "");
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer.setData("text/plain", node.id);
