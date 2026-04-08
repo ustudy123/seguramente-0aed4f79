@@ -31,20 +31,18 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit, i
         <>
           <div className="w-0.5 h-6 bg-border" />
 
-          <div className="relative flex items-start">
-            {node.children!.length > 1 && (
-              <div
-                className="absolute top-0 h-0.5 bg-border"
-                style={{
-                  left: `calc(50% / ${node.children!.length})`,
-                  right: `calc(50% / ${node.children!.length})`,
-                }}
-              />
-            )}
-            <div className="flex gap-4">
-              {node.children!.map((child) => (
+          <div className="flex">
+            {node.children!.map((child, idx) => (
+              <div key={child.id} className="relative flex flex-col items-center" style={{ marginLeft: idx > 0 ? '1rem' : 0 }}>
+                {/* Horizontal connector: left half (all except first) */}
+                {node.children!.length > 1 && idx > 0 && (
+                  <div className="absolute top-0 h-0.5 bg-border" style={{ right: '50%', left: '-0.5rem' }} />
+                )}
+                {/* Horizontal connector: right half (all except last) */}
+                {node.children!.length > 1 && idx < node.children!.length - 1 && (
+                  <div className="absolute top-0 h-0.5 bg-border" style={{ left: '50%', right: '-0.5rem' }} />
+                )}
                 <OrgBranch
-                  key={child.id}
                   node={child}
                   onDelete={onDelete}
                   onAddChild={onAddChild}
@@ -52,8 +50,8 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit, i
                   onMove={onMove}
                   onEdit={onEdit}
                 />
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </>
       )}
