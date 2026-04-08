@@ -457,8 +457,13 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             onDelete={(id) => deleteOrgNode.mutate(id)}
             onAddChild={openDialogForParent}
             onAddSibling={(parentId) => openDialogForParent(parentId || "")}
+            onEdit={(id, updates) => {
+              updateOrgNode.mutate({ id, ...updates }, {
+                onSuccess: () => toast.success("Posição atualizada"),
+                onError: () => toast.error("Erro ao atualizar posição"),
+              });
+            }}
             onMove={(draggedId, targetId, position) => {
-              // Prevent dropping onto self or own descendant
               const isDescendant = (parentId: string, checkId: string): boolean => {
                 const node = organograma.find(n => n.id === checkId);
                 if (!node?.parent_id) return false;
@@ -474,7 +479,6 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                 updateOrgNode.mutate({ id: draggedId, parent_id: targetId });
                 toast.success("Posição movida como subordinado");
               } else {
-                // sibling = same parent as target
                 updateOrgNode.mutate({ id: draggedId, parent_id: targetNode?.parent_id || null });
                 toast.success("Posição movida ao lado");
               }
