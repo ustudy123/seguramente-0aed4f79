@@ -7,10 +7,11 @@ interface OrgBranchProps {
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
+  onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
   isRoot?: boolean;
 }
 
-function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, isRoot }: OrgBranchProps) {
+function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit, isRoot }: OrgBranchProps) {
   const hasChildren = node.children && node.children.length > 0;
 
   return (
@@ -23,6 +24,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, isRoot }:
         onAddChild={onAddChild}
         onAddSibling={onAddSibling}
         onMove={onMove}
+        onEdit={onEdit}
       />
 
       {hasChildren && (
@@ -48,6 +50,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, isRoot }:
                   onAddChild={onAddChild}
                   onAddSibling={onAddSibling}
                   onMove={onMove}
+                  onEdit={onEdit}
                 />
               ))}
             </div>
@@ -64,9 +67,10 @@ interface OrgTreeProps {
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
+  onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
 }
 
-export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove }: OrgTreeProps) {
+export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgTreeProps) {
   return (
     <div className="flex gap-8 justify-center flex-wrap py-6 px-4" data-canvas="true">
       {roots.map((root) => (
@@ -77,6 +81,7 @@ export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove }: O
           onAddChild={onAddChild}
           onAddSibling={onAddSibling}
           onMove={onMove}
+          onEdit={onEdit}
           isRoot
         />
       ))}
