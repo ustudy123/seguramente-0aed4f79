@@ -6,10 +6,11 @@ interface OrgBranchProps {
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
+  onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
   isRoot?: boolean;
 }
 
-function OrgBranch({ node, onDelete, onAddChild, onAddSibling, isRoot }: OrgBranchProps) {
+function OrgBranch({ node, onDelete, onAddChild, onAddSibling, onMove, isRoot }: OrgBranchProps) {
   const hasChildren = node.children && node.children.length > 0;
 
   return (
@@ -21,6 +22,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, isRoot }: OrgBran
         onDelete={onDelete}
         onAddChild={onAddChild}
         onAddSibling={onAddSibling}
+        onMove={onMove}
       />
 
       {hasChildren && (
@@ -45,6 +47,7 @@ function OrgBranch({ node, onDelete, onAddChild, onAddSibling, isRoot }: OrgBran
                   onDelete={onDelete}
                   onAddChild={onAddChild}
                   onAddSibling={onAddSibling}
+                  onMove={onMove}
                 />
               ))}
             </div>
@@ -60,9 +63,10 @@ interface OrgTreeProps {
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
+  onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
 }
 
-export function OrgTree({ roots, onDelete, onAddChild, onAddSibling }: OrgTreeProps) {
+export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove }: OrgTreeProps) {
   return (
     <div className="flex gap-8 justify-center flex-wrap py-6 px-4" data-canvas="true">
       {roots.map((root) => (
@@ -72,6 +76,7 @@ export function OrgTree({ roots, onDelete, onAddChild, onAddSibling }: OrgTreePr
           onDelete={onDelete}
           onAddChild={onAddChild}
           onAddSibling={onAddSibling}
+          onMove={onMove}
           isRoot
         />
       ))}
