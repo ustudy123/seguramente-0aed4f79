@@ -138,6 +138,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const [novaFuncao, setNovaFuncao] = useState('');
   const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
   const [funcaoPopoverOpen, setFuncaoPopoverOpen] = useState(false);
+  const [situacaoError, setSituacaoError] = useState<string | null>(null);
 
   const isReaplicacao = !!campanhaAnterior;
 
@@ -205,25 +206,43 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   }, [open, empresaAtivaId, user]);
 
   const addSituacao = () => {
-    if (!novoSetor.trim() || !novaFuncao.trim()) return;
+    const setorNome = novoSetor.trim();
+    const funcaoNome = novaFuncao.trim();
+
+    if (!setorNome || !funcaoNome) return;
+
+    const situacaoDuplicada = situacoes.some(
+      (situacao) =>
+        situacao.setorNome.trim().toLowerCase() === setorNome.toLowerCase() &&
+        situacao.funcaoNome.trim().toLowerCase() === funcaoNome.toLowerCase()
+    );
+
+    if (situacaoDuplicada) {
+      setSituacaoError("Este par Setor + Função já foi adicionado.");
+      return;
+    }
+
     const nova: SituacaoTrabalhoCampanha = {
-      setorId: novoSetor.trim().toLowerCase().replace(/\s+/g, '_'),
-      setorNome: novoSetor.trim(),
-      funcaoId: novaFuncao.trim().toLowerCase().replace(/\s+/g, '_'),
-      funcaoNome: novaFuncao.trim(),
+      setorId: setorNome.toLowerCase().replace(/\s+/g, '_'),
+      setorNome,
+      funcaoId: funcaoNome.toLowerCase().replace(/\s+/g, '_'),
+      funcaoNome,
     };
+    setSituacaoError(null);
     setSituacoes(prev => [...prev, nova]);
     setNovoSetor('');
     setNovaFuncao('');
   };
 
   const removeSituacao = (idx: number) => {
+    setSituacaoError(null);
     setSituacoes(prev => prev.filter((_, i) => i !== idx));
   };
 
   const onSubmit = async (data: FormValues) => {
     // ── GAP-P1: Bloqueio obrigatório — NR-17 exige vínculo Setor+Função ──────
     if (situacoes.length === 0) {
+      setSituacaoError("Adicione pelo menos um par Setor + Função antes de salvar a campanha.");
       // Mostrar erro no formulário e rolar até a seção
       document.getElementById('situacoes-trabalho-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return; // bloqueia submissão
@@ -249,6 +268,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
     });
     form.reset();
     setSituacoes([]);
+    setSituacaoError(null);
     onOpenChange(false);
   };
 
@@ -903,6 +923,15 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                   <Plus className="h-3 w-3" />
                   Adicionar par Setor+Função
                 </Button>
+
+                {situacaoError && (
+                  <div
+                    id="erro-situacao-trabalho"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                  >
+                    {situacaoError}
+                  </div>
+                )}
               </div>
 
               {/* GAP-P1: Bloqueio visual — erro quando tenta criar sem vínculo */}
