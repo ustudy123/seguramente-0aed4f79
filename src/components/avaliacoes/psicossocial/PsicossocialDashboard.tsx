@@ -67,10 +67,15 @@ export function PsicossocialDashboard() {
 
   const { campanhas, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
 
-  const handleNovaCampanha = () => setShowAssistente(true);
+  const handleNovaCampanha = () => {
+    setInstrumentoPreSelecionado(undefined);
+    setShowForm(false);
+    setShowAssistente(true);
+  };
 
   const handleAssistenteSelect = (instrumento: string, _manual: boolean) => {
     setInstrumentoPreSelecionado(instrumento);
+    setShowAssistente(false);
     setShowForm(true);
   };
 

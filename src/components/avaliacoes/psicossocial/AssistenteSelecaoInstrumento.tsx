@@ -448,9 +448,8 @@ export function AssistenteSelecaoInstrumento({
     setStep('result');
   };
 
-  const handleConfirm = (instrumento: string) => {
-    onSelectInstrumento(instrumento, false);
-    onOpenChange(false);
+  const handleConfirm = (instrumento: string, manual = false) => {
+    onSelectInstrumento(instrumento, manual);
   };
 
   const questions = [
@@ -554,7 +553,7 @@ export function AssistenteSelecaoInstrumento({
                 {/* Escolha manual */}
                 <button
                   id="btn-escolher-instrumento-manualmente"
-                  onClick={() => { onSelectInstrumento('sipro', true); onOpenChange(false); }}
+                  onClick={() => handleConfirm('sipro', true)}
                   className="group text-left p-5 rounded-xl border-2 border-border hover:border-foreground/30 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -812,7 +811,7 @@ export function AssistenteSelecaoInstrumento({
                   Usar {scores[0].nome}
                 </Button>
                 <Button variant="outline" size="sm"
-                  onClick={() => { onSelectInstrumento('sipro', true); onOpenChange(false); }}
+                  onClick={() => handleConfirm('sipro', true)}
                   className="gap-1.5 text-xs">
                   <Brain className="h-3.5 w-3.5" /> Escolher outro
                 </Button>

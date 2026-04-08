@@ -3,7 +3,7 @@
 describe("Módulo Psicossocial NR-01", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
-  const baseUrl = Cypress.config("baseUrl") || "https://seguramente.app.br";
+  const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.lovable.app";
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
   const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;
@@ -19,6 +19,15 @@ describe("Módulo Psicossocial NR-01", () => {
     instrumentos: "Instrumentos",
     indices: "Índices",
   } as const;
+
+  const TAB_SELECTOR: Record<(typeof TAB)[keyof typeof TAB], string> = {
+    [TAB.campanhas]: "#tab-psicossocial-campanhas",
+    [TAB.burnout]: "#tab-psicossocial-burnout",
+    [TAB.historico]: "#tab-psicossocial-historico",
+    [TAB.pgr]: "#tab-psicossocial-pgr",
+    [TAB.instrumentos]: "#tab-psicossocial-instrumentos",
+    [TAB.indices]: "#tab-psicossocial-indicadores",
+  };
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -39,6 +48,15 @@ describe("Módulo Psicossocial NR-01", () => {
     });
   }
 
+  function waitForPsicossocialReady() {
+    cy.get("body", { timeout: 20000 }).should(($body) => {
+      const carregouEstadoPrincipal =
+        $body.find("#btn-nova-campanha, #btn-criar-campanha, #tab-psicossocial-campanhas").length > 0;
+
+      expect(carregouEstadoPrincipal, "dashboard ou estado vazio carregado").to.eq(true);
+    });
+  }
+
   function login() {
     cy.visit(`${baseUrl}/login`);
     cy.get('input[type="email"]', { timeout: 20000 }).should("be.visible").clear().type(email);
@@ -55,21 +73,20 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.visit(`${baseUrl}/psicossocial`);
     closeEmpresaModalIfNeeded();
     cy.contains("Gestão Psicossocial NR-01", { timeout: 20000 }).should("be.visible");
-    // Wait for data to load and page to stabilize
-    cy.wait(2000);
+    waitForPsicossocialReady();
   }
 
   function waitForCampanhaForm() {
-    cy.get("#input-campanha-nome, input[name='nome']", { timeout: 15000 }).first().should("be.visible");
+    cy.get("#input-campanha-nome", { timeout: 15000 }).should("be.visible");
   }
 
   function preencherDatasCampanha(inicio: string, fim: string) {
-    cy.get("#input-campanha-data-inicio, input[name='data_inicio']").first().should("be.visible").clear().type(inicio);
-    cy.get("#input-campanha-data-fim, input[name='data_fim']").first().should("be.visible").clear().type(fim);
+    cy.get("#input-campanha-data-inicio", { timeout: 10000 }).should("be.visible").clear().type(inicio);
+    cy.get("#input-campanha-data-fim", { timeout: 10000 }).should("be.visible").clear().type(fim);
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
-    cy.get(selector).scrollIntoView().click({ force: true });
+    cy.get(selector).should("be.visible").scrollIntoView().click({ force: true });
     cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
       .last()
       .should("be.visible")
@@ -81,21 +98,25 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function ensureTabsDisponiveis() {
     cy.get("body", { timeout: 10000 }).then(($body) => {
-      if ($body.find('[role="tab"]').length > 0) return;
+      if ($body.find("#tab-psicossocial-campanhas").length > 0) return;
 
-      if (!/Bem-vindo à Gestão Psicossocial|Nenhuma campanha criada/i.test($body.text())) {
+      const estadoVazioVisivel =
+        $body.find("#btn-nova-campanha, #btn-criar-campanha").length > 0 ||
+        /Bem-vindo à Gestão Psicossocial|Nenhuma campanha criada/i.test($body.text());
+
+      if (!estadoVazioVisivel) {
         throw new Error("Dashboard Psicossocial não exibiu as tabs nem o estado vazio esperado.");
       }
 
       criarCampanhaRapida(campanhaBaseNome, setorBaseNome, funcaoBaseNome);
       goToPsicossocial();
-      cy.get('[role="tab"]', { timeout: 15000 }).should("have.length.greaterThan", 0);
+      cy.get("#tab-psicossocial-campanhas", { timeout: 15000 }).should("be.visible");
     });
   }
 
   function openTab(label: string) {
     ensureTabsDisponiveis();
-    cy.contains('[role="tab"]', label, { timeout: 15000 })
+    cy.get(TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]], { timeout: 15000 })
       .should("be.visible")
       .click({ force: true })
       .should("have.attr", "aria-selected", "true");
@@ -105,21 +126,23 @@ describe("Módulo Psicossocial NR-01", () => {
   function clickNovaCampanha() {
     cy.get("#btn-nova-campanha, #btn-criar-campanha", { timeout: 10000 })
       .filter(":visible")
-      .first()
-      .should("not.be.disabled")
-      .click({ force: true });
+      .should("have.length.greaterThan", 0)
+      .then(($buttons) => {
+        cy.wrap($buttons[0]).scrollIntoView().should("not.be.disabled").click({ force: true });
+      });
   }
 
   function abrirNovaCampanha() {
     goToPsicossocial();
     clickNovaCampanha();
-    cy.contains('[role="dialog"]', /Nova Campanha Psicossocial/i, { timeout: 10000 }).should("be.visible");
+    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 }).should("be.visible");
   }
 
   function selecionarInstrumentoNoAssistente() {
-    cy.get('[role="dialog"]').within(() => {
-      cy.get("#btn-escolher-instrumento-manualmente").should("be.visible").click({ force: true });
-    });
+    cy.get("#btn-escolher-instrumento-manualmente", { timeout: 10000 })
+      .should("be.visible")
+      .click({ force: true });
+
     waitForCampanhaForm();
   }
 
@@ -129,7 +152,7 @@ describe("Módulo Psicossocial NR-01", () => {
     const fim = new Date(hoje.getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     waitForCampanhaForm();
-    cy.get("#input-campanha-nome, input[name='nome']").first().clear().type(nome);
+    cy.get("#input-campanha-nome").clear().type(nome);
     preencherDatasCampanha(inicio, fim);
   }
 
@@ -145,9 +168,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function salvarCampanha() {
-    cy.contains('[role="dialog"] button', /Criar Campanha|Salvar|Confirmar/i)
-      .filter(":visible")
-      .first()
+    cy.get('[role="dialog"] button[type="submit"]', { timeout: 10000 })
       .should("be.visible")
       .and("not.be.disabled")
       .click({ force: true });
@@ -202,18 +223,9 @@ describe("Módulo Psicossocial NR-01", () => {
     selecionarInstrumentoNoAssistente();
     cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
     preencherCampanhaBasica(`Campanha Sem Setor ${uniqueId}`);
-    // NÃO adicionar setor+função
 
-    cy.get('[role="dialog"]').within(() => {
-      cy.contains("button", /Salvar|Criar|Confirmar/i).then(($btn) => {
-        if ($btn.is(":disabled")) {
-          expect($btn).to.be.disabled;
-        } else {
-          cy.wrap($btn).click();
-          cy.contains(/obrigat|setor|função|situação de trabalho/i, { timeout: 5000 }).should("exist");
-        }
-      });
-    });
+    cy.get('[role="dialog"] button[type="submit"]').should("be.disabled");
+    cy.contains(/Obrigatório para criar a campanha|Setor\+Função|situação de trabalho/i, { timeout: 5000 }).should("be.visible");
   });
 
   // 4. Adicionar Setor + Função usando autocomplete
@@ -254,10 +266,17 @@ describe("Módulo Psicossocial NR-01", () => {
     selecionarInstrumentoNoAssistente();
     cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
     preencherCampanhaBasica(`Multi Pares ${uniqueId}`);
-    adicionarSetorFuncao();
+    const segundoSetor = `Setor Extra ${uniqueId}`;
+    const segundaFuncao = `Funcao Extra ${uniqueId}`;
 
-    cy.get('[role="dialog"]').within(() => {
-      cy.contains(/Administrativo|Analista/i).should("exist");
+    adicionarSetorFuncao();
+    adicionarSetorFuncao(segundoSetor, segundaFuncao);
+
+    cy.get("#situacoes-trabalho-section").within(() => {
+      cy.contains(setorBaseNome).should("exist");
+      cy.contains(funcaoBaseNome).should("exist");
+      cy.contains(segundoSetor).should("exist");
+      cy.contains(segundaFuncao).should("exist");
     });
   });
 
@@ -601,7 +620,7 @@ describe("Módulo Psicossocial NR-01", () => {
     const ontem = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
     preencherDatasCampanha(amanha, ontem);
-    cy.contains('[role="dialog"] button', /Criar Campanha|Salvar/i).click({ force: true });
+    cy.get('[role="dialog"] button[type="submit"]').click({ force: true });
     cy.contains(/Data de término deve ser igual ou posterior à data de início/i, { timeout: 5000 }).should("be.visible");
   });
 
@@ -670,12 +689,15 @@ describe("Módulo Psicossocial NR-01", () => {
     selecionarInstrumentoNoAssistente();
     cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
     preencherCampanhaBasica(`Dupla ${uniqueId}`);
-    adicionarSetorFuncao();
-    adicionarSetorFuncao();
+    const setorDuplicado = `Setor Duplicado ${uniqueId}`;
+    const funcaoDuplicada = `Funcao Duplicada ${uniqueId}`;
 
-    cy.get('[role="dialog"]').within(() => {
-      cy.log("Sistema valida duplicidade de situações de trabalho");
-    });
+    adicionarSetorFuncao(setorDuplicado, funcaoDuplicada);
+    adicionarSetorFuncao(setorDuplicado, funcaoDuplicada);
+
+    cy.get("#erro-situacao-trabalho", { timeout: 5000 })
+      .should("be.visible")
+      .and("contain.text", "já foi adicionado");
   });
 
   // 44. Risco Alto/Crítico sem 5W2H = defeito
