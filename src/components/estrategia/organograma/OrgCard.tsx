@@ -1,8 +1,11 @@
 import { useState, type DragEvent } from "react";
-import { Plus, Trash2, User, Briefcase, ArrowRight, GripVertical } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, ArrowRight, GripVertical, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
@@ -21,6 +24,7 @@ interface OrgCardProps {
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
+  onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
 }
 
 export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove }: OrgCardProps) {
