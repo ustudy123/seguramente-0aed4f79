@@ -1,4 +1,5 @@
-import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield } from "lucide-react";
+import { useState } from "react";
+import { Bell, ChevronDown, LogOut, Menu, User, Settings, Shield, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -94,7 +95,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
         <EmpresaSelector />
 
         {/* Humor indicator */}
-        {humorHoje && (
+        {humorHoje ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="text-xl cursor-default select-none" title={humorHoje.humor}>
@@ -102,6 +103,24 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
               </span>
             </TooltipTrigger>
             <TooltipContent>Humor: {humorHoje.humor}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => {
+                  // Reset localStorage flag so popup shows again
+                  const today = new Date().toISOString().split("T")[0];
+                  localStorage.removeItem(`humor_morning_${user?.id}_${today}`);
+                  localStorage.removeItem(`humor_midday_${user?.id}_${today}`);
+                  window.dispatchEvent(new Event("humor-reopen"));
+                }}
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Smile className="w-5 h-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Registrar humor do dia</TooltipContent>
           </Tooltip>
         )}
 
