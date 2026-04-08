@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -21,8 +21,21 @@ export function HumorCheckInPopup() {
 
   const [open, setOpen] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [forceOpen, setForceOpen] = useState(false);
 
-  if (isLoading || !precisaRegistrarHumor || !open) return null;
+  // Listen for reopen event from Header
+  useEffect(() => {
+    const handler = () => {
+      setForceOpen(true);
+      setOpen(true);
+    };
+    window.addEventListener("humor-reopen", handler);
+    return () => window.removeEventListener("humor-reopen", handler);
+  }, []);
+
+  const shouldShow = forceOpen || (precisaRegistrarHumor && open);
+
+  if (isLoading || !shouldShow) return null;
 
   const handleSelect = async (label: string, emoji: string) => {
     setSaving(true);
