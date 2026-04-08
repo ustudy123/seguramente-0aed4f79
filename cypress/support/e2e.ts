@@ -8,6 +8,10 @@ Cypress.on("uncaught:exception", (err) => {
   if (err.message?.includes("Failed to fetch") || err.message?.includes("Load failed")) {
     return false;
   }
+  // SyntaxError de HTML servido no lugar de JS (SPA reload durante navegação)
+  if (err.name === "SyntaxError" && err.message?.includes("Unexpected token '<'")) {
+    return false;
+  }
   // Deixa outros erros falharem normalmente
   return true;
 });
