@@ -70,7 +70,7 @@ function buildOrgSuggestion(colaboradores: { nome_completo: string; cargo: strin
 
 export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode, updateOrgNode } = useEstrategia(escopo);
-  const { cargos, createCargo } = useCargos({ skipEmpresaFilter: true });
+  const { cargos, createCargo } = useCargos();
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
