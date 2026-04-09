@@ -28,7 +28,7 @@ interface IntegracaoErgonomiaAEPProps {
 const MINIMO_ANONIMATO = 5;
 
 type ErgonomiaEixo = "cognitivo" | "fisico" | "organizacional";
-type RiscoSeveridade = "baixa" | "moderada" | "alta";
+type RiscoSeveridade = "baixo" | "medio" | "alto" | "critico";
 
 export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }: IntegracaoErgonomiaAEPProps) {
   // All hooks at top level - before any conditional returns
@@ -69,8 +69,8 @@ export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }
         ? dimensoesCriticas.join(", ")
         : "Fatores psicossociais identificados na avaliação";
 
-      const severidade: RiscoSeveridade = cls === "critico" ? "alta" : cls === "risco" ? "moderada" : "baixa";
-      const probabilidade: RiscoSeveridade = cls === "critico" ? "alta" : cls === "risco" ? "moderada" : "baixa";
+      const severidade: RiscoSeveridade = cls === "critico" ? "critico" : cls === "risco" ? "alto" : "medio";
+      const probabilidade: RiscoSeveridade = cls === "critico" ? "critico" : cls === "risco" ? "alto" : "medio";
       const eixo: ErgonomiaEixo = "organizacional";
 
       // Use supabase as any to bypass strict type for insert
