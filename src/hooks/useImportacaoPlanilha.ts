@@ -666,6 +666,7 @@ export function useImportacaoPlanilha() {
           .eq("tenant_id", tenantId);
         
         empresas?.forEach(emp => {
+          if (!emp.cnpj) return;
           const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
           mapaEmpresas[cnpjLimpo] = emp.id;
         });
@@ -805,6 +806,7 @@ export function useImportacaoPlanilha() {
       
       const cpfsExistentes = new Map<string, string>();
       admissoesExistentes?.forEach(adm => {
+        if (!adm.cpf) return;
         cpfsExistentes.set(adm.cpf.replace(/\D/g, ""), adm.id);
       });
       
