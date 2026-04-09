@@ -353,16 +353,145 @@ export function MetaFormModule({
         </CardContent>
       </Card>
 
-      {/* Responsável */}
+      {/* Campos dinâmicos por nível */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Responsável</Label>
-          <Input value={form.responsavel_nome || ""} onChange={e => set("responsavel_nome", e.target.value)} placeholder="Nome do responsável" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Unidade</Label>
-          <Input value={form.unidade_nome || ""} onChange={e => set("unidade_nome", e.target.value)} placeholder="Nome da unidade" />
-        </div>
+        {/* Unidade - aparece para nível unidade, setor e individual */}
+        {(form.nivel === "unidade" || form.nivel === "setor" || form.nivel === "individual") && (
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5" /> Unidade
+            </Label>
+            <Popover open={openUnidade} onOpenChange={setOpenUnidade}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-10">
+                  {form.unidade_nome || "Selecionar unidade..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[320px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar unidade..." value={searchUnidade} onValueChange={setSearchUnidade} />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
+                    <CommandGroup>
+                      {unidadesFiltradas.map(u => (
+                        <CommandItem
+                          key={u.id}
+                          value={u.razao_social}
+                          onSelect={() => {
+                            set("unidade_id", u.id);
+                            set("unidade_nome", u.nome_fantasia || u.razao_social);
+                            setOpenUnidade(false);
+                            setSearchUnidade("");
+                          }}
+                        >
+                          <span className="truncate">{u.nome_fantasia || u.razao_social}</span>
+                          {u.nome_fantasia && (
+                            <span className="ml-2 text-xs text-muted-foreground truncate">{u.razao_social}</span>
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
+        {/* Setor/Departamento - aparece para nível setor e individual */}
+        {(form.nivel === "setor" || form.nivel === "individual") && (
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" /> Setor / Departamento
+            </Label>
+            <Popover open={openSetor} onOpenChange={setOpenSetor}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-10">
+                  {form.setor_nome || form.departamento_nome || "Selecionar setor..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[320px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar setor..." value={searchSetor} onValueChange={setSearchSetor} />
+                  <CommandList>
+                    <CommandEmpty>Nenhum setor encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {setoresFiltrados.map(d => (
+                        <CommandItem
+                          key={d.id}
+                          value={d.nome}
+                          onSelect={() => {
+                            set("setor_id", d.id);
+                            set("setor_nome", d.nome);
+                            set("departamento_id", d.id);
+                            set("departamento_nome", d.nome);
+                            setOpenSetor(false);
+                            setSearchSetor("");
+                          }}
+                        >
+                          {d.nome}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
+        {/* Colaborador - aparece para nível individual */}
+        {form.nivel === "individual" && (
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5" /> Colaborador
+            </Label>
+            <Popover open={openColaborador} onOpenChange={setOpenColaborador}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-10">
+                  {form.colaborador_nome || "Selecionar colaborador..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[320px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar colaborador..." value={searchColaborador} onValueChange={setSearchColaborador} />
+                  <CommandList>
+                    <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {colaboradoresFiltrados.map(c => (
+                        <CommandItem
+                          key={c.user_id}
+                          value={c.nome_completo}
+                          onSelect={() => {
+                            set("colaborador_id", c.user_id);
+                            set("colaborador_nome", c.nome_completo);
+                            set("responsavel_id", c.user_id);
+                            set("responsavel_nome", c.nome_completo);
+                            setOpenColaborador(false);
+                            setSearchColaborador("");
+                          }}
+                        >
+                          {c.nome_completo}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
+        {/* Responsável - sempre visível para estratégica, ou como fallback */}
+        {form.nivel === "estrategica" && (
+          <div className="space-y-1.5">
+            <Label>Responsável</Label>
+            <Input value={form.responsavel_nome || ""} onChange={e => set("responsavel_nome", e.target.value)} placeholder="Nome do responsável" />
+          </div>
+        )}
       </div>
 
       <MetaParticipantesEditor
