@@ -99,6 +99,7 @@ const defaultFormData: FormData = {
 export default function Cargos() {
   const { cargos, isLoading, createCargo, updateCargo, deleteCargo } = useCargos();
   const { departamentos } = useDepartamentos();
+  const { sincronizar } = useSyncCadastros();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -106,6 +107,10 @@ export default function Cargos() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<Cargo | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...defaultFormData });
+
+  useEffect(() => {
+    sincronizar();
+  }, [sincronizar]);
 
   const handleImportSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["cargos"] });
