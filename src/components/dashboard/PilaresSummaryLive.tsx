@@ -4,6 +4,7 @@ import { Brain, Cog, Heart, BarChart3, Loader2, Expand, Trophy, TrendingUp, Shie
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { IndicatorDetailModal, IndicatorType } from "./IndicatorDetailModal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PilarSummary {
   id: number;
