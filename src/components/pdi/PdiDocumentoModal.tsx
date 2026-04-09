@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Printer, FileText, Send, CheckCircle2, MessageCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -126,8 +127,7 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
           }
         }
 
-        const { error: docError } = await supabase
-          .from("documentos" as never)
+        const { error: docError } = await fromTable("documentos")
           .insert({
             tenant_id: tenantId,
             colaborador_id: pdi.colaborador_id || null,
@@ -144,7 +144,7 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
             observacoes: `Documento PDI gerado automaticamente. Período: ${pdi.data_inicio} a ${pdi.data_fim}`,
             criado_por: user.id,
             criado_por_nome: profile?.nome_completo,
-          } as never);
+          } as any);
 
         if (docError) {
           console.error("Erro ao registrar documento:", docError);
@@ -211,7 +211,7 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
             documento_storage_path: storagePath,
             criado_por: user.id,
             criado_por_nome: profile?.nome_completo,
-          } as never)
+          } as any)
           .select("token")
           .single();
 

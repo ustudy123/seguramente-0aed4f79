@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +19,7 @@ export function TerceiroDashboard({ terceiros }: Props) {
     queryKey: ["terceiro-all-docs", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("terceiro_documentos" as never)
+      const { data } = await fromTable("terceiro_documentos")
         .select("id, status, terceiro_id, trabalhador_id, tipo, data_validade")
         .eq("tenant_id", tenantId);
       return (data as any[]) || [];
@@ -31,8 +31,7 @@ export function TerceiroDashboard({ terceiros }: Props) {
     queryKey: ["terceiro-all-treins", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("terceiro_treinamentos" as never)
+      const { data } = await fromTable("terceiro_treinamentos")
         .select("id, status, terceiro_id, trabalhador_id, tipo, data_validade")
         .eq("tenant_id", tenantId);
       return (data as any[]) || [];
@@ -44,8 +43,7 @@ export function TerceiroDashboard({ terceiros }: Props) {
     queryKey: ["terceiro-all-trabalhadores", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("terceiro_trabalhadores" as never)
+      const { data } = await fromTable("terceiro_trabalhadores")
         .select("id, atividades_risco, terceiro_id")
         .eq("tenant_id", tenantId);
       return (data as any[]) || [];

@@ -40,6 +40,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { validarFracionamentoCLT } from "@/lib/feriasPeriodo";
 import { gerarAvisoFeriasPDF, gerarReciboFeriasPDF } from "@/lib/feriasDocumentos";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useEnviarParaHub } from "@/hooks/useEnviarParaHub";
 
 // ========== Adapter types for legacy components ==========
@@ -386,15 +387,14 @@ const Ferias = () => {
   const handleLinkAssinatura = async (item: FeriasSolicitacao) => {
     if (!tenantId) { toast.error("Tenant não encontrado"); return; }
     try {
-      const { data, error } = await supabase
-        .from("ferias_assinatura_links" as never)
+      const { data, error } = await fromTable("ferias_assinatura_links")
         .insert({
           tenant_id: tenantId, colaborador_nome: item.colaborador_nome,
           departamento: item.departamento, data_inicio_ferias: item.data_inicio,
           data_fim_ferias: item.data_fim, dias_ferias: item.dias_solicitados,
           abono_pecuniario: item.abono_pecuniario, dias_abono: item.dias_abono,
           salario_base: item.salario_base || 0, documento_storage_path: null,
-        } as never).select("token").single();
+        } as any).select("token").single();
       if (error) throw error;
       const token = (data as any)?.token;
       if (token) {

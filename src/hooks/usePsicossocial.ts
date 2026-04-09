@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
@@ -276,8 +277,7 @@ export function usePsicossocial() {
       if (status === 'encerrada') {
         try {
           // Buscar dados completos da campanha para exportar
-          const { data: campanha } = await (supabase as any)
-            .from("questionario_psicossocial_campanhas")
+          const { data: campanha } = await fromTable("questionario_psicossocial_campanhas")
             .select("*")
             .eq("id", id)
             .single();
@@ -287,8 +287,7 @@ export function usePsicossocial() {
 
             if (situacoes.length > 0) {
               // Verificar se já foi exportado
-              const { data: logExist } = await (supabase as any)
-                .from("gro_exportacoes_log")
+              const { data: logExist } = await fromTable("gro_exportacoes_log")
                 .select("id")
                 .eq("campanha_id", id)
                 .maybeSingle();
@@ -325,10 +324,10 @@ export function usePsicossocial() {
                     }))
                   );
 
-                  await (supabase as any).from("gro_riscos").insert(riscos);
+                  await fromTable("gro_riscos").insert(riscos);
 
                   // Registrar log de exportação
-                  await (supabase as any).from("gro_exportacoes_log").insert({
+                  await fromTable("gro_exportacoes_log").insert({
                     tenant_id: campanha.tenant_id,
                     campanha_id: id,
                     riscos_gerados: riscos.length,

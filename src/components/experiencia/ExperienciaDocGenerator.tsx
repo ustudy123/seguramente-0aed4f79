@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileText, Download, Loader2, Printer, Send, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
 import type { ContratoExperiencia } from "@/hooks/useContratosExperiencia";
 import { getDuracaoTotal } from "@/hooks/useContratosExperiencia";
@@ -146,8 +147,7 @@ export function ExperienciaDocGenerator({ contrato, open, onClose }: Experiencia
 
     setEnviandoLink(true);
     try {
-      const { data, error } = await supabase
-        .from("experiencia_assinatura_links" as never)
+      const { data, error } = await fromTable("experiencia_assinatura_links")
         .insert({
           tenant_id: tenantId,
           contrato_id: contrato.id,
@@ -159,7 +159,7 @@ export function ExperienciaDocGenerator({ contrato, open, onClose }: Experiencia
           status: "pendente",
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
-        } as never)
+        } as any)
         .select("token")
         .single();
 

@@ -700,7 +700,7 @@ function StepDiagnostico({ cliente, onConcluir }: { cliente: Cliente; onConcluir
         .update({
           diagnostico_iniciado: true,
           diagnostico_resultado: resultado as never,
-        } as never)
+        } as any)
         .eq('id', cliente.id);
       toast.success('Diagnóstico salvo com sucesso!');
       onConcluir();

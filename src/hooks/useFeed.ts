@@ -162,7 +162,7 @@ export function useFeed() {
       };
 
       const { data, error } = await feedPostsTable()
-        .insert(insertData as never)
+        .insert(insertData as any)
         .select()
         .single();
 
@@ -207,7 +207,7 @@ export function useFeed() {
           user_nome: profile.nome_completo,
           tipo,
         };
-        await feedReacoesTable().insert(insertData as never);
+        await feedReacoesTable().insert(insertData as any);
       }
     },
     onSuccess: () => {
@@ -236,7 +236,7 @@ export function useFeed() {
       };
 
       const { data, error } = await feedComentariosTable()
-        .insert(insertData as never)
+        .insert(insertData as any)
         .select()
         .single();
 
@@ -293,7 +293,7 @@ export function useFeed() {
   const toggleFixar = useMutation({
     mutationFn: async ({ postId, fixado }: { postId: string; fixado: boolean }) => {
       const { error } = await feedPostsTable()
-        .update({ fixado } as never)
+        .update({ fixado } as any)
         .eq('id', postId);
 
       if (error) throw error;

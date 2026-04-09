@@ -92,7 +92,7 @@ export default function ProgramaValidador() {
     refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('programa_validador_contratos' as never)
+        .from('programa_validador_contratos' as any)
         .select('*')
         .eq('cliente_id', clienteSelecionado!.id)
         .order('created_at', { ascending: false }) as any;
@@ -118,11 +118,11 @@ export default function ProgramaValidador() {
       });
       if (clienteAtual?.fase === 'qualificacao' && fase === 'kickoff') {
         const html = gerarHtmlContrato(clienteAtual);
-        await supabase.from('programa_validador_contratos' as never).insert({
+        await supabase.from('programa_validador_contratos' as any).insert({
           cliente_id: id,
           html_contrato: html,
           status: 'pendente',
-        } as never);
+        } as any);
       }
     },
     onSuccess: () => {
@@ -364,7 +364,7 @@ function DetalheCliente({
     refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('programa_validador_documento_links' as never)
+        .from('programa_validador_documento_links' as any)
         .select('*')
         .eq('cliente_id', cliente.id)
         .order('created_at', { ascending: false }) as any;
@@ -392,11 +392,11 @@ function DetalheCliente({
 
       if (cliente.fase === 'qualificacao' && fase === 'kickoff') {
         const html = gerarHtmlContrato({ ...cliente, fase });
-        await supabase.from('programa_validador_contratos' as never).insert({
+        await supabase.from('programa_validador_contratos' as any).insert({
           cliente_id: cliente.id,
           html_contrato: html,
           status: 'pendente',
-        } as never);
+        } as any);
       }
       return data;
     },
@@ -412,17 +412,17 @@ function DetalheCliente({
     mutationFn: async () => {
       const html = gerarHtmlContrato(cliente);
       const { data, error } = await supabase
-        .from('programa_validador_contratos' as never)
-        .insert({ cliente_id: cliente.id, html_contrato: html, status: 'pendente' } as never)
+        .from('programa_validador_contratos' as any)
+        .insert({ cliente_id: cliente.id, html_contrato: html, status: 'pendente' } as any)
         .select()
         .single() as any;
       if (error) throw error;
-      await supabase.from('programa_validador_historico' as never).insert({
+      await supabase.from('programa_validador_historico' as any).insert({
         cliente_id: cliente.id,
         tipo: 'contrato_gerado',
         titulo: 'Contrato gerado para assinatura eletrônica',
         autor: profile?.nome_completo || 'SuperAdmin',
-      } as never);
+      } as any);
       return data;
     },
     onSuccess: () => {
@@ -439,24 +439,24 @@ function DetalheCliente({
       const html = htmlOverride ?? gerarHtmlDocumento(tipo, cliente);
       const docExistente = documentos.find(d => d.tipo === tipo);
       const { data, error } = await supabase
-        .from('programa_validador_documento_links' as never)
+        .from('programa_validador_documento_links' as any)
         .insert({
           cliente_id: cliente.id,
           documento_id: docExistente?.id || null,
           tipo,
           html_documento: html,
           status: 'pendente',
-        } as never)
+        } as any)
         .select()
         .single() as any;
       if (error) throw error;
       await atualizarDocMutation.mutateAsync({ tipo, status: 'enviado' });
-      await supabase.from('programa_validador_historico' as never).insert({
+      await supabase.from('programa_validador_historico' as any).insert({
         cliente_id: cliente.id,
         tipo: 'documento_gerado',
         titulo: `Link de aceite gerado: ${(cliente.tipo_cliente === 'pagante' ? DOCS_CONFIG_PAGANTE : DOCS_CONFIG_TESTER).find(d => d.tipo === tipo)?.label}`,
         autor: profile?.nome_completo || 'SuperAdmin',
-      } as never);
+      } as any);
       return data;
     },
     onSuccess: (data) => {

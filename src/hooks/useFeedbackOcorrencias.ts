@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -17,8 +18,7 @@ export function useFeedbackOcorrencias() {
     queryKey: ["feedbacks", tenantId],
     queryFn: async (): Promise<Feedback[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("feedbacks" as never)
+      const { data, error } = await fromTable("feedbacks")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false }) as { data: Feedback[] | null; error: Error | null };
@@ -42,14 +42,13 @@ export function useFeedbackOcorrencias() {
       enviado_email?: boolean;
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
-      const { data, error } = await supabase
-        .from("feedbacks" as never)
+      const { data, error } = await fromTable("feedbacks")
         .insert({
           tenant_id: tenantId,
           ...input,
           registrado_por: user.id,
           registrado_por_nome: profile?.nome_completo || "Usuário",
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -64,8 +63,7 @@ export function useFeedbackOcorrencias() {
         try {
           const colaboradorId = (data as any).colaborador_id;
           if (colaboradorId) {
-            const { data: userRecord } = await (supabase as any)
-              .from("tenant_usuarios")
+            const { data: userRecord } = await fromTable("tenant_usuarios")
               .select("email_principal")
               .eq("auth_user_id", colaboradorId)
               .maybeSingle();
@@ -96,8 +94,7 @@ export function useFeedbackOcorrencias() {
     queryKey: ["ocorrencias", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Ocorrencia[]> => {
       if (!tenantId) return [];
-      let q = supabase
-        .from("ocorrencias" as never)
+      let q = fromTable("ocorrencias")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -122,8 +119,7 @@ export function useFeedbackOcorrencias() {
     }) => {
       if (!tenantId || !user) throw new Error("Não autenticado");
       const isAdv = input.is_advertencia || false;
-      const { data, error } = await supabase
-        .from("ocorrencias" as never)
+      const { data, error } = await fromTable("ocorrencias")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -131,7 +127,7 @@ export function useFeedbackOcorrencias() {
           bloqueado: isAdv,
           registrado_por: user.id,
           registrado_por_nome: profile?.nome_completo || "Usuário",
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -178,8 +174,7 @@ export function useFeedbackOcorrencias() {
       if (data && (data as any).tipo === "negativa") {
         try {
           // Buscar gestores (admins e managers do tenant)
-          const { data: gestores } = await (supabase as any)
-            .from("tenant_usuarios")
+          const { data: gestores } = await fromTable("tenant_usuarios")
             .select("email_principal, nome_completo")
             .eq("tenant_id", tenantId)
             .in("tipo_usuario", ["admin", "gestor", "rh"]);
@@ -216,14 +211,13 @@ export function useFeedbackOcorrencias() {
       destinatario_nome?: string;
     }) => {
       if (!tenantId) throw new Error("Não autenticado");
-      const { data, error } = await supabase
-        .from("advertencia_links" as never)
+      const { data, error } = await fromTable("advertencia_links")
         .insert({
           tenant_id: tenantId,
           ...input,
           status: "enviada",
           enviado_em: new Date().toISOString(),
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
@@ -63,8 +64,7 @@ export function useGamificacao() {
     queryKey: ["minhas_medalhas", tenantId, colaboradorId],
     queryFn: async () => {
       if (!tenantId || !colaboradorId) return [];
-      const { data, error } = await supabase
-        .from("trilha_medalhas_colaboradores" as never)
+      const { data, error } = await fromTable("trilha_medalhas_colaboradores")
         .select("*, medalha:trilha_medalhas(*)")
         .eq("tenant_id", tenantId)
         .eq("colaborador_id", colaboradorId)
@@ -84,8 +84,7 @@ export function useGamificacao() {
     queryKey: ["meus_certificados", tenantId, colaboradorId],
     queryFn: async () => {
       if (!tenantId || !colaboradorId) return [];
-      const { data, error } = await supabase
-        .from("trilha_certificados" as never)
+      const { data, error } = await fromTable("trilha_certificados")
         .select("*, trilha:trilhas(nome)")
         .eq("tenant_id", tenantId)
         .eq("colaborador_id", colaboradorId)
@@ -107,8 +106,7 @@ export function useGamificacao() {
       if (!tenantId) return [];
 
       // Get all progress for the tenant
-      const { data: progressos, error } = await supabase
-        .from("trilha_progresso" as never)
+      const { data: progressos, error } = await fromTable("trilha_progresso")
         .select("colaborador_id, colaborador_nome, pontos_obtidos, status, trilha_id")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido") as { data: any[] | null; error: Error | null };
@@ -116,14 +114,12 @@ export function useGamificacao() {
       if (!progressos?.length) return [];
 
       // Get medal counts
-      const { data: medalhas } = await supabase
-        .from("trilha_medalhas_colaboradores" as never)
+      const { data: medalhas } = await fromTable("trilha_medalhas_colaboradores")
         .select("colaborador_id")
         .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
 
       // Get certificate counts
-      const { data: certs } = await supabase
-        .from("trilha_certificados" as never)
+      const { data: certs } = await fromTable("trilha_certificados")
         .select("colaborador_id")
         .eq("tenant_id", tenantId) as { data: any[] | null; error: Error | null };
 
@@ -164,8 +160,7 @@ export function useGamificacao() {
     queryKey: ["trilha_medalhas_config", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("trilha_medalhas" as never)
+      const { data, error } = await fromTable("trilha_medalhas")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at") as { data: Medalha[] | null; error: Error | null };
@@ -178,9 +173,8 @@ export function useGamificacao() {
   const criarMedalhaMut = useMutation({
     mutationFn: async (input: Partial<Medalha> & { nome: string }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("trilha_medalhas" as never)
-        .insert({ tenant_id: tenantId, ...input } as never)
+      const { data, error } = await fromTable("trilha_medalhas")
+        .insert({ tenant_id: tenantId, ...input } as any)
         .select()
         .single();
       if (error) throw error;
@@ -195,7 +189,7 @@ export function useGamificacao() {
 
   const excluirMedalhaMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trilha_medalhas" as never).delete().eq("id", id);
+      const { error } = await fromTable("trilha_medalhas").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

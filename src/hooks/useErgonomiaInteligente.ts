@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "./useTenant";
 import { subDays, format } from "date-fns";
 
@@ -132,8 +133,7 @@ export function useErgonomiaInteligente() {
       const acoesConcluidas = acoesData?.filter(a => a.status === 'concluida').length || 0;
 
       // Buscar alertas de ponto (jornada excessiva) dos últimos 30 dias
-      const { data: alertasPonto } = await supabase
-        .from("ponto_alertas" as never)
+      const { data: alertasPonto } = await fromTable("ponto_alertas")
         .select("tipo, severidade")
         .eq("tenant_id", tenantId)
         .gte("created_at", trintaDiasAtras) as { data: any[] | null };
@@ -143,8 +143,7 @@ export function useErgonomiaInteligente() {
       const alertasInterjornada = (alertasPonto || []).filter((a: any) => a.tipo === 'interjornada_insuficiente').length;
 
       // Buscar média de HE dos últimos 30 dias
-      const { data: pontoDiarioData } = await supabase
-        .from("ponto_diario" as never)
+      const { data: pontoDiarioData } = await fromTable("ponto_diario")
         .select("horas_extras_50_minutos, horas_extras_100_minutos")
         .eq("tenant_id", tenantId)
         .gte("data", trintaDiasAtras) as { data: any[] | null };

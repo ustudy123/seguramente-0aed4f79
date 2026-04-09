@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, AlertTriangle, ClipboardList, Brain, Shield, Wrench, LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { IndicadorDetailModal } from "./IndicadorDetailModal";
 
@@ -23,8 +24,7 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
     queryKey: ["all_funcao_atividades", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("funcao_atividades" as never)
+      const { data, error } = await fromTable("funcao_atividades")
         .select("cargo_id, complexidade, classificacao")
         .eq("tenant_id", tenantId) as { data: { cargo_id: string; complexidade: string; classificacao: string }[] | null; error: Error | null };
       if (error) return [];
@@ -37,8 +37,7 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
     queryKey: ["all_funcao_competencias", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("funcao_competencias" as never)
+      const { data, error } = await fromTable("funcao_competencias")
         .select("cargo_id, tipo")
         .eq("tenant_id", tenantId) as { data: { cargo_id: string; tipo: string }[] | null; error: Error | null };
       if (error) return [];
@@ -51,8 +50,7 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
     queryKey: ["all_funcao_ferramentas", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("funcao_ferramentas" as never)
+      const { data, error } = await fromTable("funcao_ferramentas")
         .select("atividade_id")
         .eq("tenant_id", tenantId) as { data: { atividade_id: string }[] | null; error: Error | null };
       if (error) return [];
@@ -65,8 +63,7 @@ export function AprendizadoStats({ cargos }: AprendizadoStatsProps) {
     queryKey: ["all_funcao_conteudos", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("funcao_conteudos" as never)
+      const { data, error } = await fromTable("funcao_conteudos")
         .select("atividade_id")
         .eq("tenant_id", tenantId) as { data: { atividade_id: string }[] | null; error: Error | null };
       if (error) return [];

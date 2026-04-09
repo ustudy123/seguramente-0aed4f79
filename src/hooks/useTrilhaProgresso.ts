@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
@@ -18,8 +19,7 @@ export function useTrilhaProgresso() {
       if (!tenantId || !colaboradorId) return [];
 
       // Fetch active trilhas
-      const { data: trilhas, error: tErr } = await supabase
-        .from("trilhas" as never)
+      const { data: trilhas, error: tErr } = await fromTable("trilhas")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("status", "ativa")
@@ -28,8 +28,7 @@ export function useTrilhaProgresso() {
       if (!trilhas?.length) return [];
 
       // Fetch user's progress across all trilhas
-      const { data: progresso, error: pErr } = await supabase
-        .from("trilha_progresso" as never)
+      const { data: progresso, error: pErr } = await fromTable("trilha_progresso")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("colaborador_id", colaboradorId) as { data: TrilhaProgresso[] | null; error: Error | null };
@@ -52,8 +51,7 @@ export function useTrilhaProgresso() {
       queryKey: ["trilha_progresso", trilhaId, colaboradorId],
       queryFn: async (): Promise<TrilhaProgresso[]> => {
         if (!trilhaId || !tenantId || !colaboradorId) return [];
-        const { data, error } = await supabase
-          .from("trilha_progresso" as never)
+        const { data, error } = await fromTable("trilha_progresso")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("trilha_id", trilhaId)
@@ -67,8 +65,7 @@ export function useTrilhaProgresso() {
   const iniciarModuloMut = useMutation({
     mutationFn: async ({ trilhaId, moduloId }: { trilhaId: string; moduloId: string }) => {
       if (!tenantId || !colaboradorId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("trilha_progresso" as never)
+      const { data, error } = await fromTable("trilha_progresso")
         .upsert(
           {
             tenant_id: tenantId,
@@ -124,8 +121,7 @@ export function useTrilhaProgresso() {
         evidenciaUrl = filePath;
       }
 
-      const { data, error } = await supabase
-        .from("trilha_progresso" as never)
+      const { data, error } = await fromTable("trilha_progresso")
         .upsert(
           {
             tenant_id: tenantId,

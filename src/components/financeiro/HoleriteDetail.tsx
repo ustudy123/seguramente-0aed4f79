@@ -14,6 +14,7 @@ import {
 import type { FolhaItem } from "@/hooks/useFinanceiro";
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -259,8 +260,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
       const pastaId = await findOrCreateColaboradorPasta();
 
       // Create document record
-      const { error: docError } = await supabase
-        .from("documentos" as never)
+      const { error: docError } = await fromTable("documentos")
         .insert({
           tenant_id: tenantId,
           colaborador_id: item.colaborador_id || null,
@@ -277,7 +277,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
           pasta_id: pastaId,
-        } as never);
+        } as any);
 
       if (docError) {
         await supabase.storage.from("documentos").remove([storagePath]);
@@ -316,8 +316,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
 
         const pastaId = await findOrCreateColaboradorPasta();
 
-        const { data: docData, error: docError } = await supabase
-          .from("documentos" as never)
+        const { data: docData, error: docError } = await fromTable("documentos")
           .insert({
             tenant_id: tenantId,
             colaborador_id: item.colaborador_id || null,
@@ -334,7 +333,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
             criado_por: user.id,
             criado_por_nome: profile?.nome_completo,
             pasta_id: pastaId,
-          } as never)
+          } as any)
           .select("id")
           .single();
 
@@ -347,8 +346,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
       }
 
       // Create signature request
-      const { error: sigError } = await supabase
-        .from("holerite_assinaturas" as never)
+      const { error: sigError } = await fromTable("holerite_assinaturas")
         .insert({
           tenant_id: tenantId,
           folha_item_id: item.id,
@@ -359,7 +357,7 @@ export const HoleriteDetail = ({ open, onClose, item, competencia }: HoleriteDet
           status: "pendente",
           enviado_por: user.id,
           enviado_por_nome: profile?.nome_completo,
-        } as never);
+        } as any);
 
       if (sigError) throw sigError;
 

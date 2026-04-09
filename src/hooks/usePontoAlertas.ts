@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -38,8 +39,7 @@ export function usePontoAlertas() {
     queryKey: ["ponto-alertas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<PontoAlerta[]> => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("ponto_alertas" as never)
+      let query = fromTable("ponto_alertas")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("resolvido", false);
@@ -53,9 +53,8 @@ export function usePontoAlertas() {
 
   const resolverAlertaMutation = useMutation({
     mutationFn: async (alertaId: string) => {
-      const { error } = await supabase
-        .from("ponto_alertas" as never)
-        .update({ resolvido: true, resolvido_em: new Date().toISOString() } as never)
+      const { error } = await fromTable("ponto_alertas")
+        .update({ resolvido: true, resolvido_em: new Date().toISOString() } as any)
         .eq("id", alertaId);
       if (error) throw error;
     },

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,8 +48,7 @@ export function ErgonomiaContextPanel({
     queryKey: ["funcao-atividades-avd", tenantId, cargo?.id],
     queryFn: async () => {
       if (!cargo?.id) return [];
-      const { data } = await (supabase as any)
-        .from("funcao_atividades")
+      const { data } = await fromTable("funcao_atividades")
         .select("id, nome, complexidade, critico, tem_pop:funcao_pops(id)")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargo.id)
@@ -70,8 +70,7 @@ export function ErgonomiaContextPanel({
     queryKey: ["ergonomia-riscos-avd", tenantId, colaboradorCargo],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("ergonomia_riscos")
+      const { data } = await fromTable("ergonomia_riscos")
         .select("id, descricao, categoria, nivel_risco, cargo_afetado")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
@@ -97,7 +96,7 @@ export function ErgonomiaContextPanel({
       redistribuir: `Redistribuir tarefas de alta complexidade — ${colaboradorCargo || colaboradorNome}`,
     };
     try {
-      await (supabase as any).from("plano_acoes").insert({
+      await fromTable("plano_acoes").insert({
         tenant_id: tenantId,
         titulo: titulos[tipo],
         descricao: `Ação gerada a partir da avaliação de desempenho — Ciclo: ${cicloNome}. Colaborador: ${colaboradorNome}.`,

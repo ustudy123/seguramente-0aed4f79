@@ -81,7 +81,7 @@ export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaForm
           pontuacao_minima: form.pontuacao_minima,
           prazo_dias: form.prazo_dias ?? null,
           conexao_pdi: form.conexao_pdi,
-        } as never);
+        } as any);
       } else {
         await criarTrilha({
           nome: form.nome,
@@ -93,7 +93,7 @@ export function TrilhaForm({ open, onOpenChange, trilha, onSuccess }: TrilhaForm
           pontuacao_minima: form.pontuacao_minima,
           prazo_dias: form.prazo_dias ?? null,
           conexao_pdi: form.conexao_pdi,
-        } as never);
+        } as any);
       }
       onOpenChange(false);
       onSuccess?.();

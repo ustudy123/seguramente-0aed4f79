@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
@@ -26,8 +27,7 @@ export function useAprendizado(cargoId?: string) {
     queryKey: ["funcao_atividades", cargoId],
     queryFn: async (): Promise<FuncaoAtividade[]> => {
       if (!tenantId || !cargoId) return [];
-      const { data, error } = await supabase
-        .from("funcao_atividades" as never)
+      const { data, error } = await fromTable("funcao_atividades")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId)
@@ -41,9 +41,8 @@ export function useAprendizado(cargoId?: string) {
   const criarAtividadeMut = useMutation({
     mutationFn: async (input: Partial<FuncaoAtividade> & { nome: string }) => {
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("funcao_atividades" as never)
-        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as never)
+      const { data, error } = await fromTable("funcao_atividades")
+        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as any)
         .select()
         .single();
       if (error) throw error;
@@ -58,25 +57,22 @@ export function useAprendizado(cargoId?: string) {
 
   const atualizarAtividadeMut = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<FuncaoAtividade> & { id: string }) => {
-      const { error } = await supabase
-        .from("funcao_atividades" as never)
-        .update(updates as never)
+      const { error } = await fromTable("funcao_atividades")
+        .update(updates as any)
         .eq("id", id);
       if (error) throw error;
 
       // Se a descrição mudou, marcar POP vinculado como "desatualizado"
       if (updates.descricao !== undefined) {
-        const { data: pops } = await supabase
-          .from("funcao_pops" as never)
+        const { data: pops } = await fromTable("funcao_pops")
           .select("id, status")
           .eq("atividade_id", id)
           .neq("status", "desatualizado") as { data: Array<{ id: string; status: string }> | null };
 
         if (pops && pops.length > 0) {
           for (const pop of pops) {
-            await supabase
-              .from("funcao_pops" as never)
-              .update({ status: "desatualizado" } as never)
+            await fromTable("funcao_pops")
+              .update({ status: "desatualizado" } as any)
               .eq("id", pop.id);
           }
         }
@@ -92,7 +88,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirAtividadeMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_atividades" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_atividades").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -109,8 +105,7 @@ export function useAprendizado(cargoId?: string) {
       if (!tenantId || !cargoId) return [];
       const atividadeIds = atividades.map((a) => a.id);
       if (atividadeIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("funcao_responsabilidades" as never)
+      const { data, error } = await fromTable("funcao_responsabilidades")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("atividade_id", atividadeIds) as { data: FuncaoResponsabilidade[] | null; error: Error | null };
@@ -125,15 +120,13 @@ export function useAprendizado(cargoId?: string) {
       if (!tenantId) throw new Error("Sem contexto");
       const existing = responsabilidades.find((r) => r.atividade_id === input.atividade_id);
       if (existing) {
-        const { error } = await supabase
-          .from("funcao_responsabilidades" as never)
-          .update({ ...input } as never)
+        const { error } = await fromTable("funcao_responsabilidades")
+          .update({ ...input } as any)
           .eq("id", existing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("funcao_responsabilidades" as never)
-          .insert({ tenant_id: tenantId, ...input } as never);
+        const { error } = await fromTable("funcao_responsabilidades")
+          .insert({ tenant_id: tenantId, ...input } as any);
         if (error) throw error;
       }
     },
@@ -151,8 +144,7 @@ export function useAprendizado(cargoId?: string) {
       if (!tenantId || !cargoId) return [];
       const atividadeIds = atividades.map((a) => a.id);
       if (atividadeIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("funcao_conteudos" as never)
+      const { data, error } = await fromTable("funcao_conteudos")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("atividade_id", atividadeIds) as { data: FuncaoConteudo[] | null; error: Error | null };
@@ -165,9 +157,8 @@ export function useAprendizado(cargoId?: string) {
   const criarConteudoMut = useMutation({
     mutationFn: async (input: { atividade_id: string; tipo: string; titulo: string; url: string; descricao?: string }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_conteudos" as never)
-        .insert({ tenant_id: tenantId, ...input } as never);
+      const { error } = await fromTable("funcao_conteudos")
+        .insert({ tenant_id: tenantId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -179,7 +170,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirConteudoMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_conteudos" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_conteudos").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_conteudos", cargoId] }),
@@ -193,8 +184,7 @@ export function useAprendizado(cargoId?: string) {
       if (!tenantId || !cargoId) return [];
       const atividadeIds = atividades.map((a) => a.id);
       if (atividadeIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("funcao_ferramentas" as never)
+      const { data, error } = await fromTable("funcao_ferramentas")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("atividade_id", atividadeIds) as { data: FuncaoFerramenta[] | null; error: Error | null };
@@ -207,9 +197,8 @@ export function useAprendizado(cargoId?: string) {
   const criarFerramentaMut = useMutation({
     mutationFn: async (input: { atividade_id: string; nome: string; tipo: string; url_manual?: string; descricao?: string }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_ferramentas" as never)
-        .insert({ tenant_id: tenantId, ...input } as never);
+      const { error } = await fromTable("funcao_ferramentas")
+        .insert({ tenant_id: tenantId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -221,7 +210,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirFerramentaMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_ferramentas" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_ferramentas").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_ferramentas", cargoId] }),
@@ -233,8 +222,7 @@ export function useAprendizado(cargoId?: string) {
     queryKey: ["funcao_competencias", cargoId],
     queryFn: async (): Promise<FuncaoCompetencia[]> => {
       if (!tenantId || !cargoId) return [];
-      const { data, error } = await supabase
-        .from("funcao_competencias" as never)
+      const { data, error } = await fromTable("funcao_competencias")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId)
@@ -248,9 +236,8 @@ export function useAprendizado(cargoId?: string) {
   const criarCompetenciaMut = useMutation({
     mutationFn: async (input: { nome: string; tipo: string; descricao?: string }) => {
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_competencias" as never)
-        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as never);
+      const { error } = await fromTable("funcao_competencias")
+        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -262,9 +249,8 @@ export function useAprendizado(cargoId?: string) {
 
   const atualizarCompetenciaMut = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; nome?: string; tipo?: string; descricao?: string }) => {
-      const { error } = await supabase
-        .from("funcao_competencias" as never)
-        .update(updates as never)
+      const { error } = await fromTable("funcao_competencias")
+        .update(updates as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -277,7 +263,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirCompetenciaMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_competencias" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_competencias").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_competencias", cargoId] }),
@@ -290,8 +276,7 @@ export function useAprendizado(cargoId?: string) {
     queryFn: async (): Promise<FuncaoCompetenciaRecurso[]> => {
       if (!tenantId || competencias.length === 0) return [];
       const ids = competencias.map((c) => c.id);
-      const { data, error } = await supabase
-        .from("funcao_competencia_recursos" as never)
+      const { data, error } = await fromTable("funcao_competencia_recursos")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("competencia_id", ids) as { data: FuncaoCompetenciaRecurso[] | null; error: Error | null };
@@ -304,9 +289,8 @@ export function useAprendizado(cargoId?: string) {
   const criarCompetenciaRecursoMut = useMutation({
     mutationFn: async (input: { competencia_id: string; tipo: string; titulo: string; url: string; descricao?: string }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_competencia_recursos" as never)
-        .insert({ tenant_id: tenantId, ...input } as never);
+      const { error } = await fromTable("funcao_competencia_recursos")
+        .insert({ tenant_id: tenantId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -318,7 +302,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirCompetenciaRecursoMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_competencia_recursos" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_competencia_recursos").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_competencia_recursos", cargoId] }),
@@ -330,8 +314,7 @@ export function useAprendizado(cargoId?: string) {
     queryKey: ["funcao_epi_vinculacoes", cargoId],
     queryFn: async (): Promise<FuncaoEpiVinculacao[]> => {
       if (!tenantId || !cargoId) return [];
-      const { data, error } = await supabase
-        .from("funcao_epi_vinculacoes" as never)
+      const { data, error } = await fromTable("funcao_epi_vinculacoes")
         .select("*, epi_tipos(nome, categoria)")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId) as { data: any[] | null; error: Error | null };
@@ -348,9 +331,8 @@ export function useAprendizado(cargoId?: string) {
   const criarEpiVinculacaoMut = useMutation({
     mutationFn: async (input: { epi_tipo_id: string; obrigatoriedade: string }) => {
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_epi_vinculacoes" as never)
-        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as never);
+      const { error } = await fromTable("funcao_epi_vinculacoes")
+        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -362,7 +344,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirEpiVinculacaoMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_epi_vinculacoes" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_epi_vinculacoes").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_epi_vinculacoes", cargoId] }),
@@ -375,8 +357,7 @@ export function useAprendizado(cargoId?: string) {
     queryFn: async (): Promise<FuncaoEpiConteudo[]> => {
       if (!tenantId || epiVinculacoes.length === 0) return [];
       const ids = epiVinculacoes.map((v) => v.id);
-      const { data, error } = await supabase
-        .from("funcao_epi_conteudos" as never)
+      const { data, error } = await fromTable("funcao_epi_conteudos")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("vinculacao_id", ids) as { data: FuncaoEpiConteudo[] | null; error: Error | null };
@@ -389,9 +370,8 @@ export function useAprendizado(cargoId?: string) {
   const criarEpiConteudoMut = useMutation({
     mutationFn: async (input: { vinculacao_id: string; tipo: string; titulo: string; url: string; descricao?: string }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_epi_conteudos" as never)
-        .insert({ tenant_id: tenantId, ...input } as never);
+      const { error } = await fromTable("funcao_epi_conteudos")
+        .insert({ tenant_id: tenantId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -403,7 +383,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirEpiConteudoMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_epi_conteudos" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_epi_conteudos").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_epi_conteudos", cargoId] }),
@@ -416,8 +396,7 @@ export function useAprendizado(cargoId?: string) {
     queryFn: async (): Promise<FuncaoEpiQuestionario[]> => {
       if (!tenantId || epiVinculacoes.length === 0) return [];
       const ids = epiVinculacoes.map((v) => v.id);
-      const { data, error } = await supabase
-        .from("funcao_epi_questionarios" as never)
+      const { data, error } = await fromTable("funcao_epi_questionarios")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("vinculacao_id", ids)
@@ -431,9 +410,8 @@ export function useAprendizado(cargoId?: string) {
   const criarEpiQuestionarioMut = useMutation({
     mutationFn: async (input: { vinculacao_id: string; pergunta: string; opcoes: string[]; resposta_correta: number; ordem?: number }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_epi_questionarios" as never)
-        .insert({ tenant_id: tenantId, ...input } as never);
+      const { error } = await fromTable("funcao_epi_questionarios")
+        .insert({ tenant_id: tenantId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -445,7 +423,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirEpiQuestionarioMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_epi_questionarios" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_epi_questionarios").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_epi_questionarios", cargoId] }),
@@ -457,8 +435,7 @@ export function useAprendizado(cargoId?: string) {
     queryKey: ["funcao_treinamento_evidencias", cargoId],
     queryFn: async (): Promise<FuncaoTreinamentoEvidencia[]> => {
       if (!tenantId || !cargoId) return [];
-      const { data, error } = await supabase
-        .from("funcao_treinamento_evidencias" as never)
+      const { data, error } = await fromTable("funcao_treinamento_evidencias")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId)
@@ -474,8 +451,7 @@ export function useAprendizado(cargoId?: string) {
     queryKey: ["funcao_config", tenantId],
     queryFn: async (): Promise<FuncaoConfig | null> => {
       if (!tenantId) return null;
-      const { data, error } = await supabase
-        .from("funcao_config" as never)
+      const { data, error } = await fromTable("funcao_config")
         .select("*")
         .eq("tenant_id", tenantId)
         .maybeSingle() as { data: FuncaoConfig | null; error: Error | null };
@@ -489,15 +465,13 @@ export function useAprendizado(cargoId?: string) {
     mutationFn: async (input: Partial<FuncaoConfig>) => {
       if (!tenantId) throw new Error("Sem contexto");
       if (config) {
-        const { error } = await supabase
-          .from("funcao_config" as never)
-          .update(input as never)
+        const { error } = await fromTable("funcao_config")
+          .update(input as any)
           .eq("id", config.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("funcao_config" as never)
-          .insert({ tenant_id: tenantId, ...input } as never);
+        const { error } = await fromTable("funcao_config")
+          .insert({ tenant_id: tenantId, ...input } as any);
         if (error) throw error;
       }
     },
@@ -513,8 +487,7 @@ export function useAprendizado(cargoId?: string) {
     queryKey: ["funcao_treinamentos", cargoId],
     queryFn: async () => {
       if (!tenantId || !cargoId) return [];
-      const { data, error } = await supabase
-        .from("funcao_treinamentos" as never)
+      const { data, error } = await fromTable("funcao_treinamentos")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId)
@@ -528,9 +501,8 @@ export function useAprendizado(cargoId?: string) {
   const criarTreinamentoMut = useMutation({
     mutationFn: async (input: { titulo: string; tipo: string; url: string; descricao?: string; obrigatorio?: boolean; carga_horaria_min?: number }) => {
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
-      const { error } = await supabase
-        .from("funcao_treinamentos" as never)
-        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as never);
+      const { error } = await fromTable("funcao_treinamentos")
+        .insert({ tenant_id: tenantId, cargo_id: cargoId, ...input } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -542,7 +514,7 @@ export function useAprendizado(cargoId?: string) {
 
   const excluirTreinamentoMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_treinamentos" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_treinamentos").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funcao_treinamentos", cargoId] }),

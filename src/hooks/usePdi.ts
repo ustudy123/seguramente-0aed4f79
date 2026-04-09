@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -220,7 +221,7 @@ export function usePdi() {
           d.comentario && `Comentário: ${d.comentario}`,
         ].filter(Boolean).join(" | ");
 
-        await supabase.from("feedbacks" as never).insert({
+        await fromTable("feedbacks").insert({
           tenant_id: tenantId,
           colaborador_id: d.colaborador_id,
           colaborador_nome: d.colaborador_nome,
@@ -230,7 +231,7 @@ export function usePdi() {
           registrado_por_nome: profile?.nome_completo || "Usuário",
           pdi_id: d.pdi_id,
           pdi_titulo: d.pdi_titulo || null,
-        } as never);
+        } as any);
       }
     },
     onSuccess: () => {

@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { ErgonomiaContextPanel } from "./ErgonomiaContextPanel";
 import { useAvaliacaoEvidencias } from "@/hooks/useAvaliacaoEvidencias";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,7 +59,7 @@ function CriarAcaoModal({ open, onOpenChange, colaboradorNome, cicloNome, contex
     if (!titulo.trim()) { toast.error("Informe o título da ação"); return; }
     setIsLoading(true);
     try {
-      const { error } = await (supabase as any).from("plano_acoes").insert({
+      const { error } = await fromTable("plano_acoes").insert({
         tenant_id: tenantId,
         titulo: titulo.trim(),
         descricao: descricao.trim() || null,
@@ -144,8 +145,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
 
   const fetchTrilhas = async () => {
     setIsLoadingTrilhas(true);
-    const { data } = await (supabase as any)
-      .from("trilhas")
+    const { data } = await fromTable("trilhas")
       .select("id, nome, tipo")
       .eq("tenant_id", tenantId)
       .eq("status", "ativa")
@@ -159,8 +159,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
     setIsLoading(true);
     try {
       // Verificar se já está atribuída
-      const { data: existing } = await (supabase as any)
-        .from("trilha_atribuicoes")
+      const { data: existing } = await fromTable("trilha_atribuicoes")
         .select("id")
         .eq("tenant_id", tenantId)
         .eq("trilha_id", selected)
@@ -173,7 +172,7 @@ function AtribuirTrilhaModal({ open, onOpenChange, colaboradorId, colaboradorNom
         return;
       }
 
-      const { error } = await (supabase as any).from("trilha_atribuicoes").insert({
+      const { error } = await fromTable("trilha_atribuicoes").insert({
         tenant_id: tenantId,
         trilha_id: selected,
         colaborador_id: colaboradorId,

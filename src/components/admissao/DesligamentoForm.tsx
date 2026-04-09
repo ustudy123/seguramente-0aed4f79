@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -385,8 +386,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
       }
 
       // Salvar metadados no banco
-      const { error: dbError } = await supabase
-        .from("documentos" as never)
+      const { error: dbError } = await fromTable("documentos")
         .insert({
           tenant_id: tenantId,
           colaborador_id: admissao.id,
@@ -403,7 +403,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
           pasta_id: pastaId,
-        } as never);
+        } as any);
 
       if (dbError) {
         await supabase.storage.from("documentos").remove([storagePath]);
@@ -500,12 +500,11 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           const totalLiquido = +(totalProventos - totalDescontos + multaFgtsValor).toFixed(2);
 
           // Buscar ou criar período rescisório
-          const { data: periodoExistente } = await supabase
-            .from("folha_periodos" as never)
+          const { data: periodoExistente } = await fromTable("folha_periodos")
             .select("id")
             .eq("tenant_id", tenantId)
             .eq("competencia", competencia)
-            .eq("status", "rescisao" as never)
+            .eq("status", "rescisao" as any)
             .maybeSingle() as any;
 
           let periodoId: string;
@@ -513,8 +512,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
           if (periodoExistente?.id) {
             periodoId = periodoExistente.id;
           } else {
-            const { data: novoPeriodo, error: errPeriodo } = await supabase
-              .from("folha_periodos" as never)
+            const { data: novoPeriodo, error: errPeriodo } = await fromTable("folha_periodos")
               .insert({
                 tenant_id: tenantId,
                 competencia,
@@ -524,7 +522,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
                 total_descontos: 0,
                 total_liquido: 0,
                 total_colaboradores: 0,
-              } as never)
+              } as any)
               .select("id")
               .single() as any;
 
@@ -543,8 +541,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
             `Protocolo: ${protocolo}`,
           ].join(" | ");
 
-          await supabase
-            .from("folha_itens" as never)
+          await fromTable("folha_itens")
             .insert({
               tenant_id: tenantId,
               periodo_id: periodoId,
@@ -559,7 +556,7 @@ export const DesligamentoForm = ({ open, onOpenChange, admissao, onConfirmar }: 
               total_liquido: totalLiquido,
               status: "pendente",
               observacoes: `Rescisão ${MOTIVOS_DESLIGAMENTO[form.motivo_desligamento] || form.motivo_desligamento} | ${detalhesVerbas}`,
-            } as never);
+            } as any);
 
           queryClient.invalidateQueries({ queryKey: ["folha-periodos"] });
           queryClient.invalidateQueries({ queryKey: ["folha-itens"] });

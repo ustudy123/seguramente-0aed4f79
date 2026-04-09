@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAprendizado } from "@/hooks/useAprendizado";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -35,8 +36,7 @@ export function EpisSection({ cargoId }: EpisSectionProps) {
     queryKey: ["epi_tipos", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("epi_tipos" as never)
+      const { data, error } = await fromTable("epi_tipos")
         .select("id, nome, categoria")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)

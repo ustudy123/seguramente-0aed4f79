@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -28,8 +29,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-rubricas", tenantId],
       queryFn: async () => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_rubricas" as never)
+        const { data, error } = await fromTable("folha_rubricas")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("prioridade_calculo") as { data: any[] | null; error: any };
@@ -42,9 +42,8 @@ export function useFolhaCalculo() {
   const criarRubricaMutation = useMutation({
     mutationFn: async (dados: any) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { data, error } = await supabase
-        .from("folha_rubricas" as never)
-        .insert({ ...dados, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("folha_rubricas")
+        .insert({ ...dados, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;
@@ -59,9 +58,8 @@ export function useFolhaCalculo() {
 
   const atualizarRubricaMutation = useMutation({
     mutationFn: async ({ id, ...dados }: any) => {
-      const { data, error } = await supabase
-        .from("folha_rubricas" as never)
-        .update(dados as never)
+      const { data, error } = await fromTable("folha_rubricas")
+        .update(dados as any)
         .eq("id", id)
         .select()
         .single();
@@ -81,8 +79,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-tabelas-inss", tenantId],
       queryFn: async () => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_tabelas_inss" as never)
+        const { data, error } = await fromTable("folha_tabelas_inss")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("vigencia_inicio", { ascending: false }) as { data: any[] | null; error: any };
@@ -97,8 +94,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-tabelas-irrf", tenantId],
       queryFn: async () => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_tabelas_irrf" as never)
+        const { data, error } = await fromTable("folha_tabelas_irrf")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("vigencia_inicio", { ascending: false }) as { data: any[] | null; error: any };
@@ -114,8 +110,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-vinculos-config", tenantId],
       queryFn: async () => {
         if (!tenantId) return MATRIZ_VINCULOS_PADRAO;
-        const { data, error } = await supabase
-          .from("folha_vinculos_config" as never)
+        const { data, error } = await fromTable("folha_vinculos_config")
           .select("*")
           .eq("tenant_id", tenantId) as { data: any[] | null; error: any };
         if (error) throw error;
@@ -130,8 +125,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-lancamentos", tenantId, periodoId],
       queryFn: async () => {
         if (!tenantId || !periodoId) return [];
-        const { data, error } = await supabase
-          .from("folha_lancamentos" as never)
+        const { data, error } = await fromTable("folha_lancamentos")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("periodo_id", periodoId)
@@ -145,9 +139,8 @@ export function useFolhaCalculo() {
   const criarLancamentoMutation = useMutation({
     mutationFn: async (dados: any) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { data, error } = await supabase
-        .from("folha_lancamentos" as never)
-        .insert({ ...dados, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("folha_lancamentos")
+        .insert({ ...dados, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;
@@ -166,8 +159,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-memoria-calculo", periodoId, colaboradorId],
       queryFn: async () => {
         if (!tenantId || !periodoId) return null;
-        let query = supabase
-          .from("folha_memoria_calculo" as never)
+        let query = fromTable("folha_memoria_calculo")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("periodo_id", periodoId);
@@ -185,8 +177,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-provisoes", tenantId, competencia],
       queryFn: async () => {
         if (!tenantId) return [];
-        let query = supabase
-          .from("folha_provisoes" as never)
+        let query = fromTable("folha_provisoes")
           .select("*")
           .eq("tenant_id", tenantId);
         if (competencia) query = query.eq("competencia", competencia);
@@ -203,8 +194,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-ferias-calculo", tenantId],
       queryFn: async () => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_ferias_calculo" as never)
+        const { data, error } = await fromTable("folha_ferias_calculo")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("created_at", { ascending: false }) as { data: any[] | null; error: any };
@@ -230,15 +220,14 @@ export function useFolhaCalculo() {
       const prazoLegal = new Date(dados.data_inicio_gozo);
       prazoLegal.setDate(prazoLegal.getDate() - 2);
 
-      const { data, error } = await supabase
-        .from("folha_ferias_calculo" as never)
+      const { data, error } = await fromTable("folha_ferias_calculo")
         .insert({
           ...dados,
           ...resultado,
           prazo_legal: prazoLegal.toISOString().split("T")[0],
           memoria_calculo: resultado,
           tenant_id: tenantId,
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -257,8 +246,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-13-calculo", tenantId, ano],
       queryFn: async () => {
         if (!tenantId) return [];
-        let query = supabase
-          .from("folha_13_calculo" as never)
+        let query = fromTable("folha_13_calculo")
           .select("*")
           .eq("tenant_id", tenantId);
         if (ano) query = query.eq("ano", ano);
@@ -281,14 +269,13 @@ export function useFolhaCalculo() {
         dependentesIRRF: dados.dependentes_irrf || 0,
       });
 
-      const { data, error } = await supabase
-        .from("folha_13_calculo" as never)
+      const { data, error } = await fromTable("folha_13_calculo")
         .insert({
           ...dados,
           ...resultado,
           memoria_calculo: resultado,
           tenant_id: tenantId,
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -307,8 +294,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-rescisoes", tenantId],
       queryFn: async () => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_rescisoes" as never)
+        const { data, error } = await fromTable("folha_rescisoes")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("created_at", { ascending: false }) as { data: any[] | null; error: any };
@@ -335,8 +321,7 @@ export function useFolhaCalculo() {
       const prazoLegal = new Date(dados.data_desligamento);
       prazoLegal.setDate(prazoLegal.getDate() + 10);
 
-      const { data, error } = await supabase
-        .from("folha_rescisoes" as never)
+      const { data, error } = await fromTable("folha_rescisoes")
         .insert({
           tenant_id: tenantId,
           colaborador_id: dados.colaborador_id,
@@ -353,7 +338,7 @@ export function useFolhaCalculo() {
           ...resultado,
           prazo_legal: prazoLegal.toISOString().split("T")[0],
           memoria_calculo: resultado.detalhes,
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -368,9 +353,8 @@ export function useFolhaCalculo() {
 
   const atualizarRescisaoMutation = useMutation({
     mutationFn: async ({ id, ...dados }: any) => {
-      const { data, error } = await supabase
-        .from("folha_rescisoes" as never)
-        .update(dados as never)
+      const { data, error } = await fromTable("folha_rescisoes")
+        .update(dados as any)
         .eq("id", id)
         .select()
         .single();
@@ -390,8 +374,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-lotes", tenantId],
       queryFn: async () => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_lotes" as never)
+        const { data, error } = await fromTable("folha_lotes")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("created_at", { ascending: false }) as { data: any[] | null; error: any };
@@ -407,8 +390,7 @@ export function useFolhaCalculo() {
       queryKey: ["folha-historico", tenantId, periodoId],
       queryFn: async () => {
         if (!tenantId) return [];
-        let query = supabase
-          .from("folha_historico" as never)
+        let query = fromTable("folha_historico")
           .select("*")
           .eq("tenant_id", tenantId);
         if (periodoId) query = query.eq("periodo_id", periodoId);

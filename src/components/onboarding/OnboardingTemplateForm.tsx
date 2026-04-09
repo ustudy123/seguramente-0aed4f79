@@ -239,9 +239,9 @@ export function OnboardingTemplateForm({ open, onOpenChange, template }: Props) 
     };
     try {
       if (template) {
-        await atualizarTemplate({ id: template.id, ...payload } as never);
+        await atualizarTemplate({ id: template.id, ...payload } as any);
       } else {
-        await criarTemplate(payload as never);
+        await criarTemplate(payload as any);
       }
       onOpenChange(false);
     } catch {}

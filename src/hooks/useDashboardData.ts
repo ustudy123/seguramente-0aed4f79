@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "./useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
@@ -82,8 +83,8 @@ export const useDashboardData = () => {
         supabase.from("ergonomia_acoes").select("id, status").eq("tenant_id", tenant.id),
         supabase.from("ergonomia_evidencias").select("id").eq("tenant_id", tenant.id),
         // Terceiros cross-module
-        supabase.from("terceiros" as never).select("id, status").eq("tenant_id", tenant.id),
-        supabase.from("permissoes_trabalho" as never).select("id, status").eq("tenant_id", tenant.id),
+        fromTable("terceiros").select("id, status").eq("tenant_id", tenant.id),
+        fromTable("permissoes_trabalho").select("id, status").eq("tenant_id", tenant.id),
       ]);
 
       // Calcular métricas Pilar 1

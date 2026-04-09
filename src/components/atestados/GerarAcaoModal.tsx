@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -131,15 +132,14 @@ export function GerarAcaoModal({ open, onOpenChange, alerta }: GerarAcaoModalPro
 
       const { error } = await supabase
         .from("plano_acoes")
-        .insert(payload as never);
+        .insert(payload as any);
 
       if (error) throw error;
 
       // Mark DB alert with action if applicable
       if (alerta.id && !alerta.id.startsWith("aso-") && !alerta.id.startsWith("15dias-") && !alerta.id.startsWith("b91-")) {
-        await supabase
-          .from("alertas_saude" as never)
-          .update({ resolvido: true, resolvido_em: new Date().toISOString() } as never)
+        await fromTable("alertas_saude")
+          .update({ resolvido: true, resolvido_em: new Date().toISOString() } as any)
           .eq("id", alerta.id);
       }
 

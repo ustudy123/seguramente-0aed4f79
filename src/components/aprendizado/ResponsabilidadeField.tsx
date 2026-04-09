@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,9 +44,8 @@ export function ResponsabilidadeField({ cargoId, cargoNome, cargoDescricao, init
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from("cargos" as never)
-        .update({ responsabilidade: value } as never)
+      const { error } = await fromTable("cargos")
+        .update({ responsabilidade: value } as any)
         .eq("id", cargoId);
 
       if (error) throw error;

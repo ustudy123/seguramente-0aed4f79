@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 
@@ -209,7 +210,7 @@ async function logAuditPerfil(
   realizadoPorNome?: string
 ) {
   try {
-    await (supabase as any).from("perfil_audit_log").insert({
+    await fromTable("perfil_audit_log").insert({
       tenant_id: tenantId,
       perfil_id: perfilId,
       acao,
@@ -229,8 +230,7 @@ export function usePerfisAcesso() {
   const { data: templates = [], isLoading: loadingTemplates } = useQuery({
     queryKey: ["perfil_templates"],
     queryFn: async (): Promise<PerfilTemplate[]> => {
-      const { data, error } = await (supabase as any)
-        .from("perfil_templates")
+      const { data, error } = await fromTable("perfil_templates")
         .select("*")
         .eq("ativo", true)
         .order("nome");
@@ -248,8 +248,7 @@ export function usePerfisAcesso() {
     queryKey: ["perfis_acesso", tenantId],
     queryFn: async (): Promise<PerfilAcesso[]> => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from("perfis_acesso")
+      const { data, error } = await fromTable("perfis_acesso")
         .select("*, permissoes:perfil_permissoes(*)")
         .eq("tenant_id", tenantId)
         .order("nome");
@@ -264,8 +263,7 @@ export function usePerfisAcesso() {
     queryKey: ["usuario_perfil_vinculos", tenantId],
     queryFn: async (): Promise<UsuarioPerfilVinculo[]> => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from("usuario_perfil_vinculos")
+      const { data, error } = await fromTable("usuario_perfil_vinculos")
         .select("*, perfil:perfil_id(id,nome,cor,icone,nivel_risco), usuario:usuario_id(nome_completo,email_principal,foto_url)")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
@@ -281,8 +279,7 @@ export function usePerfisAcesso() {
     queryKey: ["perfil_audit_log", tenantId],
     queryFn: async (): Promise<PerfilAuditLog[]> => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from("perfil_audit_log")
+      const { data, error } = await fromTable("perfil_audit_log")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
@@ -309,8 +306,7 @@ export function usePerfisAcesso() {
       // Sanitize empty strings to null for timestamp/date fields
       if ('expira_em' in perfilData && !perfilData.expira_em) perfilData.expira_em = undefined;
       const nivelRisco = calcularNivelRisco(permissoes || []);
-      const { data, error } = await (supabase as any)
-        .from("perfis_acesso")
+      const { data, error } = await fromTable("perfis_acesso")
         .insert({ ...perfilData, expira_em: perfilData.expira_em || null, nivel_risco: nivelRisco, tenant_id: tenantId, criado_por: user?.id, criado_por_nome: profile?.nome_completo })
         .select().single();
       if (error) throw error;
@@ -321,7 +317,7 @@ export function usePerfisAcesso() {
           tenant_id: tenantId,
           is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === p.acao)?.sensivel || false,
         }));
-        await (supabase as any).from("perfil_permissoes").insert(perms);
+        await fromTable("perfil_permissoes").insert(perms);
       }
       await logAuditPerfil(tenantId, data.id, "criacao", `Perfil "${data.nome}" criado`, null, perfilData, profile?.nome_completo);
       return data as PerfilAcesso;
@@ -332,17 +328,17 @@ export function usePerfisAcesso() {
 
   const updatePerfil = useMutation({
     mutationFn: async ({ id, permissoes, ...payload }: Partial<PerfilAcesso> & { id: string; permissoes?: Partial<PerfilPermissao>[] }) => {
-      const { data: before } = await (supabase as any).from("perfis_acesso").select("*").eq("id", id).single();
+      const { data: before } = await fromTable("perfis_acesso").select("*").eq("id", id).single();
       // Sanitize empty strings to null for timestamp/date fields
       if ('expira_em' in payload && !payload.expira_em) (payload as any).expira_em = null;
       const nivelRisco = permissoes !== undefined ? calcularNivelRisco(permissoes) : undefined;
       const updatePayload = nivelRisco ? { ...payload, nivel_risco: nivelRisco } : payload;
-      const { error } = await (supabase as any).from("perfis_acesso").update(updatePayload).eq("id", id);
+      const { error } = await fromTable("perfis_acesso").update(updatePayload).eq("id", id);
       if (error) throw error;
       if (permissoes !== undefined) {
-        await (supabase as any).from("perfil_permissoes").delete().eq("perfil_id", id);
+        await fromTable("perfil_permissoes").delete().eq("perfil_id", id);
         if (permissoes.length) {
-          await (supabase as any).from("perfil_permissoes").insert(
+          await fromTable("perfil_permissoes").insert(
             permissoes.map((p) => ({
               ...p,
               perfil_id: id,
@@ -360,7 +356,7 @@ export function usePerfisAcesso() {
 
   const togglePerfilStatus = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { error } = await (supabase as any).from("perfis_acesso").update({ ativo }).eq("id", id);
+      const { error } = await fromTable("perfis_acesso").update({ ativo }).eq("id", id);
       if (error) throw error;
       await logAuditPerfil(tenantId!, id, ativo ? "ativacao" : "inativacao", `Perfil ${ativo ? "ativado" : "inativado"}`, null, { ativo }, profile?.nome_completo);
     },
@@ -371,8 +367,7 @@ export function usePerfisAcesso() {
   const clonarTemplate = useMutation({
     mutationFn: async (template: PerfilTemplate) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const { data, error } = await (supabase as any)
-        .from("perfis_acesso")
+      const { data, error } = await fromTable("perfis_acesso")
         .insert({
           tenant_id: tenantId,
           nome: template.nome,
@@ -398,7 +393,7 @@ export function usePerfisAcesso() {
             is_sensivel: ACOES_DISPONIVEIS.find((a) => a.id === acao)?.sensivel || false,
           }))
         );
-        await (supabase as any).from("perfil_permissoes").insert(perms);
+        await fromTable("perfil_permissoes").insert(perms);
       }
       await logAuditPerfil(tenantId, data.id, "clonagem", `Template "${template.nome}" clonado como perfil`, null, { template_id: template.id }, profile?.nome_completo);
       return data;
@@ -418,8 +413,7 @@ export function usePerfisAcesso() {
       is_perfil_principal?: boolean;
     }) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const { data, error } = await (supabase as any)
-        .from("usuario_perfil_vinculos")
+      const { data, error } = await fromTable("usuario_perfil_vinculos")
         .insert({ ...payload, tenant_id: tenantId, atribuido_por: user?.id, atribuido_por_nome: profile?.nome_completo })
         .select().single();
       if (error) throw error;
@@ -432,7 +426,7 @@ export function usePerfisAcesso() {
 
   const desvincularPerfil = useMutation({
     mutationFn: async (vinculoId: string) => {
-      const { error } = await (supabase as any).from("usuario_perfil_vinculos").update({ ativo: false }).eq("id", vinculoId);
+      const { error } = await fromTable("usuario_perfil_vinculos").update({ ativo: false }).eq("id", vinculoId);
       if (error) throw error;
       await logAuditPerfil(tenantId!, null, "desvinculacao", `Vínculo de perfil removido`, null, { vinculo_id: vinculoId }, profile?.nome_completo);
     },

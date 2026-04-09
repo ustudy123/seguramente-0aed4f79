@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,8 +48,7 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
     queryKey: ["funcao_indicadores", cargoId, tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("funcao_indicadores" as never)
+      const { data, error } = await fromTable("funcao_indicadores")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId)
@@ -80,14 +80,14 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
   const addMutation = useMutation({
     mutationFn: async () => {
       if (!tenantId || !nome.trim()) throw new Error("Preencha o nome");
-      const { error } = await supabase.from("funcao_indicadores" as never).insert({
+      const { error } = await fromTable("funcao_indicadores").insert({
         tenant_id: tenantId,
         cargo_id: cargoId,
         nome: nome.trim(),
         descricao: descricao.trim() || null,
         meta: meta.trim() || null,
         periodicidade,
-      } as never);
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -101,13 +101,13 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editingId || !nome.trim()) throw new Error("Preencha o nome");
-      const { error } = await supabase.from("funcao_indicadores" as never)
+      const { error } = await fromTable("funcao_indicadores")
         .update({
           nome: nome.trim(),
           descricao: descricao.trim() || null,
           meta: meta.trim() || null,
           periodicidade,
-        } as never)
+        } as any)
         .eq("id", editingId) as { error: Error | null };
       if (error) throw error;
     },
@@ -121,7 +121,7 @@ export function IndicadoresSection({ cargoId }: IndicadoresSectionProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("funcao_indicadores" as never).delete().eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("funcao_indicadores").delete().eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => {

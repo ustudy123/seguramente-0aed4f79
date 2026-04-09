@@ -15,6 +15,7 @@ import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck, Build
 import { useUsuarios, TIPO_USUARIO_LABELS, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cleanCpf, formatCpf, validateCpf } from "@/lib/cpf";
@@ -95,8 +96,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     queryKey: ["empresas-lista-grupo", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("empresa_cadastro")
+      const { data } = await fromTable("empresa_cadastro")
         .select("id, razao_social, nome_fantasia, cnpj, grupo_economico_id")
         .eq("tenant_id", tenantId)
         .order("razao_social");
@@ -110,8 +110,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     queryKey: ["perfis-acesso-select", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("perfis_acesso")
+      const { data } = await fromTable("perfis_acesso")
         .select("id, nome, cor, tipo_usuario_sugerido, descricao")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
@@ -241,8 +240,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       // Se já existia no tenant, buscar o registro do usuário na tabela usuarios
       let usuario: any;
       if (jaExistia) {
-        const { data: usuarioExistente } = await (supabase as any)
-          .from("usuarios")
+        const { data: usuarioExistente } = await fromTable("usuarios")
           .select("*")
           .eq("auth_user_id", authUserId)
           .eq("tenant_id", tenantId)
@@ -319,8 +317,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
       // Vincular perfil de acesso se selecionado
       if (data.perfil_acesso_id) {
-        await (supabase as any)
-          .from("usuario_perfil_vinculos")
+        await fromTable("usuario_perfil_vinculos")
           .insert({
             tenant_id: tenantId,
             usuario_id: usuario.id,

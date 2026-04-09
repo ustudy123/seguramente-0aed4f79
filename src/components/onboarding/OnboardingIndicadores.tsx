@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingProcessos } from "@/hooks/useOnboarding";
 import type { OnboardingProcesso } from "@/types/onboarding";
@@ -37,8 +38,7 @@ export function OnboardingIndicadores() {
     queryKey: ["onboarding_percepcao_cultural", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("onboarding_percepcao_cultural" as never)
+      const { data, error } = await fromTable("onboarding_percepcao_cultural")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false }) as { data: any[] | null; error: Error | null };

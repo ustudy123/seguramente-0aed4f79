@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 
@@ -68,8 +69,7 @@ export function useSuporteTickets() {
     queryKey: ["suporte-tickets", tenantId, isSuperAdmin],
     queryFn: async (): Promise<SuporteTicket[]> => {
       if (!isSuperAdmin && !tenantId) return [];
-      let query = (supabase as any)
-        .from("suporte_tickets")
+      let query = fromTable("suporte_tickets")
         .select("*")
         .order("created_at", { ascending: false });
       // Superadmins veem todos os tickets; usuários normais só do seu tenant
@@ -86,8 +86,7 @@ export function useSuporteTickets() {
   const createTicket = useMutation({
     mutationFn: async (payload: Partial<SuporteTicket>) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const { data, error } = await (supabase as any)
-        .from("suporte_tickets")
+      const { data, error } = await fromTable("suporte_tickets")
         .insert({
           ...payload,
           tenant_id: tenantId,
@@ -112,8 +111,7 @@ export function useSuporteTickets() {
       if (payload.status === "resolvido" && !payload.resolvido_em) {
         updateData.resolvido_em = new Date().toISOString();
       }
-      const { error } = await (supabase as any)
-        .from("suporte_tickets")
+      const { error } = await fromTable("suporte_tickets")
         .update(updateData)
         .eq("id", id);
       if (error) throw error;
@@ -127,8 +125,7 @@ export function useSuporteTickets() {
 
   // Comments
   const fetchComentarios = async (ticketId: string): Promise<TicketComentario[]> => {
-    const { data, error } = await (supabase as any)
-      .from("suporte_ticket_comentarios")
+    const { data, error } = await fromTable("suporte_ticket_comentarios")
       .select("*")
       .eq("ticket_id", ticketId)
       .order("created_at");
@@ -139,8 +136,7 @@ export function useSuporteTickets() {
   const addComentario = useMutation({
     mutationFn: async ({ ticketId, conteudo }: { ticketId: string; conteudo: string }) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const { error } = await (supabase as any)
-        .from("suporte_ticket_comentarios")
+      const { error } = await fromTable("suporte_ticket_comentarios")
         .insert({
           tenant_id: tenantId,
           ticket_id: ticketId,

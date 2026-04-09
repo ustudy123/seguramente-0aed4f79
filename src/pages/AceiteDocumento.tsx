@@ -107,13 +107,13 @@ export default function AceiteDocumento() {
       }
 
       // Histórico
-      await supabase.from('programa_validador_historico' as never).insert({
+      await supabase.from('programa_validador_historico' as any).insert({
         cliente_id: link.cliente_id,
         tipo: 'documento_aceito',
         titulo: `Ata de Kickoff assinada eletronicamente`,
         descricao: `Assinado por: ${signatario} em ${dataFormatada}`,
         autor: signatario,
-      } as never);
+      } as any);
     },
     onSuccess: async () => {
       // Salvar no módulo de Documentos da empresa (tenant do cliente)
@@ -154,7 +154,7 @@ export default function AceiteDocumento() {
 
           if (pastaDestino?.id) {
             const { data: updatedLink } = await supabase
-              .from('programa_validador_documento_links' as never)
+              .from('programa_validador_documento_links' as any)
               .select('html_assinado, html_documento')
               .eq('token', token!)
               .single() as any;
@@ -210,13 +210,13 @@ export default function AceiteDocumento() {
         });
       if (error) throw error;
 
-      await supabase.from('programa_validador_historico' as never).insert({
+      await supabase.from('programa_validador_historico' as any).insert({
         cliente_id: link.cliente_id,
         tipo: 'documento_recusado',
         titulo: `Ata de Kickoff recusada`,
         descricao: `Motivo: ${motivo || 'Não informado'}`,
         autor: link?.programa_validador_clientes?.poc_nome || 'Destinatário',
-      } as never);
+      } as any);
     },
     onSuccess: () => setEtapa('recusado'),
     onError: (err: Error) => toast.error(err.message),

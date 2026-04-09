@@ -79,7 +79,7 @@ export default function TrilhaTerceiroPublica() {
   const loadTrilha = async () => {
     try {
       const { data: trilhaData, error: tErr } = await supabasePublic
-        .from("trilhas" as never)
+        .from("trilhas" as any)
         .select("id, nome, descricao, objetivo, tenant_id, total_modulos")
         .eq("token_publico", token)
         .eq("publico_terceiros", true)
@@ -89,7 +89,7 @@ export default function TrilhaTerceiroPublica() {
       setTrilha(trilhaData);
 
       const { data: modulosData, error: mErr } = await supabasePublic
-        .from("trilha_modulos" as never)
+        .from("trilha_modulos" as any)
         .select("id, titulo, descricao, objetivo, tipo, conteudo_url, conteudo_texto, tempo_estimado_min, pontuacao, ordem, evidencia_obrigatoria")
         .eq("trilha_id", trilhaData.id)
         .eq("ativo", true)
@@ -106,7 +106,7 @@ export default function TrilhaTerceiroPublica() {
   const loadProgresso = async () => {
     if (!trilha || !cpf) return;
     const { data } = await supabasePublic
-      .from("trilha_terceiro_progresso" as never)
+      .from("trilha_terceiro_progresso" as any)
       .select("modulo_id, status, pontos_obtidos")
       .eq("trilha_id", trilha.id)
       .eq("terceiro_cpf", cpf) as { data: ProgressoData[] | null; error: any };
@@ -130,7 +130,7 @@ export default function TrilhaTerceiroPublica() {
     setEvidenciaTexto("");
     const status = getModuloStatus(modulo.id);
     if (status === "nao_iniciado" && trilha) {
-      await supabasePublic.from("trilha_terceiro_progresso" as never).upsert({
+      await supabasePublic.from("trilha_terceiro_progresso" as any).upsert({
         tenant_id: trilha.tenant_id,
         trilha_id: trilha.id,
         modulo_id: modulo.id,
@@ -150,7 +150,7 @@ export default function TrilhaTerceiroPublica() {
     if (!modulo) return;
     setConcluindo(true);
     try {
-      const { error } = await supabasePublic.from("trilha_terceiro_progresso" as never).upsert({
+      const { error } = await supabasePublic.from("trilha_terceiro_progresso" as any).upsert({
         tenant_id: trilha.tenant_id,
         trilha_id: trilha.id,
         modulo_id: modulo.id,

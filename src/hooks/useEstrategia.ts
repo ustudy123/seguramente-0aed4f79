@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -38,7 +39,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
     queryKey: ["estrategia_swot", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase.from("estrategia_swot" as never).select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+      let q = fromTable("estrategia_swot").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
       q = applyScope(q);
       const { data, error } = await q as { data: EstrategiaSwot[] | null; error: Error | null };
       if (error) throw error;
@@ -49,9 +50,8 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const createSwot = useMutation({
     mutationFn: async (input: { titulo: string; descricao?: string; escopo?: string; unidade?: string; periodo?: string; projeto?: string }) => {
-      const { data, error } = await supabase
-        .from("estrategia_swot" as never)
-        .insert({ ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+      const { data, error } = await fromTable("estrategia_swot")
+        .insert({ ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as any)
         .select().single() as { data: EstrategiaSwot | null; error: Error | null };
       if (error) throw error;
       return data;
@@ -62,7 +62,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const deleteSwot = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("estrategia_swot" as never).delete().eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("estrategia_swot").delete().eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_swot"] }); toast.success("SWOT removida"); },
@@ -74,8 +74,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
       queryKey: ["estrategia_swot_itens", swotId],
       queryFn: async () => {
         if (!swotId) return [];
-        const { data, error } = await supabase
-          .from("estrategia_swot_itens" as never).select("*").eq("swot_id", swotId).order("ordem") as { data: SwotItem[] | null; error: Error | null };
+        const { data, error } = await fromTable("estrategia_swot_itens").select("*").eq("swot_id", swotId).order("ordem") as { data: SwotItem[] | null; error: Error | null };
         if (error) throw error;
         return (data || []) as SwotItem[];
       },
@@ -84,7 +83,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const createSwotItem = useMutation({
     mutationFn: async (input: { swot_id: string; tipo: SwotTipo; descricao: string; classificacao?: SwotClassificacao; impacto?: SwotImpacto }) => {
-      const { error } = await supabase.from("estrategia_swot_itens" as never).insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
+      const { error } = await fromTable("estrategia_swot_itens").insert({ ...input, tenant_id: tenantId } as any) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_swot_itens"] }); },
@@ -92,7 +91,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const deleteSwotItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("estrategia_swot_itens" as never).delete().eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("estrategia_swot_itens").delete().eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_swot_itens"] }); },
@@ -103,7 +102,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
     queryKey: ["estrategia_oceano_azul", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase.from("estrategia_oceano_azul" as never).select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+      let q = fromTable("estrategia_oceano_azul").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
       q = applyScope(q);
       const { data, error } = await q as { data: EstrategiaOceanoAzul[] | null; error: Error | null };
       if (error) throw error;
@@ -114,9 +113,8 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const createOceano = useMutation({
     mutationFn: async (input: { titulo: string; descricao?: string; swot_id?: string }) => {
-      const { data, error } = await supabase
-        .from("estrategia_oceano_azul" as never)
-        .insert({ ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as never)
+      const { data, error } = await fromTable("estrategia_oceano_azul")
+        .insert({ ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email } as any)
         .select().single() as { data: EstrategiaOceanoAzul | null; error: Error | null };
       if (error) throw error;
       return data;
@@ -126,7 +124,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const deleteOceano = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("estrategia_oceano_azul" as never).delete().eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("estrategia_oceano_azul").delete().eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_oceano_azul"] }); toast.success("Matriz removida"); },
@@ -137,8 +135,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
       queryKey: ["estrategia_oceano_itens", oceanoId],
       queryFn: async () => {
         if (!oceanoId) return [];
-        const { data, error } = await supabase
-          .from("estrategia_oceano_itens" as never).select("*").eq("oceano_id", oceanoId).order("ordem") as { data: OceanoItem[] | null; error: Error | null };
+        const { data, error } = await fromTable("estrategia_oceano_itens").select("*").eq("oceano_id", oceanoId).order("ordem") as { data: OceanoItem[] | null; error: Error | null };
         if (error) throw error;
         return (data || []) as OceanoItem[];
       },
@@ -147,7 +144,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const createOceanoItem = useMutation({
     mutationFn: async (input: { oceano_id: string; quadrante: OceanoQuadrante; descricao: string; swot_item_id?: string }) => {
-      const { error } = await supabase.from("estrategia_oceano_itens" as never).insert({ ...input, tenant_id: tenantId } as never) as { error: Error | null };
+      const { error } = await fromTable("estrategia_oceano_itens").insert({ ...input, tenant_id: tenantId } as any) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_oceano_itens"] }); },
@@ -155,7 +152,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const deleteOceanoItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("estrategia_oceano_itens" as never).delete().eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("estrategia_oceano_itens").delete().eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_oceano_itens"] }); },
@@ -166,7 +163,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
     queryKey: ["estrategia_cultura", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return null;
-      let q = supabase.from("estrategia_cultura" as never).select("*").eq("tenant_id", tenantId);
+      let q = fromTable("estrategia_cultura").select("*").eq("tenant_id", tenantId);
       q = applyScope(q);
       const { data, error } = await (q as any).maybeSingle() as { data: EstrategiaCultura | null; error: Error | null };
       if (error) throw error;
@@ -181,14 +178,14 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
       // For grupo scope we can't use tenant_id as the conflict key — use id if exists, else insert
       if (isGrupo) {
         if (cultura?.id) {
-          const { error } = await supabase.from("estrategia_cultura" as never).update(payload as never).eq("id", cultura.id) as { error: Error | null };
+          const { error } = await fromTable("estrategia_cultura").update(payload as any).eq("id", cultura.id) as { error: Error | null };
           if (error) throw error;
         } else {
-          const { error } = await supabase.from("estrategia_cultura" as never).insert(payload as never) as { error: Error | null };
+          const { error } = await fromTable("estrategia_cultura").insert(payload as any) as { error: Error | null };
           if (error) throw error;
         }
       } else {
-        const { error } = await supabase.from("estrategia_cultura" as never).upsert(payload as never, { onConflict: "tenant_id" }) as { error: Error | null };
+        const { error } = await fromTable("estrategia_cultura").upsert(payload as never, { onConflict: "tenant_id" }) as { error: Error | null };
         if (error) throw error;
       }
     },
@@ -201,7 +198,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
     queryKey: ["estrategia_organograma", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase.from("estrategia_organograma" as never).select("*").eq("tenant_id", tenantId).order("ordem");
+      let q = fromTable("estrategia_organograma").select("*").eq("tenant_id", tenantId).order("ordem");
       q = applyScope(q);
       const { data, error } = await q as { data: EstrategiaOrganograma[] | null; error: Error | null };
       if (error) throw error;
@@ -212,7 +209,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const createOrgNode = useMutation({
     mutationFn: async (input: { titulo: string; parent_id?: string; cargo_id?: string; departamento_id?: string; nome_ocupante?: string; tipo?: string }) => {
-      const { data, error } = await supabase.from("estrategia_organograma" as never).insert({ ...input, tenant_id: tenantId, ...scopePayload() } as never).select().single() as { data: EstrategiaOrganograma | null; error: Error | null };
+      const { data, error } = await fromTable("estrategia_organograma").insert({ ...input, tenant_id: tenantId, ...scopePayload() } as any).select().single() as { data: EstrategiaOrganograma | null; error: Error | null };
       if (error) throw error;
       return data;
     },
@@ -221,7 +218,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const updateOrgNode = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<EstrategiaOrganograma>) => {
-      const { error } = await supabase.from("estrategia_organograma" as never).update(updates as never).eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("estrategia_organograma").update(updates as any).eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_organograma"] }); },
@@ -229,7 +226,7 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
 
   const deleteOrgNode = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("estrategia_organograma" as never).delete().eq("id", id) as { error: Error | null };
+      const { error } = await fromTable("estrategia_organograma").delete().eq("id", id) as { error: Error | null };
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["estrategia_organograma"] }); toast.success("Posição removida"); },

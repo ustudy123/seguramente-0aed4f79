@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -106,8 +107,7 @@ export function useContratosExperiencia() {
     queryKey: ["contratos-experiencia", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("contratos_experiencia" as never)
+      let query = fromTable("contratos_experiencia")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -123,8 +123,7 @@ export function useContratosExperiencia() {
     useQuery({
       queryKey: ["contratos-experiencia-historico", contratoId],
       queryFn: async () => {
-        const { data, error } = await supabase
-          .from("contratos_experiencia_historico" as never)
+        const { data, error } = await fromTable("contratos_experiencia_historico")
           .select("*")
           .eq("contrato_id", contratoId)
           .order("created_at", { ascending: false }) as { data: any[] | null; error: any };
@@ -135,8 +134,7 @@ export function useContratosExperiencia() {
     });
 
   async function registrarHistorico(contratoId: string, acao: string, descricao: string, dados?: any) {
-    await supabase
-      .from("contratos_experiencia_historico" as never)
+    await fromTable("contratos_experiencia_historico")
       .insert({
         tenant_id: tenantId,
         contrato_id: contratoId,
@@ -145,7 +143,7 @@ export function useContratosExperiencia() {
         dados: dados || null,
         usuario_id: user?.id,
         usuario_nome: profile?.nome_completo || user?.email,
-      } as never);
+      } as any);
   }
 
   // Criar contrato
@@ -165,15 +163,14 @@ export function useContratosExperiencia() {
 
       const dataFim = calcularDataFim(dados.data_admissao, dados.duracao_primeiro_periodo);
 
-      const { data, error } = await supabase
-        .from("contratos_experiencia" as never)
+      const { data, error } = await fromTable("contratos_experiencia")
         .insert({
           ...dados,
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || dados.empresa_id || null,
           data_fim_primeiro_periodo: dataFim,
           status: "em_experiencia",
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -194,8 +191,7 @@ export function useContratosExperiencia() {
   const prorrogarMutation = useMutation({
     mutationFn: async ({ id, duracao_prorrogacao }: { id: string; duracao_prorrogacao: number }) => {
       // Buscar contrato atual
-      const { data: contrato } = await supabase
-        .from("contratos_experiencia" as never)
+      const { data: contrato } = await fromTable("contratos_experiencia")
         .select("*")
         .eq("id", id)
         .single() as { data: ContratoExperiencia | null };
@@ -211,8 +207,7 @@ export function useContratosExperiencia() {
       const dataInicioProrr = addDays(parseISO(contrato.data_fim_primeiro_periodo), 1);
       const dataFimProrr = calcularDataFim(format(dataInicioProrr, "yyyy-MM-dd"), duracao_prorrogacao);
 
-      const { data, error } = await supabase
-        .from("contratos_experiencia" as never)
+      const { data, error } = await fromTable("contratos_experiencia")
         .update({
           prorrogado: true,
           duracao_prorrogacao,
@@ -225,7 +220,7 @@ export function useContratosExperiencia() {
           alerta_15_dias_enviado: false,
           alerta_7_dias_enviado: false,
           alerta_2_dias_enviado: false,
-        } as never)
+        } as any)
         .eq("id", id)
         .select()
         .single();
@@ -248,14 +243,13 @@ export function useContratosExperiencia() {
     mutationFn: async ({ id, data_efetivacao }: { id: string; data_efetivacao?: string }) => {
       const dataEfetivacao = data_efetivacao || format(new Date(), "yyyy-MM-dd");
 
-      const { data, error } = await supabase
-        .from("contratos_experiencia" as never)
+      const { data, error } = await fromTable("contratos_experiencia")
         .update({
           status: "efetivado",
           data_efetivacao: dataEfetivacao,
           efetivado_por: user?.id,
           efetivado_por_nome: profile?.nome_completo || user?.email,
-        } as never)
+        } as any)
         .eq("id", id)
         .select()
         .single();
@@ -299,8 +293,7 @@ export function useContratosExperiencia() {
     }) => {
       const dataEnc = data_encerramento || format(new Date(), "yyyy-MM-dd");
 
-      const { data, error } = await supabase
-        .from("contratos_experiencia" as never)
+      const { data, error } = await fromTable("contratos_experiencia")
         .update({
           status: "encerrado",
           data_encerramento: dataEnc,
@@ -308,7 +301,7 @@ export function useContratosExperiencia() {
           motivo_encerramento: motivo_encerramento || null,
           encerrado_por: user?.id,
           encerrado_por_nome: profile?.nome_completo || user?.email,
-        } as never)
+        } as any)
         .eq("id", id)
         .select()
         .single();

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import type { NotasCriterios } from "@/types/avaliacao";
@@ -93,8 +94,7 @@ export function useResultadosAvaliacao(
     queryKey: ["profiles-resultados-avd", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("profiles")
+      const { data } = await fromTable("profiles")
         .select("user_id, nome_completo, departamento, cargo")
         .eq("tenant_id", tenantId);
       return (data || []) as Array<{ user_id: string; nome_completo: string; departamento?: string; cargo?: string }>;
