@@ -181,7 +181,24 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
         </div>
       )}
 
-      {atividades.map((at) => {
+      {/* Group activities by process */}
+      {(() => {
+        const processos = new Map<string, typeof atividades>();
+        atividades.forEach((at) => {
+          const proc = (at as any).processo || "Geral";
+          if (!processos.has(proc)) processos.set(proc, []);
+          processos.get(proc)!.push(at);
+        });
+
+        return Array.from(processos.entries()).map(([processo, procAtividades]) => (
+          <div key={processo} className="space-y-2">
+            {processos.size > 1 && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs font-semibold text-primary uppercase tracking-wide">🔹 {processo}</span>
+                <span className="text-xs text-muted-foreground">({procAtividades.length})</span>
+              </div>
+            )}
+            {procAtividades.map((at) => {
         const atConteudos = conteudos.filter((c) => c.atividade_id === at.id);
         const atFerramentas = ferramentas.filter((f) => f.atividade_id === at.id);
         const atResp = responsabilidades.find((r) => r.atividade_id === at.id);
@@ -466,6 +483,9 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
           </Collapsible>
         );
       })}
+          </div>
+        ));
+      })()}
     </div>
   );
 }
