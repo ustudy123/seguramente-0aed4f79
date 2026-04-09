@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { PopData } from "@/hooks/usePopAtividade";
-import { generatePdfFromHtml } from "@/utils/generatePdfFromHtml";
+import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -19,130 +19,207 @@ const STATUS_LABELS: Record<string, string> = {
   desatualizado: "Desatualizado",
 };
 
-function escapeHtml(str: string) {
+const PAGE_WIDTH = 210;
+const PAGE_HEIGHT = 297;
+const MARGIN = 15;
+const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+const LINE_HEIGHT = 5.5;
+const FONT_SIZE_BODY = 10;
+const FONT_SIZE_H1 = 16;
+const FONT_SIZE_H2 = 12;
+const FONT_SIZE_SMALL = 8;
+
+function sanitizeText(str: string): string {
   return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
 }
 
-function generateAllPopsHtml(pops: PopData[], funcaoNome?: string): string {
+class PdfBuilder {
+  pdf: jsPDF;
+  y: number = MARGIN;
+  pageNum: number = 1;
+
+  constructor() {
+    this.pdf = new jsPDF("p", "mm", "a4");
+  }
+
+  checkSpace(needed: number) {
+    if (this.y + needed > PAGE_HEIGHT - MARGIN) {
+      this.pdf.addPage();
+      this.pageNum++;
+      this.y = MARGIN;
+    }
+  }
+
+  addText(text: string, fontSize: number, options?: { bold?: boolean; color?: [number, number, number]; indent?: number; maxWidth?: number; align?: "left" | "center" | "justify" }) {
+    const { bold = false, color = [51, 51, 51], indent = 0, maxWidth = CONTENT_WIDTH, align = "left" } = options || {};
+    this.pdf.setFontSize(fontSize);
+    this.pdf.setFont("helvetica", bold ? "bold" : "normal");
+    this.pdf.setTextColor(color[0], color[1], color[2]);
+
+    const effectiveWidth = maxWidth - indent;
+    const lines = this.pdf.splitTextToSize(sanitizeText(text), effectiveWidth);
+
+    for (const line of lines) {
+      this.checkSpace(fontSize * 0.4 + 1);
+      if (align === "center") {
+        this.pdf.text(line, PAGE_WIDTH / 2, this.y, { align: "center" });
+      } else {
+        this.pdf.text(line, MARGIN + indent, this.y);
+      }
+      this.y += fontSize * 0.4 + 1;
+    }
+  }
+
+  addGap(mm: number) {
+    this.y += mm;
+  }
+
+  addLine(color: [number, number, number] = [37, 99, 235]) {
+    this.checkSpace(2);
+    this.pdf.setDrawColor(color[0], color[1], color[2]);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.line(MARGIN, this.y, PAGE_WIDTH - MARGIN, this.y);
+    this.y += 3;
+  }
+
+  addSection(title: string, content: string) {
+    if (!content?.trim()) return;
+    this.checkSpace(15);
+    this.addText(title, FONT_SIZE_H2, { bold: true, color: [30, 64, 175] });
+    this.addGap(1);
+    this.addText(content, FONT_SIZE_BODY);
+    this.addGap(3);
+  }
+
+  addListSection(title: string, items: string[]) {
+    if (!items?.length) return;
+    this.checkSpace(15);
+    this.addText(title, FONT_SIZE_H2, { bold: true, color: [30, 64, 175] });
+    this.addGap(1);
+    for (const item of items) {
+      this.checkSpace(LINE_HEIGHT + 2);
+      this.addText(`• ${item}`, FONT_SIZE_BODY, { indent: 3 });
+    }
+    this.addGap(3);
+  }
+
+  addNumberedPages() {
+    const total = this.pdf.getNumberOfPages();
+    for (let i = 1; i <= total; i++) {
+      this.pdf.setPage(i);
+      this.pdf.setFontSize(8);
+      this.pdf.setTextColor(140);
+      this.pdf.text(`Página ${i}/${total}`, PAGE_WIDTH - 28, PAGE_HEIGHT - 5);
+    }
+  }
+}
+
+function buildAllPopsPdf(pops: PopData[], funcaoNome?: string): jsPDF {
+  const builder = new PdfBuilder();
   const now = new Date();
   const dateStr = format(now, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
-  let sections = "";
+  // Cover
+  builder.addGap(40);
+  builder.addText("Procedimentos Operacionais Padrão", FONT_SIZE_H1 + 4, { bold: true, color: [26, 54, 93], align: "center" });
+  builder.addGap(4);
+  builder.addText(funcaoNome || "Função", FONT_SIZE_H1, { bold: true, color: [30, 64, 175], align: "center" });
+  builder.addGap(6);
+  builder.addLine();
+  builder.addGap(2);
+  builder.addText(`${pops.length} POP${pops.length !== 1 ? "s" : ""} • Gerado em ${dateStr}`, FONT_SIZE_SMALL + 1, { color: [107, 114, 128], align: "center" });
+  builder.addGap(10);
 
+  // Index
+  builder.addText("Índice", FONT_SIZE_H2 + 1, { bold: true, color: [26, 54, 93] });
+  builder.addGap(3);
   for (let i = 0; i < pops.length; i++) {
-    const pop = pops[i];
-    const passos = pop.procedimento_passos || [];
-    const resp = pop.responsabilidades || {} as any;
-    const preReq = pop.pre_requisitos || [];
-    const materiais = pop.materiais_ferramentas || [];
-
-    if (i > 0) {
-      sections += `<div style="page-break-before: always;"></div>`;
-    }
-
-    sections += `
-      <div style="margin-bottom: 40px;">
-        <h1 style="color:#1a365d; border-bottom:2px solid #2563eb; padding-bottom:8px; font-size:20px; margin-top:0;">
-          ${escapeHtml(pop.codigo)} — ${escapeHtml(pop.titulo)}
-        </h1>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:16px; font-size:12px;">
-          <span><strong style="color:#1e40af;">Versão:</strong> ${pop.versao_atual}</span>
-          <span><strong style="color:#1e40af;">Status:</strong> ${STATUS_LABELS[pop.status] || pop.status}</span>
-          <span><strong style="color:#1e40af;">Criado por:</strong> ${pop.criado_por_nome || "—"}</span>
-          <span><strong style="color:#1e40af;">Criado em:</strong> ${format(new Date(pop.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
-          ${pop.gerado_por_ia ? `<span><strong style="color:#1e40af;">🤖 Gerado por IA</strong></span>` : ""}
-        </div>
-
-        ${pop.objetivo ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">1. Objetivo</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.objetivo)}</p>` : ""}
-        ${pop.escopo ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">2. Escopo</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.escopo)}</p>` : ""}
-        
-        <h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">3. Responsabilidades</h2>
-        <ul style="padding-left:20px;">
-          <li><strong>Executante:</strong> ${escapeHtml(resp.executante || "—")}</li>
-          <li><strong>Supervisão:</strong> ${escapeHtml(resp.supervisao || "—")}</li>
-          <li><strong>Interfaces:</strong> ${escapeHtml(resp.interfaces || "—")}</li>
-        </ul>
-
-        ${pop.definicoes ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">4. Definições</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.definicoes)}</p>` : ""}
-        ${preReq.length > 0 ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">5. Pré-requisitos</h2><ul style="padding-left:20px;">${preReq.map(p => `<li>${escapeHtml(p)}</li>`).join("")}</ul>` : ""}
-        ${materiais.length > 0 ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">6. Materiais, Ferramentas e Sistemas</h2><ul style="padding-left:20px;">${materiais.map(m => `<li>${escapeHtml(m)}</li>`).join("")}</ul>` : ""}
-        ${pop.epis_sst ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">7. EPIs / Requisitos de SST</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.epis_sst)}</p>` : ""}
-        
-        ${passos.length > 0 ? `
-          <h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">8. Procedimento Passo a Passo</h2>
-          ${passos.map(p => `
-            <div style="background:#f0f9ff; padding:10px; border-radius:6px; margin:6px 0; border-left:3px solid #2563eb;">
-              <span style="font-weight:bold; color:#1e40af;">Passo ${p.numero}:</span> ${escapeHtml(p.descricao)}
-              ${p.tempo_estimado ? ` <em>(${escapeHtml(p.tempo_estimado)})</em>` : ""}
-              ${p.ponto_atencao ? `<div style="background:#fef3c7; padding:6px; border-radius:4px; margin-top:4px; font-size:12px;">⚠️ ${escapeHtml(p.ponto_atencao)}</div>` : ""}
-            </div>
-          `).join("")}
-        ` : ""}
-
-        ${pop.criterios_qualidade ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">9. Critérios de Qualidade</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.criterios_qualidade)}</p>` : ""}
-        ${pop.registros_evidencias ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">10. Registros e Evidências</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.registros_evidencias)}</p>` : ""}
-        ${pop.tratamento_nao_conformidades ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">11. Tratamento de Não Conformidades</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.tratamento_nao_conformidades)}</p>` : ""}
-        ${pop.referencias ? `<h2 style="color:#1e40af; font-size:15px; border-left:4px solid #2563eb; padding-left:8px; margin-top:20px;">12. Referências</h2><p style="white-space:pre-wrap; text-align:justify;">${escapeHtml(pop.referencias)}</p>` : ""}
-      </div>
-    `;
+    builder.checkSpace(LINE_HEIGHT + 2);
+    builder.addText(`${i + 1}. ${pops[i].codigo} — ${pops[i].titulo}`, FONT_SIZE_BODY, { indent: 3 });
   }
 
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>POPs - ${escapeHtml(funcaoNome || "Função")}</title>
-  <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 30px 40px;
-      color: #333;
-      font-size: 13px;
-      line-height: 1.6;
-      background: #fff;
+  // Each POP
+  for (const pop of pops) {
+    builder.pdf.addPage();
+    builder.pageNum++;
+    builder.y = MARGIN;
+
+    builder.addText(`${pop.codigo} — ${pop.titulo}`, FONT_SIZE_H1, { bold: true, color: [26, 54, 93] });
+    builder.addLine();
+    builder.addGap(2);
+
+    // Metadata
+    const meta = [
+      `Versão: ${pop.versao_atual}`,
+      `Status: ${STATUS_LABELS[pop.status] || pop.status}`,
+      `Criado por: ${pop.criado_por_nome || "—"}`,
+      `Criado em: ${format(new Date(pop.created_at), "dd/MM/yyyy", { locale: ptBR })}`,
+      ...(pop.gerado_por_ia ? ["🤖 Gerado por IA"] : []),
+    ];
+    for (const m of meta) {
+      builder.addText(m, FONT_SIZE_SMALL + 1, { color: [75, 85, 99] });
     }
-    h1 { margin-top: 0; }
-    h2 { margin-bottom: 8px; }
-    p { margin: 4px 0 12px 0; }
-    ul { margin: 4px 0 12px 0; }
-    li { margin: 3px 0; }
-  </style>
-</head>
-<body>
-  <div style="text-align:center; margin-bottom:30px; padding-bottom:16px; border-bottom:2px solid #2563eb;">
-    <h1 style="font-size:22px; color:#1a365d; margin:0 0 4px 0; border:none; padding:0;">
-      Procedimentos Operacionais Padrão
-    </h1>
-    <p style="font-size:16px; color:#1e40af; margin:0 0 8px 0; font-weight:600;">
-      ${escapeHtml(funcaoNome || "Função")}
-    </p>
-    <p style="font-size:11px; color:#6b7280; margin:0;">
-      ${pops.length} POP${pops.length !== 1 ? "s" : ""} • Gerado em ${dateStr}
-    </p>
-  </div>
+    builder.addGap(4);
 
-  <!-- Índice -->
-  <div style="background:#f8fafc; padding:16px; border-radius:8px; margin-bottom:30px;">
-    <h2 style="font-size:14px; color:#1a365d; margin:0 0 8px 0; border:none; padding:0;">Índice</h2>
-    <ol style="padding-left:20px; margin:0;">
-      ${pops.map(p => `<li style="margin:4px 0;"><strong>${escapeHtml(p.codigo)}</strong> — ${escapeHtml(p.titulo)}</li>`).join("")}
-    </ol>
-  </div>
+    // Sections
+    builder.addSection("1. Objetivo", pop.objetivo || "");
+    builder.addSection("2. Escopo", pop.escopo || "");
 
-  ${sections}
+    // Responsibilities
+    const resp = (pop.responsabilidades || {}) as any;
+    if (resp.executante || resp.supervisao || resp.interfaces) {
+      builder.addText("3. Responsabilidades", FONT_SIZE_H2, { bold: true, color: [30, 64, 175] });
+      builder.addGap(1);
+      if (resp.executante) builder.addText(`• Executante: ${resp.executante}`, FONT_SIZE_BODY, { indent: 3 });
+      if (resp.supervisao) builder.addText(`• Supervisão: ${resp.supervisao}`, FONT_SIZE_BODY, { indent: 3 });
+      if (resp.interfaces) builder.addText(`• Interfaces: ${resp.interfaces}`, FONT_SIZE_BODY, { indent: 3 });
+      builder.addGap(3);
+    }
 
-  <div style="margin-top:30px; padding-top:12px; border-top:1px solid #e5e7eb; text-align:center; font-size:10px; color:#9ca3af;">
-    Documento gerado automaticamente em ${dateStr}
-  </div>
-</body>
-</html>`;
+    builder.addSection("4. Definições", pop.definicoes || "");
+    builder.addListSection("5. Pré-requisitos", pop.pre_requisitos || []);
+    builder.addListSection("6. Materiais, Ferramentas e Sistemas", pop.materiais_ferramentas || []);
+    builder.addSection("7. EPIs / Requisitos de SST", pop.epis_sst || "");
+
+    // Steps
+    const passos = pop.procedimento_passos || [];
+    if (passos.length > 0) {
+      builder.addText("8. Procedimento Passo a Passo", FONT_SIZE_H2, { bold: true, color: [30, 64, 175] });
+      builder.addGap(2);
+      for (const p of passos) {
+        builder.checkSpace(12);
+        let stepText = `Passo ${p.numero}: ${p.descricao}`;
+        if (p.tempo_estimado) stepText += ` (${p.tempo_estimado})`;
+        builder.addText(stepText, FONT_SIZE_BODY, { indent: 3 });
+        if (p.ponto_atencao) {
+          builder.addText(`⚠️ ${p.ponto_atencao}`, FONT_SIZE_SMALL + 1, { indent: 8, color: [180, 120, 0] });
+        }
+        builder.addGap(1);
+      }
+      builder.addGap(2);
+    }
+
+    builder.addSection("9. Critérios de Qualidade", pop.criterios_qualidade || "");
+    builder.addSection("10. Registros e Evidências", pop.registros_evidencias || "");
+    builder.addSection("11. Tratamento de Não Conformidades", pop.tratamento_nao_conformidades || "");
+    builder.addSection("12. Referências", pop.referencias || "");
+  }
+
+  // Footer
+  builder.addNumberedPages();
+  return builder.pdf;
+}
+
+function sanitizeFilename(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9-_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
 }
 
 export function ExportarTodosPopsPdf({ pops, funcaoNome }: ExportarTodosPopsPdfProps) {
@@ -153,25 +230,13 @@ export function ExportarTodosPopsPdf({ pops, funcaoNome }: ExportarTodosPopsPdfP
   const handleExport = async () => {
     setLoading(true);
     try {
-      const html = generateAllPopsHtml(pops, funcaoNome);
-      const { pdf, filename } = await generatePdfFromHtml({
-        html,
-        filenamePrefix: `pops-${funcaoNome || "funcao"}`,
-      });
+      const pdf = buildAllPopsPdf(pops, funcaoNome);
+      const filename = `${sanitizeFilename(`pops-${funcaoNome || "funcao"}`) || "pops"}-${Date.now()}.pdf`;
       pdf.save(filename);
       toast.success(`PDF com ${pops.length} POP${pops.length !== 1 ? "s" : ""} exportado!`);
     } catch (err: any) {
       console.error("Erro ao exportar POPs:", err);
-      // Fallback: download as HTML
-      const html = generateAllPopsHtml(pops, funcaoNome);
-      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `pops-${funcaoNome || "funcao"}.html`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.error("Erro no PDF. Exportado como HTML.");
+      toast.error("Erro ao gerar o PDF. Tente novamente.");
     } finally {
       setLoading(false);
     }
