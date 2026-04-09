@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,14 +8,23 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Search, Building2, Users, User } from "lucide-react";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type { MetaCompleta, MetaNivel, MetaParticipante } from "@/types/metas-module";
 import {
   NIVEL_LABELS, PERIODO_LABELS, INDICADOR_TIPO_LABELS, INDICADOR_DIRECAO_LABELS,
 } from "@/types/metas-module";
 import { MetaParticipantesEditor } from "./MetaParticipantesEditor";
+import { useQuery } from "@tanstack/react-query";
 
 interface MetaFormModuleProps {
   nivel?: MetaNivel;
