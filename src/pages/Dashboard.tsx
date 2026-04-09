@@ -46,15 +46,8 @@ const Dashboard = () => {
       {/* Quick Actions */}
       <QuickActions />
 
-      {/* Pendências and Alertas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <PendingTasks />
-        </div>
-        <div>
-          <AlertasCriticos />
-        </div>
-      </div>
+      {/* Alertas Críticos */}
+      <AlertasCriticos />
     </div>
   );
 };
