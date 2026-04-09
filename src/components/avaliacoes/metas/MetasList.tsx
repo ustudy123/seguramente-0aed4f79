@@ -41,8 +41,16 @@ const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = 
   atrasada: { color: "bg-red-100 text-red-700", icon: AlertCircle },
 };
 
+const TIPOS_AVALIACAO = ["individual", "equipe", "departamento"] as const;
+const TIPO_LABELS: Record<string, string> = {
+  todos: "Todos",
+  individual: "Individual",
+  equipe: "Equipe",
+  departamento: "Departamento",
+};
+
 export function MetasList() {
-  const { metas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, createCheckin, isCreatingCheckin } = useMetas();
+  const { metas: todasMetas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, createCheckin, isCreatingCheckin } = useMetas();
   const [showForm, setShowForm] = useState(false);
   const [okrMetaId, setOkrMetaId] = useState<string | null>(null);
   const [okrForm, setOkrForm] = useState({ key_result: "", descricao: "", tipo: "percentual" as string, valor_alvo: 100, unidade: "" });
@@ -51,6 +59,11 @@ export function MetasList() {
   const [checkinObs, setCheckinObs] = useState("");
   const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
   const [detailMeta, setDetailMeta] = useState<(Meta & { categoria_meta?: string; ierm_score?: number; ierm_nivel?: string }) | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+
+  // Filtra apenas metas relevantes para avaliação de desempenho
+  const metasAvaliacao = todasMetas.filter(m => TIPOS_AVALIACAO.includes(m.tipo as any));
+  const metas = filtroTipo === "todos" ? metasAvaliacao : metasAvaliacao.filter(m => m.tipo === filtroTipo);
 
   const toggleExpanded = (id: string) => {
     setExpandedMetas(prev => {
@@ -119,7 +132,7 @@ export function MetasList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
@@ -129,10 +142,22 @@ export function MetasList() {
             Metas com análise ergonômica integrada, ações e rastreabilidade completa
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Meta
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+            <SelectTrigger className="w-[160px] h-9">
+              <SelectValue placeholder="Filtrar tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TIPO_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Meta
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
