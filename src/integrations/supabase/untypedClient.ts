@@ -10,14 +10,12 @@
  */
 import { supabase } from "./client";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type UntypedSupabaseClient = ReturnType<typeof supabase.from<any>>;
-
 /**
  * Acessa uma tabela do Supabase que não está no schema tipado.
  * Retorna o query builder padrão do Supabase sem erros de tipo.
  */
-export function fromTable(table: string): UntypedSupabaseClient {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function fromTable(table: string): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabase as any).from(table);
 }
