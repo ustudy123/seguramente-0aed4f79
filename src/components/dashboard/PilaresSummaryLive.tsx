@@ -87,21 +87,16 @@ export const PilaresSummaryLive = () => {
       )
     : 0;
 
-  const hasData = data ? (
-    data.organizacao.cargosDefinidos > 0 ||
-    data.organizacao.departamentos > 0 ||
-    data.organizacao.admissoesAndamento > 0 ||
-    data.condicoes.itensNr17Total > 0 ||
-    data.condicoes.episDisponiveis > 0 ||
-    data.condicoes.riscosAtivos > 0 ||
-    data.experiencia.humorTotal > 0 ||
-    data.experiencia.ouvidoriaPendente > 0 ||
-    data.experiencia.feedPostsHoje > 0 ||
-    data.governanca.acoesTotal > 0 ||
-    data.governanca.evidenciasEnviadas > 0 ||
-    data.governanca.terceirosAtivos > 0 ||
-    data.governanca.ptsBloqueadas > 0
-  ) : false;
+  // Conta quantos pilares possuem dados significativos
+  const pilaresComDados = data ? [
+    data.organizacao.cargosDefinidos > 0 || data.organizacao.admissoesAndamento > 0,
+    data.condicoes.itensNr17Total > 0 || data.condicoes.episDisponiveis > 0 || data.condicoes.riscosAtivos > 0,
+    data.experiencia.humorTotal > 0 || data.experiencia.ouvidoriaPendente > 0 || data.experiencia.feedPostsHoje > 0,
+    data.governanca.acoesTotal > 0 || data.governanca.evidenciasEnviadas > 0 || data.governanca.terceirosAtivos > 0 || data.governanca.ptsBloqueadas > 0,
+  ].filter(Boolean).length : 0;
+
+  // Exige pelo menos 2 pilares com dados para mostrar o nível de maturidade
+  const hasData = pilaresComDados >= 2;
 
   const getOverallLabel = (score: number) => {
     if (!hasData) return null;
