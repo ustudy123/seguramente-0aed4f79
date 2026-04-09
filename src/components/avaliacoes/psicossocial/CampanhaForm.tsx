@@ -163,6 +163,11 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const tipo = form.watch("tipo");
   const instrumento = form.watch("instrumento");
 
+  // Sincronizar departamentos/cargos ao abrir
+  useEffect(() => {
+    if (open) sincronizar();
+  }, [open, sincronizar]);
+
   // Buscar dados da empresa ao abrir o form
   useEffect(() => {
     if (!open) return;
