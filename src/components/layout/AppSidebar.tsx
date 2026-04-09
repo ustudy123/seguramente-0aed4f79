@@ -572,7 +572,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                     }
                   >
                     <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-                    {!isCollapsed && <span className="text-[13px]">Pendências</span>}
+                    {!isCollapsed && <span className="text-[13px] uppercase">Pendências</span>}
                   </NavLink>
                 )}
               </div>
