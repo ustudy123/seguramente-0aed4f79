@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Pencil, Trash2, Building2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,9 +34,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useDepartamentos, Departamento } from "@/hooks/useCadastros";
+import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 
 export default function Departamentos() {
   const { departamentos, isLoading, createDepartamento, updateDepartamento, deleteDepartamento } = useDepartamentos();
+  const { sincronizar } = useSyncCadastros();
+
+  useEffect(() => {
+    sincronizar();
+  }, [sincronizar]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);

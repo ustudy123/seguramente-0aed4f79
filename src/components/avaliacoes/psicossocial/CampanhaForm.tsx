@@ -53,6 +53,7 @@ import {
 import { cn } from "@/lib/utils";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
+import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 import { useEffect, useState } from "react";
@@ -128,6 +129,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const { user } = useAuth();
   const { departamentos } = useDepartamentos();
   const { cargos } = useCargos();
+  const { sincronizar } = useSyncCadastros();
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
   // Situações de trabalho (pares Setor+Função) vinculadas à campanha
@@ -160,6 +162,11 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
 
   const tipo = form.watch("tipo");
   const instrumento = form.watch("instrumento");
+
+  // Sincronizar departamentos/cargos ao abrir
+  useEffect(() => {
+    if (open) sincronizar();
+  }, [open, sincronizar]);
 
   // Buscar dados da empresa ao abrir o form
   useEffect(() => {
