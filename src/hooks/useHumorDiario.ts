@@ -111,14 +111,14 @@ const EMAILS_COM_POPUP_HUMOR_DESATIVADO = new Set([
   "renata_sophia_cortereal@cafefrossard.com",
 ]);
 
-// Intervalo em horas para solicitar novo registro de humor (check-in meio de jornada)
+// Intervalo em horas para solicitar novo registro de humor (check-in recorrente)
 const INTERVALO_HORAS = 5;
 
-// Chaves de controle no localStorage para evitar múltiplas exibições no dia
+// Chaves de controle no localStorage para evitar múltiplas exibições
 function getStorageKeys(userId: string, today: string) {
   return {
     morning: `humor_morning_${userId}_${today}`,   // primeiro login do dia
-    midday: `humor_midday_${userId}_${today}`,     // check-in após 5h
+    lastShown: `humor_lastshown_${userId}`,        // timestamp do último popup exibido
   };
 }
 
@@ -126,12 +126,12 @@ export function marcarHumorMorningVisto(userId: string) {
   const today = new Date().toISOString().split("T")[0];
   const keys = getStorageKeys(userId, today);
   localStorage.setItem(keys.morning, "1");
+  localStorage.setItem(keys.lastShown, new Date().toISOString());
 }
 
 export function marcarHumorMiddayVisto(userId: string) {
-  const today = new Date().toISOString().split("T")[0];
-  const keys = getStorageKeys(userId, today);
-  localStorage.setItem(keys.midday, "1");
+  const keys = getStorageKeys(userId, new Date().toISOString().split("T")[0]);
+  localStorage.setItem(keys.lastShown, new Date().toISOString());
 }
 
 // Verifica se passaram X horas desde o último registro
