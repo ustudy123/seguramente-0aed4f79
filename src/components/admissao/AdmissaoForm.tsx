@@ -93,15 +93,6 @@ interface AdmissaoFormProps {
   };
 }
 
-interface UsuarioEncontrado {
-  id: string;
-  nome_completo: string;
-  email_principal: string;
-  cpf?: string;
-  telefone_principal?: string;
-  cargo_funcao?: string;
-  data_nascimento?: string;
-}
 
 export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: AdmissaoFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
