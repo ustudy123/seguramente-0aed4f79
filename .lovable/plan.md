@@ -1,63 +1,85 @@
 
 
-## Diagnóstico: Inconsistência nas Faixas de Classificação do IRP-S
+## Análise da Redundância no Dashboard
 
-### O que está acontecendo
+### Problema identificado
 
-O sistema tem dois índices complementares:
+O dashboard atual tem **5 seções**:
+1. **PilaresSummaryLive** — resumo compacto dos 4 pilares (Maturidade + Score geral)
+2. **QuickActions** — 6 botões de ação rápida
+3. **DashboardPilares** — cards coloridos detalhados dos mesmos 4 pilares (repete Maturidade, métricas)
+4. **RecentActivity** — sempre vazio ("Nenhuma atividade registrada")
+5. **PendingTasks** — pendências (já existe módulo dedicado /pendencias)
+
+A seção 3 (DashboardPilares) é **completamente redundante** com a seção 1 (PilaresSummaryLive) — ambas mostram os mesmos 4 pilares, mesmos scores de maturidade, mesmos dados. A seção 4 (RecentActivity) está sempre vazia e não agrega valor.
+
+### Proposta de Reestruturação
+
+Remover as seções redundantes e substituí-las por informações operacionais realmente úteis:
 
 ```text
-IPS  (Índice Psicossocial)         → maior = melhor (saúde)
-IRP-S (Índice de Risco Psicossocial) → maior = pior  (risco)
-
-Relação: IRP-S = 100 - IPS
+┌──────────────────────────────────────────────┐
+│  Header (Dashboard + data)                   │
+├──────────────────────────────────────────────┤
+│  Governança do Trabalho Humano               │
+│  (PilaresSummaryLive - MANTÉM como está)     │
+├──────────────────────────────────────────────┤
+│  KPIs Operacionais (NOVO)                    │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐  │
+│  │Colab│ │Admis│ │EPIs │ │Docs │ │Aval │ │Metas│
+│  │ ativos│ pend│ baixo│ pend│ pend│ ativas│  │
+│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘  │
+├──────────────────────────────────────────────┤
+│  Ações Rápidas (MANTÉM)                      │
+├───────────────────────┬──────────────────────┤
+│  Pendências (2/3)     │ Alertas Críticos(1/3)│
+│  (MANTÉM)             │ (NOVO - EPIs vencidos│
+│                       │  docs expirados, etc)│
+└───────────────────────┴──────────────────────┘
 ```
 
-O texto "Score 0–100: quanto maior, maior o risco organizacional" **está correto** para o IRP-S. Não precisa inverter.
+### Mudanças detalhadas
 
-**O problema real** é que as faixas de classificação do IRP-S não espelham as do IPS:
+**1. Remover: DashboardPilares (seção "Detalhamento por Pilar")**
+- Totalmente redundante com PilaresSummaryLive
+- Os dados detalhados já são acessíveis clicando nos pilares do resumo (abre modal IndicatorDetailModal)
 
-```text
-FAIXAS IPS (atuais — corretas):
-  80-100 → Saudável
-  65-79  → Estável
-  50-64  → Atenção
-  35-49  → Risco
-   0-34  → Crítico
+**2. Remover: RecentActivity**
+- Componente sempre vazio, sem integração real com dados
 
-FAIXAS IRP-S (atuais — ERRADAS):
-   0-24  → Saudável     ← deveria ser 0-20
-  25-49  → Atenção      ← deveria ser Estável até 35
-  50-74  → Risco
-  75-100 → Risco Elevado
+**3. Novo: KPIs Operacionais**
+- Linha de cards compactos com números-chave do dia-a-dia:
+  - **Colaboradores Ativos** (total da empresa ativa)
+  - **Admissões Pendentes** (já disponível em `useDashboardData`)
+  - **EPIs Estoque Baixo** (já disponível)
+  - **Documentos Pendentes** (do `usePendencias`)
+  - **Avaliações Pendentes** (do `usePendencias`)
+  - **Metas Ativas** (query ao `metas_module`)
+- Cada card é clicável e leva ao módulo correspondente
 
-FAIXAS IRP-S CORRIGIDAS (espelhando IPS):
-   0-20  → Saudável      (= IPS 80-100)
-  21-35  → Estável        (= IPS 65-79)
-  36-50  → Atenção        (= IPS 50-64)
-  51-65  → Risco          (= IPS 35-49)
-  66-100 → Risco Crítico  (= IPS 0-34)
-```
+**4. Novo: Alertas Críticos (substituindo RecentActivity)**
+- Card compacto listando itens que requerem atenção imediata:
+  - EPIs vencidos ou em estoque crítico
+  - Documentos próximos do vencimento
+  - Ouvidoria pendente
+  - Riscos ergonômicos ativos
+- Dados já disponíveis via `useDashboardData` e `usePendencias`
 
-Com as faixas atuais, IRP-S **31** = "Atenção", mas o IPS equivalente seria **69** = "Estável". Isso gera a confusão que você está vendo.
+### Arquivos impactados
 
-### Plano de Correção
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/Dashboard.tsx` | Reestruturar layout: remover DashboardPilares e RecentActivity, adicionar novos componentes |
+| `src/components/dashboard/DashboardKPIs.tsx` | **Criar** — cards de KPIs operacionais |
+| `src/components/dashboard/AlertasCriticos.tsx` | **Criar** — lista de alertas que precisam de ação |
+| `src/hooks/useDashboardData.ts` | Adicionar query para metas ativas e colaboradores |
+| `src/components/dashboard/DashboardPilares.tsx` | Pode ser mantido no código mas removido do Dashboard |
+| `src/components/dashboard/RecentActivity.tsx` | Sem uso, removido do Dashboard |
 
-**Arquivo 1: `src/types/psicossocial.ts`**
-- Atualizar o tipo `IRPSClassificacao` para incluir 5 níveis (espelhando IPS): `saudavel | estavel | atencao | risco | critico`
-- Corrigir a função `calcularIRPSClassificacao` com as faixas espelhadas
-- Atualizar `getIRPSColor`, `getIRPSBgColor` e `getIRPSLabel` para os 5 níveis
+### Resultado
 
-**Arquivo 2: `src/components/avaliacoes/psicossocial/ResultadosModal.tsx`**
-- Atualizar a função `getNivelScore` (linha 139) para usar as mesmas faixas corrigidas
-
-**Arquivo 3: `src/data/instrumentos/index.ts`**
-- Alinhar o tipo `NivelIRPS` e funções auxiliares (`getLabelNivelIRPS`, `getCorNivelIRPS`, `getBgNivelIRPS`) com os novos 5 níveis
-
-**Arquivo 4: `src/test/psicossocial-types.test.ts`**
-- Atualizar testes para refletir os novos thresholds
-
-### Resultado esperado
-
-Com IRP-S = 31 → classificação **"Estável"** (verde-azul), coerente com IPS = 69 que também é "Estável".
+- Dashboard mais enxuto e focado no que importa operacionalmente
+- Sem duplicação de informação
+- KPIs acionáveis com navegação direta
+- Alertas que demandam ação imediata em destaque
 
