@@ -128,6 +128,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const { user } = useAuth();
   const { departamentos } = useDepartamentos();
   const { cargos } = useCargos();
+  const { sincronizar } = useSyncCadastros();
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
   // Situações de trabalho (pares Setor+Função) vinculadas à campanha
