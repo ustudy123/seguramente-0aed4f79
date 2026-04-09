@@ -124,6 +124,17 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
               }
             }}
           />
+          {(() => {
+            const semPop = atividades.filter(a => !getPopByAtividade(a.id));
+            if (semPop.length > 0) {
+              return (
+                <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowLoteModal(true)}>
+                  <Zap className="w-4 h-4" /> Gerar POPs ({semPop.length})
+                </Button>
+              );
+            }
+            return null;
+          })()}
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             <Plus className="w-4 h-4 mr-1" /> Atividade
           </Button>
