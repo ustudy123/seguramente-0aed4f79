@@ -109,10 +109,10 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
             <TooltipTrigger asChild>
               <button
                 onClick={() => {
-                  // Reset localStorage flag so popup shows again
+                  // Reset localStorage flags so popup shows again
                   const today = new Date().toISOString().split("T")[0];
                   localStorage.removeItem(`humor_morning_${user?.id}_${today}`);
-                  localStorage.removeItem(`humor_midday_${user?.id}_${today}`);
+                  localStorage.removeItem(`humor_lastshown_${user?.id}`);
                   window.dispatchEvent(new Event("humor-reopen"));
                 }}
                 className="text-muted-foreground hover:text-primary transition-colors"
