@@ -13,81 +13,78 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SuperAdminRoute } from "@/components/admin/SuperAdminRoute";
 import { Loader2 } from "lucide-react";
 
-// Fallback de carregamento
+// Eager imports for all protected app pages (no loading delay on navigation)
+import Dashboard from "./pages/Dashboard";
+import Colaboradores from "./pages/Colaboradores";
+import Ponto from "./pages/Ponto";
+import Ferias from "./pages/Ferias";
+import Documentos from "./pages/Documentos";
+import ContratosExperiencia from "./pages/ContratosExperiencia";
+import Epis from "./pages/Epis";
+import Feed from "./pages/Feed";
+import Ouvidoria from "./pages/Ouvidoria";
+import FeedbackOcorrencias from "./pages/FeedbackOcorrencias";
+import AprendizadoPapeis from "./pages/AprendizadoPapeis";
+import Trilhas from "./pages/Trilhas";
+import Estrategia from "./pages/Estrategia";
+import Ergonomia from "./pages/Ergonomia";
+import Psicossocial from "./pages/Psicossocial";
+import ComplianceSST from "./pages/ComplianceSST";
+import PlanoAcao from "./pages/PlanoAcao";
+import PlanoAcaoDetalhe from "./pages/PlanoAcaoDetalhe";
+import Avaliacoes from "./pages/Avaliacoes";
+import MetasModule from "./pages/MetasModule";
+import Atestados from "./pages/Atestados";
+import Pdi from "./pages/Pdi";
+import Financeiro from "./pages/Financeiro";
+import Academia from "./pages/Academia";
+import Empresa from "./pages/Empresa";
+import Marketplace from "./pages/Marketplace";
+import Terceiros from "./pages/Terceiros";
+import IncidentesAcidentes from "./pages/IncidentesAcidentes";
+import CulturaCelebracoes from "./pages/CulturaCelebracoes";
+import BemEstar from "./pages/BemEstar";
+import Onboarding from "./pages/Onboarding";
+import FinanceiroBeneficios from "./pages/FinanceiroBeneficios";
+import HubContabil from "./pages/HubContabil";
+import Configuracoes from "./pages/Configuracoes";
+import Suporte from "./pages/Suporte";
+import Usuarios from "./pages/Usuarios";
+import PerfisAcesso from "./pages/PerfisAcesso";
+import MeuPerfil from "./pages/MeuPerfil";
+import Pendencias from "./pages/Pendencias";
+import Departamentos from "./pages/cadastros/Departamentos";
+import Cargos from "./pages/cadastros/Cargos";
+import Filiais from "./pages/cadastros/Filiais";
+import AnaliseJornada from "./pages/AnaliseJornada";
+import NotFound from "./pages/NotFound";
+
+// Lazy imports only for rarely accessed / public / admin pages
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <Loader2 className="w-8 h-8 animate-spin text-primary" />
   </div>
 );
 
-// Auth Pages
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
-
-// App Pages
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Colaboradores = lazy(() => import("./pages/Colaboradores"));
-const Ponto = lazy(() => import("./pages/Ponto"));
-const Ferias = lazy(() => import("./pages/Ferias"));
-const Documentos = lazy(() => import("./pages/Documentos"));
-const ContratosExperiencia = lazy(() => import("./pages/ContratosExperiencia"));
-const Epis = lazy(() => import("./pages/Epis"));
-const Feed = lazy(() => import("./pages/Feed"));
-const Ouvidoria = lazy(() => import("./pages/Ouvidoria"));
-const FeedbackOcorrencias = lazy(() => import("./pages/FeedbackOcorrencias"));
-const AprendizadoPapeis = lazy(() => import("./pages/AprendizadoPapeis"));
-const Trilhas = lazy(() => import("./pages/Trilhas"));
-const Estrategia = lazy(() => import("./pages/Estrategia"));
-const Ergonomia = lazy(() => import("./pages/Ergonomia"));
-const Psicossocial = lazy(() => import("./pages/Psicossocial"));
-const ComplianceSST = lazy(() => import("./pages/ComplianceSST"));
-const PlanoAcao = lazy(() => import("./pages/PlanoAcao"));
-const PlanoAcaoDetalhe = lazy(() => import("./pages/PlanoAcaoDetalhe"));
-const Avaliacoes = lazy(() => import("./pages/Avaliacoes"));
-const MetasModule = lazy(() => import("./pages/MetasModule"));
-const Atestados = lazy(() => import("./pages/Atestados"));
-const Pdi = lazy(() => import("./pages/Pdi"));
-const Financeiro = lazy(() => import("./pages/Financeiro"));
-const Academia = lazy(() => import("./pages/Academia"));
-const Empresa = lazy(() => import("./pages/Empresa"));
-const Marketplace = lazy(() => import("./pages/Marketplace"));
-const Terceiros = lazy(() => import("./pages/Terceiros"));
-const IncidentesAcidentes = lazy(() => import("./pages/IncidentesAcidentes"));
-const CulturaCelebracoes = lazy(() => import("./pages/CulturaCelebracoes"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const BemEstar = lazy(() => import("./pages/BemEstar"));
 const QuestionarioPsicossocial = lazy(() => import("./pages/QuestionarioPsicossocial"));
 const PdiAssinatura = lazy(() => import("./pages/PdiAssinatura"));
 const PontoExterno = lazy(() => import("./pages/PontoExterno"));
 const FeriasAssinatura = lazy(() => import("./pages/FeriasAssinatura"));
 const TrilhaTerceiroPublica = lazy(() => import("./pages/TrilhaTerceiroPublica"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const FinanceiroBeneficios = lazy(() => import("./pages/FinanceiroBeneficios"));
-const HubContabil = lazy(() => import("./pages/HubContabil"));
-const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
-const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const AssinaturaContrato = lazy(() => import("./pages/AssinaturaContrato"));
 const ExperienciaAssinatura = lazy(() => import("./pages/ExperienciaAssinatura"));
 const AceiteDocumento = lazy(() => import("./pages/AceiteDocumento"));
 const OnboardingCliente = lazy(() => import("./pages/OnboardingCliente"));
 const AtivarConta = lazy(() => import("./pages/AtivarConta"));
 const OnboardingProtegido = lazy(() => import("./pages/OnboardingProtegido"));
-const AnaliseJornada = lazy(() => import("./pages/AnaliseJornada"));
-const Suporte = lazy(() => import("./pages/Suporte"));
-const Usuarios = lazy(() => import("./pages/Usuarios"));
-const PerfisAcesso = lazy(() => import("./pages/PerfisAcesso"));
-const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
-const Pendencias = lazy(() => import("./pages/Pendencias"));
-const Departamentos = lazy(() => import("./pages/cadastros/Departamentos"));
-const Cargos = lazy(() => import("./pages/cadastros/Cargos"));
-const Filiais = lazy(() => import("./pages/cadastros/Filiais"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
+const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
-
-// Admin Pages
 const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard"));
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
