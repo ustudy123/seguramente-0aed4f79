@@ -41,8 +41,16 @@ const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = 
   atrasada: { color: "bg-red-100 text-red-700", icon: AlertCircle },
 };
 
+const TIPOS_AVALIACAO = ["individual", "equipe", "departamento"] as const;
+const TIPO_LABELS: Record<string, string> = {
+  todos: "Todos",
+  individual: "Individual",
+  equipe: "Equipe",
+  departamento: "Departamento",
+};
+
 export function MetasList() {
-  const { metas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, createCheckin, isCreatingCheckin } = useMetas();
+  const { metas: todasMetas, isLoadingMetas, deleteMeta, deleteOkr, createOkr, createCheckin, isCreatingCheckin } = useMetas();
   const [showForm, setShowForm] = useState(false);
   const [okrMetaId, setOkrMetaId] = useState<string | null>(null);
   const [okrForm, setOkrForm] = useState({ key_result: "", descricao: "", tipo: "percentual" as string, valor_alvo: 100, unidade: "" });
@@ -51,6 +59,11 @@ export function MetasList() {
   const [checkinObs, setCheckinObs] = useState("");
   const [expandedMetas, setExpandedMetas] = useState<Set<string>>(new Set());
   const [detailMeta, setDetailMeta] = useState<(Meta & { categoria_meta?: string; ierm_score?: number; ierm_nivel?: string }) | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+
+  // Filtra apenas metas relevantes para avaliação de desempenho
+  const metasAvaliacao = todasMetas.filter(m => TIPOS_AVALIACAO.includes(m.tipo as any));
+  const metas = filtroTipo === "todos" ? metasAvaliacao : metasAvaliacao.filter(m => m.tipo === filtroTipo);
 
   const toggleExpanded = (id: string) => {
     setExpandedMetas(prev => {
