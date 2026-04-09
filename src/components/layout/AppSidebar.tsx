@@ -120,7 +120,7 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "PESSOAS",
+    label: "Pessoas",
     color: "text-violet-400",
     sectionIcon: Users,
     items: [
@@ -322,7 +322,7 @@ const CollapsibleSection = ({
         </div>
         <p
           className={cn(
-            "flex-1 text-left text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors",
+            "flex-1 text-left text-[13px] font-semibold tracking-[0.02em] transition-colors",
             hasActiveChild
               ? "text-sidebar-foreground/80"
               : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
@@ -395,7 +395,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           items.push({ title: child.title, path: child.path, icon: item.icon, sectionLabel: section.label });
         });
       });
-      if (section.label === "PESSOAS") {
+      if (section.label === "Pessoas") {
         items.push({ title: "Pendências", path: "/pendencias", icon: ClipboardList, sectionLabel: section.label });
       }
     });
@@ -570,7 +570,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                   onToggle={() => toggleSection(section.label)}
                   onNavigate={isMobile ? onClose : undefined}
                 />
-                {section.label === "PESSOAS" && (
+                {section.label === "Pessoas" && (
                   <NavLink
                     to="/pendencias"
                     onClick={isMobile ? onClose : undefined}
@@ -584,7 +584,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                     }
                   >
                     <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-                    {!isCollapsed && <span className="text-[13px] uppercase">Pendências</span>}
+                    {!isCollapsed && <span className="text-[13px]">Pendências</span>}
                   </NavLink>
                 )}
               </div>
