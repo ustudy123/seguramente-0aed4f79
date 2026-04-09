@@ -53,6 +53,7 @@ import {
 import { cn } from "@/lib/utils";
 import { usePsicossocial } from "@/hooks/usePsicossocial";
 import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
+import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
 import { useEffect, useState } from "react";
