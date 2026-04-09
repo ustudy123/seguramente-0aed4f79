@@ -86,13 +86,13 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
           .select("id, tipo, dias_afastamento, grupo_clinico, created_at")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
-          .returns<{ id: string; tipo: string; dias_afastamento: number | null; grupo_clinico: string | null; created_at: string }[]>(),
+          ,
 
         fromTable("afastamentos")
           .select("id, status, dias_totais, motivo_principal")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
-          .returns<{ id: string; status: string; dias_totais: number | null; motivo_principal: string | null }[]>(),
+          ,
 
         supabase
           .from("profiles")
@@ -127,7 +127,7 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
         .select("horas_extras_50_minutos, horas_extras_100_minutos, atraso_minutos, status")
         .eq("tenant_id", tenantId)
         .gte("data", dataRef)
-        .returns<{ horas_extras_50_minutos: number | null; horas_extras_100_minutos: number | null; atraso_minutos: number | null; status: string }[]>();
+        ;
 
       const registros = data || [];
       if (registros.length === 0) return null;
@@ -193,13 +193,13 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
           .select("id, tipo, is_advertencia")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
-          .returns<{ id: string; tipo: string; is_advertencia: boolean }[]>(),
+          ,
 
         fromTable("feedbacks")
           .select("id, categoria")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
-          .returns<{ id: string; categoria: string }[]>(),
+          ,
       ]);
 
       const ocorrencias = ocorrenciasRes.data || [];
