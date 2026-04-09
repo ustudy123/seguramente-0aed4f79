@@ -289,15 +289,17 @@ export function useHumorDiario() {
 
   // Verificar se precisa mostrar o popup:
   // Ocasião 1 (morning): primeiro acesso do dia — não tem registro E não foi mostrado hoje
-  // Ocasião 2 (midday): após 5h trabalhadas — já tem registro, passaram 5h E não foi mostrado o midday hoje
+  // Ocasião 2 (recorrente): a cada 5h desde o último popup exibido
   const keys = isReady ? getStorageKeys(user!.id, today) : null;
   const morningJaMostrado = keys ? !!localStorage.getItem(keys.morning) : true;
-  const middayJaMostrado = keys ? !!localStorage.getItem(keys.midday) : true;
+  
+  const lastShownStr = keys ? localStorage.getItem(keys.lastShown) : null;
+  const passaram5hDesdeUltimoPopup = lastShownStr 
+    ? passaramHorasDesdeRegistro(lastShownStr, INTERVALO_HORAS)
+    : false;
 
   const precisaMorning = isReady && !queryLoading && !humorHoje && !morningJaMostrado;
-  const precisaMidday = isReady && !queryLoading && !!humorHoje && 
-    passaramHorasDesdeRegistro(humorHoje.updated_at, INTERVALO_HORAS) && 
-    !middayJaMostrado;
+  const precisaMidday = isReady && !queryLoading && !!humorHoje && passaram5hDesdeUltimoPopup;
 
   const precisaRegistrarHumor = !popupHumorDesativado && (precisaMorning || precisaMidday);
 
