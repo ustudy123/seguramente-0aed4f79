@@ -74,6 +74,71 @@ export function MetaFormModule({
 
   const set = (field: string, value: unknown) => setForm(p => ({ ...p, [field]: value }));
 
+  // Buscar unidades (empresas)
+  const { data: unidades = [] } = useQuery({
+    queryKey: ["empresas-meta-form", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await supabase
+        .from("empresa_cadastro")
+        .select("id, razao_social, nome_fantasia")
+        .eq("tenant_id", tenantId)
+        .order("razao_social");
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Buscar setores/departamentos
+  const { data: setores = [] } = useQuery({
+    queryKey: ["departamentos-meta-form", tenantId, empresaAtivaId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      let q = supabase
+        .from("departamentos")
+        .select("id, nome")
+        .eq("tenant_id", tenantId)
+        .order("nome");
+      if (empresaAtivaId) q = q.eq("empresa_id", empresaAtivaId);
+      const { data } = await q;
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  // Buscar colaboradores
+  const { data: colaboradores = [] } = useQuery({
+    queryKey: ["colaboradores-meta-form", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, nome_completo")
+        .eq("tenant_id", tenantId)
+        .order("nome_completo");
+      return data || [];
+    },
+    enabled: !!tenantId,
+  });
+
+  const unidadesFiltradas = useMemo(() => {
+    if (!searchUnidade) return unidades;
+    const s = searchUnidade.toLowerCase();
+    return unidades.filter(u => (u.razao_social || "").toLowerCase().includes(s) || (u.nome_fantasia || "").toLowerCase().includes(s));
+  }, [unidades, searchUnidade]);
+
+  const setoresFiltrados = useMemo(() => {
+    if (!searchSetor) return setores;
+    const s = searchSetor.toLowerCase();
+    return setores.filter(d => (d.nome || "").toLowerCase().includes(s));
+  }, [setores, searchSetor]);
+
+  const colaboradoresFiltrados = useMemo(() => {
+    if (!searchColaborador) return colaboradores;
+    const s = searchColaborador.toLowerCase();
+    return colaboradores.filter(c => (c.nome_completo || "").toLowerCase().includes(s));
+  }, [colaboradores, searchColaborador]);
+
   const handleSugerirIA = async () => {
     setIsSugerindo(true);
     try {
