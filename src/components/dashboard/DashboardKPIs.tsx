@@ -17,8 +17,9 @@ interface KPIItem {
   value: number;
   icon: React.ElementType;
   path: string;
-  color: string;
-  bg: string;
+  iconColor: string;
+  gradient: string;
+  shadowColor: string;
 }
 
 export const DashboardKPIs = () => {
@@ -30,48 +31,54 @@ export const DashboardKPIs = () => {
       value: data?.colaboradoresAtivos ?? 0,
       icon: Users,
       path: "/colaboradores",
-      color: "text-blue-700",
-      bg: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+      iconColor: "text-blue-600",
+      gradient: "from-blue-50 via-blue-100/60 to-blue-50",
+      shadowColor: "hover:shadow-blue-200/50",
     },
     {
       label: "Admissões Pendentes",
       value: data?.admissoesPendentes ?? 0,
       icon: UserPlus,
       path: "/admissao",
-      color: "text-cyan-700",
-      bg: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
+      iconColor: "text-cyan-600",
+      gradient: "from-cyan-50 via-cyan-100/60 to-cyan-50",
+      shadowColor: "hover:shadow-cyan-200/50",
     },
     {
       label: "EPIs Estoque Baixo",
       value: data?.episBaixoEstoque ?? 0,
       icon: ShieldAlert,
       path: "/epis",
-      color: "text-red-700",
-      bg: "bg-red-50 border-red-200 hover:bg-red-100",
+      iconColor: "text-red-600",
+      gradient: "from-red-50 via-red-100/60 to-red-50",
+      shadowColor: "hover:shadow-red-200/50",
     },
     {
       label: "Documentos Pendentes",
       value: data?.documentosPendentes ?? 0,
       icon: FileWarning,
       path: "/documentos",
-      color: "text-amber-700",
-      bg: "bg-amber-50 border-amber-200 hover:bg-amber-100",
+      iconColor: "text-amber-600",
+      gradient: "from-amber-50 via-amber-100/60 to-amber-50",
+      shadowColor: "hover:shadow-amber-200/50",
     },
     {
       label: "Avaliações Pendentes",
       value: data?.avaliacoesPendentes ?? 0,
       icon: Star,
       path: "/avaliacoes",
-      color: "text-purple-700",
-      bg: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+      iconColor: "text-purple-600",
+      gradient: "from-purple-50 via-purple-100/60 to-purple-50",
+      shadowColor: "hover:shadow-purple-200/50",
     },
     {
       label: "Metas Ativas",
       value: data?.metasAtivas ?? 0,
       icon: Target,
       path: "/metas",
-      color: "text-emerald-700",
-      bg: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
+      iconColor: "text-emerald-600",
+      gradient: "from-emerald-50 via-emerald-100/60 to-emerald-50",
+      shadowColor: "hover:shadow-emerald-200/50",
     },
   ];
 
@@ -96,20 +103,27 @@ export const DashboardKPIs = () => {
             <Link
               to={kpi.path}
               className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 group hover:shadow-md",
-                kpi.bg
+                "relative flex flex-col items-center gap-2 p-4 rounded-2xl border border-white/60 transition-all duration-300 group",
+                "bg-gradient-to-br shadow-sm hover:shadow-lg hover:-translate-y-0.5",
+                kpi.gradient,
+                kpi.shadowColor
               )}
             >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              ) : (
-                <kpi.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", kpi.color)} />
-              )}
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground tabular-nums">
-                  {isLoading ? "—" : kpi.value}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{kpi.label}</p>
+              <div className="absolute inset-0 rounded-2xl bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <div className="p-2 rounded-xl bg-white/70 shadow-sm group-hover:shadow-md transition-shadow">
+                    <kpi.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", kpi.iconColor)} />
+                  </div>
+                )}
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground tabular-nums">
+                    {isLoading ? "—" : kpi.value}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{kpi.label}</p>
+                </div>
               </div>
             </Link>
           </motion.div>
