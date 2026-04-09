@@ -93,12 +93,12 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 className="min-h-[120px] resize-y"
-                maxLength={1000}
+                maxLength={5000}
                 disabled={loading}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Deixe vazio para usar apenas o nome do cargo: "{cargoNome}"</span>
-                <span>{descricao.length}/1.000</span>
+                <span className={descricao.length > 4500 ? "text-destructive font-medium" : ""}>{descricao.length}/5.000</span>
               </div>
             </div>
 
