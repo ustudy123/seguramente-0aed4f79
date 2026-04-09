@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { PilaresSummaryLive } from "@/components/dashboard/PilaresSummaryLive";
-import { DashboardPilares } from "@/components/dashboard/DashboardPilares";
+import { DashboardKPIs } from "@/components/dashboard/DashboardKPIs";
 import { QuickActions } from "@/components/dashboard/QuickActions";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { AlertasCriticos } from "@/components/dashboard/AlertasCriticos";
 import { PendingTasks } from "@/components/dashboard/PendingTasks";
 import { CalendarDays } from "lucide-react";
 
@@ -40,31 +40,19 @@ const Dashboard = () => {
       {/* Pilares Summary - Visão Geral */}
       <PilaresSummaryLive />
 
+      {/* KPIs Operacionais */}
+      <DashboardKPIs />
+
       {/* Quick Actions */}
       <QuickActions />
 
-      {/* Pilares Detail Cards */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-7 w-1 rounded-full bg-primary" />
-          <h2 className="text-lg font-semibold text-foreground">
-            Detalhamento por Pilar
-          </h2>
-        </div>
-        <DashboardPilares />
-      </motion.div>
-
-      {/* Activity and Tasks */}
+      {/* Pendências and Alertas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <RecentActivity />
+          <PendingTasks />
         </div>
         <div>
-          <PendingTasks />
+          <AlertasCriticos />
         </div>
       </div>
     </div>
