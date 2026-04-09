@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { confirm } from "@/components/ui/confirm-dialog";
 import { ArrowLeft, Plus, Pencil, Trash2, BookOpen, FolderOpen, Play, Eye, GripVertical, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
