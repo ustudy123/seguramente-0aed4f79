@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 
 export interface TrilhaAnalytics {
@@ -72,12 +73,12 @@ export function useAnalyticsTrilhas() {
 
       // Parallel fetches
       const [trilhasRes, modulosRes, progressoRes, certsRes, medalhasRes, humorRes] = await Promise.all([
-        supabase.from("trilhas" as never).select("id, nome, status, total_modulos").eq("tenant_id", tenantId) as any,
-        supabase.from("trilha_modulos" as never).select("id, trilha_id, titulo, tipo, pontuacao, ativo").eq("tenant_id", tenantId) as any,
-        supabase.from("trilha_progresso" as never).select("*").eq("tenant_id", tenantId) as any,
-        supabase.from("trilha_certificados" as never).select("id, colaborador_id, trilha_id, data_conclusao").eq("tenant_id", tenantId) as any,
-        supabase.from("trilha_medalhas_colaboradores" as never).select("id, colaborador_id").eq("tenant_id", tenantId) as any,
-        supabase.from("humor_registros" as never).select("colaborador_id, humor, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(500) as any,
+        fromTable("trilhas").select("id, nome, status, total_modulos").eq("tenant_id", tenantId) as any,
+        fromTable("trilha_modulos").select("id, trilha_id, titulo, tipo, pontuacao, ativo").eq("tenant_id", tenantId) as any,
+        fromTable("trilha_progresso").select("*").eq("tenant_id", tenantId) as any,
+        fromTable("trilha_certificados").select("id, colaborador_id, trilha_id, data_conclusao").eq("tenant_id", tenantId) as any,
+        fromTable("trilha_medalhas_colaboradores").select("id, colaborador_id").eq("tenant_id", tenantId) as any,
+        fromTable("humor_registros").select("colaborador_id, humor, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(500) as any,
       ]);
 
       const trilhas: any[] = trilhasRes.data || [];

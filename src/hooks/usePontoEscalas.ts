@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -58,8 +59,7 @@ export function usePontoEscalas() {
     queryKey: ["ponto-escalas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<PontoEscala[]> => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("ponto_escalas" as never)
+      let query = fromTable("ponto_escalas")
         .select("*")
         .eq("tenant_id", tenantId);
       if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
@@ -74,8 +74,7 @@ export function usePontoEscalas() {
     queryKey: ["ponto-escala-atribuicoes", tenantId],
     queryFn: async (): Promise<EscalaAtribuicao[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("ponto_escala_atribuicoes" as never)
+      const { data, error } = await fromTable("ponto_escala_atribuicoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("ativa", true) as { data: EscalaAtribuicao[] | null; error: Error | null };
@@ -88,9 +87,8 @@ export function usePontoEscalas() {
   const criarEscalaMutation = useMutation({
     mutationFn: async (escala: Partial<PontoEscala>) => {
       if (!tenantId) throw new Error("Não autenticado");
-      const { data, error } = await supabase
-        .from("ponto_escalas" as never)
-        .insert({ ...escala, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as never)
+      const { data, error } = await fromTable("ponto_escalas")
+        .insert({ ...escala, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
         .select()
         .single();
       if (error) throw error;
@@ -105,9 +103,8 @@ export function usePontoEscalas() {
 
   const atualizarEscalaMutation = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<PontoEscala> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("ponto_escalas" as never)
-        .update(updates as never)
+      const { data, error } = await fromTable("ponto_escalas")
+        .update(updates as any)
         .eq("id", id)
         .select()
         .single();
@@ -124,9 +121,8 @@ export function usePontoEscalas() {
   const atribuirEscalaMutation = useMutation({
     mutationFn: async (atribuicao: Partial<EscalaAtribuicao>) => {
       if (!tenantId) throw new Error("Não autenticado");
-      const { data, error } = await supabase
-        .from("ponto_escala_atribuicoes" as never)
-        .insert({ ...atribuicao, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("ponto_escala_atribuicoes")
+        .insert({ ...atribuicao, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;

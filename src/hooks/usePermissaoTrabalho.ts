@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -56,8 +57,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
     queryKey: ["permissoes-trabalho", tenantId, terceiroId],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase
-        .from("permissoes_trabalho" as never)
+      let q = fromTable("permissoes_trabalho")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -74,8 +74,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
       queryKey: ["permissao-trabalhadores", permissaoId],
       queryFn: async () => {
         if (!permissaoId || !tenantId) return [];
-        const { data, error } = await supabase
-          .from("permissao_trabalhadores" as never)
+        const { data, error } = await fromTable("permissao_trabalhadores")
           .select("*")
           .eq("permissao_id", permissaoId)
           .eq("tenant_id", tenantId);
@@ -85,8 +84,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
         const trabIds = (data as any[]).map((d: any) => d.trabalhador_id);
         if (trabIds.length === 0) return [];
 
-        const { data: trabs } = await supabase
-          .from("terceiro_trabalhadores" as never)
+        const { data: trabs } = await fromTable("terceiro_trabalhadores")
           .select("id, nome, funcao, status")
           .in("id", trabIds);
 
@@ -116,8 +114,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
       // 1. Create PT
-      const { data: pt, error: ptErr } = await supabase
-        .from("permissoes_trabalho" as never)
+      const { data: pt, error: ptErr } = await fromTable("permissoes_trabalho")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -132,7 +129,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
           observacoes: payload.observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
-        } as never)
+        } as any)
         .select()
         .single();
       if (ptErr) throw ptErr;
@@ -144,8 +141,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
         const validations = await Promise.all(
           payload.trabalhador_ids.map(async (trabId) => {
             // Check docs
-            const { data: docs } = await supabase
-              .from("terceiro_documentos" as never)
+            const { data: docs } = await fromTable("terceiro_documentos")
               .select("id, status")
               .eq("trabalhador_id", trabId)
               .eq("tenant_id", tenantId);
@@ -153,8 +149,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
               !(docs as any[]).some((d: any) => d.status === "vencido");
 
             // Check trainings
-            const { data: treins } = await supabase
-              .from("terceiro_treinamentos" as never)
+            const { data: treins } = await fromTable("terceiro_treinamentos")
               .select("id, status")
               .eq("trabalhador_id", trabId)
               .eq("tenant_id", tenantId);
@@ -162,8 +157,7 @@ export function usePermissaoTrabalho(terceiroId?: string) {
               !(treins as any[]).some((t: any) => t.status === "vencido");
 
             // Check ASO
-            const { data: asos } = await supabase
-              .from("terceiro_documentos" as never)
+            const { data: asos } = await fromTable("terceiro_documentos")
               .select("id, status")
               .eq("trabalhador_id", trabId)
               .eq("tenant_id", tenantId)
@@ -194,9 +188,8 @@ export function usePermissaoTrabalho(terceiroId?: string) {
           })
         );
 
-        const { error: insertErr } = await supabase
-          .from("permissao_trabalhadores" as never)
-          .insert(validations as never);
+        const { error: insertErr } = await fromTable("permissao_trabalhadores")
+          .insert(validations as any);
         if (insertErr) throw insertErr;
 
         // 3. Auto-determine PT status
@@ -206,15 +199,14 @@ export function usePermissaoTrabalho(terceiroId?: string) {
           ? null
           : "Trabalhador(es) com pendência documental";
 
-        await supabase
-          .from("permissoes_trabalho" as never)
+        await fromTable("permissoes_trabalho")
           .update({
             status: newStatus,
             motivo_bloqueio: motivo,
             ...(allApto
               ? { liberado_em: new Date().toISOString(), liberado_por: user.id, liberado_por_nome: profile?.nome_completo || user.email }
               : {}),
-          } as never)
+          } as any)
           .eq("id", ptId);
       }
     },
@@ -228,14 +220,13 @@ export function usePermissaoTrabalho(terceiroId?: string) {
   const encerrarPermissao = useMutation({
     mutationFn: async (id: string) => {
       if (!user) throw new Error("Não autenticado");
-      const { error } = await supabase
-        .from("permissoes_trabalho" as never)
+      const { error } = await fromTable("permissoes_trabalho")
         .update({
           status: "encerrada",
           encerrado_por: user.id,
           encerrado_por_nome: profile?.nome_completo || user.email,
           encerrado_em: new Date().toISOString(),
-        } as never)
+        } as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -248,9 +239,8 @@ export function usePermissaoTrabalho(terceiroId?: string) {
 
   const cancelarPermissao = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("permissoes_trabalho" as never)
-        .update({ status: "cancelada" } as never)
+      const { error } = await fromTable("permissoes_trabalho")
+        .update({ status: "cancelada" } as any)
         .eq("id", id);
       if (error) throw error;
     },

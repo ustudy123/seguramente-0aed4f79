@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 
 /**
  * Hook que verifica o status do usuário logado na tabela usuarios_base.
@@ -10,8 +11,7 @@ export function useUsuarioStatus(authUserId?: string, tenantId?: string) {
     queryKey: ["meu-usuario-status", authUserId, tenantId],
     queryFn: async () => {
       if (!authUserId || !tenantId) return null;
-      const { data, error } = await (supabase as any)
-        .from("usuarios_base")
+      const { data, error } = await fromTable("usuarios_base")
         .select("id, status")
         .eq("auth_user_id", authUserId)
         .eq("tenant_id", tenantId)

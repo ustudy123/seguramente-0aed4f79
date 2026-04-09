@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -21,15 +22,13 @@ export function useTerceiros() {
     const today = new Date().toISOString().split("T")[0];
 
     // Check documents
-    const { data: docs } = await supabase
-      .from("terceiro_documentos" as never)
+    const { data: docs } = await fromTable("terceiro_documentos")
       .select("data_validade, status")
       .eq("tenant_id", tid)
       .eq("trabalhador_id", trabalhadorId);
 
     // Check trainings
-    const { data: treins } = await supabase
-      .from("terceiro_treinamentos" as never)
+    const { data: treins } = await fromTable("terceiro_treinamentos")
       .select("data_validade, status")
       .eq("tenant_id", tid)
       .eq("trabalhador_id", trabalhadorId);
@@ -44,9 +43,8 @@ export function useTerceiros() {
 
     const newStatus = hasExpired ? "bloqueado" : "liberado";
 
-    await supabase
-      .from("terceiro_trabalhadores" as never)
-      .update({ status: newStatus } as never)
+    await fromTable("terceiro_trabalhadores")
+      .update({ status: newStatus } as any)
       .eq("id", trabalhadorId);
   };
 
@@ -55,8 +53,7 @@ export function useTerceiros() {
     queryKey: ["terceiros", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = supabase
-        .from("terceiros" as never)
+      let q = fromTable("terceiros")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("razao_social");
@@ -71,9 +68,8 @@ export function useTerceiros() {
   const createTerceiro = useMutation({
     mutationFn: async (payload: Partial<Terceiro>) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const { data, error } = await supabase
-        .from("terceiros" as never)
-        .insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as never)
+      const { data, error } = await fromTable("terceiros")
+        .insert({ ...payload, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
         .select()
         .single();
       if (error) throw error;
@@ -88,9 +84,8 @@ export function useTerceiros() {
 
   const updateTerceiro = useMutation({
     mutationFn: async ({ id, ...payload }: Partial<Terceiro> & { id: string }) => {
-      const { error } = await supabase
-        .from("terceiros" as never)
-        .update(payload as never)
+      const { error } = await fromTable("terceiros")
+        .update(payload as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -103,8 +98,7 @@ export function useTerceiros() {
 
   const deleteTerceiro = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("terceiros" as never)
+      const { error } = await fromTable("terceiros")
         .delete()
         .eq("id", id);
       if (error) throw error;
@@ -122,8 +116,7 @@ export function useTerceiros() {
       queryKey: ["terceiro-trabalhadores", terceiroId],
       queryFn: async () => {
         if (!terceiroId || !tenantId) return [];
-        const { data, error } = await supabase
-          .from("terceiro_trabalhadores" as never)
+        const { data, error } = await fromTable("terceiro_trabalhadores")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("terceiro_id", terceiroId)
@@ -137,9 +130,8 @@ export function useTerceiros() {
   const createTrabalhador = useMutation({
     mutationFn: async (payload: Partial<TerceiroTrabalhador>) => {
       if (!tenantId) throw new Error("Sem tenant");
-      const { data, error } = await supabase
-        .from("terceiro_trabalhadores" as never)
-        .insert({ ...payload, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("terceiro_trabalhadores")
+        .insert({ ...payload, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;
@@ -154,8 +146,7 @@ export function useTerceiros() {
 
   const deleteTrabalhador = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("terceiro_trabalhadores" as never)
+      const { error } = await fromTable("terceiro_trabalhadores")
         .delete()
         .eq("id", id);
       if (error) throw error;
@@ -173,8 +164,7 @@ export function useTerceiros() {
       queryKey: ["terceiro-documentos", terceiroId, trabalhadorId],
       queryFn: async () => {
         if (!terceiroId || !tenantId) return [];
-        let q = supabase
-          .from("terceiro_documentos" as never)
+        let q = fromTable("terceiro_documentos")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("terceiro_id", terceiroId);
@@ -222,8 +212,7 @@ export function useTerceiros() {
         }
       }
 
-      const { error } = await supabase
-        .from("terceiro_documentos" as never)
+      const { error } = await fromTable("terceiro_documentos")
         .insert({
           tenant_id: tenantId,
           terceiro_id: params.terceiro_id,
@@ -239,14 +228,14 @@ export function useTerceiros() {
           observacoes: params.observacoes || null,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
-        } as never);
+        } as any);
       if (error) {
         await supabase.storage.from("documentos").remove([path]);
         throw error;
       }
 
       // Audit log
-      await supabase.from("terceiro_audit_log" as never).insert({
+      await fromTable("terceiro_audit_log").insert({
         tenant_id: tenantId,
         entidade_tipo: "documento",
         entidade_id: params.terceiro_id,
@@ -255,7 +244,7 @@ export function useTerceiros() {
         dados_novos: { tipo: params.tipo, nome: params.nome, arquivo: params.file.name },
         usuario_id: user.id,
         usuario_nome: profile?.nome_completo || user.email,
-      } as never);
+      } as any);
 
       // Recalculate worker status if document is for a worker
       if (params.trabalhador_id) {
@@ -275,15 +264,14 @@ export function useTerceiros() {
       if (doc.arquivo_url) {
         await supabase.storage.from("documentos").remove([doc.arquivo_url]);
       }
-      const { error } = await supabase
-        .from("terceiro_documentos" as never)
+      const { error } = await fromTable("terceiro_documentos")
         .delete()
         .eq("id", doc.id);
       if (error) throw error;
 
       // Audit log
       if (tenantId && user) {
-        await supabase.from("terceiro_audit_log" as never).insert({
+        await fromTable("terceiro_audit_log").insert({
           tenant_id: tenantId,
           entidade_tipo: "documento",
           entidade_id: doc.id,
@@ -292,7 +280,7 @@ export function useTerceiros() {
           dados_anteriores: { tipo: doc.tipo, nome: doc.nome, arquivo: doc.arquivo_nome },
           usuario_id: user.id,
           usuario_nome: profile?.nome_completo || user.email,
-        } as never);
+        } as any);
       }
     },
     onSuccess: () => {
@@ -308,8 +296,7 @@ export function useTerceiros() {
       queryKey: ["terceiro-treinamentos", trabalhadorId],
       queryFn: async () => {
         if (!trabalhadorId || !tenantId) return [];
-        const { data, error } = await supabase
-          .from("terceiro_treinamentos" as never)
+        const { data, error } = await fromTable("terceiro_treinamentos")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("trabalhador_id", trabalhadorId)
@@ -359,8 +346,7 @@ export function useTerceiros() {
         }
       }
 
-      const { error } = await supabase
-        .from("terceiro_treinamentos" as never)
+      const { error } = await fromTable("terceiro_treinamentos")
         .insert({
           tenant_id: tenantId,
           terceiro_id: params.terceiro_id,
@@ -376,7 +362,7 @@ export function useTerceiros() {
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.email,
           trilha_id: params.trilha_id || null,
-        } as never);
+        } as any);
       if (error) throw error;
 
       // Recalculate worker status
@@ -397,8 +383,7 @@ export function useTerceiros() {
       if (t.certificado_url) {
         await supabase.storage.from("documentos").remove([t.certificado_url]);
       }
-      const { error } = await supabase
-        .from("terceiro_treinamentos" as never)
+      const { error } = await fromTable("terceiro_treinamentos")
         .delete()
         .eq("id", t.id);
       if (error) throw error;

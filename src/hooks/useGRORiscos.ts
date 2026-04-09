@@ -4,6 +4,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -21,8 +22,7 @@ export function useGRORiscos() {
     queryKey,
     queryFn: async (): Promise<GRORisco[]> => {
       if (!tenantId) return [];
-      let query = (supabase as any)
-        .from("gro_riscos")
+      let query = fromTable("gro_riscos")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
@@ -55,8 +55,7 @@ export function useGRORiscos() {
   const criarRisco = useMutation({
     mutationFn: async (dados: NovoGRORisco): Promise<GRORisco> => {
       if (!tenantId) throw new Error("Tenant não identificado");
-      const { data, error } = await (supabase as any)
-        .from("gro_riscos")
+      const { data, error } = await fromTable("gro_riscos")
         .insert({
           ...dados,
           tenant_id: tenantId,
@@ -77,8 +76,7 @@ export function useGRORiscos() {
   // ── Atualizar status GRO ───────────────────────────────────────────────────
   const atualizarStatusGRO = useMutation({
     mutationFn: async ({ id, status_gro }: { id: string; status_gro: GRORisco['status_gro'] }) => {
-      const { error } = await (supabase as any)
-        .from("gro_riscos")
+      const { error } = await fromTable("gro_riscos")
         .update({ status_gro })
         .eq("id", id);
       if (error) throw error;
@@ -93,8 +91,7 @@ export function useGRORiscos() {
   // ── Vincular ação ─────────────────────────────────────────────────────────
   const vincularAcao = useMutation({
     mutationFn: async ({ id, acao_id }: { id: string; acao_id: string }) => {
-      const { error } = await (supabase as any)
-        .from("gro_riscos")
+      const { error } = await fromTable("gro_riscos")
         .update({ acao_id, status_gro: 'avaliado' })
         .eq("id", id);
       if (error) throw error;
@@ -107,8 +104,7 @@ export function useGRORiscos() {
   const inativarRisco = useMutation({
     mutationFn: async (id: string) => {
       // Buscar o risco para checar nível e ação vinculada
-      const { data: risco, error: errRisco } = await (supabase as any)
-        .from("gro_riscos")
+      const { data: risco, error: errRisco } = await fromTable("gro_riscos")
         .select("nivel_risco, acao_id, titulo")
         .eq("id", id)
         .single();
@@ -122,8 +118,7 @@ export function useGRORiscos() {
         );
       }
 
-      const { error } = await (supabase as any)
-        .from("gro_riscos")
+      const { error } = await fromTable("gro_riscos")
         .update({ ativo: false })
         .eq("id", id);
       if (error) throw error;
@@ -195,8 +190,7 @@ export function useGRORiscos() {
         }))
       );
 
-      const { error } = await (supabase as any)
-        .from("gro_riscos")
+      const { error } = await fromTable("gro_riscos")
         .insert(riscos);
       if (error) throw error;
       return riscos.length;

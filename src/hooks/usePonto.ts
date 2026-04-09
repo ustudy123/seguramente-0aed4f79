@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -115,8 +116,7 @@ export function usePonto() {
       queryFn: async (): Promise<PontoDiario[]> => {
         if (!tenantId) return [];
         
-        let query = supabase
-          .from("ponto_diario" as never)
+        let query = fromTable("ponto_diario")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("data", dataStr);
@@ -143,8 +143,7 @@ export function usePonto() {
       queryFn: async (): Promise<PontoMarcacao[]> => {
         if (!tenantId) return [];
         
-        let query = supabase
-          .from("ponto_marcacoes" as never)
+        let query = fromTable("ponto_marcacoes")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("data_marcacao", hoje);
@@ -171,8 +170,7 @@ export function usePonto() {
       queryFn: async (): Promise<PontoAjuste[]> => {
         if (!tenantId) return [];
         
-        const { data, error } = await supabase
-          .from("ponto_ajustes" as never)
+        const { data, error } = await fromTable("ponto_ajustes")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("status", "pendente")
@@ -192,8 +190,7 @@ export function usePonto() {
       queryFn: async (): Promise<PontoAuditLog[]> => {
         if (!tenantId) return [];
         
-        const { data, error } = await supabase
-          .from("ponto_audit_log" as never)
+        const { data, error } = await fromTable("ponto_audit_log")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("created_at", { ascending: false })
@@ -235,8 +232,7 @@ export function usePonto() {
       const userAgent = navigator.userAgent;
       const dispositivo = /Mobile|Android|iPhone/i.test(userAgent) ? "Mobile" : "Desktop";
 
-      const { data, error } = await supabase
-        .from("ponto_marcacoes" as never)
+      const { data, error } = await fromTable("ponto_marcacoes")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -255,7 +251,7 @@ export function usePonto() {
           selfie_nome: selfieNome,
           created_by: user.id,
           hash_marcacao: "placeholder",
-        } as never)
+        } as any)
         .select()
         .single();
 
@@ -323,8 +319,7 @@ export function usePonto() {
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase
-        .from("ponto_ajustes" as never)
+      const { data, error } = await fromTable("ponto_ajustes")
         .insert({
           tenant_id: tenantId,
           colaborador_id: colaboradorId,
@@ -338,7 +333,7 @@ export function usePonto() {
           motivo,
           created_by: user.id,
           created_by_nome: profile?.nome_completo,
-        } as never)
+        } as any)
         .select()
         .single();
 
@@ -367,15 +362,14 @@ export function usePonto() {
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase
-        .from("ponto_ajustes" as never)
+      const { data, error } = await fromTable("ponto_ajustes")
         .update({
           status: aprovado ? "aprovado" : "rejeitado",
           aprovado_por: user.id,
           aprovado_por_nome: profile?.nome_completo,
           data_aprovacao: new Date().toISOString(),
           observacao_aprovador: observacao,
-        } as never)
+        } as any)
         .eq("id", ajusteId)
         .select()
         .single();
@@ -386,7 +380,7 @@ export function usePonto() {
 
       // Se aprovado e for inclusão/correção, criar nova marcação
       if (aprovado && ajuste.tipo_ajuste !== "justificativa" && ajuste.tipo_ajuste !== "abono" && ajuste.tipo_marcacao && ajuste.hora_solicitada) {
-        await supabase.from("ponto_marcacoes" as never).insert({
+        await fromTable("ponto_marcacoes").insert({
           tenant_id: tenantId,
           colaborador_id: ajuste.colaborador_id,
           colaborador_nome: ajuste.colaborador_nome,
@@ -397,7 +391,7 @@ export function usePonto() {
           marcacao_original: false,
           created_by: user.id,
           hash_marcacao: "placeholder",
-        } as never);
+        } as any);
       }
 
       return ajuste;

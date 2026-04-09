@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 
@@ -43,8 +44,7 @@ export function useCondicoesEspeciais(colaboradorId?: string) {
     queryKey: ["condicoes-especiais", tenantId, colaboradorId],
     queryFn: async () => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("colaborador_condicoes_especiais" as never)
+      let query = fromTable("colaborador_condicoes_especiais")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("ativo", true)
@@ -61,8 +61,7 @@ export function useCondicoesEspeciais(colaboradorId?: string) {
     queryKey: ["condicoes-especiais-historico", tenantId, colaboradorId],
     queryFn: async () => {
       if (!tenantId || !colaboradorId) return [];
-      const { data, error } = await supabase
-        .from("condicoes_especiais_historico" as never)
+      const { data, error } = await fromTable("condicoes_especiais_historico")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("colaborador_id", colaboradorId)
@@ -79,8 +78,7 @@ export function useCondicoesEspeciais(colaboradorId?: string) {
 
       // Se já existe uma condição ativa, desativa antes
       if (dados.colaborador_id) {
-        const { data: existentes } = await supabase
-          .from("colaborador_condicoes_especiais" as never)
+        const { data: existentes } = await fromTable("colaborador_condicoes_especiais")
           .select("id")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", dados.colaborador_id)
@@ -88,32 +86,29 @@ export function useCondicoesEspeciais(colaboradorId?: string) {
 
         if (existentes && existentes.length > 0) {
           for (const ex of existentes) {
-            await supabase
-              .from("colaborador_condicoes_especiais" as never)
+            await fromTable("colaborador_condicoes_especiais")
               .update({
                 ativo: false,
                 data_fim: new Date().toISOString().split("T")[0],
-              } as never)
+              } as any)
               .eq("id", ex.id);
           }
         }
       }
 
-      const { data, error } = await supabase
-        .from("colaborador_condicoes_especiais" as never)
+      const { data, error } = await fromTable("colaborador_condicoes_especiais")
         .insert({
           ...dados,
           tenant_id: tenantId,
           alterado_por: user?.id,
           alterado_por_nome: profile?.nome_completo || user?.email,
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
 
       // Registrar histórico
-      await supabase
-        .from("condicoes_especiais_historico" as never)
+      await fromTable("condicoes_especiais_historico")
         .insert({
           tenant_id: tenantId,
           condicao_id: (data as any).id,
@@ -124,7 +119,7 @@ export function useCondicoesEspeciais(colaboradorId?: string) {
           justificativa: dados.justificativa_alteracao,
           usuario_id: user?.id,
           usuario_nome: profile?.nome_completo || user?.email,
-        } as never);
+        } as any);
 
       return data;
     },

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
@@ -351,8 +352,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
 
           if (responsavelProfile) {
             // Buscar email via tenant_usuarios
-            const { data: userRecord } = await (supabase as any)
-              .from("tenant_usuarios")
+            const { data: userRecord } = await fromTable("tenant_usuarios")
               .select("email_principal")
               .eq("auth_user_id", created.responsavel_id)
               .maybeSingle();

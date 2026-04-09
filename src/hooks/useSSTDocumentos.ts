@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -204,8 +205,7 @@ export function useSSTDocumentos() {
       const pastaId = await findOrCreateSSTFolder(tenantId, params.tipo);
 
       const docStatus = status === "vencido" ? "vencido" : "valido";
-      const { error: docError } = await supabase
-        .from("documentos" as never)
+      const { error: docError } = await fromTable("documentos")
         .insert({
           tenant_id: tenantId,
           colaborador_id: null,
@@ -225,7 +225,7 @@ export function useSSTDocumentos() {
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo || user.user_metadata?.nome || null,
           pasta_id: pastaId,
-        } as never);
+        } as any);
 
       if (docError) {
         console.warn("Aviso: documento SST salvo, mas não foi possível vincular ao módulo Documentos:", docError.message);
@@ -257,8 +257,7 @@ export function useSSTDocumentos() {
 
       // Also remove from documentos table (by matching storage_path)
       if (doc.arquivo_url) {
-        await supabase
-          .from("documentos" as never)
+        await fromTable("documentos")
           .delete()
           .eq("storage_path", doc.arquivo_url);
       }

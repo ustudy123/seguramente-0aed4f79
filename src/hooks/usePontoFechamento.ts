@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -56,8 +57,7 @@ export function usePontoFechamento() {
       queryKey: ["ponto-fechamentos", tenantId, empresaAtivaId],
       queryFn: async (): Promise<PontoFechamento[]> => {
         if (!tenantId) return [];
-        let query = supabase
-          .from("ponto_fechamentos" as never)
+        let query = fromTable("ponto_fechamentos")
           .select("*")
           .eq("tenant_id", tenantId);
         if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
@@ -74,8 +74,7 @@ export function usePontoFechamento() {
       queryKey: ["ponto-espelhos", tenantId, competencia],
       queryFn: async (): Promise<PontoEspelho[]> => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("ponto_espelhos" as never)
+        const { data, error } = await fromTable("ponto_espelhos")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("competencia", competencia)
@@ -98,8 +97,7 @@ export function usePontoFechamento() {
       const lastDay = new Date(endYear, endMonth, 0).getDate();
       const endDate = `${competencia}-${lastDay}`;
 
-      const { data: pontos } = await supabase
-        .from("ponto_diario" as never)
+      const { data: pontos } = await fromTable("ponto_diario")
         .select("*")
         .eq("tenant_id", tenantId)
         .gte("data", startDate)
@@ -108,8 +106,7 @@ export function usePontoFechamento() {
       const registros = pontos || [];
 
       // Create/update fechamento
-      const { data: fechamento, error: fechError } = await supabase
-        .from("ponto_fechamentos" as never)
+      const { data: fechamento, error: fechError } = await fromTable("ponto_fechamentos")
         .upsert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -141,8 +138,7 @@ export function usePontoFechamento() {
         const totalFaltas = dias.filter((d: any) => d.status === "falta").length;
         const totalAtrasos = dias.reduce((s: number, d: any) => s + (d.atraso_minutos || 0), 0);
 
-        await supabase
-          .from("ponto_espelhos" as never)
+        await fromTable("ponto_espelhos")
           .upsert({
             tenant_id: tenantId,
             empresa_id: empresaAtivaId || null,
@@ -173,14 +169,13 @@ export function usePontoFechamento() {
   const confirmarEspelhoMutation = useMutation({
     mutationFn: async ({ espelhoId, ressalva }: { espelhoId: string; ressalva?: string }) => {
       if (!user) throw new Error("Não autenticado");
-      const { error } = await supabase
-        .from("ponto_espelhos" as never)
+      const { error } = await fromTable("ponto_espelhos")
         .update({
           status: ressalva ? "ressalva" : "confirmado",
           ressalva_texto: ressalva || null,
           data_confirmacao: new Date().toISOString(),
           confirmado_por: user.id,
-        } as never)
+        } as any)
         .eq("id", espelhoId);
       if (error) throw error;
     },

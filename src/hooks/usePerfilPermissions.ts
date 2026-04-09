@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useMemo } from "react";
 
@@ -20,8 +21,7 @@ export function usePerfilPermissions() {
     queryKey: ["meu_usuario_base_id", user?.id, tenantId],
     queryFn: async () => {
       if (!user?.id || !tenantId) return null;
-      const { data, error } = await (supabase as any)
-        .from("usuarios_base")
+      const { data, error } = await fromTable("usuarios_base")
         .select("id")
         .eq("auth_user_id", user.id)
         .eq("tenant_id", tenantId)
@@ -41,8 +41,7 @@ export function usePerfilPermissions() {
     queryKey: ["meu_perfil_vinculo", usuarioBase?.id, tenantId],
     queryFn: async () => {
       if (!usuarioBase?.id || !tenantId) return null;
-      const { data, error } = await (supabase as any)
-        .from("usuario_perfil_vinculos")
+      const { data, error } = await fromTable("usuario_perfil_vinculos")
         .select("perfil_id, is_perfil_principal")
         .eq("usuario_id", usuarioBase.id)
         .eq("tenant_id", tenantId)
@@ -65,8 +64,7 @@ export function usePerfilPermissions() {
     queryKey: ["minhas_perfil_permissoes", vinculo?.perfil_id],
     queryFn: async () => {
       if (!vinculo?.perfil_id) return [];
-      const { data, error } = await (supabase as any)
-        .from("perfil_permissoes")
+      const { data, error } = await fromTable("perfil_permissoes")
         .select("modulo, acao, escopo, ativo")
         .eq("perfil_id", vinculo.perfil_id)
         .eq("ativo", true);

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -23,8 +24,7 @@ export function useAtestados() {
     queryFn: async (): Promise<Atestado[]> => {
       if (!tenantId) return [];
       
-      let query = supabase
-        .from("atestados" as never)
+      let query = fromTable("atestados")
         .select("*")
         .eq("tenant_id", tenantId);
 
@@ -46,8 +46,7 @@ export function useAtestados() {
     queryFn: async (): Promise<Afastamento[]> => {
       if (!tenantId) return [];
       
-      let query = supabase
-        .from("afastamentos" as never)
+      let query = fromTable("afastamentos")
         .select("*")
         .eq("tenant_id", tenantId);
 
@@ -68,8 +67,7 @@ export function useAtestados() {
     queryKey: ["eventos_saude", tenantId],
     queryFn: async (): Promise<EventoSaude[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("eventos_saude" as never)
+      const { data, error } = await fromTable("eventos_saude")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("data_inicio", { ascending: false }) as { data: EventoSaude[] | null; error: Error | null };
@@ -90,8 +88,7 @@ export function useAtestados() {
       // Por enquanto, mantenho sem filtro de empresa para não quebrar
       // EDIT: Ah, eu deveria ter adicionado na migração. Vou pular o filtro aqui por enquanto.
       
-      const { data, error } = await supabase
-        .from("beneficios_inss" as never)
+      const { data, error } = await fromTable("beneficios_inss")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("data_inicio", { ascending: false }) as { data: BeneficioINSS[] | null; error: Error | null };
@@ -106,8 +103,7 @@ export function useAtestados() {
     queryKey: ["alertas_saude", tenantId],
     queryFn: async (): Promise<AlertaSaude[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("alertas_saude" as never)
+      const { data, error } = await fromTable("alertas_saude")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("resolvido", false)
@@ -154,8 +150,7 @@ export function useAtestados() {
             // Buscar ou criar pasta do colaborador
             let pastaId: string | null = null;
             
-            const { data: pastaExistente } = await supabase
-              .from("documento_pastas" as never)
+            const { data: pastaExistente } = await fromTable("documento_pastas")
               .select("id")
               .eq("tenant_id", tenantId)
               .eq("colaborador_id", colaboradorId)
@@ -167,8 +162,7 @@ export function useAtestados() {
               pastaId = pastaExistente.id;
             } else {
               // Criar pasta do colaborador
-              const { data: novaPasta } = await supabase
-                .from("documento_pastas" as never)
+              const { data: novaPasta } = await fromTable("documento_pastas")
                 .insert({
                   tenant_id: tenantId,
                   nome: formData.colaborador_nome,
@@ -178,7 +172,7 @@ export function useAtestados() {
                   colaborador_cpf: formData.colaborador_cpf || null,
                   criado_por: user.id,
                   criado_por_nome: profile?.nome_completo,
-                } as never)
+                } as any)
                 .select("id")
                 .single() as { data: { id: string } | null };
               
@@ -186,8 +180,7 @@ export function useAtestados() {
             }
 
             // Salvar metadados no banco de documentos
-            await supabase
-              .from("documentos" as never)
+            await fromTable("documentos")
               .insert({
                 tenant_id: tenantId,
                 colaborador_id: colaboradorId,
@@ -205,7 +198,7 @@ export function useAtestados() {
                 observacoes: `Atestado ${formData.tipo} - ${formData.profissional_nome} (${formData.profissional_registro})`,
                 criado_por: user.id,
                 criado_por_nome: profile?.nome_completo,
-              } as never);
+              } as any);
           }
         }
       }
@@ -218,8 +211,7 @@ export function useAtestados() {
         dias_afastamento = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       }
 
-      const { data, error } = await supabase
-        .from("atestados" as never)
+      const { data, error } = await fromTable("atestados")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -260,7 +252,7 @@ export function useAtestados() {
           arquivo_tamanho,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
-        } as never)
+        } as any)
         .select()
         .single();
 
@@ -293,8 +285,7 @@ export function useAtestados() {
     if (!tenantId || !atestado.data_inicio_afastamento) return;
 
     // Check for existing active afastamento for this colaborador
-    const { data: existingAfastamentos } = await supabase
-      .from("afastamentos" as never)
+    const { data: existingAfastamentos } = await fromTable("afastamentos")
       .select("*")
       .eq("tenant_id", tenantId)
       .eq("colaborador_nome", atestado.colaborador_nome)
@@ -306,24 +297,21 @@ export function useAtestados() {
       const newEndDate = atestado.data_fim_afastamento || atestado.data_inicio_afastamento;
       
       if (new Date(newEndDate) > new Date(existing.data_fim || existing.data_inicio)) {
-        await supabase
-          .from("afastamentos" as never)
+        await fromTable("afastamentos")
           .update({ 
             data_fim: newEndDate,
             motivo_principal: atestado.grupo_clinico || existing.motivo_principal,
-          } as never)
+          } as any)
           .eq("id", existing.id);
       }
 
       // Link atestado to afastamento
-      await supabase
-        .from("atestados" as never)
-        .update({ afastamento_id: existing.id } as never)
+      await fromTable("atestados")
+        .update({ afastamento_id: existing.id } as any)
         .eq("id", atestado.id);
     } else {
       // Create new afastamento
-      const { data: newAfastamento } = await supabase
-        .from("afastamentos" as never)
+      const { data: newAfastamento } = await fromTable("afastamentos")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -334,14 +322,13 @@ export function useAtestados() {
           data_fim: atestado.data_fim_afastamento,
           motivo_principal: atestado.grupo_clinico,
           nexo_trabalho: atestado.nexo_trabalho,
-        } as never)
+        } as any)
         .select()
         .single();
 
       if (newAfastamento) {
-        await supabase
-          .from("atestados" as never)
-          .update({ afastamento_id: (newAfastamento as Afastamento).id } as never)
+        await fromTable("atestados")
+          .update({ afastamento_id: (newAfastamento as Afastamento).id } as any)
           .eq("id", atestado.id);
       }
     }
@@ -358,8 +345,7 @@ export function useAtestados() {
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-      const { data: relatedAtestados } = await supabase
-        .from("atestados" as never)
+      const { data: relatedAtestados } = await fromTable("atestados")
         .select("dias_afastamento")
         .eq("tenant_id", tenantId)
         .eq("colaborador_nome", atestado.colaborador_nome)
@@ -374,8 +360,7 @@ export function useAtestados() {
     }
 
     // Check if alert already exists for this colaborador (avoid duplicates)
-    const { data: existingAlert } = await supabase
-      .from("alertas_saude" as never)
+    const { data: existingAlert } = await fromTable("alertas_saude")
       .select("id")
       .eq("tenant_id", tenantId)
       .eq("colaborador_nome", atestado.colaborador_nome)
@@ -386,8 +371,7 @@ export function useAtestados() {
     if (existingAlert && existingAlert.length > 0) return;
 
     // Create alert suggesting INSS referral
-    await supabase
-      .from("alertas_saude" as never)
+    await fromTable("alertas_saude")
       .insert({
         tenant_id: tenantId,
         tipo: "encaminhamento_inss",
@@ -400,7 +384,7 @@ export function useAtestados() {
           ? `${atestado.colaborador_nome} possui atestado com ${diasAtestado} dias de afastamento (>15 dias). Recomenda-se encaminhamento ao INSS.`
           : `${atestado.colaborador_nome} acumulou mais de 15 dias de afastamento pelo mesmo motivo nos últimos 90 dias. Recomenda-se encaminhamento ao INSS.`,
         prioridade: "critica",
-      } as never);
+      } as any);
 
     toast.info("⚠️ Atenção: Encaminhamento ao INSS sugerido para " + atestado.colaborador_nome);
   };
@@ -408,9 +392,8 @@ export function useAtestados() {
   // Update atestado
   const updateAtestadoMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<AtestadoFormData> }) => {
-      const { error } = await supabase
-        .from("atestados" as never)
-        .update(data as never)
+      const { error } = await fromTable("atestados")
+        .update(data as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -434,30 +417,26 @@ export function useAtestados() {
       // Se o atestado está vinculado a um afastamento, verificar se precisa remover
       if (atestado.afastamento_id) {
         // Verificar se há outros atestados vinculados ao mesmo afastamento
-        const { data: outrosAtestados } = await supabase
-          .from("atestados" as never)
+        const { data: outrosAtestados } = await fromTable("atestados")
           .select("id")
           .eq("afastamento_id", atestado.afastamento_id)
           .neq("id", atestado.id) as { data: { id: string }[] | null };
 
         // Se não há outros atestados, remover o afastamento
         if (!outrosAtestados || outrosAtestados.length === 0) {
-          await supabase
-            .from("afastamentos" as never)
+          await fromTable("afastamentos")
             .delete()
             .eq("id", atestado.afastamento_id);
         }
       }
 
       // Remover alertas de saúde relacionados ao atestado
-      await supabase
-        .from("alertas_saude" as never)
+      await fromTable("alertas_saude")
         .delete()
         .eq("referencia_id", atestado.id)
         .eq("referencia_tipo", "atestado");
       
-      const { error } = await supabase
-        .from("atestados" as never)
+      const { error } = await fromTable("atestados")
         .delete()
         .eq("id", atestado.id);
       if (error) throw error;
@@ -478,14 +457,13 @@ export function useAtestados() {
     mutationFn: async (data: Partial<BeneficioINSS>) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
       
-      const { error } = await supabase
-        .from("beneficios_inss" as never)
+      const { error } = await fromTable("beneficios_inss")
         .insert({
           tenant_id: tenantId,
           ...data,
           criado_por: user.id,
           criado_por_nome: profile?.nome_completo,
-        } as never);
+        } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -503,20 +481,17 @@ export function useAtestados() {
       if (!tenantId) throw new Error("Tenant não identificado");
       
       // Desvincular atestados do afastamento antes de deletar
-      await supabase
-        .from("atestados" as never)
-        .update({ afastamento_id: null } as never)
+      await fromTable("atestados")
+        .update({ afastamento_id: null } as any)
         .eq("afastamento_id", afastamentoId);
 
       // Deletar alertas relacionados
-      await supabase
-        .from("alertas_saude" as never)
+      await fromTable("alertas_saude")
         .delete()
         .eq("referencia_id", afastamentoId)
         .eq("referencia_tipo", "afastamento");
       
-      const { error } = await supabase
-        .from("afastamentos" as never)
+      const { error } = await fromTable("afastamentos")
         .delete()
         .eq("id", afastamentoId);
       if (error) throw error;
@@ -537,13 +512,12 @@ export function useAtestados() {
     mutationFn: async (alertaId: string) => {
       if (!user) throw new Error("Usuário não autenticado");
       
-      const { error } = await supabase
-        .from("alertas_saude" as never)
+      const { error } = await fromTable("alertas_saude")
         .update({
           resolvido: true,
           resolvido_por: user.id,
           resolvido_em: new Date().toISOString(),
-        } as never)
+        } as any)
         .eq("id", alertaId);
       if (error) throw error;
     },

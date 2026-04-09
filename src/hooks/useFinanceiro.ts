@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -116,8 +117,7 @@ export function useFinanceiro() {
       queryKey: ["beneficios-tipos", tenantId],
       queryFn: async (): Promise<BeneficioTipo[]> => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("beneficios_tipos" as never)
+        const { data, error } = await fromTable("beneficios_tipos")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("nome") as { data: BeneficioTipo[] | null; error: Error | null };
@@ -130,9 +130,8 @@ export function useFinanceiro() {
   const criarBeneficioTipoMutation = useMutation({
     mutationFn: async (dados: Partial<BeneficioTipo>) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { data, error } = await supabase
-        .from("beneficios_tipos" as never)
-        .insert({ ...dados, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("beneficios_tipos")
+        .insert({ ...dados, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;
@@ -147,9 +146,8 @@ export function useFinanceiro() {
 
   const atualizarBeneficioTipoMutation = useMutation({
     mutationFn: async ({ id, ...dados }: Partial<BeneficioTipo> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("beneficios_tipos" as never)
-        .update(dados as never)
+      const { data, error } = await fromTable("beneficios_tipos")
+        .update(dados as any)
         .eq("id", id)
         .select()
         .single();
@@ -170,8 +168,7 @@ export function useFinanceiro() {
     queryFn: async (): Promise<BeneficioColaborador[]> => {
       if (!tenantId) return [];
       
-      let query = supabase
-        .from("beneficios_colaboradores" as never)
+      let query = fromTable("beneficios_colaboradores")
         .select("*, beneficios_tipos(*)")
         .eq("tenant_id", tenantId);
 
@@ -193,9 +190,8 @@ export function useFinanceiro() {
   const vincularBeneficioMutation = useMutation({
     mutationFn: async (dados: Partial<BeneficioColaborador>) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { data, error } = await supabase
-        .from("beneficios_colaboradores" as never)
-        .insert({ ...dados, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as never)
+      const { data, error } = await fromTable("beneficios_colaboradores")
+        .insert({ ...dados, tenant_id: tenantId, empresa_id: empresaAtivaId || null } as any)
         .select()
         .single();
       if (error) throw error;
@@ -210,9 +206,8 @@ export function useFinanceiro() {
 
   const atualizarBeneficioColabMutation = useMutation({
     mutationFn: async ({ id, ...dados }: Partial<BeneficioColaborador> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("beneficios_colaboradores" as never)
-        .update(dados as never)
+      const { data, error } = await fromTable("beneficios_colaboradores")
+        .update(dados as any)
         .eq("id", id)
         .select()
         .single();
@@ -232,8 +227,7 @@ export function useFinanceiro() {
       queryKey: ["folha-periodos", tenantId],
       queryFn: async (): Promise<FolhaPeriodo[]> => {
         if (!tenantId) return [];
-        const { data, error } = await supabase
-          .from("folha_periodos" as never)
+        const { data, error } = await fromTable("folha_periodos")
           .select("*")
           .eq("tenant_id", tenantId)
           .order("competencia", { ascending: false }) as { data: FolhaPeriodo[] | null; error: Error | null };
@@ -246,9 +240,8 @@ export function useFinanceiro() {
   const criarPeriodoMutation = useMutation({
     mutationFn: async (dados: { competencia: string; observacoes?: string }) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { data, error } = await supabase
-        .from("folha_periodos" as never)
-        .insert({ ...dados, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("folha_periodos")
+        .insert({ ...dados, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;
@@ -263,9 +256,8 @@ export function useFinanceiro() {
 
   const atualizarPeriodoMutation = useMutation({
     mutationFn: async ({ id, ...dados }: Partial<FolhaPeriodo> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("folha_periodos" as never)
-        .update(dados as never)
+      const { data, error } = await fromTable("folha_periodos")
+        .update(dados as any)
         .eq("id", id)
         .select()
         .single();
@@ -285,8 +277,7 @@ export function useFinanceiro() {
       queryKey: ["folha-itens", tenantId, periodoId],
       queryFn: async (): Promise<FolhaItem[]> => {
         if (!tenantId || !periodoId) return [];
-        const { data, error } = await supabase
-          .from("folha_itens" as never)
+        const { data, error } = await fromTable("folha_itens")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("periodo_id", periodoId)
@@ -300,9 +291,8 @@ export function useFinanceiro() {
   const criarFolhaItemMutation = useMutation({
     mutationFn: async (dados: Partial<FolhaItem>) => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { data, error } = await supabase
-        .from("folha_itens" as never)
-        .insert({ ...dados, tenant_id: tenantId } as never)
+      const { data, error } = await fromTable("folha_itens")
+        .insert({ ...dados, tenant_id: tenantId } as any)
         .select()
         .single();
       if (error) throw error;

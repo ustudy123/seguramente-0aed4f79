@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 
 export interface TrilhaNotificacao {
@@ -25,8 +26,7 @@ export function useTrilhaNotificacoes() {
     queryKey: ["trilha_notificacoes", colaboradorId],
     queryFn: async (): Promise<TrilhaNotificacao[]> => {
       if (!colaboradorId) return [];
-      const { data, error } = await supabase
-        .from("trilha_notificacoes" as never)
+      const { data, error } = await fromTable("trilha_notificacoes")
         .select("*")
         .eq("colaborador_id", colaboradorId)
         .order("created_at", { ascending: false })
@@ -41,9 +41,8 @@ export function useTrilhaNotificacoes() {
 
   const marcarLidaMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("trilha_notificacoes" as never)
-        .update({ lida: true } as never)
+      const { error } = await fromTable("trilha_notificacoes")
+        .update({ lida: true } as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -53,9 +52,8 @@ export function useTrilhaNotificacoes() {
   const marcarTodasLidasMut = useMutation({
     mutationFn: async () => {
       if (!colaboradorId) return;
-      const { error } = await supabase
-        .from("trilha_notificacoes" as never)
-        .update({ lida: true } as never)
+      const { error } = await fromTable("trilha_notificacoes")
+        .update({ lida: true } as any)
         .eq("colaborador_id", colaboradorId)
         .eq("lida", false);
       if (error) throw error;

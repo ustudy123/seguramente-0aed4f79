@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
@@ -31,8 +32,7 @@ export function useUsuarioVinculos() {
     queryKey: ["usuario_base_by_auth", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("usuarios_base" as never)
+      const { data, error } = await fromTable("usuarios_base")
         .select("id, tipo_usuario")
         .eq("auth_user_id", user.id)
         .maybeSingle() as { data: { id: string; tipo_usuario: string | null } | null; error: Error | null };
@@ -54,8 +54,7 @@ export function useUsuarioVinculos() {
     queryKey: ["usuario_vinculos", usuarioBase?.id, tenantId],
     queryFn: async () => {
       if (!usuarioBase?.id || !tenantId) return [];
-      const { data, error } = await supabase
-        .from("usuario_vinculos" as never)
+      const { data, error } = await fromTable("usuario_vinculos")
         .select("id, empresa_id, tipo_vinculo, status, data_inicio, data_fim")
         .eq("usuario_id", usuarioBase.id)
         .eq("tenant_id", tenantId)

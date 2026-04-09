@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
@@ -13,8 +14,7 @@ export function useTrilhaQuiz(moduloId?: string) {
     queryKey: ["trilha_quiz", moduloId],
     queryFn: async (): Promise<TrilhaQuizPergunta[]> => {
       if (!tenantId || !moduloId) return [];
-      const { data, error } = await supabase
-        .from("trilha_quiz_perguntas" as never)
+      const { data, error } = await fromTable("trilha_quiz_perguntas")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("modulo_id", moduloId)
@@ -34,9 +34,8 @@ export function useTrilhaQuiz(moduloId?: string) {
       ordem: number;
     }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("trilha_quiz_perguntas" as never)
-        .insert({ tenant_id: tenantId, ...input } as never)
+      const { data, error } = await fromTable("trilha_quiz_perguntas")
+        .insert({ tenant_id: tenantId, ...input } as any)
         .select()
         .single();
       if (error) throw error;
@@ -51,9 +50,8 @@ export function useTrilhaQuiz(moduloId?: string) {
 
   const atualizarPerguntaMut = useMutation({
     mutationFn: async ({ id, ...input }: Partial<TrilhaQuizPergunta> & { id: string }) => {
-      const { error } = await supabase
-        .from("trilha_quiz_perguntas" as never)
-        .update(input as never)
+      const { error } = await fromTable("trilha_quiz_perguntas")
+        .update(input as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -66,7 +64,7 @@ export function useTrilhaQuiz(moduloId?: string) {
 
   const excluirPerguntaMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trilha_quiz_perguntas" as never).delete().eq("id", id);
+      const { error } = await fromTable("trilha_quiz_perguntas").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

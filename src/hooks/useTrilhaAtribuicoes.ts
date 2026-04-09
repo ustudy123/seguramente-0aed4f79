@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
@@ -24,8 +25,7 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
     queryKey: ["trilha_atribuicoes", tenantId, trilhaId],
     queryFn: async (): Promise<TrilhaAtribuicao[]> => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("trilha_atribuicoes" as never)
+      let query = fromTable("trilha_atribuicoes")
         .select("*, trilha:trilhas(nome)")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -50,9 +50,8 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
       alvo_nome: string | null;
     }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("trilha_atribuicoes" as never)
-        .insert({ tenant_id: tenantId, ...input } as never)
+      const { data, error } = await fromTable("trilha_atribuicoes")
+        .insert({ tenant_id: tenantId, ...input } as any)
         .select()
         .single();
       if (error) throw error;
@@ -67,7 +66,7 @@ export function useTrilhaAtribuicoes(trilhaId?: string) {
 
   const removerMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trilha_atribuicoes" as never).delete().eq("id", id);
+      const { error } = await fromTable("trilha_atribuicoes").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleMutationError } from "@/lib/toastError";
@@ -129,8 +130,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
     const nomeDocumento = `${popData.codigo} - ${popData.titulo}`;
 
     // Verificar se já existe documento vinculado a este POP
-    const { data: existente } = await supabase
-      .from("documentos" as never)
+    const { data: existente } = await fromTable("documentos")
       .select("id")
       .eq("tenant_id", tenantId)
       .eq("pop_id", popData.id)
@@ -138,8 +138,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
 
     if (existente?.[0]) {
       // Atualizar documento existente
-      await supabase
-        .from("documentos" as never)
+      await fromTable("documentos")
         .update({
           nome_original: nomeDocumento,
           nome_arquivo: nomeDocumento,
@@ -149,12 +148,11 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
           atividade_vinculada: atividadeNome || null,
           observacoes: `POP ${popData.status} | v${popData.versao_atual}${popData.gerado_por_ia ? " | Gerado por IA" : ""}`,
           pasta_id: pastaId,
-        } as never)
+        } as any)
         .eq("id", existente[0].id);
     } else {
       // Criar novo documento vinculado ao POP
-      await supabase
-        .from("documentos" as never)
+      await fromTable("documentos")
         .insert({
           tenant_id: tenantId,
           pop_id: popData.id,
@@ -173,7 +171,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
           observacoes: `POP ${popData.status}${popData.gerado_por_ia ? " | Gerado por IA" : ""}`,
           criado_por: user.id,
           criado_por_nome: userName,
-        } as never);
+        } as any);
     }
 
     qc.invalidateQueries({ queryKey: ["documentos"] });
@@ -184,8 +182,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
     queryKey: ["funcao_pops", cargoId],
     queryFn: async (): Promise<PopData[]> => {
       if (!tenantId || !cargoId) return [];
-      const { data, error } = await supabase
-        .from("funcao_pops" as never)
+      const { data, error } = await fromTable("funcao_pops")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("cargo_id", cargoId)
@@ -209,8 +206,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
       if (!tenantId || !cargoId) throw new Error("Sem contexto");
       
       // Generate code
-      const { data: existing } = await supabase
-        .from("funcao_pops" as never)
+      const { data: existing } = await fromTable("funcao_pops")
         .select("codigo")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
@@ -222,8 +218,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
       const codigo = `POP-FUN-${String(lastNum + 1).padStart(3, "0")}`;
 
       const content = input.popContent || {};
-      const { data, error } = await supabase
-        .from("funcao_pops" as never)
+      const { data, error } = await fromTable("funcao_pops")
         .insert({
           tenant_id: tenantId,
           cargo_id: cargoId,
@@ -245,7 +240,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
           registros_evidencias: (content as any).registros_evidencias || null,
           tratamento_nao_conformidades: (content as any).tratamento_nao_conformidades || null,
           referencias: (content as any).referencias || null,
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -270,7 +265,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
         const currentVersion = parseFloat(currentPop.versao_atual) || 1.0;
         const newVersion = (currentVersion + 0.1).toFixed(1);
 
-        await supabase.from("funcao_pop_versoes" as never).insert({
+        await fromTable("funcao_pop_versoes").insert({
           tenant_id: tenantId,
           pop_id: input.id,
           versao: currentPop.versao_atual,
@@ -293,14 +288,13 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
           motivo_alteracao: input.motivo || null,
           alterado_por: user?.id,
           alterado_por_nome: userName,
-        } as never);
+        } as any);
 
         input.updates.versao_atual = newVersion;
       }
 
-      const { error } = await supabase
-        .from("funcao_pops" as never)
-        .update(input.updates as never)
+      const { error } = await fromTable("funcao_pops")
+        .update(input.updates as any)
         .eq("id", input.id);
       if (error) throw error;
 
@@ -322,13 +316,12 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
     mutationFn: async (id: string) => {
       // Remover documento vinculado
       if (tenantId) {
-        await supabase
-          .from("documentos" as never)
+        await fromTable("documentos")
           .delete()
           .eq("tenant_id", tenantId)
           .eq("pop_id", id);
       }
-      const { error } = await supabase.from("funcao_pops" as never).delete().eq("id", id);
+      const { error } = await fromTable("funcao_pops").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -342,8 +335,7 @@ export function usePopAtividade(cargoId?: string, cargoNome?: string, atividadeN
   // Fetch versions for a specific POP
   const buscarVersoes = async (popId: string): Promise<PopVersao[]> => {
     if (!tenantId) return [];
-    const { data, error } = await supabase
-      .from("funcao_pop_versoes" as never)
+    const { data, error } = await fromTable("funcao_pop_versoes")
       .select("*")
       .eq("tenant_id", tenantId)
       .eq("pop_id", popId)

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -15,8 +16,7 @@ export function useTrilhas() {
     queryKey: ["trilhas", tenantId, empresaAtivaId],
     queryFn: async (): Promise<Trilha[]> => {
       if (!tenantId) return [];
-      let query = supabase
-        .from("trilhas" as never)
+      let query = fromTable("trilhas")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -31,15 +31,14 @@ export function useTrilhas() {
   const criarTrilhaMut = useMutation({
     mutationFn: async (input: Partial<Trilha> & { nome: string }) => {
       if (!tenantId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("trilhas" as never)
+      const { data, error } = await fromTable("trilhas")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
           criado_por: user?.id,
           criado_por_nome: profile?.nome_completo || user?.email,
           ...input,
-        } as never)
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -54,9 +53,8 @@ export function useTrilhas() {
 
   const atualizarTrilhaMut = useMutation({
     mutationFn: async ({ id, ...input }: Partial<Trilha> & { id: string }) => {
-      const { error } = await supabase
-        .from("trilhas" as never)
-        .update(input as never)
+      const { error } = await fromTable("trilhas")
+        .update(input as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -69,7 +67,7 @@ export function useTrilhas() {
 
   const excluirTrilhaMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trilhas" as never).delete().eq("id", id);
+      const { error } = await fromTable("trilhas").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -98,8 +96,7 @@ export function useTrilhaModulos(trilhaId?: string) {
     queryFn: async (): Promise<TrilhaModulo[]> => {
       if (!trilhaId) return [];
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("trilha_modulos" as never)
+      const { data, error } = await fromTable("trilha_modulos")
         .select("*")
         .eq("tenant_id", tenantId)
         .eq("trilha_id", trilhaId)
@@ -113,9 +110,8 @@ export function useTrilhaModulos(trilhaId?: string) {
   const criarModuloMut = useMutation({
     mutationFn: async (input: Partial<TrilhaModulo> & { titulo: string }) => {
       if (!tenantId || !trilhaId) throw new Error("Sem contexto");
-      const { data, error } = await supabase
-        .from("trilha_modulos" as never)
-        .insert({ tenant_id: tenantId, trilha_id: trilhaId, ...input } as never)
+      const { data, error } = await fromTable("trilha_modulos")
+        .insert({ tenant_id: tenantId, trilha_id: trilhaId, ...input } as any)
         .select()
         .single();
       if (error) throw error;
@@ -131,9 +127,8 @@ export function useTrilhaModulos(trilhaId?: string) {
 
   const atualizarModuloMut = useMutation({
     mutationFn: async ({ id, ...input }: Partial<TrilhaModulo> & { id: string }) => {
-      const { error } = await supabase
-        .from("trilha_modulos" as never)
-        .update(input as never)
+      const { error } = await fromTable("trilha_modulos")
+        .update(input as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -146,7 +141,7 @@ export function useTrilhaModulos(trilhaId?: string) {
 
   const excluirModuloMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trilha_modulos" as never).delete().eq("id", id);
+      const { error } = await fromTable("trilha_modulos").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 
 export interface EvidenciaColaborador {
@@ -69,8 +70,7 @@ export function useAvaliacaoEvidencias(colaboradorId: string | null, dataInicio?
       // Executar queries em paralelo
       const [feedbacksRes, ocorrenciasRes, metasRes, trilhasRes, acoesRes, psicossocialRes] = await Promise.all([
         // Feedbacks do colaborador no período
-        supabase
-          .from("feedbacks" as never)
+        fromTable("feedbacks")
           .select("id, categoria, descricao, created_at, registrado_por_nome")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", colaboradorId)
@@ -80,8 +80,7 @@ export function useAvaliacaoEvidencias(colaboradorId: string | null, dataInicio?
           .limit(20) as any,
 
         // Ocorrências do colaborador no período
-        supabase
-          .from("ocorrencias" as never)
+        fromTable("ocorrencias")
           .select("id, tipo, descricao, created_at, is_advertencia")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", colaboradorId)
@@ -100,8 +99,7 @@ export function useAvaliacaoEvidencias(colaboradorId: string | null, dataInicio?
           .limit(10),
 
         // Progresso em trilhas
-        supabase
-          .from("trilha_progresso" as never)
+        fromTable("trilha_progresso")
           .select("trilha_id, status, trilhas:trilha_id(nome, total_modulos)")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", colaboradorId)
@@ -117,8 +115,7 @@ export function useAvaliacaoEvidencias(colaboradorId: string | null, dataInicio?
           .limit(10),
 
         // Indicadores psicossociais — última campanha com respostas do colaborador
-        supabase
-          .from("psicossocial_convites" as never)
+        fromTable("psicossocial_convites")
           .select("id, status, respostas:psicossocial_respostas(respostas_json), campanha:psicossocial_campanhas(nome)")
           .eq("tenant_id", tenantId)
           .eq("colaborador_id", colaboradorId)

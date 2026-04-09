@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "./useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { criarPastaColaborador } from "@/utils/criarPastaColaborador";
@@ -135,8 +136,7 @@ export function useDocumentos() {
     queryFn: async (): Promise<Documento[]> => {
       if (!tenantId) return [];
 
-      let query = supabase
-        .from("documentos" as never)
+      let query = fromTable("documentos")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -200,8 +200,7 @@ export function useDocumentos() {
       // ── NOVA VERSÃO de documento existente ───────────────────────────────
       if (documentoExistenteId) {
         // 1. Buscar documento atual para salvar sua versão
-        const { data: docAtual } = await supabase
-          .from("documentos" as never)
+        const { data: docAtual } = await fromTable("documentos")
           .select("*")
           .eq("id", documentoExistenteId)
           .single() as { data: Documento | null };
@@ -210,7 +209,7 @@ export function useDocumentos() {
           const proximaVersao = (docAtual.versao_atual || 1) + 1;
 
           // 2. Salvar versão anterior no histórico
-          await supabase.from("documento_versoes" as never).insert({
+          await fromTable("documento_versoes").insert({
             tenant_id: tenantId,
             documento_id: documentoExistenteId,
             versao: docAtual.versao_atual || 1,
@@ -223,11 +222,10 @@ export function useDocumentos() {
             criado_por: docAtual.criado_por,
             criado_por_nome: docAtual.criado_por_nome,
             motivo_revisao: motivoRevisao || null,
-          } as never);
+          } as any);
 
           // 3. Atualizar documento principal com novo arquivo
-          const { data, error } = await supabase
-            .from("documentos" as never)
+          const { data, error } = await fromTable("documentos")
             .update({
               nome_arquivo: nomeArquivo,
               nome_original: file.name,
@@ -239,7 +237,7 @@ export function useDocumentos() {
               observacoes: observacoes || docAtual.observacoes,
               versao_atual: proximaVersao,
               total_versoes: proximaVersao,
-            } as never)
+            } as any)
             .eq("id", documentoExistenteId)
             .select()
             .single();
@@ -279,8 +277,7 @@ export function useDocumentos() {
         }
       }
 
-      const { data, error } = await supabase
-        .from("documentos" as never)
+      const { data, error } = await fromTable("documentos")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,
@@ -301,7 +298,7 @@ export function useDocumentos() {
           pasta_id: resolvedPastaId,
           versao_atual: 1,
           total_versoes: 1,
-        } as never)
+        } as any)
         .select()
         .single();
 
@@ -341,8 +338,7 @@ export function useDocumentos() {
       if (storageError) console.warn("Erro ao remover do storage:", storageError);
 
       // Remover do banco
-      const { error } = await supabase
-        .from("documentos" as never)
+      const { error } = await fromTable("documentos")
         .delete()
         .eq("id", documento.id);
 
@@ -381,8 +377,7 @@ export function useDocumentos() {
 
   // Buscar versões de um documento específico
   const getVersoes = async (documentoId: string): Promise<DocumentoVersao[]> => {
-    const { data, error } = await supabase
-      .from("documento_versoes" as never)
+    const { data, error } = await fromTable("documento_versoes")
       .select("*")
       .eq("documento_id", documentoId)
       .eq("tenant_id", tenantId)
@@ -398,8 +393,7 @@ export function useDocumentos() {
       if (!tenantId || !user) throw new Error("Não autenticado");
 
       // 1. Buscar documento atual
-      const { data: docAtual } = await supabase
-        .from("documentos" as never)
+      const { data: docAtual } = await fromTable("documentos")
         .select("*")
         .eq("id", documentoId)
         .single() as { data: Documento | null };
@@ -407,7 +401,7 @@ export function useDocumentos() {
       if (!docAtual) throw new Error("Documento não encontrado");
 
       // 2. Salvar versão atual no histórico antes de restaurar
-      await supabase.from("documento_versoes" as never).insert({
+      await fromTable("documento_versoes").insert({
         tenant_id: tenantId,
         documento_id: documentoId,
         versao: docAtual.versao_atual,
@@ -420,12 +414,11 @@ export function useDocumentos() {
         criado_por: docAtual.criado_por,
         criado_por_nome: docAtual.criado_por_nome,
         motivo_revisao: `Substituída ao restaurar versão ${versao.versao}`,
-      } as never);
+      } as any);
 
       // 3. Promover versão antiga como atual
       const novaVersaoNum = docAtual.versao_atual + 1;
-      await supabase
-        .from("documentos" as never)
+      await fromTable("documentos")
         .update({
           nome_arquivo: versao.storage_path,
           nome_original: versao.nome_original,
@@ -437,12 +430,11 @@ export function useDocumentos() {
           versao_atual: novaVersaoNum,
           total_versoes: novaVersaoNum,
           status: calcularStatus(versao.data_validade),
-        } as never)
+        } as any)
         .eq("id", documentoId);
 
       // 4. Remover versão do histórico (agora é a atual)
-      await supabase
-        .from("documento_versoes" as never)
+      await fromTable("documento_versoes")
         .delete()
         .eq("id", versao.id);
     },
