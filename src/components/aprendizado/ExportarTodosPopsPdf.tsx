@@ -47,7 +47,7 @@ class PopPdfBuilder {
     this.doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
   }
 
-  private ensureSpace(h: number) {
+  ensureSpace(h: number) {
     if (this.y + h > PAGE_H - M_BOTTOM) {
       this.doc.addPage();
       this.y = M_TOP;
