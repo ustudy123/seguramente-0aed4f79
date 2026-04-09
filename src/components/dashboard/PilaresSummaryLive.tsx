@@ -167,10 +167,17 @@ export const PilaresSummaryLive = () => {
                   </div>
                 </div>
               )}
-              <div className="bg-muted/60 rounded-lg px-4 py-2.5 text-center min-w-[72px]">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Score</p>
-                <p className="text-2xl font-extrabold text-foreground -mt-0.5 tabular-nums">{averageScore}%</p>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="bg-muted/60 rounded-lg px-4 py-2.5 text-center min-w-[72px] cursor-help">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Score</p>
+                    <p className="text-2xl font-extrabold text-foreground -mt-0.5 tabular-nums">{averageScore}%</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[260px] text-center">
+                  <p className="text-xs">Média ponderada dos 4 pilares estratégicos (Organização, Condições, Experiência e Governança). Quanto maior, mais madura a gestão do trabalho.</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
