@@ -42,6 +42,9 @@ type MetaFormState = Partial<Omit<MetaCompleta, "participantes">> & {
 export function MetaFormModule({
   nivel: defaultNivel, metaPai, initialData, onSave, onCancel, isSaving,
 }: MetaFormModuleProps) {
+  const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
+
   const [form, setForm] = useState<MetaFormState>({
     titulo: "",
     descricao: "",
@@ -62,6 +65,12 @@ export function MetaFormModule({
   });
   const [isSugerindo, setIsSugerindo] = useState(false);
   const [sugestoes, setSugestoes] = useState<any[]>([]);
+  const [openUnidade, setOpenUnidade] = useState(false);
+  const [openSetor, setOpenSetor] = useState(false);
+  const [openColaborador, setOpenColaborador] = useState(false);
+  const [searchUnidade, setSearchUnidade] = useState("");
+  const [searchSetor, setSearchSetor] = useState("");
+  const [searchColaborador, setSearchColaborador] = useState("");
 
   const set = (field: string, value: unknown) => setForm(p => ({ ...p, [field]: value }));
 
