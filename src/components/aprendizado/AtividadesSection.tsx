@@ -502,6 +502,28 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
           </div>
         ));
       })()}
+
+      <GerarPopsEmLoteModal
+        open={showLoteModal}
+        onClose={() => setShowLoteModal(false)}
+        atividadesSemPop={atividades
+          .filter(a => !getPopByAtividade(a.id))
+          .map(a => {
+            const atResp = responsabilidades.find(r => r.atividade_id === a.id);
+            const atFerr = ferramentas.filter(f => f.atividade_id === a.id);
+            const atCont = conteudos.filter(c => c.atividade_id === a.id);
+            return {
+              atividade: a,
+              responsabilidade: atResp,
+              ferramentas: atFerr.map(f => `${f.nome} (${TIPO_FERRAMENTA_LABELS[f.tipo]})`).join(", ") || undefined,
+              conteudos: atCont.map(c => `${c.titulo} (${TIPO_CONTEUDO_LABELS[c.tipo]})`).join(", ") || undefined,
+            };
+          })}
+        funcaoNome={funcaoNome}
+        nivel={nivel}
+        gerarPopIA={gerarPopIA}
+        criarPop={criarPop}
+      />
     </div>
   );
 }
