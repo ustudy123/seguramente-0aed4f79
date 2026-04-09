@@ -13,6 +13,7 @@ import { useAprendizado } from "@/hooks/useAprendizado";
 import { usePopAtividade } from "@/hooks/usePopAtividade";
 import { PopSection } from "./PopSection";
 import { GerarPopsEmLoteModal } from "./GerarPopsEmLoteModal";
+import { ExportarTodosPopsPdf } from "./ExportarTodosPopsPdf";
 import { AudioAtividadesImport } from "./AudioAtividadesImport";
 import { TextoAtividadesImport } from "./TextoAtividadesImport";
 import type { FuncaoAtividade } from "@/types/aprendizado";
@@ -37,7 +38,7 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
     ferramentas, criarFerramenta, excluirFerramenta,
   } = useAprendizado(cargoId);
 
-  const { getPopByAtividade, criarPop, gerarPopIA } = usePopAtividade(cargoId, funcaoNome);
+  const { pops, getPopByAtividade, criarPop, gerarPopIA } = usePopAtividade(cargoId, funcaoNome);
 
   const [showForm, setShowForm] = useState(false);
   const [showLoteModal, setShowLoteModal] = useState(false);
@@ -135,6 +136,7 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
             }
             return null;
           })()}
+          <ExportarTodosPopsPdf pops={pops} funcaoNome={funcaoNome} />
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             <Plus className="w-4 h-4 mr-1" /> Atividade
           </Button>
