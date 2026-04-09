@@ -132,7 +132,7 @@ export function MetasList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
@@ -142,10 +142,21 @@ export function MetasList() {
             Metas com análise ergonômica integrada, ações e rastreabilidade completa
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Meta
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+            <SelectTrigger className="w-[160px] h-9">
+              <SelectValue placeholder="Filtrar tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TIPO_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Meta
+          </Button>
       </div>
 
       {/* Stats */}
