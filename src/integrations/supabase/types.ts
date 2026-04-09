@@ -2066,22 +2066,31 @@ export type Database = {
           aposentadoria_especial_anos: number | null
           ativo: boolean
           created_at: string
+          criterios_sucesso: string | null
+          cultura_esperada: string | null
           departamento_id: string | null
           descricao: string | null
           empresa_id: string | null
+          erros_riscos: string | null
+          escopo_geral: string | null
           exames_obrigatorios: string[] | null
           faixa_salarial_max: number | null
           faixa_salarial_min: number | null
+          ferramentas_cargo: string | null
           id: string
           insalubridade: boolean
           insalubridade_agente_nocivo: string | null
           insalubridade_grau: string | null
+          interfaces_cargo: string | null
           nivel: string | null
           nome: string
+          objetivo_funcao: string | null
+          padroes_execucao: string | null
           periculosidade: boolean
           periculosidade_tipo: string | null
           periodicidade_exame_meses: number | null
           responsabilidade: string | null
+          subordinacao: string | null
           tenant_id: string
           updated_at: string
         }
@@ -2090,22 +2099,31 @@ export type Database = {
           aposentadoria_especial_anos?: number | null
           ativo?: boolean
           created_at?: string
+          criterios_sucesso?: string | null
+          cultura_esperada?: string | null
           departamento_id?: string | null
           descricao?: string | null
           empresa_id?: string | null
+          erros_riscos?: string | null
+          escopo_geral?: string | null
           exames_obrigatorios?: string[] | null
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
+          ferramentas_cargo?: string | null
           id?: string
           insalubridade?: boolean
           insalubridade_agente_nocivo?: string | null
           insalubridade_grau?: string | null
+          interfaces_cargo?: string | null
           nivel?: string | null
           nome: string
+          objetivo_funcao?: string | null
+          padroes_execucao?: string | null
           periculosidade?: boolean
           periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
           responsabilidade?: string | null
+          subordinacao?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -2114,22 +2132,31 @@ export type Database = {
           aposentadoria_especial_anos?: number | null
           ativo?: boolean
           created_at?: string
+          criterios_sucesso?: string | null
+          cultura_esperada?: string | null
           departamento_id?: string | null
           descricao?: string | null
           empresa_id?: string | null
+          erros_riscos?: string | null
+          escopo_geral?: string | null
           exames_obrigatorios?: string[] | null
           faixa_salarial_max?: number | null
           faixa_salarial_min?: number | null
+          ferramentas_cargo?: string | null
           id?: string
           insalubridade?: boolean
           insalubridade_agente_nocivo?: string | null
           insalubridade_grau?: string | null
+          interfaces_cargo?: string | null
           nivel?: string | null
           nome?: string
+          objetivo_funcao?: string | null
+          padroes_execucao?: string | null
           periculosidade?: boolean
           periculosidade_tipo?: string | null
           periodicidade_exame_meses?: number | null
           responsabilidade?: string | null
+          subordinacao?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -7940,36 +7967,45 @@ export type Database = {
         Row: {
           cargo_id: string
           classificacao: Database["public"]["Enums"]["classificacao_atividade"]
+          como: string | null
           complexidade: Database["public"]["Enums"]["complexidade_atividade"]
           created_at: string
           descricao: string | null
           frequencia: Database["public"]["Enums"]["frequencia_atividade"]
           id: string
           nome: string
+          processo: string | null
+          resultado_esperado: string | null
           tenant_id: string
           updated_at: string
         }
         Insert: {
           cargo_id: string
           classificacao?: Database["public"]["Enums"]["classificacao_atividade"]
+          como?: string | null
           complexidade?: Database["public"]["Enums"]["complexidade_atividade"]
           created_at?: string
           descricao?: string | null
           frequencia?: Database["public"]["Enums"]["frequencia_atividade"]
           id?: string
           nome: string
+          processo?: string | null
+          resultado_esperado?: string | null
           tenant_id: string
           updated_at?: string
         }
         Update: {
           cargo_id?: string
           classificacao?: Database["public"]["Enums"]["classificacao_atividade"]
+          como?: string | null
           complexidade?: Database["public"]["Enums"]["complexidade_atividade"]
           created_at?: string
           descricao?: string | null
           frequencia?: Database["public"]["Enums"]["frequencia_atividade"]
           id?: string
           nome?: string
+          processo?: string | null
+          resultado_esperado?: string | null
           tenant_id?: string
           updated_at?: string
         }
