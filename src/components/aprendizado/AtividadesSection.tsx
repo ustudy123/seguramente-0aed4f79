@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle, Pencil, Check, X, AlertTriangle, Sparkles } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle, Pencil, Check, X, AlertTriangle, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
+import { usePopAtividade } from "@/hooks/usePopAtividade";
 import { PopSection } from "./PopSection";
+import { GerarPopsEmLoteModal } from "./GerarPopsEmLoteModal";
 import { AudioAtividadesImport } from "./AudioAtividadesImport";
 import { TextoAtividadesImport } from "./TextoAtividadesImport";
 import type { FuncaoAtividade } from "@/types/aprendizado";
