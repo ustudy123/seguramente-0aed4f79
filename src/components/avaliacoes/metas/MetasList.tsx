@@ -157,6 +157,7 @@ export function MetasList() {
             <Plus className="h-4 w-4" />
             Nova Meta
           </Button>
+        </div>
       </div>
 
       {/* Stats */}
