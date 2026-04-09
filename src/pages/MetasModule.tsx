@@ -21,7 +21,7 @@ import { MetasIndicadoresConfig } from "@/components/metas/MetasIndicadoresConfi
 import { MetasConsistenciaPanel } from "@/components/metas/MetasConsistenciaPanel";
 import { MetasConsolidacaoPanel } from "@/components/metas/MetasConsolidacaoPanel";
 import { MetasChatAssistente } from "@/components/metas/MetasChatAssistente";
-import { MetasGuidePanel } from "@/components/metas/MetasGuidePanel";
+import { GuiaRapidoMetas } from "@/components/metas/GuiaRapidoMetas";
 import type { MetaCompleta, MetaNivel } from "@/types/metas-module";
 import { useAvaliacaoPermissoes } from "@/hooks/useAvaliacaoPermissoes";
 
@@ -33,6 +33,7 @@ export default function Metas() {
   const [editingMeta, setEditingMeta] = useState<MetaCompleta | null>(null);
   const [detailMeta, setDetailMeta] = useState<MetaCompleta | null>(null);
   const [desdobramentoMeta, setDesdobramentoMeta] = useState<MetaCompleta | null>(null);
+  const [showGuia, setShowGuia] = useState(false);
 
   const { podeVerConfiguracoes } = useAvaliacaoPermissoes();
 
@@ -91,6 +92,10 @@ export default function Metas() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setShowGuia(true)} className="gap-1.5">
+            <BookOpen className="h-4 w-4" />
+            Guia Rápido
+          </Button>
           <Button id="btn-nova-meta" onClick={() => openForm(tab === "dashboard" || tab === "consolidacao" || tab === "chat" || tab === "indicadores" || tab === "config" ? "estrategica" : (tab as MetaNivel))} className="gap-1.5">
             <Plus className="h-4 w-4" />
             Nova Meta
@@ -119,9 +124,6 @@ export default function Metas() {
           </TabsTrigger>
           <TabsTrigger id="tab-metas-chat" value="chat" className="gap-1">
             <MessageSquare className="w-4 h-4" /> Assistente IA
-          </TabsTrigger>
-          <TabsTrigger id="tab-metas-guia" value="guia" className="gap-1">
-            <BookOpen className="w-4 h-4" /> Guia Completo
           </TabsTrigger>
           {podeVerConfiguracoes && (
             <>
@@ -167,11 +169,6 @@ export default function Metas() {
         {/* Chat IA */}
         <TabsContent value="chat">
           <MetasChatAssistente metas={metas} />
-        </TabsContent>
-
-        {/* Guia Completo */}
-        <TabsContent value="guia">
-          <MetasGuidePanel />
         </TabsContent>
 
         {/* Indicadores */}
@@ -224,6 +221,9 @@ export default function Metas() {
         onCriarMetas={handleDesdobrarConfirm}
         isDesdobrando={isDesdobrando}
       />
+
+      {/* Guia Rápido */}
+      <GuiaRapidoMetas open={showGuia} onOpenChange={setShowGuia} />
     </motion.div>
   );
 }
