@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle, Pencil, Check, X, AlertTriangle, Sparkles } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Link2, Wrench, Users, ExternalLink, HelpCircle, Pencil, Check, X, AlertTriangle, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAprendizado } from "@/hooks/useAprendizado";
+import { usePopAtividade } from "@/hooks/usePopAtividade";
 import { PopSection } from "./PopSection";
+import { GerarPopsEmLoteModal } from "./GerarPopsEmLoteModal";
 import { AudioAtividadesImport } from "./AudioAtividadesImport";
 import { TextoAtividadesImport } from "./TextoAtividadesImport";
 import type { FuncaoAtividade } from "@/types/aprendizado";
@@ -35,7 +37,10 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
     ferramentas, criarFerramenta, excluirFerramenta,
   } = useAprendizado(cargoId);
 
+  const { getPopByAtividade, criarPop, gerarPopIA } = usePopAtividade(cargoId, funcaoNome);
+
   const [showForm, setShowForm] = useState(false);
+  const [showLoteModal, setShowLoteModal] = useState(false);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [frequencia, setFrequencia] = useState("diaria");
@@ -119,6 +124,17 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
               }
             }}
           />
+          {(() => {
+            const semPop = atividades.filter(a => !getPopByAtividade(a.id));
+            if (semPop.length > 0) {
+              return (
+                <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowLoteModal(true)}>
+                  <Zap className="w-4 h-4" /> Gerar POPs ({semPop.length})
+                </Button>
+              );
+            }
+            return null;
+          })()}
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             <Plus className="w-4 h-4 mr-1" /> Atividade
           </Button>
@@ -486,6 +502,28 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
           </div>
         ));
       })()}
+
+      <GerarPopsEmLoteModal
+        open={showLoteModal}
+        onClose={() => setShowLoteModal(false)}
+        atividadesSemPop={atividades
+          .filter(a => !getPopByAtividade(a.id))
+          .map(a => {
+            const atResp = responsabilidades.find(r => r.atividade_id === a.id);
+            const atFerr = ferramentas.filter(f => f.atividade_id === a.id);
+            const atCont = conteudos.filter(c => c.atividade_id === a.id);
+            return {
+              atividade: a,
+              responsabilidade: atResp,
+              ferramentas: atFerr.map(f => `${f.nome} (${TIPO_FERRAMENTA_LABELS[f.tipo]})`).join(", ") || undefined,
+              conteudos: atCont.map(c => `${c.titulo} (${TIPO_CONTEUDO_LABELS[c.tipo]})`).join(", ") || undefined,
+            };
+          })}
+        funcaoNome={funcaoNome}
+        nivel={nivel}
+        gerarPopIA={gerarPopIA}
+        criarPop={criarPop}
+      />
     </div>
   );
 }
