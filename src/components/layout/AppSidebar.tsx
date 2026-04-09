@@ -322,7 +322,7 @@ const CollapsibleSection = ({
         </div>
         <p
           className={cn(
-            "flex-1 text-left text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors",
+            "flex-1 text-left text-[13px] font-semibold tracking-[0.02em] transition-colors",
             hasActiveChild
               ? "text-sidebar-foreground/80"
               : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
