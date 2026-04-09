@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import {
   Target, MoreVertical, TrendingUp, Eye, Trash2, Edit,
   AlertTriangle, CheckCircle2,
@@ -250,8 +251,9 @@ export function MetasListView({
                       ))}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => {
-                          if (confirm("Tem certeza?")) onDelete?.(meta.id);
+                        onClick={async () => {
+                          const confirmed = await confirm({ title: "Excluir meta", description: "Tem certeza que deseja excluir esta meta?", confirmLabel: "Excluir" });
+                          if (confirmed) onDelete?.(meta.id);
                         }}
                         className="gap-2 text-destructive"
                       >

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -153,8 +154,9 @@ export function MetasIndicadoresConfig() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(ind); setShowForm(true); }}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
-                    if (confirm("Excluir este indicador?")) deleteMutation.mutate(ind.id);
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={async () => {
+                    const confirmed = await confirm({ title: "Excluir indicador", description: "Excluir este indicador?", confirmLabel: "Excluir" });
+                    if (confirmed) deleteMutation.mutate(ind.id);
                   }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>

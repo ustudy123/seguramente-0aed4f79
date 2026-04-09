@@ -134,7 +134,8 @@ export function JornadaDocumentos() {
   };
 
   const handleDelete = async (doc: Documento) => {
-    if (!confirm("Excluir este documento?")) return;
+    const confirmed = await confirm({ title: "Excluir documento", description: "Excluir este documento?", confirmLabel: "Excluir" });
+    if (!confirmed) return;
     await supabase.storage.from("jornada-documentos").remove([doc.arquivo_url]);
     await supabase.from("jornada_documentos").delete().eq("id", doc.id);
     toast.success("Documento excluído");
