@@ -16,54 +16,60 @@ const actions = [
     description: "Cadastrar admissão",
     icon: UserPlus,
     path: "/admissao",
-    iconColor: "text-blue-600",
-    gradient: "from-blue-50 via-blue-100/60 to-blue-50",
-    shadowColor: "hover:shadow-blue-200/50",
+    iconColor: "text-white",
+    gradient: "from-blue-500 to-blue-600",
+    borderColor: "border-blue-400/30",
+    iconBg: "bg-blue-400/30",
   },
   {
     title: "Registrar Ponto",
     description: "Marcação manual",
     icon: Clock,
     path: "/ponto",
-    iconColor: "text-cyan-600",
-    gradient: "from-cyan-50 via-cyan-100/60 to-cyan-50",
-    shadowColor: "hover:shadow-cyan-200/50",
+    iconColor: "text-white",
+    gradient: "from-cyan-500 to-teal-600",
+    borderColor: "border-cyan-400/30",
+    iconBg: "bg-cyan-400/30",
   },
   {
     title: "Solicitar Férias",
     description: "Nova solicitação",
     icon: Calendar,
     path: "/ferias",
-    iconColor: "text-emerald-600",
-    gradient: "from-emerald-50 via-emerald-100/60 to-emerald-50",
-    shadowColor: "hover:shadow-emerald-200/50",
+    iconColor: "text-white",
+    gradient: "from-emerald-500 to-green-600",
+    borderColor: "border-emerald-400/30",
+    iconBg: "bg-emerald-400/30",
   },
   {
     title: "Nova Avaliação",
     description: "Iniciar ciclo",
     icon: Star,
     path: "/avaliacoes",
-    iconColor: "text-amber-600",
-    gradient: "from-amber-50 via-amber-100/60 to-amber-50",
-    shadowColor: "hover:shadow-amber-200/50",
+    iconColor: "text-white",
+    gradient: "from-amber-500 to-orange-600",
+    borderColor: "border-amber-400/30",
+    iconBg: "bg-amber-400/30",
   },
   {
     title: "Documentos",
     description: "Upload de arquivos",
     icon: FileText,
     path: "/documentos",
-    iconColor: "text-purple-600",
-    gradient: "from-purple-50 via-purple-100/60 to-purple-50",
-    shadowColor: "hover:shadow-purple-200/50",
+    iconColor: "text-white",
+    gradient: "from-purple-500 to-violet-600",
+    borderColor: "border-purple-400/30",
+    iconBg: "bg-purple-400/30",
   },
   {
     title: "Colaboradores",
     description: "Ver listagem",
     icon: Users,
     path: "/colaboradores",
-    iconColor: "text-rose-600",
-    gradient: "from-rose-50 via-rose-100/60 to-rose-50",
-    shadowColor: "hover:shadow-rose-200/50",
+    iconColor: "text-white",
+    gradient: "from-rose-500 to-pink-600",
+    borderColor: "border-rose-400/30",
+    iconBg: "bg-rose-400/30",
   },
 ];
 
@@ -89,20 +95,20 @@ export const QuickActions = () => {
             <Link
               to={action.path}
               className={cn(
-                "relative flex flex-col items-center gap-2.5 p-4 rounded-2xl border border-white/60 transition-all duration-300 group",
-                "bg-gradient-to-br shadow-sm hover:shadow-lg hover:-translate-y-0.5",
+                "relative flex flex-col items-center gap-2.5 p-4 rounded-2xl border transition-all duration-300 group overflow-hidden",
+                "bg-gradient-to-br shadow-md hover:shadow-xl hover:-translate-y-1",
                 action.gradient,
-                action.shadowColor
+                action.borderColor
               )}
             >
-              <div className="absolute inset-0 rounded-2xl bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 flex flex-col items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-white/70 shadow-sm group-hover:shadow-md transition-shadow">
+                <div className={cn("p-2 rounded-xl transition-shadow", action.iconBg)}>
                   <action.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", action.iconColor)} />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-semibold text-foreground">{action.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{action.description}</p>
+                  <p className="text-xs font-semibold text-white">{action.title}</p>
+                  <p className="text-[10px] text-white/75 mt-0.5">{action.description}</p>
                 </div>
               </div>
             </Link>
