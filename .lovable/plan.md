@@ -1,85 +1,80 @@
 
 
-## Análise da Redundância no Dashboard
+## Análise Multi-Tenant: Status Atual e Correções Necessárias
 
-### Problema identificado
+### Diagnóstico Geral
 
-O dashboard atual tem **5 seções**:
-1. **PilaresSummaryLive** — resumo compacto dos 4 pilares (Maturidade + Score geral)
-2. **QuickActions** — 6 botões de ação rápida
-3. **DashboardPilares** — cards coloridos detalhados dos mesmos 4 pilares (repete Maturidade, métricas)
-4. **RecentActivity** — sempre vazio ("Nenhuma atividade registrada")
-5. **PendingTasks** — pendências (já existe módulo dedicado /pendencias)
+O sistema **já está funcionando em multi-tenant** na maior parte. A arquitetura base é sólida:
+- 277 tabelas, todas com RLS habilitado
+- Coluna `tenant_id` presente em praticamente todas as tabelas operacionais
+- Função `get_user_tenant_id()` (SECURITY DEFINER) usada nas políticas RLS
+- Código filtra por `tenant_id` em todas as queries dos hooks
 
-A seção 3 (DashboardPilares) é **completamente redundante** com a seção 1 (PilaresSummaryLive) — ambas mostram os mesmos 4 pilares, mesmos scores de maturidade, mesmos dados. A seção 4 (RecentActivity) está sempre vazia e não agrega valor.
+No entanto, a auditoria de segurança identificou **8 vulnerabilidades** que comprometem o isolamento multi-tenant.
 
-### Proposta de Reestruturação
+---
 
-Remover as seções redundantes e substituí-las por informações operacionais realmente úteis:
+### Vulnerabilidades Encontradas (por prioridade)
 
-```text
-┌──────────────────────────────────────────────┐
-│  Header (Dashboard + data)                   │
-├──────────────────────────────────────────────┤
-│  Governança do Trabalho Humano               │
-│  (PilaresSummaryLive - MANTÉM como está)     │
-├──────────────────────────────────────────────┤
-│  KPIs Operacionais (NOVO)                    │
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐  │
-│  │Colab│ │Admis│ │EPIs │ │Docs │ │Aval │ │Metas│
-│  │ ativos│ pend│ baixo│ pend│ pend│ ativas│  │
-│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘  │
-├──────────────────────────────────────────────┤
-│  Ações Rápidas (MANTÉM)                      │
-├───────────────────────┬──────────────────────┤
-│  Pendências (2/3)     │ Alertas Críticos(1/3)│
-│  (MANTÉM)             │ (NOVO - EPIs vencidos│
-│                       │  docs expirados, etc)│
-└───────────────────────┴──────────────────────┘
-```
+#### 1. CRÍTICO — Storage sem isolamento de tenant
+**Problema:** 8 buckets de storage permitem que qualquer usuário autenticado acesse arquivos de **qualquer tenant**:
+- `documentos` (policy ampla anula a policy com tenant)
+- `sst-documentos`, `pdi-evidencias`, `esocial-certificados`, `hub-contabil`, `jornada-documentos`, `eventos-sst`, `ergonomia-evidencias`
 
-### Mudanças detalhadas
+**Correção:** Remover policies permissivas e manter apenas policies com `(storage.foldername(name))[1] = (get_user_tenant_id())::text`
 
-**1. Remover: DashboardPilares (seção "Detalhamento por Pilar")**
-- Totalmente redundante com PilaresSummaryLive
-- Os dados detalhados já são acessíveis clicando nos pilares do resumo (abre modal IndicatorDetailModal)
+#### 2. CRÍTICO — OTPs do Psicossocial expostos publicamente
+**Problema:** Tabela `psicossocial_otp_verificacao` permite leitura anônima de códigos OTP, permitindo que qualquer pessoa veja códigos de verificação.
 
-**2. Remover: RecentActivity**
-- Componente sempre vazio, sem integração real com dados
+**Correção:** Restringir policy SELECT para exigir match de `campanha_id` + `telefone_hash`
 
-**3. Novo: KPIs Operacionais**
-- Linha de cards compactos com números-chave do dia-a-dia:
-  - **Colaboradores Ativos** (total da empresa ativa)
-  - **Admissões Pendentes** (já disponível em `useDashboardData`)
-  - **EPIs Estoque Baixo** (já disponível)
-  - **Documentos Pendentes** (do `usePendencias`)
-  - **Avaliações Pendentes** (do `usePendencias`)
-  - **Metas Ativas** (query ao `metas_module`)
-- Cada card é clicável e leva ao módulo correspondente
+#### 3. CRÍTICO — Convites do Questionário com CPF/Nome públicos
+**Problema:** Tabela `questionario_psicossocial_convites` tem policy `USING (true)` que expõe CPFs e nomes de colaboradores.
 
-**4. Novo: Alertas Críticos (substituindo RecentActivity)**
-- Card compacto listando itens que requerem atenção imediata:
-  - EPIs vencidos ou em estoque crítico
-  - Documentos próximos do vencimento
-  - Ouvidoria pendente
-  - Riscos ergonômicos ativos
-- Dados já disponíveis via `useDashboardData` e `usePendencias`
+**Correção:** Criar RPC SECURITY DEFINER para busca por token, remover SELECT público
 
-### Arquivos impactados
+#### 4. MODERADO — 2 policies com `WITH CHECK (true)` 
+**Problema:** Existem policies INSERT/UPDATE permissivas demais em 2 tabelas (provavelmente marketplace_avaliacoes e outra).
 
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/Dashboard.tsx` | Reestruturar layout: remover DashboardPilares e RecentActivity, adicionar novos componentes |
-| `src/components/dashboard/DashboardKPIs.tsx` | **Criar** — cards de KPIs operacionais |
-| `src/components/dashboard/AlertasCriticos.tsx` | **Criar** — lista de alertas que precisam de ação |
-| `src/hooks/useDashboardData.ts` | Adicionar query para metas ativas e colaboradores |
-| `src/components/dashboard/DashboardPilares.tsx` | Pode ser mantido no código mas removido do Dashboard |
-| `src/components/dashboard/RecentActivity.tsx` | Sem uso, removido do Dashboard |
+**Correção:** Adicionar condição de tenant_id ou user_id
 
-### Resultado
+#### 5. MODERADO — Proteção contra senhas vazadas desabilitada
+**Problema:** Recurso do Supabase Auth não está ativado.
 
-- Dashboard mais enxuto e focado no que importa operacionalmente
-- Sem duplicação de informação
-- KPIs acionáveis com navegação direta
-- Alertas que demandam ação imediata em destaque
+**Correção:** Ativar manualmente no painel Supabase (Auth > Settings)
+
+---
+
+### Plano de Implementação
+
+#### Migração SQL 1 — Corrigir Storage (8 buckets)
+- DROP das policies permissivas sem tenant check no bucket `documentos`
+- Criar/atualizar policies nos 7 buckets restantes adicionando `(storage.foldername(name))[1] = (get_user_tenant_id())::text`
+
+#### Migração SQL 2 — Corrigir Psicossocial OTP
+- DROP da policy anon SELECT atual em `psicossocial_otp_verificacao`
+- Criar RPC `verificar_otp(p_campanha_id, p_telefone_hash, p_codigo)` SECURITY DEFINER
+- Atualizar código frontend para usar a RPC
+
+#### Migração SQL 3 — Corrigir Convites Questionário
+- DROP da policy `USING (true)` em `questionario_psicossocial_convites`
+- Criar RPC `buscar_convite_por_token(p_token)` SECURITY DEFINER
+- Atualizar código frontend
+
+#### Migração SQL 4 — Corrigir policies `WITH CHECK (true)`
+- Identificar as 2 tabelas exatas e adicionar condições de tenant
+
+#### Passo Manual (usuário)
+- Ativar "Leaked Password Protection" no painel Supabase Auth
+
+---
+
+### Detalhes Técnicos
+
+**Arquivos a editar no código:**
+- Componentes/hooks que fazem queries em `psicossocial_otp_verificacao` — migrar para RPC
+- Componentes/hooks que buscam `questionario_psicossocial_convites` por token — migrar para RPC
+- Hooks de upload de storage — garantir que o path inclui `tenantId/` como primeiro segmento
+
+**Estimativa:** 4 migrações SQL + ~4-6 arquivos de código
 
