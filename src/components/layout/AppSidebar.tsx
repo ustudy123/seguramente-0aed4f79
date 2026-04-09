@@ -533,6 +533,18 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
             </NavLink>
 
 
+            {/* Estrutura Organizacional first */}
+            {filteredSections.filter(s => s.label === "Estrutura Organizacional").map((section) => (
+              <CollapsibleSection
+                key={section.label}
+                section={section}
+                isCollapsed={isCollapsed}
+                isOpen={!!openSections[section.label]}
+                onToggle={() => toggleSection(section.label)}
+                onNavigate={isMobile ? onClose : undefined}
+              />
+            ))}
+
             <NavLink
               to="/estrategia"
               onClick={isMobile ? onClose : undefined}
@@ -549,7 +561,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
               {!isCollapsed && <span className="text-[13px]">Estratégia & Governança</span>}
             </NavLink>
 
-            {filteredSections.map((section) => (
+            {filteredSections.filter(s => s.label !== "Estrutura Organizacional").map((section) => (
               <div key={section.label}>
                 <CollapsibleSection
                   section={section}
