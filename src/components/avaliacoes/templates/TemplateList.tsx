@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { 
   Plus, 
   FileText, 
@@ -35,7 +36,8 @@ export function TemplateList() {
   const [editingTemplate, setEditingTemplate] = useState<AvaliacaoTemplate | null>(null);
 
   const handleDelete = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este template?")) {
+    const confirmed = await confirm({ title: "Excluir template", description: "Tem certeza que deseja excluir este template?", confirmLabel: "Excluir" });
+    if (confirmed) {
       await deleteTemplate(id);
     }
   };

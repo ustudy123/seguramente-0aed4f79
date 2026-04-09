@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { confirm } from "@/components/ui/confirm-dialog";
 import { ArrowLeft, Plus, Pencil, Trash2, BookOpen, FolderOpen, Play, Eye, GripVertical, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,7 +113,7 @@ export function AcademiaAdmin({ onBack }: Props) {
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModuloForm(modulo); setModuloDialog(true); }}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { if (confirm('Remover módulo e suas aulas?')) deletarItem.mutate({ tabela: 'academia_modulos', id: modulo.id }); }}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={async () => { const ok = await confirm({ title: "Remover módulo", description: "Remover módulo e suas aulas?", confirmLabel: "Remover" }); if (ok) deletarItem.mutate({ tabela: 'academia_modulos', id: modulo.id }); }}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setAulaForm({ modulo_id: modulo.id }); setAulaDialog(true); }}>
@@ -130,7 +131,7 @@ export function AcademiaAdmin({ onBack }: Props) {
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setAulaForm(aula); setAulaDialog(true); }}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { if (confirm('Remover aula?')) deletarItem.mutate({ tabela: 'academia_aulas', id: aula.id }); }}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={async () => { const ok = await confirm({ title: "Remover aula", description: "Remover esta aula?", confirmLabel: "Remover" }); if (ok) deletarItem.mutate({ tabela: 'academia_aulas', id: aula.id }); }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
@@ -190,7 +191,7 @@ export function AcademiaAdmin({ onBack }: Props) {
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setTreinoForm(t); setTreinoDialog(true); }}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { if (confirm('Remover treinamento?')) deletarItem.mutate({ tabela: 'academia_treinamentos', id: t.id }); }}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={async () => { const ok = await confirm({ title: "Remover treinamento", description: "Remover este treinamento?", confirmLabel: "Remover" }); if (ok) deletarItem.mutate({ tabela: 'academia_treinamentos', id: t.id }); }}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>

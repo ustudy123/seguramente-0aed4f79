@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { 
   Plus, 
   Calendar, 
@@ -61,7 +62,8 @@ export function CicloList() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este ciclo?")) {
+    const confirmed = await confirm({ title: "Excluir ciclo", description: "Tem certeza que deseja excluir este ciclo?", confirmLabel: "Excluir" });
+    if (confirmed) {
       await deleteCiclo(id);
     }
   };

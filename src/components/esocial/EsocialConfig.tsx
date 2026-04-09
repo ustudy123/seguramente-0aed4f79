@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -311,8 +312,9 @@ export function EsocialConfig() {
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive h-8 w-8"
-                        onClick={() => {
-                          if (confirm("Remover este certificado?")) deleteCert.mutate(cert.id);
+                        onClick={async () => {
+                          const ok = await confirm({ title: "Remover certificado", description: "Remover este certificado?", confirmLabel: "Remover" });
+                          if (ok) deleteCert.mutate(cert.id);
                         }}
                       >
                         <Trash2 className="w-4 h-4" />

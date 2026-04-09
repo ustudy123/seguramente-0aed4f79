@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { motion } from "framer-motion";
 import {
   Plus, Pencil, Trash2, Loader2, Copy, ToggleLeft, ToggleRight,
@@ -131,8 +132,9 @@ export function OnboardingTemplateList({ onSelect, onNew, onEdit }: Props) {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => {
-                      if (confirm("Remover este template?")) excluirTemplate(t.id);
+                    onClick={async () => {
+                      const ok = await confirm({ title: "Remover template", description: "Remover este template?", confirmLabel: "Remover" });
+                      if (ok) excluirTemplate(t.id);
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />

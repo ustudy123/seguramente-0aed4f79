@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Plus, Pencil, Trash2, GripVertical, Loader2,
@@ -136,7 +137,7 @@ export function OnboardingTemplateDetail({ template, onBack, onEdit }: Props) {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => { if (confirm("Remover esta etapa?")) excluirEtapa(etapa.id); }}
+                          onClick={async () => { const confirmed = await confirm({ title: "Remover etapa", description: "Remover esta etapa?", confirmLabel: "Remover" }); if (confirmed) excluirEtapa(etapa.id); }}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>

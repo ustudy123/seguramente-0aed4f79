@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { 
   Plus, Target, TrendingUp, MoreVertical, Trash2, Edit,
   ChevronDown, ChevronRight, CheckCircle2, Clock, AlertCircle,
@@ -60,7 +61,8 @@ export function MetasList() {
   };
 
   const handleDeleteMeta = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir esta meta e todos os seus OKRs?")) {
+    const confirmed = await confirm({ title: "Excluir meta", description: "Tem certeza que deseja excluir esta meta e todos os seus OKRs?", confirmLabel: "Excluir" });
+    if (confirmed) {
       await deleteMeta(id);
     }
   };
@@ -82,7 +84,8 @@ export function MetasList() {
   };
 
   const handleDeleteOkr = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este Resultado-Chave?")) {
+    const confirmed = await confirm({ title: "Excluir Resultado-Chave", description: "Tem certeza que deseja excluir este Resultado-Chave?", confirmLabel: "Excluir" });
+    if (confirmed) {
       await deleteOkr(id);
     }
   };
