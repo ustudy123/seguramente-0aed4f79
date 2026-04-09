@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePonto } from "@/hooks/usePonto";
 import { usePontoFechamento } from "@/hooks/usePontoFechamento";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { format } from "date-fns";
 import { FileDown, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -67,8 +68,7 @@ export function PontoRelatoriosTab() {
     const lastDay2 = new Date(endYear2, endMonth2, 0).getDate();
     const endDate2 = `${competencia}-${String(lastDay2).padStart(2, "0")}`;
 
-    const { data: marcacoes, error } = await supabase
-      .from("ponto_marcacoes" as never)
+    const { data: marcacoes, error } = await fromTable("ponto_marcacoes")
       .select("*")
       .gte("data_marcacao", startDate2)
       .lte("data_marcacao", endDate2)

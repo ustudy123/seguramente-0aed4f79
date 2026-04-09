@@ -69,7 +69,7 @@ export function QuizPerguntaForm({
         pergunta: texto,
         opcoes: validOpcoes,
         resposta_correta: respostaCorreta,
-      } as never);
+      } as any);
     } else {
       await criarPergunta({
         modulo_id: moduloId,

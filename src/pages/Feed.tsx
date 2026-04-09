@@ -10,6 +10,7 @@ import { PostCard } from "@/components/feed/PostCard";
 import { useFeed } from "@/hooks/useFeed";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_COLORS, STATUS_ACAO_LABELS } from "@/types/cultura";
 import { format, parseISO, differenceInDays, setYear, addYears, startOfDay } from "date-fns";
@@ -82,8 +83,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     queryKey: ["lembretes-dispensados", tenantId, userId],
     queryFn: async () => {
       if (!tenantId || !userId) return [];
-      const { data, error } = await (supabase as any)
-        .from("lembretes_dispensados")
+      const { data, error } = await fromTable("lembretes_dispensados")
         .select("chave")
         .eq("tenant_id", tenantId)
         .eq("usuario_id", userId);
@@ -95,7 +95,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
 
   const dispensar = async (chave: string) => {
     if (!tenantId || !userId) return;
-    await (supabase as any).from("lembretes_dispensados").insert({
+    await fromTable("lembretes_dispensados").insert({
       tenant_id: tenantId,
       usuario_id: userId,
       chave,
@@ -106,8 +106,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     queryKey: ["cultura-acoes-mural", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from("cultura_acoes")
+      const { data, error } = await fromTable("cultura_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("status", ["pendente", "em_andamento"])
@@ -123,8 +122,7 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     queryKey: ["mural-admissoes-auto", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from("admissoes")
+      const { data, error } = await fromTable("admissoes")
         .select("id, nome_completo, data_nascimento, data_admissao, cargo")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");

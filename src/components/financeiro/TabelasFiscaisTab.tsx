@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,8 +50,7 @@ export default function TabelasFiscaisTab() {
     queryKey: ["tabelas-fiscais", tenantId],
     queryFn: async (): Promise<TabelaFiscal[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
-        .from("tabelas_fiscais" as never)
+      const { data, error } = await fromTable("tabelas_fiscais")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("vigencia_inicio", { ascending: false }) as { data: any[] | null; error: Error | null };
@@ -66,8 +66,7 @@ export default function TabelasFiscaisTab() {
   const criarMutation = useMutation({
     mutationFn: async () => {
       if (!tenantId) throw new Error("Tenant não encontrado");
-      const { error } = await supabase
-        .from("tabelas_fiscais" as never)
+      const { error } = await fromTable("tabelas_fiscais")
         .insert({
           tenant_id: tenantId,
           tipo,
@@ -76,7 +75,7 @@ export default function TabelasFiscaisTab() {
           faixas: JSON.stringify(faixas),
           teto: teto ? parseFloat(teto) : null,
           deducao_por_dependente: deducaoDep ? parseFloat(deducaoDep) : null,
-        } as never);
+        } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -90,9 +89,8 @@ export default function TabelasFiscaisTab() {
 
   const toggleAtivoMutation = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { error } = await supabase
-        .from("tabelas_fiscais" as never)
-        .update({ ativo } as never)
+      const { error } = await fromTable("tabelas_fiscais")
+        .update({ ativo } as any)
         .eq("id", id);
       if (error) throw error;
     },

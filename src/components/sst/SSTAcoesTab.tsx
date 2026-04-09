@@ -258,7 +258,7 @@ export function SSTAcoesTab({ documentos }: Props) {
         origem_descricao: `Importado do ${doc.tipo} — ${doc.empresa_emissora || doc.arquivo_nome}`,
         criado_por: user.id,
         criado_por_nome: profile?.nome_completo || user.email,
-      } as never);
+      } as any);
       if (error) throw error;
       toast.success("Ação importada para o Plano de Ação!", {
         action: { label: "Ver Plano", onClick: () => navigate("/plano-acao") },

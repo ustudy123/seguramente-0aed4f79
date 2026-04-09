@@ -11,6 +11,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
 import { ManualCulturaModal } from "./ManualCulturaModal";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
@@ -41,8 +42,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     queryKey: ["manuais_gerados", tenantId, "cultura"],
     queryFn: async () => {
       if (!tenantId) return null;
-      const { data } = await supabase
-        .from("manuais_gerados" as never)
+      const { data } = await fromTable("manuais_gerados")
         .select("id, titulo, html, created_at")
         .eq("tenant_id", tenantId)
         .eq("tipo", "cultura")
@@ -135,13 +135,12 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const saveManualCache = async (html: string) => {
     if (!tenantId || !user) return;
     try {
-      await supabase
-        .from("manuais_gerados" as never)
+      await fromTable("manuais_gerados")
         .delete()
         .eq("tenant_id", tenantId)
         .eq("tipo", "cultura");
 
-      await supabase.from("manuais_gerados" as never).insert({
+      await fromTable("manuais_gerados").insert({
         tenant_id: tenantId,
         empresa_id: empresaAtivaId || null,
         tipo: "cultura",
@@ -150,7 +149,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         html,
         gerado_por: user.id,
         gerado_por_nome: profile?.nome_completo || "",
-      } as never);
+      } as any);
 
       refetchCached();
     } catch (err) {

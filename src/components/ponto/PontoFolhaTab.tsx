@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { usePontoFechamento } from "@/hooks/usePontoFechamento";
@@ -45,8 +46,7 @@ export function PontoFolhaTab() {
     queryKey: ["ponto-exportacoes-folha", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("ponto_exportacoes_folha" as never)
+      const { data } = await fromTable("ponto_exportacoes_folha")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
@@ -152,8 +152,7 @@ export function PontoFolhaTab() {
       }
 
       // Registrar exportação
-      await supabase
-        .from("ponto_exportacoes_folha" as never)
+      await fromTable("ponto_exportacoes_folha")
         .insert({
           tenant_id: tenantId,
           competencia,
@@ -165,7 +164,7 @@ export function PontoFolhaTab() {
           gerado_por: profile?.nome_completo,
           gerado_por_id: profile?.id,
           dados_exportados: { total: dados.length, sistema: sistemaDestino },
-        } as never);
+        } as any);
 
       queryClient.invalidateQueries({ queryKey: ["ponto-exportacoes-folha"] });
       toast.success(`Exportação gerada: ${dados.length} colaboradores`);

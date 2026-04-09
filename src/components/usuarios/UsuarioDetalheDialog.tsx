@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -121,8 +122,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     queryKey: ["usuario-perfil-vinculo", usuario.id, tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await (supabase as any)
-        .from("usuario_perfil_vinculos")
+      const { data, error } = await fromTable("usuario_perfil_vinculos")
         .select("*, perfil:perfil_id(id,nome,cor,icone,nivel_risco,descricao)")
         .eq("tenant_id", tenantId)
         .eq("usuario_id", usuario.id)
@@ -197,8 +197,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
         throw new Error("Falha ao criar acesso no sistema para este usuário.");
       }
 
-      const { error: syncError } = await (supabase as any)
-        .from("usuarios_base")
+      const { error: syncError } = await fromTable("usuarios_base")
         .update({
           auth_user_id: createdAuthUserId,
           email_validado: true,
@@ -254,8 +253,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     queryKey: ["empresas-lista", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("empresa_cadastro")
+      const { data } = await fromTable("empresa_cadastro")
         .select("id, razao_social, nome_fantasia, cnpj")
         .eq("tenant_id", tenantId)
         .order("razao_social");
@@ -267,8 +265,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   const { data: logs = [] } = useQuery({
     queryKey: ["usuario-audit", usuario.id],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("usuario_audit_log")
+      const { data } = await fromTable("usuario_audit_log")
         .select("*")
         .eq("usuario_id", usuario.id)
         .order("created_at", { ascending: false })
@@ -362,8 +359,7 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
         throw new Error("Falha ao criar acesso no sistema para este usuário.");
       }
 
-      const { error: syncError } = await (supabase as any)
-        .from("usuarios_base")
+      const { error: syncError } = await fromTable("usuarios_base")
         .update({
           auth_user_id: createdAuthUserId,
           status: "convite_enviado",

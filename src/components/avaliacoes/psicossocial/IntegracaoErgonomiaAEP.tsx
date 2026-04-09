@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
@@ -74,8 +75,7 @@ export function IntegracaoErgonomiaAEP({ campanha, ips, dimensoesCriticas = [] }
       const eixo: ErgonomiaEixo = "organizacional";
 
       // Use supabase as any to bypass strict type for insert
-      const { error } = await (supabase as any)
-        .from("ergonomia_riscos")
+      const { error } = await fromTable("ergonomia_riscos")
         .insert({
           tenant_id: tenantId,
           empresa_id: empresaAtivaId || null,

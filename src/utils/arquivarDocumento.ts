@@ -4,6 +4,7 @@
  * Creates audit log entries for traceability.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { criarPastaColaborador } from "./criarPastaColaborador";
 
 interface ArquivarDocumentoParams {
@@ -168,8 +169,7 @@ export async function arquivarDocumento(params: ArquivarDocumentoParams): Promis
     }
 
     // 5. Insert document record
-    const { data: docData, error: docError } = await supabase
-      .from("documentos" as never)
+    const { data: docData, error: docError } = await fromTable("documentos")
       .insert({
         tenant_id: tenantId,
         empresa_id: empresaId || null,
@@ -190,7 +190,7 @@ export async function arquivarDocumento(params: ArquivarDocumentoParams): Promis
         pasta_id: pastaId,
         versao_atual: 1,
         total_versoes: 1,
-      } as never)
+      } as any)
       .select("id")
       .single();
 
@@ -202,7 +202,7 @@ export async function arquivarDocumento(params: ArquivarDocumentoParams): Promis
 
     // 6. Create audit log
     try {
-      await supabase.from("documento_audit_logs" as never).insert({
+      await fromTable("documento_audit_logs").insert({
         tenant_id: tenantId,
         documento_id: (docData as any).id,
         documento_nome: fileName,
@@ -211,7 +211,7 @@ export async function arquivarDocumento(params: ArquivarDocumentoParams): Promis
         pasta_destino_nome: tipo,
         usuario_id: userId,
         usuario_nome: userNome,
-      } as never);
+      } as any);
     } catch { /* non-blocking */ }
 
     return { id: (docData as any).id, storagePath };

@@ -93,9 +93,9 @@ export function ModuloForm({ open, onOpenChange, trilhaId, modulo, nextOrdem = 0
       };
 
       if (modulo) {
-        await atualizarModulo({ id: modulo.id, ...payload } as never);
+        await atualizarModulo({ id: modulo.id, ...payload } as any);
       } else {
-        await criarModulo({ ...payload, ordem: nextOrdem } as never);
+        await criarModulo({ ...payload, ordem: nextOrdem } as any);
       }
       onOpenChange(false);
       onSuccess?.();

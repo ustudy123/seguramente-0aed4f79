@@ -153,7 +153,7 @@ export function SSTCriarAcaoModal({ open, onOpenChange, achado, documento }: SST
         criado_por_nome: profile?.nome_completo || user.email,
       };
 
-      const { error } = await supabase.from("plano_acoes").insert(payload as never);
+      const { error } = await supabase.from("plano_acoes").insert(payload as any);
       if (error) throw error;
 
       toast.success("Ação criada no Plano de Ação!", {

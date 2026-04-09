@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
@@ -46,8 +47,7 @@ export default function UsuariosContent() {
     queryKey: ["empresas-lista", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("empresa_cadastro")
+      const { data } = await fromTable("empresa_cadastro")
         .select("id, razao_social, nome_fantasia")
         .eq("tenant_id", tenantId)
         .order("razao_social");
@@ -61,8 +61,7 @@ export default function UsuariosContent() {
     queryKey: ["usuarios-perfil-vinculos-lista", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("usuario_perfil_vinculos")
+      const { data } = await fromTable("usuario_perfil_vinculos")
         .select("usuario_id, perfil:perfil_id(id,nome,cor)")
         .eq("tenant_id", tenantId)
         .eq("ativo", true);

@@ -49,6 +49,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 
 import { useDocumentoPastas } from "@/hooks/useDocumentoPastas";
 import { useAuth } from "@/hooks/useAuth";
@@ -308,8 +309,7 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
   };
 
   const fetchPopData = async (popId: string) => {
-    const { data, error } = await supabase
-      .from("funcao_pops" as never)
+    const { data, error } = await fromTable("funcao_pops")
       .select("*")
       .eq("id", popId)
       .single() as { data: any; error: any };

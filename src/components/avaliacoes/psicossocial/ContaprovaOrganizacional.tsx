@@ -9,6 +9,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import {
   AlertTriangle,
@@ -81,15 +82,13 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
       const dataRef = campanha.data_inicio || new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
 
       const [atestadosRes, afastamentosRes, totalColabRes] = await Promise.all([
-        supabase
-          .from("atestados" as never)
+        fromTable("atestados")
           .select("id, tipo, dias_afastamento, grupo_clinico, created_at")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
           .returns<{ id: string; tipo: string; dias_afastamento: number | null; grupo_clinico: string | null; created_at: string }[]>(),
 
-        supabase
-          .from("afastamentos" as never)
+        fromTable("afastamentos")
           .select("id, status, dias_totais, motivo_principal")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
@@ -124,8 +123,7 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
       if (!tenantId) return null;
       const dataRef = campanha.data_inicio || new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
 
-      const { data } = await supabase
-        .from("ponto_diario" as never)
+      const { data } = await fromTable("ponto_diario")
         .select("horas_extras_50_minutos, horas_extras_100_minutos, atraso_minutos, status")
         .eq("tenant_id", tenantId)
         .gte("data", dataRef)
@@ -191,15 +189,13 @@ export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizaci
       const dataRef = campanha.data_inicio || new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
 
       const [ocorrenciasRes, feedbacksRes] = await Promise.all([
-        supabase
-          .from("ocorrencias" as never)
+        fromTable("ocorrencias")
           .select("id, tipo, is_advertencia")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)
           .returns<{ id: string; tipo: string; is_advertencia: boolean }[]>(),
 
-        supabase
-          .from("feedbacks" as never)
+        fromTable("feedbacks")
           .select("id, categoria")
           .eq("tenant_id", tenantId)
           .gte("created_at", dataRef)

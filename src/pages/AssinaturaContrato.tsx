@@ -21,7 +21,7 @@ export default function AssinaturaContrato() {
     queryKey: ['contrato-publico', token],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('programa_validador_contratos' as never)
+        .from('programa_validador_contratos' as any)
         .select('*, programa_validador_clientes(nome_empresa, poc_nome, poc_email, onboarding_token, tenant_id)')
         .eq('token', token!)
         .single() as any;
@@ -53,26 +53,26 @@ export default function AssinaturaContrato() {
       const htmlFinal = (contrato.html_contrato || '') + blocoAssinatura;
 
       const { error } = await supabase
-        .from('programa_validador_contratos' as never)
+        .from('programa_validador_contratos' as any)
         .update({
           status: 'assinado',
           assinatura_img: assinaturaImg,
           assinado_em: agora,
           assinado_por: nome || contrato?.programa_validador_clientes?.poc_nome,
           html_assinado: htmlFinal,
-        } as never)
+        } as any)
         .eq('token', token!) as any;
 
       if (error) throw error;
 
       // Registrar no histórico
-      await supabase.from('programa_validador_historico' as never).insert({
+      await supabase.from('programa_validador_historico' as any).insert({
         cliente_id: contrato.cliente_id,
         tipo: 'contrato_assinado',
         titulo: 'Contrato assinado eletronicamente',
         descricao: `Assinado por: ${nome || contrato?.programa_validador_clientes?.poc_nome} em ${dataFormatada}`,
         autor: nome || contrato?.programa_validador_clientes?.poc_nome,
-      } as never);
+      } as any);
     },
     onSuccess: async () => {
       // Salvar no módulo de Documentos da empresa (tenant do cliente)

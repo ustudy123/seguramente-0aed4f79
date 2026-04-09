@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
 
 interface LinkTerceiroButtonProps {
@@ -26,8 +27,7 @@ export function LinkTerceiroButton({ trilhaId }: LinkTerceiroButtonProps) {
     setLoading(true);
     try {
       // Check if trilha already has a token
-      const { data: trilha } = await supabase
-        .from("trilhas" as never)
+      const { data: trilha } = await fromTable("trilhas")
         .select("token_publico, publico_terceiros")
         .eq("id", trilhaId)
         .single() as { data: { token_publico: string | null; publico_terceiros: boolean } | null; error: any };
@@ -37,15 +37,13 @@ export function LinkTerceiroButton({ trilhaId }: LinkTerceiroButtonProps) {
       if (!token) {
         // Generate new token
         token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-        const { error } = await supabase
-          .from("trilhas" as never)
-          .update({ token_publico: token, publico_terceiros: true } as never)
+        const { error } = await fromTable("trilhas")
+          .update({ token_publico: token, publico_terceiros: true } as any)
           .eq("id", trilhaId);
         if (error) throw error;
       } else if (!trilha?.publico_terceiros) {
-        await supabase
-          .from("trilhas" as never)
-          .update({ publico_terceiros: true } as never)
+        await fromTable("trilhas")
+          .update({ publico_terceiros: true } as any)
           .eq("id", trilhaId);
       }
 

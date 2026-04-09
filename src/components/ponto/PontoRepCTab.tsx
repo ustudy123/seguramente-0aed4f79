@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,8 +27,7 @@ export function PontoRepCTab() {
     queryKey: ["ponto-repc-importacoes", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("ponto_repc_importacoes" as never)
+      const { data } = await fromTable("ponto_repc_importacoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
@@ -88,8 +88,7 @@ export function PontoRepCTab() {
       const { marcacoes, erros } = processarArquivoAFD(conteudo);
 
       // Registrar importação
-      const { data: importacao, error: errImport } = await supabase
-        .from("ponto_repc_importacoes" as never)
+      const { data: importacao, error: errImport } = await fromTable("ponto_repc_importacoes")
         .insert({
           tenant_id: tenantId,
           arquivo_nome: file.name,
@@ -104,7 +103,7 @@ export function PontoRepCTab() {
           erros: erros.length > 0 ? erros : null,
           importado_por: profile?.nome_completo,
           importado_por_id: profile?.id,
-        } as never)
+        } as any)
         .select()
         .single() as { data: any; error: any };
 
@@ -114,8 +113,7 @@ export function PontoRepCTab() {
       let importados = 0;
       for (const m of marcacoes) {
         // Determinar tipo de marcação baseado na ordem do dia
-        const { data: existentes } = await supabase
-          .from("ponto_marcacoes" as never)
+        const { data: existentes } = await fromTable("ponto_marcacoes")
           .select("tipo_marcacao")
           .eq("tenant_id", tenantId)
           .eq("colaborador_cpf", m.colaborador_cpf)
@@ -128,8 +126,7 @@ export function PontoRepCTab() {
         else if (tipos.includes("retorno_almoco") && !tipos.includes("saida")) tipoMarcacao = "saida";
         else if (tipos.includes("saida")) continue; // Já tem todas as marcações
 
-        const { error: errMarcacao } = await supabase
-          .from("ponto_marcacoes" as never)
+        const { error: errMarcacao } = await fromTable("ponto_marcacoes")
           .insert({
             tenant_id: tenantId,
             colaborador_cpf: m.colaborador_cpf,
@@ -140,18 +137,17 @@ export function PontoRepCTab() {
             tipo_marcacao: tipoMarcacao,
             origem: "repc",
             ip_address: "REP-C Import",
-          } as never);
+          } as any);
 
         if (!errMarcacao) importados++;
       }
 
       // Atualizar status
-      await supabase
-        .from("ponto_repc_importacoes" as never)
+      await fromTable("ponto_repc_importacoes")
         .update({
           status: "concluido",
           registros_importados: importados,
-        } as never)
+        } as any)
         .eq("id", importacao.id);
 
       queryClient.invalidateQueries({ queryKey: ["ponto-repc-importacoes"] });

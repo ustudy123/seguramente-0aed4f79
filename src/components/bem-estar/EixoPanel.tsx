@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { EIXOS_CONFIG, type BemEstarEixo, type BemEstarResposta } from "@/hooks/useBemEstar";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EixoPanelProps {
@@ -113,10 +114,9 @@ export function EixoPanel({
 
     if (eixo === "autoconhecimento") {
       // Fetch mood history
-      supabase
-        .from("humor_diario" as never)
-        .select("humor, emoji, data, created_at" as never)
-        .eq("user_id" as never, user.id as never)
+      fromTable("humor_diario")
+        .select("humor, emoji, data, created_at" as any)
+        .eq("user_id" as never, user.id as any)
         .order("data" as never, { ascending: false })
         .limit(14)
         .then(({ data }: any) => {
@@ -126,11 +126,10 @@ export function EixoPanel({
 
     if (eixo === "autonomia") {
       // Fetch positive feedback count
-      supabase
-        .from("feedbacks" as never)
+      fromTable("feedbacks")
         .select("id" as never, { count: "exact", head: true })
-        .eq("destinatario_id" as never, user.id as never)
-        .eq("categoria" as never, "reconhecimento" as never)
+        .eq("destinatario_id" as never, user.id as any)
+        .eq("categoria" as never, "reconhecimento" as any)
         .then(({ count }: any) => {
           setFeedbackCount(count || 0);
         });

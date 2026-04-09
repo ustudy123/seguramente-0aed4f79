@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { ManualFuncaoModal } from "./ManualFuncaoModal";
@@ -44,8 +45,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     queryKey: ["manuais_gerados", tenantId, "funcao"],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("manuais_gerados" as never)
+      const { data } = await fromTable("manuais_gerados")
         .select("id, tipo, referencia_id, titulo, html, created_at")
         .eq("tenant_id", tenantId)
         .in("tipo", ["funcao", "funcao_global"])
@@ -66,8 +66,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     queryKey: ["funcao_atividades_count", tenantId],
     queryFn: async () => {
       if (!tenantId) return {};
-      const { data, error } = await supabase
-        .from("funcao_atividades" as never)
+      const { data, error } = await fromTable("funcao_atividades")
         .select("cargo_id")
         .eq("tenant_id", tenantId) as { data: { cargo_id: string }[] | null; error: Error | null };
       if (error) return {};
@@ -82,8 +81,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     queryKey: ["funcao_competencias_count", tenantId],
     queryFn: async () => {
       if (!tenantId) return {};
-      const { data, error } = await supabase
-        .from("funcao_competencias" as never)
+      const { data, error } = await fromTable("funcao_competencias")
         .select("cargo_id")
         .eq("tenant_id", tenantId) as { data: { cargo_id: string }[] | null; error: Error | null };
       if (error) return {};
@@ -98,8 +96,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     queryKey: ["funcao_epi_count", tenantId],
     queryFn: async () => {
       if (!tenantId) return {};
-      const { data, error } = await supabase
-        .from("funcao_epi_vinculacoes" as never)
+      const { data, error } = await fromTable("funcao_epi_vinculacoes")
         .select("cargo_id")
         .eq("tenant_id", tenantId) as { data: { cargo_id: string }[] | null; error: Error | null };
       if (error) return {};
@@ -132,14 +129,13 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     if (!tenantId || !user) return;
     try {
       // Upsert: delete old and insert new
-      await supabase
-        .from("manuais_gerados" as never)
+      await fromTable("manuais_gerados")
         .delete()
         .eq("tenant_id", tenantId)
         .eq("tipo", tipo)
         .eq("referencia_id", refId || "");
 
-      await supabase.from("manuais_gerados" as never).insert({
+      await fromTable("manuais_gerados").insert({
         tenant_id: tenantId,
         empresa_id: empresaAtivaId || null,
         tipo,
@@ -148,7 +144,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         html,
         gerado_por: user.id,
         gerado_por_nome: profile?.nome_completo || "",
-      } as never);
+      } as any);
 
       refetchManuais();
     } catch (err) {

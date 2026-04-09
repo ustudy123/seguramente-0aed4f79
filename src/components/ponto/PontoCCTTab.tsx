@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useTenant } from "@/hooks/useTenant";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Scale, Plus, Edit, Trash2 } from "lucide-react";
@@ -74,8 +75,7 @@ export function PontoCCTTab() {
     queryKey: ["ponto-cct-config", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await supabase
-        .from("ponto_cct_config" as never)
+      const { data } = await fromTable("ponto_cct_config")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false }) as { data: any[] | null };
@@ -128,10 +128,10 @@ export function PontoCCTTab() {
       const payload = { ...form, tenant_id: tenantId };
 
       if (editId) {
-        await supabase.from("ponto_cct_config" as never).update(payload as never).eq("id", editId);
+        await fromTable("ponto_cct_config").update(payload as any).eq("id", editId);
         toast.success("CCT atualizada!");
       } else {
-        await supabase.from("ponto_cct_config" as never).insert(payload as never);
+        await fromTable("ponto_cct_config").insert(payload as any);
         toast.success("CCT cadastrada!");
       }
 
@@ -145,7 +145,7 @@ export function PontoCCTTab() {
   };
 
   const handleExcluir = async (id: string) => {
-    await supabase.from("ponto_cct_config" as never).delete().eq("id", id);
+    await fromTable("ponto_cct_config").delete().eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["ponto-cct-config"] });
     toast.success("CCT removida");
   };

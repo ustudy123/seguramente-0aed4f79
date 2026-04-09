@@ -17,6 +17,7 @@ import { SimularAcessoDialog } from "@/components/perfis/SimularAcessoDialog";
 import { AuditLogPerfil } from "@/components/perfis/AuditLogPerfil";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function PerfisAcesso() {
@@ -43,8 +44,7 @@ export default function PerfisAcesso() {
     queryKey: ["usuarios_base_lista", tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data } = await (supabase as any)
-        .from("usuarios_base")
+      const { data } = await fromTable("usuarios_base")
         .select("id, nome_completo, email_principal")
         .eq("tenant_id", tenantId)
         .order("nome_completo");

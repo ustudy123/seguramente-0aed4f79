@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
@@ -45,8 +46,7 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
   const carregarToken = async () => {
     setLoadingToken(true);
     try {
-      const { data, error } = await supabase
-        .from("questionario_psicossocial_campanhas" as never)
+      const { data, error } = await fromTable("questionario_psicossocial_campanhas")
         .select("id, token_publico")
         .eq("id", campanha.id)
         .single() as { data: { id: string; token_publico: string | null } | null; error: any };
@@ -61,9 +61,8 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
           .map(b => b.toString(16).padStart(2, '0'))
           .join('');
 
-        const { error: updateError } = await supabase
-          .from("questionario_psicossocial_campanhas" as never)
-          .update({ token_publico: token } as never)
+        const { error: updateError } = await fromTable("questionario_psicossocial_campanhas")
+          .update({ token_publico: token } as any)
           .eq("id", campanha.id);
 
         if (updateError) throw updateError;

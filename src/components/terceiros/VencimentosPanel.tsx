@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,30 +29,26 @@ export function VencimentosPanel() {
       if (!tenantId) return [];
 
       // Fetch docs with validade
-      const { data: docs } = await supabase
-        .from("terceiro_documentos" as never)
+      const { data: docs } = await fromTable("terceiro_documentos")
         .select("id, tipo, nome, data_validade, status, terceiro_id, trabalhador_id")
         .eq("tenant_id", tenantId)
         .not("data_validade", "is", null)
         .order("data_validade");
 
       // Fetch treinamentos with validade
-      const { data: treins } = await supabase
-        .from("terceiro_treinamentos" as never)
+      const { data: treins } = await fromTable("terceiro_treinamentos")
         .select("id, tipo, descricao, data_validade, status, terceiro_id, trabalhador_id")
         .eq("tenant_id", tenantId)
         .not("data_validade", "is", null)
         .order("data_validade");
 
       // Fetch terceiro names
-      const { data: terceiros } = await supabase
-        .from("terceiros" as never)
+      const { data: terceiros } = await fromTable("terceiros")
         .select("id, razao_social")
         .eq("tenant_id", tenantId);
 
       // Fetch trabalhador names
-      const { data: trabalhadores } = await supabase
-        .from("terceiro_trabalhadores" as never)
+      const { data: trabalhadores } = await fromTable("terceiro_trabalhadores")
         .select("id, nome")
         .eq("tenant_id", tenantId);
 

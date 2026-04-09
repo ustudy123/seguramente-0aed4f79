@@ -78,9 +78,9 @@ export function OnboardingEtapaForm({ open, onOpenChange, templateId, etapa, nex
     };
     try {
       if (etapa) {
-        await atualizarEtapa({ id: etapa.id, ...payload } as never);
+        await atualizarEtapa({ id: etapa.id, ...payload } as any);
       } else {
-        await criarEtapa(payload as never);
+        await criarEtapa(payload as any);
       }
       onOpenChange(false);
     } catch {}

@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { CulturaValoresModule } from "./CulturaValoresModule";
@@ -110,9 +111,8 @@ export function PercepcaoCulturalQuiz({ trilhaId, processoId, onComplete }: Prop
         categoria: p.categoria,
       }));
 
-      const { error } = await supabase
-        .from("onboarding_percepcao_cultural" as never)
-        .insert(inserts as never);
+      const { error } = await fromTable("onboarding_percepcao_cultural")
+        .insert(inserts as any);
       if (error) throw error;
 
       setSubmitted(true);
