@@ -37,7 +37,10 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
     ferramentas, criarFerramenta, excluirFerramenta,
   } = useAprendizado(cargoId);
 
+  const { getPopByAtividade, criarPop, gerarPopIA } = usePopAtividade(cargoId, funcaoNome);
+
   const [showForm, setShowForm] = useState(false);
+  const [showLoteModal, setShowLoteModal] = useState(false);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [frequencia, setFrequencia] = useState("diaria");
