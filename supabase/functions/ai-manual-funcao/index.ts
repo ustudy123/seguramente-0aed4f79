@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { getCompanyContext } from '../_shared/ai-helper.ts'
+import { getCompanyContext } from '../_shared/ai-helper.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,10 +45,10 @@ Deno.serve(async (req) => {
 
     const nomeEmpresa = empresa_nome || tenant?.nome || "Nossa Empresa";
 
-    // Fetch cargos
+    // Fetch cargos with new fields
     let cargosQuery = supabase
       .from("cargos")
-      .select("id, nome, nivel, descricao, responsabilidade")
+      .select("id, nome, nivel, descricao, responsabilidade, subordinacao, interfaces_cargo, objetivo_funcao, escopo_geral, padroes_execucao, cultura_esperada, erros_riscos, criterios_sucesso, ferramentas_cargo")
       .eq("tenant_id", tenantId)
       .eq("ativo", true)
       .order("nome");
@@ -67,13 +67,13 @@ Deno.serve(async (req) => {
 
     const cargoIds = cargos.map((c: any) => c.id);
 
-    // Fetch related data (WITHOUT POPs and conteúdos - manual focuses on structure only)
-    const [atividadesRes, competenciasRes, episRes, responsabilidadesRes, indicadoresRes] = await Promise.all([
+    const [atividadesRes, competenciasRes, episRes, responsabilidadesRes, indicadoresRes, ferramentasRes] = await Promise.all([
       supabase.from("funcao_atividades").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
       supabase.from("funcao_competencias").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
       supabase.from("funcao_epi_vinculacoes").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
       supabase.from("funcao_responsabilidades").select("*").eq("tenant_id", tenantId),
       supabase.from("funcao_indicadores").select("*").eq("tenant_id", tenantId).in("cargo_id", cargoIds),
+      supabase.from("funcao_ferramentas").select("*").eq("tenant_id", tenantId),
     ]);
 
     const atividades = atividadesRes.data || [];
@@ -81,8 +81,9 @@ Deno.serve(async (req) => {
     const epis = episRes.data || [];
     const responsabilidades = responsabilidadesRes.data || [];
     const indicadores = indicadoresRes.data || [];
+    const ferramentas = ferramentasRes.data || [];
 
-    // Build per-cargo sections
+    // Build per-cargo sections with 13-section model
     const cargoSections = cargos.map((cargo: any) => {
       const cargoAtividades = atividades.filter((a: any) => a.cargo_id === cargo.id);
       const cargoCompetencias = competencias.filter((c: any) => c.cargo_id === cargo.id);
@@ -91,24 +92,45 @@ Deno.serve(async (req) => {
 
       const atividadeIds = cargoAtividades.map((a: any) => a.id);
       const cargoResponsabilidades = responsabilidades.filter((r: any) => atividadeIds.includes(r.atividade_id));
+      const cargoFerramentas = ferramentas.filter((f: any) => atividadeIds.includes(f.atividade_id));
 
-      // Atividades resumidas (SEM passo a passo, SEM POPs)
-      const atividadesText = cargoAtividades.map((a: any) => {
-        const resp = cargoResponsabilidades.find((r: any) => r.atividade_id === a.id);
+      // Group activities by process
+      const processos = new Map<string, any[]>();
+      cargoAtividades.forEach((a: any) => {
+        const proc = a.processo || "Geral";
+        if (!processos.has(proc)) processos.set(proc, []);
+        processos.get(proc)!.push(a);
+      });
 
-        let text = `  - ${a.nome} (Frequência: ${a.frequencia}, Complexidade: ${a.complexidade}, Classificação: ${a.classificacao})`;
-        if (a.descricao) text += `\n    Descrição: ${a.descricao}`;
-        if (resp?.responsavel_direto) text += `\n    Responsável Direto: ${resp.responsavel_direto}`;
-        if (resp?.interfaces) text += `\n    Interfaces: ${resp.interfaces}`;
-
-        return text;
+      const atividadesText = Array.from(processos.entries()).map(([proc, atvs]) => {
+        const items = atvs.map((a: any) => {
+          const resp = cargoResponsabilidades.find((r: any) => r.atividade_id === a.id);
+          let text = `    - ${a.nome} (Freq: ${a.frequencia}, Compl: ${a.complexidade}, Class: ${a.classificacao})`;
+          if (a.descricao) text += `\n      O que: ${a.descricao}`;
+          if (a.como) text += `\n      Como: ${a.como}`;
+          if (a.resultado_esperado) text += `\n      Resultado: ${a.resultado_esperado}`;
+          if (resp?.responsavel_direto) text += `\n      Responsável: ${resp.responsavel_direto}`;
+          if (resp?.interfaces) text += `\n      Interfaces: ${resp.interfaces}`;
+          if (resp?.consequencia_erro) text += `\n      Consequência de erro: ${resp.consequencia_erro}`;
+          return text;
+        }).join("\n\n");
+        return `  🔹 Processo: ${proc}\n${items}`;
       }).join("\n\n") || "  (nenhuma atividade cadastrada)";
 
-      // Competências organizadas por tipo
+      // Routine grouped by frequency
+      const rotina: Record<string, string[]> = { diaria: [], semanal: [], mensal: [], eventual: [] };
+      cargoAtividades.forEach((a: any) => {
+        if (rotina[a.frequencia]) rotina[a.frequencia].push(a.nome);
+      });
+      const rotinaText = Object.entries(rotina)
+        .filter(([, items]) => items.length > 0)
+        .map(([freq, items]) => `  ${freq.charAt(0).toUpperCase() + freq.slice(1)}:\n${items.map(i => `    - ${i}`).join("\n")}`)
+        .join("\n") || "  (sem rotina definida)";
+
+      // Competências by type
       const compTecnicas = cargoCompetencias.filter((c: any) => c.tipo === "tecnica");
       const compComportamentais = cargoCompetencias.filter((c: any) => c.tipo === "comportamental");
       const compCognitivas = cargoCompetencias.filter((c: any) => c.tipo === "cognitiva");
-
       const formatComp = (list: any[]) => list.map((c: any) =>
         `    - ${c.nome}${c.descricao ? `: ${c.descricao}` : ""}`
       ).join("\n") || "    (nenhuma)";
@@ -116,45 +138,76 @@ Deno.serve(async (req) => {
       const competenciasText = `  Técnicas (${compTecnicas.length}):\n${formatComp(compTecnicas)}\n  Comportamentais (${compComportamentais.length}):\n${formatComp(compComportamentais)}\n  Cognitivas (${compCognitivas.length}):\n${formatComp(compCognitivas)}`;
 
       const episText = cargoEpis.map((e: any) =>
-        `  - ${e.epi_tipo_nome || "EPI"} (${e.obrigatoriedade})${e.epi_tipo_categoria ? ` — Categoria: ${e.epi_tipo_categoria}` : ""}`
+        `  - ${e.epi_tipo_nome || "EPI"} (${e.obrigatoriedade})${e.epi_tipo_categoria ? ` — Cat: ${e.epi_tipo_categoria}` : ""}`
       ).join("\n") || "  (nenhum EPI vinculado)";
 
-      // Indicadores
       const indicadoresText = cargoIndicadores.length > 0
         ? cargoIndicadores.map((i: any) =>
-          `  - ${i.nome}${i.meta ? ` | Meta: ${i.meta}` : ""}${i.periodicidade ? ` | Periodicidade: ${i.periodicidade}` : ""}${i.descricao ? ` — ${i.descricao}` : ""}`
+          `  - ${i.nome}${i.meta ? ` | Meta: ${i.meta}` : ""}${i.periodicidade ? ` | Per: ${i.periodicidade}` : ""}${i.descricao ? ` — ${i.descricao}` : ""}`
         ).join("\n")
         : "  (nenhum indicador definido)";
 
       // Interfaces consolidadas
       const interfacesSet = new Set<string>();
       cargoResponsabilidades.forEach((r: any) => {
-        if (r.interfaces) {
-          r.interfaces.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => interfacesSet.add(s));
-        }
+        if (r.interfaces) r.interfaces.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => interfacesSet.add(s));
       });
-      const interfacesText = interfacesSet.size > 0
-        ? Array.from(interfacesSet).map(i => `  - ${i}`).join("\n")
-        : "  (nenhuma interface definida)";
+      if (cargo.interfaces_cargo) {
+        cargo.interfaces_cargo.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => interfacesSet.add(s));
+      }
+
+      // Ferramentas consolidadas
+      const ferramentasSet = new Set<string>();
+      cargoFerramentas.forEach((f: any) => ferramentasSet.add(`${f.nome} (${f.tipo})`));
+      if (cargo.ferramentas_cargo) {
+        cargo.ferramentas_cargo.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => ferramentasSet.add(s));
+      }
 
       return `
 ══════════════════════════════════════════════════════
-FUNÇÃO: ${cargo.nome}${cargo.nivel ? ` (Nível: ${cargo.nivel})` : ""}
+1. IDENTIFICAÇÃO DO CARGO
 ══════════════════════════════════════════════════════
+Nome: ${cargo.nome}${cargo.nivel ? ` | Nível: ${cargo.nivel}` : ""}
+${cargo.subordinacao ? `Subordinação: ${cargo.subordinacao}` : ""}
+${cargo.interfaces_cargo ? `Interfaces: ${cargo.interfaces_cargo}` : ""}
 ${cargo.descricao ? `Descrição: ${cargo.descricao}` : ""}
-${cargo.responsabilidade ? `\nRESPONSABILIDADE & ESCOPO:\n${cargo.responsabilidade}` : ""}
 
-ATIVIDADES (${cargoAtividades.length}):
+2. OBJETIVO DA FUNÇÃO:
+${cargo.objetivo_funcao || "(a ser gerado pela IA com base nos dados)"}
+
+3. ESCOPO GERAL:
+${cargo.escopo_geral || "(a ser gerado pela IA)"}
+
+4. RESPONSABILIDADES DETALHADAS (por processo):
+${cargo.responsabilidade ? `ESCOPO & RESPONSABILIDADE:\n${cargo.responsabilidade}\n` : ""}
 ${atividadesText}
 
-COMPETÊNCIAS (${cargoCompetencias.length}):
+5. ROTINA ESTRUTURADA:
+${rotinaText}
+
+6. PADRÕES DE EXECUÇÃO:
+${cargo.padroes_execucao || "(a ser definido pela IA)"}
+
+7. COMPETÊNCIAS (${cargoCompetencias.length}):
 ${competenciasText}
 
-INDICADORES DE DESEMPENHO (${cargoIndicadores.length}):
+8. INDICADORES (KPIs) (${cargoIndicadores.length}):
 ${indicadoresText}
 
-INTERFACES (${interfacesSet.size}):
-${interfacesText}
+9. ERROS E RISCOS:
+${cargo.erros_riscos || "(a ser identificado pela IA)"}
+
+10. INTERFACES E FLUXOS (${interfacesSet.size}):
+${interfacesSet.size > 0 ? Array.from(interfacesSet).map(i => `  - ${i}`).join("\n") : "  (nenhuma interface definida)"}
+
+11. FERRAMENTAS (${ferramentasSet.size}):
+${ferramentasSet.size > 0 ? Array.from(ferramentasSet).map(f => `  - ${f}`).join("\n") : "  (nenhuma ferramenta definida)"}
+
+12. CRITÉRIOS DE SUCESSO:
+${cargo.criterios_sucesso || "(a ser definido pela IA)"}
+
+13. CULTURA ESPERADA:
+${cargo.cultura_esperada || "(a ser definido pela IA)"}
 
 EPIs (${cargoEpis.length}):
 ${episText}`;
@@ -165,7 +218,7 @@ ${episText}`;
       ? `Manual de Funções — ${nomeEmpresa}`
       : `Manual da Função: ${cargos[0].nome} — ${nomeEmpresa}`;
 
-    const prompt = `Você é um consultor sênior de RH e Gestão de Pessoas. Com base nos dados abaixo, gere um MANUAL DE FUNÇÕES conciso, profissional e visualmente rico em HTML.
+    const prompt = `Você é um consultor sênior de RH e Gestão de Pessoas. Com base nos dados abaixo, gere um MANUAL DE FUNÇÕES profissional e visualmente rico em HTML seguindo o modelo de 13 seções.
 
 ${companyContext}
 
@@ -177,42 +230,48 @@ ${cargoSections}
 
 INSTRUÇÕES OBRIGATÓRIAS:
 
-1. O manual DEVE conter APENAS:
+1. O manual DEVE seguir o MODELO DE 13 SEÇÕES para cada função:
    - Capa com título "${tituloManual}" e data de geração
-   - Sumário com links para cada função
-   - Para CADA função, uma seção com:
-     * Nome e nível do cargo em header destacado
-     * Descrição do cargo (expanda brevemente se necessário)
-     * Responsabilidade & Escopo (se houver), em caixa visual destacada
-     * Tabela de Atividades RESUMIDA com colunas: Nome, Frequência, Complexidade, Classificação, Responsável
-     * Cards de Competências organizados por tipo (Técnica, Comportamental, Cognitiva) com ícones
-     * Indicadores de Desempenho em tabela ou cards
-     * Interfaces (áreas/cargos com os quais interage)
-     * EPIs obrigatórios/recomendados
-   ${isGlobal ? "- Quadro comparativo consolidado no final (resumo de todas as funções)" : ""}
-   - Rodapé com data de geração e nome da empresa
+   - Sumário com links
+   - Para CADA função:
+     1. Identificação (Nome, Área, Subordinação, Interfaces)
+     2. Objetivo da Função
+     3. Escopo Geral
+     4. Responsabilidades Detalhadas (agrupadas por processo, com O que/Como/Frequência/Resultado)
+     5. Rotina Estruturada (Diário/Semanal/Mensal)
+     6. Padrões de Execução
+     7. Competências (Técnicas/Comportamentais/Cognitivas em cards)
+     8. KPIs (tabela com nome, meta, periodicidade)
+     9. Erros e Riscos (com consequências)
+     10. Interfaces e Fluxos (Recebe/Entrega/Depende de)
+     11. Ferramentas
+     12. Critérios de Sucesso
+     13. Cultura Esperada
+   ${isGlobal ? "- Quadro comparativo consolidado no final" : ""}
+   - Rodapé com data e empresa
 
-2. NÃO INCLUIR:
+2. Se alguma seção estiver marcada como "(a ser gerado pela IA)" ou "(a ser definido pela IA)", COMPLETE COM CONTEÚDO RELEVANTE baseado no cargo e contexto.
+
+3. NÃO INCLUIR:
    - POPs (Procedimentos Operacionais Padrão)
-   - Passos detalhados ou etapas de execução
-   - Materiais de treinamento ou links de conteúdo
-   - Checklists de procedimento
-   - O manual deve ser CONCISO e OBJETIVO
+   - Passos detalhados de execução
+   - Materiais de treinamento
 
-3. FORMATAÇÃO HTML:
+4. FORMATAÇÃO HTML:
    - CSS inline em cada elemento
    - Paleta: primário #1e3a5f, secundário #2d8a6e, accent #f4a261, fundo #f8f9fa, texto #1a1a2e
-   - Fonte: font-family: 'Segoe UI', 'Inter', system-ui, sans-serif
+   - Fonte: 'Segoe UI', 'Inter', system-ui, sans-serif
    - Cards com border-radius: 12px, box-shadow, padding 24px+
-   - Tabelas estilizadas com cabeçalho colorido e linhas zebradas
-   - Badges coloridos para frequência, complexidade e tipo de competência
-   - Ícones emoji relevantes (🎯 🧠 🛡️ ⚙️ 👤 📊)
-   - Divisores visuais entre funções
-   - Tamanho mínimo: 15px corpo, 28px títulos, 42px capa
-   - @media print para impressão
+   - Tabelas estilizadas com cabeçalho colorido e zebra
+   - Badges coloridos para frequência, complexidade, tipo
+   - Ícones emoji: 🎯 🧠 🛡️ ⚙️ 👤 📊 📋 ⚠️ ✅ 🔧 🏢
+   - Divisores visuais entre seções
+   - Numeração de seções (1-13)
+   - Tamanho: 15px corpo, 28px títulos, 42px capa
+   - @media print
 
-4. HTML SELF-CONTAINED, sem referências externas, começando com <!DOCTYPE html>.
-5. Aspecto de manual corporativo premium e conciso.
+5. HTML SELF-CONTAINED, sem referências externas, começando com <!DOCTYPE html>.
+6. Aspecto de manual corporativo premium.
 
 Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
 
@@ -228,7 +287,7 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "Você é um designer e consultor de RH. Gere apenas HTML completo e profissional para manuais de funções. O manual deve ser CONCISO — sem POPs, sem passos detalhados, sem materiais de treinamento. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
+          { role: "system", content: "Você é um designer e consultor de RH. Gere apenas HTML completo e profissional para manuais de funções seguindo o modelo de 13 seções. Complete seções marcadas como 'a ser gerado/definido pela IA' com conteúdo relevante. Sem POPs, sem passos detalhados. Nunca inclua markdown, code blocks ou explicações — apenas o HTML puro." },
           { role: "user", content: prompt }
         ],
       }),
@@ -237,14 +296,12 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const errorText = await response.text();
@@ -254,7 +311,6 @@ Retorne APENAS o HTML completo sem explicações, markdown ou code blocks.`;
     const data = await response.json();
     let html = data.choices?.[0]?.message?.content?.trim() || "";
 
-    // Sanitize markdown fences
     if (html.startsWith("```")) {
       html = html.replace(/^```(?:html)?\s*\n?/, "").replace(/\n?\s*```\s*$/, "");
     }

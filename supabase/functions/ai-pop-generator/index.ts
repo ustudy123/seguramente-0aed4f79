@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getCompanyContext } from '../_shared/ai-helper.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +25,20 @@ serve(async (req) => {
       criterios_qualidade, responsaveis,
       responsavel_direto, consequencia_erro, conteudos_relacionados,
       action, trecho, instrucao,
+      tenantId,
     } = body;
+
+    // Fetch company context if tenantId provided
+    let companyContext = "";
+    if (tenantId) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        companyContext = await getCompanyContext(supabase, tenantId);
+      } catch { /* ignore */ }
+    }
 
     // IA assistida: reescrever/detalhar/simplificar trechos
     if (action === "rewrite") {
@@ -59,6 +74,8 @@ Retorne APENAS o texto reescrito, sem explicações.`;
 
     // Geração completa do POP
     const contexto = `
+${companyContext}
+
 CONTEXTO DA FUNÇÃO:
 - Função: ${funcao_nome || "Não informado"}
 - Setor/Unidade: ${setor || "Não informado"}
@@ -90,7 +107,7 @@ INFORMAÇÕES COMPLEMENTARES:
 - Responsáveis: ${responsaveis || "Não informados"}
 `.trim();
 
-    const systemPrompt = `Você é um especialista em criação de Procedimentos Operacionais Padrão (POP) para empresas brasileiras.
+    const systemPrompt = `Você é um especialista em criação de Procedimentos Operacionais Padrão (POP) para empresas brasileiras, com forte conhecimento em SST (Segurança e Saúde do Trabalho).
 
 Gere um POP completo em formato JSON estruturado com os seguintes campos:
 
@@ -117,7 +134,15 @@ Gere um POP completo em formato JSON estruturado com os seguintes campos:
   "criterios_qualidade": "como saber que está correto",
   "registros_evidencias": "prints, formulários, anexos necessários",
   "tratamento_nao_conformidades": "o que fazer quando der errado",
-  "referencias": "documentos internos, NRs aplicáveis"
+  "referencias": "documentos internos, NRs aplicáveis",
+  "camada_sst": {
+    "riscos_identificados": ["lista de riscos SST da atividade"],
+    "controles_recomendados": ["medidas de controle"],
+    "nrs_aplicaveis": ["NRs aplicáveis com justificativa breve"],
+    "epis_obrigatorios": ["EPIs obrigatórios para esta atividade"],
+    "sinalizacao_necessaria": "sinalização de segurança quando aplicável",
+    "treinamentos_obrigatorios": ["treinamentos SST necessários"]
+  }
 }
 
 REGRAS:
@@ -126,12 +151,16 @@ REGRAS:
 - Incluir pontos de atenção em cada passo crítico
 - Considerar a complexidade e classificação da atividade
 - Se a atividade for crítica, ser mais detalhado nos pontos de atenção e riscos
+- A camada SST deve ser SEMPRE preenchida, mesmo que mínima (ex: ergonomia, postura)
+- Considere NRs relevantes: NR-01 (PGR), NR-07 (PCMSO), NR-09, NR-12, NR-17 (Ergonomia), etc.
+- Use o contexto da empresa para personalizar riscos e controles
 - Retornar APENAS o JSON, sem markdown fences ou explicações`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: contexto },
