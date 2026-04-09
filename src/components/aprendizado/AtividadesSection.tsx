@@ -483,6 +483,9 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
           </Collapsible>
         );
       })}
+          </div>
+        ));
+      })()}
     </div>
   );
 }
