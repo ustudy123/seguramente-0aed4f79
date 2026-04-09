@@ -136,6 +136,7 @@ export function AtividadesSection({ cargoId, funcaoNome, nivel }: AtividadesSect
             }
             return null;
           })()}
+          <ExportarTodosPopsPdf pops={pops} funcaoNome={funcaoNome} />
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             <Plus className="w-4 h-4 mr-1" /> Atividade
           </Button>
