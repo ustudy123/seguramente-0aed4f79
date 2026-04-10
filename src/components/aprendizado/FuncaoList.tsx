@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2, Eye } from "lucide-react";
+import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2, Eye, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
@@ -13,6 +14,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { ManualFuncaoModal } from "./ManualFuncaoModal";
 import { toast } from "sonner";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
+import type { PopData } from "@/hooks/usePopAtividade";
 
 interface Cargo {
   id: string;
