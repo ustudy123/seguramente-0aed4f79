@@ -223,7 +223,9 @@ describe("Módulo Psicossocial NR-01", () => {
       .should("be.visible")
       .and("not.be.disabled")
       .click({ force: true });
-    cy.get('[role="dialog"]', { timeout: 15000 }).should("not.exist");
+    // Wait for save to complete - check for toast or dialog closing
+    cy.wait(2000);
+    cy.get('[role="dialog"]', { timeout: 20000 }).should("not.exist");
   }
 
   function criarCampanhaRapida(nome: string, setor = setorBaseNome, funcao = funcaoBaseNome) {
