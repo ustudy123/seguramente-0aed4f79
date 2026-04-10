@@ -57,25 +57,46 @@ describe("Módulo Psicossocial NR-01", () => {
     });
   }
 
+  function dispatchNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+    const prototype = Object.getPrototypeOf(element);
+    const valueSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+
+    element.focus();
+    valueSetter?.call(element, value);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+    element.blur();
+  }
+
+  function preencherCampo(selector: string, value: string) {
+    cy.get(selector, { timeout: 15000 })
+      .filter(":visible")
+      .first()
+      .scrollIntoView()
+      .should("exist")
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement | HTMLTextAreaElement, value);
+      });
+  }
+
+  function preencherCommandInputVisivel(value: string) {
+    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+      .should("have.length.at.least", 1)
+      .last()
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement, value);
+      });
+  }
+
   function login() {
     cy.visit(`${baseUrl}/login`);
-    // Wait for framer-motion animation (opacity 0→1) to finish
-    cy.get('input[type="email"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible");
-    // Re-query to avoid detached DOM
-    cy.get('input[type="email"]').clear().type(email);
-    cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible");
-    cy.get('input[autocomplete="current-password"]').clear().type(password, { log: false });
-    cy.contains("button", /^Entrar$/).should("be.visible").click();
+    cy.get('input[type="email"]', { timeout: 20000 }).should("be.visible");
+    preencherCampo('input[type="email"]', email);
+    preencherCampo('input[autocomplete="current-password"]', password);
+    cy.contains("button", /^Entrar$/, { timeout: 10000 }).should("be.visible").click({ force: true });
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
-    // Wait for auth state to fully settle (profile, tenant, queries, etc.)
-    cy.wait(2500);
+    cy.wait(3000);
   }
 
   function goToPsicossocial() {
@@ -92,40 +113,31 @@ describe("Módulo Psicossocial NR-01", () => {
       .should("be.visible");
   }
 
-  // FIX: scroll into view, handle potentially pre-filled/disabled date inputs
   function preencherDatasCampanha(inicio: string, fim: string) {
-    cy.get("#input-campanha-data-inicio", { timeout: 10000 })
-      .scrollIntoView()
-      .should("exist");
-    // Re-query to avoid detached DOM after scroll
-    cy.get("#input-campanha-data-inicio")
-      .invoke("val", "")
-      .trigger("change")
-      .type(inicio, { force: true });
-
-    cy.get("#input-campanha-data-fim", { timeout: 10000 })
-      .scrollIntoView()
-      .should("exist");
-    cy.get("#input-campanha-data-fim")
-      .invoke("val", "")
-      .trigger("change")
-      .type(fim, { force: true });
+    preencherCampo("#input-campanha-data-inicio", inicio);
+    preencherCampo("#input-campanha-data-fim", fim);
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
-    cy.get(selector, { timeout: 10000 }).scrollIntoView().should("exist").click({ force: true });
-    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
-      .last()
-      .should("be.visible")
-      .clear()
-      .type(valor);
-    cy.wait(500);
-    // The CommandInput onValueChange already sets the state as user types.
-    // Close the popover by clicking outside (Esc may clear the value in some implementations)
-    cy.get('[role="dialog"]').click({ force: true });
-    cy.wait(300);
-    // Verify value was set
-    cy.get(selector).should("contain.text", valor);
+    cy.get(selector, { timeout: 10000 })
+      .filter(":visible")
+      .first()
+      .scrollIntoView()
+      .should("exist")
+      .click({ force: true });
+
+    preencherCommandInputVisivel(valor);
+    cy.wait(150);
+
+    cy.get(selector)
+      .filter(":visible")
+      .first()
+      .click({ force: true });
+
+    cy.get(selector)
+      .filter(":visible")
+      .first()
+      .should("contain.text", valor);
   }
 
   function ensureTabsDisponiveis() {
@@ -154,17 +166,19 @@ describe("Módulo Psicossocial NR-01", () => {
     });
   }
 
-  // FIX: break chain after click to avoid DOM detachment errors from React re-renders
   function openTab(label: string) {
     ensureTabsDisponiveis();
     const sel = TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]];
     cy.get(sel, { timeout: 15000 })
+      .filter(":visible")
+      .first()
       .scrollIntoView()
       .should("exist")
       .click({ force: true });
     cy.wait(300);
-    // Re-query after click to avoid detached DOM element
     cy.get(sel, { timeout: 5000 })
+      .filter(":visible")
+      .first()
       .should("have.attr", "aria-selected", "true");
     cy.wait(500);
   }
@@ -198,9 +212,7 @@ describe("Módulo Psicossocial NR-01", () => {
     const fim = new Date(hoje.getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     waitForCampanhaForm();
-    // Break chain to avoid detached DOM
-    cy.get("#input-campanha-nome").scrollIntoView();
-    cy.get("#input-campanha-nome").clear().type(nome);
+    preencherCampo("#input-campanha-nome", nome);
     preencherDatasCampanha(inicio, fim);
   }
 
@@ -209,7 +221,7 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.wait(300);
     digitarNoComboboxSituacao("#combobox-setor-situacao", setor);
     digitarNoComboboxSituacao("#combobox-funcao-situacao", funcao);
-    cy.get("#btn-adicionar-situacao-trabalho").should("be.enabled").click({ force: true });
+    cy.get("#btn-adicionar-situacao-trabalho").scrollIntoView().should("be.enabled").click({ force: true });
     cy.get("#situacoes-trabalho-section").within(() => {
       cy.contains(setor).should("exist");
       cy.contains(funcao).should("exist");
@@ -217,14 +229,17 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function salvarCampanha() {
-    cy.get('[role="dialog"] button[type="submit"]', { timeout: 10000 })
-      .scrollIntoView()
-      .should("be.visible")
-      .and("not.be.disabled")
-      .click({ force: true });
-    // Wait for save to complete - check for toast or dialog closing
+    cy.get('[role="dialog"]:visible', { timeout: 10000 })
+      .last()
+      .within(() => {
+        cy.get('button[type="submit"]')
+          .scrollIntoView()
+          .should("be.visible")
+          .and("not.be.disabled")
+          .click({ force: true });
+      });
     cy.wait(2000);
-    cy.get('[role="dialog"]', { timeout: 20000 }).should("not.exist");
+    cy.get('[role="dialog"]:visible', { timeout: 20000 }).should("not.exist");
   }
 
   function criarCampanhaRapida(nome: string, setor = setorBaseNome, funcao = funcaoBaseNome) {
