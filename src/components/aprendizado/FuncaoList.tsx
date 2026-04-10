@@ -189,7 +189,19 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         body: { cargo_ids: cargoIds, tenantId },
       });
 
-      if (error) throw error;
+      if (error) {
+        // supabase.functions.invoke wraps non-2xx as FunctionsHttpError
+        // Try to extract the JSON body for a better message
+        let msg = error.message || "Erro ao gerar manual";
+        try {
+          const ctx = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            if (body?.error) msg = body.error;
+          }
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
 
       const html = data.html || "";
