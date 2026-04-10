@@ -120,24 +120,12 @@ describe("Módulo Psicossocial NR-01", () => {
       .clear()
       .type(valor);
     cy.wait(500);
-    // Try to select "create new" option, or press Enter to confirm, then Esc to close
-    cy.get("body").then(($body) => {
-      const createOption = $body.find('[cmdk-item]:contains("Criar"), [cmdk-item]:contains("Adicionar"), [cmdk-item]:contains("Pressione")');
-      if (createOption.length > 0) {
-        cy.wrap(createOption.first()).click({ force: true });
-      } else {
-        // If there's a matching item, click it; otherwise press Enter to use typed value
-        const matchingItem = $body.find(`[cmdk-item]:contains("${valor}")`);
-        if (matchingItem.length > 0) {
-          cy.wrap(matchingItem.first()).click({ force: true });
-        } else {
-          cy.focused().type("{enter}");
-        }
-      }
-    });
+    // The CommandInput onValueChange already sets the state as user types.
+    // Close the popover by clicking outside (Esc may clear the value in some implementations)
+    cy.get('[role="dialog"]').click({ force: true });
     cy.wait(300);
-    // Verify value was set - use a relaxed check
-    cy.get(selector).invoke("text").should("not.be.empty");
+    // Verify value was set
+    cy.get(selector).should("contain.text", valor);
   }
 
   function ensureTabsDisponiveis() {
