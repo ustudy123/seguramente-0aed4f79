@@ -254,51 +254,51 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
       const passos = pop.procedimento_passos || [];
       
       return `
-        <div style="page-break-before: always; padding: 32px 0;">
-          <h2 style="font-size: 22px; color: #1e3a5f; border-bottom: 3px solid #2563eb; padding-bottom: 8px; margin-bottom: 16px;">
+        <div style="page-break-before: always; padding: 32px 24px; max-width: 100%; box-sizing: border-box; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
+          <h2 style="font-size: 22px; color: #1e3a5f; border-bottom: 3px solid #2563eb; padding-bottom: 8px; margin-bottom: 16px; word-wrap: break-word;">
             POP ${i + 1}: ${pop.codigo} - ${pop.titulo}
           </h2>
-          <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
             <span style="background: #f0f7ff; padding: 4px 12px; border-radius: 6px; font-size: 13px; color: #1e40af;">Versão: ${pop.versao_atual || "1.0"}</span>
             <span style="background: #f0f7ff; padding: 4px 12px; border-radius: 6px; font-size: 13px; color: #1e40af;">Status: ${pop.status}</span>
             ${pop.gerado_por_ia ? '<span style="background: #fef3c7; padding: 4px 12px; border-radius: 6px; font-size: 13px; color: #92640a;">Gerado por IA</span>' : ''}
           </div>
-          ${pop.objetivo ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">1. Objetivo</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.objetivo}</p></div>` : ''}
-          ${pop.escopo ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">2. Escopo</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.escopo}</p></div>` : ''}
+          ${pop.objetivo ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">1. Objetivo</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.objetivo}</p></div>` : ''}
+          ${pop.escopo ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">2. Escopo</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.escopo}</p></div>` : ''}
           ${(resp.executante || resp.supervisao || resp.interfaces) ? `
             <div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">3. Responsabilidades</h3>
-            <ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px;">
+            <ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px; overflow-wrap: break-word; word-wrap: break-word;">
               ${resp.executante ? `<li><strong>Executante:</strong> ${resp.executante}</li>` : ''}
               ${resp.supervisao ? `<li><strong>Supervisão:</strong> ${resp.supervisao}</li>` : ''}
               ${resp.interfaces ? `<li><strong>Interfaces:</strong> ${resp.interfaces}</li>` : ''}
             </ul></div>` : ''}
-          ${pop.definicoes ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">4. Definições</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.definicoes}</p></div>` : ''}
-          ${pop.pre_requisitos?.length ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">5. Pré-requisitos</h3><ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px;">${pop.pre_requisitos.map(p => `<li>${p}</li>`).join('')}</ul></div>` : ''}
-          ${pop.materiais_ferramentas?.length ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">6. Materiais e Ferramentas</h3><ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px;">${pop.materiais_ferramentas.map(m => `<li>${m}</li>`).join('')}</ul></div>` : ''}
-          ${pop.epis_sst ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">7. EPIs / SST</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.epis_sst}</p></div>` : ''}
+          ${pop.definicoes ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">4. Definições</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.definicoes}</p></div>` : ''}
+          ${pop.pre_requisitos?.length ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">5. Pré-requisitos</h3><ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px; overflow-wrap: break-word; word-wrap: break-word;">${pop.pre_requisitos.map(p => `<li>${p}</li>`).join('')}</ul></div>` : ''}
+          ${pop.materiais_ferramentas?.length ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">6. Materiais e Ferramentas</h3><ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px; overflow-wrap: break-word; word-wrap: break-word;">${pop.materiais_ferramentas.map(m => `<li>${m}</li>`).join('')}</ul></div>` : ''}
+          ${pop.epis_sst ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">7. EPIs / SST</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.epis_sst}</p></div>` : ''}
           ${passos.length ? `
             <div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 8px;">8. Procedimento Passo a Passo</h3>
             ${passos.map(p => `
-              <div style="background: #f0f7ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <div style="background: #f0f7ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; box-sizing: border-box;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
                   <span style="background: #2563eb; color: #fff; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Passo ${p.numero}</span>
                   ${p.tempo_estimado ? `<span style="font-size: 12px; color: #666;">(${p.tempo_estimado})</span>` : ''}
                 </div>
-                <p style="font-size: 14px; color: #333; margin: 4px 0 0 0; line-height: 1.5;">${p.descricao}</p>
-                ${p.ponto_atencao ? `<div style="background: #fef3c7; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 13px; color: #92640a;"><strong>⚠ Atenção:</strong> ${p.ponto_atencao}</div>` : ''}
+                <p style="font-size: 14px; color: #333; margin: 4px 0 0 0; line-height: 1.5; text-align: justify; overflow-wrap: break-word; word-wrap: break-word;">${p.descricao}</p>
+                ${p.ponto_atencao ? `<div style="background: #fef3c7; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 13px; color: #92640a; overflow-wrap: break-word; word-wrap: break-word;"><strong>⚠ Atenção:</strong> ${p.ponto_atencao}</div>` : ''}
               </div>
             `).join('')}
             </div>` : ''}
-          ${pop.criterios_qualidade ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">9. Critérios de Qualidade</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.criterios_qualidade}</p></div>` : ''}
-          ${pop.registros_evidencias ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">10. Registros e Evidências</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.registros_evidencias}</p></div>` : ''}
-          ${pop.tratamento_nao_conformidades ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">11. Tratamento de Não Conformidades</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.tratamento_nao_conformidades}</p></div>` : ''}
-          ${pop.referencias ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">12. Referências</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.referencias}</p></div>` : ''}
+          ${pop.criterios_qualidade ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">9. Critérios de Qualidade</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.criterios_qualidade}</p></div>` : ''}
+          ${pop.registros_evidencias ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">10. Registros e Evidências</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.registros_evidencias}</p></div>` : ''}
+          ${pop.tratamento_nao_conformidades ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">11. Tratamento de Não Conformidades</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.tratamento_nao_conformidades}</p></div>` : ''}
+          ${pop.referencias ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">12. Referências</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word;">${pop.referencias}</p></div>` : ''}
         </div>
       `;
     }).join('');
 
     return `
-      <div style="page-break-before: always; padding: 40px 0; text-align: center;">
+      <div style="page-break-before: always; padding: 40px 24px; text-align: center; box-sizing: border-box;">
         <h1 style="font-size: 28px; color: #1e3a5f; margin-bottom: 8px;">Procedimentos Operacionais Padrão (POPs)</h1>
         <p style="font-size: 14px; color: #888;">${pops.length} procedimento${pops.length !== 1 ? 's' : ''} vinculado${pops.length !== 1 ? 's' : ''}</p>
         <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />

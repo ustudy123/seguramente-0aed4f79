@@ -64,6 +64,13 @@ export function normalizeManualHtml(html: string) {
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
       font-kerning: normal;
+      max-width: 794px;
+      margin: 0 auto;
+      padding: 0 20px;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
     }
 
     *, *::before, *::after {
@@ -72,6 +79,12 @@ export function normalizeManualHtml(html: string) {
 
     img, svg, canvas {
       max-width: 100%;
+    }
+
+    p, li, td, th, div, span, blockquote {
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
     }
   `;
   documentNode.head.appendChild(baseStyle);
