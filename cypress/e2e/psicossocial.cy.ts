@@ -59,8 +59,16 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]', { timeout: 20000 }).should("be.visible").clear().type(email);
+    // Wait for framer-motion animation (opacity 0→1) to finish
+    cy.get('input[type="email"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(email);
     cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView()
       .should("be.visible")
       .clear()
       .type(password, { log: false });
@@ -77,7 +85,10 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function waitForCampanhaForm() {
-    cy.get("#input-campanha-nome", { timeout: 15000 }).should("be.visible");
+    cy.get("#input-campanha-nome", { timeout: 15000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible");
   }
 
   function preencherDatasCampanha(inicio: string, fim: string) {
