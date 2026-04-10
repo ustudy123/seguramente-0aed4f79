@@ -28,11 +28,22 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]', { timeout: 20000 }).should("be.visible").clear().type(email);
-    cy.get('input[autocomplete="current-password"]', { timeout: 20000 }).should("be.visible").clear().type(password, { log: false });
+    cy.get('input[type="email"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(email);
+    cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(password, { log: false });
     cy.contains("button", /^Entrar$/).should("be.visible").click();
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
+    cy.wait(1500);
   }
 
   function goToEstrategia() {
@@ -43,6 +54,7 @@ describe("Módulo SWOT — Estratégia & Governança", () => {
 
   function openSwotTab() {
     cy.get('button[role="tab"]').contains("SWOT").click({ force: true });
+    // Re-query after click to avoid detached DOM
     cy.get('button[role="tab"][aria-selected="true"]').should("contain.text", "SWOT");
     cy.wait(1500);
   }

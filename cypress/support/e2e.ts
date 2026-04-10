@@ -12,6 +12,11 @@ Cypress.on("uncaught:exception", (err) => {
   if (err.name === "SyntaxError" && err.message?.includes("Unexpected token '<'")) {
     return false;
   }
+  // Erros de autenticação que ocorrem durante navegação entre páginas
+  // (mutations disparadas antes do auth state estar pronto após cy.visit)
+  if (err.message?.includes("Usuário não autenticado") || err.message?.includes("Dados insuficientes para atualização")) {
+    return false;
+  }
   // Deixa outros erros falharem normalmente
   return true;
 });

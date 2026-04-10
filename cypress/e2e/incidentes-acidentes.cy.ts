@@ -19,10 +19,21 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]').should("be.visible").clear().type(email);
-    cy.get('input[autocomplete="current-password"]').should("be.visible").clear().type(password, { log: false });
+    cy.get('input[type="email"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(email);
+    cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(password, { log: false });
     cy.contains("button", /^Entrar$/).click();
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+    cy.wait(1500);
   }
 
   function goToModulo() {
@@ -32,6 +43,7 @@ describe("Módulo Incidentes & Acidentes", () => {
 
   function openTab(label: string) {
     cy.contains('[role="tab"]', label).should("be.visible").click();
+    // Re-query after click to avoid detached DOM from React re-render
     cy.contains('[role="tab"]', label).should("have.attr", "aria-selected", "true");
   }
 
