@@ -63,20 +63,19 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.get('input[type="email"]', { timeout: 20000 })
       .should("exist")
       .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(email);
+      .should("be.visible");
+    // Re-query to avoid detached DOM
+    cy.get('input[type="email"]').clear().type(email);
     cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
       .should("exist")
       .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(password, { log: false });
+      .should("be.visible");
+    cy.get('input[autocomplete="current-password"]').clear().type(password, { log: false });
     cy.contains("button", /^Entrar$/).should("be.visible").click();
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
-    // Wait for auth state to fully settle (profile, tenant, etc.)
-    cy.wait(1500);
+    // Wait for auth state to fully settle (profile, tenant, queries, etc.)
+    cy.wait(2500);
   }
 
   function goToPsicossocial() {
