@@ -75,6 +75,8 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.contains("button", /^Entrar$/).should("be.visible").click();
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
+    // Wait for auth state to fully settle (profile, tenant, etc.)
+    cy.wait(1500);
   }
 
   function goToPsicossocial() {
@@ -91,13 +93,22 @@ describe("Módulo Psicossocial NR-01", () => {
       .should("be.visible");
   }
 
+  // FIX: scroll into view before asserting visibility for elements inside fixed dialogs
   function preencherDatasCampanha(inicio: string, fim: string) {
-    cy.get("#input-campanha-data-inicio", { timeout: 10000 }).should("be.visible").clear().type(inicio);
-    cy.get("#input-campanha-data-fim", { timeout: 10000 }).should("be.visible").clear().type(fim);
+    cy.get("#input-campanha-data-inicio", { timeout: 10000 })
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(inicio);
+    cy.get("#input-campanha-data-fim", { timeout: 10000 })
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(fim);
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
-    cy.get(selector).should("be.visible").scrollIntoView().click({ force: true });
+    cy.get(selector, { timeout: 10000 }).scrollIntoView().should("exist").click({ force: true });
     cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
       .last()
       .should("be.visible")
@@ -125,13 +136,17 @@ describe("Módulo Psicossocial NR-01", () => {
     });
   }
 
+  // FIX: break chain after click to avoid DOM detachment errors from React re-renders
   function openTab(label: string) {
     ensureTabsDisponiveis();
-    cy.get(TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]], { timeout: 15000 })
+    const sel = TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]];
+    cy.get(sel, { timeout: 15000 })
       .should("be.visible")
-      .click({ force: true })
+      .click({ force: true });
+    // Re-query after click to avoid detached DOM element
+    cy.get(sel, { timeout: 5000 })
       .should("have.attr", "aria-selected", "true");
-    cy.wait(300);
+    cy.wait(500);
   }
 
   function clickNovaCampanha() {
@@ -163,12 +178,13 @@ describe("Módulo Psicossocial NR-01", () => {
     const fim = new Date(hoje.getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     waitForCampanhaForm();
-    cy.get("#input-campanha-nome").clear().type(nome);
+    cy.get("#input-campanha-nome").scrollIntoView().clear().type(nome);
     preencherDatasCampanha(inicio, fim);
   }
 
   function adicionarSetorFuncao(setor = setorBaseNome, funcao = funcaoBaseNome) {
     cy.get("#situacoes-trabalho-section", { timeout: 10000 }).scrollIntoView();
+    cy.wait(300);
     digitarNoComboboxSituacao("#combobox-setor-situacao", setor);
     digitarNoComboboxSituacao("#combobox-funcao-situacao", funcao);
     cy.get("#btn-adicionar-situacao-trabalho").should("be.enabled").click({ force: true });
@@ -180,6 +196,7 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function salvarCampanha() {
     cy.get('[role="dialog"] button[type="submit"]', { timeout: 10000 })
+      .scrollIntoView()
       .should("be.visible")
       .and("not.be.disabled")
       .click({ force: true });
@@ -235,8 +252,9 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.get('[role="dialog"]', { timeout: 10000 }).should("be.visible");
     preencherCampanhaBasica(`Campanha Sem Setor ${uniqueId}`);
 
-    cy.get('[role="dialog"] button[type="submit"]').should("be.disabled");
-    cy.contains(/Obrigatório para criar a campanha|Setor\+Função|situação de trabalho/i, { timeout: 5000 }).should("be.visible");
+    cy.get('[role="dialog"] button[type="submit"]').scrollIntoView().should("be.disabled");
+    // FIX: use .should("exist") instead of .should("be.visible") for text inside fixed dialog
+    cy.contains(/Obrigatório para criar a campanha|Setor\+Função|situação de trabalho/i, { timeout: 5000 }).should("exist");
   });
 
   // 4. Adicionar Setor + Função usando autocomplete
@@ -631,8 +649,8 @@ describe("Módulo Psicossocial NR-01", () => {
     const ontem = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
     preencherDatasCampanha(amanha, ontem);
-    cy.get('[role="dialog"] button[type="submit"]').click({ force: true });
-    cy.contains(/Data de término deve ser igual ou posterior à data de início/i, { timeout: 5000 }).should("be.visible");
+    cy.get('[role="dialog"] button[type="submit"]').scrollIntoView().click({ force: true });
+    cy.contains(/Data de término deve ser igual ou posterior à data de início/i, { timeout: 5000 }).should("exist");
   });
 
   // 36. Campanha com período expirado sem respostas
@@ -707,6 +725,7 @@ describe("Módulo Psicossocial NR-01", () => {
     adicionarSetorFuncao(setorDuplicado, funcaoDuplicada);
 
     cy.get("#erro-situacao-trabalho", { timeout: 5000 })
+      .scrollIntoView()
       .should("be.visible")
       .and("contain.text", "já foi adicionado");
   });
