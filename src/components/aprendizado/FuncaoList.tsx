@@ -461,15 +461,25 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                       {epiCounts[cargo.id] || 0}
                     </span>
                     {cached && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1.5 w-full sm:w-auto"
-                        onClick={(e) => handleVisualizarCached(e, cached)}
-                      >
-                        <Eye className="w-4 h-4" />
-                        Ver Manual
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="sm" className="gap-1.5 w-full sm:w-auto">
+                            <Eye className="w-4 h-4" />
+                            Ver Manual
+                            <ChevronDown className="w-3 h-3 ml-0.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={(e) => handleVisualizarCached(e as any, cached)}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Apenas Manual
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleVisualizarComPops(e as any, cached, cargo.id)}>
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            Manual + POPs
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                     <Button
                       variant="outline"
