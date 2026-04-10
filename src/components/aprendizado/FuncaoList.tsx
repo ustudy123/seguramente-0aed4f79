@@ -224,12 +224,114 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
     gerarManual(null, "Manual Global de Funções");
   };
 
+  const fetchPopsForCargo = async (cargoId: string): Promise<PopData[]> => {
+    if (!tenantId) return [];
+    const { data } = await fromTable("funcao_pops")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("cargo_id", cargoId)
+      .order("codigo") as { data: PopData[] | null };
+    return data || [];
+  };
+
+  const buildPopsHtmlSection = (pops: PopData[]): string => {
+    if (!pops.length) return "";
+    
+    const popSections = pops.map((pop, i) => {
+      const resp = (pop.responsabilidades || {}) as Record<string, string>;
+      const passos = pop.procedimento_passos || [];
+      
+      return `
+        <div style="page-break-before: always; padding: 32px 0;">
+          <h2 style="font-size: 22px; color: #1e3a5f; border-bottom: 3px solid #2563eb; padding-bottom: 8px; margin-bottom: 16px;">
+            POP ${i + 1}: ${pop.codigo} - ${pop.titulo}
+          </h2>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+            <span style="background: #f0f7ff; padding: 4px 12px; border-radius: 6px; font-size: 13px; color: #1e40af;">Versão: ${pop.versao_atual || "1.0"}</span>
+            <span style="background: #f0f7ff; padding: 4px 12px; border-radius: 6px; font-size: 13px; color: #1e40af;">Status: ${pop.status}</span>
+            ${pop.gerado_por_ia ? '<span style="background: #fef3c7; padding: 4px 12px; border-radius: 6px; font-size: 13px; color: #92640a;">Gerado por IA</span>' : ''}
+          </div>
+          ${pop.objetivo ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">1. Objetivo</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.objetivo}</p></div>` : ''}
+          ${pop.escopo ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">2. Escopo</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.escopo}</p></div>` : ''}
+          ${(resp.executante || resp.supervisao || resp.interfaces) ? `
+            <div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">3. Responsabilidades</h3>
+            <ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px;">
+              ${resp.executante ? `<li><strong>Executante:</strong> ${resp.executante}</li>` : ''}
+              ${resp.supervisao ? `<li><strong>Supervisão:</strong> ${resp.supervisao}</li>` : ''}
+              ${resp.interfaces ? `<li><strong>Interfaces:</strong> ${resp.interfaces}</li>` : ''}
+            </ul></div>` : ''}
+          ${pop.definicoes ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">4. Definições</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.definicoes}</p></div>` : ''}
+          ${pop.pre_requisitos?.length ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">5. Pré-requisitos</h3><ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px;">${pop.pre_requisitos.map(p => `<li>${p}</li>`).join('')}</ul></div>` : ''}
+          ${pop.materiais_ferramentas?.length ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">6. Materiais e Ferramentas</h3><ul style="font-size: 14px; color: #333; line-height: 1.8; padding-left: 20px;">${pop.materiais_ferramentas.map(m => `<li>${m}</li>`).join('')}</ul></div>` : ''}
+          ${pop.epis_sst ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">7. EPIs / SST</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.epis_sst}</p></div>` : ''}
+          ${passos.length ? `
+            <div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 8px;">8. Procedimento Passo a Passo</h3>
+            ${passos.map(p => `
+              <div style="background: #f0f7ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <span style="background: #2563eb; color: #fff; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Passo ${p.numero}</span>
+                  ${p.tempo_estimado ? `<span style="font-size: 12px; color: #666;">(${p.tempo_estimado})</span>` : ''}
+                </div>
+                <p style="font-size: 14px; color: #333; margin: 4px 0 0 0; line-height: 1.5;">${p.descricao}</p>
+                ${p.ponto_atencao ? `<div style="background: #fef3c7; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 13px; color: #92640a;"><strong>⚠ Atenção:</strong> ${p.ponto_atencao}</div>` : ''}
+              </div>
+            `).join('')}
+            </div>` : ''}
+          ${pop.criterios_qualidade ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">9. Critérios de Qualidade</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.criterios_qualidade}</p></div>` : ''}
+          ${pop.registros_evidencias ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">10. Registros e Evidências</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.registros_evidencias}</p></div>` : ''}
+          ${pop.tratamento_nao_conformidades ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">11. Tratamento de Não Conformidades</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.tratamento_nao_conformidades}</p></div>` : ''}
+          ${pop.referencias ? `<div style="margin-bottom: 14px;"><h3 style="font-size: 15px; color: #1a365d; margin-bottom: 4px;">12. Referências</h3><p style="font-size: 14px; color: #333; text-align: justify; line-height: 1.6;">${pop.referencias}</p></div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div style="page-break-before: always; padding: 40px 0; text-align: center;">
+        <h1 style="font-size: 28px; color: #1e3a5f; margin-bottom: 8px;">Procedimentos Operacionais Padrão (POPs)</h1>
+        <p style="font-size: 14px; color: #888;">${pops.length} procedimento${pops.length !== 1 ? 's' : ''} vinculado${pops.length !== 1 ? 's' : ''}</p>
+        <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
+      </div>
+      ${popSections}
+    `;
+  };
+
+  const combineManualWithPops = (manualHtml: string, popsHtml: string): string => {
+    if (!popsHtml) return manualHtml;
+    // Insert POPs HTML before </body> if present, otherwise append
+    if (manualHtml.toLowerCase().includes("</body>")) {
+      return manualHtml.replace(/<\/body>/i, `${popsHtml}</body>`);
+    }
+    return manualHtml + popsHtml;
+  };
+
   const handleVisualizarCached = (e: React.MouseEvent, cached: any) => {
     e.stopPropagation();
     setManualHtml(cached.html);
     setManualTitulo(cached.titulo);
     setManualOpen(true);
     setCurrentManualRef(cached.referencia_id);
+  };
+
+  const handleVisualizarComPops = async (e: React.MouseEvent, cached: any, cargoId: string) => {
+    e.stopPropagation();
+    try {
+      const pops = await fetchPopsForCargo(cargoId);
+      if (!pops.length) {
+        toast.info("Nenhum POP encontrado para esta função. Exibindo apenas o manual.");
+        handleVisualizarCached(e, cached);
+        return;
+      }
+      const popsHtml = buildPopsHtmlSection(pops);
+      const combined = combineManualWithPops(cached.html, popsHtml);
+      setManualHtml(combined);
+      setManualTitulo(`${cached.titulo} + POPs`);
+      setManualOpen(true);
+      setCurrentManualRef(cached.referencia_id);
+    } catch (err) {
+      console.error("Erro ao carregar POPs:", err);
+      toast.error("Erro ao carregar POPs. Exibindo apenas o manual.");
+      handleVisualizarCached(e, cached);
+    }
   };
 
   const handlePdfArchive = async (blob: Blob, filename: string) => {
