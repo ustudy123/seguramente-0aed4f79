@@ -211,7 +211,9 @@ describe("Módulo Psicossocial NR-01", () => {
     const fim = new Date(hoje.getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     waitForCampanhaForm();
-    cy.get("#input-campanha-nome").scrollIntoView().clear().type(nome);
+    // Break chain to avoid detached DOM
+    cy.get("#input-campanha-nome").scrollIntoView();
+    cy.get("#input-campanha-nome").clear().type(nome);
     preencherDatasCampanha(inicio, fim);
   }
 
