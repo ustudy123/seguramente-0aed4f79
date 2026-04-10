@@ -36,7 +36,18 @@ export function GerarFuncaoIAModal({ open, onClose, cargoId, cargoNome, onSucces
         body: { descricao_livre: texto, cargo_id: cargoId },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to extract JSON error message from FunctionsHttpError
+        let msg = error.message || "Erro ao gerar função com IA";
+        try {
+          const ctx = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            if (body?.error) msg = body.error;
+          }
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
 
       setResultado(data.resultado);
