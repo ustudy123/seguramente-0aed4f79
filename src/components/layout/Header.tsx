@@ -75,8 +75,8 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-4">
         {/* Logged in as */}
-        <span className="hidden md:inline text-xs text-muted-foreground">
-          Logado como <strong className="text-foreground">{user?.email}</strong>
+        <span className="hidden md:inline text-xs text-white/80">
+          Logado como <strong className="text-white">{user?.email}</strong>
         </span>
         {/* Super Admin indicator */}
         {isSuperAdmin && (
