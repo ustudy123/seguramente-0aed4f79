@@ -84,7 +84,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
             variant="outline"
             size="sm"
             onClick={() => navigate("/admin")}
-            className="hidden md:flex items-center gap-2 border-primary/50 text-primary hover:bg-primary/10"
+            className="hidden md:flex items-center gap-2 border-white/40 text-white hover:bg-white/15"
           >
             <Shield className="w-4 h-4" />
             Super Admin
