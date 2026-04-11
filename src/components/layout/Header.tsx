@@ -62,7 +62,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30" style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%) 0%, hsl(280 40% 68%) 50%, hsl(262 40% 60%) 100%)' }}>
       <div className="flex items-center gap-2">
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={onMenuToggle} className="mr-1">
@@ -75,8 +75,8 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-4">
         {/* Logged in as */}
-        <span className="hidden md:inline text-xs text-muted-foreground">
-          Logado como <strong className="text-foreground">{user?.email}</strong>
+        <span className="hidden md:inline text-xs text-white/80">
+          Logado como <strong className="text-white">{user?.email}</strong>
         </span>
         {/* Super Admin indicator */}
         {isSuperAdmin && (
@@ -84,7 +84,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
             variant="outline"
             size="sm"
             onClick={() => navigate("/admin")}
-            className="hidden md:flex items-center gap-2 border-primary/50 text-primary hover:bg-primary/10"
+            className="hidden md:flex items-center gap-2 border-white/40 text-white hover:bg-white/15"
           >
             <Shield className="w-4 h-4" />
             Super Admin
@@ -115,7 +115,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
                   localStorage.removeItem(`humor_lastshown_${user?.id}`);
                   window.dispatchEvent(new Event("humor-reopen"));
                 }}
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-white/70 hover:text-white transition-colors"
               >
                 <Smile className="w-5 h-5" />
               </button>
@@ -127,7 +127,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative text-white/80 hover:text-white hover:bg-white/15">
               <Bell className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
@@ -144,7 +144,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 md:gap-3 pl-2 pr-2 md:pr-3">
+            <Button variant="ghost" className="flex items-center gap-2 md:gap-3 pl-2 pr-2 md:pr-3 hover:bg-white/15">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={profile?.avatar_url || ""} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm">
@@ -152,14 +152,14 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
                 </AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium text-white">
                   {profile?.nome_completo?.split(" ")[0] || "Usuário"}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-white/70">
                   {profile?.cargo || (isSuperAdmin ? "Super Admin" : getRoleLabel(roles))}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
+              <ChevronDown className="w-4 h-4 text-white/70 hidden md:block" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
