@@ -1,5 +1,9 @@
 // Ignora erros do app que não são bugs reais (ex: React Query cancelando requests)
 Cypress.on("uncaught:exception", (err) => {
+  // ResizeObserver loop — não é um bug real
+  if (err.message?.includes("ResizeObserver loop")) {
+    return false;
+  }
   // AbortError do React Query quando componente desmonta
   if (err.name === "AbortError") {
     return false;
