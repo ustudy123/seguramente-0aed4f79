@@ -171,7 +171,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         mimeType: "text/html",
         tipo: "Manual de Cultura",
         observacoes: "Manual de Cultura Organizacional gerado por IA",
-        pastaCategoria: null,
+        pastaCategoria: "Cultura",
       });
     } catch (err) {
       console.error("Erro ao arquivar:", err);
