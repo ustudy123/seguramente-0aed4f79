@@ -69,8 +69,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function preencherCampo(selector: string, value: string) {
-    cy.get(selector, { timeout: 15000 })
-      .filter(":visible")
+    cy.get(`${selector}:visible`, { timeout: 15000 })
       .first()
       .scrollIntoView()
       .should("exist")
