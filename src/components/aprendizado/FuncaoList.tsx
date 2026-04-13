@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2, Eye, ChevronDown } from "lucide-react";
+import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2, Eye, ChevronDown, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
