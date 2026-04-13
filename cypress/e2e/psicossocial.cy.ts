@@ -144,28 +144,32 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
+    // Click the combobox trigger
     cy.get(selector, { timeout: 10000 })
       .first()
       .should("exist")
       .scrollIntoView()
       .click({ force: true });
 
+    cy.wait(500);
+
+    // Wait for the popper to appear and find the input inside it
     cy.get("[data-radix-popper-content-wrapper]", { timeout: 10000 })
       .should("have.length.at.least", 1)
       .last()
-      .within(() => {
-        cy.get("[cmdk-input]", { timeout: 10000 })
-          .should("exist")
-          .then(($input) => {
-            dispatchNativeValue($input[0] as HTMLInputElement, valor);
-          });
-
-        cy.get("[cmdk-input]", { timeout: 5000 }).should("have.value", valor);
+      .find("input", { timeout: 5000 })
+      .should("exist")
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement, valor);
       });
 
-    cy.get("body").type("{esc}", { force: true });
-    cy.wait(300);
+    cy.wait(500);
 
+    // Close the popover by pressing Escape
+    cy.get("body").type("{esc}", { force: true });
+    cy.wait(500);
+
+    // Verify the value was set
     cy.get(selector, { timeout: 5000 })
       .first()
       .should("contain.text", valor);
