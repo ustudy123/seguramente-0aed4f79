@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Users, ClipboardList, ShieldCheck, Rocket, ArrowRight, Shield } from "lucide-react";
+import { Users, ClipboardList, ShieldCheck, Rocket, ArrowRight, Shield, ImageIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditoriaTab } from "@/components/configuracoes/AuditoriaTab";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import UsuariosContent from "@/components/configuracoes/UsuariosContent";
 import PerfisContent from "@/components/configuracoes/PerfisContent";
 import { EsocialConfig } from "@/components/esocial/EsocialConfig";
+import { EmpresaLogoTab } from "@/components/configuracoes/EmpresaLogoTab";
 
 export default function Configuracoes() {
   const { hasMinimumRole, profile, isSuperAdmin } = useAuthContext();
