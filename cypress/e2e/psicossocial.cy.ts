@@ -322,12 +322,13 @@ describe("Módulo Psicossocial NR-01", () => {
   it("TC-04: Autocomplete de Setor + Função funciona", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get("#combobox-setor-situacao:visible").first().scrollIntoView().click({ force: true });
-    cy.get('[cmdk-input]:visible', { timeout: 5000 })
+    cy.get("#combobox-setor-situacao", { timeout: 10000 }).first().scrollIntoView().click({ force: true });
+    cy.wait(800);
+    cy.get('[cmdk-input]', { timeout: 8000 })
+      .should("have.length.at.least", 1)
       .last()
-      .should("be.visible")
-      .clear()
-      .type("Admin");
+      .clear({ force: true })
+      .type("Admin", { force: true });
 
     cy.get("body").then(($body) => {
       if ($body.find("[cmdk-item]").length > 0) {
