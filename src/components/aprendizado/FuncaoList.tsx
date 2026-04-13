@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2, Eye, ChevronDown } from "lucide-react";
+import { Search, Briefcase, ClipboardList, Brain, Shield, FileText, BookOpen, Loader2, Eye, ChevronDown, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -171,7 +171,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         mimeType: "text/html",
         tipo: "Manual de Função",
         observacoes: `Manual gerado por IA: ${titulo}`,
-        pastaCategoria: null,
+        pastaCategoria: "Aprendizado",
       });
     } catch (err) {
       console.error("Erro ao arquivar manual:", err);
@@ -359,7 +359,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         mimeType: "application/pdf",
         tipo: "Manual de Função (PDF)",
         observacoes: `PDF do manual: ${manualTitulo}`,
-        pastaCategoria: null,
+        pastaCategoria: "Aprendizado",
       });
       toast.success("PDF arquivado no módulo Documentos!");
     } catch (err) {
@@ -440,8 +440,20 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                       <Briefcase className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{cargo.nome}</p>
+                      <p className="font-medium text-foreground flex items-center gap-1.5">
+                        {cargo.nome}
+                        {cached && (
+                          <span title="Manual gerado" className="text-emerald-500">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </span>
+                        )}
+                      </p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {cached && (
+                          <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            Manual gerado
+                          </Badge>
+                        )}
                         {cargo.departamento?.nome && (
                           <span className="text-xs text-muted-foreground font-normal">
                             {cargo.departamento.nome}
