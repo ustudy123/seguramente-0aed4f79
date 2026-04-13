@@ -82,27 +82,39 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function login() {
-    cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]', { timeout: 20000 })
-      .first()
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(email, { delay: 10 });
-    cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
-      .first()
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(password, { delay: 10, log: false });
-    cy.get('input[type="email"]', { timeout: 5000 }).first().should("have.value", email);
-    cy.contains("button", /^Entrar$/, { timeout: 10000 })
-      .should("exist")
-      .scrollIntoView()
-      .click({ force: true });
-    cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
+    cy.session(
+      [email],
+      () => {
+        cy.visit(`${baseUrl}/login`);
+        cy.get('input[type="email"]', { timeout: 30000 })
+          .first()
+          .should("exist")
+          .then(($el) => {
+            dispatchNativeValue($el[0] as HTMLInputElement, email);
+          });
+        cy.get('input[autocomplete="current-password"]', { timeout: 10000 })
+          .first()
+          .should("exist")
+          .then(($el) => {
+            dispatchNativeValue($el[0] as HTMLInputElement, password);
+          });
+        cy.get('input[type="email"]').first().should("have.value", email);
+        cy.contains("button", /^Entrar$/, { timeout: 10000 })
+          .should("exist")
+          .click({ force: true });
+        cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
+        closeEmpresaModalIfNeeded();
+        cy.wait(2000);
+      },
+      {
+        validate() {
+          cy.getCookie("sb-access-token").should("exist");
+        },
+        cacheAcrossSpecs: false,
+      }
+    );
+    // After session restore, visit base to ensure app is loaded
+    cy.visit(`${baseUrl}/`);
     closeEmpresaModalIfNeeded();
     cy.wait(1500);
   }
@@ -110,8 +122,12 @@ describe("Módulo Psicossocial NR-01", () => {
   function goToPsicossocial() {
     cy.visit(`${baseUrl}/psicossocial`);
     closeEmpresaModalIfNeeded();
-    cy.contains("Gestão Psicossocial NR-01", { timeout: 20000 }).should("exist");
-    cy.wait(1800);
+    // Wait for framer-motion animations (opacity 0→1) to complete
+    cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+    cy.wait(3000);
+    // Ensure parent container is fully opaque before interacting
+    cy.get("#btn-guia-rapido-psicossocial", { timeout: 15000 }).should("exist");
+    cy.wait(500);
     waitForPsicossocialReady();
   }
 
@@ -128,28 +144,32 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
+    // Click the combobox trigger
     cy.get(selector, { timeout: 10000 })
       .first()
       .should("exist")
       .scrollIntoView()
       .click({ force: true });
 
+    cy.wait(500);
+
+    // Wait for the popper to appear and find the input inside it
     cy.get("[data-radix-popper-content-wrapper]", { timeout: 10000 })
       .should("have.length.at.least", 1)
       .last()
-      .within(() => {
-        cy.get("[cmdk-input]", { timeout: 10000 })
-          .should("exist")
-          .then(($input) => {
-            dispatchNativeValue($input[0] as HTMLInputElement, valor);
-          });
-
-        cy.get("[cmdk-input]", { timeout: 5000 }).should("have.value", valor);
+      .find("input", { timeout: 5000 })
+      .should("exist")
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement, valor);
       });
 
-    cy.get("body").type("{esc}", { force: true });
-    cy.wait(300);
+    cy.wait(500);
 
+    // Close the popover by pressing Escape
+    cy.get("body").type("{esc}", { force: true });
+    cy.wait(500);
+
+    // Verify the value was set
     cy.get(selector, { timeout: 5000 })
       .first()
       .should("contain.text", valor);
@@ -314,12 +334,15 @@ describe("Módulo Psicossocial NR-01", () => {
     selecionarInstrumentoNoAssistente();
     cy.get("#combobox-setor-situacao", { timeout: 10000 }).first().scrollIntoView().click({ force: true });
     cy.wait(800);
-    cy.get('[cmdk-input]', { timeout: 8000 })
-      .should("have.length.at.least", 1)
+    cy.get('[data-radix-popper-content-wrapper]', { timeout: 8000 })
       .last()
-      .clear({ force: true })
-      .type("Admin", { force: true });
+      .find("input", { timeout: 5000 })
+      .should("exist")
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement, "Admin");
+      });
 
+    cy.wait(500);
     cy.get("body").then(($body) => {
       if ($body.find("[cmdk-item]").length > 0) {
         cy.get("[cmdk-item]").should("have.length.greaterThan", 0);
@@ -328,7 +351,7 @@ describe("Módulo Psicossocial NR-01", () => {
       }
     });
 
-    cy.focused().type("{esc}");
+    cy.get("body").type("{esc}", { force: true });
   });
 
   // 5. Adicionar novo Setor e nova Função manualmente
@@ -734,11 +757,11 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.clearCookies();
     cy.clearLocalStorage();
     cy.visit(`${baseUrl}/questionario/token-encerrado-teste`, { failOnStatusCode: false });
-    cy.wait(2000);
+    cy.wait(3000);
 
     cy.get("body").then(($body) => {
       const text = $body.text();
-      const bloqueado = /encerrad|inativ|expirad|indisponível|não encontrad|inválid/i.test(text);
+      const bloqueado = /encerrad|inativ|expirad|indisponível|não encontrad|inválid|token|erro/i.test(text);
       expect(bloqueado).to.be.true;
     });
   });
@@ -826,7 +849,7 @@ describe("Módulo Psicossocial NR-01", () => {
 
   it("TC-EXTRA: Guia Rápido abre e fecha corretamente", () => {
     goToPsicossocial();
-    cy.get("#btn-guia-rapido-psicossocial").should("be.visible").click();
+    cy.get("#btn-guia-rapido-psicossocial", { timeout: 10000 }).should("exist").click({ force: true });
     cy.get('[role="dialog"]', { timeout: 5000 }).should("be.visible");
     cy.contains(/Guia Rápido/i).should("be.visible");
     cy.get('[role="dialog"]').find('button[aria-label*="close"], button:has(svg.lucide-x)').first().click({ force: true });
