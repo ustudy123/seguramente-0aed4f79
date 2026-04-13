@@ -4,117 +4,22 @@ describe("Módulo Psicossocial NR-01", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
   const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.app.br";
+  const supabaseAuthStorageKey = "sb-diayjpsrcerycycyaxst-auth-token";
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
   const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;
   const setorBaseNome = `Setor Cypress ${uniqueId}`;
   const funcaoBaseNome = `Funcao Cypress ${uniqueId}`;
-
-  // ─── Tab label mapping (real labels from PsicossocialDashboard) ────────
-  const TAB = {
-    campanhas: "Campanhas",
-    burnout: "Burnout & Boreout",
-    historico: "Histórico IPS",
-    pgr: "Inventário PGR",
-    instrumentos: "Instrumentos",
-    indices: "Índices",
-  } as const;
-
-  const TAB_SELECTOR: Record<(typeof TAB)[keyof typeof TAB], string> = {
-    [TAB.campanhas]: "#tab-psicossocial-campanhas",
-    [TAB.burnout]: "#tab-psicossocial-burnout",
-    [TAB.historico]: "#tab-psicossocial-historico",
-    [TAB.pgr]: "#tab-psicossocial-pgr",
-    [TAB.instrumentos]: "#tab-psicossocial-instrumentos",
-    [TAB.indices]: "#tab-psicossocial-indicadores",
-  };
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────
-
-  function closeEmpresaModalIfNeeded() {
-    cy.get("body", { timeout: 15000 }).then(($body) => {
-      const pageText = $body.text();
-      if (/Acesso Restrito/i.test(pageText)) {
-        throw new Error("Usuário de teste sem empresa vinculada.");
-      }
-      if (!/Selecione a Empresa/i.test(pageText)) return;
-      cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("be.visible");
-      cy.get("button.text-left:visible").first().click({ force: true });
-      cy.contains("button", /Acessar|Continuar|Confirmar|Entrar/i, { timeout: 10000 })
-        .should("be.visible")
-        .and("not.be.disabled")
-        .click({ force: true });
-      cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("not.exist");
-    });
-  }
-
-  function waitForPsicossocialReady() {
-    cy.get("body", { timeout: 20000 }).should(($body) => {
-      const carregouEstadoPrincipal =
-        $body.find("#btn-nova-campanha, #btn-criar-campanha, #tab-psicossocial-campanhas").length > 0;
-
-      expect(carregouEstadoPrincipal, "dashboard ou estado vazio carregado").to.eq(true);
-    });
-    cy.get("#btn-guia-rapido-psicossocial", { timeout: 15000 }).should("exist");
-  }
-
-  function dispatchNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
-    const prototype = Object.getPrototypeOf(element);
-    const valueSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
-
-    element.focus();
-    valueSetter?.call(element, value);
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-    element.dispatchEvent(new Event("change", { bubbles: true }));
-    element.blur();
-  }
-
-  function preencherCampo(selector: string, value: string) {
-    cy.get(selector, { timeout: 15000 })
-      .first()
-      .scrollIntoView()
-      .should("exist")
-      .then(($input) => {
-        dispatchNativeValue($input[0] as HTMLInputElement | HTMLTextAreaElement, value);
-      });
-
-    cy.get(selector, { timeout: 5000 }).first().should("have.value", value);
-  }
-
-  function login() {
-    cy.session(
-      [email],
-      () => {
-        cy.visit(`${baseUrl}/login`);
-        cy.get('input[type="email"]', { timeout: 30000 })
-          .first()
-          .should("exist")
-          .then(($el) => {
-            dispatchNativeValue($el[0] as HTMLInputElement, email);
-          });
-        cy.get('input[autocomplete="current-password"]', { timeout: 10000 })
-          .first()
-          .should("exist")
-          .then(($el) => {
-            dispatchNativeValue($el[0] as HTMLInputElement, password);
-          });
-        cy.get('input[type="email"]').first().should("have.value", email);
-        cy.contains("button", /^Entrar$/, { timeout: 10000 })
-          .should("exist")
-          .click({ force: true });
-        cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
-        closeEmpresaModalIfNeeded();
-        cy.wait(2000);
-      },
+...
       {
         validate() {
+          cy.visit(`${baseUrl}/`);
+          cy.wait(1500);
           cy.window().then((win) => {
-            const keys = Object.keys(win.localStorage);
-            const hasToken = keys.some(
-              (k) => k.includes("supabase") && k.includes("auth")
-            );
-            expect(hasToken, "Supabase auth token in localStorage").to.be.true;
+            const sessionJson = win.localStorage.getItem(supabaseAuthStorageKey);
+            expect(sessionJson, `Supabase session key ${supabaseAuthStorageKey}`).to.exist;
           });
+          cy.location("pathname").should("not.eq", "/login");
         },
         cacheAcrossSpecs: false,
       }
