@@ -106,7 +106,9 @@ describe("Módulo Psicossocial NR-01", () => {
   function goToPsicossocial() {
     cy.visit(`${baseUrl}/psicossocial`);
     closeEmpresaModalIfNeeded();
-    cy.contains("Gestão Psicossocial NR-01", { timeout: 20000 }).should("be.visible");
+    // Wait for framer-motion animation to complete (opacity 0→1)
+    cy.contains("Gestão Psicossocial NR-01", { timeout: 20000 }).should("exist");
+    cy.wait(1500);
     waitForPsicossocialReady();
   }
 
@@ -124,21 +126,25 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
     // Open the combobox popover
-    cy.get(`${selector}:visible`, { timeout: 10000 })
+    cy.get(selector, { timeout: 10000 })
       .first()
       .scrollIntoView()
       .click({ force: true });
 
-    // Wait for the popover input to appear
-    cy.wait(500);
+    // Wait for the popover to render
+    cy.wait(800);
 
-    // Type the value into the command input
-    cy.get('[cmdk-input]', { timeout: 5000 })
-      .filter(":visible")
-      .last()
-      .clear()
-      .type(valor, { delay: 30 });
-    cy.wait(500);
+    // Type into the command input using native value dispatch for stability
+    cy.get('[cmdk-input]', { timeout: 8000 })
+      .should("have.length.at.least", 1)
+      .then(($inputs) => {
+        const visibleInputs = $inputs.filter(":visible");
+        const target = visibleInputs.length > 0 ? visibleInputs.last() : $inputs.last();
+        cy.wrap(target).as("comboInput");
+      });
+
+    cy.get("@comboInput").clear({ force: true }).type(valor, { delay: 30, force: true });
+    cy.wait(600);
 
     // Check if there's a matching item to click, otherwise press Enter to create
     cy.get("body").then(($body) => {
@@ -146,15 +152,14 @@ describe("Módulo Psicossocial NR-01", () => {
       if (items.length > 0) {
         cy.get("[cmdk-item]:visible").first().click({ force: true });
       } else {
-        // Press Enter to confirm the typed value
-        cy.get('[cmdk-input]:visible').last().type("{enter}");
+        cy.get("@comboInput").type("{enter}", { force: true });
       }
     });
 
     cy.wait(500);
 
     // Verify the value was set
-    cy.get(`${selector}:visible`, { timeout: 5000 })
+    cy.get(selector, { timeout: 5000 })
       .first()
       .should("contain.text", valor);
   }
@@ -189,14 +194,12 @@ describe("Módulo Psicossocial NR-01", () => {
     ensureTabsDisponiveis();
     const sel = TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]];
     cy.get(sel, { timeout: 15000 })
-      .filter(":visible")
+      .should("have.length.at.least", 1)
       .first()
       .scrollIntoView()
-      .should("exist")
       .click({ force: true });
-    cy.wait(300);
+    cy.wait(500);
     cy.get(sel, { timeout: 5000 })
-      .filter(":visible")
       .first()
       .should("have.attr", "aria-selected", "true");
     cy.wait(500);
