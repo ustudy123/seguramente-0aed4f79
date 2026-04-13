@@ -90,15 +90,16 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]', { timeout: 20000 }).filter(":visible").first().should("be.visible");
-    preencherCampo('input[type="email"]', email);
-    preencherCampo('input[autocomplete="current-password"]', password);
+    cy.get('input[type="email"]:visible', { timeout: 20000 }).first().should("be.visible");
+    cy.get('input[type="email"]:visible').first().clear().type(email, { delay: 10 });
+    cy.get('input[autocomplete="current-password"]:visible').first().clear().type(password, { delay: 10 });
+    cy.get('input[type="email"]:visible').first().should("have.value", email);
     cy.contains("button", /^Entrar$/, { timeout: 10000 })
       .filter(":visible")
       .first()
       .should("be.visible")
       .click({ force: true });
-    cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+    cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
     cy.wait(3000);
   }
@@ -124,19 +125,21 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
     // Open the combobox popover
-    cy.get(selector, { timeout: 10000 })
-      .filter(":visible")
+    cy.get(`${selector}:visible`, { timeout: 10000 })
       .first()
       .scrollIntoView()
-      .should("exist")
       .click({ force: true });
 
+    // Wait for the popover input to appear
+    cy.wait(500);
+
     // Type the value into the command input
-    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+    cy.get('[cmdk-input]', { timeout: 5000 })
+      .filter(":visible")
       .last()
       .clear()
       .type(valor, { delay: 30 });
-    cy.wait(300);
+    cy.wait(500);
 
     // Check if there's a matching item to click, otherwise press Enter to create
     cy.get("body").then(($body) => {
@@ -145,15 +148,14 @@ describe("Módulo Psicossocial NR-01", () => {
         cy.get("[cmdk-item]:visible").first().click({ force: true });
       } else {
         // Press Enter to confirm the typed value
-        cy.get('input[placeholder="Buscar ou digitar..."]:visible').last().type("{enter}");
+        cy.get('[cmdk-input]:visible').last().type("{enter}");
       }
     });
 
-    cy.wait(300);
+    cy.wait(500);
 
     // Verify the value was set
-    cy.get(selector, { timeout: 5000 })
-      .filter(":visible")
+    cy.get(`${selector}:visible`, { timeout: 5000 })
       .first()
       .should("contain.text", valor);
   }
