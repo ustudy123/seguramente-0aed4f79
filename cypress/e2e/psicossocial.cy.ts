@@ -320,8 +320,8 @@ describe("Módulo Psicossocial NR-01", () => {
   it("TC-04: Autocomplete de Setor + Função funciona", () => {
     abrirNovaCampanha();
     selecionarInstrumentoNoAssistente();
-    cy.get("#combobox-setor-situacao").scrollIntoView().click({ force: true });
-    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+    cy.get("#combobox-setor-situacao:visible").first().scrollIntoView().click({ force: true });
+    cy.get('[cmdk-input]:visible', { timeout: 5000 })
       .last()
       .should("be.visible")
       .clear()
