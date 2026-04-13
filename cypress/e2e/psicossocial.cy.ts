@@ -122,8 +122,12 @@ describe("Módulo Psicossocial NR-01", () => {
   function goToPsicossocial() {
     cy.visit(`${baseUrl}/psicossocial`);
     closeEmpresaModalIfNeeded();
-    cy.contains("Gestão Psicossocial NR-01", { timeout: 20000 }).should("exist");
-    cy.wait(1800);
+    // Wait for framer-motion animations (opacity 0→1) to complete
+    cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+    cy.wait(3000);
+    // Ensure parent container is fully opaque before interacting
+    cy.get("#btn-guia-rapido-psicossocial", { timeout: 15000 }).should("exist");
+    cy.wait(500);
     waitForPsicossocialReady();
   }
 
