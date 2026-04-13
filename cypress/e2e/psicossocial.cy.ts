@@ -108,7 +108,13 @@ describe("Módulo Psicossocial NR-01", () => {
       },
       {
         validate() {
-          cy.getCookie("sb-access-token").should("exist");
+          cy.window().then((win) => {
+            const keys = Object.keys(win.localStorage);
+            const hasToken = keys.some(
+              (k) => k.includes("supabase") && k.includes("auth")
+            );
+            expect(hasToken, "Supabase auth token in localStorage").to.be.true;
+          });
         },
         cacheAcrossSpecs: false,
       }
