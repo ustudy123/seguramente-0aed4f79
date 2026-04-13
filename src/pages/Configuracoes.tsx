@@ -82,6 +82,12 @@ export default function Configuracoes() {
               <span className="hidden sm:inline">Auditoria</span>
             </TabsTrigger>
           )}
+          {isAdmin && (
+            <TabsTrigger value="logo" className="flex items-center gap-1.5">
+              <ImageIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Logo</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {isAdmin && (
