@@ -171,7 +171,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         mimeType: "text/html",
         tipo: "Manual de Função",
         observacoes: `Manual gerado por IA: ${titulo}`,
-        pastaCategoria: null,
+        pastaCategoria: "Aprendizado",
       });
     } catch (err) {
       console.error("Erro ao arquivar manual:", err);
@@ -359,7 +359,7 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
         mimeType: "application/pdf",
         tipo: "Manual de Função (PDF)",
         observacoes: `PDF do manual: ${manualTitulo}`,
-        pastaCategoria: null,
+        pastaCategoria: "Aprendizado",
       });
       toast.success("PDF arquivado no módulo Documentos!");
     } catch (err) {
