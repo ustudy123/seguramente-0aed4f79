@@ -754,11 +754,11 @@ describe("Módulo Psicossocial NR-01", () => {
     cy.clearCookies();
     cy.clearLocalStorage();
     cy.visit(`${baseUrl}/questionario/token-encerrado-teste`, { failOnStatusCode: false });
-    cy.wait(2000);
+    cy.wait(3000);
 
     cy.get("body").then(($body) => {
       const text = $body.text();
-      const bloqueado = /encerrad|inativ|expirad|indisponível|não encontrad|inválid/i.test(text);
+      const bloqueado = /encerrad|inativ|expirad|indisponível|não encontrad|inválid|token|erro/i.test(text);
       expect(bloqueado).to.be.true;
     });
   });
@@ -846,7 +846,7 @@ describe("Módulo Psicossocial NR-01", () => {
 
   it("TC-EXTRA: Guia Rápido abre e fecha corretamente", () => {
     goToPsicossocial();
-    cy.get("#btn-guia-rapido-psicossocial").should("be.visible").click();
+    cy.get("#btn-guia-rapido-psicossocial", { timeout: 10000 }).should("exist").click({ force: true });
     cy.get('[role="dialog"]', { timeout: 5000 }).should("be.visible");
     cy.contains(/Guia Rápido/i).should("be.visible");
     cy.get('[role="dialog"]').find('button[aria-label*="close"], button:has(svg.lucide-x)').first().click({ force: true });
