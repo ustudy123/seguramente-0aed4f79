@@ -440,8 +440,20 @@ export function FuncaoList({ cargos, isLoading, onSelect }: FuncaoListProps) {
                       <Briefcase className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{cargo.nome}</p>
+                      <p className="font-medium text-foreground flex items-center gap-1.5">
+                        {cargo.nome}
+                        {cached && (
+                          <span title="Manual gerado" className="text-emerald-500">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </span>
+                        )}
+                      </p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {cached && (
+                          <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            Manual gerado
+                          </Badge>
+                        )}
                         {cargo.departamento?.nome && (
                           <span className="text-xs text-muted-foreground font-normal">
                             {cargo.departamento.nome}
