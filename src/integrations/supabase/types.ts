@@ -3562,6 +3562,7 @@ export type Database = {
           inscricao_estadual: string | null
           inscricao_municipal: string | null
           jornada_padrao: string | null
+          logo_url: string | null
           matriz_id: string | null
           nome_fantasia: string | null
           numero: string | null
@@ -3630,6 +3631,7 @@ export type Database = {
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           jornada_padrao?: string | null
+          logo_url?: string | null
           matriz_id?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -3698,6 +3700,7 @@ export type Database = {
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           jornada_padrao?: string | null
+          logo_url?: string | null
           matriz_id?: string | null
           nome_fantasia?: string | null
           numero?: string | null
