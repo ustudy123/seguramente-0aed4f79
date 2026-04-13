@@ -80,7 +80,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function preencherCommandInputVisivel(value: string) {
-    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+    cy.get('[cmdk-input]:visible', { timeout: 5000 })
       .should("have.length.at.least", 1)
       .last()
       .then(($input) => {
