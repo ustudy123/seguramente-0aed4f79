@@ -123,50 +123,66 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   }
 
   const preparedHtml = normalizeManualHtml(html);
-  const iframe = document.createElement("iframe");
-  iframe.setAttribute("aria-hidden", "true");
-  iframe.style.position = "fixed";
-  iframe.style.top = "0";
-  iframe.style.left = "-10000px";
-  iframe.style.width = "794px";
-  iframe.style.height = "1123px";
-  iframe.style.opacity = "0";
-  iframe.style.pointerEvents = "none";
-  iframe.style.border = "0";
-  iframe.style.background = "#ffffff";
 
-  document.body.appendChild(iframe);
+  // Parse the HTML to extract just the body content and styles
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(preparedHtml, "text/html");
+  const bodyContent = doc.body.innerHTML;
+  const styles = Array.from(doc.querySelectorAll("style"))
+    .map((s) => s.textContent)
+    .join("\n");
+
+  // Create a container div in the main document (avoids cross-document issues with html2canvas)
+  const container = document.createElement("div");
+  container.setAttribute("aria-hidden", "true");
+  container.style.cssText = [
+    "position: fixed",
+    "top: 0",
+    "left: -10000px",
+    "width: 794px",
+    "background: #ffffff",
+    "opacity: 0",
+    "pointer-events: none",
+    "z-index: -9999",
+    "overflow: visible",
+  ].join(";");
+
+  // Add styles
+  const styleEl = document.createElement("style");
+  styleEl.textContent = styles;
+  container.appendChild(styleEl);
+
+  // Add content
+  const contentDiv = document.createElement("div");
+  contentDiv.innerHTML = bodyContent;
+  contentDiv.style.cssText = [
+    "max-width: 794px",
+    "margin: 0 auto",
+    "padding: 0 20px",
+    "box-sizing: border-box",
+    "overflow-wrap: break-word",
+    "word-wrap: break-word",
+    "word-break: break-word",
+    "background: #ffffff",
+  ].join(";");
+  container.appendChild(contentDiv);
+
+  document.body.appendChild(container);
 
   try {
-    await new Promise<void>((resolve, reject) => {
-      iframe.onload = () => resolve();
-      iframe.onerror = () => reject(new Error("Falha ao preparar o manual para PDF."));
-      iframe.srcdoc = preparedHtml;
-    });
-
-    const iframeDocument = iframe.contentDocument;
-
-    if (!iframeDocument?.body) {
-      throw new Error("Não foi possível acessar o conteúdo do manual.");
+    // Wait for fonts and images to load
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
     }
+    await wait(600);
 
-    if (iframeDocument.fonts?.ready) {
-      await iframeDocument.fonts.ready;
-    }
+    const captureWidth = Math.max(contentDiv.scrollWidth, contentDiv.offsetWidth, 794);
+    const captureHeight = Math.max(contentDiv.scrollHeight, contentDiv.offsetHeight, 1123);
 
-    await wait(500);
-
-    const root = iframeDocument.documentElement;
-    const body = iframeDocument.body;
-    const captureWidth = Math.max(root.scrollWidth, body.scrollWidth, body.offsetWidth, 794);
-    const captureHeight = Math.max(root.scrollHeight, body.scrollHeight, body.offsetHeight, 1123);
-
-    iframe.style.width = `${captureWidth}px`;
-    iframe.style.height = `${captureHeight}px`;
-
+    container.style.width = `${captureWidth}px`;
     await wait(200);
 
-    const canvas = await html2canvas(body, {
+    const canvas = await html2canvas(contentDiv, {
       scale: PDF_RENDER_SCALE,
       useCORS: true,
       logging: false,
@@ -231,6 +247,6 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
 
     return { blob, filename, pdf };
   } finally {
-    iframe.remove();
+    container.remove();
   }
 }
