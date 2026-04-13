@@ -334,12 +334,15 @@ describe("Módulo Psicossocial NR-01", () => {
     selecionarInstrumentoNoAssistente();
     cy.get("#combobox-setor-situacao", { timeout: 10000 }).first().scrollIntoView().click({ force: true });
     cy.wait(800);
-    cy.get('[cmdk-input]', { timeout: 8000 })
-      .should("have.length.at.least", 1)
+    cy.get('[data-radix-popper-content-wrapper]', { timeout: 8000 })
       .last()
-      .clear({ force: true })
-      .type("Admin", { force: true });
+      .find("input", { timeout: 5000 })
+      .should("exist")
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement, "Admin");
+      });
 
+    cy.wait(500);
     cy.get("body").then(($body) => {
       if ($body.find("[cmdk-item]").length > 0) {
         cy.get("[cmdk-item]").should("have.length.greaterThan", 0);
@@ -348,7 +351,7 @@ describe("Módulo Psicossocial NR-01", () => {
       }
     });
 
-    cy.focused().type("{esc}");
+    cy.get("body").type("{esc}", { force: true });
   });
 
   // 5. Adicionar novo Setor e nova Função manualmente
