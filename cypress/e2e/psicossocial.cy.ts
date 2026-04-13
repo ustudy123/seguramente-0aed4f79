@@ -90,10 +90,14 @@ describe("Módulo Psicossocial NR-01", () => {
 
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]', { timeout: 20000 }).should("be.visible");
+    cy.get('input[type="email"]', { timeout: 20000 }).filter(":visible").first().should("be.visible");
     preencherCampo('input[type="email"]', email);
     preencherCampo('input[autocomplete="current-password"]', password);
-    cy.contains("button", /^Entrar$/, { timeout: 10000 }).should("be.visible").click({ force: true });
+    cy.contains("button", /^Entrar$/, { timeout: 10000 })
+      .filter(":visible")
+      .first()
+      .should("be.visible")
+      .click({ force: true });
     cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
     cy.wait(3000);
@@ -119,6 +123,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
+    // Open the combobox popover
     cy.get(selector, { timeout: 10000 })
       .filter(":visible")
       .first()
@@ -126,15 +131,28 @@ describe("Módulo Psicossocial NR-01", () => {
       .should("exist")
       .click({ force: true });
 
-    preencherCommandInputVisivel(valor);
-    cy.wait(150);
+    // Type the value into the command input
+    cy.get('input[placeholder="Buscar ou digitar..."]:visible', { timeout: 5000 })
+      .last()
+      .clear()
+      .type(valor, { delay: 30 });
+    cy.wait(300);
 
-    cy.get(selector)
-      .filter(":visible")
-      .first()
-      .click({ force: true });
+    // Check if there's a matching item to click, otherwise press Enter to create
+    cy.get("body").then(($body) => {
+      const items = $body.find("[cmdk-item]:visible");
+      if (items.length > 0) {
+        cy.get("[cmdk-item]:visible").first().click({ force: true });
+      } else {
+        // Press Enter to confirm the typed value
+        cy.get('input[placeholder="Buscar ou digitar..."]:visible').last().type("{enter}");
+      }
+    });
 
-    cy.get(selector)
+    cy.wait(300);
+
+    // Verify the value was set
+    cy.get(selector, { timeout: 5000 })
       .filter(":visible")
       .first()
       .should("contain.text", valor);
