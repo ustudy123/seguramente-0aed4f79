@@ -25,7 +25,7 @@ interface ArquivarDocumentoParams {
   colaboradorNome?: string | null;
   colaboradorCpf?: string | null;
   // Target folder category (used when no collaborator)
-  pastaCategoria?: "SST" | "Ergonomia" | "Psicossocial" | "Ponto" | "Financeiro" | "Desligamento" | "Admissão" | null;
+  pastaCategoria?: "SST" | "Ergonomia" | "Psicossocial" | "Ponto" | "Financeiro" | "Desligamento" | "Admissão" | "Aprendizado" | "Cultura" | null;
   // Subfolder inside collaborator folder
   subpastaColaborador?: "Admissão" | "Vida Funcional" | "Saúde Ocupacional" | "Desligamento" | null;
 }
@@ -83,6 +83,8 @@ async function findCategoriaPasta(
     Financeiro: ["Processos Organizacionais", "Gestão de Pessoas"],
     Desligamento: ["Gestão de Pessoas"],
     "Admissão": ["Gestão de Pessoas"],
+    Aprendizado: ["Processos Organizacionais", "Gestão de Pessoas"],
+    Cultura: ["Processos Organizacionais", "Gestão de Pessoas"],
   };
 
   const candidates = FOLDER_MAP[categoria] || [categoria];
