@@ -241,7 +241,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
         mimeType: "application/pdf",
         tipo: "Manual de Cultura (PDF)",
         observacoes: "PDF do Manual de Cultura Organizacional",
-        pastaCategoria: null,
+        pastaCategoria: "Cultura",
       });
       toast.success("PDF arquivado no módulo Documentos!");
     } catch (err) {
