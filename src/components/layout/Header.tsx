@@ -94,35 +94,29 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
         {/* Empresa Selector */}
         <EmpresaSelector />
 
-        {/* Humor indicator */}
-        {humorHoje ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-xl cursor-default select-none" title={humorHoje.humor}>
-                {humorHoje.emoji}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Humor: {humorHoje.humor}</TooltipContent>
-          </Tooltip>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => {
-                  // Reset localStorage flags so popup shows again
-                  const today = new Date().toISOString().split("T")[0];
-                  localStorage.removeItem(`humor_morning_${user?.id}_${today}`);
-                  localStorage.removeItem(`humor_lastshown_${user?.id}`);
-                  window.dispatchEvent(new Event("humor-reopen"));
-                }}
-                className="text-white/70 hover:text-white transition-colors"
-              >
+        {/* Humor indicator - always clickable to change */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                const today = new Date().toISOString().split("T")[0];
+                localStorage.removeItem(`humor_morning_${user?.id}_${today}`);
+                localStorage.removeItem(`humor_lastshown_${user?.id}`);
+                window.dispatchEvent(new Event("humor-reopen"));
+              }}
+              className="text-white/70 hover:text-white transition-colors"
+            >
+              {humorHoje ? (
+                <span className="text-xl select-none">{humorHoje.emoji}</span>
+              ) : (
                 <Smile className="w-5 h-5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Registrar humor do dia</TooltipContent>
-          </Tooltip>
-        )}
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {humorHoje ? `Humor: ${humorHoje.humor} — clique para alterar` : "Registrar humor do dia"}
+          </TooltipContent>
+        </Tooltip>
 
         {/* Notifications */}
         <DropdownMenu>
