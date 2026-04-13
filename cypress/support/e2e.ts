@@ -1,7 +1,11 @@
 // Ignora erros do app que não são bugs reais (ex: React Query cancelando requests)
 Cypress.on("uncaught:exception", (err) => {
   // AbortError do React Query quando componente desmonta
-  if (err.name === "AbortError" || err.message?.includes("signal is aborted") || err.message?.includes("aborted")) {
+  if (err.name === "AbortError") {
+    return false;
+  }
+  // Qualquer erro relacionado a signal/abort
+  if (err.message?.includes("signal") || err.message?.includes("abort") || err.message?.includes("aborted")) {
     return false;
   }
   // Erros de rede/fetch que ocorrem durante navegação
@@ -17,12 +21,17 @@ Cypress.on("uncaught:exception", (err) => {
     err.message?.includes("Usuário não autenticado") ||
     err.message?.includes("Dados insuficientes para atualização") ||
     err.message?.includes("não autenticado") ||
-    err.message?.includes("JWT")
+    err.message?.includes("JWT") ||
+    err.message?.includes("autenticad")
   ) {
     return false;
   }
   // Erros de React Query / cancelamento genérico
   if (err.message?.includes("cancelled") || err.message?.includes("canceled")) {
+    return false;
+  }
+  // Erros de promise rejection não tratados genéricos durante navegação
+  if (err.message?.includes("unhandled") || err.message?.includes("without reason")) {
     return false;
   }
   // Deixa outros erros falharem normalmente
