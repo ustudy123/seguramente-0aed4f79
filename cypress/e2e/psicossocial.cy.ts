@@ -4,27 +4,105 @@ describe("Módulo Psicossocial NR-01", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
   const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.app.br";
-  const supabaseAuthStorageKey = "sb-diayjpsrcerycycyaxst-auth-token";
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
   const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;
   const setorBaseNome = `Setor Cypress ${uniqueId}`;
   const funcaoBaseNome = `Funcao Cypress ${uniqueId}`;
-...
+
+  const TAB = {
+    campanhas: "campanhas",
+    indices: "indices",
+    pgr: "pgr",
+    historico: "historico",
+  } as const;
+
+  const TAB_SELECTOR: Record<(typeof TAB)[keyof typeof TAB], string> = {
+    campanhas: "#tab-psicossocial-campanhas",
+    indices: "#tab-psicossocial-indicadores",
+    pgr: "#tab-psicossocial-pgr",
+    historico: "#tab-psicossocial-historico",
+  };
+
+  function dispatchNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+    const prototype = Object.getPrototypeOf(element);
+    const valueSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+
+    valueSetter?.call(element, value);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function preencherCampo(selector: string, valor: string) {
+    cy.get(selector, { timeout: 15000 })
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .then(($input) => {
+        dispatchNativeValue($input[0] as HTMLInputElement, valor);
+      });
+
+    cy.get(selector).should("have.value", valor);
+  }
+
+  function closeEmpresaModalIfNeeded() {
+    cy.get("body", { timeout: 15000 }).then(($body) => {
+      const pageText = $body.text();
+
+      if (/Acesso Restrito/i.test(pageText)) {
+        throw new Error("Usuário de teste sem empresa vinculada.");
+      }
+
+      if (!/Selecione a Empresa/i.test(pageText)) return;
+
+      cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("be.visible");
+      cy.get("button.text-left:visible").first().click({ force: true });
+      cy.contains("button", /Acessar|Continuar|Confirmar|Entrar/i, { timeout: 10000 })
+        .should("be.visible")
+        .and("not.be.disabled")
+        .click({ force: true });
+      cy.contains(/Selecione a Empresa/i, { timeout: 10000 }).should("not.exist");
+    });
+  }
+
+  function waitForPsicossocialReady() {
+    cy.get("#tab-psicossocial-campanhas", { timeout: 20000 }).should("exist");
+    cy.get("body").should("not.contain.text", "Carregando...");
+  }
+
+  function login() {
+    cy.session(
+      [email, password],
+      () => {
+        cy.visit(`${baseUrl}/login`);
+        cy.get('input[type="email"]', { timeout: 20000 })
+          .should("exist")
+          .scrollIntoView()
+          .should("be.visible")
+          .clear()
+          .type(email, { delay: 10 });
+        cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
+          .should("exist")
+          .scrollIntoView()
+          .should("be.visible")
+          .clear()
+          .type(password, { log: false, delay: 10 });
+        cy.contains("button", /^Entrar$/).should("be.visible").click();
+        cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
+        closeEmpresaModalIfNeeded();
+        cy.wait(1500);
+      },
       {
         validate() {
-          cy.visit(`${baseUrl}/`);
-          cy.wait(1500);
-          cy.window().then((win) => {
-            const sessionJson = win.localStorage.getItem(supabaseAuthStorageKey);
-            expect(sessionJson, `Supabase session key ${supabaseAuthStorageKey}`).to.exist;
-          });
-          cy.location("pathname").should("not.eq", "/login");
+          cy.visit(`${baseUrl}/psicossocial`);
+          closeEmpresaModalIfNeeded();
+          cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+          cy.location("pathname", { timeout: 20000 }).should("not.eq", "/login");
         },
         cacheAcrossSpecs: false,
       }
     );
-    // After session restore, visit base to ensure app is loaded
+
     cy.visit(`${baseUrl}/`);
     closeEmpresaModalIfNeeded();
     cy.wait(1500);
