@@ -82,27 +82,39 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function login() {
-    cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]', { timeout: 20000 })
-      .first()
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(email, { delay: 10 });
-    cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
-      .first()
-      .should("exist")
-      .scrollIntoView()
-      .should("be.visible")
-      .clear()
-      .type(password, { delay: 10, log: false });
-    cy.get('input[type="email"]', { timeout: 5000 }).first().should("have.value", email);
-    cy.contains("button", /^Entrar$/, { timeout: 10000 })
-      .should("exist")
-      .scrollIntoView()
-      .click({ force: true });
-    cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
+    cy.session(
+      [email],
+      () => {
+        cy.visit(`${baseUrl}/login`);
+        cy.get('input[type="email"]', { timeout: 30000 })
+          .first()
+          .should("exist")
+          .then(($el) => {
+            dispatchNativeValue($el[0] as HTMLInputElement, email);
+          });
+        cy.get('input[autocomplete="current-password"]', { timeout: 10000 })
+          .first()
+          .should("exist")
+          .then(($el) => {
+            dispatchNativeValue($el[0] as HTMLInputElement, password);
+          });
+        cy.get('input[type="email"]').first().should("have.value", email);
+        cy.contains("button", /^Entrar$/, { timeout: 10000 })
+          .should("exist")
+          .click({ force: true });
+        cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
+        closeEmpresaModalIfNeeded();
+        cy.wait(2000);
+      },
+      {
+        validate() {
+          cy.getCookie("sb-access-token").should("exist");
+        },
+        cacheAcrossSpecs: false,
+      }
+    );
+    // After session restore, visit base to ensure app is loaded
+    cy.visit(`${baseUrl}/`);
     closeEmpresaModalIfNeeded();
     cy.wait(1500);
   }
