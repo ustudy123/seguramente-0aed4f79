@@ -74,12 +74,6 @@ export function HumorCheckInPopup() {
           className="bg-card rounded-2xl border shadow-2xl overflow-hidden"
         >
           <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 px-6 py-5 relative">
-            <button
-              onClick={handleSkip}
-              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
               <h3 className="font-semibold text-foreground">
