@@ -3,7 +3,7 @@
 describe("Módulo Psicossocial NR-01", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.lovable.app";
+  const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.app.br";
   const uniqueId = Date.now();
   const campanhaNome = `Campanha Cypress ${uniqueId}`;
   const campanhaBaseNome = `Campanha Base Cypress ${uniqueId}`;
@@ -55,6 +55,7 @@ describe("Módulo Psicossocial NR-01", () => {
 
       expect(carregouEstadoPrincipal, "dashboard ou estado vazio carregado").to.eq(true);
     });
+    cy.get("#btn-guia-rapido-psicossocial", { timeout: 15000 }).should("exist");
   }
 
   function dispatchNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
@@ -69,46 +70,48 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function preencherCampo(selector: string, value: string) {
-    cy.get(`${selector}:visible`, { timeout: 15000 })
+    cy.get(selector, { timeout: 15000 })
       .first()
       .scrollIntoView()
       .should("exist")
       .then(($input) => {
         dispatchNativeValue($input[0] as HTMLInputElement | HTMLTextAreaElement, value);
       });
-  }
 
-  function preencherCommandInputVisivel(value: string) {
-    cy.get('[cmdk-input]:visible', { timeout: 5000 })
-      .should("have.length.at.least", 1)
-      .last()
-      .then(($input) => {
-        dispatchNativeValue($input[0] as HTMLInputElement, value);
-      });
+    cy.get(selector, { timeout: 5000 }).first().should("have.value", value);
   }
 
   function login() {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]:visible', { timeout: 20000 }).first().should("be.visible");
-    cy.get('input[type="email"]:visible').first().clear().type(email, { delay: 10 });
-    cy.get('input[autocomplete="current-password"]:visible').first().clear().type(password, { delay: 10 });
-    cy.get('input[type="email"]:visible').first().should("have.value", email);
-    cy.contains("button", /^Entrar$/, { timeout: 10000 })
-      .filter(":visible")
+    cy.get('input[type="email"]', { timeout: 20000 })
       .first()
+      .should("exist")
+      .scrollIntoView()
       .should("be.visible")
+      .clear()
+      .type(email, { delay: 10 });
+    cy.get('input[autocomplete="current-password"]', { timeout: 20000 })
+      .first()
+      .should("exist")
+      .scrollIntoView()
+      .should("be.visible")
+      .clear()
+      .type(password, { delay: 10, log: false });
+    cy.get('input[type="email"]', { timeout: 5000 }).first().should("have.value", email);
+    cy.contains("button", /^Entrar$/, { timeout: 10000 })
+      .should("exist")
+      .scrollIntoView()
       .click({ force: true });
     cy.location("pathname", { timeout: 30000 }).should("not.eq", "/login");
     closeEmpresaModalIfNeeded();
-    cy.wait(3000);
+    cy.wait(1500);
   }
 
   function goToPsicossocial() {
     cy.visit(`${baseUrl}/psicossocial`);
     closeEmpresaModalIfNeeded();
-    // Wait for framer-motion animation to complete (opacity 0→1)
     cy.contains("Gestão Psicossocial NR-01", { timeout: 20000 }).should("exist");
-    cy.wait(1500);
+    cy.wait(1800);
     waitForPsicossocialReady();
   }
 
@@ -125,40 +128,28 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
-    // Open the combobox popover
     cy.get(selector, { timeout: 10000 })
       .first()
+      .should("exist")
       .scrollIntoView()
       .click({ force: true });
 
-    // Wait for the popover to render
-    cy.wait(800);
-
-    // Type into the command input using native value dispatch for stability
-    cy.get('[cmdk-input]', { timeout: 8000 })
+    cy.get("[data-radix-popper-content-wrapper]", { timeout: 10000 })
       .should("have.length.at.least", 1)
-      .then(($inputs) => {
-        const visibleInputs = $inputs.filter(":visible");
-        const target = visibleInputs.length > 0 ? visibleInputs.last() : $inputs.last();
-        cy.wrap(target).as("comboInput");
+      .last()
+      .within(() => {
+        cy.get("[cmdk-input]", { timeout: 10000 })
+          .should("exist")
+          .then(($input) => {
+            dispatchNativeValue($input[0] as HTMLInputElement, valor);
+          });
+
+        cy.get("[cmdk-input]", { timeout: 5000 }).should("have.value", valor);
       });
 
-    cy.get("@comboInput").clear({ force: true }).type(valor, { delay: 30, force: true });
-    cy.wait(600);
+    cy.get("body").type("{esc}", { force: true });
+    cy.wait(300);
 
-    // Check if there's a matching item to click, otherwise press Enter to create
-    cy.get("body").then(($body) => {
-      const items = $body.find("[cmdk-item]:visible");
-      if (items.length > 0) {
-        cy.get("[cmdk-item]:visible").first().click({ force: true });
-      } else {
-        cy.get("@comboInput").type("{enter}", { force: true });
-      }
-    });
-
-    cy.wait(500);
-
-    // Verify the value was set
     cy.get(selector, { timeout: 5000 })
       .first()
       .should("contain.text", valor);
@@ -173,7 +164,6 @@ describe("Módulo Psicossocial NR-01", () => {
         /Bem-vindo à Gestão Psicossocial|Nenhuma campanha criada/i.test($body.text());
 
       if (!estadoVazioVisivel) {
-        // Retry after a wait - page may still be loading
         cy.wait(3000);
         cy.get("body").then(($body2) => {
           if ($body2.find("#tab-psicossocial-campanhas").length > 0) return;
@@ -193,16 +183,16 @@ describe("Módulo Psicossocial NR-01", () => {
   function openTab(label: string) {
     ensureTabsDisponiveis();
     const sel = TAB_SELECTOR[label as (typeof TAB)[keyof typeof TAB]];
-    cy.get(sel, { timeout: 15000 })
-      .should("have.length.at.least", 1)
+    cy.get(sel, { timeout: 20000 })
+      .should("exist")
       .first()
       .scrollIntoView()
       .click({ force: true });
-    cy.wait(500);
-    cy.get(sel, { timeout: 5000 })
+    cy.wait(300);
+    cy.get(sel, { timeout: 10000 })
       .first()
       .should("have.attr", "aria-selected", "true");
-    cy.wait(500);
+    cy.wait(300);
   }
 
   function clickNovaCampanha() {

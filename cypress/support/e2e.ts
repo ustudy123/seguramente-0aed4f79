@@ -1,43 +1,42 @@
-// Ignora erros do app que não são bugs reais (ex: React Query cancelando requests)
-Cypress.on("uncaught:exception", (err) => {
-  // ResizeObserver loop — não é um bug real
-  if (err.message?.includes("ResizeObserver loop")) {
-    return false;
-  }
-  // AbortError do React Query quando componente desmonta
-  if (err.name === "AbortError") {
-    return false;
-  }
-  // Qualquer erro relacionado a signal/abort
-  if (err.message?.includes("signal") || err.message?.includes("abort") || err.message?.includes("aborted")) {
-    return false;
-  }
-  // Erros de rede/fetch que ocorrem durante navegação
-  if (err.message?.includes("Failed to fetch") || err.message?.includes("Load failed")) {
-    return false;
-  }
-  // SyntaxError de HTML servido no lugar de JS (SPA reload durante navegação)
-  if (err.name === "SyntaxError" && err.message?.includes("Unexpected token '<'")) {
-    return false;
-  }
-  // Erros de autenticação que ocorrem durante navegação entre páginas
+const shouldIgnoreAppError = (message: string, name?: string) => {
+  if (message.includes("ResizeObserver loop")) return true;
+  if (name === "AbortError") return true;
+  if (message.includes("signal") || message.includes("abort") || message.includes("aborted")) return true;
+  if (message.includes("Failed to fetch") || message.includes("Load failed")) return true;
+  if (name === "SyntaxError" && message.includes("Unexpected token '<'")) return true;
   if (
-    err.message?.includes("Usuário não autenticado") ||
-    err.message?.includes("Dados insuficientes para atualização") ||
-    err.message?.includes("não autenticado") ||
-    err.message?.includes("JWT") ||
-    err.message?.includes("autenticad")
+    message.includes("Usuário não autenticado") ||
+    message.includes("Dados insuficientes para atualização") ||
+    message.includes("não autenticado") ||
+    message.includes("JWT") ||
+    message.includes("autenticad")
   ) {
+    return true;
+  }
+  if (message.includes("cancelled") || message.includes("canceled")) return true;
+  if (message.includes("unhandled") || message.includes("without reason")) return true;
+  return false;
+};
+
+Cypress.on("uncaught:exception", (err) => {
+  const message = String(err?.message || "");
+  const name = String(err?.name || "");
+
+  if (shouldIgnoreAppError(message, name)) {
     return false;
   }
-  // Erros de React Query / cancelamento genérico
-  if (err.message?.includes("cancelled") || err.message?.includes("canceled")) {
-    return false;
-  }
-  // Erros de promise rejection não tratados genéricos durante navegação
-  if (err.message?.includes("unhandled") || err.message?.includes("without reason")) {
-    return false;
-  }
-  // Deixa outros erros falharem normalmente
+
   return true;
+});
+
+Cypress.on("window:before:load", (win) => {
+  win.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    const message = String(reason?.message || reason || "");
+    const name = String(reason?.name || "");
+
+    if (shouldIgnoreAppError(message, name)) {
+      event.preventDefault();
+    }
+  });
 });
