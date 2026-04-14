@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -300,7 +300,7 @@ interface AssistenteSelecaoInstrumentoProps {
 export function AssistenteSelecaoInstrumento({
   open, onOpenChange, onSelectInstrumento,
 }: AssistenteSelecaoInstrumentoProps) {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { empresaAtivaId } = useEmpresaAtiva();
   const [step, setStep] = useState<Step>('choice');
   const [sysData, setSysData] = useState<SystemData | null>(null);

@@ -10,7 +10,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -72,7 +72,7 @@ function classificarOcorrencias(taxa: number): "positiva" | "negativa" | "alerta
 }
 
 export function ContaprovaOrganizacional({ campanha, ips }: ContaprovaOrganizacionalProps) {
-  const { tenantId } = useAuth();
+  const { tenantId } = useAuthContext();
 
   // 1. Atestados / Afastamentos nos últimos 90 dias (período da campanha)
   const { data: dadosAtestados } = useQuery({

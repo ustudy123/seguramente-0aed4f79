@@ -145,6 +145,20 @@ export function PsicossocialDashboard() {
           </div>
         </div>
 
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Privacidade e anonimato protegidos</p>
+                <p className="text-sm text-muted-foreground">
+                  As respostas são anônimas, exibidas apenas de forma agregada e respeitam o mínimo de 5 respondentes por grupo.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Banner de Próxima Ação */}
         <ProximaAcaoBanner
           campanhas={campanhas}

@@ -38,7 +38,7 @@ import { RadarPsicossocial } from "./RadarPsicossocial";
 import { IPSGauge } from "./IPSGauge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import {
@@ -67,7 +67,7 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
   const { useEstatisticasCampanha, useRespostasCampanha } = usePsicossocial();
   const { data: stats, isLoading: loadingStats } = useEstatisticasCampanha(campanha.id);
   const { data: respostas = [], isLoading: loadingRespostas } = useRespostasCampanha(campanha.id);
-  const { user, profile } = useAuth();
+  const { user, profile } = useAuthContext();
   const { tenantId } = useTenant();
   const { empresaAtivaId } = useEmpresaAtiva();
 
