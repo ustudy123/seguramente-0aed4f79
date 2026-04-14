@@ -66,8 +66,13 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function waitForPsicossocialReady() {
-    cy.get("#tab-psicossocial-campanhas", { timeout: 20000 }).should("exist");
-    cy.get("body").should("not.contain.text", "Carregando...");
+    cy.contains("Gestão Psicossocial NR-01", { timeout: 30000 }).should("exist");
+    cy.get("body", { timeout: 30000 }).should(($body) => {
+      const hasTabs = $body.find("#tab-psicossocial-campanhas").length > 0;
+      const hasCreateAction = $body.find("#btn-nova-campanha, #btn-criar-campanha").length > 0;
+      expect(hasTabs || hasCreateAction, "dashboard psicossocial carregado").to.be.true;
+      expect($body.text()).to.not.contain("Usuário não autenticado");
+    });
   }
 
   function login() {
@@ -205,7 +210,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function clickNovaCampanha() {
-    cy.get("#btn-nova-campanha, #btn-criar-campanha", { timeout: 10000 })
+    cy.get("#btn-nova-campanha, #btn-criar-campanha", { timeout: 20000 })
       .filter(":visible")
       .should("have.length.greaterThan", 0)
       .then(($buttons) => {

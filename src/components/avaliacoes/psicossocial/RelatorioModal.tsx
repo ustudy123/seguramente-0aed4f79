@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 import { calcularIPSClassificacao, getIPSLabel } from "@/types/psicossocial";
 import { scoreToProbabilidade, scoreToSeveridade, calcularNivelGRO, GRO_NIVEL_RISCO_LABELS } from "@/types/gro";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { arquivarDocumento } from "@/utils/arquivarDocumento";
 import jsPDF from "jspdf";
@@ -41,7 +41,7 @@ const NIVEL_BADGE: Record<string, string> = {
 
 export function RelatorioModal({ open, onClose, campanhas, empresaNome }: RelatorioModalProps) {
   const [exportando, setExportando] = useState(false);
-  const { tenantId, user, profile } = useAuth();
+  const { tenantId, user, profile } = useAuthContext();
   const { empresaAtivaId } = useEmpresaAtiva();
 
   const campanhasValidas = campanhas.filter(c =>

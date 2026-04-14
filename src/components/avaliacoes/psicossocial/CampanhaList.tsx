@@ -34,7 +34,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import type { CampanhaPsicossocial, RadarDimensao } from "@/types/psicossocial";
 
 const MINIMO_ANONIMATO = 5;
@@ -53,7 +53,7 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
 
   const { atualizarStatusCampanha } = usePsicossocial();
   const { importarDaCampanha } = useGRORiscos();
-  const { tenantId } = useAuth();
+  const { tenantId } = useAuthContext();
 
   const handleAtivar = (campanha: CampanhaPsicossocial) => {
     atualizarStatusCampanha.mutate({ id: campanha.id, status: 'ativa' });

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { AlertTriangle, Siren, ExternalLink, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ interface AlertaPsicossocial {
 }
 
 export function AlertasPsicossociaisPanel() {
-  const { tenantId } = useAuth();
+  const { tenantId } = useAuthContext();
   const navigate = useNavigate();
 
   const { data: alertas = [], isLoading } = useQuery({

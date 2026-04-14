@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
@@ -70,7 +70,7 @@ function getLinkParticipacao(token: string) {
 }
 
 export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
-  const { profile } = useAuth();
+  const { profile } = useAuthContext();
   const queryClient = useQueryClient();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [busca, setBusca] = useState("");

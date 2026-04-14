@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { FatorActionForm } from "@/components/ergonomia/radar/FatorActionForm";
@@ -542,7 +542,7 @@ interface RadaresPsicossocialSectionProps {
 }
 
 export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossocialSectionProps) {
-  const { tenantId, user, profile } = useAuth();
+  const { tenantId, user, profile } = useAuthContext();
   const navigate = useNavigate();
   const [gerandoBurnout, setGerandoBurnout] = useState(false);
   const [gerandoBoreout, setGerandoBoreout] = useState(false);

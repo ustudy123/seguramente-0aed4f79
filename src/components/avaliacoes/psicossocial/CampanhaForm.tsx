@@ -59,7 +59,7 @@ import { format, addDays } from "date-fns";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 const POLITICA_USO_DADOS_PADRAO = `Suas respostas serão utilizadas exclusivamente para fins de diagnóstico organizacional e melhoria das condições de trabalho. Este questionário é anônimo e não permite identificação individual. Os dados serão tratados de forma agregada, em conformidade com a LGPD, e não serão utilizados para decisões punitivas.`;
 
@@ -126,7 +126,7 @@ interface CampanhaFormProps {
 export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumentoSugerido }: CampanhaFormProps) {
   const { criarCampanha, campanhas } = usePsicossocial();
   const { empresaAtivaId } = useEmpresaAtiva();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { departamentos } = useDepartamentos();
   const { cargos } = useCargos();
   const { sincronizar } = useSyncCadastros();

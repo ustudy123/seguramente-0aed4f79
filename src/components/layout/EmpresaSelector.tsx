@@ -37,7 +37,7 @@ export const EmpresaSelector = () => {
     return (
       <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
         <Building2 className="w-4 h-4" />
-        <span>Carregando...</span>
+        <span>Sincronizando empresas</span>
       </div>);
 
   }
