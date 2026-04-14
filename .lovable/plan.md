@@ -1,80 +1,36 @@
 
 
-## Análise Multi-Tenant: Status Atual e Correções Necessárias
+# Plano: Gerar Video Institucional Seguramente (Motion Graphics)
 
-### Diagnóstico Geral
+## Objetivo
+Criar um video MP4 de ~25-30 segundos com motion graphics usando Remotion, baseado no roteiro aprovado. O video cobre o gancho NR-01, os 3 pilares (Organização, Segurança Jurídica, Inteligência de Dados) e o fechamento com CTA.
 
-O sistema **já está funcionando em multi-tenant** na maior parte. A arquitetura base é sólida:
-- 277 tabelas, todas com RLS habilitado
-- Coluna `tenant_id` presente em praticamente todas as tabelas operacionais
-- Função `get_user_tenant_id()` (SECURITY DEFINER) usada nas políticas RLS
-- Código filtra por `tenant_id` em todas as queries dos hooks
+## Direção Criativa
+- **Paleta:** Lilás `#6B3FA0`, Laranja `#F07B2C`, Escuro `#2A2040`, Claro `#F5F3FA`
+- **Fontes:** Inter (já usada no projeto) + Poppins (display/títulos)
+- **Estilo:** Tech Product — clean, profissional, transições suaves, dark background com acentos de cor
+- **Motifs:** Formas geométricas flutuantes, linhas de conexão, ícones de escudo/proteção
 
-No entanto, a auditoria de segurança identificou **8 vulnerabilidades** que comprometem o isolamento multi-tenant.
+## Estrutura do Video (30fps, ~25s = 750 frames)
 
----
+| Cena | Duração | Conteúdo |
+|------|---------|----------|
+| 1 - Hook | ~4s | "NR-01 exige gestão de riscos psicossociais. Sua empresa está preparada?" |
+| 2 - Pilar 1 | ~5s | Organização & Eficiência (campanhas, questionários, dashboards) |
+| 3 - Pilar 2 | ~5s | Segurança Jurídica (ponto, EPI, onboarding como evidência) |
+| 4 - Pilar 3 | ~5s | Inteligência de Dados (cruzamento percepção x dados reais) |
+| 5 - CTA | ~4s | Logo Seguramente + "Conheça o sistema" |
 
-### Vulnerabilidades Encontradas (por prioridade)
+## Etapas Técnicas
 
-#### 1. CRÍTICO — Storage sem isolamento de tenant
-**Problema:** 8 buckets de storage permitem que qualquer usuário autenticado acesse arquivos de **qualquer tenant**:
-- `documentos` (policy ampla anula a policy com tenant)
-- `sst-documentos`, `pdi-evidencias`, `esocial-certificados`, `hub-contabil`, `jornada-documentos`, `eventos-sst`, `ergonomia-evidencias`
+1. **Setup Remotion** — Criar diretório `remotion/`, instalar dependências, configurar compositor musl, symlink ffmpeg
+2. **Criar componentes** — Background persistente, 5 cenas individuais, componentes reutilizáveis (TextReveal, IconBadge)
+3. **Montar composição** — TransitionSeries com wipe/fade entre cenas
+4. **Copiar logo** — Usar `logo-seguramente.png` do projeto como asset
+5. **Renderizar** — Script programático para gerar MP4 em `/mnt/documents/`
+6. **QA** — Spot-check frames chave antes de entregar
 
-**Correção:** Remover policies permissivas e manter apenas policies com `(storage.foldername(name))[1] = (get_user_tenant_id())::text`
-
-#### 2. CRÍTICO — OTPs do Psicossocial expostos publicamente
-**Problema:** Tabela `psicossocial_otp_verificacao` permite leitura anônima de códigos OTP, permitindo que qualquer pessoa veja códigos de verificação.
-
-**Correção:** Restringir policy SELECT para exigir match de `campanha_id` + `telefone_hash`
-
-#### 3. CRÍTICO — Convites do Questionário com CPF/Nome públicos
-**Problema:** Tabela `questionario_psicossocial_convites` tem policy `USING (true)` que expõe CPFs e nomes de colaboradores.
-
-**Correção:** Criar RPC SECURITY DEFINER para busca por token, remover SELECT público
-
-#### 4. MODERADO — 2 policies com `WITH CHECK (true)` 
-**Problema:** Existem policies INSERT/UPDATE permissivas demais em 2 tabelas (provavelmente marketplace_avaliacoes e outra).
-
-**Correção:** Adicionar condição de tenant_id ou user_id
-
-#### 5. MODERADO — Proteção contra senhas vazadas desabilitada
-**Problema:** Recurso do Supabase Auth não está ativado.
-
-**Correção:** Ativar manualmente no painel Supabase (Auth > Settings)
-
----
-
-### Plano de Implementação
-
-#### Migração SQL 1 — Corrigir Storage (8 buckets)
-- DROP das policies permissivas sem tenant check no bucket `documentos`
-- Criar/atualizar policies nos 7 buckets restantes adicionando `(storage.foldername(name))[1] = (get_user_tenant_id())::text`
-
-#### Migração SQL 2 — Corrigir Psicossocial OTP
-- DROP da policy anon SELECT atual em `psicossocial_otp_verificacao`
-- Criar RPC `verificar_otp(p_campanha_id, p_telefone_hash, p_codigo)` SECURITY DEFINER
-- Atualizar código frontend para usar a RPC
-
-#### Migração SQL 3 — Corrigir Convites Questionário
-- DROP da policy `USING (true)` em `questionario_psicossocial_convites`
-- Criar RPC `buscar_convite_por_token(p_token)` SECURITY DEFINER
-- Atualizar código frontend
-
-#### Migração SQL 4 — Corrigir policies `WITH CHECK (true)`
-- Identificar as 2 tabelas exatas e adicionar condições de tenant
-
-#### Passo Manual (usuário)
-- Ativar "Leaked Password Protection" no painel Supabase Auth
-
----
-
-### Detalhes Técnicos
-
-**Arquivos a editar no código:**
-- Componentes/hooks que fazem queries em `psicossocial_otp_verificacao` — migrar para RPC
-- Componentes/hooks que buscam `questionario_psicossocial_convites` por token — migrar para RPC
-- Hooks de upload de storage — garantir que o path inclui `tenantId/` como primeiro segmento
-
-**Estimativa:** 4 migrações SQL + ~4-6 arquivos de código
+## Limitações
+- Video mudo (sandbox não suporta encoding de áudio) — narração deve ser adicionada separadamente
+- Máximo ~30 segundos pelo timeout de renderização
 
