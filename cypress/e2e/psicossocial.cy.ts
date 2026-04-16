@@ -138,7 +138,7 @@ describe("Módulo Psicossocial NR-01", () => {
   }
 
   function digitarNoComboboxSituacao(selector: string, valor: string) {
-    // Click the combobox trigger
+    // Click the combobox trigger to open the popover
     cy.get(selector, { timeout: 10000 })
       .first()
       .should("exist")
@@ -147,24 +147,25 @@ describe("Módulo Psicossocial NR-01", () => {
 
     cy.wait(500);
 
-    // Wait for the popper to appear and find the input inside it
+    // cmdk's CommandInput is controlled and ignores native value setters.
+    // We must use real keyboard events (cy.type) so onValueChange fires.
     cy.get("[data-radix-popper-content-wrapper]", { timeout: 10000 })
       .should("have.length.at.least", 1)
       .last()
       .find("input", { timeout: 5000 })
       .should("exist")
-      .then(($input) => {
-        dispatchNativeValue($input[0] as HTMLInputElement, valor);
-      });
+      .focus()
+      .clear({ force: true })
+      .type(valor, { delay: 10, force: true });
 
-    cy.wait(500);
+    cy.wait(400);
 
-    // Close the popover by pressing Escape
+    // Close the popover by pressing Escape (state persists in parent component)
     cy.get("body").type("{esc}", { force: true });
-    cy.wait(500);
+    cy.wait(400);
 
-    // Verify the value was set
-    cy.get(selector, { timeout: 5000 })
+    // Verify the trigger now displays the typed value
+    cy.get(selector, { timeout: 8000 })
       .first()
       .should("contain.text", valor);
   }
