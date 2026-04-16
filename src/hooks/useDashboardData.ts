@@ -91,7 +91,12 @@ export const useDashboardData = () => {
       const cargos = cargosRes.count || 0;
       const departamentos = departamentosRes.count || 0;
       const admissoes = admissoesRes.count || 0;
-      const scoreOrganizacao = 0;
+      const scoreOrganizacao = Math.min(100, Math.round(
+        (cargos > 0 ? 35 : 0) +
+        (departamentos > 0 ? 35 : 0) +
+        (admissoes > 0 ? 15 : 0) +
+        Math.min(15, cargos * 3)
+      ));
 
       // Calcular métricas Pilar 2
       const itensNr17 = itensNr17Res.data || [];
@@ -101,32 +106,39 @@ export const useDashboardData = () => {
       const episDisponiveis = epis.filter(e => e.status === "disponivel").length;
       const episBaixoEstoque = epis.filter(e => e.quantidade_estoque <= e.quantidade_minima).length;
       const riscosAtivos = riscosRes.count || 0;
-      const scoreCondicoes = 0;
+      const nr17Score = itensTotal > 0 ? (itensAtendidos / itensTotal) * 40 : 0;
+      const epiScore = epis.length > 0 ? (episDisponiveis / epis.length) * 30 : 0;
+      const riscoScore = riscosAtivos > 0 ? 30 : 0;
+      const scoreCondicoes = Math.min(100, Math.round(nr17Score + epiScore + riscoScore));
 
       // Calcular métricas Pilar 3
       const humores = humorRes.data || [];
       const ouvidoriaPendente = ouvidoriaRes.count || 0;
       const feedHoje = feedRes.count || 0;
-      const scoreExperiencia = 0;
+      const humorPositivo = humores.filter(h => ["feliz", "motivado", "tranquilo", "grato", "animado"].includes(h.humor)).length;
+      const humorScore = humores.length > 0 ? (humorPositivo / humores.length) * 40 : 0;
+      const ouvidoriaScore = ouvidoriaPendente === 0 && humores.length > 0 ? 30 : ouvidoriaPendente > 0 ? Math.max(0, 30 - ouvidoriaPendente * 5) : 0;
+      const feedScore = feedHoje > 0 ? 30 : humores.length > 0 ? 10 : 0;
+      const scoreExperiencia = Math.min(100, Math.round(humorScore + ouvidoriaScore + feedScore));
 
       // Calcular métricas Pilar 4
       const acoes = acoesRes.data || [];
       const acoesConcluidas = acoes.filter(a => a.status === "concluida").length;
       const acoesEmAndamento = acoes.filter(a => a.status === "em_andamento").length;
       const evidencias = evidenciasRes.count || 0;
-      
-      // Terceiros metrics
       const terceirosData = (terceirosRes.data as any[]) || [];
       const terceirosAtivos = terceirosData.length;
       const terceirosConformes = terceirosData.filter((t: any) => t.status === "liberado").length;
       const ptsData = (ptsRes.data as any[]) || [];
       const ptsBloqueadas = ptsData.filter((p: any) => p.status === "bloqueada").length;
-      
-      const scoreGovernanca = 0;
+      const acaoScore = acoes.length > 0 ? (acoesConcluidas / acoes.length) * 40 : 0;
+      const evidenciaScore = evidencias > 0 ? Math.min(30, evidencias * 5) : 0;
+      const terceiroScore = terceirosAtivos > 0 ? (terceirosConformes / terceirosAtivos) * 30 : (acoes.length > 0 ? 15 : 0);
+      const scoreGovernanca = Math.min(100, Math.round(acaoScore + evidenciaScore + terceiroScore));
 
       return {
         organizacao: {
-          totalColaboradores: 0, // Será implementado com tabela de colaboradores
+          totalColaboradores: 0,
           cargosDefinidos: cargos,
           departamentos: departamentos,
           admissoesAndamento: admissoes,
@@ -141,7 +153,7 @@ export const useDashboardData = () => {
           score: scoreCondicoes,
         },
         experiencia: {
-          humorPositivo: 0,
+          humorPositivo: humorPositivo,
           humorTotal: humores.length,
           ouvidoriaPendente: ouvidoriaPendente,
           feedPostsHoje: feedHoje,
