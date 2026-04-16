@@ -827,15 +827,17 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                         <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[220px] p-0" align="start">
+                    <PopoverContent id="popover-setor-situacao" className="w-[220px] p-0" align="start">
                       <Command>
                         <CommandInput
+                          id="input-combobox-setor-situacao"
                           placeholder="Buscar ou digitar..."
                           value={novoSetor}
                           onValueChange={setNovoSetor}
                           className="h-8 text-sm"
+                          autoFocus
                         />
-                        <CommandList>
+                        <CommandList id="lista-combobox-setor-situacao">
                           <CommandEmpty>
                             <span className="text-xs text-muted-foreground px-2">
                               Pressione + para usar "{novoSetor}"
@@ -875,15 +877,17 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                         <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[220px] p-0" align="start">
+                    <PopoverContent id="popover-funcao-situacao" className="w-[220px] p-0" align="start">
                       <Command>
                         <CommandInput
+                          id="input-combobox-funcao-situacao"
                           placeholder="Buscar ou digitar..."
                           value={novaFuncao}
                           onValueChange={setNovaFuncao}
                           className="h-8 text-sm"
+                          autoFocus
                         />
-                        <CommandList>
+                        <CommandList id="lista-combobox-funcao-situacao">
                           <CommandEmpty>
                             <span className="text-xs text-muted-foreground px-2">
                               Pressione + para usar "{novaFuncao}"
