@@ -4,6 +4,7 @@ export default defineConfig({
   e2e: {
     baseUrl: process.env.CYPRESS_BASE_URL || "https://seguramente.app.br",
     defaultCommandTimeout: 10000,
+    pageLoadTimeout: 120000,
     supportFile: "cypress/support/e2e.ts",
     specPattern: "cypress/e2e/**/*.cy.ts",
   },
