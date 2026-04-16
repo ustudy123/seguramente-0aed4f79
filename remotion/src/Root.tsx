@@ -1,12 +1,12 @@
 import { Composition } from "remotion";
 import { MainVideo } from "./MainVideo";
 
-// 2 scenes: 180 + 240 = 420, minus 1 transition x 25 = 395 frames (~13s)
+// Scene1: 210 frames (7s) + Scene2: 270 frames (9s) - transition 25 = 455 frames (~15s)
 export const RemotionRoot = () => (
   <Composition
     id="main"
     component={MainVideo}
-    durationInFrames={395}
+    durationInFrames={455}
     fps={30}
     width={1920}
     height={1080}
