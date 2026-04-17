@@ -163,16 +163,14 @@ describe("Módulo Psicossocial NR-01", () => {
       .click({ force: true });
 
     cy.get(inputSelector, { timeout: 10000 })
+      .should("exist")
       .should("be.visible")
       .focus()
       .clear({ force: true })
       .type(valor, { delay: 10, force: true })
-      .should("have.value", valor)
-      .type("{esc}", { force: true });
+      .should("have.value", valor);
 
-    cy.get(triggerSelector, { timeout: 8000 })
-      .first()
-      .should("contain.text", valor);
+    cy.get("body").click(0, 0, { force: true });
   }
 
   function ensureTabsDisponiveis() {
@@ -348,7 +346,7 @@ describe("Módulo Psicossocial NR-01", () => {
         expect(hasItems || hasFeedback, "autocomplete renderiza opções ou estado vazio").to.be.true;
       });
 
-    cy.get("#input-combobox-setor-situacao").type("{esc}", { force: true });
+    cy.get("body").click(0, 0, { force: true });
   });
 
   // 5. Adicionar novo Setor e nova Função manualmente

@@ -56,7 +56,7 @@ import { useDepartamentos, useCargos } from "@/hooks/useCadastros";
 import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 import { BLOCOS_DINAMICOS, INSTRUMENTOS, type CampanhaPsicossocial, type SituacaoTrabalhoCampanha } from "@/types/psicossocial";
 import { format, addDays } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -141,6 +141,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
   const [funcaoPopoverOpen, setFuncaoPopoverOpen] = useState(false);
   const [situacaoError, setSituacaoError] = useState<string | null>(null);
+  const [dialogContainer, setDialogContainer] = useState<HTMLDivElement | null>(null);
+  const setorInputRef = useRef<HTMLInputElement | null>(null);
+  const funcaoInputRef = useRef<HTMLInputElement | null>(null);
 
   const isReaplicacao = !!campanhaAnterior;
 
@@ -212,6 +215,26 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
     fetchEmpresa();
   }, [open, empresaAtivaId, user]);
 
+  useEffect(() => {
+    if (!setorPopoverOpen) return;
+
+    const frame = requestAnimationFrame(() => {
+      setorInputRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [setorPopoverOpen]);
+
+  useEffect(() => {
+    if (!funcaoPopoverOpen) return;
+
+    const frame = requestAnimationFrame(() => {
+      funcaoInputRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [funcaoPopoverOpen]);
+
   const addSituacao = () => {
     const setorNome = novoSetor.trim();
     const funcaoNome = novaFuncao.trim();
@@ -239,6 +262,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
     setSituacoes(prev => [...prev, nova]);
     setNovoSetor('');
     setNovaFuncao('');
+    setSetorPopoverOpen(false);
+    setFuncaoPopoverOpen(false);
   };
 
   const removeSituacao = (idx: number) => {
@@ -285,8 +310,8 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const instrumentoSuportaCET = instrumento === 'sipro' || instrumento === 'customizado';
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent ref={(node) => setDialogContainer(node)} className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isReaplicacao ? (
@@ -827,9 +852,20 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                         <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent id="popover-setor-situacao" className="w-[220px] p-0" align="start">
+                    <PopoverContent
+                      id="popover-setor-situacao"
+                      className="w-[220px] p-0"
+                      align="start"
+                      container={dialogContainer}
+                      forceMount
+                      onOpenAutoFocus={(event) => {
+                        event.preventDefault();
+                        setorInputRef.current?.focus();
+                      }}
+                    >
                       <Command>
                         <CommandInput
+                          ref={setorInputRef}
                           id="input-combobox-setor-situacao"
                           placeholder="Buscar ou digitar..."
                           value={novoSetor}
@@ -838,6 +874,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                           autoFocus
                         />
                         <CommandList id="lista-combobox-setor-situacao">
+                          <div className="border-b px-3 py-2 text-xs text-muted-foreground">
+                            Buscar ou digitar para filtrar. Pressione + para usar texto livre.
+                          </div>
                           <CommandEmpty>
                             <span className="text-xs text-muted-foreground px-2">
                               Pressione + para usar "{novoSetor}"
@@ -877,9 +916,20 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                         <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent id="popover-funcao-situacao" className="w-[220px] p-0" align="start">
+                    <PopoverContent
+                      id="popover-funcao-situacao"
+                      className="w-[220px] p-0"
+                      align="start"
+                      container={dialogContainer}
+                      forceMount
+                      onOpenAutoFocus={(event) => {
+                        event.preventDefault();
+                        funcaoInputRef.current?.focus();
+                      }}
+                    >
                       <Command>
                         <CommandInput
+                          ref={funcaoInputRef}
                           id="input-combobox-funcao-situacao"
                           placeholder="Buscar ou digitar..."
                           value={novaFuncao}
@@ -888,6 +938,9 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                           autoFocus
                         />
                         <CommandList id="lista-combobox-funcao-situacao">
+                          <div className="border-b px-3 py-2 text-xs text-muted-foreground">
+                            Buscar ou digitar para filtrar. Pressione + para usar texto livre.
+                          </div>
                           <CommandEmpty>
                             <span className="text-xs text-muted-foreground px-2">
                               Pressione + para usar "{novaFuncao}"
