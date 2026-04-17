@@ -41,10 +41,8 @@ export default function LandingPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showDiagnostico, setShowDiagnostico] = useState(false);
   const [showFormulario, setShowFormulario] = useState(false);
   const [leadEnviado, setLeadEnviado] = useState(false);
-  const [diagnosticoResultado, setDiagnosticoResultado] = useState<any>(null);
 
   useEffect(() => {
     fetchVagas();
@@ -76,8 +74,6 @@ export default function LandingPage() {
       await supabase.from("landing_leads").insert({
         nome: nome.trim().substring(0, 100),
         email: email.trim().substring(0, 255),
-        diagnostico_resultado: diagnosticoResultado,
-        pontuacao_diagnostico: diagnosticoResultado?.pontuacao || null,
       });
       setLeadEnviado(true);
       toast.success("Cadastro realizado! Garanta sua vaga agora.");
