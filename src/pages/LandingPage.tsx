@@ -91,14 +91,19 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0c0a14] text-white overflow-x-hidden">
       {/* Floating urgency bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 py-2.5 px-4 text-center text-sm font-bold shadow-lg" style={{ background: 'linear-gradient(90deg, hsl(262 52% 30%), hsl(262 52% 45%), hsl(262 52% 30%))' }}>
-        <Clock className="inline w-4 h-4 mr-1" />
-        ⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.
-        {vagasRestantes > 0 && (
-          <span className="ml-2 px-3 py-0.5 rounded-full text-xs font-black" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
-            🔥 Apenas {vagasRestantes} vagas restantes
+      <div className="fixed top-0 left-0 right-0 z-50 py-2 px-3 text-center text-[11px] sm:text-sm font-bold shadow-lg" style={{ background: 'linear-gradient(90deg, hsl(262 52% 30%), hsl(262 52% 45%), hsl(262 52% 30%))' }}>
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-tight">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.</span>
+            <span className="sm:hidden">⚠️ NR-01 — Psicossociais OBRIGATÓRIOS</span>
           </span>
-        )}
+          {vagasRestantes > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
+              🔥 {vagasRestantes} vagas
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
@@ -116,7 +121,7 @@ export default function LandingPage() {
               ALERTA: Sua empresa pode estar em risco AGORA
             </Badge>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words">
               Sua empresa está pronta para a{" "}
               <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 68%), hsl(24 90% 54%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 maior fiscalização trabalhista
@@ -137,20 +142,12 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 onClick={openWhatsApp}
-                className="text-white text-lg px-8 py-6 rounded-xl shadow-2xl group"
+                className="w-full sm:w-auto text-white text-base sm:text-lg px-6 sm:px-8 py-6 rounded-xl shadow-2xl group whitespace-normal h-auto"
                 style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))', boxShadow: '0 8px 32px hsl(152 60% 38% / 0.35)' }}
               >
-                <MessageSquare className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                AGENDAR DEMONSTRAÇÃO NO WHATSAPP
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => scrollToSection("vagas")}
-                className="border-white/30 bg-white text-gray-900 hover:bg-white/90 text-lg px-8 py-6 rounded-xl font-semibold"
-              >
-                Quero Garantir Minha Vaga →
+                <MessageSquare className="w-5 h-5 mr-2 shrink-0 group-hover:animate-pulse" />
+                <span>AGENDAR DEMONSTRAÇÃO NO WHATSAPP</span>
+                <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
 
