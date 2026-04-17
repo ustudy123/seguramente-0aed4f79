@@ -91,18 +91,34 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0c0a14] text-white overflow-x-hidden">
       {/* Floating urgency bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 py-2 px-2 sm:px-3 text-center text-[10px] sm:text-sm font-bold shadow-lg overflow-hidden" style={{ background: 'linear-gradient(90deg, hsl(262 52% 30%), hsl(262 52% 45%), hsl(262 52% 30%))' }}>
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-tight max-w-full">
-          <span className="flex items-center gap-1 min-w-0">
-            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-            <span className="hidden sm:inline">⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.</span>
-            <span className="sm:hidden">⚠️ NR-01 obrigatória</span>
+      <div className="fixed top-0 left-0 right-0 z-50 py-2 text-[11px] sm:text-sm font-bold shadow-lg overflow-hidden" style={{ background: 'linear-gradient(90deg, hsl(262 52% 30%), hsl(262 52% 45%), hsl(262 52% 30%))' }}>
+        {/* Desktop: estático e centralizado */}
+        <div className="hidden sm:flex items-center justify-center gap-3 px-3 leading-tight">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            ⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.
           </span>
           {vagasRestantes > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[9px] sm:text-xs font-black shrink-0" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
+            <span className="px-2 py-0.5 rounded-full text-xs font-black shrink-0" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
               🔥 {vagasRestantes} vagas
             </span>
           )}
+        </div>
+        {/* Mobile: marquee com texto completo */}
+        <div className="sm:hidden relative w-full overflow-hidden">
+          <div className="flex whitespace-nowrap animate-marquee">
+            {[0, 1].map((i) => (
+              <span key={i} className="flex items-center gap-2 px-4 shrink-0">
+                <Clock className="w-3 h-3 shrink-0" />
+                <span>⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.</span>
+                {vagasRestantes > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
+                    🔥 {vagasRestantes} vagas
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
