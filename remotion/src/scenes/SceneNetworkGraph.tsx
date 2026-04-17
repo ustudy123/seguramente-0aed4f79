@@ -94,7 +94,7 @@ export const SceneNetworkGraph = () => {
 
         {/* Edges from center to each node */}
         {NODES.map((node, i) => {
-          const p = polar(node.angle, RADIUS);
+          const p = polar(node.angle);
           const edgeDelay = 30 + i * 6;
           const edgeP = interpolate(frame, [edgeDelay, edgeDelay + 25], [0, 1], {
             extrapolateLeft: "clamp",
@@ -136,7 +136,7 @@ export const SceneNetworkGraph = () => {
 
         {/* Outer nodes */}
         {NODES.map((node, i) => {
-          const p = polar(node.angle, RADIUS);
+          const p = polar(node.angle);
           const nodeDelay = 50 + i * 8;
           const s = spring({ frame: frame - nodeDelay, fps, config: { damping: 14, stiffness: 160 } });
           const scale = interpolate(s, [0, 1], [0, 1]);
@@ -178,7 +178,7 @@ export const SceneNetworkGraph = () => {
 
       {/* HTML labels — for crisper, larger typography */}
       {NODES.map((node, i) => {
-        const p = polar(node.angle, RADIUS);
+        const p = polar(node.angle);
         const nodeDelay = 50 + i * 8;
         const labelOp = interpolate(frame, [nodeDelay + 8, nodeDelay + 28], [0, 1], {
           extrapolateLeft: "clamp",
