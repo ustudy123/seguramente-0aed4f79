@@ -16,7 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LandingDiagnostico } from "@/components/landing/LandingDiagnostico";
+import mockupDashboard from "@/assets/landing/mockup-dashboard.png";
+import mockupPsicossocial from "@/assets/landing/mockup-psicossocial.png";
+import mockupGovernanca from "@/assets/landing/mockup-governanca.png";
+import mockupConfiguracoes from "@/assets/landing/mockup-configuracoes.png";
+
+const WHATSAPP_NUMBER = "5546993375044";
+const WHATSAPP_MESSAGE = encodeURIComponent(
+  "Olá! Vim pelo site do SeguraMente e gostaria de agendar uma demonstração da plataforma."
+);
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+const openWhatsApp = () => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
