@@ -130,14 +130,9 @@ export const SceneCrossMatrix: React.FC = () => {
 
         {/* Lista de módulos */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
-          {MODULOS.map((mod, i) => {
-            const delay = 30 + i * 8;
-            return (
-              <Sequence key={mod.nome} from={delay} durationInFrames={9999}>
-                <ModuloRow modulo={mod} index={i} />
-              </Sequence>
-            );
-          })}
+          {MODULOS.map((mod, i) => (
+            <ModuloRow key={mod.nome} modulo={mod} index={i} delay={30 + i * 8} />
+          ))}
         </div>
       </div>
 
