@@ -145,11 +145,13 @@ export const SceneCrossMatrix: React.FC = () => {
 const ModuloRow: React.FC<{
   modulo: { nome: string; conector: string; cor: string };
   index: number;
-}> = ({ modulo, index }) => {
+  delay: number;
+}> = ({ modulo, index, delay }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const enter = spring({ frame, fps, config: { damping: 18, stiffness: 110 } });
+  const local = Math.max(0, frame - delay);
+  const enter = spring({ frame: local, fps, config: { damping: 18, stiffness: 110 } });
   const x = interpolate(enter, [0, 1], [80, 0]);
   const op = interpolate(enter, [0, 1], [0, 1]);
 
