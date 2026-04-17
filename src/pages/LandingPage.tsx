@@ -129,6 +129,24 @@ export default function LandingPage() {
               dos últimos 20 anos?
             </h1>
 
+            {/* MOCKUP - logo após o título principal */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="my-10 max-w-5xl mx-auto"
+            >
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(262 52% 50% / 0.15)' }}>
+                <img
+                  src={mockupDashboard}
+                  alt="Dashboard SeguraMente - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
+                  className="w-full h-auto rounded-2xl"
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do SeguraMente</p>
+            </motion.div>
+
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
               A NR-01 foi atualizada. Agora <strong className="text-white">riscos psicossociais são obrigatórios</strong> no GRO/PGR.
               Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(24 90% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
@@ -138,42 +156,11 @@ export default function LandingPage() {
               97% das empresas brasileiras NÃO estão preparadas. A sua está entre as 3% que vão se proteger — ou entre as 97% que vão pagar caro?
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Button
-                size="lg"
-                onClick={openWhatsApp}
-                className="w-full sm:w-auto text-white text-base sm:text-lg px-6 sm:px-8 py-6 rounded-xl shadow-2xl group whitespace-normal h-auto"
-                style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))', boxShadow: '0 8px 32px hsl(152 60% 38% / 0.35)' }}
-              >
-                <MessageSquare className="w-5 h-5 mr-2 shrink-0 group-hover:animate-pulse" />
-                <span>AGENDAR DEMONSTRAÇÃO NO WHATSAPP</span>
-                <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
-
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Sem cartão de crédito</span>
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> Resultado imediato</span>
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" style={{ color: 'hsl(152 50% 50%)' }} /> 100% confidencial</span>
             </div>
-          </motion.div>
-
-          {/* MOCKUP */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="mt-16 max-w-5xl mx-auto"
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(262 52% 50% / 0.15)' }}>
-              <img 
-                src={mockupDashboard} 
-                alt="Dashboard SeguraMente - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
-                className="w-full h-auto rounded-2xl"
-                loading="lazy"
-              />
-            </div>
-            <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do SeguraMente</p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="mt-12">
