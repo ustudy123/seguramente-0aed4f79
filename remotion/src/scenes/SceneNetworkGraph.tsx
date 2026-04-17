@@ -5,23 +5,20 @@ const PURPLE_DEEP = "#7C3AED";
 const PURPLE_GLOW = "rgba(167,139,250,";
 const ORANGE = "#F6A76C";
 
-// Center: Psicossocial. Others orbit around it.
+// Center: Psicossocial. Others orbit around it (sides only — top/bottom reserved for title/caption).
 const CENTER = { x: 960, y: 560 };
-const RADIUS = 360;
+const RADIUS_X = 540;
+const RADIUS_Y = 280;
 
 const NODES = [
-  // Top
-  { name: "Onboarding", angle: -90 },
-  // Top-right
-  { name: "Registro de Ponto", angle: -30 },
-  // Bottom-right
-  { name: "PDI", angle: 30 },
-  // Bottom
-  { name: "Gestão de Pessoas", angle: 90 },
-  // Bottom-left
-  { name: "Documentos", angle: 150 },
-  // Top-left
-  { name: "Avaliações", angle: 210 },
+  // Right column
+  { name: "Registro de Ponto", angle: -45 },
+  { name: "PDI", angle: 0 },
+  { name: "Gestão de Pessoas", angle: 45 },
+  // Left column
+  { name: "Onboarding", angle: 225 }, // -135 → 225
+  { name: "Avaliações", angle: 180 },
+  { name: "Documentos", angle: 135 },
 ];
 
 const polar = (angleDeg: number, r: number) => {
