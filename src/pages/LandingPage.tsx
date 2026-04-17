@@ -140,12 +140,12 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button
                 size="lg"
-                onClick={() => setShowDiagnostico(true)}
+                onClick={openWhatsApp}
                 className="text-white text-lg px-8 py-6 rounded-xl shadow-2xl group"
-                style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
+                style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))', boxShadow: '0 8px 32px hsl(152 60% 38% / 0.35)' }}
               >
-                <Brain className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                Faça o Diagnóstico GRÁTIS da Sua Empresa
+                <MessageSquare className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+                AGENDAR DEMONSTRAÇÃO NO WHATSAPP
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
@@ -174,7 +174,7 @@ export default function LandingPage() {
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(262 52% 50% / 0.15)' }}>
               <img 
-                src="/images/mockup-dashboard.png" 
+                src={mockupDashboard} 
                 alt="Dashboard SeguraMente - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
                 className="w-full h-auto rounded-2xl"
                 loading="lazy"
@@ -241,14 +241,17 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain, title: "Análise Psicossocial com IA", desc: "Detecta automaticamente sinais de burnout, assédio e riscos psicossociais cruzando dados de atestados, ponto, denúncias e turnover." },
-              { icon: Eye, title: "Leitura de Notas Fiscais (OCR)", desc: "Envie foto de NF-e, DANFE ou recibo e a IA extrai todos os dados automaticamente com GPT-4o Vision. Sem digitação manual." },
-              { icon: MessageSquare, title: "Ouvidoria Inteligente", desc: "IA classifica denúncias por sentimento, urgência e categoria. Identifica riscos e sugere encaminhamento automático." },
-              { icon: Target, title: "PDI Gerado por IA", desc: "Planos de Desenvolvimento Individual criados automaticamente após avaliações de desempenho, com metas SMART personalizadas." },
-              { icon: ClipboardCheck, title: "Checklist de Detecção Observável", desc: "Monitora automaticamente turnover, horas extras, atestados mentais e ocorrências — sem precisar de pesquisa." },
-              { icon: Bot, title: "Matching Inteligente NFs", desc: "IA cruza automaticamente XML de notas fiscais com guias de pagamento, identificando divergências e pendências." },
+              { icon: Brain, title: "Psicossocial Cruzando TODOS os Módulos", desc: "O motor psicossocial cruza dados de Ponto, Atestados, Ouvidoria, Avaliações, Turnover e Ocorrências em tempo real para detectar burnout e assédio antes da fiscalização." },
+              { icon: Fingerprint, title: "Entrega de EPI com Reconhecimento Facial", desc: "Cada entrega é validada por liveness + biometria facial — prova jurídica indiscutível para o eSocial S-2240 e auditorias trabalhistas." },
+              { icon: Eye, title: "Leitura de Notas e Atestados (OCR + GPT-4o)", desc: "Foto de NF-e, atestado médico, ASO ou DANFE: a IA extrai CID, dias de afastamento, valores e classifica automaticamente." },
+              { icon: MessageSquare, title: "Ouvidoria Inteligente com IA", desc: "Classifica denúncias por sentimento, urgência e categoria (assédio, ética, segurança). Identifica reincidência e sugere encaminhamento." },
+              { icon: Target, title: "PDI e Avaliações 360° com IA", desc: "Planos de Desenvolvimento Individual gerados automaticamente após avaliações, com metas SMART personalizadas por cargo." },
+              { icon: ClipboardCheck, title: "Detecção Observável Automática", desc: "Monitora turnover, horas extras, atestados mentais e ocorrências disciplinares — gatilhos automáticos para campanhas extraordinárias." },
+              { icon: GraduationCap, title: "Onboarding Self-Service Guiado", desc: "Novo cliente cria empresa, importa colaboradores, configura cargos e já recebe IA cadastrando departamentos automaticamente." },
+              { icon: Bot, title: "Matching Inteligente NF × Guia", desc: "IA cruza XML de notas fiscais com guias de pagamento (DARF, INSS, FGTS), identifica divergências e gera dossiês contábeis." },
+              { icon: Scale, title: "Conformidade Legal Automática", desc: "PGR, PCMSO, LTCAT auditados pela IA quanto à coerência normativa. Avisos de NR-01, NR-04, NR-07, NR-17 sempre atualizados." },
             ].map((item, i) => (
-              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
+              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
                 <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(262 25% 14%) 0%, hsl(262 25% 11%) 100%)', border: '1px solid hsl(262 52% 50% / 0.1)' }}>
                   <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(280 40% 72%)' }} />
                   <h3 className="text-base font-bold mb-2">{item.title}</h3>
@@ -485,31 +488,69 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ DIAGNOSTIC CTA SECTION ═══════════ */}
+      {/* ═══════════ MOCKUPS GALLERY ═══════════ */}
+      <section className="py-20 px-4" style={{ background: 'hsl(262 28% 8%)' }}>
+        <div className="max-w-6xl mx-auto">
+          <motion.div {...fadeUp} className="text-center mb-14">
+            <Badge className="mb-4" style={{ background: 'hsl(280 40% 60% / 0.15)', color: 'hsl(280 40% 75%)', borderColor: 'hsl(280 40% 60% / 0.3)' }}>
+              <LayoutDashboard className="w-4 h-4 mr-1" /> A PLATAFORMA POR DENTRO
+            </Badge>
+            <h2 className="text-3xl md:text-5xl font-black mb-4">
+              Veja o SeguraMente <span style={{ color: 'hsl(280 40% 72%)' }}>em ação</span>
+            </h2>
+            <p className="text-gray-400 max-w-3xl mx-auto text-lg">
+              Interface moderna, indicadores em tempo real e governança integrada — desenhado para quem decide.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              { src: mockupGovernanca, title: "Governança do Trabalho Humano", desc: "Visão integrada dos 4 pilares estratégicos com escore de maturidade em tempo real." },
+              { src: mockupPsicossocial, title: "Gestão Psicossocial NR-01", desc: "IPS, Confiabilidade e campanhas anônimas com privacidade garantida (mín. 5 respondentes)." },
+              { src: mockupConfiguracoes, title: "Configurações e Perfis de Acesso", desc: "Controle granular de papéis, vínculos e permissões por empresa e estabelecimento." },
+              { src: mockupDashboard, title: "Dashboard Operacional", desc: "KPIs de Colaboradores, Admissões, EPIs, Documentos, Avaliações e Metas em um só lugar." },
+            ].map((m, i) => (
+              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+                  <img src={m.src} alt={m.title} loading="lazy" className="w-full h-auto" />
+                  <div className="p-5">
+                    <h3 className="font-bold text-lg mb-1">{m.title}</h3>
+                    <p className="text-sm text-gray-400">{m.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ DEMO CTA SECTION ═══════════ */}
       <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(262 28% 8%)' }}>
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[250px]" style={{ background: 'hsl(24 90% 54%)' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[250px]" style={{ background: 'hsl(152 60% 40%)' }} />
         </div>
         <div className="relative max-w-3xl mx-auto text-center">
           <motion.div {...fadeUp}>
-            <Brain className="w-16 h-16 mx-auto mb-6" style={{ color: 'hsl(24 90% 54%)' }} />
+            <MessageSquare className="w-16 h-16 mx-auto mb-6" style={{ color: 'hsl(152 60% 50%)' }} />
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Descubra o risco da sua empresa em <span style={{ color: 'hsl(24 90% 54%)' }}>2 minutos</span>
+              Veja o SeguraMente funcionando na <span style={{ color: 'hsl(152 60% 50%)' }}>sua empresa</span>
             </h2>
             <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-              Nosso diagnóstico gratuito analisa 7 fatores críticos da NR-01 e mostra se sua empresa está em risco de multa, interdição ou processo trabalhista.
-              <strong className="text-white"> 100% confidencial. Resultado imediato.</strong>
+              Agende uma demonstração personalizada por <strong className="text-white">WhatsApp</strong>. 
+              Mostramos como o Psicossocial NR-01, EPI com reconhecimento facial e a governança integrada 
+              se aplicam ao seu cenário — sem compromisso.
             </p>
             <Button
               size="lg"
-              onClick={() => setShowDiagnostico(true)}
+              onClick={openWhatsApp}
               className="text-white text-lg px-10 py-7 rounded-xl shadow-2xl group"
-              style={{ background: 'linear-gradient(135deg, hsl(24 90% 54%), hsl(262 52% 50%))', boxShadow: '0 8px 32px hsl(24 90% 54% / 0.3)' }}
+              style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))', boxShadow: '0 8px 32px hsl(152 60% 38% / 0.35)' }}
             >
-              <Brain className="w-5 h-5 mr-2" />
-              FAZER DIAGNÓSTICO GRÁTIS AGORA
+              <MessageSquare className="w-5 h-5 mr-2" />
+              FALAR NO WHATSAPP — (46) 9 9337-5044
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
+            <p className="text-xs text-gray-600 mt-4">Atendimento humano • Resposta em minutos durante o horário comercial</p>
           </motion.div>
         </div>
       </section>
@@ -717,20 +758,15 @@ export default function LandingPage() {
         <p className="mt-1 text-xs" style={{ color: 'hsl(262 10% 30%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 
-      {/* Diagnóstico Modal */}
-      <AnimatePresence>
-        {showDiagnostico && (
-          <LandingDiagnostico
-            onClose={() => setShowDiagnostico(false)}
-            onComplete={(resultado) => {
-              setDiagnosticoResultado(resultado);
-              setShowDiagnostico(false);
-              setShowFormulario(true);
-              scrollToSection("vagas");
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Floating WhatsApp button */}
+      <button
+        onClick={openWhatsApp}
+        aria-label="Falar no WhatsApp"
+        className="fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-2xl transition-transform hover:scale-110"
+        style={{ background: 'hsl(152 70% 38%)', boxShadow: '0 8px 32px hsl(152 70% 38% / 0.5)' }}
+      >
+        <MessageSquare className="w-6 h-6 text-white" />
+      </button>
     </div>
   );
 }
