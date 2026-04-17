@@ -536,12 +536,12 @@ export default function LandingPage() {
             <Button
               size="lg"
               onClick={openWhatsApp}
-              className="text-white text-lg px-10 py-7 rounded-xl shadow-2xl group"
+              className="w-full sm:w-auto max-w-full text-white text-sm sm:text-lg px-4 sm:px-10 py-6 sm:py-7 rounded-xl shadow-2xl group whitespace-normal h-auto"
               style={{ background: 'linear-gradient(135deg, hsl(152 60% 38%), hsl(152 70% 30%))', boxShadow: '0 8px 32px hsl(152 60% 38% / 0.35)' }}
             >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              FALAR NO WHATSAPP — (46) 9 9337-5044
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <MessageSquare className="w-5 h-5 mr-2 shrink-0" />
+              <span className="break-words"><span className="sm:hidden">WHATSAPP — (46) 9 9337-5044</span><span className="hidden sm:inline">FALAR NO WHATSAPP — (46) 9 9337-5044</span></span>
+              <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
             </Button>
             <p className="text-xs text-gray-600 mt-4">Atendimento humano • Resposta em minutos durante o horário comercial</p>
           </motion.div>
@@ -632,17 +632,17 @@ export default function LandingPage() {
                   <Button
                     size="lg"
                     onClick={() => setShowFormulario(true)}
-                    className="w-full text-white text-lg py-7 rounded-xl shadow-2xl"
+                    className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto"
                     style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
                     disabled={vagasRestantes <= 0}
                   >
                     {vagasRestantes > 0 ? (
                       <>
-                        <Zap className="w-5 h-5 mr-2" />
-                        QUERO GARANTIR MINHA VAGA AGORA
+                        <Zap className="w-5 h-5 mr-2 shrink-0" />
+                        <span className="break-words">QUERO GARANTIR MINHA VAGA AGORA</span>
                       </>
                     ) : (
-                      "Vagas esgotadas — Lista de espera em breve"
+                      <span className="break-words">Vagas esgotadas — Lista de espera em breve</span>
                     )}
                   </Button>
                 </motion.div>
@@ -706,11 +706,11 @@ export default function LandingPage() {
                     <Button
                       size="lg"
                       onClick={() => navigate("/register")}
-                      className="text-white text-lg px-10 py-6 rounded-xl shadow-2xl"
+                      className="w-full sm:w-auto text-white text-sm sm:text-lg px-4 sm:px-10 py-6 rounded-xl shadow-2xl whitespace-normal h-auto"
                       style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(280 40% 60%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
                     >
-                      CRIAR MINHA CONTA AGORA — É GRÁTIS
-                      <ArrowRight className="w-5 h-5 ml-2" />
+                      <span className="break-words">CRIAR MINHA CONTA AGORA — É GRÁTIS</span>
+                      <ArrowRight className="w-5 h-5 ml-2 shrink-0" />
                     </Button>
                     <p className="text-xs text-gray-600 mt-4">Cadastro rápido em menos de 2 minutos</p>
                   </div>
@@ -737,10 +737,10 @@ export default function LandingPage() {
           <Button
             size="lg"
             onClick={() => scrollToSection("vagas")}
-            className="text-white px-10 py-6 text-lg rounded-xl"
+            className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto"
             style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))' }}
           >
-            PROTEGER MINHA EMPRESA AGORA →
+            <span className="break-words">PROTEGER MINHA EMPRESA AGORA →</span>
           </Button>
         </div>
       </section>
