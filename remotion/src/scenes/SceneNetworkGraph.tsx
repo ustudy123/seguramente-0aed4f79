@@ -21,9 +21,9 @@ const NODES = [
   { name: "Documentos", angle: 135 },
 ];
 
-const polar = (angleDeg: number, r: number) => {
+const polar = (angleDeg: number) => {
   const a = (angleDeg * Math.PI) / 180;
-  return { x: CENTER.x + Math.cos(a) * r, y: CENTER.y + Math.sin(a) * r };
+  return { x: CENTER.x + Math.cos(a) * RADIUS_X, y: CENTER.y + Math.sin(a) * RADIUS_Y };
 };
 
 export const SceneNetworkGraph = () => {
