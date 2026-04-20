@@ -51,11 +51,74 @@ export function PontoEscalasTab() {
     return `${h}h${m > 0 ? ` ${m}min` : ""}`;
   };
 
-  const handleCriar = async () => {
+  const handleSalvar = async () => {
     if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }
-    await criarEscala(escalaForm as any);
+    if (editando) {
+      await atualizarEscala({ id: editando.id, ...escalaForm } as any);
+    } else {
+      await criarEscala(escalaForm as any);
+    }
     setShowCriar(false);
+    setEditando(null);
     setEscalaForm({ ...escalaForm, nome: "" });
+  };
+
+  const abrirNova = () => {
+    setEditando(null);
+    setEscalaForm({
+      nome: "", tipo: "5x2", jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
+      intervalo_intrajornada_minutos: 60, tolerancia_minutos: 5, tolerancia_diaria_minutos: 10,
+      hora_entrada_padrao: "08:00", hora_saida_padrao: "17:00", sabado_util: false, domingo_util: false,
+      percentual_hora_extra_50: 50, percentual_hora_extra_100: 100, percentual_adicional_noturno: 20,
+      usa_hora_ficta_noturna: true,
+    });
+    setShowCriar(true);
+  };
+
+  const abrirEditar = (e: PontoEscala) => {
+    setEditando(e);
+    setEscalaForm({
+      nome: e.nome,
+      tipo: e.tipo,
+      jornada_diaria_minutos: e.jornada_diaria_minutos,
+      jornada_semanal_minutos: e.jornada_semanal_minutos,
+      intervalo_intrajornada_minutos: e.intervalo_intrajornada_minutos,
+      tolerancia_minutos: e.tolerancia_minutos,
+      tolerancia_diaria_minutos: e.tolerancia_diaria_minutos,
+      hora_entrada_padrao: e.hora_entrada_padrao?.substring(0,5) || "08:00",
+      hora_saida_padrao: e.hora_saida_padrao?.substring(0,5) || "17:00",
+      sabado_util: e.sabado_util,
+      domingo_util: e.domingo_util,
+      percentual_hora_extra_50: e.percentual_hora_extra_50,
+      percentual_hora_extra_100: e.percentual_hora_extra_100,
+      percentual_adicional_noturno: e.percentual_adicional_noturno,
+      usa_hora_ficta_noturna: e.usa_hora_ficta_noturna,
+    });
+    setShowCriar(true);
+  };
+
+  const handleToggleAtiva = async (e: PontoEscala) => {
+    const ok = await confirm({
+      title: e.ativa ? "Inativar escala?" : "Ativar escala?",
+      description: e.ativa
+        ? "A escala não poderá ser atribuída a novos colaboradores enquanto inativa."
+        : "A escala voltará a ficar disponível para atribuição.",
+      confirmLabel: e.ativa ? "Inativar" : "Ativar",
+      variant: e.ativa ? "destructive" : "default",
+    });
+    if (!ok) return;
+    await atualizarEscala({ id: e.id, ativa: !e.ativa } as any);
+  };
+
+  const handleExcluir = async (e: PontoEscala) => {
+    const ok = await confirm({
+      title: "Excluir escala?",
+      description: `A escala "${e.nome}" será removida permanentemente. Esta ação não pode ser desfeita. (Só é possível excluir escalas sem colaboradores atribuídos.)`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    await excluirEscala(e.id);
   };
 
   const handleAtribuir = async () => {
