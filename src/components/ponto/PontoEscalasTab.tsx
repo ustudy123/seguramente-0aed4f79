@@ -245,9 +245,9 @@ export function PontoEscalasTab() {
       )}
 
       {/* Dialog Criar Escala */}
-      <Dialog open={showCriar} onOpenChange={setShowCriar}>
+      <Dialog open={showCriar} onOpenChange={(o) => { setShowCriar(o); if (!o) setEditando(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Nova Escala de Trabalho</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editando ? "Editar Escala" : "Nova Escala de Trabalho"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
