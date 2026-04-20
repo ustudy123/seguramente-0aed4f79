@@ -325,22 +325,22 @@ export function PontoEscalasTab() {
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-6 rounded-md border bg-muted/30 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.sabado_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, sabado_util: v })} />
-                <Label>Sábado útil</Label>
+                <Label className="cursor-pointer">Sábado útil</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.domingo_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, domingo_util: v })} />
-                <Label>Domingo útil</Label>
+                <Label className="cursor-pointer">Domingo útil</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
-                <Label>Hora ficta noturna (52m30s)</Label>
+                <Label className="cursor-pointer">Hora ficta noturna (52m30s)</Label>
+              </div>
             </div>
 
             {editando && <DetalhesEscalaPanel escalaId={editando.id} />}
-          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowCriar(false); setEditando(null); }}>Cancelar</Button>
@@ -422,48 +422,55 @@ function DetalhesEscalaPanel({ escalaId }: { escalaId: string }) {
   return (
     <div className="space-y-5 border-t pt-4">
       {diasOrdenados.length > 0 && (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           <Label className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
             <CalendarDays className="w-3.5 h-3.5" /> Blocos diários cadastrados
           </Label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {diasOrdenados.map((dia) => {
-              const totalMin = porDia[dia].reduce((acc, b) => {
-                const [h1, m1] = b.hora_inicio.split(":").map(Number);
-                const [h2, m2] = b.hora_fim.split(":").map(Number);
-                return acc + (h2 * 60 + m2) - (h1 * 60 + m1);
-              }, 0);
-              const horas = Math.floor(totalMin / 60);
-              const mins = totalMin % 60;
-              return (
-                <div
-                  key={dia}
-                  className="rounded-lg border bg-card p-2.5 flex flex-col gap-1.5 hover:border-primary/40 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-sm leading-none">
-                      {DIAS_SEMANA_LABEL[dia] || dia}
-                    </span>
-                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                      {horas}h{mins > 0 ? `${mins}` : ""}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {porDia[dia].map((b, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-1.5 text-xs font-mono bg-muted/40 rounded px-1.5 py-1"
-                      >
-                        <Clock className="w-3 h-3 text-primary shrink-0" />
-                        <span>{b.hora_inicio}</span>
-                        <span className="text-muted-foreground">→</span>
-                        <span>{b.hora_fim}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="rounded-lg border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="text-left px-3 py-2 font-medium w-32">Dia</th>
+                  <th className="text-left px-3 py-2 font-medium">Horários</th>
+                  <th className="text-right px-3 py-2 font-medium w-20">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {diasOrdenados.map((dia, idx) => {
+                  const totalMin = porDia[dia].reduce((acc, b) => {
+                    const [h1, m1] = b.hora_inicio.split(":").map(Number);
+                    const [h2, m2] = b.hora_fim.split(":").map(Number);
+                    return acc + (h2 * 60 + m2) - (h1 * 60 + m1);
+                  }, 0);
+                  const horas = Math.floor(totalMin / 60);
+                  const mins = totalMin % 60;
+                  return (
+                    <tr
+                      key={dia}
+                      className={`border-t ${idx % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
+                    >
+                      <td className="px-3 py-2 font-semibold">{DIAS_SEMANA_LABEL[dia] || dia}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
+                          {porDia[dia].map((b, i) => (
+                            <span key={i} className="inline-flex items-center gap-1.5">
+                              {i > 0 && <span className="text-muted-foreground">·</span>}
+                              <Clock className="w-3 h-3 text-primary" />
+                              <span>{b.hora_inicio}</span>
+                              <span className="text-muted-foreground">→</span>
+                              <span>{b.hora_fim}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right font-mono text-xs text-muted-foreground whitespace-nowrap">
+                        {horas}h{mins > 0 ? mins.toString().padStart(2, "0") : ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
