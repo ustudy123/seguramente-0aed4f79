@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { usePontoEscalas, ESCALA_TIPOS, type PontoEscala } from "@/hooks/usePontoEscalas";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { Plus, Calendar, Clock, Users, Settings, Sparkles } from "lucide-react";
+import { Plus, Calendar, Clock, Users, Settings, Sparkles, Pencil, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
 
 export function PontoEscalasTab() {
