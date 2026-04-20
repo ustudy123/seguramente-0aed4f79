@@ -340,8 +340,10 @@ export function PontoEscalasTab() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCriar(false)}>Cancelar</Button>
-            <Button onClick={handleCriar} disabled={criandoEscala}>{criandoEscala ? "Criando..." : "Criar Escala"}</Button>
+            <Button variant="outline" onClick={() => { setShowCriar(false); setEditando(null); }}>Cancelar</Button>
+            <Button onClick={handleSalvar} disabled={criandoEscala || atualizandoEscala}>
+              {(criandoEscala || atualizandoEscala) ? "Salvando..." : (editando ? "Salvar Alterações" : "Criar Escala")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
