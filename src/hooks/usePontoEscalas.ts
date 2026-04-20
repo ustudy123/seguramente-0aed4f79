@@ -168,6 +168,9 @@ export function usePontoEscalas() {
     criarEscala: criarEscalaMutation.mutateAsync,
     criandoEscala: criarEscalaMutation.isPending,
     atualizarEscala: atualizarEscalaMutation.mutateAsync,
+    atualizandoEscala: atualizarEscalaMutation.isPending,
+    excluirEscala: excluirEscalaMutation.mutateAsync,
+    excluindoEscala: excluirEscalaMutation.isPending,
     atribuirEscala: atribuirEscalaMutation.mutateAsync,
   };
 }
