@@ -16,9 +16,10 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
 
 export function PontoEscalasTab() {
-  const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atribuirEscala } = usePontoEscalas();
+  const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atualizarEscala, atualizandoEscala, excluirEscala, atribuirEscala } = usePontoEscalas();
   const { colaboradores } = useColaboradores();
   const [showCriar, setShowCriar] = useState(false);
+  const [editando, setEditando] = useState<PontoEscala | null>(null);
   const [showInteligente, setShowInteligente] = useState(false);
   const [showAtribuir, setShowAtribuir] = useState(false);
   const [escalaForm, setEscalaForm] = useState({
