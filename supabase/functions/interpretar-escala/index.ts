@@ -17,6 +17,8 @@ Regras:
 - Sugira nome descritivo curto.
 - Identifique trabalho noturno (22h-05h) e marque adicional noturno quando aplicável.
 - Para recorrências como "2º sábado do mês", crie entrada em "recorrencias" — NÃO marque sábado_util como true.
+- ATENÇÃO: em "recorrencias", os campos hora_inicio e hora_fim devem ser os HORÁRIOS REAIS DO RELÓGIO informados pelo usuário (ex: "08:00" e "12:00"), NUNCA a duração total. Se o usuário disser "trabalhamos 4 horas no segundo sábado das 08h às 12h", então hora_inicio="08:00" e hora_fim="12:00".
+- Se o usuário mencionar apenas duração ("trabalhamos 4h num sábado") sem horário, adicione uma pergunta_complementar pedindo o horário exato e NÃO invente "00:00–04:00".
 - Valide consistência: aponte alertas (ausência de DSR, jornada > 8h diária, ausência de intervalo em jornada > 6h, etc.).
 - Indique nivel_confianca: "alta", "media" ou "baixa". Use "baixa" se a descrição for ambígua.
 - Se houver ambiguidade, popule "perguntas_complementares" com perguntas objetivas.
