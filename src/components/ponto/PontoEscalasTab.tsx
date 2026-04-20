@@ -292,6 +292,9 @@ export function PontoEscalasTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cadastro Inteligente */}
+      <CadastroInteligenteEscala open={showInteligente} onOpenChange={setShowInteligente} />
     </div>
   );
 }
