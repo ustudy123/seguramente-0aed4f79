@@ -15913,12 +15913,223 @@ export type Database = {
           },
         ]
       }
+      ponto_escala_historico_interpretacao: {
+        Row: {
+          ajuste_usuario: Json | null
+          alertas: Json | null
+          created_at: string
+          descricao_contratual: string | null
+          entrada_original: string
+          escala_id: string | null
+          id: string
+          nivel_confianca: string | null
+          origem_input: string
+          saida_ia: Json
+          tenant_id: string
+          transcricao_audio: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ajuste_usuario?: Json | null
+          alertas?: Json | null
+          created_at?: string
+          descricao_contratual?: string | null
+          entrada_original: string
+          escala_id?: string | null
+          id?: string
+          nivel_confianca?: string | null
+          origem_input?: string
+          saida_ia: Json
+          tenant_id: string
+          transcricao_audio?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ajuste_usuario?: Json | null
+          alertas?: Json | null
+          created_at?: string
+          descricao_contratual?: string | null
+          entrada_original?: string
+          escala_id?: string | null
+          id?: string
+          nivel_confianca?: string | null
+          origem_input?: string
+          saida_ia?: Json
+          tenant_id?: string
+          transcricao_audio?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_escala_historico_interpretacao_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_escalas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_escala_historico_interpretacao_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_escala_padroes: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          estrutura: Json
+          exemplo_descricao: string | null
+          id: string
+          nome: string
+          tenant_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          estrutura: Json
+          exemplo_descricao?: string | null
+          id?: string
+          nome: string
+          tenant_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          estrutura?: Json
+          exemplo_descricao?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_escala_padroes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_escala_periodos: {
+        Row: {
+          created_at: string
+          dia_semana: string
+          escala_id: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          ordem_bloco: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          dia_semana: string
+          escala_id: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          ordem_bloco?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          dia_semana?: string
+          escala_id?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          ordem_bloco?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_escala_periodos_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_escalas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_escala_periodos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_escala_recorrencias: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          dia_semana: string
+          escala_id: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          observacao: string | null
+          ordinal_mes: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          dia_semana: string
+          escala_id: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          observacao?: string | null
+          ordinal_mes: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          dia_semana?: string
+          escala_id?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          observacao?: string | null
+          ordinal_mes?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_escala_recorrencias_escala_id_fkey"
+            columns: ["escala_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_escalas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_escala_recorrencias_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_escalas: {
         Row: {
           adicional_noturno_fim: string | null
           adicional_noturno_inicio: string | null
           ativa: boolean | null
           created_at: string | null
+          descricao_contratual: string | null
+          descricao_original: string | null
           domingo_util: boolean | null
           empresa_id: string | null
           hora_entrada_padrao: string | null
@@ -15927,7 +16138,9 @@ export type Database = {
           intervalo_intrajornada_minutos: number
           jornada_diaria_minutos: number
           jornada_semanal_minutos: number
+          nivel_confianca: string | null
           nome: string
+          origem_input: string | null
           percentual_adicional_noturno: number | null
           percentual_hora_extra_100: number | null
           percentual_hora_extra_50: number | null
@@ -15944,6 +16157,8 @@ export type Database = {
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
           created_at?: string | null
+          descricao_contratual?: string | null
+          descricao_original?: string | null
           domingo_util?: boolean | null
           empresa_id?: string | null
           hora_entrada_padrao?: string | null
@@ -15952,7 +16167,9 @@ export type Database = {
           intervalo_intrajornada_minutos?: number
           jornada_diaria_minutos?: number
           jornada_semanal_minutos?: number
+          nivel_confianca?: string | null
           nome: string
+          origem_input?: string | null
           percentual_adicional_noturno?: number | null
           percentual_hora_extra_100?: number | null
           percentual_hora_extra_50?: number | null
@@ -15969,6 +16186,8 @@ export type Database = {
           adicional_noturno_inicio?: string | null
           ativa?: boolean | null
           created_at?: string | null
+          descricao_contratual?: string | null
+          descricao_original?: string | null
           domingo_util?: boolean | null
           empresa_id?: string | null
           hora_entrada_padrao?: string | null
@@ -15977,7 +16196,9 @@ export type Database = {
           intervalo_intrajornada_minutos?: number
           jornada_diaria_minutos?: number
           jornada_semanal_minutos?: number
+          nivel_confianca?: string | null
           nome?: string
+          origem_input?: string | null
           percentual_adicional_noturno?: number | null
           percentual_hora_extra_100?: number | null
           percentual_hora_extra_50?: number | null
