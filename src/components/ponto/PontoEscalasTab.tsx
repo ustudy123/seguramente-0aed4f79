@@ -337,8 +337,10 @@ export function PontoEscalasTab() {
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
                 <Label>Hora ficta noturna (52m30s)</Label>
-              </div>
             </div>
+
+            {editando && <DetalhesEscalaPanel escalaId={editando.id} />}
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowCriar(false); setEditando(null); }}>Cancelar</Button>
