@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { usePontoEscalas, ESCALA_TIPOS, type PontoEscala } from "@/hooks/usePontoEscalas";
+import { useEscalaDetalhes, DIAS_SEMANA_LABEL, ORDINAL_MES_LABEL } from "@/hooks/useEscalaDetalhes";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { Plus, Calendar, Clock, Users, Settings, Sparkles, Pencil, Power, Trash2 } from "lucide-react";
+import { Plus, Calendar, Clock, Users, Settings, Sparkles, Pencil, Power, Trash2, CalendarDays, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
@@ -336,8 +337,10 @@ export function PontoEscalasTab() {
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
                 <Label>Hora ficta noturna (52m30s)</Label>
-              </div>
             </div>
+
+            {editando && <DetalhesEscalaPanel escalaId={editando.id} />}
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowCriar(false); setEditando(null); }}>Cancelar</Button>
@@ -385,6 +388,78 @@ export function PontoEscalasTab() {
 
       {/* Cadastro Inteligente */}
       <CadastroInteligenteEscala open={showInteligente} onOpenChange={setShowInteligente} />
+    </div>
+  );
+}
+
+function DetalhesEscalaPanel({ escalaId }: { escalaId: string }) {
+  const { periodos, recorrencias, loading } = useEscalaDetalhes(escalaId);
+
+  // Agrupa períodos por dia
+  const porDia = periodos.reduce<Record<string, { hora_inicio: string; hora_fim: string }[]>>((acc, p) => {
+    (acc[p.dia_semana] = acc[p.dia_semana] || []).push({
+      hora_inicio: p.hora_inicio.substring(0, 5),
+      hora_fim: p.hora_fim.substring(0, 5),
+    });
+    return acc;
+  }, {});
+
+  if (loading) {
+    return <div className="text-xs text-muted-foreground py-2">Carregando blocos e recorrências…</div>;
+  }
+
+  if (periodos.length === 0 && recorrencias.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground border-t pt-3">
+        Esta escala não possui blocos diários nem recorrências detalhadas. Use o <strong>Cadastro Inteligente</strong> para criar uma escala com horários completos.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 border-t pt-4">
+      {Object.keys(porDia).length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+            <CalendarDays className="w-3.5 h-3.5" /> Blocos diários cadastrados
+          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {Object.entries(porDia).map(([dia, blocos]) => (
+              <div key={dia} className="text-sm border rounded-md p-2 bg-muted/30">
+                <span className="font-medium">{DIAS_SEMANA_LABEL[dia] || dia}: </span>
+                <span className="font-mono text-xs">
+                  {blocos.map((b) => `${b.hora_inicio}–${b.hora_fim}`).join(" / ")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {recorrencias.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+            <Repeat className="w-3.5 h-3.5" /> Recorrências mensais
+          </Label>
+          <div className="space-y-1">
+            {recorrencias.map((r) => (
+              <div key={r.id} className="text-sm border rounded-md p-2 bg-blue-50 dark:bg-blue-950/30">
+                <span className="font-medium">
+                  {ORDINAL_MES_LABEL[r.ordinal_mes] || r.ordinal_mes} {DIAS_SEMANA_LABEL[r.dia_semana] || r.dia_semana} do mês
+                </span>
+                <span className="font-mono text-xs ml-2">
+                  ({r.hora_inicio.substring(0, 5)}–{r.hora_fim.substring(0, 5)})
+                </span>
+                {r.descricao && <div className="text-xs text-muted-foreground mt-0.5">{r.descricao}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground italic">
+        ℹ️ Blocos diários e recorrências são gerados pelo Cadastro Inteligente. Para alterá-los, recadastre a escala via IA.
+      </p>
     </div>
   );
 }
