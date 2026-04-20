@@ -8,10 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Mic, Square, Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, FileText, Pencil } from "lucide-react";
+import { Mic, Square, Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, FileText, Pencil, BookTemplate } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { usePontoEscalas } from "@/hooks/usePontoEscalas";
+import { usePontoEscalasAvancado } from "@/hooks/usePontoEscalasAvancado";
+import { fromTable } from "@/integrations/supabase/untypedClient";
+import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 
 interface BlocoDia {
   dia_semana: string;
@@ -63,10 +67,15 @@ const DIAS_LABEL: Record<string, string> = {
 
 export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
   const { criarEscala, criandoEscala } = usePontoEscalas();
+  const { padroes, salvarEstruturaCompleta, salvandoEstrutura } = usePontoEscalasAvancado();
+  const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [descricao, setDescricao] = useState("");
   const [interpretando, setInterpretando] = useState(false);
   const [estrutura, setEstrutura] = useState<EstruturaEscala | null>(null);
   const [textoOriginal, setTextoOriginal] = useState("");
+  const [origemInput, setOrigemInput] = useState<"texto" | "audio">("texto");
+  const [transcricaoAudio, setTranscricaoAudio] = useState<string | null>(null);
 
   // Áudio
   const [gravando, setGravando] = useState(false);
@@ -76,6 +85,14 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
 
   const reset = () => {
     setDescricao(""); setEstrutura(null); setTextoOriginal("");
+    setOrigemInput("texto"); setTranscricaoAudio(null);
+  };
+
+  const aplicarPadrao = (padraoId: string) => {
+    const p = padroes.find((x) => x.id === padraoId);
+    if (!p) return;
+    setDescricao(p.exemplo_descricao || p.descricao || "");
+    toast.success(`Padrão "${p.nome}" carregado. Ajuste e clique em Interpretar.`);
   };
 
   const handleClose = (v: boolean) => {
@@ -122,6 +139,8 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
       if (error) throw error;
       const texto = data?.text || "";
       setDescricao((d) => (d ? d + " " : "") + texto);
+      setOrigemInput("audio");
+      setTranscricaoAudio(texto);
       toast.success("Áudio transcrito. Revise o texto antes de interpretar.");
     } catch (e) {
       toast.error("Falha na transcrição do áudio");
@@ -159,18 +178,11 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
   };
 
   const salvarEscala = async () => {
-    if (!estrutura) return;
-    const observacoes = [
-      `📝 Descrição original: ${textoOriginal}`,
-      `🧠 Interpretação IA: ${estrutura.resumo_interpretacao}`,
-      estrutura.recorrencias?.length
-        ? `🔁 Recorrências: ${estrutura.recorrencias.map((r) => r.descricao).join("; ")}`
-        : null,
-      `📄 Descrição contratual: ${estrutura.descricao_contratual}`,
-    ].filter(Boolean).join("\n\n");
+    if (!estrutura || !tenantId) return;
 
     try {
-      await criarEscala({
+      // 1. Criar a escala base (com colunas estendidas)
+      const escalaCriada: any = await criarEscala({
         nome: estrutura.nome_sugerido,
         tipo: estrutura.tipo,
         jornada_diaria_minutos: estrutura.jornada_diaria_minutos,
@@ -187,10 +199,62 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
         tolerancia_minutos: 5,
         tolerancia_diaria_minutos: 10,
         ativa: true,
+        descricao_original: textoOriginal,
+        descricao_contratual: estrutura.descricao_contratual,
+        nivel_confianca: estrutura.nivel_confianca,
+        origem_input: origemInput,
       } as any);
+
+      const escalaId = escalaCriada?.id;
+      if (!escalaId) {
+        toast.warning("Escala criada, mas não foi possível salvar períodos/recorrências.");
+        handleClose(false);
+        return;
+      }
+
+      // 2. Achatar períodos diários em registros (um por bloco)
+      const periodos = (estrutura.periodos_diarios || []).flatMap((dia) =>
+        dia.blocos.map((b, idx) => ({
+          dia_semana: dia.dia_semana,
+          ordem_bloco: idx + 1,
+          hora_inicio: b.inicio,
+          hora_fim: b.fim,
+        }))
+      );
+
+      // 3. Recorrências válidas (com ordinal e horários)
+      const recorrencias = (estrutura.recorrencias || [])
+        .filter((r) => r.ordinal_mes && r.dia_semana && r.hora_inicio && r.hora_fim)
+        .map((r) => ({
+          descricao: r.descricao || null,
+          ordinal_mes: r.ordinal_mes!,
+          dia_semana: r.dia_semana!,
+          hora_inicio: r.hora_inicio!,
+          hora_fim: r.hora_fim!,
+          observacao: null,
+        }));
+
+      // 4. Salvar tudo + histórico
+      await salvarEstruturaCompleta({
+        escalaId,
+        periodos,
+        recorrencias,
+        historico: {
+          entrada_original: textoOriginal,
+          origem_input: origemInput,
+          transcricao_audio: transcricaoAudio,
+          saida_ia: estrutura,
+          nivel_confianca: estrutura.nivel_confianca,
+          descricao_contratual: estrutura.descricao_contratual,
+          alertas: estrutura.alertas,
+        },
+      });
+
+      toast.success("Escala completa salva com períodos, recorrências e histórico.");
       handleClose(false);
-    } catch {
-      // toast já tratado no hook
+    } catch (err) {
+      console.error(err);
+      // toast já tratado nos hooks
     }
   };
 
