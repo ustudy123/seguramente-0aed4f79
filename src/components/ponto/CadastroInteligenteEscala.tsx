@@ -187,8 +187,6 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
         tolerancia_minutos: 5,
         tolerancia_diaria_minutos: 10,
         ativa: true,
-        // @ts-expect-error - campo extra textual
-        observacoes,
       } as any);
       handleClose(false);
     } catch {
