@@ -420,38 +420,56 @@ function DetalhesEscalaPanel({ escalaId }: { escalaId: string }) {
   const diasOrdenados = Object.keys(porDia).sort((a, b) => ORDEM.indexOf(a) - ORDEM.indexOf(b));
 
   return (
-    <div className="space-y-4 border-t pt-4">
+    <div className="space-y-5 border-t pt-4">
       {diasOrdenados.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <Label className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
             <CalendarDays className="w-3.5 h-3.5" /> Blocos diários cadastrados
           </Label>
-          <div className="rounded-md border overflow-hidden">
-            <table className="w-full text-sm">
-              <tbody>
-                {diasOrdenados.map((dia, idx) => (
-                  <tr key={dia} className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}>
-                    <td className="px-3 py-2 font-medium w-32 border-r">{DIAS_SEMANA_LABEL[dia] || dia}</td>
-                    <td className="px-3 py-2 font-mono text-xs">
-                      <div className="flex flex-wrap gap-x-3 gap-y-1">
-                        {porDia[dia].map((b, i) => (
-                          <span key={i} className="inline-flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-muted-foreground" />
-                            {b.hora_inicio}–{b.hora_fim}
-                          </span>
-                        ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {diasOrdenados.map((dia) => {
+              const totalMin = porDia[dia].reduce((acc, b) => {
+                const [h1, m1] = b.hora_inicio.split(":").map(Number);
+                const [h2, m2] = b.hora_fim.split(":").map(Number);
+                return acc + (h2 * 60 + m2) - (h1 * 60 + m1);
+              }, 0);
+              const horas = Math.floor(totalMin / 60);
+              const mins = totalMin % 60;
+              return (
+                <div
+                  key={dia}
+                  className="rounded-lg border bg-card p-2.5 flex flex-col gap-1.5 hover:border-primary/40 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm leading-none">
+                      {DIAS_SEMANA_LABEL[dia] || dia}
+                    </span>
+                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                      {horas}h{mins > 0 ? `${mins}` : ""}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {porDia[dia].map((b, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 text-xs font-mono bg-muted/40 rounded px-1.5 py-1"
+                      >
+                        <Clock className="w-3 h-3 text-primary shrink-0" />
+                        <span>{b.hora_inicio}</span>
+                        <span className="text-muted-foreground">→</span>
+                        <span>{b.hora_fim}</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {recorrencias.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <Label className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
             <Repeat className="w-3.5 h-3.5" /> Recorrências mensais
           </Label>
@@ -459,18 +477,26 @@ function DetalhesEscalaPanel({ escalaId }: { escalaId: string }) {
             {recorrencias.map((r) => (
               <div
                 key={r.id}
-                className="text-sm border rounded-md p-2.5 bg-primary/5 border-primary/20 flex items-start gap-2"
+                className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 flex items-start gap-2"
               >
-                <Repeat className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <div className="rounded-md bg-primary/15 p-1.5 shrink-0">
+                  <Repeat className="w-3.5 h-3.5 text-primary" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium leading-tight">
-                    {ORDINAL_MES_LABEL[r.ordinal_mes] || r.ordinal_mes} {DIAS_SEMANA_LABEL[r.dia_semana] || r.dia_semana}
+                  <div className="font-semibold text-sm leading-tight">
+                    {ORDINAL_MES_LABEL[r.ordinal_mes] || r.ordinal_mes}{" "}
+                    {DIAS_SEMANA_LABEL[r.dia_semana] || r.dia_semana}
                   </div>
-                  <div className="font-mono text-xs text-muted-foreground mt-0.5">
-                    {r.hora_inicio.substring(0, 5)}–{r.hora_fim.substring(0, 5)}
+                  <div className="flex items-center gap-1.5 mt-1 text-xs font-mono">
+                    <Clock className="w-3 h-3 text-primary" />
+                    <span>{r.hora_inicio.substring(0, 5)}</span>
+                    <span className="text-muted-foreground">→</span>
+                    <span>{r.hora_fim.substring(0, 5)}</span>
                   </div>
                   {r.descricao && (
-                    <div className="text-xs text-muted-foreground mt-1 italic">{r.descricao}</div>
+                    <div className="text-xs text-muted-foreground mt-1 italic line-clamp-2">
+                      {r.descricao}
+                    </div>
                   )}
                 </div>
               </div>
@@ -479,7 +505,7 @@ function DetalhesEscalaPanel({ escalaId }: { escalaId: string }) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground italic">
+      <p className="text-[11px] text-muted-foreground italic border-t pt-2">
         ℹ️ Blocos diários e recorrências são gerados pelo Cadastro Inteligente. Para alterá-los, recadastre a escala via IA.
       </p>
     </div>
