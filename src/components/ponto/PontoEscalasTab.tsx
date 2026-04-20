@@ -325,22 +325,22 @@ export function PontoEscalasTab() {
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-6 rounded-md border bg-muted/30 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.sabado_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, sabado_util: v })} />
-                <Label>Sábado útil</Label>
+                <Label className="cursor-pointer">Sábado útil</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.domingo_util} onCheckedChange={v => setEscalaForm({ ...escalaForm, domingo_util: v })} />
-                <Label>Domingo útil</Label>
+                <Label className="cursor-pointer">Domingo útil</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={escalaForm.usa_hora_ficta_noturna} onCheckedChange={v => setEscalaForm({ ...escalaForm, usa_hora_ficta_noturna: v })} />
-                <Label>Hora ficta noturna (52m30s)</Label>
+                <Label className="cursor-pointer">Hora ficta noturna (52m30s)</Label>
+              </div>
             </div>
 
             {editando && <DetalhesEscalaPanel escalaId={editando.id} />}
-          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowCriar(false); setEditando(null); }}>Cancelar</Button>
