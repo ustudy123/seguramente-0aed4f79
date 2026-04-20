@@ -118,6 +118,32 @@ export function usePontoEscalas() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const excluirEscalaMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // Verifica se há atribuições vinculadas
+      const { data: atrib, error: atribErr } = await fromTable("ponto_escala_atribuicoes")
+        .select("id")
+        .eq("escala_id", id)
+        .limit(1) as { data: { id: string }[] | null; error: Error | null };
+      if (atribErr) throw atribErr;
+      if (atrib && atrib.length > 0) {
+        throw new Error("Esta escala já está em uso. Inative-a ao invés de excluir.");
+      }
+      // Limpa dados relacionados (períodos, recorrências, histórico) antes
+      await fromTable("ponto_escala_periodos").delete().eq("escala_id", id);
+      await fromTable("ponto_escala_recorrencias").delete().eq("escala_id", id);
+      await fromTable("ponto_escala_historico_interpretacao").delete().eq("escala_id", id);
+      const { error } = await fromTable("ponto_escalas").delete().eq("id", id);
+      if (error) throw error;
+      return { id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ponto-escalas"] });
+      toast.success("Escala excluída!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const atribuirEscalaMutation = useMutation({
     mutationFn: async (atribuicao: Partial<EscalaAtribuicao>) => {
       if (!tenantId) throw new Error("Não autenticado");
