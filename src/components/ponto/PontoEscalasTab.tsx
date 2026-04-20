@@ -170,14 +170,17 @@ export function PontoEscalasTab() {
                 <TableHead>Tolerância</TableHead>
                 <TableHead>Horário</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loadingEscalas ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando...</TableCell></TableRow>
               ) : escalas.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma escala cadastrada.</TableCell></TableRow>
-              ) : escalas.map(e => (
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhuma escala cadastrada.</TableCell></TableRow>
+              ) : escalas.map(e => {
+                const emUso = atribuicoes.some(a => a.escala_id === e.id);
+                return (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.nome}</TableCell>
                   <TableCell><Badge variant="outline">{ESCALA_TIPOS.find(t => t.value === e.tipo)?.label || e.tipo}</Badge></TableCell>
@@ -187,8 +190,28 @@ export function PontoEscalasTab() {
                   <TableCell>{e.tolerancia_minutos}min / {e.tolerancia_diaria_minutos}min</TableCell>
                   <TableCell className="font-mono text-sm">{e.hora_entrada_padrao?.substring(0,5)} - {e.hora_saida_padrao?.substring(0,5)}</TableCell>
                   <TableCell><Badge className={e.ativa ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>{e.ativa ? "Ativa" : "Inativa"}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="icon" variant="ghost" title="Editar" onClick={() => abrirEditar(e)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" title={e.ativa ? "Inativar" : "Ativar"} onClick={() => handleToggleAtiva(e)}>
+                        <Power className={`w-4 h-4 ${e.ativa ? "text-amber-600" : "text-emerald-600"}`} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title={emUso ? "Não é possível excluir: escala em uso" : "Excluir"}
+                        disabled={emUso}
+                        onClick={() => handleExcluir(e)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
