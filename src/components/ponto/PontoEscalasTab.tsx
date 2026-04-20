@@ -10,14 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { usePontoEscalas, ESCALA_TIPOS, type PontoEscala } from "@/hooks/usePontoEscalas";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { Plus, Calendar, Clock, Users, Settings, Sparkles } from "lucide-react";
+import { Plus, Calendar, Clock, Users, Settings, Sparkles, Pencil, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
 
 export function PontoEscalasTab() {
-  const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atribuirEscala } = usePontoEscalas();
+  const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atualizarEscala, atualizandoEscala, excluirEscala, atribuirEscala } = usePontoEscalas();
   const { colaboradores } = useColaboradores();
   const [showCriar, setShowCriar] = useState(false);
+  const [editando, setEditando] = useState<PontoEscala | null>(null);
   const [showInteligente, setShowInteligente] = useState(false);
   const [showAtribuir, setShowAtribuir] = useState(false);
   const [escalaForm, setEscalaForm] = useState({
@@ -49,11 +51,74 @@ export function PontoEscalasTab() {
     return `${h}h${m > 0 ? ` ${m}min` : ""}`;
   };
 
-  const handleCriar = async () => {
+  const handleSalvar = async () => {
     if (!escalaForm.nome) { toast.error("Nome obrigatório"); return; }
-    await criarEscala(escalaForm as any);
+    if (editando) {
+      await atualizarEscala({ id: editando.id, ...escalaForm } as any);
+    } else {
+      await criarEscala(escalaForm as any);
+    }
     setShowCriar(false);
+    setEditando(null);
     setEscalaForm({ ...escalaForm, nome: "" });
+  };
+
+  const abrirNova = () => {
+    setEditando(null);
+    setEscalaForm({
+      nome: "", tipo: "5x2", jornada_diaria_minutos: 480, jornada_semanal_minutos: 2640,
+      intervalo_intrajornada_minutos: 60, tolerancia_minutos: 5, tolerancia_diaria_minutos: 10,
+      hora_entrada_padrao: "08:00", hora_saida_padrao: "17:00", sabado_util: false, domingo_util: false,
+      percentual_hora_extra_50: 50, percentual_hora_extra_100: 100, percentual_adicional_noturno: 20,
+      usa_hora_ficta_noturna: true,
+    });
+    setShowCriar(true);
+  };
+
+  const abrirEditar = (e: PontoEscala) => {
+    setEditando(e);
+    setEscalaForm({
+      nome: e.nome,
+      tipo: e.tipo,
+      jornada_diaria_minutos: e.jornada_diaria_minutos,
+      jornada_semanal_minutos: e.jornada_semanal_minutos,
+      intervalo_intrajornada_minutos: e.intervalo_intrajornada_minutos,
+      tolerancia_minutos: e.tolerancia_minutos,
+      tolerancia_diaria_minutos: e.tolerancia_diaria_minutos,
+      hora_entrada_padrao: e.hora_entrada_padrao?.substring(0,5) || "08:00",
+      hora_saida_padrao: e.hora_saida_padrao?.substring(0,5) || "17:00",
+      sabado_util: e.sabado_util,
+      domingo_util: e.domingo_util,
+      percentual_hora_extra_50: e.percentual_hora_extra_50,
+      percentual_hora_extra_100: e.percentual_hora_extra_100,
+      percentual_adicional_noturno: e.percentual_adicional_noturno,
+      usa_hora_ficta_noturna: e.usa_hora_ficta_noturna,
+    });
+    setShowCriar(true);
+  };
+
+  const handleToggleAtiva = async (e: PontoEscala) => {
+    const ok = await confirm({
+      title: e.ativa ? "Inativar escala?" : "Ativar escala?",
+      description: e.ativa
+        ? "A escala não poderá ser atribuída a novos colaboradores enquanto inativa."
+        : "A escala voltará a ficar disponível para atribuição.",
+      confirmLabel: e.ativa ? "Inativar" : "Ativar",
+      variant: e.ativa ? "destructive" : "default",
+    });
+    if (!ok) return;
+    await atualizarEscala({ id: e.id, ativa: !e.ativa } as any);
+  };
+
+  const handleExcluir = async (e: PontoEscala) => {
+    const ok = await confirm({
+      title: "Excluir escala?",
+      description: `A escala "${e.nome}" será removida permanentemente. Esta ação não pode ser desfeita. (Só é possível excluir escalas sem colaboradores atribuídos.)`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    await excluirEscala(e.id);
   };
 
   const handleAtribuir = async () => {
@@ -82,7 +147,7 @@ export function PontoEscalasTab() {
           <Button variant="outline" onClick={() => setShowAtribuir(true)}>
             <Users className="w-4 h-4 mr-2" /> Atribuir Escala
           </Button>
-          <Button variant="outline" onClick={() => setShowCriar(true)}>
+          <Button variant="outline" onClick={abrirNova}>
             <Plus className="w-4 h-4 mr-2" /> Nova Escala
           </Button>
           <Button onClick={() => setShowInteligente(true)} className="bg-gradient-to-r from-primary to-primary/80">
@@ -105,14 +170,17 @@ export function PontoEscalasTab() {
                 <TableHead>Tolerância</TableHead>
                 <TableHead>Horário</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loadingEscalas ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando...</TableCell></TableRow>
               ) : escalas.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma escala cadastrada.</TableCell></TableRow>
-              ) : escalas.map(e => (
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhuma escala cadastrada.</TableCell></TableRow>
+              ) : escalas.map(e => {
+                const emUso = atribuicoes.some(a => a.escala_id === e.id);
+                return (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.nome}</TableCell>
                   <TableCell><Badge variant="outline">{ESCALA_TIPOS.find(t => t.value === e.tipo)?.label || e.tipo}</Badge></TableCell>
@@ -122,8 +190,28 @@ export function PontoEscalasTab() {
                   <TableCell>{e.tolerancia_minutos}min / {e.tolerancia_diaria_minutos}min</TableCell>
                   <TableCell className="font-mono text-sm">{e.hora_entrada_padrao?.substring(0,5)} - {e.hora_saida_padrao?.substring(0,5)}</TableCell>
                   <TableCell><Badge className={e.ativa ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>{e.ativa ? "Ativa" : "Inativa"}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="icon" variant="ghost" title="Editar" onClick={() => abrirEditar(e)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" title={e.ativa ? "Inativar" : "Ativar"} onClick={() => handleToggleAtiva(e)}>
+                        <Power className={`w-4 h-4 ${e.ativa ? "text-amber-600" : "text-emerald-600"}`} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title={emUso ? "Não é possível excluir: escala em uso" : "Excluir"}
+                        disabled={emUso}
+                        onClick={() => handleExcluir(e)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -157,9 +245,9 @@ export function PontoEscalasTab() {
       )}
 
       {/* Dialog Criar Escala */}
-      <Dialog open={showCriar} onOpenChange={setShowCriar}>
+      <Dialog open={showCriar} onOpenChange={(o) => { setShowCriar(o); if (!o) setEditando(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Nova Escala de Trabalho</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editando ? "Editar Escala" : "Nova Escala de Trabalho"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -252,8 +340,10 @@ export function PontoEscalasTab() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCriar(false)}>Cancelar</Button>
-            <Button onClick={handleCriar} disabled={criandoEscala}>{criandoEscala ? "Criando..." : "Criar Escala"}</Button>
+            <Button variant="outline" onClick={() => { setShowCriar(false); setEditando(null); }}>Cancelar</Button>
+            <Button onClick={handleSalvar} disabled={criandoEscala || atualizandoEscala}>
+              {(criandoEscala || atualizandoEscala) ? "Salvando..." : (editando ? "Salvar Alterações" : "Criar Escala")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
