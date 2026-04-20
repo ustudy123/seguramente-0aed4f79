@@ -283,6 +283,34 @@ export function CadastroInteligenteEscala({ open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Biblioteca de padrões */}
+          {padroes.length > 0 && !estrutura && (
+            <Card className="bg-muted/30">
+              <CardContent className="pt-4 space-y-2">
+                <Label className="flex items-center gap-2 font-medium text-sm">
+                  <BookTemplate className="w-4 h-4" /> Comece de um padrão pronto
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {padroes.map((p) => (
+                    <Button
+                      key={p.id}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => aplicarPadrao(p.id)}
+                      disabled={interpretando || transcrevendo}
+                      className="text-xs"
+                    >
+                      {p.nome}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Clique em um padrão para preencher o campo de descrição. Você ainda pode editar antes de interpretar.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Etapa 1 - Captura */}
           <Card>
             <CardContent className="pt-4 space-y-3">
