@@ -147,7 +147,7 @@ export function PontoEscalasTab() {
           <Button variant="outline" onClick={() => setShowAtribuir(true)}>
             <Users className="w-4 h-4 mr-2" /> Atribuir Escala
           </Button>
-          <Button variant="outline" onClick={() => setShowCriar(true)}>
+          <Button variant="outline" onClick={abrirNova}>
             <Plus className="w-4 h-4 mr-2" /> Nova Escala
           </Button>
           <Button onClick={() => setShowInteligente(true)} className="bg-gradient-to-r from-primary to-primary/80">
