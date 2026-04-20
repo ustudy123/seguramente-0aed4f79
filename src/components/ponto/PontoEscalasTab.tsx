@@ -10,13 +10,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { usePontoEscalas, ESCALA_TIPOS, type PontoEscala } from "@/hooks/usePontoEscalas";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { Plus, Calendar, Clock, Users, Settings } from "lucide-react";
+import { Plus, Calendar, Clock, Users, Settings, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { CadastroInteligenteEscala } from "./CadastroInteligenteEscala";
 
 export function PontoEscalasTab() {
   const { escalas, loadingEscalas, atribuicoes, criarEscala, criandoEscala, atribuirEscala } = usePontoEscalas();
   const { colaboradores } = useColaboradores();
   const [showCriar, setShowCriar] = useState(false);
+  const [showInteligente, setShowInteligente] = useState(false);
   const [showAtribuir, setShowAtribuir] = useState(false);
   const [escalaForm, setEscalaForm] = useState({
     nome: "",
@@ -76,12 +78,15 @@ export function PontoEscalasTab() {
           </h3>
           <p className="text-sm text-muted-foreground">Gerencie escalas de trabalho e atribua a colaboradores</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={() => setShowAtribuir(true)}>
             <Users className="w-4 h-4 mr-2" /> Atribuir Escala
           </Button>
-          <Button onClick={() => setShowCriar(true)}>
+          <Button variant="outline" onClick={() => setShowCriar(true)}>
             <Plus className="w-4 h-4 mr-2" /> Nova Escala
+          </Button>
+          <Button onClick={() => setShowInteligente(true)} className="bg-gradient-to-r from-primary to-primary/80">
+            <Sparkles className="w-4 h-4 mr-2" /> Cadastro Inteligente
           </Button>
         </div>
       </div>
@@ -287,6 +292,9 @@ export function PontoEscalasTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cadastro Inteligente */}
+      <CadastroInteligenteEscala open={showInteligente} onOpenChange={setShowInteligente} />
     </div>
   );
 }
