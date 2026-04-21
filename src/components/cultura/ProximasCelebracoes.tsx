@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { toast } from "sonner";
 import type { CulturaAcao } from "@/types/cultura";
 import { buscarDiaProfissao } from "@/lib/diasProfissao";
@@ -35,19 +36,22 @@ interface Props {
 
 export const ProximasCelebracoes = ({ acoes, onCreateAcao, onUpdateStatus }: Props) => {
   const { tenantId } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const [criandoAcao, setCriandoAcao] = useState<string | null>(null);
 
   // Fetch upcoming birthdays and work anniversaries from admissoes
   const { data: celebracoesReais = [] } = useQuery({
-    queryKey: ["proximas-celebracoes", tenantId],
+    queryKey: ["proximas-celebracoes", tenantId, empresaAtivaId],
     queryFn: async (): Promise<CelebracaoItem[]> => {
       if (!tenantId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("admissoes")
-        .select("nome_completo, data_nascimento, data_admissao, cargo")
+        .select("nome_completo, data_nascimento, data_admissao, cargo, empresa_id")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
 
       if (error) throw error;
       if (!data || data.length === 0) return [];
