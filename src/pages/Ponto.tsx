@@ -61,6 +61,7 @@ const Ponto = () => {
   
   // Modals
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
+  const [showGuia, setShowGuia] = useState(false);
   const [showAjusteModal, setShowAjusteModal] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [tipoMarcacao, setTipoMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida">("entrada");
@@ -194,7 +195,17 @@ const Ponto = () => {
             <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Registro fiel e auditável da jornada
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            id="btn-guia-rapido-ponto"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowGuia(true)}
+            className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5 text-xs sm:text-sm"
+          >
+            <HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            Guia Rápido
+          </Button>
           <Button id="btn-solicitar-ajuste" variant="outline" size="sm" onClick={() => setShowAjusteModal(true)} className="text-xs sm:text-sm">
             <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Solicitar Ajuste
           </Button>
