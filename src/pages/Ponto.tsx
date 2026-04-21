@@ -624,6 +624,8 @@ const Ponto = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <GuiaRapidoPonto open={showGuia} onOpenChange={setShowGuia} />
     </div>
   );
 };
