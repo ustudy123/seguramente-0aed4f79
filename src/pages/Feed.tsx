@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { TIPO_ACAO_LABELS, STATUS_ACAO_COLORS, STATUS_ACAO_LABELS } from "@/types/cultura";
 import { format, parseISO, differenceInDays, setYear, addYears, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -75,6 +76,7 @@ function EmptyState() {
 // Widget unificado — puxa automaticamente de admissões + ações manuais
 function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => void }) {
   const { tenantId, user } = useAuth();
+  const { empresaAtivaId } = useEmpresaAtiva();
   const userId = user?.id;
   const queryClient = useQueryClient();
 
@@ -103,15 +105,17 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
     queryClient.invalidateQueries({ queryKey: ["lembretes-dispensados"] });
   };
   const { data: acoesPendentes = [] } = useQuery({
-    queryKey: ["cultura-acoes-mural", tenantId],
+    queryKey: ["cultura-acoes-mural", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await fromTable("cultura_acoes")
+      let query = fromTable("cultura_acoes")
         .select("*")
         .eq("tenant_id", tenantId)
         .in("status", ["pendente", "em_andamento"])
         .order("data_referencia", { ascending: true })
-        .limit(10);
+        .limit(20);
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -119,13 +123,15 @@ function AvisosCulturaWidget({ onFelicitar }: { onFelicitar: (msg: string) => vo
   });
 
   const { data: admissoes = [] } = useQuery({
-    queryKey: ["mural-admissoes-auto", tenantId],
+    queryKey: ["mural-admissoes-auto", tenantId, empresaAtivaId],
     queryFn: async () => {
       if (!tenantId) return [];
-      const { data, error } = await fromTable("admissoes")
-        .select("id, nome_completo, data_nascimento, data_admissao, cargo")
+      let query = fromTable("admissoes")
+        .select("id, nome_completo, data_nascimento, data_admissao, cargo, empresa_id")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
+      if (empresaAtivaId) query = query.eq("empresa_id", empresaAtivaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
