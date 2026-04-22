@@ -162,7 +162,26 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   // Definir senha
   const [showSenhaForm, setShowSenhaForm] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(true);
   const queryClient = useQueryClient();
+
+  const gerarSenhaAleatoria = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let senha = "";
+    for (let i = 0; i < 10; i++) senha += chars[Math.floor(Math.random() * chars.length)];
+    setNovaSenha(senha);
+    setMostrarSenha(true);
+  };
+
+  const copiarSenha = async () => {
+    if (!novaSenha) return;
+    try {
+      await navigator.clipboard.writeText(novaSenha);
+      toast.success("Senha copiada!");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
 
   const setPasswordMutation = useMutation({
     mutationFn: async () => {
