@@ -14,6 +14,7 @@ import {
   User, Building2, Link2, History, AlertTriangle, CheckCircle2,
   Plus, Trash2, Shield, Ban, RotateCcw, Loader2, Pencil, Save, X,
   Mail, Send, XCircle, Key, ChevronsUpDown, Check, Search, ShieldCheck,
+  Eye, EyeOff, Copy, RefreshCw,
 } from "lucide-react";
 import {
   UsuarioBase, UsuarioVinculo, TIPO_USUARIO_LABELS, VINCULO_STATUS_LABELS,
@@ -161,7 +162,26 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
   // Definir senha
   const [showSenhaForm, setShowSenhaForm] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(true);
   const queryClient = useQueryClient();
+
+  const gerarSenhaAleatoria = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let senha = "";
+    for (let i = 0; i < 10; i++) senha += chars[Math.floor(Math.random() * chars.length)];
+    setNovaSenha(senha);
+    setMostrarSenha(true);
+  };
+
+  const copiarSenha = async () => {
+    if (!novaSenha) return;
+    try {
+      await navigator.clipboard.writeText(novaSenha);
+      toast.success("Senha copiada!");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
 
   const setPasswordMutation = useMutation({
     mutationFn: async () => {
@@ -522,18 +542,46 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                 <div className="p-3 border border-primary/20 rounded-lg bg-primary/5 space-y-2">
                   <p className="text-sm font-medium">Definir senha de acesso</p>
                   <p className="text-xs text-muted-foreground">O usuário poderá fazer login imediatamente com esta senha e alterá-la depois.</p>
-                  <Input
-                    type="password"
-                    value={novaSenha}
-                    onChange={e => setNovaSenha(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="text-sm"
-                  />
-                  <div className="flex gap-2">
+                  <div className="relative">
+                    <Input
+                      type={mostrarSenha ? "text" : "password"}
+                      value={novaSenha}
+                      onChange={e => setNovaSenha(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="text-sm pr-20 font-mono"
+                    />
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => setMostrarSenha(v => !v)}
+                        title={mostrarSenha ? "Ocultar" : "Mostrar"}
+                      >
+                        {mostrarSenha ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={copiarSenha}
+                        disabled={!novaSenha}
+                        title="Copiar senha"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <Button size="sm" onClick={() => setPasswordMutation.mutate()}
                       disabled={setPasswordMutation.isPending || novaSenha.length < 6}>
                       {setPasswordMutation.isPending && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
                       <Key className="w-3 h-3 mr-1" /> Confirmar senha
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={gerarSenhaAleatoria} type="button">
+                      <RefreshCw className="w-3 h-3 mr-1" /> Gerar senha
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => { setShowSenhaForm(false); setNovaSenha(""); }}>
                       Cancelar
