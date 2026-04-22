@@ -167,7 +167,7 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
         <FileText className="w-4 h-4" /> Importar por Texto
       </Button>
 
-      <input type="file" ref={fileInputRef} className="hidden" accept=".txt,.csv,.md,.text" onChange={handleFileUpload} />
+      <input type="file" ref={fileInputRef} className="hidden" accept=".txt,.csv,.md,.text,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileUpload} />
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
         <DialogContent className="max-w-2xl h-[85vh] overflow-hidden flex flex-col">
