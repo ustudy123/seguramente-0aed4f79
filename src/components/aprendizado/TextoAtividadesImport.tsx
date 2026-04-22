@@ -221,7 +221,7 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
                   >
                     <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-sm font-medium text-foreground">Clique para selecionar um arquivo</p>
-                    <p className="text-xs text-muted-foreground mt-1">Formatos aceitos: .txt, .csv, .md</p>
+                    <p className="text-xs text-muted-foreground mt-1">Formatos aceitos: .txt, .csv, .md, .doc, .docx</p>
                   </div>
                 </TabsContent>
               </Tabs>
