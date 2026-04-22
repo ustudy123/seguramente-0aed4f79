@@ -36,10 +36,20 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
   const [importando, setImportando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const processarTexto = useCallback(async (conteudo: string) => {
+  const MAX_CHARS = 30000;
+
+  const processarTexto = useCallback(async (conteudoBruto: string) => {
+    const conteudo = conteudoBruto.length > MAX_CHARS
+      ? conteudoBruto.slice(0, MAX_CHARS)
+      : conteudoBruto;
+
     if (conteudo.trim().length < 20) {
       toast.error("Texto muito curto. Forneça uma descrição mais detalhada.");
       return;
+    }
+
+    if (conteudoBruto.length > MAX_CHARS) {
+      toast.info(`Texto longo: usando os primeiros ${MAX_CHARS.toLocaleString("pt-BR")} caracteres para extração.`);
     }
 
     setStep("processando");
@@ -64,23 +74,50 @@ export function TextoAtividadesImport({ funcaoNome, onImportar }: TextoAtividade
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = [
-      "text/plain", "text/csv", "text/markdown",
-      "application/pdf",
-    ];
-    const allowedExtensions = [".txt", ".csv", ".md", ".text"];
+    const allowedExtensions = [".txt", ".csv", ".md", ".text", ".doc", ".docx"];
     const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
 
-    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(ext)) {
-      toast.error("Formato não suportado. Use arquivos .txt, .csv ou .md");
+    if (!allowedExtensions.includes(ext)) {
+      toast.error("Formato não suportado. Use .txt, .csv, .md, .doc ou .docx");
+      e.target.value = "";
       return;
     }
 
     try {
-      const conteudo = await file.text();
+      let conteudo = "";
+
+      if (ext === ".docx" || ext === ".doc") {
+        try {
+          const mammoth = await import("mammoth");
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          conteudo = (result.value || "").trim();
+          if (!conteudo) {
+            toast.error("Não foi possível extrair texto do arquivo. Tente salvar como .docx ou .txt.");
+            e.target.value = "";
+            return;
+          }
+        } catch (docErr) {
+          console.error("Erro ao ler DOCX:", docErr);
+          toast.error("Erro ao ler arquivo Word. Para .doc antigos, salve como .docx e tente novamente.");
+          e.target.value = "";
+          return;
+        }
+      } else {
+        conteudo = await file.text();
+      }
+
+      // Normaliza quebras e remove caracteres de controle problemáticos
+      conteudo = conteudo
+        .replace(/\r\n/g, "\n")
+        .replace(/\u0000/g, "")
+        .trim();
+
       setTexto(conteudo);
+      toast.success(`Arquivo carregado (${conteudo.length.toLocaleString("pt-BR")} caracteres)`);
       await processarTexto(conteudo);
-    } catch {
+    } catch (err) {
+      console.error("Erro ao ler arquivo:", err);
       toast.error("Erro ao ler o arquivo");
     }
     e.target.value = "";
