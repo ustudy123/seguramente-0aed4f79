@@ -196,7 +196,9 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
             doc.addPage();
             y = margin;
           }
-          const cls = calcularIPSClassificacao(d.media);
+          // SIPRO: d.media é score de risco (alto = pior). Converter para escala IPS.
+          const scoreIPS = isSipro ? 100 - d.media : d.media;
+          const cls = calcularIPSClassificacao(scoreIPS);
           const clsLabel = IPS_LABELS[cls];
           const clsColor = IPS_COLORS[cls];
 
@@ -210,7 +212,7 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
           doc.setFont("helvetica", "bold");
           doc.setTextColor(...clsColor);
-          doc.text(String(d.media), pageW - margin - 30, y + 4, { align: "right" });
+          doc.text(String(scoreIPS), pageW - margin - 30, y + 4, { align: "right" });
           doc.setFont("helvetica", "normal");
           doc.text(clsLabel, pageW - margin - 2, y + 4, { align: "right" });
           doc.setTextColor(30, 30, 30);
