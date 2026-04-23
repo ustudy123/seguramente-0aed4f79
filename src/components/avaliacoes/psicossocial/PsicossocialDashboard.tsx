@@ -84,8 +84,17 @@ export function PsicossocialDashboard() {
   const totalRespostas = campanhas.reduce((sum, c) => sum + (c.total_respostas || 0), 0);
 
   const campanhasComIPS = campanhas.filter(c => c.ips_score != null && (c.total_respostas || 0) >= MINIMO_ANONIMATO);
+  // Para campanhas SIPRO, o campo `ips_score` armazena o IRP-S (alto = ruim).
+  // Convertemos para a escala IPS (alto = bom) usando 100 - score, mantendo a
+  // consistência visual com o ResultadosModal e com o PDF de relatório.
   const ipsConsolidado = campanhasComIPS.length > 0
-    ? Math.round(campanhasComIPS.reduce((sum, c) => sum + (c.ips_score || 50), 0) / campanhasComIPS.length)
+    ? Math.round(
+        campanhasComIPS.reduce((sum, c) => {
+          const raw = c.ips_score ?? 50;
+          const valorIPS = c.instrumento === 'sipro' ? 100 - raw : raw;
+          return sum + valorIPS;
+        }, 0) / campanhasComIPS.length
+      )
     : null;
   const ipsClassificacao: IPSClassificacao | null = ipsConsolidado != null ? calcularIPSClassificacao(ipsConsolidado) : null;
 
