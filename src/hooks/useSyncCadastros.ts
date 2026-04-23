@@ -29,12 +29,23 @@ export function useSyncCadastros() {
 
       if (!admissoes || admissoes.length === 0) return;
 
-      const deptSet = new Set<string>();
-      const cargoSet = new Set<string>();
+      // Deduplicar por LOWER para evitar variações de case (ex: "Administrativo" vs "administrativo")
+      const deptMap = new Map<string, string>(); // lower -> nome canônico (primeiro encontrado)
+      const cargoMap = new Map<string, string>();
       admissoes.forEach((a) => {
-        if (a.departamento?.trim()) deptSet.add(a.departamento.trim());
-        if (a.cargo?.trim()) cargoSet.add(a.cargo.trim());
+        if (a.departamento?.trim()) {
+          const nome = a.departamento.trim();
+          const key = nome.toLowerCase();
+          if (!deptMap.has(key)) deptMap.set(key, nome);
+        }
+        if (a.cargo?.trim()) {
+          const nome = a.cargo.trim();
+          const key = nome.toLowerCase();
+          if (!cargoMap.has(key)) cargoMap.set(key, nome);
+        }
       });
+      const deptSet = new Set<string>(deptMap.values());
+      const cargoSet = new Set<string>(cargoMap.values());
 
       // 2. Buscar departamentos existentes para esta empresa
       const { data: depsExistentes } = await supabase

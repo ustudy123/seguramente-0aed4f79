@@ -88,13 +88,21 @@ export function useDepartamentos() {
 
   const createDepartamento = useMutation({
     mutationFn: async (departamento: Omit<Departamento, "id" | "tenant_id" | "created_at" | "updated_at">) => {
+      const nomeNormalizado = departamento.nome?.trim();
+      if (!nomeNormalizado) throw new Error("Nome do departamento é obrigatório");
+
       const { data, error } = await supabase
         .from("departamentos")
-        .insert({ ...departamento, tenant_id: tenantId!, empresa_id: empresaAtivaId || null })
+        .insert({ ...departamento, nome: nomeNormalizado, tenant_id: tenantId!, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          throw new Error(`Já existe um departamento com o nome "${nomeNormalizado}" nesta empresa.`);
+        }
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -182,13 +190,21 @@ export function useCargos(options?: { skipEmpresaFilter?: boolean }) {
 
   const createCargo = useMutation({
     mutationFn: async (cargo: Omit<Cargo, "id" | "tenant_id" | "created_at" | "updated_at" | "departamento">) => {
+      const nomeNormalizado = cargo.nome?.trim();
+      if (!nomeNormalizado) throw new Error("Nome da função é obrigatório");
+
       const { data, error } = await supabase
         .from("cargos")
-        .insert({ ...cargo, tenant_id: tenantId!, empresa_id: empresaAtivaId || null })
+        .insert({ ...cargo, nome: nomeNormalizado, tenant_id: tenantId!, empresa_id: empresaAtivaId || null })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          throw new Error(`Já existe uma função com o nome "${nomeNormalizado}" nesta empresa.`);
+        }
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
