@@ -47,6 +47,14 @@ const sanitize = (text: string): string =>
 export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: ExportarRelatorioProps) {
   const [exportando, setExportando] = useState(false);
 
+  // SIPRO grava o score em escala IRP-S (alto = pior). Convertemos para a
+  // escala IPS (alto = melhor) para manter consistência com o termômetro do
+  // dashboard e o ResultadosModal.
+  const isSipro = campanha.instrumento === 'sipro';
+  const ipsAjustado = stats?.ips !== undefined
+    ? (isSipro ? 100 - stats.ips : stats.ips)
+    : undefined;
+
   const handleExportar = async () => {
     if (!stats || !stats.anonimato_garantido) {
       toast.error("Número insuficiente de respostas para exportar.");
@@ -129,15 +137,15 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
       doc.line(margin, y, pageW - margin, y);
       y += 6;
 
-      if (stats.ips !== undefined) {
-        const cls = calcularIPSClassificacao(stats.ips);
+      if (ipsAjustado !== undefined) {
+        const cls = calcularIPSClassificacao(ipsAjustado);
         const clsLabel = IPS_LABELS[cls];
         const clsColor = IPS_COLORS[cls];
 
         doc.setFontSize(28);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...clsColor);
-        doc.text(String(stats.ips), margin, y + 8);
+        doc.text(String(ipsAjustado), margin, y + 8);
 
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
@@ -154,7 +162,7 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
         doc.setFillColor(230, 230, 230);
         doc.roundedRect(margin, y + 18, barW, 5, 1, 1, "F");
         doc.setFillColor(...clsColor);
-        doc.roundedRect(margin, y + 18, (stats.ips / 100) * barW, 5, 1, 1, "F");
+        doc.roundedRect(margin, y + 18, (ipsAjustado / 100) * barW, 5, 1, 1, "F");
 
         y += 28;
       }
@@ -188,7 +196,9 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
             doc.addPage();
             y = margin;
           }
-          const cls = calcularIPSClassificacao(d.media);
+          // SIPRO: d.media é score de risco (alto = pior). Converter para escala IPS.
+          const scoreIPS = isSipro ? 100 - d.media : d.media;
+          const cls = calcularIPSClassificacao(scoreIPS);
           const clsLabel = IPS_LABELS[cls];
           const clsColor = IPS_COLORS[cls];
 
@@ -202,7 +212,7 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
           doc.setFont("helvetica", "bold");
           doc.setTextColor(...clsColor);
-          doc.text(String(d.media), pageW - margin - 30, y + 4, { align: "right" });
+          doc.text(String(scoreIPS), pageW - margin - 30, y + 4, { align: "right" });
           doc.setFont("helvetica", "normal");
           doc.text(clsLabel, pageW - margin - 2, y + 4, { align: "right" });
           doc.setTextColor(30, 30, 30);
