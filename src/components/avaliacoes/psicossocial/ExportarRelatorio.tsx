@@ -137,15 +137,15 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
       doc.line(margin, y, pageW - margin, y);
       y += 6;
 
-      if (stats.ips !== undefined) {
-        const cls = calcularIPSClassificacao(stats.ips);
+      if (ipsAjustado !== undefined) {
+        const cls = calcularIPSClassificacao(ipsAjustado);
         const clsLabel = IPS_LABELS[cls];
         const clsColor = IPS_COLORS[cls];
 
         doc.setFontSize(28);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...clsColor);
-        doc.text(String(stats.ips), margin, y + 8);
+        doc.text(String(ipsAjustado), margin, y + 8);
 
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
@@ -162,7 +162,7 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
         doc.setFillColor(230, 230, 230);
         doc.roundedRect(margin, y + 18, barW, 5, 1, 1, "F");
         doc.setFillColor(...clsColor);
-        doc.roundedRect(margin, y + 18, (stats.ips / 100) * barW, 5, 1, 1, "F");
+        doc.roundedRect(margin, y + 18, (ipsAjustado / 100) * barW, 5, 1, 1, "F");
 
         y += 28;
       }
