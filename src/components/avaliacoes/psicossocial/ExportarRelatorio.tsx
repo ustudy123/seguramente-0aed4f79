@@ -47,6 +47,14 @@ const sanitize = (text: string): string =>
 export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: ExportarRelatorioProps) {
   const [exportando, setExportando] = useState(false);
 
+  // SIPRO grava o score em escala IRP-S (alto = pior). Convertemos para a
+  // escala IPS (alto = melhor) para manter consistência com o termômetro do
+  // dashboard e o ResultadosModal.
+  const isSipro = campanha.instrumento === 'sipro';
+  const ipsAjustado = stats?.ips !== undefined
+    ? (isSipro ? 100 - stats.ips : stats.ips)
+    : undefined;
+
   const handleExportar = async () => {
     if (!stats || !stats.anonimato_garantido) {
       toast.error("Número insuficiente de respostas para exportar.");
