@@ -80,13 +80,20 @@ export function IPSHistoricoChart({ campanhas }: IPSHistoricoChartProps) {
     return campanhas
       .filter(c => c.ips_score != null && (c.total_respostas || 0) >= MINIMO_ANONIMATO)
       .sort((a, b) => new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime())
-      .map(c => ({
-        nome: c.nome.length > 18 ? c.nome.slice(0, 18) + "…" : c.nome,
-        nomeCompleto: c.nome,
-        data: format(new Date(c.data_inicio), "MMM/yy", { locale: ptBR }),
-        ips: c.ips_score!,
-        respostas: c.total_respostas || 0,
-      }));
+      .map(c => {
+        // SIPRO grava `ips_score` em escala IRP-S (alto = ruim). Convertemos
+        // para a escala IPS (alto = bom) para que o gráfico histórico fique
+        // consistente com o termômetro principal e o relatório PDF.
+        const raw = c.ips_score!;
+        const valorIPS = c.instrumento === 'sipro' ? 100 - raw : raw;
+        return {
+          nome: c.nome.length > 18 ? c.nome.slice(0, 18) + "…" : c.nome,
+          nomeCompleto: c.nome,
+          data: format(new Date(c.data_inicio), "MMM/yy", { locale: ptBR }),
+          ips: valorIPS,
+          respostas: c.total_respostas || 0,
+        };
+      });
   }, [campanhas]);
 
   // Trend: compare last 2

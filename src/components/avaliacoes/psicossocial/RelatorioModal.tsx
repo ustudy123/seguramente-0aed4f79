@@ -53,7 +53,11 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
   const campanha = campanhasValidas[0];
   const isSipro = campanha?.instrumento === 'sipro';
   const totalRespondentes = campanhasValidas.reduce((s, c) => s + (c.total_respostas ?? 0), 0);
-  const ipsScore = campanha?.ips_score ?? 0;
+  // SIPRO grava `ips_score` em escala IRP-S (alto = ruim). Convertemos para
+  // a escala IPS (alto = bom) para manter o relatório PDF consistente com o
+  // termômetro do dashboard e o ResultadosModal.
+  const rawScore = campanha?.ips_score ?? 0;
+  const ipsScore = isSipro ? 100 - rawScore : rawScore;
   const ipsClass = calcularIPSClassificacao(ipsScore);
   const radar = (campanha?.radar_data ?? []) as RadarDimensao[];
 
