@@ -718,7 +718,7 @@ export function AdmissaoForm({ onSubmit, onCancel, onAutoSave, initialData }: Ad
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Estabelecimento / Obra */}
               <div>
-                <Label htmlFor="filial">Estabelecimento / Obra *</Label>
+                <Label htmlFor="filial">Estabelecimento / Obra</Label>
                 <Select 
                   value={formProfissionais.watch('filial')}
                   onValueChange={(value) => formProfissionais.setValue('filial', value)}
