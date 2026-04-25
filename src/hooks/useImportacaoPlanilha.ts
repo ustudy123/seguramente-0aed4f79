@@ -323,6 +323,14 @@ function parsarTipoContrato(valor: string): string | null {
   return null;
 }
 
+export interface DistribuicaoEmpresa {
+  empresaId: string;
+  cnpj: string;
+  razaoSocial: string;
+  inseridos: number;
+  atualizados: number;
+}
+
 export interface ResultadoImportacao {
   total: number;
   departamentosCriados: number;
@@ -330,6 +338,7 @@ export interface ResultadoImportacao {
   colaboradoresInseridos: number;
   colaboradoresAtualizados: number;
   erros: { linha: number; mensagem: string }[];
+  distribuicaoEmpresas: DistribuicaoEmpresa[];
 }
 
 export function useImportacaoPlanilha() {
