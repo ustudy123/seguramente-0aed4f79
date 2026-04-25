@@ -56,6 +56,7 @@ export function ImportPlanilhaModal({
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
   const { lerArquivo, lerArquivoHeaders, lerArquivoComMapeamento, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
+  const { empresaAtivaId, setEmpresaAtiva, empresas } = useEmpresaAtiva();
   
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
