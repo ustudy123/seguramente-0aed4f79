@@ -668,17 +668,19 @@ export function useImportacaoPlanilha() {
       setProgress(5);
       const cnpjsUnicos = [...new Set(dadosValidos.map(d => d.cnpjEmpresa).filter(Boolean))];
       const mapaEmpresas: Record<string, string> = {}; // cnpj limpo -> empresa_id
+      const infoEmpresas: Record<string, { cnpj: string; razaoSocial: string }> = {}; // empresa_id -> info
       
       if (cnpjsUnicos.length > 0) {
         const { data: empresas } = await supabase
           .from("empresa_cadastro")
-          .select("id, cnpj")
+          .select("id, cnpj, razao_social")
           .eq("tenant_id", tenantId);
         
         empresas?.forEach(emp => {
           if (!emp.cnpj) return;
           const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
           mapaEmpresas[cnpjLimpo] = emp.id;
+          infoEmpresas[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
         });
         
         // Validar que todos os CNPJs existem
