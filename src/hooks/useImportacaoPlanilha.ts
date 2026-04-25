@@ -825,6 +825,13 @@ export function useImportacaoPlanilha() {
       // Processar cada colaborador
       const totalColabs = dadosComEmpresa.length;
       
+      // Acumulador de distribuição por empresa (fora do loop)
+      const distMap = new Map<string, { inseridos: number; atualizados: number }>();
+      const bumpDist = (empId: string, tipo: "inseridos" | "atualizados") => {
+        if (!distMap.has(empId)) distMap.set(empId, { inseridos: 0, atualizados: 0 });
+        distMap.get(empId)![tipo]++;
+      };
+      
       for (let i = 0; i < dadosComEmpresa.length; i++) {
         const dado = dadosComEmpresa[i];
         const cpfLimpo = dado.cpf.replace(/\D/g, "");
@@ -867,13 +874,6 @@ export function useImportacaoPlanilha() {
           conta: dado.conta || null,
           tipo_conta: dado.tipoConta || null,
           chave_pix: dado.chavePix || null,
-        };
-        
-        // Acumulador de distribuição por empresa
-        const distMap = new Map<string, { inseridos: number; atualizados: number }>();
-        const bumpDist = (empId: string, tipo: "inseridos" | "atualizados") => {
-          if (!distMap.has(empId)) distMap.set(empId, { inseridos: 0, atualizados: 0 });
-          distMap.get(empId)![tipo]++;
         };
 
         try {
