@@ -10,6 +10,8 @@ import {
   Download,
   Loader2,
   Wand2,
+  Building2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { ColumnMappingStep } from "./ColumnMappingStep";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
