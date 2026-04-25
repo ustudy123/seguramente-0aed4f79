@@ -645,6 +645,7 @@ export function useImportacaoPlanilha() {
       colaboradoresInseridos: 0,
       colaboradoresAtualizados: 0,
       erros: [],
+      distribuicaoEmpresas: [],
     };
     
     try {
