@@ -869,6 +869,13 @@ export function useImportacaoPlanilha() {
           chave_pix: dado.chavePix || null,
         };
         
+        // Acumulador de distribuição por empresa
+        const distMap = new Map<string, { inseridos: number; atualizados: number }>();
+        const bumpDist = (empId: string, tipo: "inseridos" | "atualizados") => {
+          if (!distMap.has(empId)) distMap.set(empId, { inseridos: 0, atualizados: 0 });
+          distMap.get(empId)![tipo]++;
+        };
+
         try {
           if (cpfsExistentes.has(cpfLimpo)) {
             // Atualizar existente
@@ -885,6 +892,7 @@ export function useImportacaoPlanilha() {
               });
             } else {
               resultado.colaboradoresAtualizados++;
+              if (dado.empresaId) bumpDist(dado.empresaId, "atualizados");
               // Create collaborator folder in Documents module
               try {
                 await criarPastaColaborador({
@@ -892,7 +900,7 @@ export function useImportacaoPlanilha() {
                   colaboradorId: admId,
                   colaboradorNome: dado.nome,
                   colaboradorCpf: dado.cpf,
-                  empresaId: empresaAtivaId || null,
+                  empresaId: dado.empresaId || empresaAtivaId || null,
                 });
               } catch { /* non-blocking */ }
             }
@@ -911,6 +919,7 @@ export function useImportacaoPlanilha() {
               });
             } else {
               resultado.colaboradoresInseridos++;
+              if (dado.empresaId) bumpDist(dado.empresaId, "inseridos");
               // Create collaborator folder in Documents module
               if (insertData?.id) {
                 try {
@@ -919,7 +928,7 @@ export function useImportacaoPlanilha() {
                     colaboradorId: insertData.id,
                     colaboradorNome: dado.nome,
                     colaboradorCpf: dado.cpf,
-                    empresaId: empresaAtivaId || null,
+                    empresaId: dado.empresaId || empresaAtivaId || null,
                   });
                 } catch { /* non-blocking */ }
               }
@@ -933,6 +942,17 @@ export function useImportacaoPlanilha() {
         }
         
         setProgress(50 + Math.round((i / totalColabs) * 50));
+
+        // Na última iteração, materializar distribuição
+        if (i === dadosComEmpresa.length - 1) {
+          resultado.distribuicaoEmpresas = Array.from(distMap.entries()).map(([empId, counts]) => ({
+            empresaId: empId,
+            cnpj: infoEmpresas[empId]?.cnpj || "—",
+            razaoSocial: infoEmpresas[empId]?.razaoSocial || "Empresa",
+            inseridos: counts.inseridos,
+            atualizados: counts.atualizados,
+          })).sort((a, b) => (b.inseridos + b.atualizados) - (a.inseridos + a.atualizados));
+        }
       }
       
       return resultado;
