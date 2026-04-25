@@ -323,6 +323,14 @@ function parsarTipoContrato(valor: string): string | null {
   return null;
 }
 
+export interface DistribuicaoEmpresa {
+  empresaId: string;
+  cnpj: string;
+  razaoSocial: string;
+  inseridos: number;
+  atualizados: number;
+}
+
 export interface ResultadoImportacao {
   total: number;
   departamentosCriados: number;
@@ -330,6 +338,7 @@ export interface ResultadoImportacao {
   colaboradoresInseridos: number;
   colaboradoresAtualizados: number;
   erros: { linha: number; mensagem: string }[];
+  distribuicaoEmpresas: DistribuicaoEmpresa[];
 }
 
 export function useImportacaoPlanilha() {
@@ -636,6 +645,7 @@ export function useImportacaoPlanilha() {
       colaboradoresInseridos: 0,
       colaboradoresAtualizados: 0,
       erros: [],
+      distribuicaoEmpresas: [],
     };
     
     try {
@@ -658,17 +668,19 @@ export function useImportacaoPlanilha() {
       setProgress(5);
       const cnpjsUnicos = [...new Set(dadosValidos.map(d => d.cnpjEmpresa).filter(Boolean))];
       const mapaEmpresas: Record<string, string> = {}; // cnpj limpo -> empresa_id
+      const infoEmpresas: Record<string, { cnpj: string; razaoSocial: string }> = {}; // empresa_id -> info
       
       if (cnpjsUnicos.length > 0) {
         const { data: empresas } = await supabase
           .from("empresa_cadastro")
-          .select("id, cnpj")
+          .select("id, cnpj, razao_social")
           .eq("tenant_id", tenantId);
         
         empresas?.forEach(emp => {
           if (!emp.cnpj) return;
           const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
           mapaEmpresas[cnpjLimpo] = emp.id;
+          infoEmpresas[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
         });
         
         // Validar que todos os CNPJs existem
@@ -813,6 +825,13 @@ export function useImportacaoPlanilha() {
       // Processar cada colaborador
       const totalColabs = dadosComEmpresa.length;
       
+      // Acumulador de distribuição por empresa (fora do loop)
+      const distMap = new Map<string, { inseridos: number; atualizados: number }>();
+      const bumpDist = (empId: string, tipo: "inseridos" | "atualizados") => {
+        if (!distMap.has(empId)) distMap.set(empId, { inseridos: 0, atualizados: 0 });
+        distMap.get(empId)![tipo]++;
+      };
+      
       for (let i = 0; i < dadosComEmpresa.length; i++) {
         const dado = dadosComEmpresa[i];
         const cpfLimpo = dado.cpf.replace(/\D/g, "");
@@ -856,7 +875,7 @@ export function useImportacaoPlanilha() {
           tipo_conta: dado.tipoConta || null,
           chave_pix: dado.chavePix || null,
         };
-        
+
         try {
           if (cpfsExistentes.has(cpfLimpo)) {
             // Atualizar existente
@@ -873,6 +892,7 @@ export function useImportacaoPlanilha() {
               });
             } else {
               resultado.colaboradoresAtualizados++;
+              if (dado.empresaId) bumpDist(dado.empresaId, "atualizados");
               // Create collaborator folder in Documents module
               try {
                 await criarPastaColaborador({
@@ -880,7 +900,7 @@ export function useImportacaoPlanilha() {
                   colaboradorId: admId,
                   colaboradorNome: dado.nome,
                   colaboradorCpf: dado.cpf,
-                  empresaId: empresaAtivaId || null,
+                  empresaId: dado.empresaId || empresaAtivaId || null,
                 });
               } catch { /* non-blocking */ }
             }
@@ -899,6 +919,7 @@ export function useImportacaoPlanilha() {
               });
             } else {
               resultado.colaboradoresInseridos++;
+              if (dado.empresaId) bumpDist(dado.empresaId, "inseridos");
               // Create collaborator folder in Documents module
               if (insertData?.id) {
                 try {
@@ -907,7 +928,7 @@ export function useImportacaoPlanilha() {
                     colaboradorId: insertData.id,
                     colaboradorNome: dado.nome,
                     colaboradorCpf: dado.cpf,
-                    empresaId: empresaAtivaId || null,
+                    empresaId: dado.empresaId || empresaAtivaId || null,
                   });
                 } catch { /* non-blocking */ }
               }
@@ -921,6 +942,17 @@ export function useImportacaoPlanilha() {
         }
         
         setProgress(50 + Math.round((i / totalColabs) * 50));
+
+        // Na última iteração, materializar distribuição
+        if (i === dadosComEmpresa.length - 1) {
+          resultado.distribuicaoEmpresas = Array.from(distMap.entries()).map(([empId, counts]) => ({
+            empresaId: empId,
+            cnpj: infoEmpresas[empId]?.cnpj || "—",
+            razaoSocial: infoEmpresas[empId]?.razaoSocial || "Empresa",
+            inseridos: counts.inseridos,
+            atualizados: counts.atualizados,
+          })).sort((a, b) => (b.inseridos + b.atualizados) - (a.inseridos + a.atualizados));
+        }
       }
       
       return resultado;

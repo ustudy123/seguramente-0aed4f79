@@ -10,6 +10,8 @@ import {
   Download,
   Loader2,
   Wand2,
+  Building2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useImportacaoPlanilha, DadosPlanilha, ResultadoImportacao } from "@/hooks/useImportacaoPlanilha";
+import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { ColumnMappingStep } from "./ColumnMappingStep";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -53,6 +56,7 @@ export function ImportPlanilhaModal({
   descricao = "Importe colaboradores e funções a partir de uma planilha Excel ou CSV",
 }: ImportPlanilhaModalProps) {
   const { lerArquivo, lerArquivoHeaders, lerArquivoComMapeamento, processarImportacao, isProcessing, progress } = useImportacaoPlanilha();
+  const { empresaAtivaId, setEmpresaAtiva, empresas } = useEmpresaAtiva();
   
   
   const [etapa, setEtapa] = useState<Etapa>("upload");
@@ -659,6 +663,72 @@ export function ImportPlanilhaModal({
                     <p className="text-xs text-muted-foreground">Atualizados</p>
                   </div>
                 </div>
+
+                {/* Distribuição por empresa */}
+                {resultado.distribuicaoEmpresas && resultado.distribuicaoEmpresas.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <p className="font-medium text-sm">
+                        Colaboradores foram distribuídos em {resultado.distribuicaoEmpresas.length}{" "}
+                        {resultado.distribuicaoEmpresas.length === 1 ? "empresa" : "empresas"}:
+                      </p>
+                    </div>
+                    {resultado.distribuicaoEmpresas.length > 1 || (resultado.distribuicaoEmpresas[0] && resultado.distribuicaoEmpresas[0].empresaId !== empresaAtivaId) ? (
+                      <div className="flex items-start gap-2 p-3 rounded-lg border border-info/30 bg-info/5 text-sm">
+                        <Info className="w-4 h-4 mt-0.5 shrink-0 text-info" />
+                        <p>
+                          Para visualizar os colaboradores, troque a <strong>empresa ativa</strong> no
+                          cabeçalho ou clique em uma empresa abaixo.
+                        </p>
+                      </div>
+                    ) : null}
+                    <ScrollArea className="max-h-[200px] border rounded-lg">
+                      <div className="divide-y">
+                        {resultado.distribuicaoEmpresas.map((emp) => {
+                          const ativa = emp.empresaId === empresaAtivaId;
+                          return (
+                            <div
+                              key={emp.empresaId}
+                              className={`flex items-center justify-between gap-3 p-3 ${ativa ? "bg-primary/5" : ""}`}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium truncate">{emp.razaoSocial}</p>
+                                <p className="text-xs text-muted-foreground font-mono">{emp.cnpj}</p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Badge variant="secondary" className="text-xs">
+                                  {emp.inseridos + emp.atualizados}{" "}
+                                  {emp.inseridos + emp.atualizados === 1 ? "colab." : "colabs."}
+                                </Badge>
+                                {ativa ? (
+                                  <Badge variant="outline" className="text-xs border-primary/40 text-primary">
+                                    Ativa
+                                  </Badge>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-xs"
+                                    onClick={() => {
+                                      const target = empresas.find((e) => e.id === emp.empresaId);
+                                      if (target) {
+                                        setEmpresaAtiva(target);
+                                        toast.success(`Empresa ativa: ${target.razao_social}`);
+                                      }
+                                    }}
+                                  >
+                                    Ver
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
 
                 {/* Erros */}
                 {resultado.erros.length > 0 && (
