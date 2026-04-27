@@ -141,7 +141,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
   const [funcaoPopoverOpen, setFuncaoPopoverOpen] = useState(false);
   const [situacaoError, setSituacaoError] = useState<string | null>(null);
-  const [dialogContainer, setDialogContainer] = useState<HTMLDivElement | null>(null);
   const setorInputRef = useRef<HTMLInputElement | null>(null);
   const funcaoInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -311,7 +310,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
 
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent ref={(node) => setDialogContainer(node)} className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isReaplicacao ? (
@@ -856,8 +855,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                       id="popover-setor-situacao"
                       className="w-[220px] p-0"
                       align="start"
-                      container={dialogContainer}
-                      forceMount
                       onOpenAutoFocus={(event) => {
                         event.preventDefault();
                         setorInputRef.current?.focus();
@@ -888,7 +885,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                                 <CommandItem
                                   key={d.id}
                                   value={d.nome}
-                                  onSelect={v => { setNovoSetor(v); setNovaFuncao(""); setSetorPopoverOpen(false); }}
+                                  onSelect={() => { setNovoSetor(d.nome); setNovaFuncao(""); setSetorPopoverOpen(false); }}
                                   className="text-sm"
                                 >
                                   <Check className={cn("mr-2 h-3 w-3", novoSetor === d.nome ? "opacity-100" : "opacity-0")} />
@@ -920,8 +917,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                       id="popover-funcao-situacao"
                       className="w-[220px] p-0"
                       align="start"
-                      container={dialogContainer}
-                      forceMount
                       onOpenAutoFocus={(event) => {
                         event.preventDefault();
                         funcaoInputRef.current?.focus();
@@ -957,7 +952,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                                   <CommandItem
                                     key={c.id}
                                     value={c.nome}
-                                    onSelect={v => { setNovaFuncao(v); setFuncaoPopoverOpen(false); }}
+                                    onSelect={() => { setNovaFuncao(c.nome); setFuncaoPopoverOpen(false); }}
                                     className="text-sm"
                                   >
                                     <Check className={cn("mr-2 h-3 w-3", novaFuncao === c.nome ? "opacity-100" : "opacity-0")} />
