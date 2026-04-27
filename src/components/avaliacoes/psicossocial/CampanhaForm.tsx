@@ -920,7 +920,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                       className="w-[220px] p-0"
                       align="start"
                       container={dialogContainer}
-                      forceMount
                       onOpenAutoFocus={(event) => {
                         event.preventDefault();
                         funcaoInputRef.current?.focus();
