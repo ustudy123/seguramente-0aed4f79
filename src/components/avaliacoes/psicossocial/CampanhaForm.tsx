@@ -918,7 +918,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
                       id="popover-funcao-situacao"
                       className="w-[220px] p-0"
                       align="start"
-                      container={dialogContainer}
                       onOpenAutoFocus={(event) => {
                         event.preventDefault();
                         funcaoInputRef.current?.focus();
