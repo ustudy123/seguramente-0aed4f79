@@ -141,7 +141,6 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
   const [funcaoPopoverOpen, setFuncaoPopoverOpen] = useState(false);
   const [situacaoError, setSituacaoError] = useState<string | null>(null);
-  const [dialogContainer, setDialogContainer] = useState<HTMLDivElement | null>(null);
   const setorInputRef = useRef<HTMLInputElement | null>(null);
   const funcaoInputRef = useRef<HTMLInputElement | null>(null);
 
