@@ -68,6 +68,7 @@ export interface PontoAjuste {
   created_at: string;
   created_by: string | null;
   created_by_nome: string | null;
+  anexos?: Array<{ nome: string; url: string; tamanho: number; tipo: string }>;
 }
 
 export interface PontoAuditLog {
