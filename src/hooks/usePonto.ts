@@ -68,6 +68,7 @@ export interface PontoAjuste {
   created_at: string;
   created_by: string | null;
   created_by_nome: string | null;
+  anexos?: Array<{ nome: string; url: string; tamanho: number; tipo: string }>;
 }
 
 export interface PontoAuditLog {
@@ -306,6 +307,7 @@ export function usePonto() {
       horaOriginal,
       horaSolicitada,
       motivo,
+      anexos,
     }: {
       colaboradorId: string;
       colaboradorNome: string;
@@ -316,8 +318,22 @@ export function usePonto() {
       horaOriginal?: string;
       horaSolicitada?: string;
       motivo: string;
+      anexos?: File[];
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
+
+      // Upload de anexos (se houver)
+      const anexosUploaded: Array<{ nome: string; url: string; tamanho: number; tipo: string }> = [];
+      if (anexos && anexos.length > 0) {
+        for (const file of anexos) {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${user.id}/${dataReferencia}/${Date.now()}_${safeName}`;
+          const { data: up, error: upErr } = await (await import("@/integrations/supabase/client")).supabase
+            .storage.from("ponto-ajustes-anexos").upload(path, file, { contentType: file.type });
+          if (upErr) throw upErr;
+          anexosUploaded.push({ nome: file.name, url: up.path, tamanho: file.size, tipo: file.type });
+        }
+      }
 
       const { data, error } = await fromTable("ponto_ajustes")
         .insert({
@@ -331,6 +347,7 @@ export function usePonto() {
           hora_original: horaOriginal,
           hora_solicitada: horaSolicitada,
           motivo,
+          anexos: anexosUploaded,
           created_by: user.id,
           created_by_nome: profile?.nome_completo,
         } as any)

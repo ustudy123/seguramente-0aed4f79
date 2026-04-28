@@ -15238,6 +15238,7 @@ export type Database = {
       }
       ponto_ajustes: {
         Row: {
+          anexos: Json
           aprovado_por: string | null
           aprovado_por_nome: string | null
           colaborador_cpf: string
@@ -15260,6 +15261,7 @@ export type Database = {
           tipo_marcacao: string | null
         }
         Insert: {
+          anexos?: Json
           aprovado_por?: string | null
           aprovado_por_nome?: string | null
           colaborador_cpf: string
@@ -15282,6 +15284,7 @@ export type Database = {
           tipo_marcacao?: string | null
         }
         Update: {
+          anexos?: Json
           aprovado_por?: string | null
           aprovado_por_nome?: string | null
           colaborador_cpf?: string
