@@ -110,6 +110,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
   const [respostas, setRespostas] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [aceiteLGPD, setAceiteLGPD] = useState(false);
+  const [telefoneHash, setTelefoneHash] = useState<string | null>(null);
   // Metadados demográficos (vêm do token de participação, nunca do token público)
   const [metaDemografico, setMetaDemografico] = useState<{
     setor?: string; cargo?: string; unidade?: string; turno?: string;
