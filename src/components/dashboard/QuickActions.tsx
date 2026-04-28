@@ -21,16 +21,7 @@ const actions = [
     borderColor: "border-blue-400/30",
     iconBg: "bg-blue-400/30",
   },
-  {
-    title: "Registrar Ponto",
-    description: "Marcação manual",
-    icon: Clock,
-    path: "/ponto",
-    iconColor: "text-white",
-    gradient: "from-cyan-500 to-teal-600",
-    borderColor: "border-cyan-400/30",
-    iconBg: "bg-cyan-400/30",
-  },
+  /* Action removed as per user request to use external links/PWA only */
   {
     title: "Solicitar Férias",
     description: "Nova solicitação",

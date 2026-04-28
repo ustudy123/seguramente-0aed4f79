@@ -214,9 +214,7 @@ const Ponto = () => {
           <Button id="btn-solicitar-ajuste" variant="outline" size="sm" onClick={() => setShowAjusteModal(true)} className="text-xs sm:text-sm">
             <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Solicitar Ajuste
           </Button>
-          <Button id="btn-registrar-ponto" size="sm" onClick={() => setShowRegistrarModal(true)} className="text-xs sm:text-sm">
-            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Registrar Ponto
-          </Button>
+          {/* Manual registration removed as per user request */}
         </div>
       </motion.div>
 
