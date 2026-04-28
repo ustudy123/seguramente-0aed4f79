@@ -477,8 +477,6 @@ const Ponto = () => {
                       disabled={desabilitado}
                     >
                       {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
-                      {tipo === "saida_almoco" && <Utensils className="w-4 h-4 mr-2" />}
-                      {tipo === "retorno_almoco" && <Coffee className="w-4 h-4 mr-2" />}
                       {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
                       {TIPO_MARCACAO_LABELS[tipo]}
                       {jaRegistrado && <CheckCircle className="w-3.5 h-3.5 ml-auto text-green-500" />}
