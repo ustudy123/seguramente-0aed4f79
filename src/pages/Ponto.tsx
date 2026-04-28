@@ -485,7 +485,7 @@ const Ponto = () => {
                   );
                 })}
               </div>
-              {tiposJaRegistrados.length === 4 && (
+              {tiposJaRegistrados.includes("entrada") && tiposJaRegistrados.includes("saida") && (
                 <p className="text-sm text-muted-foreground text-center py-1">
                   ✅ Todas as marcações do dia já foram registradas.
                 </p>
