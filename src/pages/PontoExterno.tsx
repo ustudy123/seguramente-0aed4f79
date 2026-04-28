@@ -164,11 +164,7 @@ const PontoExterno = () => {
                 <p><span className="text-muted-foreground">Hora:</span> <strong className="font-mono text-lg">{resultado.hora?.substring(0, 5)}</strong></p>
                 <p><span className="text-muted-foreground">Data:</span> {resultado.data}</p>
               </div>
-              {geo.endereco && (
-                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-                  <MapPin className="w-3 h-3" /> {geo.endereco}
-                </p>
-              )}
+              {/* Location captured silently for RH only */}
               <div className="pt-2">
                 <Badge variant="outline" className="text-xs">
                   <Shield className="w-3 h-3 mr-1" /> Registro auditável • Link externo
@@ -214,16 +210,7 @@ const PontoExterno = () => {
               <p className="text-xs text-muted-foreground font-mono">{colaborador?.colaborador_cpf_parcial}</p>
             </div>
 
-            {/* Geolocation */}
-            <div className="flex items-center gap-2 text-xs">
-              {geo.loading ? (
-                <><Loader2 className="w-3 h-3 animate-spin" /> <span className="text-muted-foreground">Capturando localização...</span></>
-              ) : geo.endereco ? (
-                <><MapPin className="w-3 h-3 text-emerald-500 shrink-0" /> <span className="text-muted-foreground truncate">{geo.endereco}</span></>
-              ) : geo.error ? (
-                <><AlertCircle className="w-3 h-3 text-destructive shrink-0" /> <span className="text-destructive">{geo.error}</span></>
-              ) : null}
-            </div>
+            {/* Geolocation captured silently for RH only */}
 
             {/* Selfie */}
             <PontoSelfieCapture
