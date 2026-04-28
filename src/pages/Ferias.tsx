@@ -232,7 +232,8 @@ const Ferias = () => {
   });
   const [linkAssinaturaDialog, setLinkAssinaturaDialog] = useState<{ url: string; colaborador: string } | null>(null);
 
-  const { colaboradores, isLoading: loadingColabs } = useColaboradores();
+  // Férias é direito CLT — exclui PJ/Pró-labore/Terceiros.
+  const { colaboradores, isLoading: loadingColabs } = useColaboradores({ excluirPJ: true });
   const { solicitacoes, isLoading: loadingFerias, criarSolicitacao, aprovar, recusar, atualizarCampo, stats } = useFerias();
   const { criarPeriodo, criarFolhaItem, useFolhaPeriodos } = useFinanceiro();
   const { data: periodos } = useFolhaPeriodos();
