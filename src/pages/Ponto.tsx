@@ -458,19 +458,14 @@ const Ponto = () => {
             <div className="space-y-2">
               <Label>Tipo de Marcação</Label>
               <div className="grid grid-cols-2 gap-2">
-                {(["entrada", "saida_almoco", "retorno_almoco", "saida"] as const).map((tipo) => {
+                {(["entrada", "saida"] as const).map((tipo) => {
                   const jaRegistrado = tiposJaRegistrados.includes(tipo);
-                  // GAP 1: Enforce sequential order on frontend
                   const ordemRequisitos: Record<string, string[]> = {
                     entrada: [],
-                    saida_almoco: ["entrada"],
-                    retorno_almoco: ["entrada", "saida_almoco"],
                     saida: ["entrada"],
                   };
                   const requisitosAtendidos = ordemRequisitos[tipo].every(req => tiposJaRegistrados.includes(req));
-                  // Saída final precisa de retorno se teve saída almoço
-                  const bloqueadoPorRetorno = tipo === "saida" && tiposJaRegistrados.includes("saida_almoco") && !tiposJaRegistrados.includes("retorno_almoco");
-                  const desabilitado = jaRegistrado || !requisitosAtendidos || bloqueadoPorRetorno;
+                  const desabilitado = jaRegistrado || !requisitosAtendidos;
                   
                   return (
                     <Button
