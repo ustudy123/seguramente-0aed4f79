@@ -165,10 +165,12 @@ const Ponto = () => {
         tipoMarcacao: ajusteTipo !== "justificativa" ? ajusteMarcacao : undefined,
         horaSolicitada: ajusteTipo !== "justificativa" ? ajusteHora : undefined,
         motivo: ajusteMotivo,
+        anexos: ajusteAnexos,
       });
       setShowAjusteModal(false);
       setAjusteMotivo("");
       setAjusteHora("");
+      setAjusteAnexos([]);
     } catch {}
   };
 
