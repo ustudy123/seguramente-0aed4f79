@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, Camera, LogIn, LogOut, Coffee, Utensils, CheckCircle2, AlertCircle, Loader2, Shield } from "lucide-react";
+import { Clock, MapPin, LogIn, LogOut, CheckCircle2, AlertCircle, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,11 +27,24 @@ interface RegistroResult {
   data: string;
 }
 
-const TIPO_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+const TIPO_LABELS: Record<"entrada" | "saida", { label: string; icon: React.ReactNode; color: string }> = {
   entrada: { label: "Entrada", icon: <LogIn className="w-5 h-5" />, color: "bg-emerald-500 hover:bg-emerald-600" },
-  saida_almoco: { label: "Saída Almoço", icon: <Utensils className="w-5 h-5" />, color: "bg-amber-500 hover:bg-amber-600" },
-  retorno_almoco: { label: "Retorno Almoço", icon: <Coffee className="w-5 h-5" />, color: "bg-sky-500 hover:bg-sky-600" },
   saida: { label: "Saída", icon: <LogOut className="w-5 h-5" />, color: "bg-rose-500 hover:bg-rose-600" },
+};
+
+const traduzirErroPonto = (mensagem?: string | null) => {
+  const texto = (mensagem || "").trim();
+
+  if (!texto) return "Não foi possível registrar o ponto agora. Tente novamente em instantes.";
+  if (texto.includes('column "origem"')) return "Não foi possível concluir o registro de ponto agora. Tente novamente em instantes.";
+  if (texto.includes("já registrada hoje") || texto.includes("já registrado hoje")) return texto;
+  if (texto.includes("Saída sem uma Entrada prévia") || texto.includes("Saída sem Entrada prévia")) {
+    return "Não é possível registrar Saída sem uma Entrada prévia no mesmo dia.";
+  }
+  if (texto.includes("Link inválido") || texto.includes("expirado")) return "Link inválido ou expirado.";
+  if (texto.includes("Tipo de marcação inválido")) return "Este link permite apenas registro de Entrada ou Saída.";
+
+  return texto;
 };
 
 const PontoExterno = () => {
@@ -84,8 +97,9 @@ const PontoExterno = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colaborador]);
 
-  const handleRegistrar = useCallback(async (tipo: string) => {
+  const handleRegistrar = useCallback(async (tipo: "entrada" | "saida") => {
     if (!token || !colaborador) return;
+    setError(null);
     setRegistrando(true);
     try {
       const { data, error } = await supabasePublic.rpc("registrar_ponto_externo", {
@@ -97,19 +111,19 @@ const PontoExterno = () => {
         p_selfie_base64: null,
       });
       if (error) {
-        setError(error.message);
+        setError(traduzirErroPonto(error.message));
         setRegistrando(false);
         return;
       }
       const result = data as any;
       if (result.error) {
-        setError(result.error);
+        setError(traduzirErroPonto(result.error));
         setRegistrando(false);
         return;
       }
       setResultado(result);
     } catch (e: any) {
-      setError(e.message || "Erro ao registrar ponto");
+      setError(traduzirErroPonto(e.message));
     }
     setRegistrando(false);
   }, [token, colaborador, geo.latitude, geo.longitude, geo.endereco]);
@@ -229,7 +243,7 @@ const PontoExterno = () => {
 
             {/* Buttons */}
             <div className="grid grid-cols-2 gap-3 pt-2">
-              {Object.entries(TIPO_LABELS).map(([tipo, config]) => (
+              {(Object.entries(TIPO_LABELS) as Array<["entrada" | "saida", (typeof TIPO_LABELS)["entrada"]]>).map(([tipo, config]) => (
                 <Button
                   key={tipo}
                   className={`${config.color} text-white h-14 flex flex-col gap-0.5`}
