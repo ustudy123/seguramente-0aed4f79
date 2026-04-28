@@ -458,19 +458,14 @@ const Ponto = () => {
             <div className="space-y-2">
               <Label>Tipo de Marcação</Label>
               <div className="grid grid-cols-2 gap-2">
-                {(["entrada", "saida_almoco", "retorno_almoco", "saida"] as const).map((tipo) => {
+                {(["entrada", "saida"] as const).map((tipo) => {
                   const jaRegistrado = tiposJaRegistrados.includes(tipo);
-                  // GAP 1: Enforce sequential order on frontend
                   const ordemRequisitos: Record<string, string[]> = {
                     entrada: [],
-                    saida_almoco: ["entrada"],
-                    retorno_almoco: ["entrada", "saida_almoco"],
                     saida: ["entrada"],
                   };
                   const requisitosAtendidos = ordemRequisitos[tipo].every(req => tiposJaRegistrados.includes(req));
-                  // Saída final precisa de retorno se teve saída almoço
-                  const bloqueadoPorRetorno = tipo === "saida" && tiposJaRegistrados.includes("saida_almoco") && !tiposJaRegistrados.includes("retorno_almoco");
-                  const desabilitado = jaRegistrado || !requisitosAtendidos || bloqueadoPorRetorno;
+                  const desabilitado = jaRegistrado || !requisitosAtendidos;
                   
                   return (
                     <Button
@@ -482,8 +477,6 @@ const Ponto = () => {
                       disabled={desabilitado}
                     >
                       {tipo === "entrada" && <LogIn className="w-4 h-4 mr-2" />}
-                      {tipo === "saida_almoco" && <Utensils className="w-4 h-4 mr-2" />}
-                      {tipo === "retorno_almoco" && <Coffee className="w-4 h-4 mr-2" />}
                       {tipo === "saida" && <LogOut className="w-4 h-4 mr-2" />}
                       {TIPO_MARCACAO_LABELS[tipo]}
                       {jaRegistrado && <CheckCircle className="w-3.5 h-3.5 ml-auto text-green-500" />}
@@ -492,7 +485,7 @@ const Ponto = () => {
                   );
                 })}
               </div>
-              {tiposJaRegistrados.length === 4 && (
+              {tiposJaRegistrados.includes("entrada") && tiposJaRegistrados.includes("saida") && (
                 <p className="text-sm text-muted-foreground text-center py-1">
                   ✅ Todas as marcações do dia já foram registradas.
                 </p>
