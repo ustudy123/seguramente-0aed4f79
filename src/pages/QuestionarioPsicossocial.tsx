@@ -298,11 +298,8 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
             },
             body: JSON.stringify({
               action: 'confirmar_uso',
-              telefone_hash_direto: telefoneHash,
               campanha_id: campanha.id,
-              // O backend recalcula o hash a partir do telefone, mas como já temos o hash, enviamos via campo dummy.
-              // Para manter compatibilidade, enviamos um telefone fictício de 11 dígitos — backend NÃO usa quando confirmar_uso traz telefone_hash_direto.
-              telefone: '00000000000',
+              telefone_hash_direto: telefoneHash,
             }),
           });
         } catch (e) {
