@@ -46,7 +46,8 @@ import { PontoConfigTab } from "@/components/ponto/PontoConfigTab";
 
 const Ponto = () => {
   const { profile } = useAuth();
-  const { colaboradores } = useColaboradores();
+  // Ponto eletrônico é exclusivo para vínculos CLT — exclui PJ/Pró-labore/Terceiros.
+  const { colaboradores } = useColaboradores({ excluirPJ: true });
   const {
     usePontoDiario, useMarcacoesHoje, useAjustesPendentes,
     registrarPonto, registrandoPonto,
