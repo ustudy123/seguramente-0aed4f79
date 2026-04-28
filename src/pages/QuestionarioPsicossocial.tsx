@@ -438,7 +438,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
       <VerificacaoTelefone
         campanhaId={campanha!.id}
         campanhaNome={campanha!.nome}
-        onVerificado={() => setEtapa('questionario')}
+        onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('questionario'); }}
       />
     );
   }
