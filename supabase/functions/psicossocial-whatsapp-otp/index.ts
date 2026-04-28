@@ -211,17 +211,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ─── CONFIRMAR USO (chamado APÓS submissão do questionário) ──
-    if (action === "confirmar_uso") {
-      await supabase.from("psicossocial_telefone_usado").upsert(
-        { campanha_id, telefone_hash: telefoneHash },
-        { onConflict: "campanha_id,telefone_hash" }
-      );
-      return new Response(
-        JSON.stringify({ sucesso: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     return new Response(
       JSON.stringify({ erro: "Ação inválida" }),
