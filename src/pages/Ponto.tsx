@@ -77,6 +77,7 @@ const Ponto = () => {
   const [ajusteMarcacao, setAjusteMarcacao] = useState<"entrada" | "saida_almoco" | "retorno_almoco" | "saida">("entrada");
   const [ajusteHora, setAjusteHora] = useState("");
   const [ajusteMotivo, setAjusteMotivo] = useState("");
+  const [ajusteAnexos, setAjusteAnexos] = useState<File[]>([]);
 
   // Queries
   const { data: pontosDiarios = [], isLoading: loadingPontos } = usePontoDiario(selectedDate);
