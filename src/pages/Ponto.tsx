@@ -556,14 +556,16 @@ const Ponto = () => {
 
       {/* Modal: Solicitar Ajuste */}
       <Dialog open={showAjusteModal} onOpenChange={setShowAjusteModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Solicitar Ajuste de Ponto</DialogTitle>
-            <DialogDescription>Preencha os dados para solicitar um ajuste.</DialogDescription>
+            <DialogDescription>
+              Use este formulário quando não conseguir registrar o ponto (sem internet, app indisponível, esquecimento, atendimento médico etc.). A justificativa é obrigatória e você pode anexar comprovantes.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Colaborador</Label>
+              <Label>Colaborador *</Label>
               <Select value={ajusteColaborador} onValueChange={setAjusteColaborador}>
                 <SelectTrigger><SelectValue placeholder="Selecione o colaborador" /></SelectTrigger>
                 <SelectContent>
@@ -573,17 +575,17 @@ const Ponto = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Data de Referência</Label>
+                <Label>Data de Referência *</Label>
                 <Input type="date" value={ajusteData} onChange={(e) => setAjusteData(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Tipo de Ajuste</Label>
+                <Label>Tipo de Ajuste *</Label>
                 <Select value={ajusteTipo} onValueChange={(v) => setAjusteTipo(v as typeof ajusteTipo)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="inclusao">Inclusão</SelectItem>
-                    <SelectItem value="correcao">Correção</SelectItem>
-                    <SelectItem value="justificativa">Justificativa</SelectItem>
+                    <SelectItem value="inclusao">Inclusão (não registrei)</SelectItem>
+                    <SelectItem value="correcao">Correção (registrei errado)</SelectItem>
+                    <SelectItem value="justificativa">Justificativa (atestado/falta)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -591,31 +593,51 @@ const Ponto = () => {
             {ajusteTipo !== "justificativa" && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Marcação</Label>
+                  <Label>Marcação *</Label>
                   <Select value={ajusteMarcacao} onValueChange={(v) => setAjusteMarcacao(v as typeof ajusteMarcacao)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="entrada">Entrada</SelectItem>
-                      <SelectItem value="saida_almoco">Saída Almoço</SelectItem>
-                      <SelectItem value="retorno_almoco">Retorno Almoço</SelectItem>
                       <SelectItem value="saida">Saída</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Hora Solicitada</Label>
+                  <Label>Hora Correta *</Label>
                   <Input type="time" value={ajusteHora} onChange={(e) => setAjusteHora(e.target.value)} />
                 </div>
               </div>
             )}
             <div className="space-y-2">
-              <Label>Motivo / Justificativa</Label>
-              <Textarea placeholder="Descreva o motivo do ajuste..." value={ajusteMotivo} onChange={(e) => setAjusteMotivo(e.target.value)} rows={3} />
+              <Label>Justificativa * <span className="text-xs text-muted-foreground font-normal">(obrigatória)</span></Label>
+              <Textarea
+                placeholder="Ex.: Esqueci de bater o ponto na saída; estava sem sinal de internet; precisei sair para atendimento médico..."
+                value={ajusteMotivo}
+                onChange={(e) => setAjusteMotivo(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Anexos <span className="text-xs text-muted-foreground font-normal">(opcional — atestado, comprovante etc.)</span></Label>
+              <AnexoUpload
+                anexos={ajusteAnexos}
+                onAnexosChange={setAjusteAnexos}
+                maxFiles={3}
+                maxSize={10 * 1024 * 1024}
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAjusteModal(false)}>Cancelar</Button>
-            <Button onClick={handleSolicitarAjuste} disabled={!ajusteColaborador || !ajusteMotivo || solicitandoAjuste}>
+            <Button
+              onClick={handleSolicitarAjuste}
+              disabled={
+                !ajusteColaborador ||
+                !ajusteMotivo.trim() ||
+                (ajusteTipo !== "justificativa" && !ajusteHora) ||
+                solicitandoAjuste
+              }
+            >
               {solicitandoAjuste ? "Enviando..." : "Enviar Solicitação"}
             </Button>
           </DialogFooter>
