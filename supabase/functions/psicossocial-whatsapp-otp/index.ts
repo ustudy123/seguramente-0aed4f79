@@ -183,14 +183,22 @@ Deno.serve(async (req) => {
         .update({ verificado: true, verificado_em: new Date().toISOString() })
         .eq("id", otp.id);
 
-      // Registrar telefone como usado nesta campanha
+      // NÃO registrar telefone como usado aqui — só após o questionário ser concluído.
+      // Isso evita que respondentes que abandonem antes de finalizar fiquem bloqueados.
+      return new Response(
+        JSON.stringify({ sucesso: true, telefone_hash: telefoneHash }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── CONFIRMAR USO (chamado APÓS submissão do questionário) ──
+    if (action === "confirmar_uso") {
       await supabase.from("psicossocial_telefone_usado").upsert(
         { campanha_id, telefone_hash: telefoneHash },
         { onConflict: "campanha_id,telefone_hash" }
       );
-
       return new Response(
-        JSON.stringify({ sucesso: true, telefone_hash: telefoneHash }),
+        JSON.stringify({ sucesso: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
