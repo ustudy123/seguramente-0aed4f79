@@ -25,18 +25,45 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { action, telefone, campanha_id, codigo } = await req.json();
+    const { action, telefone, campanha_id, codigo, telefone_hash_direto } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const whatsapiToken = Deno.env.get("WHATSAPI_TOKEN");
     const whatsapiBaseUrl = Deno.env.get("WHATSAPI_BASE_URL");
 
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    if (!campanha_id) {
+      return new Response(
+        JSON.stringify({ erro: "Campanha não informada" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── CONFIRMAR USO (chamado APÓS submissão do questionário) ──
+    // Aceita o hash já calculado (o respondente não precisa reenviar o telefone em texto puro).
+    if (action === "confirmar_uso") {
+      const hashFinal = telefone_hash_direto || (telefone ? await hashPhone(telefone.replace(/\D/g, "")) : null);
+      if (!hashFinal) {
+        return new Response(
+          JSON.stringify({ erro: "Hash de telefone não informado" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      await supabase.from("psicossocial_telefone_usado").upsert(
+        { campanha_id, telefone_hash: hashFinal },
+        { onConflict: "campanha_id,telefone_hash" }
+      );
+      return new Response(
+        JSON.stringify({ sucesso: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!whatsapiToken || !whatsapiBaseUrl) {
       throw new Error("WhatsApp API não configurada");
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Limpar telefone - apenas dígitos
     const telefoneLimpo = telefone?.replace(/\D/g, "") || "";
@@ -44,13 +71,6 @@ Deno.serve(async (req) => {
     if (!telefoneLimpo || telefoneLimpo.length < 10) {
       return new Response(
         JSON.stringify({ erro: "Telefone inválido" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!campanha_id) {
-      return new Response(
-        JSON.stringify({ erro: "Campanha não informada" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -183,17 +203,14 @@ Deno.serve(async (req) => {
         .update({ verificado: true, verificado_em: new Date().toISOString() })
         .eq("id", otp.id);
 
-      // Registrar telefone como usado nesta campanha
-      await supabase.from("psicossocial_telefone_usado").upsert(
-        { campanha_id, telefone_hash: telefoneHash },
-        { onConflict: "campanha_id,telefone_hash" }
-      );
-
+      // NÃO registrar telefone como usado aqui — só após o questionário ser concluído.
+      // Isso evita que respondentes que abandonem antes de finalizar fiquem bloqueados.
       return new Response(
         JSON.stringify({ sucesso: true, telefone_hash: telefoneHash }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
 
     return new Response(
       JSON.stringify({ erro: "Ação inválida" }),

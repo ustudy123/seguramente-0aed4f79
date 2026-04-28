@@ -110,6 +110,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
   const [respostas, setRespostas] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [aceiteLGPD, setAceiteLGPD] = useState(false);
+  const [telefoneHash, setTelefoneHash] = useState<string | null>(null);
   // Metadados demográficos (vêm do token de participação, nunca do token público)
   const [metaDemografico, setMetaDemografico] = useState<{
     setor?: string; cargo?: string; unidade?: string; turno?: string;
@@ -281,6 +282,31 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
         await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos);
       }
 
+
+      // Após submissão bem-sucedida, registra telefone como usado (se houver verificação OTP)
+      if (telefoneHash && campanha?.id) {
+        try {
+          const projectId = (import.meta.env.VITE_SUPABASE_URL || 'https://diayjpsrcerycycyaxst.supabase.co')
+            .replace('https://', '').split('.')[0];
+          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+          await fetch(`https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`,
+            },
+            body: JSON.stringify({
+              action: 'confirmar_uso',
+              campanha_id: campanha.id,
+              telefone_hash_direto: telefoneHash,
+            }),
+          });
+        } catch (e) {
+          console.warn('Falha ao registrar telefone usado (não bloqueante):', e);
+        }
+      }
+
       setEtapa('concluido');
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
@@ -437,7 +463,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
       <VerificacaoTelefone
         campanhaId={campanha!.id}
         campanhaNome={campanha!.nome}
-        onVerificado={() => setEtapa('questionario')}
+        onVerificado={(hash) => { setTelefoneHash(hash); setEtapa('questionario'); }}
       />
     );
   }
