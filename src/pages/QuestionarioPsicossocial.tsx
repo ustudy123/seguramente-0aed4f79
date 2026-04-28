@@ -282,6 +282,34 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
         await salvarRespostaAnonimaCampanha(token, campanha, respostas, tempoSegundos);
       }
 
+
+      // Após submissão bem-sucedida, registra telefone como usado (se houver verificação OTP)
+      if (telefoneHash && campanha?.id) {
+        try {
+          const projectId = (import.meta.env.VITE_SUPABASE_URL || 'https://diayjpsrcerycycyaxst.supabase.co')
+            .replace('https://', '').split('.')[0];
+          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+          await fetch(`https://${projectId}.supabase.co/functions/v1/psicossocial-whatsapp-otp`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`,
+            },
+            body: JSON.stringify({
+              action: 'confirmar_uso',
+              telefone_hash_direto: telefoneHash,
+              campanha_id: campanha.id,
+              // O backend recalcula o hash a partir do telefone, mas como já temos o hash, enviamos via campo dummy.
+              // Para manter compatibilidade, enviamos um telefone fictício de 11 dígitos — backend NÃO usa quando confirmar_uso traz telefone_hash_direto.
+              telefone: '00000000000',
+            }),
+          });
+        } catch (e) {
+          console.warn('Falha ao registrar telefone usado (não bloqueante):', e);
+        }
+      }
+
       setEtapa('concluido');
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
