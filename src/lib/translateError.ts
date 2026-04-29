@@ -4,8 +4,8 @@
  */
 const ERROR_TRANSLATIONS: Record<string, string> = {
   // Auth
-  "Invalid login credentials": "Credenciais inválidas. Verifique seu e-mail e senha.",
-  "Invalid login credentials.": "Credenciais inválidas. Verifique seu e-mail e senha.",
+  "Invalid login credentials": "E-mail ou senha incorretos. Confira os dados digitados ou clique em \"Esqueceu a senha?\" para redefinir.",
+  "Invalid login credentials.": "E-mail ou senha incorretos. Confira os dados digitados ou clique em \"Esqueceu a senha?\" para redefinir.",
   "Email not confirmed": "E-mail não confirmado. Verifique sua caixa de entrada.",
   "Email not confirmed.": "E-mail não confirmado. Verifique sua caixa de entrada.",
   "User already registered": "Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.",
