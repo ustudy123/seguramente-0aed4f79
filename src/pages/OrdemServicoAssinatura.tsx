@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, AlertTriangle, MapPin, Camera } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, MapPin } from "lucide-react";
 import { supabasePublic } from "@/lib/supabasePublic";
 import { PontoSelfieCapture } from "@/components/ponto/PontoSelfieCapture";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -18,10 +18,12 @@ export default function OrdemServicoAssinatura() {
   const [loading, setLoading] = useState(true);
   const [os, setOs] = useState<any>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [showSelfie, setShowSelfie] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [assinada, setAssinada] = useState(false);
-  const { coords, loading: geoLoading, getLocation } = useGeolocation();
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+
+  const { latitude, longitude, accuracy, loading: geoLoading, capturarLocalizacao } = useGeolocation();
 
   useEffect(() => {
     document.title = "Ordem de Serviço — Assinatura";
@@ -43,19 +45,17 @@ export default function OrdemServicoAssinatura() {
         setLoading(false);
       }
     })();
-    getLocation();
+    capturarLocalizacao().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  async function uploadSelfie(blob: Blob): Promise<string | null> {
+  async function uploadSelfie(file: File): Promise<string | null> {
     try {
       const fileName = `os/${token}_${Date.now()}.jpg`;
-      const formData = new FormData();
-      formData.append("file", blob, fileName);
-      // Usar fetch direto para o storage público
       const res = await fetch(`${SUPABASE_URL}/storage/v1/object/atestados/${fileName}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${ANON}`, apikey: ANON },
-        body: blob,
+        headers: { Authorization: `Bearer ${ANON}`, apikey: ANON, "Content-Type": file.type || "image/jpeg" },
+        body: file,
       });
       if (!res.ok) return null;
       return fileName;
@@ -64,15 +64,22 @@ export default function OrdemServicoAssinatura() {
     }
   }
 
-  async function handleSelfieCapturada(blob: Blob) {
-    setShowSelfie(false);
+  async function handleAssinar() {
+    if (!selfieFile) {
+      toast.error("Capture sua selfie antes de assinar.");
+      return;
+    }
+    if (!latitude || !longitude) {
+      toast.error("Localização é obrigatória. Ative o GPS.");
+      return;
+    }
     setEnviando(true);
     try {
-      const selfieUrl = await uploadSelfie(blob);
+      const selfieUrl = await uploadSelfie(selfieFile);
       const { data, error } = await supabasePublic.rpc("assinar_ordem_servico_publica", {
         p_token: token,
         p_selfie_url: selfieUrl,
-        p_geo: coords ? { lat: coords.lat, lng: coords.lng, acc: coords.accuracy } : null,
+        p_geo: { lat: latitude, lng: longitude, acc: accuracy },
         p_ip: null,
       });
       if (error) throw error;
@@ -145,19 +152,29 @@ export default function OrdemServicoAssinatura() {
           </Card>
         ) : (
           <Card>
-            <CardContent className="py-5 space-y-3">
-              <p className="text-sm font-medium">Para assinar, confirme sua identidade com selfie e localização:</p>
+            <CardContent className="py-5 space-y-4">
+              <p className="text-sm font-medium">Para assinar, capture sua selfie e confirme:</p>
+              <PontoSelfieCapture
+                selfieFile={selfieFile}
+                selfiePreview={selfiePreview}
+                onChange={(f, p) => { setSelfieFile(f); setSelfiePreview(p); }}
+              />
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <MapPin className="w-3.5 h-3.5" />
-                {geoLoading ? "Capturando localização..." : coords ? `Localização capturada (±${Math.round(coords.accuracy)}m)` : "Sem localização"}
+                {geoLoading ? "Capturando localização..." : (latitude && longitude) ? `Localização capturada (±${Math.round(accuracy || 0)}m)` : "Sem localização — clique para capturar"}
+                {(!latitude || !longitude) && (
+                  <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => capturarLocalizacao().catch(() => {})}>
+                    Capturar GPS
+                  </Button>
+                )}
               </div>
               <Button
                 size="lg"
                 className="w-full"
-                disabled={enviando || !coords}
-                onClick={() => setShowSelfie(true)}
+                disabled={enviando || !selfieFile || !latitude || !longitude}
+                onClick={handleAssinar}
               >
-                {enviando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</> : <><Camera className="w-4 h-4 mr-2" /> Capturar selfie e assinar</>}
+                {enviando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</> : <><CheckCircle2 className="w-4 h-4 mr-2" /> Assinar Ordem de Serviço</>}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
                 Ao assinar, declaro ciência dos riscos, EPIs, procedimentos e penalidades descritos acima (NR-1, art. 157 CLT).
@@ -166,12 +183,6 @@ export default function OrdemServicoAssinatura() {
           </Card>
         )}
       </div>
-
-      <PontoSelfieCapture
-        open={showSelfie}
-        onOpenChange={setShowSelfie}
-        onCapture={handleSelfieCapturada}
-      />
     </div>
   );
 }
