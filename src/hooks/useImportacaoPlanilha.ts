@@ -601,7 +601,7 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (i: number) => i !== -1 ? str(l[i]) : "";
             
-            const cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
+            let cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
             const nome = g(idx.nome);
             const cpfRaw = g(idx.cpf);
             const cpf = formatarCPF(cpfRaw);
@@ -609,12 +609,19 @@ export function useImportacaoPlanilha() {
             const departamento = g(idx.departamento);
             const dataNascimentoRaw = idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "";
             const dataAdmissaoRaw = idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "";
-            
-            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) {
-              erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+
+            if (!cnpjEmpresa) {
+              if (unicaEmpresaId) {
+                const docUnico = Object.keys(mapaEmpresas).find(k => mapaEmpresas[k] === unicaEmpresaId);
+                if (docUnico) cnpjEmpresa = docUnico;
+              } else {
+                erros.push("CNPJ ou CPF da empresa é obrigatório");
+              }
+            } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
+              erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
             } else if (!mapaEmpresas[cnpjEmpresa]) {
-              const cnpjFormatado = `${cnpjEmpresa.slice(0, 2)}.${cnpjEmpresa.slice(2, 5)}.${cnpjEmpresa.slice(5, 8)}/${cnpjEmpresa.slice(8, 12)}-${cnpjEmpresa.slice(12)}`;
-              erros.push(`Empresa com CNPJ ${cnpjFormatado} não encontrada no sistema`);
+              const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
+              erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
             }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
