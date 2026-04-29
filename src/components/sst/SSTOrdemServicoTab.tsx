@@ -292,7 +292,20 @@ export function SSTOrdemServicoTab() {
                             : <><Sparkles className="w-3.5 h-3.5 mr-1" /> {st.os ? "Reemitir" : "Gerar"}</>}
                         </Button>
                         {st.os && (
-                          <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(st.os!.id)} title="Excluir">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Excluir"
+                            onClick={async () => {
+                              const ok = await confirm({
+                                title: "Excluir Ordem de Serviço?",
+                                description: "Esta ação não pode ser desfeita.",
+                                confirmText: "Excluir",
+                                variant: "destructive",
+                              });
+                              if (ok) await excluir.mutateAsync(st.os!.id);
+                            }}
+                          >
                             <Trash2 className="w-3.5 h-3.5 text-destructive" />
                           </Button>
                         )}
@@ -331,18 +344,6 @@ export function SSTOrdemServicoTab() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={!!confirmDelete}
-        onOpenChange={open => !open && setConfirmDelete(null)}
-        title="Excluir Ordem de Serviço?"
-        description="Esta ação não pode ser desfeita."
-        confirmLabel="Excluir"
-        variant="destructive"
-        onConfirm={async () => {
-          if (confirmDelete) await excluir.mutateAsync(confirmDelete);
-          setConfirmDelete(null);
-        }}
-      />
     </div>
   );
 }
