@@ -527,7 +527,7 @@ export function useImportacaoPlanilha() {
   };
 
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
-    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    const { mapa: mapaEmpresas, unicaEmpresaId } = await getEmpresasValidas();
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -585,7 +585,8 @@ export function useImportacaoPlanilha() {
             chavePix: encontrarColuna(headers, "chavePix"),
           };
           
-          if (idx.cnpjEmpresa === -1) { reject(new Error("Coluna 'CNPJ Empresa' não encontrada na planilha")); return; }
+          // A coluna do documento da empresa só é obrigatória se houver mais de uma empresa cadastrada
+          if (idx.cnpjEmpresa === -1 && !unicaEmpresaId) { reject(new Error("Coluna 'CNPJ/CPF Empresa' não encontrada na planilha")); return; }
           if (idx.nome === -1) { reject(new Error("Coluna 'Nome' não encontrada na planilha")); return; }
           if (idx.cpf === -1) { reject(new Error("Coluna 'CPF' não encontrada na planilha")); return; }
           if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo/Função' não encontrada na planilha")); return; }
