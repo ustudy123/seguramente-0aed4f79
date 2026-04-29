@@ -46,8 +46,9 @@ export default function Login() {
     const { error } = await signIn(data.email, data.password);
     
     if (error) {
-      toast.error("Erro ao fazer login", {
+      toast.error("Não foi possível entrar", {
         description: translateError(error.message),
+        duration: 6000,
       });
       return;
     }
