@@ -18,7 +18,7 @@ export interface SystemField {
 }
 
 export const SYSTEM_FIELDS: SystemField[] = [
-  { key: "cnpjEmpresa", label: "CNPJ Empresa", required: true },
+  { key: "cnpjEmpresa", label: "CNPJ/CPF Empresa", required: true },
   { key: "nome", label: "Nome Completo", required: true },
   { key: "cpf", label: "CPF", required: true },
   { key: "dataNascimento", label: "Data de Nascimento", required: true },
@@ -60,7 +60,7 @@ export const SYSTEM_FIELDS: SystemField[] = [
 
 // Auto-detection keywords per field
 const AUTO_DETECT: Record<string, string[]> = {
-  cnpjEmpresa: ["cnpj", "empresa"],
+  cnpjEmpresa: ["cnpj", "cpf empresa", "documento empresa", "empresa"],
   nome: ["nome", "funcionario", "colaborador", "name"],
   cpf: ["cpf", "documento"],
   dataNascimento: ["nascimento", "nasc", "birth"],
