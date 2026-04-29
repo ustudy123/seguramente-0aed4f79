@@ -349,6 +349,25 @@ export function useImportacaoPlanilha() {
 
   const str = (val: any) => String(val || "").trim();
 
+  // Helper to get valid CNPJs for the tenant
+  const getEmpresasValidas = async () => {
+    if (!tenantId) return { mapa: {}, info: {} };
+    const { data } = await supabase
+      .from("empresa_cadastro")
+      .select("id, cnpj, razao_social")
+      .eq("tenant_id", tenantId);
+    
+    const mapa: Record<string, string> = {};
+    const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
+    data?.forEach(emp => {
+      if (!emp.cnpj) return;
+      const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
+      mapa[cnpjLimpo] = emp.id;
+      info[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
+    });
+    return { mapa, info };
+  };
+
   // Read only headers and sample rows for mapping step
   const lerArquivoHeaders = async (file: File): Promise<{ headers: string[]; sampleRows: any[][] }> => {
     return new Promise((resolve, reject) => {
