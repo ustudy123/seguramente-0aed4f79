@@ -391,6 +391,8 @@ export function useImportacaoPlanilha() {
 
   // Parse file using a custom column mapping (fieldKey -> original header name)
   const lerArquivoComMapeamento = async (file: File, mapping: Record<string, string>): Promise<DadosPlanilha[]> => {
+    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
