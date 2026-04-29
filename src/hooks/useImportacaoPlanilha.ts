@@ -349,6 +349,25 @@ export function useImportacaoPlanilha() {
 
   const str = (val: any) => String(val || "").trim();
 
+  // Helper to get valid CNPJs for the tenant
+  const getEmpresasValidas = async () => {
+    if (!tenantId) return { mapa: {}, info: {} };
+    const { data } = await supabase
+      .from("empresa_cadastro")
+      .select("id, cnpj, razao_social")
+      .eq("tenant_id", tenantId);
+    
+    const mapa: Record<string, string> = {};
+    const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
+    data?.forEach(emp => {
+      if (!emp.cnpj) return;
+      const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
+      mapa[cnpjLimpo] = emp.id;
+      info[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
+    });
+    return { mapa, info };
+  };
+
   // Read only headers and sample rows for mapping step
   const lerArquivoHeaders = async (file: File): Promise<{ headers: string[]; sampleRows: any[][] }> => {
     return new Promise((resolve, reject) => {
@@ -372,6 +391,8 @@ export function useImportacaoPlanilha() {
 
   // Parse file using a custom column mapping (fieldKey -> original header name)
   const lerArquivoComMapeamento = async (file: File, mapping: Record<string, string>): Promise<DadosPlanilha[]> => {
+    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -405,7 +426,12 @@ export function useImportacaoPlanilha() {
             const dataNascimentoRaw = idx["dataNascimento"] != null && idx["dataNascimento"] !== -1 ? parsarData(l[idx["dataNascimento"]]) || "" : "";
             const dataAdmissaoRaw = idx["dataAdmissao"] != null && idx["dataAdmissao"] !== -1 ? parsarData(l[idx["dataAdmissao"]]) || "" : "";
 
-            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) {
+              erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            } else if (!mapaEmpresas[cnpjEmpresa]) {
+              const cnpjFormatado = `${cnpjEmpresa.slice(0, 2)}.${cnpjEmpresa.slice(2, 5)}.${cnpjEmpresa.slice(5, 8)}/${cnpjEmpresa.slice(8, 12)}-${cnpjEmpresa.slice(12)}`;
+              erros.push(`Empresa com CNPJ ${cnpjFormatado} não encontrada no sistema`);
+            }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
@@ -477,6 +503,8 @@ export function useImportacaoPlanilha() {
   };
 
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
+    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
@@ -557,7 +585,12 @@ export function useImportacaoPlanilha() {
             const dataNascimentoRaw = idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "";
             const dataAdmissaoRaw = idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "";
             
-            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) {
+              erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            } else if (!mapaEmpresas[cnpjEmpresa]) {
+              const cnpjFormatado = `${cnpjEmpresa.slice(0, 2)}.${cnpjEmpresa.slice(2, 5)}.${cnpjEmpresa.slice(5, 8)}/${cnpjEmpresa.slice(8, 12)}-${cnpjEmpresa.slice(12)}`;
+              erros.push(`Empresa com CNPJ ${cnpjFormatado} não encontrada no sistema`);
+            }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
