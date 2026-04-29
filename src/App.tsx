@@ -77,6 +77,7 @@ const FeriasAssinatura = lazy(() => import("./pages/FeriasAssinatura"));
 const TrilhaTerceiroPublica = lazy(() => import("./pages/TrilhaTerceiroPublica"));
 const AssinaturaContrato = lazy(() => import("./pages/AssinaturaContrato"));
 const ExperienciaAssinatura = lazy(() => import("./pages/ExperienciaAssinatura"));
+const OrdemServicoAssinatura = lazy(() => import("./pages/OrdemServicoAssinatura"));
 const AceiteDocumento = lazy(() => import("./pages/AceiteDocumento"));
 const OnboardingCliente = lazy(() => import("./pages/OnboardingCliente"));
 const AtivarConta = lazy(() => import("./pages/AtivarConta"));
@@ -128,6 +129,7 @@ const App = () => (
               <Route path="/ponto-externo/:token" element={<PontoExterno />} />
               <Route path="/contrato-assinatura/:token" element={<AssinaturaContrato />} />
               <Route path="/experiencia-assinatura/:token" element={<ExperienciaAssinatura />} />
+              <Route path="/os/:token" element={<OrdemServicoAssinatura />} />
               <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
               <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
               <Route path="/ativar-conta" element={<AtivarConta />} />
