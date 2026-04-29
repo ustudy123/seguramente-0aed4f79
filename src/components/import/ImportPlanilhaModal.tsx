@@ -184,7 +184,7 @@ export function ImportPlanilhaModal({
 
   const REQUIRED_MARKER = " *";
   const COLS = [
-    "CNPJ Empresa" + REQUIRED_MARKER,
+    "CNPJ/CPF Empresa" + REQUIRED_MARKER,
     "Nome" + REQUIRED_MARKER, "CPF" + REQUIRED_MARKER, "Sexo", "Data Nascimento" + REQUIRED_MARKER, "Estado Civil", "Naturalidade", "Nacionalidade",
     "Nome Mãe", "Nome Pai", "RG", "PIS/PASEP",
     "E-mail", "Telefone", "Celular",
@@ -209,7 +209,7 @@ export function ImportPlanilhaModal({
       "341", "0001", "12345-6", "Corrente", "joao@empresa.com",
     ],
     [
-      "98.765.432/0001-10",
+      "123.456.789-00",
       "Ana Paula Padrão", "987.654.321-00", "Feminino", "22/08/1985", "Casado", "Rio de Janeiro", "Brasileira",
       "Joana Padrão", "", "98.765.432-1", "",
       "ana@empresa.com", "", "(21) 98000-0000",
@@ -244,7 +244,7 @@ export function ImportPlanilhaModal({
       [""],
       ["COLUNA", "OBRIGATÓRIO", "DESCRIÇÃO", "VALORES ACEITOS", "EXEMPLOS"],
       [""],
-      ["CNPJ Empresa *", "SIM", "CNPJ da empresa onde o colaborador será cadastrado", "14 dígitos numéricos (com ou sem pontuação)", "12.345.678/0001-90"],
+      ["CNPJ/CPF Empresa *", "SIM*", "Documento da empresa onde o colaborador será cadastrado. Aceita CNPJ (PJ) ou CPF (profissional liberal). *Pode ficar em branco se houver apenas uma empresa cadastrada — o sistema vincula automaticamente.", "CNPJ (14 dígitos) ou CPF (11 dígitos), com ou sem pontuação", "12.345.678/0001-90 ou 123.456.789-00"],
       ["Nome *", "SIM", "Nome completo do colaborador", "Texto livre", "Maria da Silva Santos"],
       ["CPF *", "SIM", "CPF do colaborador (com ou sem pontuação)", "11 dígitos numéricos", "123.456.789-00"],
       ["Sexo", "NÃO", "Gênero do colaborador", "Masculino, Feminino, M, F", "Masculino"],
@@ -288,7 +288,7 @@ export function ImportPlanilhaModal({
       ["OBSERVAÇÕES IMPORTANTES:"],
       [""],
       ["1. Colunas marcadas com * são OBRIGATÓRIAS. O registro será rejeitado se estiverem vazias."],
-      ["2. O CNPJ Empresa vincula cada colaborador à empresa correta, permitindo importar para múltiplas empresas de uma só vez."],
+      ["2. O CNPJ/CPF Empresa vincula cada colaborador à empresa correta. Aceita CNPJ (PJ) ou CPF (profissional liberal). Se você tem apenas uma empresa cadastrada, pode deixar a coluna em branco."],
       ["3. CPFs duplicados serão atualizados (não criarão registros duplicados)."],
       ["4. Departamentos e Cargos não cadastrados serão criados automaticamente."],
       ["5. A primeira linha deve conter os cabeçalhos (não apagar)."],
@@ -386,7 +386,7 @@ export function ImportPlanilhaModal({
                         Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Inclua o CNPJ da empresa em cada linha para vincular os colaboradores corretamente.
+                        Inclua o CNPJ (PJ) ou CPF (profissional liberal) da empresa em cada linha. Se você tem apenas uma empresa cadastrada, pode deixar a coluna em branco.
                       </p>
                     </div>
                   </div>
@@ -555,7 +555,7 @@ export function ImportPlanilhaModal({
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">Linha</TableHead>
-                        <TableHead>CNPJ</TableHead>
+                        <TableHead>CNPJ/CPF</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>CPF</TableHead>
                         <TableHead>Função</TableHead>
@@ -568,7 +568,12 @@ export function ImportPlanilhaModal({
                         <TableRow key={idx} className={dado.erros.length > 0 ? "bg-destructive/5" : ""}>
                           <TableCell className="font-mono text-xs">{dado.linha}</TableCell>
                           <TableCell className="font-mono text-xs">
-                            {dado.cnpjEmpresa ? `${dado.cnpjEmpresa.slice(0,2)}.${dado.cnpjEmpresa.slice(2,5)}.${dado.cnpjEmpresa.slice(5,8)}/${dado.cnpjEmpresa.slice(8,12)}-${dado.cnpjEmpresa.slice(12)}` : "-"}
+                            {(() => {
+                              const d = (dado.cnpjEmpresa || "").replace(/\D/g, "");
+                              if (d.length === 14) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+                              if (d.length === 11) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+                              return d || "-";
+                            })()}
                           </TableCell>
                           <TableCell className="font-medium">{dado.nome || "-"}</TableCell>
                           <TableCell className="font-mono text-xs">{dado.cpf || "-"}</TableCell>

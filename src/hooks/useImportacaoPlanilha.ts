@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTenant } from "./useTenant";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/untypedClient";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { criarPastaColaborador } from "@/utils/criarPastaColaborador";
@@ -52,7 +53,7 @@ export interface DadosPlanilha {
 
 // Mapeamento de colunas possíveis
 const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
-  cnpjEmpresa: ["cnpj", "cnpj empresa", "cnpj_empresa", "empresa cnpj", "cnpj da empresa"],
+  cnpjEmpresa: ["cnpj", "cpf empresa", "cnpj empresa", "cnpj_empresa", "empresa cnpj", "cnpj da empresa", "cnpj/cpf", "cnpj/cpf empresa", "documento empresa", "documento da empresa"],
   nome: ["nome", "nome_completo", "nome completo", "funcionario", "funcionário", "colaborador"],
   cpf: ["cpf", "cpf funcionario", "cpf funcionário", "documento"],
   sexo: ["sexo", "genero", "gênero", "gender"],
@@ -349,23 +350,38 @@ export function useImportacaoPlanilha() {
 
   const str = (val: any) => String(val || "").trim();
 
-  // Helper to get valid CNPJs for the tenant
+  // Helper para formatar documento (CPF ou CNPJ) para exibição
+  const formatarDocumento = (doc: string) => {
+    const d = doc.replace(/\D/g, "");
+    if (d.length === 14) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+    if (d.length === 11) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+    return doc;
+  };
+
+  // Helper to get valid empresas for the tenant (indexa por CPF ou CNPJ)
   const getEmpresasValidas = async () => {
-    if (!tenantId) return { mapa: {}, info: {} };
-    const { data } = await supabase
-      .from("empresa_cadastro")
-      .select("id, cnpj, razao_social")
+    if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
+    const { data } = await fromTable("empresa_cadastro")
+      .select("id, cnpj, cpf, tipo_pessoa, razao_social")
       .eq("tenant_id", tenantId);
-    
+
     const mapa: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
-    data?.forEach(emp => {
-      if (!emp.cnpj) return;
-      const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
-      mapa[cnpjLimpo] = emp.id;
-      info[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
+    (data || []).forEach((emp: any) => {
+      const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+      if (!doc) return;
+      const docLimpo = String(doc).replace(/\D/g, "");
+      mapa[docLimpo] = emp.id;
+      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
-    return { mapa, info };
+    // Quando há apenas uma empresa cadastrada (típico de profissional liberal),
+    // permitimos que a coluna de documento fique vazia na planilha.
+    const unicaEmpresaId = (data || []).length === 1 ? (data as any)[0].id : null;
+    if (unicaEmpresaId && !info[unicaEmpresaId]) {
+      const e = (data as any)[0];
+      info[unicaEmpresaId] = { cnpj: e.cnpj || e.cpf || "", razaoSocial: e.razao_social || "Sem razão social" };
+    }
+    return { mapa, info, unicaEmpresaId };
   };
 
   // Read only headers and sample rows for mapping step
@@ -391,7 +407,7 @@ export function useImportacaoPlanilha() {
 
   // Parse file using a custom column mapping (fieldKey -> original header name)
   const lerArquivoComMapeamento = async (file: File, mapping: Record<string, string>): Promise<DadosPlanilha[]> => {
-    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    const { mapa: mapaEmpresas, unicaEmpresaId } = await getEmpresasValidas();
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -417,7 +433,7 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (key: string) => idx[key] != null && idx[key] !== -1 ? str(l[idx[key]]) : "";
 
-            const cnpjEmpresa = g("cnpjEmpresa").replace(/\D/g, "");
+            let cnpjEmpresa = g("cnpjEmpresa").replace(/\D/g, "");
             const nome = g("nome");
             const cpfRaw = g("cpf");
             const cpf = formatarCPF(cpfRaw);
@@ -426,11 +442,19 @@ export function useImportacaoPlanilha() {
             const dataNascimentoRaw = idx["dataNascimento"] != null && idx["dataNascimento"] !== -1 ? parsarData(l[idx["dataNascimento"]]) || "" : "";
             const dataAdmissaoRaw = idx["dataAdmissao"] != null && idx["dataAdmissao"] !== -1 ? parsarData(l[idx["dataAdmissao"]]) || "" : "";
 
-            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) {
-              erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            if (!cnpjEmpresa) {
+              if (unicaEmpresaId) {
+                // Profissional liberal / tenant com 1 única empresa: usa o documento dela
+                const docUnico = Object.keys(mapaEmpresas).find(k => mapaEmpresas[k] === unicaEmpresaId);
+                if (docUnico) cnpjEmpresa = docUnico;
+              } else {
+                erros.push("CNPJ ou CPF da empresa é obrigatório");
+              }
+            } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
+              erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
             } else if (!mapaEmpresas[cnpjEmpresa]) {
-              const cnpjFormatado = `${cnpjEmpresa.slice(0, 2)}.${cnpjEmpresa.slice(2, 5)}.${cnpjEmpresa.slice(5, 8)}/${cnpjEmpresa.slice(8, 12)}-${cnpjEmpresa.slice(12)}`;
-              erros.push(`Empresa com CNPJ ${cnpjFormatado} não encontrada no sistema`);
+              const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
+              erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
             }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
@@ -503,7 +527,7 @@ export function useImportacaoPlanilha() {
   };
 
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
-    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    const { mapa: mapaEmpresas, unicaEmpresaId } = await getEmpresasValidas();
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -561,7 +585,8 @@ export function useImportacaoPlanilha() {
             chavePix: encontrarColuna(headers, "chavePix"),
           };
           
-          if (idx.cnpjEmpresa === -1) { reject(new Error("Coluna 'CNPJ Empresa' não encontrada na planilha")); return; }
+          // A coluna do documento da empresa só é obrigatória se houver mais de uma empresa cadastrada
+          if (idx.cnpjEmpresa === -1 && !unicaEmpresaId) { reject(new Error("Coluna 'CNPJ/CPF Empresa' não encontrada na planilha")); return; }
           if (idx.nome === -1) { reject(new Error("Coluna 'Nome' não encontrada na planilha")); return; }
           if (idx.cpf === -1) { reject(new Error("Coluna 'CPF' não encontrada na planilha")); return; }
           if (idx.cargo === -1) { reject(new Error("Coluna 'Cargo/Função' não encontrada na planilha")); return; }
@@ -576,7 +601,7 @@ export function useImportacaoPlanilha() {
             const erros: string[] = [];
             const g = (i: number) => i !== -1 ? str(l[i]) : "";
             
-            const cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
+            let cnpjEmpresa = g(idx.cnpjEmpresa).replace(/\D/g, "");
             const nome = g(idx.nome);
             const cpfRaw = g(idx.cpf);
             const cpf = formatarCPF(cpfRaw);
@@ -584,12 +609,19 @@ export function useImportacaoPlanilha() {
             const departamento = g(idx.departamento);
             const dataNascimentoRaw = idx.dataNascimento !== -1 ? parsarData(l[idx.dataNascimento]) || "" : "";
             const dataAdmissaoRaw = idx.dataAdmissao !== -1 ? parsarData(l[idx.dataAdmissao]) || "" : "";
-            
-            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) {
-              erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+
+            if (!cnpjEmpresa) {
+              if (unicaEmpresaId) {
+                const docUnico = Object.keys(mapaEmpresas).find(k => mapaEmpresas[k] === unicaEmpresaId);
+                if (docUnico) cnpjEmpresa = docUnico;
+              } else {
+                erros.push("CNPJ ou CPF da empresa é obrigatório");
+              }
+            } else if (cnpjEmpresa.length !== 11 && cnpjEmpresa.length !== 14) {
+              erros.push("Documento da empresa inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)");
             } else if (!mapaEmpresas[cnpjEmpresa]) {
-              const cnpjFormatado = `${cnpjEmpresa.slice(0, 2)}.${cnpjEmpresa.slice(2, 5)}.${cnpjEmpresa.slice(5, 8)}/${cnpjEmpresa.slice(8, 12)}-${cnpjEmpresa.slice(12)}`;
-              erros.push(`Empresa com CNPJ ${cnpjFormatado} não encontrada no sistema`);
+              const tipo = cnpjEmpresa.length === 11 ? "CPF" : "CNPJ";
+              erros.push(`Empresa com ${tipo} ${formatarDocumento(cnpjEmpresa)} não encontrada no sistema`);
             }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
@@ -697,34 +729,33 @@ export function useImportacaoPlanilha() {
         return resultado;
       }
       
-      // Passo 0: Resolver empresa_id por CNPJ
+      // Passo 0: Resolver empresa_id por CNPJ ou CPF (suporta tipo_pessoa = 'pf' | 'pj')
       setProgress(5);
       const cnpjsUnicos = [...new Set(dadosValidos.map(d => d.cnpjEmpresa).filter(Boolean))];
-      const mapaEmpresas: Record<string, string> = {}; // cnpj limpo -> empresa_id
+      const mapaEmpresas: Record<string, string> = {}; // doc limpo -> empresa_id
       const infoEmpresas: Record<string, { cnpj: string; razaoSocial: string }> = {}; // empresa_id -> info
-      
+
       if (cnpjsUnicos.length > 0) {
-        const { data: empresas } = await supabase
-          .from("empresa_cadastro")
-          .select("id, cnpj, razao_social")
+        const { data: empresas } = await fromTable("empresa_cadastro")
+          .select("id, cnpj, cpf, tipo_pessoa, razao_social")
           .eq("tenant_id", tenantId);
-        
-        empresas?.forEach(emp => {
-          if (!emp.cnpj) return;
-          const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
-          mapaEmpresas[cnpjLimpo] = emp.id;
-          infoEmpresas[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
+
+        (empresas || []).forEach((emp: any) => {
+          const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+          if (!doc) return;
+          const docLimpo = String(doc).replace(/\D/g, "");
+          mapaEmpresas[docLimpo] = emp.id;
+          infoEmpresas[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
         });
-        
-        // Validar que todos os CNPJs existem
-        for (const cnpj of cnpjsUnicos) {
-          if (!mapaEmpresas[cnpj]) {
-            const cnpjFormatado = `${cnpj.slice(0,2)}.${cnpj.slice(2,5)}.${cnpj.slice(5,8)}/${cnpj.slice(8,12)}-${cnpj.slice(12)}`;
-            // Mark rows with this CNPJ as errors
-            dadosValidos.filter(d => d.cnpjEmpresa === cnpj).forEach(d => {
+
+        // Validar que todos os documentos existem
+        for (const doc of cnpjsUnicos) {
+          if (!mapaEmpresas[doc]) {
+            const tipo = doc.length === 11 ? "CPF" : "CNPJ";
+            dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
               resultado.erros.push({
                 linha: d.linha,
-                mensagem: `CNPJ ${cnpjFormatado} não encontrado no cadastro de empresas`,
+                mensagem: `${tipo} ${formatarDocumento(doc)} não encontrado no cadastro de empresas`,
               });
             });
           }

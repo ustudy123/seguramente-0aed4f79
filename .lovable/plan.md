@@ -1,97 +1,62 @@
-# Ordem de Serviço (OS) — NR-1, item 1.4.1 alínea "b"
+## Problema
 
-## O que é
+O importador de colaboradores exige **CNPJ de 14 dígitos** para vincular cada linha à empresa cadastrada. Profissionais liberais (PF) que se cadastraram no sistema com **CPF** (`tipo_pessoa = 'pf'`) não conseguem importar planilhas — todas as linhas falham com *"CNPJ Empresa é obrigatório (14 dígitos)"*, mesmo colocando o CPF na coluna CNPJ.
 
-A NR-1 obriga o empregador a **dar Ordem de Serviço (OS) por escrito a cada empregado**, com:
-1. Riscos ocupacionais existentes nas atividades dele
-2. Medidas de prevenção (EPC/EPI) e como usá-las
-3. Procedimentos seguros
-4. Penalidades por descumprimento
-5. Recibo / assinatura do empregado
+A base já está preparada: `empresa_cadastro` tem colunas separadas `cnpj` e `cpf` + flag `tipo_pessoa`. Falta apenas o importador respeitar isso.
 
-Hoje o sistema já possui PGR (com `inventario_riscos`, `funcoes_atividades`, `plano_acao` extraídos por IA), Cargos/Funções, Matriz de EPI por Função, Treinamentos por Função e Colaboradores (`admissoes`). A OS é o **documento que amarra tudo isso por colaborador** e fecha o ciclo NR-1.
+## Solução proposta
 
-## Como vai funcionar (visão do usuário)
+Tornar o importador **agnóstico ao tipo de documento da empresa**: aceitar CPF (11 dígitos) ou CNPJ (14 dígitos) na mesma coluna, e fazer o lookup correto conforme o `tipo_pessoa` da empresa.
 
-1. Em **Compliance SST → Ordem de Serviço**, o gestor vê uma lista de colaboradores ativos da empresa.
-2. Para cada colaborador, o sistema calcula o **status da OS**: pendente, vigente, vencida, desatualizada (quando o PGR foi revisado depois da assinatura).
-3. Botão **"Gerar OS"** (individual) ou **"Gerar OS em lote"** (por setor/cargo/empresa toda):
-   - Sistema lê o PGR vigente da empresa (`sst_documentos` tipo PGR mais recente)
-   - Filtra `inventario_riscos` por cargo/setor do colaborador
-   - Cruza com `funcao_epis`, `funcao_treinamentos`, `funcao_atividades` da função dele
-   - Monta a OS em HTML padronizado com IA preenchendo as lacunas (procedimento seguro, penalidades padrão CLT art. 158)
-4. **Pré-visualização** com edição manual antes de finalizar (nossa diretriz: IA orienta, humano valida).
-5. Colaborador recebe **link de assinatura por WhatsApp/e-mail** (mesmo padrão de `experiencia_assinatura_links` / `ferias_assinatura_links`) — assina com selfie + geolocalização.
-6. PDF final é arquivado automaticamente em **Documentos → SST → Ordens de Serviço → {nome do colaborador}** e fica vinculado ao prontuário do colaborador.
-7. Quando um novo PGR é importado, todas as OS daquela empresa entram em **status "desatualizada"** e o sistema gera alertas automáticos com `CriarAcaoAlertaModal` (ação 5W2H de re-emissão).
+### 1. Renomear conceitualmente a coluna (sem quebrar planilhas existentes)
 
-## Estrutura do documento (conforme NR-1)
+- A coluna passa a se chamar **"CNPJ/CPF Empresa"** na UI, modal de upload, templates (CSV e XLSX) e tela de mapeamento "Parametrizar Arquivo".
+- Aceitar como aliases de header: `cnpj`, `cpf`, `cnpj empresa`, `cpf empresa`, `cnpj/cpf`, `documento empresa`, `documento`. Garante retrocompatibilidade com planilhas antigas.
+- Quando há **uma única empresa** no tenant (caso típico do profissional liberal), a coluna se torna **opcional** — o importador associa automaticamente todas as linhas àquela empresa, eliminando o atrito.
+
+### 2. Validação flexível em `useImportacaoPlanilha.ts`
+
+Substituir o check rígido de 14 dígitos por:
 
 ```text
-ORDEM DE SERVIÇO Nº {seq}/{ano}
-Empresa: {razão social} — CNPJ: {cnpj}
-Colaborador: {nome} — CPF: {cpf} — Matrícula: {esocial}
-Função: {cargo} — Setor: {departamento}
-Data de emissão: {data} | Vigência: {validade do PGR}
-
-1. BASE LEGAL — NR-1 item 1.4.1 "b" e art. 157 da CLT
-2. RISCOS OCUPACIONAIS DA FUNÇÃO     ← do PGR (gro_riscos / inventario_riscos)
-   Físicos | Químicos | Biológicos | Ergonômicos | Acidente | Psicossociais
-3. MEDIDAS DE PREVENÇÃO (EPC)        ← medidas_existentes + medidas_recomendadas
-4. EPI OBRIGATÓRIO                    ← funcao_epis (com CA, periodicidade)
-5. PROCEDIMENTOS SEGUROS DE TRABALHO  ← funcao_atividades + funcao_pops
-6. TREINAMENTOS NORMATIVOS            ← funcao_treinamentos (NR-06, NR-35, etc.)
-7. CONDUTAS PROIBIDAS
-8. PENALIDADES (CLT art. 158, parágrafo único — ato faltoso → advertência/suspensão/justa causa)
-9. DECLARAÇÃO DE CIÊNCIA E RECEBIMENTO
-   Assinatura do colaborador + selfie + geolocalização + carimbo digital
-   Assinatura do responsável (SESMT / RH)
+limpar dígitos do campo
+se vazio:
+  se tenant tem 1 única empresa → usar essa empresa, OK
+  senão → erro "Documento da empresa é obrigatório"
+se 11 dígitos → procurar empresa com tipo_pessoa='pf' e cpf = valor
+se 14 dígitos → procurar empresa com tipo_pessoa='pj' e cnpj = valor
+senão → erro "Documento inválido (use CPF 11 dígitos ou CNPJ 14 dígitos)"
 ```
 
-## Plano de implementação
+O `mapaEmpresas` passa a indexar pelo documento limpo (CPF ou CNPJ), construído a partir de `select id, cnpj, cpf, tipo_pessoa, razao_social from empresa_cadastro`.
 
-### 1. Banco de dados (migration)
-- Tabela `ordens_servico`: `id, tenant_id, empresa_id, colaborador_id (admissao_id), cargo_id, numero_sequencial, ano, pgr_id (FK sst_documentos), conteudo_html, conteudo_json (riscos+epis+treinamentos snapshot), data_emissao, data_vigencia, status (rascunho/aguardando_assinatura/assinada/vencida/desatualizada), assinada_em, assinatura_selfie_url, assinatura_geo, assinatura_ip, responsavel_emissao_id, motivo_reemissao`.
-- Tabela `ordem_servico_links` (token público para assinatura, padrão `experiencia_assinatura_links`).
-- Sequência `ordens_servico_seq` por tenant+ano (trigger BEFORE INSERT).
-- Trigger `marcar_os_desatualizadas`: quando novo PGR é inserido em `sst_documentos`, marca todas OS da empresa como `desatualizada` e cria registro em `eventos_sst` com ação 5W2H sugerida.
-- RLS: tenant isolation + `empresa_id` ativa; RPC `assinar_ordem_servico_publica(token, selfie, geo)` `SECURITY DEFINER` para a página pública (padrão do nosso public-token-access-pattern).
+Mensagens de erro formatam corretamente:
+- CNPJ → `XX.XXX.XXX/XXXX-XX`
+- CPF → `XXX.XXX.XXX-XX`
 
-### 2. Edge function `gerar-ordem-servico`
-- Input: `colaborador_id` (ou lista) + `pgr_id` (opcional, default = mais recente vigente).
-- Lê PGR (`sst_documentos.analise_ia`), filtra `inventario_riscos` por cargo/setor do colaborador, junta `funcao_epis`, `funcao_treinamentos`, `funcao_atividades`, `funcao_pops`.
-- Chama Lovable AI Gateway (gpt-4o, prompt ≤ 3000 chars conforme nossa estratégia) para **redigir os campos textuais** (procedimentos, condutas proibidas) com base nos riscos cruzados — **não para inventar riscos**.
-- Devolve `conteudo_html` + `conteudo_json` (snapshot imutável).
-- Suporta modo lote (até 50 colaboradores por chamada).
+### 3. Templates atualizados
 
-### 3. Frontend
-- Rota `/sst/ordens-servico` (eager-loaded, dentro de Compliance SST).
-- `OrdemServicoList.tsx`: tabela de colaboradores × status OS, filtros por setor/cargo, ações "Gerar", "Reemitir", "Enviar para assinatura", "Baixar PDF".
-- `OrdemServicoEditor.tsx`: editor rich-text com seções pré-preenchidas, validação dos 9 campos NR-1, botão "Finalizar e enviar para assinatura".
-- `OrdemServicoPreview.tsx`: hidden div para html2canvas (padrão `document-generation-standards`) + logo da empresa via `useEmpresaLogo`.
-- Página pública `/os/:token` (sem AuthContext, usa `supabasePublic` + Prod URL) — colaborador vê a OS, captura selfie + geo, assina.
-- Integração com `CriarAcaoAlertaModal` para alertas de OS pendente/desatualizada.
-- Arquivamento automático no módulo Documentos (reusa `findOrCreateSSTFolder`, novo mapeamento `OS → "Ordens de Serviço"`).
+- **CSV** e **XLSX** baixáveis: cabeçalho da coluna vira "CNPJ/CPF Empresa".
+- Linha de exemplo no template inclui um CPF e um CNPJ para deixar claro que ambos são aceitos.
+- Texto de instrução no modal: *"Inclua o CNPJ (PJ) ou CPF (PF) da empresa em cada linha. Se você é profissional liberal e tem apenas uma empresa cadastrada, pode deixar a coluna em branco."*
 
-### 4. Trigger de criação automática
-- Quando `admissoes` recebe novo registro com `status='ativo'` E existe PGR vigente → trigger cria OS em status `rascunho` automaticamente, gerando alerta para o RH revisar e enviar.
+### 4. Pré-validação visual no preview
 
-## Limitações e dependências
+Na tela de preview (a da imagem 3), os badges de erro mostram:
+- "CPF da empresa não encontrado no sistema" quando 11 dígitos não batem
+- "CNPJ da empresa não encontrado no sistema" quando 14 dígitos não batem
+- "Documento inválido" quando não tem 11 nem 14 dígitos
 
-1. **Qualidade da OS depende da qualidade do PGR.** Se o PGR não tem riscos mapeados por setor/cargo (campos `setor`/`cargo` em `inventario_riscos`), a OS sai genérica. Mitigação: bloquear geração e exibir "PGR sem inventário detalhado — revise antes" (lock conforme `gro/compliance-locks`).
-2. **Função × Cargo:** as tabelas `funcao_*` usam `cargo_id`. Colaboradores em `admissoes` guardam cargo como **texto** (`cargo`), não FK. Precisa de matching por nome ou de FK `cargo_id` na admissão. Vou adicionar coluna opcional `cargo_id` em `admissoes` e fallback por nome (case-insensitive) quando ausente.
-3. **PGR sem extração de IA concluída** (`analise_ia_status != 'concluida'`) não pode gerar OS — exibir bloqueio.
-4. **Assinatura digital com validade jurídica plena** exige ICP-Brasil; nosso modelo entrega assinatura eletrônica avançada (selfie + geo + IP + hash + carimbo de tempo) — suficiente para NR-1/CLT segundo MP 2.200-2/2001 e prática trabalhista, mas **não é ICP-Brasil**.
-5. **Colaboradores sem e-mail nem celular** ficam em "assinatura presencial" (gera QR Code para tablet/quiosque).
-6. Limite atual de 50MB por documento (respeitado, OS gira em ~200KB).
+E o card-resumo conta corretamente como **válidos** os registros que casam com qualquer empresa do tenant (PF ou PJ).
 
-## O que preciso de você
+## Arquivos afetados
 
-Para refinar antes de começar, me confirme:
+- `src/hooks/useImportacaoPlanilha.ts` — lookup por CPF/CNPJ, alias de headers, fallback empresa única, mensagens.
+- Componente do modal "Importar Colaboradores" e tela "Parametrizar Arquivo" — labels e textos.
+- Geradores de template CSV/XLSX — cabeçalho e linha-exemplo.
 
-1. **Numeração:** sequencial por empresa (`OS 001/2026`) ou por tenant (grupo todo)?
-2. **Validade da OS:** atrelar à validade do PGR (default), ou prazo fixo (ex.: 12 meses)?
-3. **Reemissão automática** quando colaborador muda de função/setor: gerar nova OS automaticamente em rascunho, ou só alertar?
-4. **Assinatura do responsável SESMT:** assinatura única do responsável técnico (engenheiro/técnico SST cadastrado) injetada automaticamente, ou cada OS exige assinatura manual dele também?
+## Limitações
 
-Pode responder só os números — qualquer omissão eu sigo com o default sugerido (validade = PGR, sequencial por empresa, reemissão automática em rascunho, assinatura SESMT injetada do responsável técnico cadastrado).
+- Nenhuma alteração de schema necessária — `empresa_cadastro.cpf` e `tipo_pessoa` já existem.
+- Planilhas antigas com header "CNPJ Empresa" continuam funcionando (alias mantido).
+- Não altera a lógica de importação de empresas (`EmpresaImportExport`), apenas a de colaboradores.
