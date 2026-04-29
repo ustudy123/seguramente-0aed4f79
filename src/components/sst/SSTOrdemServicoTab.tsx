@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { confirm } from "@/components/ui/confirm-dialog";
 import {
   ClipboardCheck, Loader2, FileText, Sparkles, Send, Eye, Trash2,
   AlertCircle, CheckCircle2, AlertTriangle, Copy, Search,
@@ -44,7 +44,7 @@ export function SSTOrdemServicoTab() {
   const [colabSelecionado, setColabSelecionado] = useState<ColaboradorRow | null>(null);
   const [respTecnico, setRespTecnico] = useState("");
   const [respRegistro, setRespRegistro] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  
 
   const pgrVigente = useMemo(
     () => documentos.find(d => d.tipo === "PGR" && d.status === "vigente" && d.analise_ia_status === "concluida"),
