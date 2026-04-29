@@ -426,7 +426,12 @@ export function useImportacaoPlanilha() {
             const dataNascimentoRaw = idx["dataNascimento"] != null && idx["dataNascimento"] !== -1 ? parsarData(l[idx["dataNascimento"]]) || "" : "";
             const dataAdmissaoRaw = idx["dataAdmissao"] != null && idx["dataAdmissao"] !== -1 ? parsarData(l[idx["dataAdmissao"]]) || "" : "";
 
-            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            if (!cnpjEmpresa || cnpjEmpresa.length !== 14) {
+              erros.push("CNPJ Empresa é obrigatório (14 dígitos)");
+            } else if (!mapaEmpresas[cnpjEmpresa]) {
+              const cnpjFormatado = `${cnpjEmpresa.slice(0, 2)}.${cnpjEmpresa.slice(2, 5)}.${cnpjEmpresa.slice(5, 8)}/${cnpjEmpresa.slice(8, 12)}-${cnpjEmpresa.slice(12)}`;
+              erros.push(`Empresa com CNPJ ${cnpjFormatado} não encontrada no sistema`);
+            }
             if (!nome) erros.push("Nome é obrigatório");
             if (!cpf) erros.push("CPF é obrigatório");
             else if (!validarCPF(cpf)) erros.push("CPF inválido");
