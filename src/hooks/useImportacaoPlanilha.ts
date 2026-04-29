@@ -503,6 +503,8 @@ export function useImportacaoPlanilha() {
   };
 
   const lerArquivo = async (file: File): Promise<DadosPlanilha[]> => {
+    const { mapa: mapaEmpresas } = await getEmpresasValidas();
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
