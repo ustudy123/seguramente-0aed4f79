@@ -349,23 +349,38 @@ export function useImportacaoPlanilha() {
 
   const str = (val: any) => String(val || "").trim();
 
-  // Helper to get valid CNPJs for the tenant
+  // Helper para formatar documento (CPF ou CNPJ) para exibição
+  const formatarDocumento = (doc: string) => {
+    const d = doc.replace(/\D/g, "");
+    if (d.length === 14) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+    if (d.length === 11) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+    return doc;
+  };
+
+  // Helper to get valid empresas for the tenant (indexa por CPF ou CNPJ)
   const getEmpresasValidas = async () => {
-    if (!tenantId) return { mapa: {}, info: {} };
-    const { data } = await supabase
-      .from("empresa_cadastro")
-      .select("id, cnpj, razao_social")
+    if (!tenantId) return { mapa: {}, info: {}, unicaEmpresaId: null as string | null };
+    const { data } = await fromTable("empresa_cadastro")
+      .select("id, cnpj, cpf, tipo_pessoa, razao_social")
       .eq("tenant_id", tenantId);
-    
+
     const mapa: Record<string, string> = {};
     const info: Record<string, { cnpj: string; razaoSocial: string }> = {};
-    data?.forEach(emp => {
-      if (!emp.cnpj) return;
-      const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
-      mapa[cnpjLimpo] = emp.id;
-      info[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
+    (data || []).forEach((emp: any) => {
+      const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+      if (!doc) return;
+      const docLimpo = String(doc).replace(/\D/g, "");
+      mapa[docLimpo] = emp.id;
+      info[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
     });
-    return { mapa, info };
+    // Quando há apenas uma empresa cadastrada (típico de profissional liberal),
+    // permitimos que a coluna de documento fique vazia na planilha.
+    const unicaEmpresaId = (data || []).length === 1 ? (data as any)[0].id : null;
+    if (unicaEmpresaId && !info[unicaEmpresaId]) {
+      const e = (data as any)[0];
+      info[unicaEmpresaId] = { cnpj: e.cnpj || e.cpf || "", razaoSocial: e.razao_social || "Sem razão social" };
+    }
+    return { mapa, info, unicaEmpresaId };
   };
 
   // Read only headers and sample rows for mapping step
