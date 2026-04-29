@@ -13458,6 +13458,170 @@ export type Database = {
           },
         ]
       }
+      ordem_servico_links: {
+        Row: {
+          created_at: string
+          enviado_em: string | null
+          enviado_via: string | null
+          expires_at: string
+          id: string
+          ordem_servico_id: string
+          tenant_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          enviado_em?: string | null
+          enviado_via?: string | null
+          expires_at?: string
+          id?: string
+          ordem_servico_id: string
+          tenant_id: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          enviado_em?: string | null
+          enviado_via?: string | null
+          expires_at?: string
+          id?: string
+          ordem_servico_id?: string
+          tenant_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordem_servico_links_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordens_servico: {
+        Row: {
+          ano: number
+          assinada_em: string | null
+          assinatura_geo: Json | null
+          assinatura_hash: string | null
+          assinatura_ip: string | null
+          assinatura_selfie_url: string | null
+          cargo_id: string | null
+          cargo_nome: string | null
+          colaborador_id: string
+          conteudo_html: string | null
+          conteudo_json: Json | null
+          created_at: string
+          criado_por: string | null
+          data_emissao: string
+          data_vigencia: string | null
+          empresa_id: string | null
+          id: string
+          motivo_reemissao: string | null
+          numero_formatado: string | null
+          numero_sequencial: number
+          os_anterior_id: string | null
+          pdf_url: string | null
+          pgr_id: string | null
+          responsavel_emissao_id: string | null
+          responsavel_emissao_nome: string | null
+          responsavel_tecnico_nome: string | null
+          responsavel_tecnico_registro: string | null
+          setor_nome: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ano: number
+          assinada_em?: string | null
+          assinatura_geo?: Json | null
+          assinatura_hash?: string | null
+          assinatura_ip?: string | null
+          assinatura_selfie_url?: string | null
+          cargo_id?: string | null
+          cargo_nome?: string | null
+          colaborador_id: string
+          conteudo_html?: string | null
+          conteudo_json?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          data_emissao?: string
+          data_vigencia?: string | null
+          empresa_id?: string | null
+          id?: string
+          motivo_reemissao?: string | null
+          numero_formatado?: string | null
+          numero_sequencial: number
+          os_anterior_id?: string | null
+          pdf_url?: string | null
+          pgr_id?: string | null
+          responsavel_emissao_id?: string | null
+          responsavel_emissao_nome?: string | null
+          responsavel_tecnico_nome?: string | null
+          responsavel_tecnico_registro?: string | null
+          setor_nome?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ano?: number
+          assinada_em?: string | null
+          assinatura_geo?: Json | null
+          assinatura_hash?: string | null
+          assinatura_ip?: string | null
+          assinatura_selfie_url?: string | null
+          cargo_id?: string | null
+          cargo_nome?: string | null
+          colaborador_id?: string
+          conteudo_html?: string | null
+          conteudo_json?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          data_emissao?: string
+          data_vigencia?: string | null
+          empresa_id?: string | null
+          id?: string
+          motivo_reemissao?: string | null
+          numero_formatado?: string | null
+          numero_sequencial?: number
+          os_anterior_id?: string | null
+          pdf_url?: string | null
+          pgr_id?: string | null
+          responsavel_emissao_id?: string | null
+          responsavel_emissao_nome?: string | null
+          responsavel_tecnico_nome?: string | null
+          responsavel_tecnico_registro?: string | null
+          setor_nome?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_os_anterior_id_fkey"
+            columns: ["os_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_pgr_id_fkey"
+            columns: ["pgr_id"]
+            isOneToOne: false
+            referencedRelation: "sst_documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ouvidoria: {
         Row: {
           anexos: Json | null
@@ -19760,6 +19924,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      assinar_ordem_servico_publica: {
+        Args: {
+          p_geo: Json
+          p_ip: string
+          p_selfie_url: string
+          p_token: string
+        }
+        Returns: Json
+      }
       atualizar_cliente_por_onboarding_token: {
         Args: {
           p_cnpj?: string
@@ -19996,6 +20169,7 @@ export type Database = {
         Returns: number
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      obter_ordem_servico_publica: { Args: { p_token: string }; Returns: Json }
       recalcular_status_terceiro: {
         Args: { p_terceiro_id: string }
         Returns: undefined

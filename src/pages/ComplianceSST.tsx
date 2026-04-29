@@ -20,6 +20,7 @@ import {
   Brain,
   Sparkles,
   BookOpen,
+  ClipboardCheck,
 } from "lucide-react";
 import { useSSTDocumentos, SSTDocumento } from "@/hooks/useSSTDocumentos";
 import { SSTAnaliseIAModal } from "@/components/sst/SSTAnaliseIAModal";
@@ -27,6 +28,7 @@ import { SSTAlertasTab } from "@/components/sst/SSTAlertasTab";
 import { SSTAcoesTab } from "@/components/sst/SSTAcoesTab";
 import { SSTDocumentosTab } from "@/components/sst/SSTDocumentosTab";
 import { ImportacaoInteligente } from "@/components/sst/importacao/ImportacaoInteligente";
+import { SSTOrdemServicoTab } from "@/components/sst/SSTOrdemServicoTab";
 import { GuiaRapidoComplianceSST } from "@/components/sst/GuiaRapidoComplianceSST";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -87,7 +89,7 @@ const ComplianceSST = () => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+        <TabsList className="grid grid-cols-3 md:grid-cols-7 w-full">
           <TabsTrigger value="importacao" className="text-xs md:text-sm">
             <Sparkles className="w-4 h-4 mr-1.5" />
             Importação IA
@@ -98,6 +100,10 @@ const ComplianceSST = () => {
             {documentos.length > 0 && (
               <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 h-4">{documentos.length}</Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="ordem-servico" className="text-xs md:text-sm">
+            <ClipboardCheck className="w-4 h-4 mr-1.5" />
+            Ordem De Serviço
           </TabsTrigger>
           <TabsTrigger value="painel" className="text-xs md:text-sm">
             <BarChart3 className="w-4 h-4 mr-1.5" />
@@ -125,6 +131,11 @@ const ComplianceSST = () => {
         {/* DOCUMENTOS IMPORTADOS */}
         <TabsContent value="documentos" className="space-y-4">
           <SSTDocumentosTab />
+        </TabsContent>
+
+        {/* ORDEM DE SERVIÇO (NR-1) */}
+        <TabsContent value="ordem-servico" className="space-y-4">
+          <SSTOrdemServicoTab />
         </TabsContent>
 
         {/* PAINEL */}
