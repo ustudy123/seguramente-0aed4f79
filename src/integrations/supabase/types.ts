@@ -19965,6 +19965,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      gerar_estrutura_padrao_pastas: {
+        Args: {
+          p_empresa_id: string
+          p_tenant_id: string
+          p_user_id?: string
+          p_user_nome?: string
+        }
+        Returns: number
+      }
       get_auth_user_email: { Args: never; Returns: string }
       get_current_user_tipo: { Args: never; Returns: string }
       get_user_tenant_id: { Args: never; Returns: string }
@@ -19994,6 +20003,14 @@ export type Database = {
       recalcular_status_trabalhador: {
         Args: { p_trabalhador_id: string }
         Returns: undefined
+      }
+      reconciliar_pastas_todas_empresas: {
+        Args: never
+        Returns: {
+          out_empresa_id: string
+          out_pastas_criadas: number
+          out_razao_social: string
+        }[]
       }
       registrar_ponto_externo: {
         Args: {
