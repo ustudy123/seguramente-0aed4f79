@@ -729,34 +729,33 @@ export function useImportacaoPlanilha() {
         return resultado;
       }
       
-      // Passo 0: Resolver empresa_id por CNPJ
+      // Passo 0: Resolver empresa_id por CNPJ ou CPF (suporta tipo_pessoa = 'pf' | 'pj')
       setProgress(5);
       const cnpjsUnicos = [...new Set(dadosValidos.map(d => d.cnpjEmpresa).filter(Boolean))];
-      const mapaEmpresas: Record<string, string> = {}; // cnpj limpo -> empresa_id
+      const mapaEmpresas: Record<string, string> = {}; // doc limpo -> empresa_id
       const infoEmpresas: Record<string, { cnpj: string; razaoSocial: string }> = {}; // empresa_id -> info
-      
+
       if (cnpjsUnicos.length > 0) {
-        const { data: empresas } = await supabase
-          .from("empresa_cadastro")
-          .select("id, cnpj, razao_social")
+        const { data: empresas } = await fromTable("empresa_cadastro")
+          .select("id, cnpj, cpf, tipo_pessoa, razao_social")
           .eq("tenant_id", tenantId);
-        
-        empresas?.forEach(emp => {
-          if (!emp.cnpj) return;
-          const cnpjLimpo = emp.cnpj.replace(/\D/g, "");
-          mapaEmpresas[cnpjLimpo] = emp.id;
-          infoEmpresas[emp.id] = { cnpj: emp.cnpj, razaoSocial: emp.razao_social || "Sem razão social" };
+
+        (empresas || []).forEach((emp: any) => {
+          const doc = emp.tipo_pessoa === "pf" ? emp.cpf : emp.cnpj;
+          if (!doc) return;
+          const docLimpo = String(doc).replace(/\D/g, "");
+          mapaEmpresas[docLimpo] = emp.id;
+          infoEmpresas[emp.id] = { cnpj: doc, razaoSocial: emp.razao_social || "Sem razão social" };
         });
-        
-        // Validar que todos os CNPJs existem
-        for (const cnpj of cnpjsUnicos) {
-          if (!mapaEmpresas[cnpj]) {
-            const cnpjFormatado = `${cnpj.slice(0,2)}.${cnpj.slice(2,5)}.${cnpj.slice(5,8)}/${cnpj.slice(8,12)}-${cnpj.slice(12)}`;
-            // Mark rows with this CNPJ as errors
-            dadosValidos.filter(d => d.cnpjEmpresa === cnpj).forEach(d => {
+
+        // Validar que todos os documentos existem
+        for (const doc of cnpjsUnicos) {
+          if (!mapaEmpresas[doc]) {
+            const tipo = doc.length === 11 ? "CPF" : "CNPJ";
+            dadosValidos.filter(d => d.cnpjEmpresa === doc).forEach(d => {
               resultado.erros.push({
                 linha: d.linha,
-                mensagem: `CNPJ ${cnpjFormatado} não encontrado no cadastro de empresas`,
+                mensagem: `${tipo} ${formatarDocumento(doc)} não encontrado no cadastro de empresas`,
               });
             });
           }
