@@ -386,7 +386,7 @@ export function ImportPlanilhaModal({
                         Formatos aceitos: .xlsx, .xls, .csv (máx. 5MB)
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Inclua o CNPJ da empresa em cada linha para vincular os colaboradores corretamente.
+                        Inclua o CNPJ (PJ) ou CPF (profissional liberal) da empresa em cada linha. Se você tem apenas uma empresa cadastrada, pode deixar a coluna em branco.
                       </p>
                     </div>
                   </div>
