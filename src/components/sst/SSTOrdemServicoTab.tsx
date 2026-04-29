@@ -300,7 +300,7 @@ export function SSTOrdemServicoTab() {
                               const ok = await confirm({
                                 title: "Excluir Ordem de Serviço?",
                                 description: "Esta ação não pode ser desfeita.",
-                                confirmText: "Excluir",
+                                confirmLabel: "Excluir",
                                 variant: "destructive",
                               });
                               if (ok) await excluir.mutateAsync(st.os!.id);
