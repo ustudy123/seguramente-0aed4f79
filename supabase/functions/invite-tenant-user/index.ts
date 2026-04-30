@@ -278,12 +278,16 @@ serve(async (req) => {
         }
       } else {
         newUserId = newUser.user.id;
-        // Send welcome email via Resend
-        await sendViaResend(
+        const sendResult = await sendViaResend(
           email,
           "Bem-vindo ao Seguramente",
           buildInviteHtml(nomeCompleto, `${SITE_URL}/login`, "password")
         );
+        if (sendResult?.ok) {
+          emailSent = true;
+        } else {
+          emailError = sendResult?.error ?? "Falha ao enviar email";
+        }
       }
     }
   } catch (e: any) {
