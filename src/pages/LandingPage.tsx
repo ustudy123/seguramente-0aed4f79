@@ -147,11 +147,16 @@ export default function LandingPage() {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative pt-28 pb-10 px-4 min-h-screen flex items-center">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, hsl(215 65% 7%) 0%, hsl(215 60% 10%) 50%, hsl(215 65% 7%) 100%)' }} />
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(207 90% 45%)' }} />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(33 100% 50%)' }} />
+      <section className="relative pt-32 pb-16 px-4 min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(215 60% 12%) 0%, hsl(215 65% 7%) 100%)' }} />
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 animate-pulse" style={{ background: 'hsl(207 90% 45%)' }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 animate-pulse" style={{ background: 'hsl(33 100% 50%)', animationDelay: '1s' }} />
+          
+          {/* Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         </div>
         
         <div className="relative max-w-6xl mx-auto text-center">
