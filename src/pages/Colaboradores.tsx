@@ -1035,21 +1035,46 @@ const Colaboradores = () => {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Users className="h-6 w-6 text-primary" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Users className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
+              <p className="text-muted-foreground">Gerencie sua equipe — admissão, ativos e desligados</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
-            <p className="text-muted-foreground">Gerencie sua equipe — admissão, ativos e desligados</p>
-          </div>
+        </motion.div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowImport(true)}
+            id="btn-importar-colaboradores"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Importar Colaboradores
+          </Button>
+          <Button 
+            className="gradient-primary shadow-glow" 
+            onClick={() => {
+              // This is a bit tricky as different tabs have different 'new' logic
+              // For now, we'll trigger a custom event or just let the tabs handle their own 'new' buttons
+              // But the 'Importar' is now global.
+              window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Cadastro
+          </Button>
         </div>
-      </motion.div>
+      </div>
 
       <Tabs defaultValue="ativos" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
