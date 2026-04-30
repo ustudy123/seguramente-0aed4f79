@@ -10,14 +10,14 @@ export function AuthLayout() {
       {/* Background image with purple overlay */}
       <div className="absolute inset-0 z-0">
         <img src={authBg} alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(262,40%,15%/0.92)] via-[hsl(262,35%,18%/0.9)] to-[hsl(280,30%,12%/0.95)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(215,65%,10%/0.92)] via-[hsl(215,60%,15%/0.9)] to-[hsl(215,70%,8%/0.95)]" />
       </div>
 
       {/* Decorative wave shapes */}
       <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
-        <div className="absolute -bottom-10 left-0 right-0 h-40 bg-[hsl(262,40%,22%/0.4)] rounded-[100%_100%_0_0] blur-sm" />
-        <div className="absolute top-0 -left-20 w-96 h-96 bg-[hsl(24,90%,54%/0.08)] rounded-full blur-3xl" />
-        <div className="absolute bottom-0 -right-20 w-80 h-80 bg-[hsl(262,50%,50%/0.1)] rounded-full blur-3xl" />
+        <div className="absolute -bottom-10 left-0 right-0 h-40 bg-[hsl(207,90%,39%/0.2)] rounded-[100%_100%_0_0] blur-sm" />
+        <div className="absolute top-0 -left-20 w-96 h-96 bg-[hsl(152,66%,39%/0.08)] rounded-full blur-3xl" />
+        <div className="absolute bottom-0 -right-20 w-80 h-80 bg-[hsl(33,100%,50%/0.1)] rounded-full blur-3xl" />
       </div>
 
       {/* Content container */}
@@ -29,19 +29,19 @@ export function AuthLayout() {
           transition={{ duration: 0.6 }}
           className="flex-1 text-center lg:text-left hidden lg:block"
         >
-          <div className="bg-[hsl(262,40%,10%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
+          <div className="bg-[hsl(215,65%,5%/0.75)] backdrop-blur-md rounded-2xl p-8 space-y-6">
             {/* NR-1 Psicossociais - Destaque */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="relative overflow-hidden rounded-xl border border-[hsl(24,90%,54%/0.5)] bg-gradient-to-r from-[hsl(24,90%,54%/0.2)] to-[hsl(24,80%,45%/0.15)] p-4"
+              className="relative overflow-hidden rounded-xl border border-[hsl(207,90%,39%/0.5)] bg-gradient-to-r from-[hsl(207,90%,39%/0.2)] to-[hsl(152,66%,39%/0.15)] p-4"
             >
-              <div className="absolute top-0 right-0 bg-[hsl(24,90%,54%)] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg">
+              <div className="absolute top-0 right-0 bg-[hsl(207,90%,39%)] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg">
                 Novidade
               </div>
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[hsl(24,90%,54%/0.3)] flex items-center justify-center">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[hsl(207,90%,39%/0.3)] flex items-center justify-center">
                   <span className="text-lg">🧠</span>
                 </div>
                 <div>
@@ -57,7 +57,7 @@ export function AuthLayout() {
               <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight drop-shadow-lg">
                 Gestão de Pessoas
                 <br />
-                <span className="text-[hsl(24,90%,60%)]">Simples e Segura</span>
+                <span className="text-[hsl(207,90%,60%)]">Simples e Segura</span>
               </h1>
               <p className="text-white/90 text-lg max-w-md drop-shadow">
                 Tudo o que sua empresa precisa para gerenciar colaboradores em uma única plataforma inteligente.
@@ -78,7 +78,7 @@ export function AuthLayout() {
               ))}
             </div>
 
-            <p className="text-white/60 text-xs pt-4">© 2026 Seguramente. Todos os direitos reservados.</p>
+            <p className="text-white/60 text-xs pt-4">© 2026 YOUREYES. Todos os direitos reservados.</p>
           </div>
         </motion.div>
 
