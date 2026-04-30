@@ -632,16 +632,20 @@ function AdmissoesTab() {
     uploadDocumento, isPending,
   } = useAdmissoes();
 
-  useEffect(() => {
-    const handleNovoCadastro = () => handleNew();
-    window.addEventListener('novo-cadastro-colaborador', handleNovoCadastro);
-    return () => window.removeEventListener('novo-cadastro-colaborador', handleNovoCadastro);
-  }, [canManage]); // Depend on canManage to ensure permissions are checked
-
   const isAdmin = hasMinimumRole("admin");
   const canManage = hasMinimumRole("manager");
 
+  useEffect(() => {
+    const handleNovoCadastro = () => {
+      setSelectedId(null);
+      setViewMode("new");
+    };
+    window.addEventListener('novo-cadastro-colaborador', handleNovoCadastro);
+    return () => window.removeEventListener('novo-cadastro-colaborador', handleNovoCadastro);
+  }, []);
+
   const handleView = (id: string) => { setSelectedId(id); setViewMode("detail"); };
+
   const handleEdit = (id: string) => {
     if (!canManage) { toast.error("Você não tem permissão para editar admissões"); return; }
     setSelectedId(id); setViewMode("edit");
