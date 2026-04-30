@@ -839,10 +839,13 @@ export default function LandingPage() {
           <Button
             size="lg"
             onClick={() => scrollToSection("vagas")}
-            className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto"
-            style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
+            className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto transform transition-all hover:scale-105 active:scale-95"
+            style={{ 
+              background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))',
+              boxShadow: '0 8px 32px hsl(207 90% 45% / 0.4)' 
+            }}
           >
-            <span className="break-words">PROTEGER MINHA EMPRESA AGORA →</span>
+            <span className="break-words font-black">PROTEGER MINHA EMPRESA AGORA →</span>
           </Button>
         </div>
       </section>
