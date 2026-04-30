@@ -304,22 +304,29 @@ export default function LandingPage() {
                   key={stat.label}
                   {...fadeUp}
                   transition={{ delay: i * 0.1 }}
-                  className="p-8 rounded-3xl relative overflow-hidden group"
-                  style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}
+                  className="p-10 rounded-[2rem] relative overflow-hidden group transition-all duration-500 hover:-translate-y-2"
+                  style={{ 
+                    background: 'rgba(255,255,255,0.02)', 
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+                  }}
                 >
-                  <div className="absolute top-4 right-4 transition-all group-hover:scale-110 group-hover:rotate-3">
-                    <stat.icon className="w-20 h-20" style={{ color: stat.color, opacity: 0.35, filter: `drop-shadow(0 0 12px ${stat.color})` }} strokeWidth={1.5} />
+                  <div className="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity duration-500">
+                    <stat.icon size={160} style={{ color: stat.color }} />
                   </div>
-                  <motion.h3 
-                    className="text-5xl md:text-6xl font-black mb-4 tracking-tighter"
-                    style={{ color: stat.color }}
-                    initial={{ scale: 0.8 }}
-                    whileInView={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 100 }}
-                  >
-                    {stat.number}
-                  </motion.h3>
-                  <p className="text-gray-300 font-medium text-lg leading-tight">{stat.label}</p>
+                  
+                  <div className="relative z-10">
+                    <motion.div 
+                      className="text-6xl md:text-7xl font-black mb-6 tracking-tighter"
+                      style={{ color: stat.color, textShadow: `0 0 30px ${stat.color}40` }}
+                      initial={{ scale: 0.8 }}
+                      whileInView={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 100 }}
+                    >
+                      {stat.number}
+                    </motion.div>
+                    <p className="text-gray-300 font-semibold text-lg leading-snug group-hover:text-white transition-colors">{stat.label}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
