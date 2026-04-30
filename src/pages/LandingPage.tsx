@@ -156,15 +156,31 @@ export default function LandingPage() {
         
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              ALERTA: Sua empresa pode estar em risco AGORA
-            </Badge>
+            <motion.div
+              animate={{ 
+                scale: [1, 1.03, 1],
+                transition: { duration: 3, repeat: Infinity }
+              }}
+            >
+              <Badge className="mb-6 text-sm px-4 py-1.5 cursor-default select-none" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                ALERTA: Sua empresa pode estar em risco AGORA
+              </Badge>
+            </motion.div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words tracking-tighter">
               Sua empresa está pronta para a{" "}
-              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                maior fiscalização trabalhista
+              <span className="relative">
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  maior fiscalização trabalhista
+                </span>
+                <motion.span 
+                  className="absolute -bottom-2 left-0 w-full h-1 rounded-full"
+                  style={{ background: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))' }}
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  transition={{ delay: 0.8, duration: 1 }}
+                />
               </span>{" "}
               dos últimos 20 anos?
             </h1>
