@@ -1,9 +1,11 @@
 import { Navigate, useLocation, Link } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import type { AppRole } from "@/types/database";
-import { Loader2, Ban } from "lucide-react";
+import { Loader2, Ban, ShieldOff } from "lucide-react";
 import { useUsuarioStatus } from "@/hooks/useUsuarioStatus";
 import { Button } from "@/components/ui/button";
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
+import { getModuloForPath, ALWAYS_ALLOWED_PATHS } from "@/lib/moduleAccess";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
