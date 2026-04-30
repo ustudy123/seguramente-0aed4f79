@@ -367,7 +367,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
                   prazo: created.prazo,
                   prioridade: created.prioridade,
                   descricao: created.descricao,
-                  actionUrl: "https://seguramente.lovable.app/plano-acao",
+                  actionUrl: "https://youreyes.com.br/plano-acao",
                 },
               }).catch(console.error);
             }

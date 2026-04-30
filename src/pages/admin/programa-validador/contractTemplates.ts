@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Cliente, TipoDoc } from './types';
 
-const LOGO_URL = 'https://seguramente.lovable.app/lovable-uploads/logo-seguramente.png';
+const LOGO_URL = 'https://youreyes.com.br/lovable-uploads/logo-seguramente.png';
 const SUDOCLIN_CNPJ = '00.000.000/0001-00';
 
 const ABNT_CSS = `

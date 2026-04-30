@@ -324,7 +324,7 @@ serve(async (req) => {
 
     // Resend invite
     const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: (Deno.env.get("SITE_URL") || "https://seguramente.lovable.app") + "/login",
+      redirectTo: (Deno.env.get("SITE_URL") || "https://youreyes.com.br") + "/login",
     });
 
     if (inviteError) return json({ error: inviteError.message }, 500);
