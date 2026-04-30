@@ -4,8 +4,8 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
- * Tipos de usuário considerados "profissionais" — precisam de filtro por vínculo.
- * Internos (admin, rh_dp, gestor, etc.) veem todas as empresas do tenant.
+ * Tipos de usuário externos/profissionais que SEMPRE precisam de filtro por vínculo,
+ * mesmo se a lista de vínculos vier vazia (acesso bloqueado por segurança).
  */
 const TIPOS_PROFISSIONAIS = [
   "clinica_parceira",
@@ -13,6 +13,17 @@ const TIPOS_PROFISSIONAIS = [
   "prestador_terceiro",
   "auditor",
   "suporte_autorizado",
+] as const;
+
+/**
+ * Tipos com acesso amplo a todas as empresas do tenant (não filtrados por vínculo).
+ * Inclui owners, admins e papéis de gestão central.
+ */
+const TIPOS_ACESSO_GLOBAL = [
+  "proprietario",
+  "owner",
+  "admin",
+  "administrador",
 ] as const;
 
 export interface UsuarioVinculo {
@@ -25,7 +36,9 @@ export interface UsuarioVinculo {
 }
 
 export function useUsuarioVinculos() {
-  const { user, tenantId } = useAuth();
+  const { user, tenantId, hasMinimumRole, isSuperAdmin } = useAuth();
+
+  const isOwnerOrAdmin = hasMinimumRole("admin") || isSuperAdmin;
 
   // 1) Busca o registro do usuario_base a partir do auth_user_id
   const { data: usuarioBase, isLoading: loadingBase } = useQuery({
@@ -43,13 +56,16 @@ export function useUsuarioVinculos() {
       return data;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // cache 5 min
+    staleTime: 5 * 60 * 1000,
   });
 
-  const isProfissional = !!usuarioBase?.tipo_usuario &&
-    TIPOS_PROFISSIONAIS.includes(usuarioBase.tipo_usuario as any);
+  const tipoUsuario = usuarioBase?.tipo_usuario || null;
+  const isProfissional = !!tipoUsuario && TIPOS_PROFISSIONAIS.includes(tipoUsuario as any);
+  const temAcessoGlobal = isOwnerOrAdmin || (!!tipoUsuario && TIPOS_ACESSO_GLOBAL.includes(tipoUsuario as any));
 
-  // 2) Se for profissional, busca vínculos ativos
+  // Busca vínculos para qualquer usuário não-global. Owners/admins ignoram este filtro.
+  const deveBuscarVinculos = !!usuarioBase?.id && !!tenantId && !temAcessoGlobal;
+
   const { data: vinculos = [], isLoading: loadingVinculos } = useQuery({
     queryKey: ["usuario_vinculos", usuarioBase?.id, tenantId],
     queryFn: async () => {
@@ -65,21 +81,25 @@ export function useUsuarioVinculos() {
       }
       return (data || []) as UsuarioVinculo[];
     },
-    enabled: !!usuarioBase?.id && !!tenantId && isProfissional,
+    enabled: deveBuscarVinculos,
     staleTime: 2 * 60 * 1000,
   });
 
-  // IDs das empresas vinculadas (vazio = sem restrição)
-  const empresaIdsPermitidas = isProfissional
-    ? vinculos.map((v) => v.empresa_id)
-    : [];
+  // Lista de empresas permitidas: vazia para usuários globais (sem restrição)
+  const empresaIdsPermitidas = temAcessoGlobal ? [] : vinculos.map((v) => v.empresa_id);
+
+  // "Restrito" = qualquer usuário que NÃO é owner/admin global (deve ser filtrado por vínculo)
+  const isRestrito = !temAcessoGlobal;
 
   return {
-    isProfissional,
+    /** @deprecated use isRestrito — mantido para compatibilidade */
+    isProfissional: isProfissional || isRestrito,
+    isRestrito,
+    temAcessoGlobal,
     vinculos,
     empresaIdsPermitidas,
-    isLoading: loadingBase || (isProfissional && loadingVinculos),
+    isLoading: loadingBase || (deveBuscarVinculos && loadingVinculos),
     usuarioBaseId: usuarioBase?.id || null,
-    tipoUsuario: usuarioBase?.tipo_usuario || null,
+    tipoUsuario,
   };
 }
