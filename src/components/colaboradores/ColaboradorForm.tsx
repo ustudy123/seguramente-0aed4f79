@@ -334,7 +334,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email *</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="email@empresa.com" {...field} />
                     </FormControl>
