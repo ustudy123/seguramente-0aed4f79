@@ -117,6 +117,53 @@ export function normalizeManualHtml(html: string) {
   return `<!DOCTYPE html>\n${documentNode.documentElement.outerHTML}`;
 }
 
+/**
+ * Identify "block" elements within the body that should be captured as
+ * non-splittable units. Falls back to all direct children of the body.
+ */
+function collectSections(root: HTMLElement): HTMLElement[] {
+  const direct = Array.from(root.children) as HTMLElement[];
+  const sections: HTMLElement[] = [];
+
+  const isHeading = (el: HTMLElement) => /^H[1-6]$/i.test(el.tagName);
+
+  for (const child of direct) {
+    // If a top-level wrapper contains many block children, descend one level
+    // so that headings and paragraphs become individual sections.
+    const grandChildren = Array.from(child.children) as HTMLElement[];
+    const looksLikeWrapper =
+      grandChildren.length > 3 &&
+      grandChildren.some((g) => isHeading(g) || ["P", "DIV", "SECTION", "TABLE", "UL", "OL"].includes(g.tagName));
+
+    if (looksLikeWrapper && child.tagName !== "TABLE") {
+      sections.push(...grandChildren);
+    } else {
+      sections.push(child);
+    }
+  }
+
+  // Group consecutive headings with the next non-heading sibling so titles
+  // never get separated from their content.
+  const grouped: HTMLElement[] = [];
+  let i = 0;
+  while (i < sections.length) {
+    const current = sections[i];
+    if (isHeading(current) && i + 1 < sections.length) {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "background:#ffffff;";
+      wrapper.appendChild(current.cloneNode(true));
+      wrapper.appendChild(sections[i + 1].cloneNode(true));
+      grouped.push(wrapper);
+      i += 2;
+    } else {
+      grouped.push(current);
+      i += 1;
+    }
+  }
+
+  return grouped.length ? grouped : direct;
+}
+
 export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfFromHtmlOptions) {
   if (!html.trim()) {
     throw new Error("O manual está vazio.");
@@ -124,7 +171,6 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
 
   const preparedHtml = normalizeManualHtml(html);
 
-  // Parse the HTML to extract just the body content and styles
   const parser = new DOMParser();
   const doc = parser.parseFromString(preparedHtml, "text/html");
   const bodyContent = doc.body.innerHTML;
@@ -132,7 +178,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     .map((s) => s.textContent)
     .join("\n");
 
-  // Create a container div in the main document (avoids cross-document issues with html2canvas)
+  // Hidden offscreen container in the main document
   const container = document.createElement("div");
   container.setAttribute("aria-hidden", "true");
   container.style.cssText = [
@@ -147,15 +193,14 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     "overflow: visible",
   ].join(";");
 
-  // Add styles
   const styleEl = document.createElement("style");
   styleEl.textContent = styles;
   container.appendChild(styleEl);
 
-  // Add content
   const contentDiv = document.createElement("div");
   contentDiv.innerHTML = bodyContent;
   contentDiv.style.cssText = [
+    "width: 794px",
     "max-width: 794px",
     "margin: 0 auto",
     "padding: 0 20px",
@@ -170,68 +215,100 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   document.body.appendChild(container);
 
   try {
-    // Wait for fonts and images to load
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
-    await wait(600);
-
-    const captureWidth = Math.max(contentDiv.scrollWidth, contentDiv.offsetWidth, 794);
-    const captureHeight = Math.max(contentDiv.scrollHeight, contentDiv.offsetHeight, 1123);
-
-    container.style.width = `${captureWidth}px`;
-    await wait(200);
-
-    const canvas = await html2canvas(contentDiv, {
-      scale: PDF_RENDER_SCALE,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-      width: captureWidth,
-      height: captureHeight,
-      windowWidth: captureWidth,
-      windowHeight: captureHeight,
-      scrollX: 0,
-      scrollY: 0,
-    });
-
-    if (!canvas.width || !canvas.height) {
-      throw new Error("Falha ao renderizar o conteúdo do manual.");
-    }
+    await wait(500);
 
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const contentWidth = pdfWidth - PDF_MARGIN_MM * 2;
-    const contentHeight = pdfHeight - PDF_MARGIN_MM * 2;
-    const pageContentHeightPx = Math.max(1, Math.floor((canvas.width * contentHeight) / contentWidth));
-    const totalPages = Math.ceil(canvas.height / pageContentHeightPx);
+    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2;
+    const SECTION_GAP_MM = 2;
 
-    for (let page = 0; page < totalPages; page += 1) {
-      if (page > 0) pdf.addPage();
+    const sections = collectSections(contentDiv);
+    let currentY = PDF_MARGIN_MM;
 
-      const sliceY = page * pageContentHeightPx;
-      const sliceH = Math.min(pageContentHeightPx, canvas.height - sliceY);
-
-      const pageCanvas = document.createElement("canvas");
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = sliceH;
-
-      const ctx = pageCanvas.getContext("2d");
-      if (!ctx) {
-        throw new Error("Falha ao preparar a página do PDF.");
+    const renderElementToCanvas = async (element: HTMLElement) => {
+      // For grouped wrappers, mount them temporarily into the container
+      const needsMount = !element.isConnected;
+      if (needsMount) {
+        element.style.width = "754px"; // 794 - 2*20 padding
+        element.style.boxSizing = "border-box";
+        container.appendChild(element);
+        await wait(50);
       }
+      const canvas = await html2canvas(element, {
+        scale: PDF_RENDER_SCALE,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+      if (needsMount) container.removeChild(element);
+      return canvas;
+    };
 
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(canvas, 0, sliceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    const addCanvasAsImage = (canvas: HTMLCanvasElement, heightMm: number) => {
+      const data = canvas.toDataURL("image/png");
+      pdf.addImage(data, "PNG", PDF_MARGIN_MM, currentY, contentWidth, heightMm);
+      currentY += heightMm + SECTION_GAP_MM;
+    };
 
-      const sliceData = pageCanvas.toDataURL("image/png");
-      const sliceHeightMm = (sliceH * contentWidth) / canvas.width;
+    const sliceTallCanvas = (canvas: HTMLCanvasElement) => {
+      // Section is taller than a full page — split it across pages at pixel
+      // boundaries (last resort; only triggered for oversize blocks).
+      const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
+      let y = 0;
+      while (y < canvas.height) {
+        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+        const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
+        if (availablePx < 60) {
+          pdf.addPage();
+          currentY = PDF_MARGIN_MM;
+          continue;
+        }
+        const sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
+        const slice = document.createElement("canvas");
+        slice.width = canvas.width;
+        slice.height = sliceH;
+        const ctx = slice.getContext("2d");
+        if (!ctx) throw new Error("Falha ao preparar slice.");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, slice.width, slice.height);
+        ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const sliceMm = (sliceH * contentWidth) / canvas.width;
+        addCanvasAsImage(slice, sliceMm);
+        y += sliceH;
+        if (y < canvas.height) {
+          pdf.addPage();
+          currentY = PDF_MARGIN_MM;
+        }
+      }
+    };
 
-      pdf.addImage(sliceData, "PNG", PDF_MARGIN_MM, PDF_MARGIN_MM, contentWidth, sliceHeightMm);
+    for (const section of sections) {
+      const canvas = await renderElementToCanvas(section);
+      if (!canvas.width || !canvas.height) continue;
+
+      const heightMm = (canvas.height * contentWidth) / canvas.width;
+      const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+
+      if (heightMm <= usableHeight) {
+        // Fits on a page — push to next page if needed
+        if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
+          pdf.addPage();
+          currentY = PDF_MARGIN_MM;
+        }
+        addCanvasAsImage(canvas, heightMm);
+      } else {
+        // Section is too tall for a single page — slice safely
+        if (currentY > PDF_MARGIN_MM) {
+          pdf.addPage();
+          currentY = PDF_MARGIN_MM;
+        }
+        sliceTallCanvas(canvas);
+      }
     }
 
     const finalTotalPages = pdf.getNumberOfPages();
