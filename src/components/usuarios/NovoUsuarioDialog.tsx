@@ -91,6 +91,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   // Modo de vínculo: empresa individual ou grupo econômico
   const [modoVinculo, setModoVinculo] = useState<"empresa" | "grupo">("empresa");
   const [grupoSelecionadoId, setGrupoSelecionadoId] = useState<string>("");
+  const [emailEnviado, setEmailEnviado] = useState<boolean>(true);
+  const [emailErro, setEmailErro] = useState<string | null>(null);
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-lista-grupo", tenantId],
@@ -231,6 +233,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
       const authUserId = (authData as any)?.userId as string | undefined;
       if (!authUserId) throw new Error("Não foi possível provisionar o acesso no sistema.");
+
+      const inviteSent = (authData as any)?.inviteSent === true;
+      const inviteErr = (authData as any)?.emailError as string | null | undefined;
+      setEmailEnviado(inviteSent);
+      setEmailErro(inviteErr ?? null);
 
       const jaExistia = (authData as any)?.alreadyExists === true;
       if (jaExistia) {
@@ -718,9 +725,19 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   <Badge variant="secondary">Acesso no Auth criado</Badge>
                   {dadosReaproveitados && <Badge variant="outline" className="text-primary border-primary/30">Dados reaproveitados</Badge>}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  O convite de acesso já foi enviado automaticamente para o e-mail informado.
-                </p>
+                {emailEnviado ? (
+                  <p className="text-sm text-muted-foreground">
+                    O convite de acesso foi enviado para o e-mail informado. Caso não chegue em alguns minutos, peça ao usuário para verificar a caixa de spam.
+                  </p>
+                ) : (
+                  <div className="text-sm text-left p-3 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive">
+                    <p className="font-medium mb-1">⚠️ O e-mail de convite não pôde ser enviado automaticamente.</p>
+                    <p className="text-xs">
+                      O usuário foi criado, mas você precisa reenviar o convite manualmente pela lista de usuários.
+                      {emailErro ? <> Detalhe: <span className="font-mono">{emailErro}</span></> : null}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

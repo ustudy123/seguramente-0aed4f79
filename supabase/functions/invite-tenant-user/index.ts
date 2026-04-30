@@ -43,11 +43,11 @@ function buildInviteHtml(nomeCompleto: string, confirmationUrl: string, method: 
   `;
 }
 
-async function sendViaResend(email: string, subject: string, html: string) {
+async function sendViaResend(email: string, subject: string, html: string): Promise<{ ok: boolean; error?: string }> {
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) {
     console.error("RESEND_API_KEY not configured");
-    return;
+    return { ok: false, error: "RESEND_API_KEY not configured" };
   }
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -64,11 +64,15 @@ async function sendViaResend(email: string, subject: string, html: string) {
       }),
     });
     if (!res.ok) {
-      const err = await res.json();
+      const err = await res.json().catch(() => ({}));
       console.error("Resend error:", err);
+      return { ok: false, error: (err as any)?.message ?? `HTTP ${res.status}` };
     }
-  } catch (e) {
-    console.error("Email send error:", e);
+    console.log("Resend email sent to:", email);
+    return { ok: true };
+  } catch (e: any) {
+    console.error("Email send error:", e?.message ?? e);
+    return { ok: false, error: e?.message ?? "Email send error" };
   }
 }
 
@@ -189,34 +193,72 @@ serve(async (req) => {
 
   let newUserId: string;
 
+  let emailSent = false;
+  let emailError: string | null = null;
+
   try {
     if (method === "invite") {
-      // Use generateLink instead of inviteUserByEmail to avoid default Supabase email
-      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-        type: "invite",
-        email,
-        options: {
-          data: { tenant_id: tenantId, nome_completo: nomeCompleto },
-          redirectTo: `${SITE_URL}/login`,
-        },
-      });
+      let confirmationUrl: string | null = null;
 
-      if (linkError || !linkData?.user) {
-        console.error("generateLink error:", linkError?.message);
-        if (linkError?.message?.includes("already been registered") && existingUser) {
-          newUserId = existingUser.id;
+      if (existingUser) {
+        // User already exists in auth — use magiclink/recovery to send a usable link
+        newUserId = existingUser.id;
+        const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+          type: existingUser.email_confirmed_at ? "magiclink" : "invite",
+          email,
+          options: {
+            redirectTo: `${SITE_URL}/login`,
+          },
+        });
+        if (linkError) {
+          console.error("generateLink (existing) error:", linkError.message);
+          // Fallback: recovery link
+          const { data: recData, error: recError } = await admin.auth.admin.generateLink({
+            type: "recovery",
+            email,
+            options: { redirectTo: `${SITE_URL}/reset-password` },
+          });
+          if (recError) {
+            console.error("recovery fallback error:", recError.message);
+            emailError = recError.message;
+          } else {
+            confirmationUrl = recData?.properties?.action_link ?? null;
+          }
         } else {
-          return json({ error: linkError?.message ?? "Falha ao gerar convite" }, 500);
+          confirmationUrl = linkData?.properties?.action_link ?? null;
         }
       } else {
+        // New user — invite link
+        const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+          type: "invite",
+          email,
+          options: {
+            data: { tenant_id: tenantId, nome_completo: nomeCompleto },
+            redirectTo: `${SITE_URL}/login`,
+          },
+        });
+
+        if (linkError || !linkData?.user) {
+          console.error("generateLink error:", linkError?.message);
+          return json({ error: linkError?.message ?? "Falha ao gerar convite" }, 500);
+        }
         newUserId = linkData.user.id;
-        // Send branded email via Resend with the confirmation URL
-        const confirmationUrl = linkData.properties?.action_link || `${SITE_URL}/login`;
-        await sendViaResend(
+        confirmationUrl = linkData.properties?.action_link ?? null;
+      }
+
+      if (confirmationUrl) {
+        const sendResult = await sendViaResend(
           email,
           "Você foi convidado para o Seguramente",
           buildInviteHtml(nomeCompleto, confirmationUrl, "invite")
         );
+        if (sendResult?.ok) {
+          emailSent = true;
+        } else {
+          emailError = sendResult?.error ?? "Falha ao enviar email";
+        }
+      } else if (!emailError) {
+        emailError = "Não foi possível gerar o link de convite";
       }
     } else {
       if (!password || password.length < 6) {
@@ -236,12 +278,16 @@ serve(async (req) => {
         }
       } else {
         newUserId = newUser.user.id;
-        // Send welcome email via Resend
-        await sendViaResend(
+        const sendResult = await sendViaResend(
           email,
           "Bem-vindo ao Seguramente",
           buildInviteHtml(nomeCompleto, `${SITE_URL}/login`, "password")
         );
+        if (sendResult?.ok) {
+          emailSent = true;
+        } else {
+          emailError = sendResult?.error ?? "Falha ao enviar email";
+        }
       }
     }
   } catch (e: any) {
@@ -297,6 +343,7 @@ serve(async (req) => {
   return json({
     ok: true,
     userId: newUserId!,
-    inviteSent: method === "invite",
+    inviteSent: emailSent,
+    emailError,
   });
 });
