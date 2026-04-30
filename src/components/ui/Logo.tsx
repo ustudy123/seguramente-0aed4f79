@@ -1,4 +1,4 @@
-import logoImage from "@/assets/logo-seguramente.png";
+import logoImage from "@/assets/logo-youreyes.svg";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -18,7 +18,7 @@ export function Logo({ size = "md", showText = true }: LogoProps) {
     <div className="flex items-center justify-center">
       <img
         src={logoImage}
-        alt="Seguramente"
+        alt="YOUREYES"
         className={`${sizeClasses[size]} w-auto object-contain`}
       />
     </div>

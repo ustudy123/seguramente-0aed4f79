@@ -62,7 +62,7 @@ export const Header = ({ onMenuToggle, isMobile }: HeaderProps) => {
   };
 
   return (
-    <header className="h-16 border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30" style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%) 0%, hsl(280 40% 68%) 50%, hsl(262 40% 60%) 100%)' }}>
+    <header className="h-16 border-b border-border px-4 md:px-6 flex items-center justify-between sticky top-0 z-30" style={{ background: 'linear-gradient(135deg, hsl(215 65% 12%) 0%, hsl(207 90% 39%) 50%, hsl(152 66% 39%) 100%)' }}>
       <div className="flex items-center gap-2">
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={onMenuToggle} className="mr-1">
