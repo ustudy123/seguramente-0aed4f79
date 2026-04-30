@@ -147,11 +147,16 @@ export default function LandingPage() {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative pt-28 pb-10 px-4 min-h-screen flex items-center">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, hsl(215 65% 7%) 0%, hsl(215 60% 10%) 50%, hsl(215 65% 7%) 100%)' }} />
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(207 90% 45%)' }} />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(33 100% 50%)' }} />
+      <section className="relative pt-32 pb-16 px-4 min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, hsl(215 60% 12%) 0%, hsl(215 65% 7%) 100%)' }} />
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 animate-pulse" style={{ background: 'hsl(207 90% 45%)' }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 animate-pulse" style={{ background: 'hsl(33 100% 50%)', animationDelay: '1s' }} />
+          
+          {/* Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         </div>
         
         <div className="relative max-w-6xl mx-auto text-center">
@@ -168,14 +173,14 @@ export default function LandingPage() {
               </Badge>
             </motion.div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words tracking-tighter">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-8 break-words tracking-tighter">
               Sua empresa está pronta para a{" "}
-              <span className="relative">
-                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span className="relative inline-block">
+                <span className="relative z-10" style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 65%), hsl(152 66% 60%), hsl(33 100% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   maior fiscalização trabalhista
                 </span>
                 <motion.span 
-                  className="absolute -bottom-2 left-0 w-full h-1 rounded-full"
+                  className="absolute bottom-1 sm:bottom-2 left-0 w-full h-[30%] -z-0 opacity-20 rounded-sm"
                   style={{ background: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))' }}
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
@@ -190,17 +195,24 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="my-10 max-w-5xl mx-auto"
+              className="my-16 max-w-5xl mx-auto relative"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(207 90% 45% / 0.15)' }}>
+              {/* Decorative elements around mockup */}
+              <div className="absolute -top-6 -left-6 w-24 h-24 border-t-2 border-l-2 border-hsl(207 90% 45% / 0.3) rounded-tl-2xl hidden md:block" />
+              <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b-2 border-r-2 border-hsl(33 100% 50% / 0.3) rounded-br-2xl hidden md:block" />
+              
+              <div className="relative rounded-2xl overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border border-white/5 bg-white/5 backdrop-blur-sm p-1">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-orange-500/10 pointer-events-none" />
                 <img
                   src={mockupDashboard}
-                  alt="Dashboard YOUREYES - Painel de controle com indicadores de fatores de riscos psicossociais, compliance NR-01 e gestão de RH"
-                  className="w-full h-auto rounded-2xl"
+                  alt="Dashboard YOUREYES - Painel de controle inteligente"
+                  className="w-full h-auto rounded-xl shadow-2xl relative z-10"
                   loading="lazy"
                 />
               </div>
-              <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do YOUREYES</p>
+              <p className="text-center text-[10px] uppercase tracking-widest text-gray-500 mt-6 font-bold opacity-60">
+                Visualização real da plataforma YOUREYES
+              </p>
             </motion.div>
 
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
@@ -245,12 +257,21 @@ export default function LandingPage() {
               { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(152 66% 50%)", bg: "hsl(152 66% 50% / 0.1)" },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
-                <div className="rounded-2xl p-6 h-full transition-colors" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: item.bg }}>
-                    <item.icon className="w-6 h-6" style={{ color: item.color }} />
+                <div 
+                  className="rounded-2xl p-8 h-full transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden" 
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', 
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundImage: `linear-gradient(135deg, ${item.color}, transparent)` }} />
+                  
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg transition-transform group-hover:rotate-6" style={{ background: item.bg, border: `1px solid ${item.color}20` }}>
+                    <item.icon className="w-7 h-7" style={{ color: item.color }} />
                   </div>
-                  <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">{item.desc}</p>
+                  <h3 className="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">{item.title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -283,22 +304,29 @@ export default function LandingPage() {
                   key={stat.label}
                   {...fadeUp}
                   transition={{ delay: i * 0.1 }}
-                  className="p-8 rounded-3xl relative overflow-hidden group"
-                  style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}
+                  className="p-10 rounded-[2rem] relative overflow-hidden group transition-all duration-500 hover:-translate-y-2"
+                  style={{ 
+                    background: 'rgba(255,255,255,0.02)', 
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+                  }}
                 >
-                  <div className="absolute top-4 right-4 transition-all group-hover:scale-110 group-hover:rotate-3">
-                    <stat.icon className="w-20 h-20" style={{ color: stat.color, opacity: 0.35, filter: `drop-shadow(0 0 12px ${stat.color})` }} strokeWidth={1.5} />
+                  <div className="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity duration-500">
+                    <stat.icon size={160} style={{ color: stat.color }} />
                   </div>
-                  <motion.h3 
-                    className="text-5xl md:text-6xl font-black mb-4 tracking-tighter"
-                    style={{ color: stat.color }}
-                    initial={{ scale: 0.8 }}
-                    whileInView={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 100 }}
-                  >
-                    {stat.number}
-                  </motion.h3>
-                  <p className="text-gray-300 font-medium text-lg leading-tight">{stat.label}</p>
+                  
+                  <div className="relative z-10">
+                    <motion.div 
+                      className="text-6xl md:text-7xl font-black mb-6 tracking-tighter"
+                      style={{ color: stat.color, textShadow: `0 0 30px ${stat.color}40` }}
+                      initial={{ scale: 0.8 }}
+                      whileInView={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 100 }}
+                    >
+                      {stat.number}
+                    </motion.div>
+                    <p className="text-gray-300 font-semibold text-lg leading-snug group-hover:text-white transition-colors">{stat.label}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -319,21 +347,20 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain, title: "Psicossocial Cruzando TODOS os Módulos", desc: "O motor psicossocial cruza dados de Ponto, Atestados, Ouvidoria, Avaliações, Turnover e Ocorrências em tempo real para detectar burnout e assédio antes da fiscalização." },
-              { icon: Fingerprint, title: "Entrega de EPI com Reconhecimento Facial", desc: "Cada entrega é validada por liveness + biometria facial — prova jurídica indiscutível para o eSocial S-2240 e auditorias trabalhistas." },
-              { icon: Eye, title: "Leitura de Notas e Atestados (OCR + GPT-4o)", desc: "Foto de NF-e, atestado médico, ASO ou DANFE: a IA extrai CID, dias de afastamento, valores e classifica automaticamente." },
-              { icon: MessageSquare, title: "Ouvidoria Inteligente com IA", desc: "Classifica denúncias por sentimento, urgência e categoria (assédio, ética, segurança). Identifica reincidência e sugere encaminhamento." },
-              { icon: Target, title: "PDI e Avaliações 360° com IA", desc: "Planos de Desenvolvimento Individual gerados automaticamente após avaliações, com metas SMART personalizadas por cargo." },
-              { icon: ClipboardCheck, title: "Detecção Observável Automática", desc: "Monitora turnover, horas extras, atestados mentais e ocorrências disciplinares — gatilhos automáticos para campanhas extraordinárias." },
-              { icon: GraduationCap, title: "Onboarding Self-Service Guiado", desc: "Novo cliente cria empresa, importa colaboradores, configura cargos e já recebe IA cadastrando departamentos automaticamente." },
-              { icon: Bot, title: "Matching Inteligente NF × Guia", desc: "IA cruza XML de notas fiscais com guias de pagamento (DARF, INSS, FGTS), identifica divergências e gera dossiês contábeis." },
-              { icon: Scale, title: "Conformidade Legal Automática", desc: "PGR, PCMSO, LTCAT auditados pela IA quanto à coerência normativa. Avisos de NR-01, NR-04, NR-07, NR-17 sempre atualizados." },
+              { icon: Brain, title: "Psicossocial NR-01", desc: "O motor psicossocial cruza dados de Ponto, Atestados, Ouvidoria, Avaliações, Turnover e Ocorrências em tempo real para detectar burnout e assédio antes da fiscalização." },
+              { icon: Fingerprint, title: "EPI com Facial", desc: "Cada entrega é validada por liveness + biometria facial — prova jurídica indiscutível para o eSocial S-2240 e auditorias trabalhistas." },
+              { icon: Eye, title: "Leitura IA (OCR)", desc: "Foto de NF-e, atestado médico, ASO ou DANFE: a IA extrai CID, dias de afastamento, valores e classifica automaticamente." },
+              { icon: MessageSquare, title: "Ouvidoria com IA", desc: "Classifica denúncias por sentimento, urgência e categoria (assédio, ética, segurança). Identifica reincidência e sugere encaminhamento." },
+              { icon: Target, title: "PDI Inteligente", desc: "Planos de Desenvolvimento Individual gerados automaticamente após avaliações, com metas SMART personalizadas por cargo." },
+              { icon: ClipboardCheck, title: "Detecção Automática", desc: "Monitora turnover, horas extras, atestados mentais e ocorrências disciplinares — gatilhos automáticos para campanhas extraordinárias." },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(215 50% 14%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(207 90% 45% / 0.1)' }}>
-                  <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(152 66% 55%)' }} />
-                  <h3 className="text-base font-bold mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">{item.desc}</p>
+                <div className="rounded-2xl p-8 h-full transition-all duration-300 hover:bg-white/[0.05] group border border-white/5 bg-white/[0.02] backdrop-blur-md">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 group-hover:scale-110 transition-transform">
+                    <item.icon className="w-6 h-6" style={{ color: 'hsl(152 66% 55%)' }} />
+                  </div>
+                  <h3 className="text-lg font-bold mb-3 tracking-tight group-hover:text-emerald-400 transition-colors">{item.title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -488,17 +515,18 @@ export default function LandingPage() {
           </motion.div>
           <div className="space-y-8">
             {[
-              { step: "01", title: "Faça o Diagnóstico Gratuito", desc: "Responda 7 perguntas e descubra em 2 minutos o nível de risco psicossocial da sua empresa. Resultado imediato." },
-              { step: "02", title: "Crie sua Conta e Configure", desc: "Cadastre sua empresa, departamentos e colaboradores. O YOUREYES já gera automaticamente os indicadores iniciais." },
-              { step: "03", title: "Deixe a IA Trabalhar por Você", desc: "O sistema monitora continuamente atestados, ponto, denúncias e turnover. Você recebe alertas antes dos problemas virarem multas." },
+              { step: "01", title: "Diagnóstico Rápido", desc: "Responda 7 perguntas críticas e receba um relatório imediato do nível de exposição da sua empresa." },
+              { step: "02", title: "Setup Inteligente", desc: "Nossa IA importa seus dados e configura departamentos e cargos automaticamente em minutos." },
+              { step: "03", title: "Monitoramento Ativo", desc: "O sistema assume o controle, disparando alertas proativos e gerando conformidade automática." },
             ].map((s, i) => (
-              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-6 items-start">
-                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(207 90% 45% / 0.15), hsl(152 66% 50% / 0.15))', border: '1px solid hsl(207 90% 45% / 0.2)' }}>
-                  <span className="text-2xl font-black" style={{ color: 'hsl(207 90% 60%)' }}>{s.step}</span>
+              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-8 items-start group">
+                <div className="shrink-0 w-20 h-20 rounded-3xl flex items-center justify-center relative" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div className="absolute inset-0 bg-blue-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-3xl font-black relative z-10" style={{ backgroundImage: 'linear-gradient(135deg, hsl(207 90% 65%), hsl(152 66% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{s.step}</span>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-1">{s.title}</h3>
-                  <p className="text-gray-400">{s.desc}</p>
+                <div className="pt-2">
+                  <h3 className="text-2xl font-black mb-2 tracking-tight group-hover:text-white transition-colors">{s.title}</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed group-hover:text-gray-300 transition-colors">{s.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -656,23 +684,24 @@ export default function LandingPage() {
             </div>
 
             {/* Vagas visual */}
-            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-bold text-gray-400">Vagas preenchidas</span>
-                <span className="text-sm font-bold" style={{ color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
+            <div className="rounded-[2rem] p-8 mb-10 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 pointer-events-none" />
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-sm font-bold uppercase tracking-widest text-gray-500">Status das Vagas</span>
+                <span className="text-xl font-black px-3 py-1 rounded-lg" style={{ background: 'hsl(33 100% 50% / 0.1)', color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
               </div>
-              <div className="w-full rounded-full h-4 overflow-hidden" style={{ background: 'hsl(215 40% 20%)' }}>
+              <div className="w-full rounded-full h-5 overflow-hidden p-1 relative z-10" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <motion.div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full shadow-[0_0_20px_rgba(249,115,22,0.4)]"
                   style={{ background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${((10 - vagasRestantes) / 10) * 100}%` }}
                   viewport={{ once: true }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  transition={{ duration: 1.5, ease: "circOut" }}
                 />
               </div>
-              <p className="text-xs text-gray-600 mt-2 text-center">
-                Quando as 10 vagas forem preenchidas, novos acessos serão apenas por planos pagos com módulos limitados
+              <p className="text-xs text-gray-500 mt-4 text-center font-medium italic relative z-10">
+                Atenção: Após o preenchimento total, a plataforma passará a cobrar por cada módulo individualmente.
               </p>
             </div>
 
@@ -742,49 +771,72 @@ export default function LandingPage() {
 
               {showFormulario && !leadEnviado && (
                 <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-                    <h3 className="text-xl font-bold mb-1 text-center">Garanta sua vaga agora</h3>
-                    <p className="text-gray-500 text-sm text-center mb-6">Preencha seus dados para reservar seu acesso completo</p>
-                    <div className="space-y-4">
-                      <Input
-                        placeholder="Seu nome completo"
-                        value={nome}
-                        onChange={e => setNome(e.target.value)}
-                        maxLength={100}
-                        className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
-                      />
-                      <Input
-                        type="email"
-                        placeholder="Seu melhor e-mail"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        maxLength={255}
-                        className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
-                      />
-                      <Input
-                        type="tel"
-                        inputMode="tel"
-                        placeholder="WhatsApp com DDD — (00) 00000-0000"
-                        value={whatsapp}
-                        onChange={e => setWhatsapp(formatWhatsapp(e.target.value))}
-                        maxLength={16}
-                        className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
-                      />
+                  <div 
+                    className="rounded-[2.5rem] p-10 relative overflow-hidden" 
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(30px)',
+                      boxShadow: '0 40px 100px -20px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[60px] rounded-full" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/10 blur-[60px] rounded-full" />
+                    
+                    <h3 className="text-3xl font-black mb-2 text-center tracking-tight">Comece sua Proteção</h3>
+                    <p className="text-gray-400 text-base text-center mb-10">Preencha os dados e garanta seu acesso <span className="text-white font-bold">Vitalício</span> à fase Alpha.</p>
+                    
+                    <div className="space-y-5 relative z-10">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nome Completo</label>
+                        <Input
+                          placeholder="Ex: João Silva"
+                          value={nome}
+                          onChange={e => setNome(e.target.value)}
+                          maxLength={100}
+                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">E-mail Corporativo</label>
+                        <Input
+                          type="email"
+                          placeholder="joao@empresa.com.br"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          maxLength={255}
+                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">WhatsApp</label>
+                        <Input
+                          type="tel"
+                          inputMode="tel"
+                          placeholder="(00) 00000-0000"
+                          value={whatsapp}
+                          onChange={e => setWhatsapp(formatWhatsapp(e.target.value))}
+                          maxLength={16}
+                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
+                        />
+                      </div>
+                      
                       <Button
                         size="lg"
                         onClick={handleSubmitLead}
                         disabled={loading}
-                        className="w-full text-white text-lg py-6 rounded-xl"
-                        style={{ background: 'linear-gradient(135deg, hsl(152 50% 42%), hsl(152 50% 35%))' }}
+                        className="w-full text-white text-xl font-black py-8 rounded-xl shadow-2xl mt-4 group overflow-hidden relative"
+                        style={{ 
+                          background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(152 66% 45%))',
+                          boxShadow: '0 20px 40px -10px rgba(16, 185, 129, 0.3)'
+                        }}
                       >
-                        {loading ? "Enviando..." : "RESERVAR MINHA VAGA →"}
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        <span className="relative z-10">{loading ? "PROCESSANDO..." : "GARANTIR MINHA VAGA AGORA →"}</span>
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-600 text-center mt-4">
-                      🔒 Seus dados estão seguros. Não enviamos spam.
+                    <p className="text-[10px] text-gray-500 text-center mt-6 font-medium uppercase tracking-widest">
+                      🔒 Ambiente criptografado e 100% seguro pela LGPD
                     </p>
                   </div>
                 </motion.div>
