@@ -526,14 +526,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       {/* Form Modal */}
       <ColaboradorForm open={showForm} onOpenChange={handleCloseForm} onSuccess={() => refetch()} colaborador={editingColaborador} />
 
-      {/* Import Modal */}
-      <ImportPlanilhaModal
-        open={showImport}
-        onOpenChange={setShowImport}
-        onSuccess={handleImportSuccess}
-        titulo="Importar Colaboradores"
-        descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
-      />
+      {/* Import Modal moved to parent Colaboradores component to work across all tabs */}
 
       {/* Detail Modal */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
