@@ -1028,12 +1028,21 @@ function DesligadosTab() {
 // ========== Main Page ==========
 const Colaboradores = () => {
   const [showImport, setShowImport] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
     window.addEventListener('open-import-colaboradores', handleOpenImport);
     return () => window.removeEventListener('open-import-colaboradores', handleOpenImport);
   }, []);
+
+  const handleImportSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
+    queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
+    queryClient.invalidateQueries({ queryKey: ["cargos"] });
+    queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+    queryClient.invalidateQueries({ queryKey: ["admissoes"] });
+  };
 
   return (
     <div className="space-y-6">
