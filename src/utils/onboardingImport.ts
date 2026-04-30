@@ -254,7 +254,7 @@ export async function importCollaborators(
       empresa_id: empresaId,
       nome_completo: row.nome_completo,
       cpf: cpfFormatted,
-      email: row.email || `${normalizeCPF(row.cpf)}@placeholder.com`,
+      email: row.email?.trim() || null,
       cargo: row.cargo || 'Não informado',
       departamento: row.departamento || null,
       celular: row.telefone || null,
