@@ -147,6 +147,12 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [desligarColab, setDesligarColab] = useState<ColaboradorExtendido | null>(null);
 
+  useEffect(() => {
+    const handleNovoCadastro = () => setShowNovoChoice(true);
+    window.addEventListener('novo-cadastro-colaborador', handleNovoCadastro);
+    return () => window.removeEventListener('novo-cadastro-colaborador', handleNovoCadastro);
+  }, []);
+
   const handleExportarColaboradores = () => {
     if (filteredColaboradores.length === 0) {
       toast.error("Nenhum colaborador para exportar.");
