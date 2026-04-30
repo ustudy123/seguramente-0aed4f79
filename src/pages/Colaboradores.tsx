@@ -1035,6 +1035,14 @@ function DesligadosTab() {
 
 // ========== Main Page ==========
 const Colaboradores = () => {
+  const [showImport, setShowImport] = useState(false);
+
+  useEffect(() => {
+    const handleOpenImport = () => setShowImport(true);
+    window.addEventListener('open-import-colaboradores', handleOpenImport);
+    return () => window.removeEventListener('open-import-colaboradores', handleOpenImport);
+  }, []);
+
   return (
     <div className="space-y-6">
       <motion.div

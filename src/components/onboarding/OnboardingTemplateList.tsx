@@ -3,7 +3,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { motion } from "framer-motion";
 import {
   Plus, Pencil, Trash2, Loader2, Copy, ToggleLeft, ToggleRight,
-  Building2, Users, Briefcase, ChevronRight,
+  Building2, Users, Briefcase, ChevronRight, Upload,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
