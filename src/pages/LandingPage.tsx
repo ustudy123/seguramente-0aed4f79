@@ -20,10 +20,11 @@ import mockupDashboard from "@/assets/landing/mockup-dashboard.png";
 import mockupPsicossocial from "@/assets/landing/mockup-psicossocial.png";
 import mockupGovernanca from "@/assets/landing/mockup-governanca.png";
 import mockupConfiguracoes from "@/assets/landing/mockup-configuracoes.png";
+import logoYoureyes from "@/assets/logo-youreyes.svg";
 
 const WHATSAPP_NUMBER = "5546993375044";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "Olá! Vim pelo site do SeguraMente e gostaria de agendar uma demonstração da plataforma."
+  "Olá! Vim pelo site da YOUREYES e gostaria de agendar uma demonstração da plataforma."
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 const openWhatsApp = () => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
@@ -89,9 +90,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c0a14] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#050d1a] text-white overflow-x-hidden">
       {/* Floating urgency bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 py-2 text-[11px] sm:text-sm font-bold shadow-lg overflow-hidden" style={{ background: 'linear-gradient(90deg, hsl(262 52% 30%), hsl(262 52% 45%), hsl(262 52% 30%))' }}>
+      <div className="fixed top-0 left-0 right-0 z-50 py-2 text-[11px] sm:text-sm font-bold shadow-lg overflow-hidden" style={{ background: 'linear-gradient(90deg, hsl(207 90% 25%), hsl(207 90% 38%), hsl(207 90% 25%))' }}>
         {/* Desktop: estático e centralizado */}
         <div className="hidden sm:flex items-center justify-center gap-3 px-3 leading-tight">
           <span className="flex items-center gap-1">
@@ -99,7 +100,7 @@ export default function LandingPage() {
             ⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.
           </span>
           {vagasRestantes > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-black shrink-0" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
+            <span className="px-2 py-0.5 rounded-full text-xs font-black shrink-0" style={{ background: 'hsl(33 100% 50%)', color: '#fff' }}>
               🔥 {vagasRestantes} vagas
             </span>
           )}
@@ -112,7 +113,7 @@ export default function LandingPage() {
                 <Clock className="w-3 h-3 shrink-0" />
                 <span>⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.</span>
                 {vagasRestantes > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0" style={{ background: 'hsl(24 90% 54%)', color: '#fff' }}>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0" style={{ background: 'hsl(33 100% 50%)', color: '#fff' }}>
                     🔥 {vagasRestantes} vagas
                   </span>
                 )}
@@ -124,22 +125,22 @@ export default function LandingPage() {
 
       {/* ═══════════ HERO ═══════════ */}
       <section className="relative pt-28 pb-10 px-4 min-h-screen flex items-center">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, hsl(262 30% 8%) 0%, hsl(262 25% 10%) 50%, hsl(262 30% 8%) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, hsl(215 65% 7%) 0%, hsl(215 60% 10%) 50%, hsl(215 65% 7%) 100%)' }} />
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(262 52% 50%)' }} />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(24 90% 54%)' }} />
+          <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(207 90% 45%)' }} />
+          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-[128px]" style={{ background: 'hsl(33 100% 50%)' }} />
         </div>
         
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(24 90% 65%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
+            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
               <AlertTriangle className="w-4 h-4 mr-2" />
               ALERTA: Sua empresa pode estar em risco AGORA
             </Badge>
 
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words">
               Sua empresa está pronta para a{" "}
-              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 68%), hsl(24 90% 54%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 maior fiscalização trabalhista
               </span>{" "}
               dos últimos 20 anos?
@@ -152,20 +153,20 @@ export default function LandingPage() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="my-10 max-w-5xl mx-auto"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(262 52% 50% / 0.15)' }}>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(207 90% 45% / 0.15)' }}>
                 <img
                   src={mockupDashboard}
-                  alt="Dashboard SeguraMente - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
+                  alt="Dashboard YOUREYES - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
                   className="w-full h-auto rounded-2xl"
                   loading="lazy"
                 />
               </div>
-              <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do SeguraMente</p>
+              <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do YOUREYES</p>
             </motion.div>
 
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
               A NR-01 foi atualizada. Agora <strong className="text-white">riscos psicossociais são obrigatórios</strong> no GRO/PGR.
-              Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(24 90% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
+              Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(33 100% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
             </p>
 
             <p className="text-base text-gray-500 max-w-2xl mx-auto mb-10">
@@ -186,11 +187,11 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ PAIN SECTION ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 30% 8%) 0%, hsl(262 25% 10%) 100%)' }}>
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(215 65% 7%) 0%, hsl(215 60% 10%) 100%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-5xl font-black text-center mb-4">
-              O que acontece com quem <span style={{ color: 'hsl(24 90% 54%)' }}>ignora</span> a NR-01?
+              O que acontece com quem <span style={{ color: 'hsl(33 100% 50%)' }}>ignora</span> a NR-01?
             </h2>
             <p className="text-gray-400 text-center max-w-2xl mx-auto mb-16">
               A fiscalização não avisa. Ela chega. E quando chega, o prejuízo é irreversível.
@@ -199,13 +200,13 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "hsl(24 90% 54%)", bg: "hsl(24 90% 54% / 0.1)" },
-              { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "hsl(262 52% 60%)", bg: "hsl(262 52% 50% / 0.1)" },
+              { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "hsl(33 100% 50%)", bg: "hsl(33 100% 50% / 0.1)" },
+              { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "hsl(207 90% 55%)", bg: "hsl(207 90% 45% / 0.1)" },
               { icon: TrendingDown, title: "Processos Trabalhistas", desc: "Burnout, assédio e danos morais. Um único processo pode ultrapassar R$ 200.000 em indenizações.", color: "hsl(38 90% 55%)", bg: "hsl(38 90% 50% / 0.1)" },
-              { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(280 40% 68%)", bg: "hsl(280 40% 68% / 0.1)" },
+              { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(152 66% 50%)", bg: "hsl(152 66% 50% / 0.1)" },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
-                <div className="rounded-2xl p-6 h-full transition-colors" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+                <div className="rounded-2xl p-6 h-full transition-colors" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: item.bg }}>
                     <item.icon className="w-6 h-6" style={{ color: item.color }} />
                   </div>
@@ -219,18 +220,18 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ IA SECTION ═══════════ */}
-      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(262 25% 10%)' }}>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(262 52% 50% / 0.05)' }} />
+      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 60% 10%)' }}>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(207 90% 45% / 0.05)' }} />
         <div className="max-w-6xl mx-auto relative">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4" style={{ background: 'hsl(262 52% 50% / 0.15)', color: 'hsl(280 40% 72%)', borderColor: 'hsl(262 52% 50% / 0.3)' }}>
+            <Badge className="mb-4" style={{ background: 'hsl(207 90% 45% / 0.15)', color: 'hsl(152 66% 55%)', borderColor: 'hsl(207 90% 45% / 0.3)' }}>
               <Sparkles className="w-4 h-4 mr-1" /> INTELIGÊNCIA ARTIFICIAL
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              IA que <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 72%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trabalha por você</span> 24 horas por dia
+              IA que <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trabalha por você</span> 24 horas por dia
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-              Enquanto seus concorrentes usam planilhas, o SeguraMente usa <strong className="text-white">GPT-4o e visão computacional</strong> para automatizar 
+              Enquanto seus concorrentes usam planilhas, o YOUREYES usa <strong className="text-white">GPT-4o e visão computacional</strong> para automatizar 
               o que antes levava semanas. Isso não é marketing — é tecnologia real rodando agora.
             </p>
           </motion.div>
@@ -248,8 +249,8 @@ export default function LandingPage() {
               { icon: Scale, title: "Conformidade Legal Automática", desc: "PGR, PCMSO, LTCAT auditados pela IA quanto à coerência normativa. Avisos de NR-01, NR-04, NR-07, NR-17 sempre atualizados." },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(262 25% 14%) 0%, hsl(262 25% 11%) 100%)', border: '1px solid hsl(262 52% 50% / 0.1)' }}>
-                  <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(280 40% 72%)' }} />
+                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(215 50% 14%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(207 90% 45% / 0.1)' }}>
+                  <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(152 66% 55%)' }} />
                   <h3 className="text-base font-bold mb-2">{item.title}</h3>
                   <p className="text-gray-400 text-sm">{item.desc}</p>
                 </div>
@@ -260,25 +261,25 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ PSYCHOSOCIAL DEEP DIVE ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 25% 10%) 0%, hsl(262 28% 8%) 100%)' }}>
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(215 60% 10%) 0%, hsl(215 65% 8%) 100%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(24 90% 60%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
+            <Badge className="mb-4" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
               <AlertTriangle className="w-4 h-4 mr-1" /> NR-01 — OBRIGATÓRIO
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Gestão Psicossocial <span style={{ color: 'hsl(24 90% 54%)' }}>Completa</span> e Automatizada
+              Gestão Psicossocial <span style={{ color: 'hsl(33 100% 50%)' }}>Completa</span> e Automatizada
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-              O SeguraMente é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores psicossociais exigidos pela NR-01 atualizada, 
+              O YOUREYES é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores psicossociais exigidos pela NR-01 atualizada, 
               com questionários validados, indicadores automáticos e relatórios prontos para a fiscalização.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <motion.div {...fadeUp} className="rounded-2xl p-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+            <motion.div {...fadeUp} className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <FileText className="w-6 h-6" style={{ color: 'hsl(262 52% 65%)' }} />
+                <FileText className="w-6 h-6" style={{ color: 'hsl(207 90% 60%)' }} />
                 Questionário NR-01 Completo
               </h3>
               <div className="space-y-3 text-sm text-gray-400">
@@ -300,9 +301,9 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            <motion.div {...fadeUp} transition={{ delay: 0.15 }} className="rounded-2xl p-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+            <motion.div {...fadeUp} transition={{ delay: 0.15 }} className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6" style={{ color: 'hsl(280 40% 68%)' }} />
+                <BarChart3 className="w-6 h-6" style={{ color: 'hsl(152 66% 50%)' }} />
                 Indicadores Automáticos
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -314,8 +315,8 @@ export default function LandingPage() {
                   { code: "ICOP-S", name: "Índice de Cooperação Social" },
                   { code: "INOT-S", name: "Índice de Notificações de Risco" },
                 ].map((ind, i) => (
-                  <div key={i} className="rounded-xl p-3" style={{ background: 'hsl(262 28% 8%)', border: '1px solid hsl(262 20% 18%)' }}>
-                    <p className="text-xs font-mono font-bold" style={{ color: 'hsl(280 40% 72%)' }}>{ind.code}</p>
+                  <div key={i} className="rounded-xl p-3" style={{ background: 'hsl(215 65% 8%)', border: '1px solid hsl(215 40% 20%)' }}>
+                    <p className="text-xs font-mono font-bold" style={{ color: 'hsl(152 66% 55%)' }}>{ind.code}</p>
                     <p className="text-xs text-gray-500 mt-1">{ind.name}</p>
                   </div>
                 ))}
@@ -329,14 +330,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ ALL MODULES ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'hsl(262 28% 8%)' }}>
+      <section className="py-20 px-4" style={{ background: 'hsl(215 65% 8%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
             <Badge className="mb-4" style={{ background: 'hsl(152 50% 42% / 0.15)', color: 'hsl(152 50% 55%)', borderColor: 'hsl(152 50% 42% / 0.3)' }}>
               <Shield className="w-4 h-4 mr-1" /> PLATAFORMA COMPLETA
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(280 40% 68%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>+30 módulos</span> integrados em uma única plataforma
+              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>+30 módulos</span> integrados em uma única plataforma
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Tudo que sua empresa precisa para SST, RH e compliance — sem precisar de 10 softwares diferentes.
@@ -375,13 +376,13 @@ export default function LandingPage() {
               { icon: Users, name: "Multi-Tenant / Multi-Empresa" },
             ].map((mod, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.03 }}>
-                <div className="rounded-xl p-4 h-full transition-colors group relative" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+                <div className="rounded-xl p-4 h-full transition-colors group relative" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
                   {mod.tag && (
-                    <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'hsl(24 90% 54% / 0.2)', color: 'hsl(24 90% 60%)' }}>
+                    <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'hsl(33 100% 50% / 0.2)', color: 'hsl(33 100% 60%)' }}>
                       {mod.tag}
                     </span>
                   )}
-                  <mod.icon className="w-6 h-6 mb-2 transition-colors" style={{ color: 'hsl(262 52% 65%)' }} />
+                  <mod.icon className="w-6 h-6 mb-2 transition-colors" style={{ color: 'hsl(207 90% 60%)' }} />
                   <p className="text-sm font-medium text-gray-300">{mod.name}</p>
                 </div>
               </motion.div>
@@ -397,22 +398,22 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ HOW IT WORKS ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 28% 8%) 0%, hsl(262 25% 10%) 100%)' }}>
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(215 65% 8%) 0%, hsl(215 60% 10%) 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Comece em <span style={{ color: 'hsl(280 40% 72%)' }}>3 passos simples</span>
+              Comece em <span style={{ color: 'hsl(152 66% 55%)' }}>3 passos simples</span>
             </h2>
           </motion.div>
           <div className="space-y-8">
             {[
               { step: "01", title: "Faça o Diagnóstico Gratuito", desc: "Responda 7 perguntas e descubra em 2 minutos o nível de risco psicossocial da sua empresa. Resultado imediato." },
-              { step: "02", title: "Crie sua Conta e Configure", desc: "Cadastre sua empresa, departamentos e colaboradores. O SeguraMente já gera automaticamente os indicadores iniciais." },
+              { step: "02", title: "Crie sua Conta e Configure", desc: "Cadastre sua empresa, departamentos e colaboradores. O YOUREYES já gera automaticamente os indicadores iniciais." },
               { step: "03", title: "Deixe a IA Trabalhar por Você", desc: "O sistema monitora continuamente atestados, ponto, denúncias e turnover. Você recebe alertas antes dos problemas virarem multas." },
             ].map((s, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-6 items-start">
-                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(262 52% 50% / 0.15), hsl(280 40% 68% / 0.15))', border: '1px solid hsl(262 52% 50% / 0.2)' }}>
-                  <span className="text-2xl font-black" style={{ color: 'hsl(262 52% 65%)' }}>{s.step}</span>
+                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(207 90% 45% / 0.15), hsl(152 66% 50% / 0.15))', border: '1px solid hsl(207 90% 45% / 0.2)' }}>
+                  <span className="text-2xl font-black" style={{ color: 'hsl(207 90% 60%)' }}>{s.step}</span>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-1">{s.title}</h3>
@@ -425,10 +426,10 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ SOCIAL PROOF ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'hsl(262 25% 10%)' }}>
+      <section className="py-20 px-4" style={{ background: 'hsl(215 60% 10%)' }}>
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-black mb-16">
-            Números que <span style={{ color: 'hsl(280 40% 72%)' }}>falam por si</span>
+            Números que <span style={{ color: 'hsl(152 66% 55%)' }}>falam por si</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -438,7 +439,7 @@ export default function LandingPage() {
               { num: "74%", label: "redução de riscos com gestão psicossocial" },
             ].map((stat, i) => (
               <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <p className="text-3xl md:text-4xl font-black" style={{ backgroundImage: 'linear-gradient(90deg, hsl(262 52% 60%), hsl(24 90% 54%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stat.num}</p>
+                <p className="text-3xl md:text-4xl font-black" style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stat.num}</p>
                 <p className="text-sm text-gray-500 mt-2">{stat.label}</p>
               </motion.div>
             ))}
@@ -447,21 +448,21 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ DIFFERENTIATORS ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(262 25% 10%) 0%, hsl(262 28% 8%) 100%)' }}>
+      <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(215 60% 10%) 0%, hsl(215 65% 8%) 100%)' }}>
         <div className="max-w-5xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Por que o SeguraMente é <span style={{ color: 'hsl(24 90% 54%)' }}>diferente</span>?
+              Por que o YOUREYES é <span style={{ color: 'hsl(33 100% 50%)' }}>diferente</span>?
             </h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {[
               { title: "Outros softwares", items: ["Planilhas disfarçadas de sistema", "Sem IA real — apenas formulários", "SST separado do RH", "Sem gestão psicossocial", "Sem compliance NR-01 atualizada", "Interface ultrapassada"], bad: true },
-              { title: "SeguraMente", items: ["Plataforma inteligente com IA real (GPT-4o)", "Detecção automática de riscos", "SST + RH + Psicossocial integrados", "100% compliance NR-01 atualizada", "Indicadores em tempo real", "Design moderno e intuitivo"], bad: false },
+              { title: "YOUREYES", items: ["Plataforma inteligente com IA real (GPT-4o)", "Detecção automática de riscos", "SST + RH + Psicossocial integrados", "100% compliance NR-01 atualizada", "Indicadores em tempo real", "Design moderno e intuitivo"], bad: false },
             ].map((col, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }}>
-                <div className="rounded-2xl p-8 h-full" style={{ background: col.bad ? 'hsl(0 20% 10%)' : 'hsl(262 25% 11%)', border: `1px solid ${col.bad ? 'hsl(0 40% 25% / 0.3)' : 'hsl(152 50% 42% / 0.2)'}` }}>
+                <div className="rounded-2xl p-8 h-full" style={{ background: col.bad ? 'hsl(0 20% 10%)' : 'hsl(215 55% 12%)', border: `1px solid ${col.bad ? 'hsl(0 40% 25% / 0.3)' : 'hsl(152 50% 42% / 0.2)'}` }}>
                   <h3 className="text-xl font-bold mb-6" style={{ color: col.bad ? 'hsl(0 60% 60%)' : 'hsl(152 50% 55%)' }}>{col.title}</h3>
                   <div className="space-y-3">
                     {col.items.map((item, j) => (
@@ -485,14 +486,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ MOCKUPS GALLERY ═══════════ */}
-      <section className="py-20 px-4" style={{ background: 'hsl(262 28% 8%)' }}>
+      <section className="py-20 px-4" style={{ background: 'hsl(215 65% 8%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-14">
-            <Badge className="mb-4" style={{ background: 'hsl(280 40% 60% / 0.15)', color: 'hsl(280 40% 75%)', borderColor: 'hsl(280 40% 60% / 0.3)' }}>
+            <Badge className="mb-4" style={{ background: 'hsl(152 66% 45% / 0.15)', color: 'hsl(152 66% 60%)', borderColor: 'hsl(152 66% 45% / 0.3)' }}>
               <LayoutDashboard className="w-4 h-4 mr-1" /> A PLATAFORMA POR DENTRO
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Veja o SeguraMente <span style={{ color: 'hsl(280 40% 72%)' }}>em ação</span>
+              Veja o YOUREYES <span style={{ color: 'hsl(152 66% 55%)' }}>em ação</span>
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Interface moderna, indicadores em tempo real e governança integrada — desenhado para quem decide.
@@ -507,7 +508,7 @@ export default function LandingPage() {
               { src: mockupDashboard, title: "Dashboard Operacional", desc: "KPIs de Colaboradores, Admissões, EPIs, Documentos, Avaliações e Metas em um só lugar." },
             ].map((m, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
                   <img src={m.src} alt={m.title} loading="lazy" className="w-full h-auto" />
                   <div className="p-5">
                     <h3 className="font-bold text-lg mb-1">{m.title}</h3>
@@ -521,7 +522,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ DEMO CTA SECTION ═══════════ */}
-      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(262 28% 8%)' }}>
+      <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 65% 8%)' }}>
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[250px]" style={{ background: 'hsl(152 60% 40%)' }} />
         </div>
@@ -529,7 +530,7 @@ export default function LandingPage() {
           <motion.div {...fadeUp}>
             <MessageSquare className="w-16 h-16 mx-auto mb-6" style={{ color: 'hsl(152 60% 50%)' }} />
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Veja o SeguraMente funcionando na <span style={{ color: 'hsl(152 60% 50%)' }}>sua empresa</span>
+              Veja o YOUREYES funcionando na <span style={{ color: 'hsl(152 60% 50%)' }}>sua empresa</span>
             </h2>
             <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
               Agende uma demonstração personalizada por <strong className="text-white">WhatsApp</strong>. 
@@ -552,20 +553,20 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ CTA / VAGAS ═══════════ */}
-      <section id="vagas" className="py-20 px-4 relative" style={{ background: 'linear-gradient(180deg, hsl(262 28% 8%) 0%, hsl(262 30% 6%) 100%)' }}>
+      <section id="vagas" className="py-20 px-4 relative" style={{ background: 'linear-gradient(180deg, hsl(215 65% 8%) 0%, hsl(215 70% 5%) 100%)' }}>
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[200px]" style={{ background: 'hsl(262 52% 50%)' }} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[200px]" style={{ background: 'hsl(207 90% 45%)' }} />
         </div>
         <div className="relative max-w-2xl mx-auto">
           <motion.div {...fadeUp}>
             <div className="text-center mb-10">
-              <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(24 90% 60%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
+              <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
                 <Zap className="w-4 h-4 mr-1" />
                 LANÇAMENTO EXCLUSIVO — VAGAS LIMITADAS
               </Badge>
               <h2 className="text-3xl md:text-5xl font-black mb-4">
-                Apenas <span style={{ color: 'hsl(24 90% 54%)' }}>{vagasRestantes}</span> vagas para acesso{" "}
-                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(24 90% 54%), hsl(262 52% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>COMPLETO</span>
+                Apenas <span style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes}</span> vagas para acesso{" "}
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(33 100% 50%), hsl(207 90% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>COMPLETO</span>
               </h2>
               <p className="text-gray-400 max-w-xl mx-auto">
                 Estamos liberando <strong className="text-white">10 vagas exclusivas</strong> com acesso total a TODOS os módulos — 
@@ -574,15 +575,15 @@ export default function LandingPage() {
             </div>
 
             {/* Vagas visual */}
-            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-bold text-gray-400">Vagas preenchidas</span>
-                <span className="text-sm font-bold" style={{ color: 'hsl(24 90% 54%)' }}>{10 - vagasRestantes}/10</span>
+                <span className="text-sm font-bold" style={{ color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
               </div>
-              <div className="w-full rounded-full h-4 overflow-hidden" style={{ background: 'hsl(262 20% 18%)' }}>
+              <div className="w-full rounded-full h-4 overflow-hidden" style={{ background: 'hsl(215 40% 20%)' }}>
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: 'linear-gradient(90deg, hsl(262 52% 50%), hsl(24 90% 54%))' }}
+                  style={{ background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${((10 - vagasRestantes) / 10) * 100}%` }}
                   viewport={{ once: true }}
@@ -595,9 +596,9 @@ export default function LandingPage() {
             </div>
 
             {/* What's included */}
-            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5" style={{ color: 'hsl(24 90% 54%)' }} />
+                <Award className="w-5 h-5" style={{ color: 'hsl(33 100% 50%)' }} />
                 O que você recebe nas 10 primeiras vagas:
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -636,7 +637,7 @@ export default function LandingPage() {
                     size="lg"
                     onClick={() => setShowFormulario(true)}
                     className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto"
-                    style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
+                    style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
                     disabled={vagasRestantes <= 0}
                   >
                     {vagasRestantes > 0 ? (
@@ -653,7 +654,7 @@ export default function LandingPage() {
 
               {showFormulario && !leadEnviado && (
                 <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="rounded-2xl p-8" style={{ background: 'hsl(262 25% 11%)', border: '1px solid hsl(262 20% 18%)' }}>
+                  <div className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
                     <h3 className="text-xl font-bold mb-1 text-center">Garanta sua vaga agora</h3>
                     <p className="text-gray-500 text-sm text-center mb-6">Preencha seus dados para reservar seu acesso completo</p>
                     <div className="space-y-4">
@@ -663,7 +664,7 @@ export default function LandingPage() {
                         onChange={e => setNome(e.target.value)}
                         maxLength={100}
                         className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(262 28% 8%)', borderColor: 'hsl(262 20% 20%)' }}
+                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
                       />
                       <Input
                         type="email"
@@ -672,7 +673,7 @@ export default function LandingPage() {
                         onChange={e => setEmail(e.target.value)}
                         maxLength={255}
                         className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(262 28% 8%)', borderColor: 'hsl(262 20% 20%)' }}
+                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
                       />
                       <Button
                         size="lg"
@@ -693,14 +694,14 @@ export default function LandingPage() {
 
               {leadEnviado && (
                 <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-                  <div className="rounded-2xl p-8" style={{ background: 'linear-gradient(180deg, hsl(152 20% 12%) 0%, hsl(262 25% 11%) 100%)', border: '1px solid hsl(152 50% 42% / 0.3)' }}>
+                  <div className="rounded-2xl p-8" style={{ background: 'linear-gradient(180deg, hsl(152 20% 12%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(152 50% 42% / 0.3)' }}>
                     <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: 'hsl(152 50% 50%)' }} />
                     <h3 className="text-2xl font-black mb-2">Parabéns! Sua vaga está quase garantida 🎉</h3>
                     <p className="text-gray-400 mb-2">
-                      Restam apenas <strong style={{ color: 'hsl(24 90% 54%)' }}>{vagasRestantes} vagas</strong> para acesso completo.
+                      Restam apenas <strong style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes} vagas</strong> para acesso completo.
                     </p>
-                    <div className="rounded-xl p-4 my-6" style={{ background: 'hsl(262 28% 8%)', border: '1px solid hsl(24 90% 54% / 0.3)' }}>
-                      <p className="font-bold text-sm mb-1" style={{ color: 'hsl(24 90% 54%)' }}>⚡ ATENÇÃO: Apenas 10 vagas com acesso TOTAL</p>
+                    <div className="rounded-xl p-4 my-6" style={{ background: 'hsl(215 65% 8%)', border: '1px solid hsl(33 100% 50% / 0.3)' }}>
+                      <p className="font-bold text-sm mb-1" style={{ color: 'hsl(33 100% 50%)' }}>⚡ ATENÇÃO: Apenas 10 vagas com acesso TOTAL</p>
                       <p className="text-gray-500 text-xs">
                         Após as 10 vagas, novos usuários terão acesso apenas a módulos limitados conforme o plano contratado. 
                         Crie sua conta agora para garantir o acesso completo.
@@ -710,7 +711,7 @@ export default function LandingPage() {
                       size="lg"
                       onClick={() => navigate("/register")}
                       className="w-full sm:w-auto text-white text-sm sm:text-lg px-4 sm:px-10 py-6 rounded-xl shadow-2xl whitespace-normal h-auto"
-                      style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(280 40% 60%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
+                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(152 66% 45%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
                     >
                       <span className="break-words">CRIAR MINHA CONTA AGORA — É GRÁTIS</span>
                       <ArrowRight className="w-5 h-5 ml-2 shrink-0" />
@@ -725,23 +726,23 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ FINAL URGENCY ═══════════ */}
-      <section className="py-16 px-4" style={{ background: 'hsl(262 30% 6%)', borderTop: '1px solid hsl(262 20% 14%)' }}>
+      <section className="py-16 px-4" style={{ background: 'hsl(215 70% 5%)', borderTop: '1px solid hsl(215 40% 16%)' }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-black mb-4">
             A pergunta não é <em>"Quanto custa adequar?"</em>
           </h2>
           <p className="text-xl text-gray-400 mb-8">
-            A pergunta é: <strong style={{ color: 'hsl(24 90% 54%)' }}>"Quanto vai custar NÃO adequar?"</strong>
+            A pergunta é: <strong style={{ color: 'hsl(33 100% 50%)' }}>"Quanto vai custar NÃO adequar?"</strong>
           </p>
           <p className="text-gray-500 text-sm mb-8">
-            Uma única multa do MTE paga 5 anos de SeguraMente. Um único processo por burnout paga 10 anos. 
+            Uma única multa do MTE paga 5 anos de YOUREYES. Um único processo por burnout paga 10 anos. 
             A escolha é sua: investir centavos em prevenção ou milhares em correção.
           </p>
           <Button
             size="lg"
             onClick={() => scrollToSection("vagas")}
             className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto"
-            style={{ background: 'linear-gradient(135deg, hsl(262 52% 50%), hsl(24 90% 54%))' }}
+            style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
           >
             <span className="break-words">PROTEGER MINHA EMPRESA AGORA →</span>
           </Button>
@@ -749,9 +750,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 text-center text-sm" style={{ borderTop: '1px solid hsl(262 20% 14%)', color: 'hsl(262 10% 40%)' }}>
-        <p>© {new Date().getFullYear()} SeguraMente — Plataforma de Gestão Inteligente de SST e RH</p>
-        <p className="mt-1 text-xs" style={{ color: 'hsl(262 10% 30%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
+      <footer className="py-8 px-4 text-center text-sm" style={{ borderTop: '1px solid hsl(215 40% 16%)', color: 'hsl(215 15% 55%)' }}>
+        <p>© {new Date().getFullYear()} YOUREYES — Plataforma de Gestão Inteligente de SST e RH</p>
+        <p className="mt-1 text-xs" style={{ color: 'hsl(215 15% 40%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 
       {/* Floating WhatsApp button */}
@@ -759,7 +760,7 @@ export default function LandingPage() {
         onClick={openWhatsApp}
         aria-label="Falar no WhatsApp"
         className="fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-2xl transition-transform hover:scale-110"
-        style={{ background: 'hsl(152 70% 38%)', boxShadow: '0 8px 32px hsl(152 70% 38% / 0.5)' }}
+        style={{ background: 'hsl(152 66% 39%)', boxShadow: '0 8px 32px hsl(152 70% 38% / 0.5)' }}
       >
         <MessageSquare className="w-6 h-6 text-white" />
       </button>
