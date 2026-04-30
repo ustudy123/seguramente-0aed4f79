@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
-import { getModuloForPath, ALWAYS_ALLOWED_PATHS } from "@/lib/moduleAccess";
+import { getModuloForPath, ALWAYS_ALLOWED_PATHS, isAdminPath } from "@/lib/moduleAccess";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -376,22 +376,21 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const { isSuperAdmin } = useAuthContext();
-  const { temAcessoModulo, perfilVinculado, isOwner } = usePerfilPermissions();
+  const { temAcessoModulo, temAcessoModuloAdmin, perfilVinculado, isOwner } = usePerfilPermissions();
 
   const isItemAllowed = useMemo(() => {
     return (path?: string) => {
       if (!path) return true;
       if (isSuperAdmin || isOwner || !perfilVinculado) return true;
-      // Normaliza pathname (sem query/hash) p/ checar ALWAYS_ALLOWED
       const cleanPath = path.split("?")[0].split("#")[0];
       if (ALWAYS_ALLOWED_PATHS.has(cleanPath)) return true;
       const modulo = getModuloForPath(path);
-      // Gating estrito: se o usuário tem perfil vinculado e a rota não tem
-      // módulo mapeado, ela é considerada RESTRITA.
       if (!modulo) return false;
+      // Rotas administrativas exigem escopo ≠ proprio_usuario
+      if (isAdminPath(path)) return temAcessoModuloAdmin(modulo);
       return temAcessoModulo(modulo);
     };
-  }, [isSuperAdmin, isOwner, perfilVinculado, temAcessoModulo]);
+  }, [isSuperAdmin, isOwner, perfilVinculado, temAcessoModulo, temAcessoModuloAdmin]);
 
   const filteredSections = useMemo(() => {
     const base = isSuperAdmin ? menuSections : menuSections.filter((s) => s.label !== "Academia");
