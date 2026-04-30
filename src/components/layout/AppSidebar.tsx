@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
+import { getModuloForPath, ALWAYS_ALLOWED_PATHS } from "@/lib/moduleAccess";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
