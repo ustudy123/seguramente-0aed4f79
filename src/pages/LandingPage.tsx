@@ -771,49 +771,72 @@ export default function LandingPage() {
 
               {showFormulario && !leadEnviado && (
                 <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="rounded-2xl p-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-                    <h3 className="text-xl font-bold mb-1 text-center">Garanta sua vaga agora</h3>
-                    <p className="text-gray-500 text-sm text-center mb-6">Preencha seus dados para reservar seu acesso completo</p>
-                    <div className="space-y-4">
-                      <Input
-                        placeholder="Seu nome completo"
-                        value={nome}
-                        onChange={e => setNome(e.target.value)}
-                        maxLength={100}
-                        className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
-                      />
-                      <Input
-                        type="email"
-                        placeholder="Seu melhor e-mail"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        maxLength={255}
-                        className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
-                      />
-                      <Input
-                        type="tel"
-                        inputMode="tel"
-                        placeholder="WhatsApp com DDD — (00) 00000-0000"
-                        value={whatsapp}
-                        onChange={e => setWhatsapp(formatWhatsapp(e.target.value))}
-                        maxLength={16}
-                        className="h-12 text-white placeholder:text-gray-600"
-                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
-                      />
+                  <div 
+                    className="rounded-[2.5rem] p-10 relative overflow-hidden" 
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(30px)',
+                      boxShadow: '0 40px 100px -20px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[60px] rounded-full" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/10 blur-[60px] rounded-full" />
+                    
+                    <h3 className="text-3xl font-black mb-2 text-center tracking-tight">Comece sua Proteção</h3>
+                    <p className="text-gray-400 text-base text-center mb-10">Preencha os dados e garanta seu acesso <span className="text-white font-bold">Vitalício</span> à fase Alpha.</p>
+                    
+                    <div className="space-y-5 relative z-10">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nome Completo</label>
+                        <Input
+                          placeholder="Ex: João Silva"
+                          value={nome}
+                          onChange={e => setNome(e.target.value)}
+                          maxLength={100}
+                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">E-mail Corporativo</label>
+                        <Input
+                          type="email"
+                          placeholder="joao@empresa.com.br"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          maxLength={255}
+                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">WhatsApp</label>
+                        <Input
+                          type="tel"
+                          inputMode="tel"
+                          placeholder="(00) 00000-0000"
+                          value={whatsapp}
+                          onChange={e => setWhatsapp(formatWhatsapp(e.target.value))}
+                          maxLength={16}
+                          className="h-14 text-lg border-white/10 bg-black/20 focus:bg-black/40 transition-all rounded-xl"
+                        />
+                      </div>
+                      
                       <Button
                         size="lg"
                         onClick={handleSubmitLead}
                         disabled={loading}
-                        className="w-full text-white text-lg py-6 rounded-xl"
-                        style={{ background: 'linear-gradient(135deg, hsl(152 50% 42%), hsl(152 50% 35%))' }}
+                        className="w-full text-white text-xl font-black py-8 rounded-xl shadow-2xl mt-4 group overflow-hidden relative"
+                        style={{ 
+                          background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(152 66% 45%))',
+                          boxShadow: '0 20px 40px -10px rgba(16, 185, 129, 0.3)'
+                        }}
                       >
-                        {loading ? "Enviando..." : "RESERVAR MINHA VAGA →"}
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        <span className="relative z-10">{loading ? "PROCESSANDO..." : "GARANTIR MINHA VAGA AGORA →"}</span>
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-600 text-center mt-4">
-                      🔒 Seus dados estão seguros. Não enviamos spam.
+                    <p className="text-[10px] text-gray-500 text-center mt-6 font-medium uppercase tracking-widest">
+                      🔒 Ambiente criptografado e 100% seguro pela LGPD
                     </p>
                   </div>
                 </motion.div>
