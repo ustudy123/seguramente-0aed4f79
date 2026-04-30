@@ -262,6 +262,48 @@ export default function LandingPage() {
       <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 60% 10%)' }}>
         <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(207 90% 45% / 0.05)' }} />
         <div className="max-w-6xl mx-auto relative">
+          {/* ═══════════ BIG NUMBERS SECTION ═══════════ */}
+          <div className="mb-32">
+            <motion.div {...fadeUp} className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-black mb-4">
+                Números que tiram o <span style={{ color: 'hsl(33 100% 50%)' }}>sono</span> do empregador
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+                Ignorar a conformidade legal não é uma economia. É um risco financeiro de proporções catastróficas.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              {[
+                { number: "R$ 100 Bi", label: "Custos anuais das empresas com processos trabalhistas no Brasil", icon: TrendingDown, color: "hsl(33 100% 50%)" },
+                { number: "213%", label: "Do salário anual é o custo médio para substituir um talento perdido por burnout", icon: Users, color: "hsl(207 90% 55%)" },
+                { number: "R$ 50 Mil", label: "Multa máxima POR INFRAÇÃO em caso de descumprimento das NRs", icon: Scale, color: "hsl(152 66% 50%)" },
+              ].map((stat, i) => (
+                <motion.div 
+                  key={stat.label}
+                  {...fadeUp}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-8 rounded-3xl relative overflow-hidden group"
+                  style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <stat.icon className="w-24 h-24" />
+                  </div>
+                  <motion.h3 
+                    className="text-5xl md:text-6xl font-black mb-4 tracking-tighter"
+                    style={{ color: stat.color }}
+                    initial={{ scale: 0.8 }}
+                    whileInView={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                  >
+                    {stat.number}
+                  </motion.h3>
+                  <p className="text-gray-300 font-medium text-lg leading-tight">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
           <motion.div {...fadeUp} className="text-center mb-16">
             <Badge className="mb-4" style={{ background: 'hsl(207 90% 45% / 0.15)', color: 'hsl(152 66% 55%)', borderColor: 'hsl(207 90% 45% / 0.3)' }}>
               <Sparkles className="w-4 h-4 mr-1" /> INTELIGÊNCIA ARTIFICIAL
