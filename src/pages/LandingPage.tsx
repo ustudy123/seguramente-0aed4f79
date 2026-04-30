@@ -684,23 +684,24 @@ export default function LandingPage() {
             </div>
 
             {/* Vagas visual */}
-            <div className="rounded-2xl p-6 mb-8" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-bold text-gray-400">Vagas preenchidas</span>
-                <span className="text-sm font-bold" style={{ color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
+            <div className="rounded-[2rem] p-8 mb-10 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 pointer-events-none" />
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-sm font-bold uppercase tracking-widest text-gray-500">Status das Vagas</span>
+                <span className="text-xl font-black px-3 py-1 rounded-lg" style={{ background: 'hsl(33 100% 50% / 0.1)', color: 'hsl(33 100% 50%)' }}>{10 - vagasRestantes}/10</span>
               </div>
-              <div className="w-full rounded-full h-4 overflow-hidden" style={{ background: 'hsl(215 40% 20%)' }}>
+              <div className="w-full rounded-full h-5 overflow-hidden p-1 relative z-10" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <motion.div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full shadow-[0_0_20px_rgba(249,115,22,0.4)]"
                   style={{ background: 'linear-gradient(90deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${((10 - vagasRestantes) / 10) * 100}%` }}
                   viewport={{ once: true }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  transition={{ duration: 1.5, ease: "circOut" }}
                 />
               </div>
-              <p className="text-xs text-gray-600 mt-2 text-center">
-                Quando as 10 vagas forem preenchidas, novos acessos serão apenas por planos pagos com módulos limitados
+              <p className="text-xs text-gray-500 mt-4 text-center font-medium italic relative z-10">
+                Atenção: Após o preenchimento total, a plataforma passará a cobrar por cada módulo individualmente.
               </p>
             </div>
 
