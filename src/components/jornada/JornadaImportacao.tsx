@@ -37,6 +37,7 @@ export function JornadaImportacao() {
   const [mapeamento, setMapeamento] = useState<Record<string, number | undefined>>({});
   const [dadosProcessados, setDadosProcessados] = useState<any[]>([]);
   const [resultado, setResultado] = useState<any>(null);
+  const [lendoArquivo, setLendoArquivo] = useState(false);
   
   // Template state
   const [templates, setTemplates] = useState<any[]>([]);
