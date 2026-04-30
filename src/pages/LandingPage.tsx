@@ -97,7 +97,7 @@ export default function LandingPage() {
         <div className="hidden sm:flex items-center justify-center gap-3 px-3 leading-tight">
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 shrink-0" />
-            ⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.
+            ⚠️ NR-01 ATUALIZADA — Fatores de fatores de riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.
           </span>
           {vagasRestantes > 0 && (
             <span className="px-2 py-0.5 rounded-full text-xs font-black shrink-0" style={{ background: 'hsl(33 100% 50%)', color: '#fff' }}>
@@ -111,7 +111,7 @@ export default function LandingPage() {
             {[0, 1].map((i) => (
               <span key={i} className="flex items-center gap-2 px-4 shrink-0">
                 <Clock className="w-3 h-3 shrink-0" />
-                <span>⚠️ NR-01 ATUALIZADA — Riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.</span>
+                <span>⚠️ NR-01 ATUALIZADA — Fatores de fatores de riscos psicossociais agora são OBRIGATÓRIOS. Multas de até R$ 50.000 por infração.</span>
                 {vagasRestantes > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0" style={{ background: 'hsl(33 100% 50%)', color: '#fff' }}>
                     🔥 {vagasRestantes} vagas
@@ -156,7 +156,7 @@ export default function LandingPage() {
               <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(207 90% 45% / 0.15)' }}>
                 <img
                   src={mockupDashboard}
-                  alt="Dashboard YOUREYES - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
+                  alt="Dashboard YOUREYES - Painel de controle com indicadores de fatores de riscos psicossociais, compliance NR-01 e gestão de RH"
                   className="w-full h-auto rounded-2xl"
                   loading="lazy"
                 />
@@ -165,7 +165,7 @@ export default function LandingPage() {
             </motion.div>
 
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
-              A NR-01 foi atualizada. Agora <strong className="text-white">riscos psicossociais são obrigatórios</strong> no GRO/PGR.
+              A NR-01 foi atualizada. Agora <strong className="text-white">fatores de riscos psicossociais são obrigatórios</strong> no GRO/PGR.
               Empresas que não se adequarem enfrentam <strong style={{ color: 'hsl(33 100% 60%)' }}>multas, interdições e processos trabalhistas</strong>.
             </p>
 
@@ -271,7 +271,7 @@ export default function LandingPage() {
               Gestão Psicossocial <span style={{ color: 'hsl(33 100% 50%)' }}>Completa</span> e Automatizada
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-              O YOUREYES é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores psicossociais exigidos pela NR-01 atualizada, 
+              O YOUREYES é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores de riscos psicossociais exigidos pela NR-01 atualizada, 
               com questionários validados, indicadores automáticos e relatórios prontos para a fiscalização.
             </p>
           </motion.div>
