@@ -165,6 +165,39 @@ const NIVEIS_VALIDOS: Record<string, string> = {
   "dir": "diretor",
 };
 
+/**
+ * Recorta o range (`!ref`) da planilha para a última linha que realmente contém
+ * dados. Algumas planilhas (especialmente exportações de sistemas legados) vêm
+ * com `!ref` apontando até a linha 1.048.576, o que faria `sheet_to_json`
+ * gerar mais de um milhão de linhas vazias e travar o navegador.
+ */
+function recortarRangePlanilha(planilha: XLSX.WorkSheet): void {
+  const ref = planilha["!ref"];
+  if (!ref) return;
+  const range = XLSX.utils.decode_range(ref);
+  let ultimaLinhaComDados = range.s.r;
+
+  for (let r = range.e.r; r >= range.s.r; r--) {
+    let temDado = false;
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = planilha[XLSX.utils.encode_cell({ r, c })];
+      if (cell && cell.v !== undefined && cell.v !== null && String(cell.v).trim() !== "") {
+        temDado = true;
+        break;
+      }
+    }
+    if (temDado) {
+      ultimaLinhaComDados = r;
+      break;
+    }
+  }
+
+  if (ultimaLinhaComDados < range.e.r) {
+    range.e.r = ultimaLinhaComDados;
+    planilha["!ref"] = XLSX.utils.encode_range(range);
+  }
+}
+
 function normalizarTexto(texto: string): string {
   return texto
     .toLowerCase()
@@ -393,7 +426,8 @@ export function useImportacaoPlanilha() {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const planilha = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
+          recortarRangePlanilha(planilha);
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           if (jsonData.length < 1) { reject(new Error("Planilha vazia")); return; }
           const headers = jsonData[0].map(h => str(h)).filter(h => h.length > 0);
           const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows
@@ -416,7 +450,8 @@ export function useImportacaoPlanilha() {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const planilha = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
+          recortarRangePlanilha(planilha);
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
 
           const headers = jsonData[0].map(h => str(h));
@@ -538,7 +573,8 @@ export function useImportacaoPlanilha() {
           const workbook = XLSX.read(data, { type: "array", cellDates: false });
           const primeiraAba = workbook.SheetNames[0];
           const planilha = workbook.Sheets[primeiraAba];
-          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "" }) as any[][];
+          recortarRangePlanilha(planilha);
+          const jsonData = XLSX.utils.sheet_to_json(planilha, { header: 1, raw: true, defval: "", blankrows: false }) as any[][];
           
           if (jsonData.length < 2) { reject(new Error("Planilha vazia ou sem dados")); return; }
           
