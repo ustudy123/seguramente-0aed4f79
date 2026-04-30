@@ -515,17 +515,18 @@ export default function LandingPage() {
           </motion.div>
           <div className="space-y-8">
             {[
-              { step: "01", title: "Faça o Diagnóstico Gratuito", desc: "Responda 7 perguntas e descubra em 2 minutos o nível de risco psicossocial da sua empresa. Resultado imediato." },
-              { step: "02", title: "Crie sua Conta e Configure", desc: "Cadastre sua empresa, departamentos e colaboradores. O YOUREYES já gera automaticamente os indicadores iniciais." },
-              { step: "03", title: "Deixe a IA Trabalhar por Você", desc: "O sistema monitora continuamente atestados, ponto, denúncias e turnover. Você recebe alertas antes dos problemas virarem multas." },
+              { step: "01", title: "Diagnóstico Rápido", desc: "Responda 7 perguntas críticas e receba um relatório imediato do nível de exposição da sua empresa." },
+              { step: "02", title: "Setup Inteligente", desc: "Nossa IA importa seus dados e configura departamentos e cargos automaticamente em minutos." },
+              { step: "03", title: "Monitoramento Ativo", desc: "O sistema assume o controle, disparando alertas proativos e gerando conformidade automática." },
             ].map((s, i) => (
-              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-6 items-start">
-                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(207 90% 45% / 0.15), hsl(152 66% 50% / 0.15))', border: '1px solid hsl(207 90% 45% / 0.2)' }}>
-                  <span className="text-2xl font-black" style={{ color: 'hsl(207 90% 60%)' }}>{s.step}</span>
+              <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-8 items-start group">
+                <div className="shrink-0 w-20 h-20 rounded-3xl flex items-center justify-center relative" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div className="absolute inset-0 bg-blue-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-3xl font-black relative z-10" style={{ backgroundImage: 'linear-gradient(135deg, hsl(207 90% 65%), hsl(152 66% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{s.step}</span>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-1">{s.title}</h3>
-                  <p className="text-gray-400">{s.desc}</p>
+                <div className="pt-2">
+                  <h3 className="text-2xl font-black mb-2 tracking-tight group-hover:text-white transition-colors">{s.title}</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed group-hover:text-gray-300 transition-colors">{s.desc}</p>
                 </div>
               </motion.div>
             ))}
