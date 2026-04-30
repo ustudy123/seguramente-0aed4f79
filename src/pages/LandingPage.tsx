@@ -286,8 +286,8 @@ export default function LandingPage() {
                   className="p-8 rounded-3xl relative overflow-hidden group"
                   style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}
                 >
-                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <stat.icon className="w-24 h-24" />
+                  <div className="absolute top-4 right-4 transition-all group-hover:scale-110 group-hover:rotate-3">
+                    <stat.icon className="w-20 h-20" style={{ color: stat.color, opacity: 0.35, filter: `drop-shadow(0 0 12px ${stat.color})` }} strokeWidth={1.5} />
                   </div>
                   <motion.h3 
                     className="text-5xl md:text-6xl font-black mb-4 tracking-tighter"
