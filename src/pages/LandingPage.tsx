@@ -36,6 +36,14 @@ const fadeUp = {
   transition: { duration: 0.6 },
 };
 
+const pulseGlow = {
+  initial: { boxShadow: '0 0 0 0px hsl(33 100% 50% / 0.4)' },
+  animate: { 
+    boxShadow: ['0 0 0 0px hsl(33 100% 50% / 0.4)', '0 0 0 15px hsl(33 100% 50% / 0)', '0 0 0 0px hsl(33 100% 50% / 0)'],
+    transition: { duration: 2, repeat: Infinity }
+  }
+};
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [vagasRestantes, setVagasRestantes] = useState(10);
