@@ -55,7 +55,7 @@ const formSchema = z.object({
     .min(11, "CPF deve ter 11 dígitos")
     .refine((val) => cleanCpf(val).length === 11, "CPF deve ter 11 dígitos")
     .refine((val) => validateCpf(val), "CPF inválido - verifique os dígitos"),
-  email: z.string().email("Email inválido"),
+  email: z.string().trim().email("Email inválido").optional().or(z.literal("")),
   celular: z.string().optional(),
   tipo_contrato: z.string().min(1, "Selecione o tipo de vínculo"),
   cargo: z.string().min(1, "Selecione um cargo"),
