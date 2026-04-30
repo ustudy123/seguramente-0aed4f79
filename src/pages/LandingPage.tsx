@@ -347,21 +347,20 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain, title: "Psicossocial Cruzando TODOS os Módulos", desc: "O motor psicossocial cruza dados de Ponto, Atestados, Ouvidoria, Avaliações, Turnover e Ocorrências em tempo real para detectar burnout e assédio antes da fiscalização." },
-              { icon: Fingerprint, title: "Entrega de EPI com Reconhecimento Facial", desc: "Cada entrega é validada por liveness + biometria facial — prova jurídica indiscutível para o eSocial S-2240 e auditorias trabalhistas." },
-              { icon: Eye, title: "Leitura de Notas e Atestados (OCR + GPT-4o)", desc: "Foto de NF-e, atestado médico, ASO ou DANFE: a IA extrai CID, dias de afastamento, valores e classifica automaticamente." },
-              { icon: MessageSquare, title: "Ouvidoria Inteligente com IA", desc: "Classifica denúncias por sentimento, urgência e categoria (assédio, ética, segurança). Identifica reincidência e sugere encaminhamento." },
-              { icon: Target, title: "PDI e Avaliações 360° com IA", desc: "Planos de Desenvolvimento Individual gerados automaticamente após avaliações, com metas SMART personalizadas por cargo." },
-              { icon: ClipboardCheck, title: "Detecção Observável Automática", desc: "Monitora turnover, horas extras, atestados mentais e ocorrências disciplinares — gatilhos automáticos para campanhas extraordinárias." },
-              { icon: GraduationCap, title: "Onboarding Self-Service Guiado", desc: "Novo cliente cria empresa, importa colaboradores, configura cargos e já recebe IA cadastrando departamentos automaticamente." },
-              { icon: Bot, title: "Matching Inteligente NF × Guia", desc: "IA cruza XML de notas fiscais com guias de pagamento (DARF, INSS, FGTS), identifica divergências e gera dossiês contábeis." },
-              { icon: Scale, title: "Conformidade Legal Automática", desc: "PGR, PCMSO, LTCAT auditados pela IA quanto à coerência normativa. Avisos de NR-01, NR-04, NR-07, NR-17 sempre atualizados." },
+              { icon: Brain, title: "Psicossocial NR-01", desc: "O motor psicossocial cruza dados de Ponto, Atestados, Ouvidoria, Avaliações, Turnover e Ocorrências em tempo real para detectar burnout e assédio antes da fiscalização." },
+              { icon: Fingerprint, title: "EPI com Facial", desc: "Cada entrega é validada por liveness + biometria facial — prova jurídica indiscutível para o eSocial S-2240 e auditorias trabalhistas." },
+              { icon: Eye, title: "Leitura IA (OCR)", desc: "Foto de NF-e, atestado médico, ASO ou DANFE: a IA extrai CID, dias de afastamento, valores e classifica automaticamente." },
+              { icon: MessageSquare, title: "Ouvidoria com IA", desc: "Classifica denúncias por sentimento, urgência e categoria (assédio, ética, segurança). Identifica reincidência e sugere encaminhamento." },
+              { icon: Target, title: "PDI Inteligente", desc: "Planos de Desenvolvimento Individual gerados automaticamente após avaliações, com metas SMART personalizadas por cargo." },
+              { icon: ClipboardCheck, title: "Detecção Automática", desc: "Monitora turnover, horas extras, atestados mentais e ocorrências disciplinares — gatilhos automáticos para campanhas extraordinárias." },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(215 50% 14%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(207 90% 45% / 0.1)' }}>
-                  <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(152 66% 55%)' }} />
-                  <h3 className="text-base font-bold mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">{item.desc}</p>
+                <div className="rounded-2xl p-8 h-full transition-all duration-300 hover:bg-white/[0.05] group border border-white/5 bg-white/[0.02] backdrop-blur-md">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 group-hover:scale-110 transition-transform">
+                    <item.icon className="w-6 h-6" style={{ color: 'hsl(152 66% 55%)' }} />
+                  </div>
+                  <h3 className="text-lg font-bold mb-3 tracking-tight group-hover:text-emerald-400 transition-colors">{item.title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
