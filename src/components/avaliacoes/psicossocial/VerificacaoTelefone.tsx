@@ -35,7 +35,46 @@ export function VerificacaoTelefone({
   const [verificando, setVerificando] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [jaRespondeu, setJaRespondeu] = useState(false);
+  const [modoToken, setModoToken] = useState(false);
+  const [tokenEmail, setTokenEmail] = useState("");
+  const [tokenValor, setTokenValor] = useState("");
+  const [validandoToken, setValidandoToken] = useState(false);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+
+  // ── BYPASS DE TESTE (uso restrito) ──
+  // Permite que um usuário específico de testes pule a verificação WhatsApp.
+  const TEST_BYPASS_EMAIL = "renata_sophia_cortereal@cafefrossard.com";
+  const TEST_BYPASS_TOKEN = "PAULO2026";
+
+  const sha256Hex = async (input: string) => {
+    const buf = new TextEncoder().encode(input);
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
+  const validarTokenTeste = async () => {
+    const emailNorm = tokenEmail.trim().toLowerCase();
+    const tokenNorm = tokenValor.trim().toUpperCase();
+    if (emailNorm !== TEST_BYPASS_EMAIL.toLowerCase() || tokenNorm !== TEST_BYPASS_TOKEN) {
+      toast.error("Token ou email inválido para acesso de teste.");
+      return;
+    }
+    setValidandoToken(true);
+    try {
+      // Hash determinístico por email+campanha — garante 1 resposta por campanha
+      // mesmo no modo de teste, mantendo a integridade da campanha.
+      const telefoneHash = await sha256Hex(`bypass:${emailNorm}:${campanhaId}`);
+      setEtapa("verificado");
+      toast.success("Acesso de teste autorizado!");
+      setTimeout(() => onVerificado(telefoneHash), 800);
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao validar token");
+    } finally {
+      setValidandoToken(false);
+    }
+  };
 
   useEffect(() => {
     if (cooldown <= 0) return;
