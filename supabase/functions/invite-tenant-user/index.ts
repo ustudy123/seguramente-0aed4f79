@@ -295,11 +295,20 @@ serve(async (req) => {
     return json({ error: e?.message || "Erro ao criar usuário" }, 500);
   }
 
+  // Check if tenant already has empresa_cadastro — if so, mark onboarding as concluded
+  // (new users joining configured tenants should not see the onboarding flow)
+  const { count: empresaCount } = await admin
+    .from("empresa_cadastro")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId);
+  const tenantAlreadyConfigured = (empresaCount ?? 0) > 0;
+
   // Create profile
   const { error: profileError } = await admin.from("profiles").insert({
     user_id: newUserId!,
     tenant_id: tenantId,
     nome_completo: nomeCompleto,
+    onboarding_concluido: tenantAlreadyConfigured,
   });
 
   if (profileError) {
