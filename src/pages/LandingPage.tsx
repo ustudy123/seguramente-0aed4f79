@@ -257,12 +257,21 @@ export default function LandingPage() {
               { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(152 66% 50%)", bg: "hsl(152 66% 50% / 0.1)" },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
-                <div className="rounded-2xl p-6 h-full transition-colors" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: item.bg }}>
-                    <item.icon className="w-6 h-6" style={{ color: item.color }} />
+                <div 
+                  className="rounded-2xl p-8 h-full transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden" 
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', 
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundImage: `linear-gradient(135deg, ${item.color}, transparent)` }} />
+                  
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg transition-transform group-hover:rotate-6" style={{ background: item.bg, border: `1px solid ${item.color}20` }}>
+                    <item.icon className="w-7 h-7" style={{ color: item.color }} />
                   </div>
-                  <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">{item.desc}</p>
+                  <h3 className="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">{item.title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
