@@ -20121,6 +20121,14 @@ export type Database = {
           total_servicos_executados: number
         }[]
       }
+      clone_perfil_permissoes: {
+        Args: {
+          _source_perfil_id: string
+          _target_perfil_id: string
+          _target_tenant_id: string
+        }
+        Returns: undefined
+      }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
       epi_atualizar_estoque_local_otimista: {
         Args: {
