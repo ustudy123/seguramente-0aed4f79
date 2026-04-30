@@ -431,8 +431,6 @@ export function useImportacaoPlanilha() {
           if (jsonData.length < 1) { reject(new Error("Planilha vazia")); return; }
           const headers = jsonData[0].map(h => str(h)).filter(h => h.length > 0);
           const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows
-          const headers = jsonData[0].map(h => str(h)).filter(h => h.length > 0);
-          const sampleRows = jsonData.slice(1, 4); // up to 3 sample rows
           resolve({ headers, sampleRows });
         } catch (error) { reject(error); }
       };
