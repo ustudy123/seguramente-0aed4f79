@@ -43,11 +43,11 @@ function buildInviteHtml(nomeCompleto: string, confirmationUrl: string, method: 
   `;
 }
 
-async function sendViaResend(email: string, subject: string, html: string) {
+async function sendViaResend(email: string, subject: string, html: string): Promise<{ ok: boolean; error?: string }> {
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) {
     console.error("RESEND_API_KEY not configured");
-    return;
+    return { ok: false, error: "RESEND_API_KEY not configured" };
   }
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -64,11 +64,15 @@ async function sendViaResend(email: string, subject: string, html: string) {
       }),
     });
     if (!res.ok) {
-      const err = await res.json();
+      const err = await res.json().catch(() => ({}));
       console.error("Resend error:", err);
+      return { ok: false, error: (err as any)?.message ?? `HTTP ${res.status}` };
     }
-  } catch (e) {
-    console.error("Email send error:", e);
+    console.log("Resend email sent to:", email);
+    return { ok: true };
+  } catch (e: any) {
+    console.error("Email send error:", e?.message ?? e);
+    return { ok: false, error: e?.message ?? "Email send error" };
   }
 }
 
