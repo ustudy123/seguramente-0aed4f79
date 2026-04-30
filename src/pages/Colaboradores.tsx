@@ -255,7 +255,7 @@ function AtivosTab() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
         <Button variant="outline" onClick={() => setShowImport(true)}>
           <Upload className="w-4 h-4 mr-2" />
-          Importar Planilha
+          Importar Colaboradores
         </Button>
         <Button className="gradient-primary shadow-glow" onClick={() => setShowNovoChoice(true)}>
           <Plus className="w-4 h-4 mr-2" />
