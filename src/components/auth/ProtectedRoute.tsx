@@ -94,10 +94,12 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     !isOwner &&
     perfilVinculado &&
     !loadingPerfil &&
-    !ALWAYS_ALLOWED_PATHS.has(location.pathname)
+    !ALWAYS_ALLOWED_PATHS.has(location.pathname.split("?")[0].split("#")[0])
   ) {
     const modulo = getModuloForPath(location.pathname);
-    if (modulo && !temAcessoModulo(modulo)) {
+    // Gating estrito: rota sem módulo mapeado + perfil vinculado = bloqueada
+    const blocked = !modulo || !temAcessoModulo(modulo);
+    if (blocked) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="max-w-md w-full text-center space-y-6">
