@@ -526,14 +526,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       {/* Form Modal */}
       <ColaboradorForm open={showForm} onOpenChange={handleCloseForm} onSuccess={() => refetch()} colaborador={editingColaborador} />
 
-      {/* Import Modal */}
-      <ImportPlanilhaModal
-        open={showImport}
-        onOpenChange={setShowImport}
-        onSuccess={handleImportSuccess}
-        titulo="Importar Colaboradores"
-        descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
-      />
+      {/* Import Modal moved to parent Colaboradores component to work across all tabs */}
 
       {/* Detail Modal */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
@@ -1035,12 +1028,21 @@ function DesligadosTab() {
 // ========== Main Page ==========
 const Colaboradores = () => {
   const [showImport, setShowImport] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
     window.addEventListener('open-import-colaboradores', handleOpenImport);
     return () => window.removeEventListener('open-import-colaboradores', handleOpenImport);
   }, []);
+
+  const handleImportSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["colaboradores-list"] });
+    queryClient.invalidateQueries({ queryKey: ["colaboradores"] });
+    queryClient.invalidateQueries({ queryKey: ["cargos"] });
+    queryClient.invalidateQueries({ queryKey: ["departamentos"] });
+    queryClient.invalidateQueries({ queryKey: ["admissoes"] });
+  };
 
   return (
     <div className="space-y-6">
@@ -1076,6 +1078,15 @@ const Colaboradores = () => {
           <DesligadosTab />
         </TabsContent>
       </Tabs>
+
+      {/* Import Modal at parent level — works regardless of active tab */}
+      <ImportPlanilhaModal
+        open={showImport}
+        onOpenChange={setShowImport}
+        onSuccess={handleImportSuccess}
+        titulo="Importar Colaboradores"
+        descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
+      />
     </div>
   );
 };
