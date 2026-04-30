@@ -1078,6 +1078,15 @@ const Colaboradores = () => {
           <DesligadosTab />
         </TabsContent>
       </Tabs>
+
+      {/* Import Modal at parent level — works regardless of active tab */}
+      <ImportPlanilhaModal
+        open={showImport}
+        onOpenChange={setShowImport}
+        onSuccess={handleImportSuccess}
+        titulo="Importar Colaboradores"
+        descricao="Importe uma planilha para criar colaboradores, funções e departamentos automaticamente"
+      />
     </div>
   );
 };
