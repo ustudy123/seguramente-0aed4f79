@@ -156,7 +156,7 @@ export function useAuth() {
     try {
       // Sign up user
       // Use the published URL for email redirects to avoid localhost issues
-      const appUrl = "https://seguramente.lovable.app";
+      const appUrl = "https://youreyes.com.br";
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,

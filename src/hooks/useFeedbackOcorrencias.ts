@@ -231,7 +231,7 @@ export function useFeedbackOcorrencias() {
       if (data) {
         try {
           const advData = data as AdvertenciaLink;
-          const advUrl = `https://seguramente.lovable.app/advertencia?token=${advData.token}`;
+          const advUrl = `https://youreyes.com.br/advertencia?token=${advData.token}`;
           sendEmail({
             templateName: "generico",
             recipientEmail: advData.destinatario_email,

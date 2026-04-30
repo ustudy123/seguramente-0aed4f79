@@ -166,7 +166,7 @@ export default function Register() {
 
       // 1. Create auth user with Supabase (sends verification email)
       // Use published app URL to avoid localhost links in confirmation emails
-      const appUrl = "https://seguramente.lovable.app";
+      const appUrl = "https://youreyes.com.br";
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.senha,

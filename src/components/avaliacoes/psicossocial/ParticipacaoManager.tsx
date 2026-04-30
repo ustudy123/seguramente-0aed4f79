@@ -63,7 +63,7 @@ interface ParticipacaoManagerProps {
 }
 
 // Sempre usa a URL publicada para garantir acesso anônimo sem login Lovable
-const BASE_URL = import.meta.env.VITE_APP_URL || "https://seguramente.lovable.app";
+const BASE_URL = import.meta.env.VITE_APP_URL || "https://youreyes.com.br";
 
 function getLinkParticipacao(token: string) {
   return `${BASE_URL}/p/${token}`;

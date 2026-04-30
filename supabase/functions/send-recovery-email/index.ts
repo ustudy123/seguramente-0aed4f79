@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SITE_URL = Deno.env.get("SITE_URL") || "https://seguramente.lovable.app";
+const SITE_URL = Deno.env.get("SITE_URL") || "https://youreyes.com.br";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
