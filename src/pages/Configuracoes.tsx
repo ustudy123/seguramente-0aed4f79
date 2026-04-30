@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, ClipboardList, ShieldCheck, Rocket, ArrowRight, Shield, ImageIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,13 +10,41 @@ import UsuariosContent from "@/components/configuracoes/UsuariosContent";
 import PerfisContent from "@/components/configuracoes/PerfisContent";
 import { EsocialConfig } from "@/components/esocial/EsocialConfig";
 import { EmpresaLogoTab } from "@/components/configuracoes/EmpresaLogoTab";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Configuracoes() {
   const { hasMinimumRole, profile, isSuperAdmin } = useAuthContext();
   const isAdmin = hasMinimumRole("admin");
   const navigate = useNavigate();
 
-  const needsOnboarding = !!profile && !(profile as any).onboarding_concluido && !isSuperAdmin;
+  const profileOnboardingIncomplete = !!profile && !(profile as any).onboarding_concluido && !isSuperAdmin;
+  const tenantId = (profile as any)?.tenant_id;
+  const [tenantHasData, setTenantHasData] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!profileOnboardingIncomplete || !tenantId) {
+      setTenantHasData(false);
+      return;
+    }
+    supabase
+      .from("empresa_cadastro")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .then(({ count }) => {
+        const hasData = (count ?? 0) > 0;
+        setTenantHasData(hasData);
+        if (hasData) {
+          // Self-heal: mark this user's onboarding as concluded
+          supabase
+            .from("profiles")
+            .update({ onboarding_concluido: true })
+            .eq("user_id", (profile as any).user_id)
+            .then(() => {});
+        }
+      });
+  }, [profileOnboardingIncomplete, tenantId]);
+
+  const needsOnboarding = profileOnboardingIncomplete && tenantHasData === false;
 
   return (
     <div className="space-y-6">
