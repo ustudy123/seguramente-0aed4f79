@@ -165,6 +165,39 @@ const NIVEIS_VALIDOS: Record<string, string> = {
   "dir": "diretor",
 };
 
+/**
+ * Recorta o range (`!ref`) da planilha para a última linha que realmente contém
+ * dados. Algumas planilhas (especialmente exportações de sistemas legados) vêm
+ * com `!ref` apontando até a linha 1.048.576, o que faria `sheet_to_json`
+ * gerar mais de um milhão de linhas vazias e travar o navegador.
+ */
+function recortarRangePlanilha(planilha: XLSX.WorkSheet): void {
+  const ref = planilha["!ref"];
+  if (!ref) return;
+  const range = XLSX.utils.decode_range(ref);
+  let ultimaLinhaComDados = range.s.r;
+
+  for (let r = range.e.r; r >= range.s.r; r--) {
+    let temDado = false;
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = planilha[XLSX.utils.encode_cell({ r, c })];
+      if (cell && cell.v !== undefined && cell.v !== null && String(cell.v).trim() !== "") {
+        temDado = true;
+        break;
+      }
+    }
+    if (temDado) {
+      ultimaLinhaComDados = r;
+      break;
+    }
+  }
+
+  if (ultimaLinhaComDados < range.e.r) {
+    range.e.r = ultimaLinhaComDados;
+    planilha["!ref"] = XLSX.utils.encode_range(range);
+  }
+}
+
 function normalizarTexto(texto: string): string {
   return texto
     .toLowerCase()
