@@ -382,9 +382,13 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     return (path?: string) => {
       if (!path) return true;
       if (isSuperAdmin || isOwner || !perfilVinculado) return true;
-      if (ALWAYS_ALLOWED_PATHS.has(path)) return true;
+      // Normaliza pathname (sem query/hash) p/ checar ALWAYS_ALLOWED
+      const cleanPath = path.split("?")[0].split("#")[0];
+      if (ALWAYS_ALLOWED_PATHS.has(cleanPath)) return true;
       const modulo = getModuloForPath(path);
-      if (!modulo) return true; // rotas globais
+      // Gating estrito: se o usuário tem perfil vinculado e a rota não tem
+      // módulo mapeado, ela é considerada RESTRITA.
+      if (!modulo) return false;
       return temAcessoModulo(modulo);
     };
   }, [isSuperAdmin, isOwner, perfilVinculado, temAcessoModulo]);
@@ -575,22 +579,24 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
               />
             ))}
 
-            <NavLink
-              to="/estrategia"
-              onClick={isMobile ? onClose : undefined}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
-                  "font-semibold",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                )
-              }
-            >
-              <Compass className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-              {!isCollapsed && <span className="text-[13px]">Estratégia & Governança</span>}
-            </NavLink>
+            {isItemAllowed("/estrategia") && (
+              <NavLink
+                to="/estrategia"
+                onClick={isMobile ? onClose : undefined}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
+                    "font-semibold",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                      : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                  )
+                }
+              >
+                <Compass className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
+                {!isCollapsed && <span className="text-[13px]">Estratégia & Governança</span>}
+              </NavLink>
+            )}
 
             {filteredSections.filter(s => s.label !== "Estrutura Organizacional").map((section) => (
               <div key={section.label}>
