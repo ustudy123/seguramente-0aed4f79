@@ -67,6 +67,11 @@ export function OnboardingGate() {
     tenantHasData === false; // Only block if tenant truly has no data
 
   useEffect(() => {
+    // Wait until the tenant check resolves before deciding anything
+    if (profileOnboardingIncomplete && tenantHasData === null) {
+      return;
+    }
+
     if (!needsOnboarding) {
       setShowModal(false);
       localStorage.removeItem(ONBOARDING_SHOWN_KEY);
@@ -89,7 +94,7 @@ export function OnboardingGate() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [needsOnboarding]);
+  }, [needsOnboarding, profileOnboardingIncomplete, tenantHasData]);
 
   const handleGoToOnboarding = () => {
     const token = (profile as any)?.onboarding_token;
