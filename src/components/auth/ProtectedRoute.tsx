@@ -87,6 +87,42 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Perfil-based gating: se o usuário tem perfil vinculado (e não é owner/superadmin),
+  // checa se a rota atual está liberada para o módulo do seu perfil.
+  if (
+    !isSuperAdmin &&
+    !isOwner &&
+    perfilVinculado &&
+    !loadingPerfil &&
+    !ALWAYS_ALLOWED_PATHS.has(location.pathname)
+  ) {
+    const modulo = getModuloForPath(location.pathname);
+    if (modulo && !temAcessoModulo(modulo)) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+              <ShieldOff className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-foreground">Acesso Restrito</h1>
+              <p className="text-muted-foreground">
+                Seu perfil de acesso não inclui este módulo. Solicite ao administrador
+                da sua empresa para revisar suas permissões.
+              </p>
+            </div>
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90"
+            >
+              Voltar ao início
+            </Link>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return <>{children}</>;
 }
 
