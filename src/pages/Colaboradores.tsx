@@ -90,6 +90,7 @@ import { AdmissaoFormData } from "@/types/database";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return "-";
