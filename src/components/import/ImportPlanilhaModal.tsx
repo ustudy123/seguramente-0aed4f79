@@ -68,6 +68,7 @@ export function ImportPlanilhaModal({
   const [sampleRows, setSampleRows] = useState<any[][]>([]);
   const [usarMapeamento, setUsarMapeamento] = useState(false);
   const [previewFilter, setPreviewFilter] = useState<"todos" | "erros" | "validos">("todos");
+  const [lendoArquivo, setLendoArquivo] = useState(false);
 
   const dadosComErros = dados.filter(d => d.erros.length > 0);
   const dadosValidos = dados.filter(d => d.erros.length === 0);
