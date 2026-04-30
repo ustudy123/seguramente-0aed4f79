@@ -82,6 +82,7 @@ export function JornadaImportacao() {
     const file = files[0];
     if (!file) return;
     setArquivo(file);
+    setLendoArquivo(true);
     try {
       const { headers: h, dados } = await lerArquivo(file);
       setHeaders(h);
@@ -115,6 +116,8 @@ export function JornadaImportacao() {
       toast.success(`Arquivo lido: ${h.length} colunas, ${dados.length} linhas`);
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setLendoArquivo(false);
     }
   }, [lerArquivo]);
 
