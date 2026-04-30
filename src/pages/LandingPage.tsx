@@ -195,17 +195,24 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="my-10 max-w-5xl mx-auto"
+              className="my-16 max-w-5xl mx-auto relative"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(207 90% 45% / 0.15)' }}>
+              {/* Decorative elements around mockup */}
+              <div className="absolute -top-6 -left-6 w-24 h-24 border-t-2 border-l-2 border-hsl(207 90% 45% / 0.3) rounded-tl-2xl hidden md:block" />
+              <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b-2 border-r-2 border-hsl(33 100% 50% / 0.3) rounded-br-2xl hidden md:block" />
+              
+              <div className="relative rounded-2xl overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border border-white/5 bg-white/5 backdrop-blur-sm p-1">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-orange-500/10 pointer-events-none" />
                 <img
                   src={mockupDashboard}
-                  alt="Dashboard YOUREYES - Painel de controle com indicadores de fatores de riscos psicossociais, compliance NR-01 e gestão de RH"
-                  className="w-full h-auto rounded-2xl"
+                  alt="Dashboard YOUREYES - Painel de controle inteligente"
+                  className="w-full h-auto rounded-xl shadow-2xl relative z-10"
                   loading="lazy"
                 />
               </div>
-              <p className="text-center text-xs text-gray-600 mt-3">* Imagem ilustrativa do painel de controle do YOUREYES</p>
+              <p className="text-center text-[10px] uppercase tracking-widest text-gray-500 mt-6 font-bold opacity-60">
+                Visualização real da plataforma YOUREYES
+              </p>
             </motion.div>
 
             <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-4">
