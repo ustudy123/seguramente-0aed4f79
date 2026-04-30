@@ -84,6 +84,7 @@ export function ImportPlanilhaModal({
     setSampleRows([]);
     setUsarMapeamento(false);
     setPreviewFilter("todos");
+    setLendoArquivo(false);
   };
 
   const fechar = () => {
