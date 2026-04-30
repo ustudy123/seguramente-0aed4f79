@@ -90,6 +90,7 @@ import { AdmissaoFormData } from "@/types/database";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return "-";
@@ -1034,6 +1035,8 @@ function DesligadosTab() {
 const Colaboradores = () => {
   const [showImport, setShowImport] = useState(false);
   const queryClient = useQueryClient();
+  const { temPermissao, isOwner } = usePerfilPermissions();
+  const podeCriar = isOwner || temPermissao("colaboradores", "criar");
 
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
@@ -1069,26 +1072,27 @@ const Colaboradores = () => {
         </motion.div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowImport(true)}
-            id="btn-importar-colaboradores"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Importar Colaboradores
-          </Button>
-          <Button 
-            className="gradient-primary shadow-glow" 
-            onClick={() => {
-              // This is a bit tricky as different tabs have different 'new' logic
-              // For now, we'll trigger a custom event or just let the tabs handle their own 'new' buttons
-              // But the 'Importar' is now global.
-              window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Cadastro
-          </Button>
+          {podeCriar && (
+            <>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowImport(true)}
+                id="btn-importar-colaboradores"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Importar Colaboradores
+              </Button>
+              <Button 
+                className="gradient-primary shadow-glow" 
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('novo-cadastro-colaborador'));
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Cadastro
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

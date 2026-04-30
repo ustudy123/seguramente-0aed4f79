@@ -99,7 +99,8 @@ export function usePerfilPermissions() {
   }, [permissaoSet, isOwner]);
 
   /**
-   * Verifica se o usuário tem acesso a qualquer ação de um módulo.
+   * Verifica se o usuário tem acesso a qualquer ação de um módulo (qualquer escopo).
+   * Use para telas de auto-serviço (ex.: meu PDI, minhas trilhas).
    */
   const temAcessoModulo = useMemo(() => {
     return (modulo: string): boolean => {
@@ -108,9 +109,26 @@ export function usePerfilPermissions() {
     };
   }, [permissoes, isOwner]);
 
+  /**
+   * Verifica se o usuário tem acesso ADMINISTRATIVO ao módulo — i.e., qualquer
+   * permissão cujo escopo NÃO seja `proprio_usuario`. Usado para liberar telas
+   * de listagem/gestão (ex.: /colaboradores, /cadastros/*). Um colaborador com
+   * `colaboradores:visualizar` no escopo `proprio_usuario` deve ver apenas o
+   * próprio perfil — NÃO a listagem completa.
+   */
+  const temAcessoModuloAdmin = useMemo(() => {
+    return (modulo: string): boolean => {
+      if (isOwner) return true;
+      return permissoes.some(
+        (p) => p.modulo === modulo && p.escopo !== "proprio_usuario"
+      );
+    };
+  }, [permissoes, isOwner]);
+
   return {
     temPermissao,
     temAcessoModulo,
+    temAcessoModuloAdmin,
     permissoes,
     isLoading,
     perfilVinculado: !!vinculo?.perfil_id,

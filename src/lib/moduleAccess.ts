@@ -65,6 +65,45 @@ export const PATH_TO_MODULO: Record<string, string> = {
 };
 
 /**
+ * Rotas administrativas: exigem que o perfil tenha pelo menos UMA permissão
+ * no módulo com escopo diferente de `proprio_usuario`. Sem isso, a rota é
+ * bloqueada mesmo quando o módulo aparece em `perfil_permissoes`.
+ *
+ * Exemplo: um Colaborador com `colaboradores:visualizar (proprio_usuario)`
+ * pode ver o próprio perfil em /meu-perfil, mas NÃO pode entrar em
+ * /colaboradores (listagem geral / botões de gestão).
+ */
+export const ADMIN_PATHS = new Set<string>([
+  "/empresa",
+  "/cadastros/filiais",
+  "/cadastros/departamentos",
+  "/cadastros/cargos",
+  "/colaboradores",
+  "/marketplace",
+  "/contratos-experiencia",
+  "/onboarding-rh",
+  "/ferias",
+  "/atestados",
+  "/feedback-ocorrencias",
+  "/analise-jornada",
+  "/ponto",
+  "/documentos",
+  "/financeiro",
+  "/financeiro/beneficios",
+  "/hub-contabil",
+  "/compliance-sst",
+  "/incidentes-acidentes",
+  "/ergonomia",
+  "/psicossocial",
+  "/epis",
+  "/terceiros",
+  "/metas",
+  "/plano-acao",
+  "/avaliacoes",
+  "/estrategia",
+]);
+
+/**
  * Rotas sempre liberadas para usuários autenticados, mesmo com perfil restrito.
  * Inclui itens essenciais ao auto-serviço (próprio perfil, suporte, etc).
  */
@@ -103,4 +142,17 @@ export function getModuloForPath(pathname: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Indica se a rota é "administrativa" (listagem/gestão), exigindo permissão
+ * com escopo diferente de `proprio_usuario`.
+ */
+export function isAdminPath(pathname: string): boolean {
+  const cleanPath = pathname.split("?")[0].split("#")[0];
+  if (ADMIN_PATHS.has(cleanPath)) return true;
+  for (const p of ADMIN_PATHS) {
+    if (cleanPath.startsWith(p + "/")) return true;
+  }
+  return false;
 }
