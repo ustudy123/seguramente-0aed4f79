@@ -343,6 +343,7 @@ serve(async (req) => {
   return json({
     ok: true,
     userId: newUserId!,
-    inviteSent: method === "invite",
+    inviteSent: emailSent,
+    emailError,
   });
 });
