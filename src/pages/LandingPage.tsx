@@ -713,24 +713,31 @@ export default function LandingPage() {
 
             <AnimatePresence mode="wait">
               {!showFormulario && !leadEnviado && (
-                <motion.div key="cta" exit={{ opacity: 0 }}>
-                  <Button
-                    size="lg"
-                    onClick={() => setShowFormulario(true)}
-                    className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto"
-                    style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
-                    disabled={vagasRestantes <= 0}
+                  <motion.div 
+                    key="cta" 
+                    exit={{ opacity: 0 }}
+                    variants={pulseGlow}
+                    initial="initial"
+                    animate="animate"
+                    className="rounded-xl"
                   >
-                    {vagasRestantes > 0 ? (
-                      <>
-                        <Zap className="w-5 h-5 mr-2 shrink-0" />
-                        <span className="break-words">QUERO GARANTIR MINHA VAGA AGORA</span>
-                      </>
-                    ) : (
-                      <span className="break-words">Vagas esgotadas — Lista de espera em breve</span>
-                    )}
-                  </Button>
-                </motion.div>
+                    <Button
+                      size="lg"
+                      onClick={() => setShowFormulario(true)}
+                      className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto transform transition-all active:scale-95"
+                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
+                      disabled={vagasRestantes <= 0}
+                    >
+                      {vagasRestantes > 0 ? (
+                        <>
+                          <Zap className="w-5 h-5 mr-2 shrink-0 animate-pulse" />
+                          <span className="break-words font-black tracking-wide">QUERO GARANTIR MINHA VAGA AGORA</span>
+                        </>
+                      ) : (
+                        <span className="break-words font-bold">Vagas esgotadas — Lista de espera em breve</span>
+                      )}
+                    </Button>
+                  </motion.div>
               )}
 
               {showFormulario && !leadEnviado && (
