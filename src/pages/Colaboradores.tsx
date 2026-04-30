@@ -1034,6 +1034,8 @@ function DesligadosTab() {
 const Colaboradores = () => {
   const [showImport, setShowImport] = useState(false);
   const queryClient = useQueryClient();
+  const { temPermissao, isOwner } = usePerfilPermissions();
+  const podeCriar = isOwner || temPermissao("colaboradores", "criar");
 
   useEffect(() => {
     const handleOpenImport = () => setShowImport(true);
