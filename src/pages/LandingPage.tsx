@@ -168,14 +168,14 @@ export default function LandingPage() {
               </Badge>
             </motion.div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words tracking-tighter">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-8 break-words tracking-tighter">
               Sua empresa está pronta para a{" "}
-              <span className="relative">
-                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span className="relative inline-block">
+                <span className="relative z-10" style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 65%), hsl(152 66% 60%), hsl(33 100% 60%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   maior fiscalização trabalhista
                 </span>
                 <motion.span 
-                  className="absolute -bottom-2 left-0 w-full h-1 rounded-full"
+                  className="absolute bottom-1 sm:bottom-2 left-0 w-full h-[30%] -z-0 opacity-20 rounded-sm"
                   style={{ background: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))' }}
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
