@@ -149,7 +149,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   variant="outline"
                   size="icon"
                   onClick={handleBuscarCnpj}
-                  disabled={cnpjLoading || !validateCnpj(data.cnpj || '') || (!!data.id && !!data.cnpj)}
+                  disabled={cnpjLoading || !validateCnpj(data.cnpj || '')}
                   title="Buscar dados na Receita Federal"
                 >
                   {cnpjLoading ? (
@@ -161,7 +161,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               </div>
               {!!data.id && !!data.cnpj ? (
                 <p className="text-xs text-muted-foreground">
-                  CNPJ informado no cadastro inicial. Não pode ser alterado.
+                  CNPJ definido no cadastro inicial e não pode ser alterado. Use a lupa para buscar/atualizar endereço e demais dados na Receita Federal.
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
