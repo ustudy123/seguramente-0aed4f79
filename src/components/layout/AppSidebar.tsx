@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
+import { getModuloForPath, ALWAYS_ALLOWED_PATHS } from "@/lib/moduleAccess";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -374,11 +376,38 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const { isSuperAdmin } = useAuthContext();
+  const { temAcessoModulo, perfilVinculado, isOwner } = usePerfilPermissions();
+
+  const isItemAllowed = useMemo(() => {
+    return (path?: string) => {
+      if (!path) return true;
+      if (isSuperAdmin || isOwner || !perfilVinculado) return true;
+      if (ALWAYS_ALLOWED_PATHS.has(path)) return true;
+      const modulo = getModuloForPath(path);
+      if (!modulo) return true; // rotas globais
+      return temAcessoModulo(modulo);
+    };
+  }, [isSuperAdmin, isOwner, perfilVinculado, temAcessoModulo]);
 
   const filteredSections = useMemo(() => {
-    if (isSuperAdmin) return menuSections;
-    return menuSections.filter((s) => s.label !== "Academia");
-  }, [isSuperAdmin]);
+    const base = isSuperAdmin ? menuSections : menuSections.filter((s) => s.label !== "Academia");
+    // Filtra itens (e seções vazias) por perfil de acesso
+    return base
+      .map((section) => ({
+        ...section,
+        items: section.items
+          .map((item) => {
+            if (item.children) {
+              const allowedChildren = item.children.filter((c) => isItemAllowed(c.path));
+              if (allowedChildren.length === 0 && !isItemAllowed(item.path)) return null;
+              return { ...item, children: allowedChildren };
+            }
+            return isItemAllowed(item.path) ? item : null;
+          })
+          .filter(Boolean) as typeof section.items,
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [isSuperAdmin, isItemAllowed]);
 
   const allItems = useMemo(() => {
     const items: { title: string; path: string; icon: React.ElementType; sectionLabel: string }[] = [];

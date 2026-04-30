@@ -324,15 +324,19 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
 
       // Vincular perfil de acesso se selecionado
       if (data.perfil_acesso_id) {
-        await fromTable("usuario_perfil_vinculos")
+        const { error: vincError } = await fromTable("usuario_perfil_vinculos")
           .insert({
             tenant_id: tenantId,
             usuario_id: usuario.id,
             perfil_id: data.perfil_acesso_id,
             ativo: true,
-            is_principal: true,
+            is_perfil_principal: true,
             atribuido_por_nome: "Sistema (cadastro)",
           });
+        if (vincError) {
+          console.error("Erro ao vincular perfil de acesso:", vincError);
+          toast.error("Usuário criado, mas falhou ao vincular o perfil de acesso: " + vincError.message);
+        }
       }
 
       setNovoUsuarioId(usuario.id);

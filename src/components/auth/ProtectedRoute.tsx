@@ -1,9 +1,11 @@
 import { Navigate, useLocation, Link } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import type { AppRole } from "@/types/database";
-import { Loader2, Ban } from "lucide-react";
+import { Loader2, Ban, ShieldOff } from "lucide-react";
 import { useUsuarioStatus } from "@/hooks/useUsuarioStatus";
 import { Button } from "@/components/ui/button";
+import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
+import { getModuloForPath, ALWAYS_ALLOWED_PATHS } from "@/lib/moduleAccess";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,6 +16,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, profile, loading, hasMinimumRole, signOut, isSuperAdmin } = useAuthContext();
   const location = useLocation();
   const { isBloqueado, isLoading: loadingStatus } = useUsuarioStatus(user?.id, profile?.tenant_id);
+  const { temAcessoModulo, perfilVinculado, isLoading: loadingPerfil, isOwner } = usePerfilPermissions();
 
   if (loading || (user && profile && loadingStatus)) {
     return (
@@ -82,6 +85,42 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         </div>
       </div>
     );
+  }
+
+  // Perfil-based gating: se o usuário tem perfil vinculado (e não é owner/superadmin),
+  // checa se a rota atual está liberada para o módulo do seu perfil.
+  if (
+    !isSuperAdmin &&
+    !isOwner &&
+    perfilVinculado &&
+    !loadingPerfil &&
+    !ALWAYS_ALLOWED_PATHS.has(location.pathname)
+  ) {
+    const modulo = getModuloForPath(location.pathname);
+    if (modulo && !temAcessoModulo(modulo)) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+              <ShieldOff className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-foreground">Acesso Restrito</h1>
+              <p className="text-muted-foreground">
+                Seu perfil de acesso não inclui este módulo. Solicite ao administrador
+                da sua empresa para revisar suas permissões.
+              </p>
+            </div>
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90"
+            >
+              Voltar ao início
+            </Link>
+          </div>
+        </div>
+      );
+    }
   }
 
   return <>{children}</>;
