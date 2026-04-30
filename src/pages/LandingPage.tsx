@@ -132,7 +132,7 @@ export default function LandingPage() {
         
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
+            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
               <AlertTriangle className="w-4 h-4 mr-2" />
               ALERTA: Sua empresa pode estar em risco AGORA
             </Badge>
@@ -199,7 +199,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "hsl(33 100% 50%)", bg: "hsl(24 90% 54% / 0.1)" },
+              { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "hsl(33 100% 50%)", bg: "hsl(33 100% 50% / 0.1)" },
               { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "hsl(207 90% 55%)", bg: "hsl(207 90% 45% / 0.1)" },
               { icon: TrendingDown, title: "Processos Trabalhistas", desc: "Burnout, assédio e danos morais. Um único processo pode ultrapassar R$ 200.000 em indenizações.", color: "hsl(38 90% 55%)", bg: "hsl(38 90% 50% / 0.1)" },
               { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(152 66% 50%)", bg: "hsl(152 66% 50% / 0.1)" },
@@ -263,7 +263,7 @@ export default function LandingPage() {
       <section className="py-20 px-4" style={{ background: 'linear-gradient(180deg, hsl(215 60% 10%) 0%, hsl(215 65% 8%) 100%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
+            <Badge className="mb-4" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
               <AlertTriangle className="w-4 h-4 mr-1" /> NR-01 — OBRIGATÓRIO
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
@@ -377,7 +377,7 @@ export default function LandingPage() {
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.03 }}>
                 <div className="rounded-xl p-4 h-full transition-colors group relative" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
                   {mod.tag && (
-                    <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'hsl(24 90% 54% / 0.2)', color: 'hsl(33 100% 60%)' }}>
+                    <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'hsl(33 100% 50% / 0.2)', color: 'hsl(33 100% 60%)' }}>
                       {mod.tag}
                     </span>
                   )}
@@ -559,7 +559,7 @@ export default function LandingPage() {
         <div className="relative max-w-2xl mx-auto">
           <motion.div {...fadeUp}>
             <div className="text-center mb-10">
-              <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(24 90% 54% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(24 90% 54% / 0.3)' }}>
+              <Badge className="mb-4 animate-pulse text-sm" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 60%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
                 <Zap className="w-4 h-4 mr-1" />
                 LANÇAMENTO EXCLUSIVO — VAGAS LIMITADAS
               </Badge>
@@ -699,7 +699,7 @@ export default function LandingPage() {
                     <p className="text-gray-400 mb-2">
                       Restam apenas <strong style={{ color: 'hsl(33 100% 50%)' }}>{vagasRestantes} vagas</strong> para acesso completo.
                     </p>
-                    <div className="rounded-xl p-4 my-6" style={{ background: 'hsl(215 65% 8%)', border: '1px solid hsl(24 90% 54% / 0.3)' }}>
+                    <div className="rounded-xl p-4 my-6" style={{ background: 'hsl(215 65% 8%)', border: '1px solid hsl(33 100% 50% / 0.3)' }}>
                       <p className="font-bold text-sm mb-1" style={{ color: 'hsl(33 100% 50%)' }}>⚡ ATENÇÃO: Apenas 10 vagas com acesso TOTAL</p>
                       <p className="text-gray-500 text-xs">
                         Após as 10 vagas, novos usuários terão acesso apenas a módulos limitados conforme o plano contratado. 
