@@ -5,7 +5,7 @@ import { Loader2, Ban, ShieldOff } from "lucide-react";
 import { useUsuarioStatus } from "@/hooks/useUsuarioStatus";
 import { Button } from "@/components/ui/button";
 import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
-import { getModuloForPath, ALWAYS_ALLOWED_PATHS } from "@/lib/moduleAccess";
+import { getModuloForPath, ALWAYS_ALLOWED_PATHS, isAdminPath } from "@/lib/moduleAccess";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, profile, loading, hasMinimumRole, signOut, isSuperAdmin } = useAuthContext();
   const location = useLocation();
   const { isBloqueado, isLoading: loadingStatus } = useUsuarioStatus(user?.id, profile?.tenant_id);
-  const { temAcessoModulo, perfilVinculado, isLoading: loadingPerfil, isOwner } = usePerfilPermissions();
+  const { temAcessoModulo, temAcessoModuloAdmin, perfilVinculado, isLoading: loadingPerfil, isOwner } = usePerfilPermissions();
 
   if (loading || (user && profile && loadingStatus)) {
     return (

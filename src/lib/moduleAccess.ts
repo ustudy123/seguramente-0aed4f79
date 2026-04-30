@@ -143,3 +143,16 @@ export function getModuloForPath(pathname: string): string | null {
   }
   return null;
 }
+
+/**
+ * Indica se a rota é "administrativa" (listagem/gestão), exigindo permissão
+ * com escopo diferente de `proprio_usuario`.
+ */
+export function isAdminPath(pathname: string): boolean {
+  const cleanPath = pathname.split("?")[0].split("#")[0];
+  if (ADMIN_PATHS.has(cleanPath)) return true;
+  for (const p of ADMIN_PATHS) {
+    if (cleanPath.startsWith(p + "/")) return true;
+  }
+  return false;
+}
