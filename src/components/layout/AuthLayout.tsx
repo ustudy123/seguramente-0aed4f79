@@ -47,7 +47,7 @@ export function AuthLayout() {
                 <div>
                   <h3 className="text-white font-bold text-base">NR-1 — Riscos Psicossociais</h3>
                   <p className="text-white/80 text-sm mt-0.5">
-                    Sua empresa está pronta para a nova exigência? Avalie, monitore e previna riscos psicossociais com nossa plataforma completa.
+                    Sua empresa está pronta para a nova exigência? Avalie, monitore e previna riscos psicossociais com nossa plataforma completa
                   </p>
                 </div>
               </div>
