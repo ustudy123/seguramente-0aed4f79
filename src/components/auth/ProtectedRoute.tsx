@@ -16,6 +16,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const { user, profile, loading, hasMinimumRole, signOut, isSuperAdmin } = useAuthContext();
   const location = useLocation();
   const { isBloqueado, isLoading: loadingStatus } = useUsuarioStatus(user?.id, profile?.tenant_id);
+  const { temAcessoModulo, perfilVinculado, isLoading: loadingPerfil, isOwner } = usePerfilPermissions();
 
   if (loading || (user && profile && loadingStatus)) {
     return (
