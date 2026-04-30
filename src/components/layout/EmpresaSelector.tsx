@@ -64,6 +64,30 @@ export const EmpresaSelector = () => {
       </div>);
   }
 
+  // Quando há apenas 1 empresa vinculada, exibir somente o nome (sem seletor)
+  if (empresas.length === 1) {
+    const unica = empresaAtiva || empresas[0];
+    return (
+      <div
+        className={cn(
+          "hidden md:flex items-center gap-2 max-w-[320px] rounded-md border px-3 py-1.5 text-sm bg-background/50",
+          isProfissional ? "border-amber-400/50" : "border-border/50"
+        )}
+      >
+        {isProfissional && <Shield className="w-3.5 h-3.5 shrink-0 text-amber-500" />}
+        <Building2 className="w-4 h-4 shrink-0 text-primary" />
+        <span className="truncate text-sm font-medium text-secondary-foreground">
+          {unica.razao_social || unica.nome_fantasia || "Empresa"}
+        </span>
+        {isProfissional && (
+          <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0 border-amber-400/50 text-amber-600 bg-amber-50">
+            Vinculado
+          </Badge>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
