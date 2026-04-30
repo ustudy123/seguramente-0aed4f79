@@ -41,6 +41,7 @@ export default function LandingPage() {
   const [vagasRestantes, setVagasRestantes] = useState(10);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [loading, setLoading] = useState(false);
   const [showFormulario, setShowFormulario] = useState(false);
   const [leadEnviado, setLeadEnviado] = useState(false);
@@ -61,13 +62,26 @@ export default function LandingPage() {
     }
   };
 
+  const formatWhatsapp = (v: string) => {
+    const digits = v.replace(/\D/g, "").substring(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
   const handleSubmitLead = async () => {
-    if (!nome.trim() || !email.trim()) {
-      toast.error("Preencha nome e e-mail");
+    if (!nome.trim() || !email.trim() || !whatsapp.trim()) {
+      toast.error("Preencha nome, e-mail e WhatsApp");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error("E-mail inválido");
+      return;
+    }
+    const digits = whatsapp.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 11) {
+      toast.error("WhatsApp inválido. Use DDD + número");
       return;
     }
     setLoading(true);
@@ -75,6 +89,7 @@ export default function LandingPage() {
       await supabase.from("landing_leads").insert({
         nome: nome.trim().substring(0, 100),
         email: email.trim().substring(0, 255),
+        telefone: digits,
       });
       setLeadEnviado(true);
       toast.success("Cadastro realizado! Garanta sua vaga agora.");
@@ -672,6 +687,16 @@ export default function LandingPage() {
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         maxLength={255}
+                        className="h-12 text-white placeholder:text-gray-600"
+                        style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
+                      />
+                      <Input
+                        type="tel"
+                        inputMode="tel"
+                        placeholder="WhatsApp com DDD — (00) 00000-0000"
+                        value={whatsapp}
+                        onChange={e => setWhatsapp(formatWhatsapp(e.target.value))}
+                        maxLength={16}
                         className="h-12 text-white placeholder:text-gray-600"
                         style={{ background: 'hsl(215 65% 8%)', borderColor: 'hsl(215 40% 22%)' }}
                       />
