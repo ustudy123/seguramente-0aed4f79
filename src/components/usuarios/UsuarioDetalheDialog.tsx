@@ -58,7 +58,16 @@ function EmpresaSearchSelect({ empresas, value, onChange }: { empresas: any[]; v
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open}
           className="w-full h-8 justify-between font-normal text-sm">
-          {selected ? (selected.nome_fantasia || selected.razao_social) : "Buscar empresa…"}
+          {selected ? (
+            <span>
+              {selected.razao_social}
+              {selected.nome_fantasia && selected.nome_fantasia !== selected.razao_social && (
+                <span className="text-muted-foreground ml-1 font-normal">
+                  ({selected.nome_fantasia})
+                </span>
+              )}
+            </span>
+          ) : "Buscar empresa…"}
           <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
