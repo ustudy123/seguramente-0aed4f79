@@ -9,7 +9,7 @@ export interface Colaborador {
   cpf: string;
   cargo: string;
   departamento: string | null;
-  email: string;
+  email: string | null;
   celular: string | null;
   filial: string | null;
   data_admissao: string | null;

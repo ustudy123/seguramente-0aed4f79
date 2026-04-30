@@ -913,7 +913,7 @@ export function useImportacaoPlanilha() {
           nome_mae: dado.nomeMae || null,
           nome_pai: dado.nomePai || null,
           rg: dado.rg || null,
-          email: dado.email || `${dado.cpf}@importado.temp`,
+          email: dado.email?.trim() || null,
           telefone: dado.telefone || null,
           celular: dado.celular || null,
           cep: dado.cep || null,

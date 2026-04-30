@@ -55,7 +55,7 @@ const formSchema = z.object({
     .min(11, "CPF deve ter 11 dígitos")
     .refine((val) => cleanCpf(val).length === 11, "CPF deve ter 11 dígitos")
     .refine((val) => validateCpf(val), "CPF inválido - verifique os dígitos"),
-  email: z.string().email("Email inválido"),
+  email: z.string().trim().email("Email inválido").optional().or(z.literal("")),
   celular: z.string().optional(),
   tipo_contrato: z.string().min(1, "Selecione o tipo de vínculo"),
   cargo: z.string().min(1, "Selecione um cargo"),
@@ -176,7 +176,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           .update({
             nome_completo: data.nome_completo,
             cpf: cleanCpf(data.cpf),
-            email: data.email,
+            email: data.email?.trim() || null,
             celular: data.celular || null,
             tipo_contrato: data.tipo_contrato,
             cargo: data.cargo,
@@ -204,7 +204,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           tenant_id: tenantId,
           nome_completo: data.nome_completo,
           cpf: cleanCpf(data.cpf),
-          email: data.email,
+          email: data.email?.trim() || null,
           celular: data.celular || null,
           tipo_contrato: data.tipo_contrato,
           cargo: data.cargo,
@@ -334,7 +334,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email *</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="email@empresa.com" {...field} />
                     </FormControl>

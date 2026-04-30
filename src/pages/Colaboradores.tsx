@@ -233,7 +233,7 @@ function AtivosTab() {
   const filteredColaboradores = colaboradores.filter((colab) => {
     const matchesSearch = 
       colab.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      colab.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (colab.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       colab.cargo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDepartment = departmentFilter === "all" || colab.departamento === departmentFilter;
     const matchesStatus = statusFilter === "all" || colab.status === statusFilter;
@@ -374,7 +374,11 @@ function AtivosTab() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="w-4 h-4" />
-                  <span className="truncate">{colab.email}</span>
+                  {colab.email ? (
+                    <span className="truncate">{colab.email}</span>
+                  ) : (
+                    <span className="truncate italic text-muted-foreground/70">E-mail não cadastrado</span>
+                  )}
                 </div>
                 {colab.celular && (
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -430,7 +434,7 @@ function AtivosTab() {
                       </Avatar>
                       <div>
                         <p className="font-medium text-foreground">{colab.nome_completo}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{colab.email}</p>
+                        <p className={cn("text-xs truncate max-w-[200px]", colab.email ? "text-muted-foreground" : "text-muted-foreground/60 italic")}>{colab.email || "E-mail não cadastrado"}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -557,7 +561,7 @@ function AtivosTab() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" /> Email</p>
-                  <p className="text-sm font-medium truncate">{selectedColaborador.email}</p>
+                  <p className={cn("text-sm font-medium truncate", !selectedColaborador.email && "italic text-muted-foreground/70")}>{selectedColaborador.email || "Não cadastrado"}</p>
                 </div>
                 {selectedColaborador.celular && (
                   <div className="space-y-1">
@@ -1006,7 +1010,7 @@ function DesligadosTab() {
                   </Avatar>
                   <div>
                     <p className="font-medium text-foreground">{colab.nome_completo}</p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{colab.email}</p>
+                    <p className={cn("text-xs truncate max-w-[200px]", colab.email ? "text-muted-foreground" : "text-muted-foreground/60 italic")}>{colab.email || "E-mail não cadastrado"}</p>
                   </div>
                 </div>
               </TableCell>

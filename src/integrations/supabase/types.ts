@@ -665,7 +665,7 @@ export type Database = {
           desligado_por: string | null
           desligado_por_nome: string | null
           dias_aviso_previo: number | null
-          email: string
+          email: string | null
           empresa_id: string | null
           endereco: string | null
           estado: string | null
@@ -737,7 +737,7 @@ export type Database = {
           desligado_por?: string | null
           desligado_por_nome?: string | null
           dias_aviso_previo?: number | null
-          email: string
+          email?: string | null
           empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
@@ -809,7 +809,7 @@ export type Database = {
           desligado_por?: string | null
           desligado_por_nome?: string | null
           dias_aviso_previo?: number | null
-          email?: string
+          email?: string | null
           empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
