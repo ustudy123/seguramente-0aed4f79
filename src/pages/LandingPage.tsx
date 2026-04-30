@@ -152,7 +152,7 @@ export default function LandingPage() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="my-10 max-w-5xl mx-auto"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(262 52% 50% / 0.15)' }}>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 16px 64px hsl(207 90% 45% / 0.15)' }}>
                 <img
                   src={mockupDashboard}
                   alt="Dashboard YOUREYES - Painel de controle com indicadores psicossociais, compliance NR-01 e gestão de RH"
@@ -200,9 +200,9 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: FileWarning, title: "Multas de até R$ 50.000", desc: "Por infração. Reincidência dobra o valor. Uma única visita do MTE pode custar mais que 5 anos de prevenção.", color: "hsl(33 100% 50%)", bg: "hsl(24 90% 54% / 0.1)" },
-              { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "hsl(207 90% 55%)", bg: "hsl(262 52% 50% / 0.1)" },
+              { icon: Lock, title: "Interdição Total", desc: "Sua empresa pode ser PARADA. Sem produção, sem faturamento, sem folha. Até a adequação completa.", color: "hsl(207 90% 55%)", bg: "hsl(207 90% 45% / 0.1)" },
               { icon: TrendingDown, title: "Processos Trabalhistas", desc: "Burnout, assédio e danos morais. Um único processo pode ultrapassar R$ 200.000 em indenizações.", color: "hsl(38 90% 55%)", bg: "hsl(38 90% 50% / 0.1)" },
-              { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(152 66% 50%)", bg: "hsl(280 40% 68% / 0.1)" },
+              { icon: Users, title: "Perda de Talentos", desc: "Colaboradores adoecidos pedem demissão. O custo de turnover chega a 213% do salário anual.", color: "hsl(152 66% 50%)", bg: "hsl(152 66% 50% / 0.1)" },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
                 <div className="rounded-2xl p-6 h-full transition-colors" style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}>
@@ -220,10 +220,10 @@ export default function LandingPage() {
 
       {/* ═══════════ IA SECTION ═══════════ */}
       <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 60% 10%)' }}>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(262 52% 50% / 0.05)' }} />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(207 90% 45% / 0.05)' }} />
         <div className="max-w-6xl mx-auto relative">
           <motion.div {...fadeUp} className="text-center mb-16">
-            <Badge className="mb-4" style={{ background: 'hsl(262 52% 50% / 0.15)', color: 'hsl(152 66% 55%)', borderColor: 'hsl(262 52% 50% / 0.3)' }}>
+            <Badge className="mb-4" style={{ background: 'hsl(207 90% 45% / 0.15)', color: 'hsl(152 66% 55%)', borderColor: 'hsl(207 90% 45% / 0.3)' }}>
               <Sparkles className="w-4 h-4 mr-1" /> INTELIGÊNCIA ARTIFICIAL
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
@@ -248,7 +248,7 @@ export default function LandingPage() {
               { icon: Scale, title: "Conformidade Legal Automática", desc: "PGR, PCMSO, LTCAT auditados pela IA quanto à coerência normativa. Avisos de NR-01, NR-04, NR-07, NR-17 sempre atualizados." },
             ].map((item, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}>
-                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(215 50% 14%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(262 52% 50% / 0.1)' }}>
+                <div className="rounded-2xl p-6 h-full transition-all" style={{ background: 'linear-gradient(180deg, hsl(215 50% 14%) 0%, hsl(215 55% 12%) 100%)', border: '1px solid hsl(207 90% 45% / 0.1)' }}>
                   <item.icon className="w-8 h-8 mb-3" style={{ color: 'hsl(152 66% 55%)' }} />
                   <h3 className="text-base font-bold mb-2">{item.title}</h3>
                   <p className="text-gray-400 text-sm">{item.desc}</p>
@@ -411,7 +411,7 @@ export default function LandingPage() {
               { step: "03", title: "Deixe a IA Trabalhar por Você", desc: "O sistema monitora continuamente atestados, ponto, denúncias e turnover. Você recebe alertas antes dos problemas virarem multas." },
             ].map((s, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }} className="flex gap-6 items-start">
-                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(262 52% 50% / 0.15), hsl(280 40% 68% / 0.15))', border: '1px solid hsl(262 52% 50% / 0.2)' }}>
+                <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(207 90% 45% / 0.15), hsl(152 66% 50% / 0.15))', border: '1px solid hsl(207 90% 45% / 0.2)' }}>
                   <span className="text-2xl font-black" style={{ color: 'hsl(207 90% 60%)' }}>{s.step}</span>
                 </div>
                 <div>
@@ -488,7 +488,7 @@ export default function LandingPage() {
       <section className="py-20 px-4" style={{ background: 'hsl(215 65% 8%)' }}>
         <div className="max-w-6xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-14">
-            <Badge className="mb-4" style={{ background: 'hsl(280 40% 60% / 0.15)', color: 'hsl(280 40% 75%)', borderColor: 'hsl(280 40% 60% / 0.3)' }}>
+            <Badge className="mb-4" style={{ background: 'hsl(152 66% 45% / 0.15)', color: 'hsl(152 66% 60%)', borderColor: 'hsl(152 66% 45% / 0.3)' }}>
               <LayoutDashboard className="w-4 h-4 mr-1" /> A PLATAFORMA POR DENTRO
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
@@ -636,7 +636,7 @@ export default function LandingPage() {
                     size="lg"
                     onClick={() => setShowFormulario(true)}
                     className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto"
-                    style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
+                    style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
                     disabled={vagasRestantes <= 0}
                   >
                     {vagasRestantes > 0 ? (
@@ -710,7 +710,7 @@ export default function LandingPage() {
                       size="lg"
                       onClick={() => navigate("/register")}
                       className="w-full sm:w-auto text-white text-sm sm:text-lg px-4 sm:px-10 py-6 rounded-xl shadow-2xl whitespace-normal h-auto"
-                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(152 66% 45%))', boxShadow: '0 8px 32px hsl(262 52% 50% / 0.3)' }}
+                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(152 66% 45%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
                     >
                       <span className="break-words">CRIAR MINHA CONTA AGORA — É GRÁTIS</span>
                       <ArrowRight className="w-5 h-5 ml-2 shrink-0" />
