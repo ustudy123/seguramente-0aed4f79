@@ -91,6 +91,8 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   // Modo de vínculo: empresa individual ou grupo econômico
   const [modoVinculo, setModoVinculo] = useState<"empresa" | "grupo">("empresa");
   const [grupoSelecionadoId, setGrupoSelecionadoId] = useState<string>("");
+  const [emailEnviado, setEmailEnviado] = useState<boolean>(true);
+  const [emailErro, setEmailErro] = useState<string | null>(null);
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-lista-grupo", tenantId],
