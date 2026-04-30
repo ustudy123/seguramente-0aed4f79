@@ -234,6 +234,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       const authUserId = (authData as any)?.userId as string | undefined;
       if (!authUserId) throw new Error("Não foi possível provisionar o acesso no sistema.");
 
+      const inviteSent = (authData as any)?.inviteSent === true;
+      const inviteErr = (authData as any)?.emailError as string | null | undefined;
+      setEmailEnviado(inviteSent);
+      setEmailErro(inviteErr ?? null);
+
       const jaExistia = (authData as any)?.alreadyExists === true;
       if (jaExistia) {
         toast.info("Usuário já existente no sistema — vinculando às empresas selecionadas.");
