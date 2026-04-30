@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -130,7 +130,7 @@ const statusLabels: Record<string, string> = {
 };
 
 // ========== Ativos Tab Component ==========
-function AtivosTab() {
+function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShowImport: (v: boolean) => void }) {
   const navigate = useNavigate();
   const { tenantId } = useAuth();
   const queryClient = useQueryClient();
@@ -141,7 +141,6 @@ function AtivosTab() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [showNovoChoice, setShowNovoChoice] = useState(false);
-  const [showImport, setShowImport] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorExtendido | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<ColaboradorEditData | null>(null);
@@ -255,7 +254,7 @@ function AtivosTab() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
         <Button variant="outline" onClick={() => setShowImport(true)}>
           <Upload className="w-4 h-4 mr-2" />
-          Importar Planilha
+          Importar Colaboradores
         </Button>
         <Button className="gradient-primary shadow-glow" onClick={() => setShowNovoChoice(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -1035,6 +1034,14 @@ function DesligadosTab() {
 
 // ========== Main Page ==========
 const Colaboradores = () => {
+  const [showImport, setShowImport] = useState(false);
+
+  useEffect(() => {
+    const handleOpenImport = () => setShowImport(true);
+    window.addEventListener('open-import-colaboradores', handleOpenImport);
+    return () => window.removeEventListener('open-import-colaboradores', handleOpenImport);
+  }, []);
+
   return (
     <div className="space-y-6">
       <motion.div
@@ -1060,7 +1067,7 @@ const Colaboradores = () => {
           <TabsTrigger value="desligados">Desligados</TabsTrigger>
         </TabsList>
         <TabsContent value="ativos" className="mt-6">
-          <AtivosTab />
+          <AtivosTab showImport={showImport} setShowImport={setShowImport} />
         </TabsContent>
         <TabsContent value="admissoes" className="mt-6">
           <AdmissoesTab />

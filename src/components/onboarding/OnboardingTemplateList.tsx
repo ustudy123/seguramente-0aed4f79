@@ -3,7 +3,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { motion } from "framer-motion";
 import {
   Plus, Pencil, Trash2, Loader2, Copy, ToggleLeft, ToggleRight,
-  Building2, Users, Briefcase, ChevronRight,
+  Building2, Users, Briefcase, ChevronRight, Upload,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,10 +48,22 @@ export function OnboardingTemplateList({ onSelect, onNew, onEdit }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{templates.length} template(s)</p>
-        <Button onClick={onNew} size="sm" className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Template
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+            // Find the "Importar Planilha" button in Colaboradores or dispatch an event
+            // But since this is a different context, we'll just add the button here too if possible
+            // or navigate to colaboradores and open the modal.
+            // For now, let's just make sure the existing button in Colaboradores is clear.
+            window.dispatchEvent(new CustomEvent('open-import-colaboradores'));
+          }}>
+            <Upload className="w-4 h-4" />
+            Importar Planilha
+          </Button>
+          <Button onClick={onNew} size="sm" className="gap-2">
+            <Plus className="w-4 h-4" />
+            Novo Template
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
