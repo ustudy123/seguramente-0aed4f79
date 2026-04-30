@@ -4,8 +4,8 @@ import { fromTable } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
- * Tipos de usuário considerados "profissionais" — precisam de filtro por vínculo.
- * Internos (admin, rh_dp, gestor, etc.) veem todas as empresas do tenant.
+ * Tipos de usuário externos/profissionais que SEMPRE precisam de filtro por vínculo,
+ * mesmo se a lista de vínculos vier vazia (acesso bloqueado por segurança).
  */
 const TIPOS_PROFISSIONAIS = [
   "clinica_parceira",
@@ -13,6 +13,17 @@ const TIPOS_PROFISSIONAIS = [
   "prestador_terceiro",
   "auditor",
   "suporte_autorizado",
+] as const;
+
+/**
+ * Tipos com acesso amplo a todas as empresas do tenant (não filtrados por vínculo).
+ * Inclui owners, admins e papéis de gestão central.
+ */
+const TIPOS_ACESSO_GLOBAL = [
+  "proprietario",
+  "owner",
+  "admin",
+  "administrador",
 ] as const;
 
 export interface UsuarioVinculo {
