@@ -98,6 +98,7 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
+    setLendoArquivo(true);
 
     try {
       // Try standard auto-detection first
@@ -117,6 +118,8 @@ export function ImportPlanilhaModal({
         setErro(innerError.message || "Erro ao ler arquivo");
         toast.error("Erro ao ler planilha: " + innerError.message);
       }
+    } finally {
+      setLendoArquivo(false);
     }
   }, [lerArquivo, lerArquivoHeaders]);
 
@@ -126,6 +129,7 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
+    setLendoArquivo(true);
 
     try {
       const { headers, sampleRows: samples } = await lerArquivoHeaders(file);
@@ -136,11 +140,14 @@ export function ImportPlanilhaModal({
     } catch (error: any) {
       setErro(error.message || "Erro ao ler arquivo");
       toast.error("Erro ao ler planilha: " + error.message);
+    } finally {
+      setLendoArquivo(false);
     }
   }, [lerArquivoHeaders]);
 
   const handleMapeamentoConfirm = async (mapping: Record<string, string>) => {
     if (!arquivo) return;
+    setLendoArquivo(true);
     try {
       const dadosLidos = await lerArquivoComMapeamento(arquivo, mapping);
       setDados(dadosLidos);
@@ -148,6 +155,8 @@ export function ImportPlanilhaModal({
     } catch (error: any) {
       setErro(error.message || "Erro ao processar com mapeamento");
       toast.error("Erro ao processar: " + error.message);
+    } finally {
+      setLendoArquivo(false);
     }
   };
 
