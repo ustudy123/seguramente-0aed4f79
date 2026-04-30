@@ -356,7 +356,8 @@ export function ImportPlanilhaModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Wrapper relative para overlay de "Lendo planilha…" — não pode ser na DialogContent pois sobrescreve o `fixed` do Radix */}
         <DialogHeader className="shrink-0">
           <DialogTitle>{titulo}</DialogTitle>
           <DialogDescription>{descricao}</DialogDescription>
