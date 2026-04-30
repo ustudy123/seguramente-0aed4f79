@@ -97,8 +97,14 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     !ALWAYS_ALLOWED_PATHS.has(location.pathname.split("?")[0].split("#")[0])
   ) {
     const modulo = getModuloForPath(location.pathname);
-    // Gating estrito: rota sem módulo mapeado + perfil vinculado = bloqueada
-    const blocked = !modulo || !temAcessoModulo(modulo);
+    const requerAdmin = isAdminPath(location.pathname);
+    // Gating estrito:
+    //  - rota sem módulo mapeado → bloqueada
+    //  - rota administrativa → exige permissão com escopo ≠ proprio_usuario
+    //  - demais rotas → basta ter qualquer permissão no módulo
+    const blocked =
+      !modulo ||
+      (requerAdmin ? !temAcessoModuloAdmin(modulo) : !temAcessoModulo(modulo));
     if (blocked) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
