@@ -35,7 +35,46 @@ export function VerificacaoTelefone({
   const [verificando, setVerificando] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [jaRespondeu, setJaRespondeu] = useState(false);
+  const [modoToken, setModoToken] = useState(false);
+  const [tokenEmail, setTokenEmail] = useState("");
+  const [tokenValor, setTokenValor] = useState("");
+  const [validandoToken, setValidandoToken] = useState(false);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+
+  // ── BYPASS DE TESTE (uso restrito) ──
+  // Permite que um usuário específico de testes pule a verificação WhatsApp.
+  const TEST_BYPASS_EMAIL = "renata_sophia_cortereal@cafefrossard.com";
+  const TEST_BYPASS_TOKEN = "PAULO2026";
+
+  const sha256Hex = async (input: string) => {
+    const buf = new TextEncoder().encode(input);
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
+  const validarTokenTeste = async () => {
+    const emailNorm = tokenEmail.trim().toLowerCase();
+    const tokenNorm = tokenValor.trim().toUpperCase();
+    if (emailNorm !== TEST_BYPASS_EMAIL.toLowerCase() || tokenNorm !== TEST_BYPASS_TOKEN) {
+      toast.error("Token ou email inválido para acesso de teste.");
+      return;
+    }
+    setValidandoToken(true);
+    try {
+      // Hash determinístico por email+campanha — garante 1 resposta por campanha
+      // mesmo no modo de teste, mantendo a integridade da campanha.
+      const telefoneHash = await sha256Hex(`bypass:${emailNorm}:${campanhaId}`);
+      setEtapa("verificado");
+      toast.success("Acesso de teste autorizado!");
+      setTimeout(() => onVerificado(telefoneHash), 800);
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao validar token");
+    } finally {
+      setValidandoToken(false);
+    }
+  };
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -234,7 +273,7 @@ export function VerificacaoTelefone({
 
             <CardContent className="space-y-4">
               {/* Etapa 1: Telefone */}
-              {etapa === "telefone" && (
+              {etapa === "telefone" && !modoToken && (
                 <>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
@@ -272,6 +311,76 @@ export function VerificacaoTelefone({
                       </>
                     )}
                   </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModoToken(true)}
+                    className="w-full text-[11px] text-muted-foreground hover:text-violet-600 underline-offset-2 hover:underline transition"
+                  >
+                    Tenho um token de acesso de teste
+                  </button>
+                </>
+              )}
+
+              {/* Etapa 1b: Modo Token de Teste */}
+              {etapa === "telefone" && modoToken && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email autorizado</label>
+                    <Input
+                      type="email"
+                      value={tokenEmail}
+                      onChange={(e) => setTokenEmail(e.target.value)}
+                      placeholder="seuemail@dominio.com"
+                      autoComplete="email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Token de acesso</label>
+                    <Input
+                      type="text"
+                      value={tokenValor}
+                      onChange={(e) => setTokenValor(e.target.value.toUpperCase())}
+                      placeholder="TOKEN"
+                      className="font-mono tracking-wider"
+                    />
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                      Modo restrito a usuários de teste autorizados. O acesso é registrado e
+                      garante <strong>uma resposta por campanha</strong>.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={validarTokenTeste}
+                    disabled={validandoToken || !tokenEmail || !tokenValor}
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md gap-2"
+                    size="lg"
+                  >
+                    {validandoToken ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Validando...
+                      </>
+                    ) : (
+                      <>
+                        Acessar com Token
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModoToken(false);
+                      setTokenEmail("");
+                      setTokenValor("");
+                    }}
+                    className="w-full text-[11px] text-muted-foreground hover:text-violet-600 underline-offset-2 hover:underline transition"
+                  >
+                    ← Voltar para verificação por WhatsApp
+                  </button>
                 </>
               )}
 
