@@ -58,7 +58,16 @@ function EmpresaSearchSelect({ empresas, value, onChange }: { empresas: any[]; v
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open}
           className="w-full h-8 justify-between font-normal text-sm">
-          {selected ? (selected.nome_fantasia || selected.razao_social) : "Buscar empresa…"}
+          {selected ? (
+            <span>
+              {selected.razao_social}
+              {selected.nome_fantasia && selected.nome_fantasia !== selected.razao_social && (
+                <span className="text-muted-foreground ml-1 font-normal">
+                  ({selected.nome_fantasia})
+                </span>
+              )}
+            </span>
+          ) : "Buscar empresa…"}
           <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -88,7 +97,14 @@ function EmpresaSearchSelect({ empresas, value, onChange }: { empresas: any[]; v
               >
                 <Check className={cn("h-3.5 w-3.5 mt-0.5 shrink-0", value === e.id ? "opacity-100 text-primary" : "opacity-0")} />
                 <div className="flex flex-col gap-0">
-                  <span className="font-medium leading-tight">{e.nome_fantasia || e.razao_social}</span>
+                  <span className="font-medium leading-tight">
+                    {e.razao_social}
+                    {e.nome_fantasia && e.nome_fantasia !== e.razao_social && (
+                      <span className="text-muted-foreground ml-1.5 font-normal">
+                        ({e.nome_fantasia})
+                      </span>
+                    )}
+                  </span>
                   {e.cnpj && (
                     <span className="text-xs text-muted-foreground leading-tight">
                       CNPJ: {e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
