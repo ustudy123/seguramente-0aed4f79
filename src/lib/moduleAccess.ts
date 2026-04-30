@@ -6,9 +6,10 @@
  *
  * Owners (proprietário) e superadmins ignoram este mapa (acesso total).
  *
- * Rotas que NÃO estão neste mapa são consideradas "globais" (Início, Meu Perfil,
- * Suporte, Pendências, Configurações etc.) e ficam liberadas para qualquer
- * usuário autenticado.
+ * Comportamento de fallback: para usuários COM perfil vinculado, qualquer
+ * rota não mapeada e não listada em `ALWAYS_ALLOWED_PATHS` é considerada
+ * RESTRITA (bloqueada). Para usuários sem perfil vinculado, vale a hierarquia
+ * de roles (definida no ProtectedRoute / AppSidebar).
  */
 export const PATH_TO_MODULO: Record<string, string> = {
   // Estrutura organizacional
@@ -18,6 +19,9 @@ export const PATH_TO_MODULO: Record<string, string> = {
   "/cadastros/cargos": "configuracoes",
   "/colaboradores": "colaboradores",
   "/marketplace": "configuracoes",
+
+  // Estratégia & Governança (link de topo do sidebar)
+  "/estrategia": "configuracoes",
 
   // Saúde & Segurança
   "/compliance-sst": "sst",
@@ -56,12 +60,13 @@ export const PATH_TO_MODULO: Record<string, string> = {
   "/financeiro/beneficios": "beneficios",
   "/hub-contabil": "hub_contabil",
 
-  // Estratégia (geralmente RH/Gestor)
-  "/estrategia": "configuracoes",
+  // Academia (acessível via perfil/roles)
+  "/academia": "trilhas",
 };
 
 /**
  * Rotas sempre liberadas para usuários autenticados, mesmo com perfil restrito.
+ * Inclui itens essenciais ao auto-serviço (próprio perfil, suporte, etc).
  */
 export const ALWAYS_ALLOWED_PATHS = new Set<string>([
   "/",
@@ -69,21 +74,31 @@ export const ALWAYS_ALLOWED_PATHS = new Set<string>([
   "/suporte",
   "/pendencias",
   "/configuracoes", // a página em si filtra por role; necessário p/ auto-serviço
-  "/onboarding-rh-self", // placeholder se houver
+  "/onboarding-rh-self",
+  "/bem-estar", // espaço pessoal de auto-percepção
 ]);
 
 /**
- * Devolve o módulo associado a uma rota, ou null se a rota é global.
- * Considera prefixos para rotas dinâmicas tipo /plano-acao/:id.
+ * Devolve o módulo associado a uma rota, ou null se a rota é considerada
+ * "global" (sempre liberada — vide `ALWAYS_ALLOWED_PATHS`).
+ *
+ * IMPORTANTE: para o gating estrito por perfil, a checagem deve ser feita
+ * em duas etapas pelo chamador:
+ *   1) se a rota está em `ALWAYS_ALLOWED_PATHS` → liberada
+ *   2) caso contrário, exigir mapeamento em `PATH_TO_MODULO` e validar a permissão
+ *      Rotas não mapeadas para usuários COM perfil vinculado devem ser BLOQUEADAS.
  */
 export function getModuloForPath(pathname: string): string | null {
+  // Normaliza: remove query string e hash
+  const cleanPath = pathname.split("?")[0].split("#")[0];
+
   // Match exato
-  if (PATH_TO_MODULO[pathname]) return PATH_TO_MODULO[pathname];
+  if (PATH_TO_MODULO[cleanPath]) return PATH_TO_MODULO[cleanPath];
 
   // Match por prefixo (mais longo primeiro)
   const sortedKeys = Object.keys(PATH_TO_MODULO).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
-    if (pathname === key || pathname.startsWith(key + "/")) {
+    if (cleanPath === key || cleanPath.startsWith(key + "/")) {
       return PATH_TO_MODULO[key];
     }
   }
