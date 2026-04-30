@@ -36,6 +36,14 @@ const fadeUp = {
   transition: { duration: 0.6 },
 };
 
+const pulseGlow = {
+  initial: { boxShadow: '0 0 0 0px hsl(33 100% 50% / 0.4)' },
+  animate: { 
+    boxShadow: ['0 0 0 0px hsl(33 100% 50% / 0.4)', '0 0 0 15px hsl(33 100% 50% / 0)', '0 0 0 0px hsl(33 100% 50% / 0)'],
+    transition: { duration: 2, repeat: Infinity }
+  }
+};
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [vagasRestantes, setVagasRestantes] = useState(10);
@@ -148,15 +156,31 @@ export default function LandingPage() {
         
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Badge className="mb-6 text-sm px-4 py-1.5" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              ALERTA: Sua empresa pode estar em risco AGORA
-            </Badge>
+            <motion.div
+              animate={{ 
+                scale: [1, 1.03, 1],
+                transition: { duration: 3, repeat: Infinity }
+              }}
+            >
+              <Badge className="mb-6 text-sm px-4 py-1.5 cursor-default select-none" style={{ background: 'hsl(33 100% 50% / 0.15)', color: 'hsl(33 100% 65%)', borderColor: 'hsl(33 100% 50% / 0.3)' }}>
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                ALERTA: Sua empresa pode estar em risco AGORA
+              </Badge>
+            </motion.div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 break-words tracking-tighter">
               Sua empresa está pronta para a{" "}
-              <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                maior fiscalização trabalhista
+              <span className="relative">
+                <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 50%), hsl(33 100% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  maior fiscalização trabalhista
+                </span>
+                <motion.span 
+                  className="absolute -bottom-2 left-0 w-full h-1 rounded-full"
+                  style={{ background: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(33 100% 50%))' }}
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  transition={{ delay: 0.8, duration: 1 }}
+                />
               </span>{" "}
               dos últimos 20 anos?
             </h1>
@@ -238,6 +262,48 @@ export default function LandingPage() {
       <section className="py-20 px-4 relative overflow-hidden" style={{ background: 'hsl(215 60% 10%)' }}>
         <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[200px]" style={{ background: 'hsl(207 90% 45% / 0.05)' }} />
         <div className="max-w-6xl mx-auto relative">
+          {/* ═══════════ BIG NUMBERS SECTION ═══════════ */}
+          <div className="mb-32">
+            <motion.div {...fadeUp} className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-black mb-4">
+                Números que tiram o <span style={{ color: 'hsl(33 100% 50%)' }}>sono</span> do empregador
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+                Ignorar a conformidade legal não é uma economia. É um risco financeiro de proporções catastróficas.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              {[
+                { number: "R$ 100 Bi", label: "Custos anuais das empresas com processos trabalhistas no Brasil", icon: TrendingDown, color: "hsl(33 100% 50%)" },
+                { number: "213%", label: "Do salário anual é o custo médio para substituir um talento perdido por burnout", icon: Users, color: "hsl(207 90% 55%)" },
+                { number: "R$ 50 Mil", label: "Multa máxima POR INFRAÇÃO em caso de descumprimento das NRs", icon: Scale, color: "hsl(152 66% 50%)" },
+              ].map((stat, i) => (
+                <motion.div 
+                  key={stat.label}
+                  {...fadeUp}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-8 rounded-3xl relative overflow-hidden group"
+                  style={{ background: 'hsl(215 55% 12%)', border: '1px solid hsl(215 40% 20%)' }}
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <stat.icon className="w-24 h-24" />
+                  </div>
+                  <motion.h3 
+                    className="text-5xl md:text-6xl font-black mb-4 tracking-tighter"
+                    style={{ color: stat.color }}
+                    initial={{ scale: 0.8 }}
+                    whileInView={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                  >
+                    {stat.number}
+                  </motion.h3>
+                  <p className="text-gray-300 font-medium text-lg leading-tight">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
           <motion.div {...fadeUp} className="text-center mb-16">
             <Badge className="mb-4" style={{ background: 'hsl(207 90% 45% / 0.15)', color: 'hsl(152 66% 55%)', borderColor: 'hsl(207 90% 45% / 0.3)' }}>
               <Sparkles className="w-4 h-4 mr-1" /> INTELIGÊNCIA ARTIFICIAL
@@ -647,24 +713,31 @@ export default function LandingPage() {
 
             <AnimatePresence mode="wait">
               {!showFormulario && !leadEnviado && (
-                <motion.div key="cta" exit={{ opacity: 0 }}>
-                  <Button
-                    size="lg"
-                    onClick={() => setShowFormulario(true)}
-                    className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto"
-                    style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
-                    disabled={vagasRestantes <= 0}
+                  <motion.div 
+                    key="cta" 
+                    exit={{ opacity: 0 }}
+                    variants={pulseGlow}
+                    initial="initial"
+                    animate="animate"
+                    className="rounded-xl"
                   >
-                    {vagasRestantes > 0 ? (
-                      <>
-                        <Zap className="w-5 h-5 mr-2 shrink-0" />
-                        <span className="break-words">QUERO GARANTIR MINHA VAGA AGORA</span>
-                      </>
-                    ) : (
-                      <span className="break-words">Vagas esgotadas — Lista de espera em breve</span>
-                    )}
-                  </Button>
-                </motion.div>
+                    <Button
+                      size="lg"
+                      onClick={() => setShowFormulario(true)}
+                      className="w-full text-white text-sm sm:text-lg px-4 py-6 sm:py-7 rounded-xl shadow-2xl whitespace-normal h-auto transform transition-all active:scale-95"
+                      style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))', boxShadow: '0 8px 32px hsl(207 90% 45% / 0.3)' }}
+                      disabled={vagasRestantes <= 0}
+                    >
+                      {vagasRestantes > 0 ? (
+                        <>
+                          <Zap className="w-5 h-5 mr-2 shrink-0 animate-pulse" />
+                          <span className="break-words font-black tracking-wide">QUERO GARANTIR MINHA VAGA AGORA</span>
+                        </>
+                      ) : (
+                        <span className="break-words font-bold">Vagas esgotadas — Lista de espera em breve</span>
+                      )}
+                    </Button>
+                  </motion.div>
               )}
 
               {showFormulario && !leadEnviado && (
@@ -766,10 +839,13 @@ export default function LandingPage() {
           <Button
             size="lg"
             onClick={() => scrollToSection("vagas")}
-            className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto"
-            style={{ background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))' }}
+            className="w-full sm:w-auto text-white px-4 sm:px-10 py-6 text-sm sm:text-lg rounded-xl whitespace-normal h-auto transform transition-all hover:scale-105 active:scale-95"
+            style={{ 
+              background: 'linear-gradient(135deg, hsl(207 90% 45%), hsl(33 100% 50%))',
+              boxShadow: '0 8px 32px hsl(207 90% 45% / 0.4)' 
+            }}
           >
-            <span className="break-words">PROTEGER MINHA EMPRESA AGORA →</span>
+            <span className="break-words font-black">PROTEGER MINHA EMPRESA AGORA →</span>
           </Button>
         </div>
       </section>
