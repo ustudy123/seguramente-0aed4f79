@@ -37,6 +37,7 @@ export function JornadaImportacao() {
   const [mapeamento, setMapeamento] = useState<Record<string, number | undefined>>({});
   const [dadosProcessados, setDadosProcessados] = useState<any[]>([]);
   const [resultado, setResultado] = useState<any>(null);
+  const [lendoArquivo, setLendoArquivo] = useState(false);
   
   // Template state
   const [templates, setTemplates] = useState<any[]>([]);
@@ -81,6 +82,7 @@ export function JornadaImportacao() {
     const file = files[0];
     if (!file) return;
     setArquivo(file);
+    setLendoArquivo(true);
     try {
       const { headers: h, dados } = await lerArquivo(file);
       setHeaders(h);
@@ -114,6 +116,8 @@ export function JornadaImportacao() {
       toast.success(`Arquivo lido: ${h.length} colunas, ${dados.length} linhas`);
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setLendoArquivo(false);
     }
   }, [lerArquivo]);
 
@@ -178,22 +182,45 @@ export function JornadaImportacao() {
         <Card>
           <CardHeader><CardTitle className="text-sm">Upload de Arquivo de Jornada</CardTitle></CardHeader>
           <CardContent>
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
-                isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-              }`}
-            >
-              <input {...getInputProps()} />
-              <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-              <p className="text-foreground font-medium">Arraste um arquivo CSV ou Excel aqui</p>
-              <p className="text-sm text-muted-foreground mt-1">ou clique para selecionar (máx. 20MB)</p>
-              <div className="flex gap-2 justify-center mt-4">
-                <Badge variant="outline">.csv</Badge>
-                <Badge variant="outline">.xlsx</Badge>
-                <Badge variant="outline">.xls</Badge>
+            {lendoArquivo ? (
+              <div className="border-2 border-dashed border-primary/40 rounded-xl p-12 text-center bg-primary/5">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <div className="p-4 rounded-full bg-primary/10">
+                      <FileSpreadsheet className="w-8 h-8 text-primary" />
+                    </div>
+                    <Loader2 className="w-5 h-5 animate-spin text-primary absolute -top-1 -right-1" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Lendo planilha…</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Aguarde enquanto interpretamos o arquivo. Planilhas grandes podem levar alguns segundos.
+                    </p>
+                  </div>
+                  <Progress value={undefined} className="h-1.5 w-full max-w-xs animate-pulse" />
+                  {arquivo && (
+                    <p className="text-xs text-muted-foreground truncate max-w-full">{arquivo.name}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
+                  isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                <p className="text-foreground font-medium">Arraste um arquivo CSV ou Excel aqui</p>
+                <p className="text-sm text-muted-foreground mt-1">ou clique para selecionar (máx. 20MB)</p>
+                <div className="flex gap-2 justify-center mt-4">
+                  <Badge variant="outline">.csv</Badge>
+                  <Badge variant="outline">.xlsx</Badge>
+                  <Badge variant="outline">.xls</Badge>
+                </div>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground mt-4">
               O arquivo deve conter dados de jornada exportados do seu sistema de ponto. 
               Na próxima etapa você fará o mapeamento das colunas.

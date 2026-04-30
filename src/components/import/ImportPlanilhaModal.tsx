@@ -68,6 +68,7 @@ export function ImportPlanilhaModal({
   const [sampleRows, setSampleRows] = useState<any[][]>([]);
   const [usarMapeamento, setUsarMapeamento] = useState(false);
   const [previewFilter, setPreviewFilter] = useState<"todos" | "erros" | "validos">("todos");
+  const [lendoArquivo, setLendoArquivo] = useState(false);
 
   const dadosComErros = dados.filter(d => d.erros.length > 0);
   const dadosValidos = dados.filter(d => d.erros.length === 0);
@@ -83,6 +84,7 @@ export function ImportPlanilhaModal({
     setSampleRows([]);
     setUsarMapeamento(false);
     setPreviewFilter("todos");
+    setLendoArquivo(false);
   };
 
   const fechar = () => {
@@ -96,6 +98,7 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
+    setLendoArquivo(true);
 
     try {
       // Try standard auto-detection first
@@ -115,6 +118,8 @@ export function ImportPlanilhaModal({
         setErro(innerError.message || "Erro ao ler arquivo");
         toast.error("Erro ao ler planilha: " + innerError.message);
       }
+    } finally {
+      setLendoArquivo(false);
     }
   }, [lerArquivo, lerArquivoHeaders]);
 
@@ -124,6 +129,7 @@ export function ImportPlanilhaModal({
 
     setArquivo(file);
     setErro(null);
+    setLendoArquivo(true);
 
     try {
       const { headers, sampleRows: samples } = await lerArquivoHeaders(file);
@@ -134,11 +140,14 @@ export function ImportPlanilhaModal({
     } catch (error: any) {
       setErro(error.message || "Erro ao ler arquivo");
       toast.error("Erro ao ler planilha: " + error.message);
+    } finally {
+      setLendoArquivo(false);
     }
   }, [lerArquivoHeaders]);
 
   const handleMapeamentoConfirm = async (mapping: Record<string, string>) => {
     if (!arquivo) return;
+    setLendoArquivo(true);
     try {
       const dadosLidos = await lerArquivoComMapeamento(arquivo, mapping);
       setDados(dadosLidos);
@@ -146,6 +155,8 @@ export function ImportPlanilhaModal({
     } catch (error: any) {
       setErro(error.message || "Erro ao processar com mapeamento");
       toast.error("Erro ao processar: " + error.message);
+    } finally {
+      setLendoArquivo(false);
     }
   };
 
@@ -345,11 +356,34 @@ export function ImportPlanilhaModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
         <DialogHeader className="shrink-0">
           <DialogTitle>{titulo}</DialogTitle>
           <DialogDescription>{descricao}</DialogDescription>
         </DialogHeader>
+
+        {lendoArquivo && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
+            <div className="flex flex-col items-center gap-4 p-8 rounded-xl bg-card border shadow-lg max-w-sm text-center">
+              <div className="relative">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <FileSpreadsheet className="w-8 h-8 text-primary" />
+                </div>
+                <Loader2 className="w-5 h-5 animate-spin text-primary absolute -top-1 -right-1" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Lendo planilha…</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Aguarde enquanto interpretamos o arquivo. Planilhas grandes podem levar alguns segundos.
+                </p>
+              </div>
+              <Progress value={undefined} className="h-1.5 w-full animate-pulse" />
+              {arquivo && (
+                <p className="text-xs text-muted-foreground truncate max-w-full">{arquivo.name}</p>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto min-h-0">
           <AnimatePresence mode="wait">
