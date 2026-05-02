@@ -65,7 +65,7 @@ export default function Estrategia() {
           </p>
           {tab !== "organograma" && tab !== "cultura" && (
             <p className="text-muted-foreground mt-1 text-sm">
-              O módulo Estratégia e Governança é essencial para ajudar a planejar e organizar a direção da empresa. Ele fornece ferramentas para melhorar a cultura organizacional e a estrutura interna.
+              O módulo Planejamento Estratégico é essencial para ajudar a definir a direção da empresa através de ferramentas clássicas de gestão.
             </p>
           )}
         </div>
