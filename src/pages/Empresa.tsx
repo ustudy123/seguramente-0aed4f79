@@ -309,18 +309,18 @@ export default function Empresa() {
         </Button>
       </div>
 
-      {/* Aviso de auto-save / rascunho */}
+      {/* Aviso de auto-save */}
       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          💾 As alterações são salvas automaticamente neste navegador como <strong>rascunho</strong>.
-          Você pode fechar a aba e continuar depois — clique em <strong>Salvar</strong> para gravar definitivamente.
-          {rascunhoRestaurado && <span className="ml-1 text-primary font-medium">(rascunho restaurado)</span>}
+          {upsertCadastro.isPending ? (
+            <span className="flex items-center gap-1.5">
+              <Loader2 className="w-3 h-3 animate-spin text-primary" />
+              Salvando alterações automaticamente...
+            </span>
+          ) : (
+            <span>✅ Todas as alterações foram salvas automaticamente no banco de dados.</span>
+          )}
         </p>
-        {rascunhoRestaurado && (
-          <Button variant="ghost" size="sm" onClick={handleDescartarRascunho}>
-            Descartar rascunho
-          </Button>
-        )}
       </div>
 
       {/* Tabs */}
