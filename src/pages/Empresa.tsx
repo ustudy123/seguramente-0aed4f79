@@ -169,6 +169,14 @@ export default function Empresa() {
 
   const handleSave = async () => {
     try {
+      if (formData.tipo_pessoa === 'pj' && (!formData.cnpj || !formData.cnpj.trim())) {
+        toast.error('O CNPJ é obrigatório para Pessoa Jurídica.');
+        return;
+      }
+      if (formData.tipo_pessoa === 'pf' && (!formData.cpf || !formData.cpf.trim())) {
+        toast.error('O CPF é obrigatório para Pessoa Física.');
+        return;
+      }
       await upsertCadastro.mutateAsync(formData);
       clearDraft();
       setHasChanges(false);
