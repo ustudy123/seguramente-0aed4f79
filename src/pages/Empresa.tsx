@@ -305,6 +305,20 @@ export default function Empresa() {
         </Button>
       </div>
 
+      {/* Aviso de auto-save / rascunho */}
+      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          💾 As alterações são salvas automaticamente neste navegador como <strong>rascunho</strong>.
+          Você pode fechar a aba e continuar depois — clique em <strong>Salvar</strong> para gravar definitivamente.
+          {rascunhoRestaurado && <span className="ml-1 text-primary font-medium">(rascunho restaurado)</span>}
+        </p>
+        {rascunhoRestaurado && (
+          <Button variant="ghost" size="sm" onClick={handleDescartarRascunho}>
+            Descartar rascunho
+          </Button>
+        )}
+      </div>
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
