@@ -3,8 +3,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, TrendingUp, FileWarning } from 'lucide-react';
-import type { EmpresaCadastro } from '@/types/empresa';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2 } from 'lucide-react';
+import type { EmpresaCadastro, TacDetalhe } from '@/types/empresa';
 
 interface Props {
   data: Partial<EmpresaCadastro>;
