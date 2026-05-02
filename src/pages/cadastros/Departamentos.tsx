@@ -33,11 +33,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useDepartamentos, Departamento } from "@/hooks/useCadastros";
+import { useDepartamentos, useFiliais, Departamento } from "@/hooks/useCadastros";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 
 export default function Departamentos() {
   const { departamentos, isLoading, createDepartamento, updateDepartamento, deleteDepartamento } = useDepartamentos();
+  const { filiais } = useFiliais();
   const { sincronizar } = useSyncCadastros();
 
   useEffect(() => {
@@ -47,19 +49,32 @@ export default function Departamentos() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedDepartamento, setSelectedDepartamento] = useState<Departamento | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nome: string;
+    descricao: string;
+    ativo: boolean;
+    filial_id: string | null;
+  }>({
     nome: "",
     descricao: "",
     ativo: true,
+    filial_id: null,
   });
+
+  const filiaisAtivas = filiais.filter((f) => f.ativo);
 
   const filteredDepartamentos = departamentos.filter((dep) =>
     dep.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getFilialNome = (filialId: string | null) => {
+    if (!filialId) return "-";
+    return filiais.find((f) => f.id === filialId)?.nome || "-";
+  };
+
   const handleOpenCreate = () => {
     setSelectedDepartamento(null);
-    setFormData({ nome: "", descricao: "", ativo: true });
+    setFormData({ nome: "", descricao: "", ativo: true, filial_id: null });
     setIsFormOpen(true);
   };
 
@@ -69,6 +84,7 @@ export default function Departamentos() {
       nome: departamento.nome,
       descricao: departamento.descricao || "",
       ativo: departamento.ativo,
+      filial_id: departamento.filial_id ?? null,
     });
     setIsFormOpen(true);
   };
@@ -148,6 +164,7 @@ export default function Departamentos() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Estabelecimento/Obra</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -156,13 +173,13 @@ export default function Departamentos() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={5} className="text-center py-8">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : filteredDepartamentos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={5} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <Building2 className="w-8 h-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
@@ -177,6 +194,9 @@ export default function Departamentos() {
               filteredDepartamentos.map((departamento) => (
                 <TableRow key={departamento.id}>
                   <TableCell className="font-medium">{departamento.nome}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {getFilialNome(departamento.filial_id)}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {departamento.descricao || "-"}
                   </TableCell>
@@ -233,6 +253,27 @@ export default function Departamentos() {
                 placeholder="Ex: Recursos Humanos"
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filial">Estabelecimento/Obra</Label>
+              <Select
+                value={formData.filial_id ?? "none"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, filial_id: value === "none" ? null : value })
+                }
+              >
+                <SelectTrigger id="filial">
+                  <SelectValue placeholder="Selecione um estabelecimento ou obra" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum (vinculado à empresa)</SelectItem>
+                  {filiaisAtivas.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="descricao">Descrição</Label>

@@ -2991,6 +2991,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           empresa_id: string | null
+          filial_id: string | null
           id: string
           nome: string
           responsavel_id: string | null
@@ -3002,6 +3003,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           empresa_id?: string | null
+          filial_id?: string | null
           id?: string
           nome: string
           responsavel_id?: string | null
@@ -3013,6 +3015,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           empresa_id?: string | null
+          filial_id?: string | null
           id?: string
           nome?: string
           responsavel_id?: string | null
@@ -3025,6 +3028,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresa_cadastro"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departamentos_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "filiais"
             referencedColumns: ["id"]
           },
           {
