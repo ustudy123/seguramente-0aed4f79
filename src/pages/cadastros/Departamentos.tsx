@@ -255,6 +255,27 @@ export default function Departamentos() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="filial">Estabelecimento/Obra</Label>
+              <Select
+                value={formData.filial_id ?? "none"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, filial_id: value === "none" ? null : value })
+                }
+              >
+                <SelectTrigger id="filial">
+                  <SelectValue placeholder="Selecione um estabelecimento ou obra" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum (vinculado à empresa)</SelectItem>
+                  {filiaisAtivas.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="descricao">Descrição</Label>
               <Textarea
                 id="descricao"
