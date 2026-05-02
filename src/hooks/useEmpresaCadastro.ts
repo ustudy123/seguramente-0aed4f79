@@ -178,6 +178,21 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     },
   });
 
+  // Exclusão segura via RPC: valida master + ausência de colaboradores/terceiros
+  const deleteEmpresa = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await (supabase as any).rpc('delete_empresa_segura', {
+        _empresa_id: id,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
+    },
+  });
+
   // Obrigações da empresa específica
   const { data: obrigacoes = [], isLoading: obrigacoesLoading } = useQuery({
     queryKey: ['empresa_obrigacoes', tenantId, empresaId],
