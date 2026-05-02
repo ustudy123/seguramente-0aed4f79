@@ -98,6 +98,16 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
+    label: "Planejamento Estratégico",
+    color: "text-emerald-400",
+    sectionIcon: Compass,
+    items: [
+      { title: "Planejamento Estratégico", icon: Compass, path: "/estrategia" },
+      { title: "Metas", icon: Target, path: "/metas" },
+      { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
+    ],
+  },
+  {
     label: "Saúde & Segurança",
     color: "text-amber-400",
     sectionIcon: HeartPulse,
@@ -108,16 +118,6 @@ const menuSections: MenuSection[] = [
       { title: "Psicossocial NR-01", icon: Brain, path: "/psicossocial" },
       { title: "EPIs", icon: Shield, path: "/epis" },
       { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" },
-    ],
-  },
-  {
-    label: "Planejamento Estratégico",
-    color: "text-emerald-400",
-    sectionIcon: Compass,
-    items: [
-      { title: "Planejamento Estratégico", icon: Compass, path: "/estrategia" },
-      { title: "Metas", icon: Target, path: "/metas" },
-      { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
     ],
   },
   {
