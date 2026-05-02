@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { exportEmpresasToXlsx, exportEmpresasToPdf } from '@/utils/empresaExport';
 import type { EmpresaCadastro } from '@/types/empresa';
 import type { GrupoEconomico } from '@/hooks/useGruposEconomicos';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface EmpresaListProps {
   empresas: (EmpresaCadastro & { ativo: boolean })[];
