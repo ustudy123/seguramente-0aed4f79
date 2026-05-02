@@ -78,6 +78,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         tac_detalhes: rest.tac_detalhes as unknown as Json,
         turnos: rest.turnos as unknown as Json,
         condicoes_especiais_detalhes: rest.condicoes_especiais_detalhes as unknown as Json,
+        aprendiz_obrigatorio: rest.aprendiz_obrigatorio || false,
       };
 
       if (empresaId) {
