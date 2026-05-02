@@ -607,22 +607,28 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           </div>
         ) : (
           <div className="space-y-1">
-            <NavLink
-              to="/"
-              onClick={isMobile ? onClose : undefined}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
-                  "font-semibold",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                )
-              }
-            >
-              <Home className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-              {!isCollapsed && <span className="text-[13px]">Início</span>}
-            </NavLink>
+            {/* Início — standalone neon link (blue hue) */}
+            <div className="neon-section" style={{ "--accent-h": "210", "--accent-s": "95%", "--accent-l": "60%" } as React.CSSProperties}>
+              <NavLink
+                to="/"
+                onClick={isMobile ? onClose : undefined}
+                className={({ isActive }) =>
+                  cn(
+                    "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 mb-1 overflow-hidden",
+                    isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/70"
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
+                      <Home className="w-[14px] h-[14px]" strokeWidth={2} />
+                    </span>
+                    {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Início</span>}
+                  </>
+                )}
+              </NavLink>
+            </div>
 
 
             {/* Estrutura Organizacional first */}
@@ -648,22 +654,27 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                   onNavigate={isMobile ? onClose : undefined}
                 />
                 {section.label === "Pessoas" && (
-                  <NavLink
-                    to="/pendencias"
-                    onClick={isMobile ? onClose : undefined}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 mt-1",
-                        "font-semibold",
-                        isActive
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                      )
-                    }
-                  >
-                    <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-                    {!isCollapsed && <span className="text-[13px]">Pendências</span>}
-                  </NavLink>
+                  <div className="neon-section mt-1" style={{ "--accent-h": "30", "--accent-s": "95%", "--accent-l": "60%" } as React.CSSProperties}>
+                    <NavLink
+                      to="/pendencias"
+                      onClick={isMobile ? onClose : undefined}
+                      className={({ isActive }) =>
+                        cn(
+                          "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 mb-1 overflow-hidden",
+                          isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/70"
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
+                            <ClipboardList className="w-[14px] h-[14px]" strokeWidth={2} />
+                          </span>
+                          {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Pendências</span>}
+                        </>
+                      )}
+                    </NavLink>
+                  </div>
                 )}
               </div>
             ))}
