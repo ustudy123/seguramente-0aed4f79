@@ -18,24 +18,13 @@ import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 
 interface Props {
   cadastro: EmpresaCadastro | null;
+  onTabChange?: (tab: string) => void;
 }
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  pendente: { label: 'Pendente', color: 'bg-muted text-muted-foreground', icon: Clock },
-  conforme: { label: 'Conforme', color: 'bg-accent text-accent-foreground', icon: CheckCircle2 },
-  nao_conforme: { label: 'Não Conforme', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
-  em_adequacao: { label: 'Em Adequação', color: 'bg-warning/10 text-warning', icon: RefreshCw },
-  nao_aplicavel: { label: 'N/A', color: 'bg-secondary text-secondary-foreground', icon: CheckCircle2 },
-};
-
-const CRITICIDADE_COLOR: Record<string, string> = {
-  baixa: 'border-l-muted-foreground',
-  media: 'border-l-warning',
-  alta: 'border-l-orange-500',
-  critica: 'border-l-destructive',
-};
-
-export function EmpresaObrigacoesTab({ cadastro }: Props) {
+...
+export function EmpresaObrigacoesTab({
+  cadastro,
+  onTabChange
+}: Props) {
   const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro();
 
   // Detect obligations from cadastro data
