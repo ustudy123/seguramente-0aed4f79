@@ -94,7 +94,6 @@ const menuSections: MenuSection[] = [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Prestadores de Serviços", icon: HardHat, path: "/terceiros" },
       { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
-      { title: "Cultura", icon: Heart, path: "/estrategia?tab=cultura" },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
     ],
   },
@@ -103,6 +102,7 @@ const menuSections: MenuSection[] = [
     color: "text-emerald-400",
     sectionIcon: Compass,
     items: [
+      { title: "Identidade Estratégica", icon: Heart, path: "/estrategia?tab=cultura" },
       { title: "Planejamento Estratégico", icon: Compass, path: "/estrategia" },
       { title: "Metas", icon: Target, path: "/metas" },
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
