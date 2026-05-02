@@ -448,9 +448,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           items.push({ title: child.title, path: child.path, icon: item.icon, sectionLabel: section.label });
         });
       });
-      if (section.label === "Pessoas") {
-        items.push({ title: "Pendências", path: "/pendencias", icon: ClipboardList, sectionLabel: section.label });
-      }
+      // Pendências removed from sidebar search as it's now only on dashboard
     });
     items.push({ title: "Configurações", path: "/configuracoes", icon: Settings, sectionLabel: "Sistema" });
     items.push({ title: "Suporte", path: "/suporte", icon: LifeBuoy, sectionLabel: "Sistema" });
@@ -609,24 +607,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                   onToggle={() => toggleSection(section.label)}
                   onNavigate={isMobile ? onClose : undefined}
                 />
-                {section.label === "Pessoas" && (
-                  <NavLink
-                    to="/pendencias"
-                    onClick={isMobile ? onClose : undefined}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 mt-1",
-                        "font-semibold",
-                        isActive
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-                      )
-                    }
-                  >
-                    <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
-                    {!isCollapsed && <span className="text-[13px]">Pendências</span>}
-                  </NavLink>
-                )}
+                {/* Pendências removed from sidebar */}
               </div>
             ))}
           </div>
