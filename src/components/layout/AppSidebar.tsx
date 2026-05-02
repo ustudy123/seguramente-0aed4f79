@@ -88,6 +88,7 @@ const menuSections: MenuSection[] = [
     label: "Estrutura Organizacional",
     color: "text-cyan-400",
     sectionIcon: Building2,
+    hue: 190, // Cyan
     items: [
       { title: "Empresa", icon: Building2, path: "/empresa" },
       { title: "Estabelecimento ou Obra", icon: Building2, path: "/cadastros/filiais" },
@@ -102,6 +103,7 @@ const menuSections: MenuSection[] = [
     label: "Planejamento e Cultura",
     color: "text-emerald-400",
     sectionIcon: Compass,
+    hue: 145, // Emerald
     items: [
       { title: "Identidade Estratégica", icon: Heart, path: "/estrategia?tab=cultura" },
       { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
@@ -114,6 +116,7 @@ const menuSections: MenuSection[] = [
     label: "Saúde & Segurança",
     color: "text-amber-400",
     sectionIcon: HeartPulse,
+    hue: 35, // Amber/Orange
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
@@ -126,6 +129,7 @@ const menuSections: MenuSection[] = [
     label: "Avaliações e Desenvolvimento",
     color: "text-emerald-400",
     sectionIcon: Target,
+    hue: 95, // Lime/Neon green
     items: [
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
       { title: "PDI", icon: Target, path: "/pdi" },
@@ -135,6 +139,7 @@ const menuSections: MenuSection[] = [
     label: "Pessoas",
     color: "text-violet-400",
     sectionIcon: Users,
+    hue: 270, // Violet
     items: [
       { title: "Cultura e Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
@@ -155,12 +160,14 @@ const menuSections: MenuSection[] = [
     label: "Documentos & Registros",
     color: "text-rose-400",
     sectionIcon: FileText,
+    hue: 340, // Pink/Rose
     items: [{ title: "Documentos", icon: FileText, path: "/documentos" }],
   },
   {
     label: "Financeiro",
     color: "text-teal-400",
     sectionIcon: DollarSign,
+    hue: 175, // Teal
     items: [
       { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
       { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
@@ -171,6 +178,7 @@ const menuSections: MenuSection[] = [
     label: "Academia",
     color: "text-indigo-400",
     sectionIcon: BookOpen,
+    hue: 245, // Indigo
     items: [{ title: "Academia", icon: BookOpen, path: "/academia" }],
   },
 ];
