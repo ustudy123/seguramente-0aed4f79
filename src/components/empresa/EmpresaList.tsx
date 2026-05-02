@@ -262,12 +262,26 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
             <Download className="w-4 h-4 mr-1" />
             Exportar
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4 mr-1" />
+            Importar
+          </Button>
           <Button size="sm" onClick={onNew}>
             <Plus className="w-4 h-4 mr-1" />
             Nova Empresa
           </Button>
         </div>
       </div>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Importar Empresas</DialogTitle>
+            <DialogDescription>Importe empresas via Excel/CSV ou baixe o modelo</DialogDescription>
+          </DialogHeader>
+          <EmpresaImportExport />
+        </DialogContent>
+      </Dialog>
 
       {/* Batch actions */}
       {selectedIds.size > 0 && (
