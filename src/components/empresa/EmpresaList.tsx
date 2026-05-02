@@ -450,6 +450,17 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                           <ToggleLeft className="w-5 h-5" />
                         )}
                       </Button>
+                      {podeExcluir && onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(emp.id, emp.razao_social || emp.nome_fantasia || 'sem nome')}
+                          title="Excluir empresa (apenas Administrador Master, sem colaboradores/prestadores)"
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
