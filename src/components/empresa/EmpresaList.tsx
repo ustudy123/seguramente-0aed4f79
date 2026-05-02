@@ -116,7 +116,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       return;
     }
     try {
-      exportEmpresasToXlsx(filtered);
+      exportEmpresasToXlsx(filtered, obrigacoes);
       toast.success(`${filtered.length} empresa(s) exportada(s) em Excel!`);
     } catch (err) {
       console.error(err);
