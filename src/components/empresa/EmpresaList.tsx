@@ -28,6 +28,8 @@ interface EmpresaListProps {
 }
 
 export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+  const { hasRole, isSuperAdmin } = useAuthContext() as any;
+  const podeExcluir = isSuperAdmin || hasRole?.('owner');
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
