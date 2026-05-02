@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -12,6 +12,33 @@ import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2, Edit, Archive, Ar
 import { confirm } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, TacDetalhe } from '@/types/empresa';
+
+const ORGAOS_EMISSORES = [
+  {
+    category: "Ministério Público",
+    options: ["Ministério Público Federal (MPF)", "Ministério Público Estadual (MPE)", "Ministério Público do Trabalho (MPT)"]
+  },
+  {
+    category: "Defensoria Pública",
+    options: ["Defensoria Pública da União", "Defensorias Públicas dos Estados"]
+  },
+  {
+    category: "Entes Federativos",
+    options: ["União", "Estados", "Distrito Federal", "Municípios"]
+  },
+  {
+    category: "Administração Direta",
+    options: ["Órgãos vinculados à União", "Órgãos vinculados aos Estados", "Órgãos vinculados ao Distrito Federal", "Órgãos vinculados aos Municípios"]
+  },
+  {
+    category: "Administração Indireta",
+    options: ["Autarquias (ex: IBAMA)", "Fundações Públicas", "Empresas Públicas", "Sociedades de Economia Mista"]
+  },
+  {
+    category: "Órgãos de Proteção e Defesa",
+    options: ["Órgãos Ambientais", "Órgãos de Defesa do Consumidor (ex: PROCON)", "Órgãos de Fiscalização do Patrimônio Público"]
+  }
+];
 
 interface Props {
   data: Partial<EmpresaCadastro>;
@@ -24,10 +51,6 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
   const ativos = tacList.filter((t) => !t.arquivado);
   const arquivados = tacList.filter((t) => t.arquivado);
 
-  // Edição via dialog (rascunho local — só persiste no onChange ao salvar)
-  // editIdx === null  -> fechado
-  // editIdx === -1    -> criando novo (ainda não está na lista)
-  // editIdx >= 0      -> editando item existente
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [draft, setDraft] = useState<TacDetalhe | null>(null);
 
@@ -63,7 +86,6 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
       return;
     }
     if (editIdx === -1) {
-      // novo
       onChange({ tac_detalhes: [...tacList, draft] });
       toast.success('TAC adicionado.');
     } else {
@@ -384,11 +406,26 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Órgão Emissor</Label>
-                <Input
-                  placeholder="Ex.: MPT, MTE"
+                <Select
                   value={draft.orgao_emissor || ''}
-                  onChange={(e) => setDraft({ ...draft, orgao_emissor: e.target.value })}
-                />
+                  onValueChange={(v) => setDraft({ ...draft, orgao_emissor: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o órgão" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ORGAOS_EMISSORES.map((cat) => (
+                      <SelectGroup key={cat.category}>
+                        <SelectLabel>{cat.category}</SelectLabel>
+                        {cat.options.map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Data de Assinatura</Label>
@@ -451,7 +488,7 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
               Cancelar
             </Button>
             <Button type="button" onClick={saveDraft}>
-              Salvar alterações
+              Salvar
             </Button>
           </DialogFooter>
         </DialogContent>
