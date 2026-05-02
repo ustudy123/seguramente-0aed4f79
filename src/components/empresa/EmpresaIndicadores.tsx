@@ -51,13 +51,13 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
           <div className="flex items-end">
             {fapValor > 0 && (
               <Badge
-                variant={fapValor > 1.5 ? 'destructive' : fapValor > 1.0 ? 'secondary' : 'default'}
+                variant={fapValor > 1.5 ? 'destructive' : fapValor < 1.0 ? 'default' : 'secondary'}
               >
                 {fapValor > 1.5
                   ? 'FAP Elevado — Atenção'
-                  : fapValor > 1.0
-                  ? 'FAP Neutro'
-                  : 'FAP Favorável'}
+                  : fapValor < 1.0
+                  ? 'FAP Favorável'
+                  : 'FAP Neutro'}
               </Badge>
             )}
           </div>
