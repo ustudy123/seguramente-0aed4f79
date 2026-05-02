@@ -363,6 +363,20 @@ export function EmpresaImportExport() {
               </div>
             )}
 
+            {importResult.duplicadas.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-warning">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>{importResult.duplicadas.length} empresa(s) ignorada(s) (já cadastradas):</span>
+                </div>
+                <ul className="text-xs space-y-1 max-h-40 overflow-y-auto">
+                  {importResult.duplicadas.map((d, i) => (
+                    <li key={i} className="text-warning">{d}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {importResult.errors.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-destructive">
