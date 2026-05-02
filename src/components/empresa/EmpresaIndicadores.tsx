@@ -317,24 +317,7 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const novo: TacDetalhe = {
-                      numero: '',
-                      orgao_emissor: '',
-                      data_assinatura: '',
-                      obrigacoes: '',
-                      prazo: '',
-                      penalidades: '',
-                      status: 'Em cumprimento',
-                    };
-                    const next = [...tacList, novo];
-                    onChange({ tac_detalhes: next });
-                    // Abrir editor já no novo
-                    setTimeout(() => {
-                      setEditIdx(next.length - 1);
-                      setDraft({ ...novo });
-                    }, 0);
-                  }}
+                  onClick={openNew}
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Adicionar TAC
