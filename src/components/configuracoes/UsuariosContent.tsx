@@ -88,7 +88,10 @@ export default function UsuariosContent() {
         (u.telefone_principal || "").includes(q);
       const matchStatus = filterStatus === "todos" || u.status === filterStatus;
       const matchTipo = filterTipo === "todos" || u.tipo_usuario === filterTipo;
-      const matchEmpresa = filterEmpresa === "todos" ||
+      // Administradores e papéis de acesso global aparecem em qualquer empresa filtrada
+      const tiposGlobais = ["administrador", "rh_dp", "corporativo_multiempresa", "suporte_autorizado", "auditor"];
+      const isGlobal = tiposGlobais.includes(u.tipo_usuario);
+      const matchEmpresa = filterEmpresa === "todos" || isGlobal ||
         ((u as any).vinculos || []).some((v: any) => v.empresa_id === filterEmpresa && v.status === "ativo");
       return matchQ && matchStatus && matchTipo && matchEmpresa;
     });
