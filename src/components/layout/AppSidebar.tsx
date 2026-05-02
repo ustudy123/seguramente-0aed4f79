@@ -236,10 +236,12 @@ const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolea
       to={item.path || "/"}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
+        // (5) Barra lateral no ativo
+        "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:rounded-r-full before:transition-all before:duration-200",
         isActive
-          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
-          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20 before:h-5 before:bg-sidebar-primary-foreground"
+          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground before:h-0 before:bg-transparent"
       )}
     >
       <item.icon
