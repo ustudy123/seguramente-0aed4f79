@@ -259,6 +259,7 @@ export default function Empresa() {
           onNew={handleNew}
           onToggleAtivo={handleToggleAtivo}
           grupos={grupos}
+          obrigacoes={useEmpresaCadastro(null).obrigacoes}
         />
       </div>
     );
