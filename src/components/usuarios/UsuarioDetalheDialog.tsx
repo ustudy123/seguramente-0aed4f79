@@ -831,9 +831,9 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
 
                 <Separator />
 
-                {/* Score de Qualidade */}
+                {/* Cadastro Completo */}
                 <div>
-                  <p className="text-sm font-medium mb-2">Score de Qualidade Cadastral</p>
+                  <p className="text-sm font-medium mb-2">Cadastro Completo</p>
                   <QualidadeScoreIndicator score={score} pct={pct} />
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {[

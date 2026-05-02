@@ -220,7 +220,7 @@ export default function UsuariosContent() {
             <span>Empresa / E-mail</span>
             <span>Perfil de Acesso</span>
             <span>Vínculos</span>
-            <span>Qualidade</span>
+            <span>Cadastro Completo</span>
             <span>Status</span>
           </div>
           {filtered.map(u => {

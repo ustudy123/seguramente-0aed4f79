@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,8 @@ export default function MeuPerfil() {
 
   const [nomeCompleto, setNomeCompleto] = useState(profile?.nome_completo || "");
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change
   const [senhaAtual, setSenhaAtual] = useState("");
@@ -45,6 +47,46 @@ export default function MeuPerfil() {
       toast.error(err.message || "Erro ao atualizar perfil");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!profile?.user_id) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB.");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${profile.user_id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, cacheControl: "3600" });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", profile.user_id);
+      if (updErr) throw updErr;
+      await (supabase as any)
+        .from("usuarios_base")
+        .update({ foto_url: publicUrl })
+        .eq("auth_user_id", profile.user_id);
+      toast.success("Foto atualizada!");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar foto");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -100,10 +142,22 @@ export default function MeuPerfil() {
                   {profile?.nome_completo ? getInitials(profile.nome_completo) : "U"}
                 </AvatarFallback>
               </Avatar>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleAvatarUpload(f);
+                }}
+              />
               <button
-                className="absolute bottom-0 right-0 bg-card border border-border rounded-full p-1.5 shadow-sm hover:bg-muted transition-colors"
-                title="Alterar foto (em breve)"
-                onClick={() => toast.info("Upload de foto em breve")}
+                type="button"
+                disabled={uploadingAvatar}
+                className="absolute bottom-0 right-0 bg-card border border-border rounded-full p-1.5 shadow-sm hover:bg-muted transition-colors disabled:opacity-50"
+                title={uploadingAvatar ? "Enviando..." : "Alterar foto"}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <Camera className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
