@@ -83,6 +83,9 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                 </span>
               </div>
             )}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>% Exigido</Label>
                 <Input
                   type="number"
                   step="0.01"
