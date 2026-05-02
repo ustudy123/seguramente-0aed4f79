@@ -84,6 +84,7 @@ export interface EmpresaCadastro {
   tipo_unidade: 'matriz' | 'filial';
   matriz_id: string | null;
   ai_context: string | null;
+  logo_url: string | null;
 
   total_colaboradores: number;
   ativo: boolean;

@@ -43,6 +43,7 @@ export default function Empresa() {
     upsertCadastro,
     toggleAtivoEmpresa,
     cliente,
+    obrigacoes,
   } = useEmpresaCadastro(viewMode === 'edit' ? selectedEmpresaId : undefined);
 
   const { grupos } = useGruposEconomicos();
@@ -259,6 +260,7 @@ export default function Empresa() {
           onNew={handleNew}
           onToggleAtivo={handleToggleAtivo}
           grupos={grupos}
+          obrigacoes={obrigacoes}
         />
       </div>
     );

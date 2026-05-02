@@ -22,9 +22,10 @@ interface EmpresaListProps {
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
   grupos?: GrupoEconomico[];
+  obrigacoes?: any[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [] }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [], obrigacoes = [] }: EmpresaListProps) {
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
@@ -115,7 +116,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       return;
     }
     try {
-      exportEmpresasToXlsx(filtered);
+      exportEmpresasToXlsx(filtered, grupos, obrigacoes);
       toast.success(`${filtered.length} empresa(s) exportada(s) em Excel!`);
     } catch (err) {
       console.error(err);
@@ -129,7 +130,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       return;
     }
     try {
-      exportEmpresasToPdf(filtered);
+      exportEmpresasToPdf(filtered, grupos, obrigacoes);
       toast.success(`${filtered.length} empresa(s) exportada(s) em PDF!`);
     } catch (err) {
       console.error(err);
