@@ -110,7 +110,7 @@ export function EmpresaImportExport() {
 
     // Define a coluna C com formato texto e largura adequada.
     wsData['!cols'] = wsData['!cols'] || [];
-    wsData['!cols'][2] = { wch: 22, z: '@' };
+    wsData['!cols'][2] = { wch: 22 };
 
     XLSX.utils.book_append_sheet(wb, wsData, 'Dados');
 
