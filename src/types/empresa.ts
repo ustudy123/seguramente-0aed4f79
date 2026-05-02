@@ -52,6 +52,7 @@ export interface EmpresaCadastro {
   pcd_percentual_exigido: number | null;
   
   // Jovem Aprendiz
+  aprendiz_obrigatorio: boolean;
   aprendiz_quantidade_minima: number;
   aprendiz_quantidade_maxima: number;
   aprendiz_quantidade_atual: number;
