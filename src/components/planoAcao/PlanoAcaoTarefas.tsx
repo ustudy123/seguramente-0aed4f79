@@ -244,7 +244,7 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => handleDeleteTarefa(tarefa.id)}
+                          onClick={() => handleDeleteTarefa(tarefa)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Excluir
