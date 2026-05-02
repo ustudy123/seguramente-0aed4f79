@@ -73,7 +73,9 @@ const TEMPLATE_INSTRUCTIONS = [
 export function EmpresaImportExport() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
-
+  const { tenantId } = useTenant();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const handleDownloadTemplate = () => {
     const wb = XLSX.utils.book_new();
 
