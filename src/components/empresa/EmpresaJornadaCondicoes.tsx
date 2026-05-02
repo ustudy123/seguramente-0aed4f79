@@ -56,11 +56,37 @@ export function EmpresaJornadaCondicoes({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Jornada Padrão</Label>
-            <Input
-              placeholder="Ex: 44h semanais, 8h diárias"
-              value={data.jornada_padrao || ''}
-              onChange={(e) => onChange({ jornada_padrao: e.target.value })}
-            />
+            <Select
+              value={
+                JORNADAS_PADRONIZADAS.includes(data.jornada_padrao || '')
+                  ? data.jornada_padrao || ''
+                  : data.jornada_padrao
+                  ? 'Outro / Personalizada'
+                  : ''
+              }
+              onValueChange={(v) =>
+                onChange({ jornada_padrao: v === 'Outro / Personalizada' ? '' : v })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a jornada/escala" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                {JORNADAS_PADRONIZADAS.map((j) => (
+                  <SelectItem key={j} value={j}>
+                    {j}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(!JORNADAS_PADRONIZADAS.includes(data.jornada_padrao || '') ||
+              data.jornada_padrao === '') && (
+              <Input
+                placeholder="Descreva a jornada personalizada (ex.: 6x2 com sábado alternado)"
+                value={data.jornada_padrao || ''}
+                onChange={(e) => onChange({ jornada_padrao: e.target.value })}
+              />
+            )}
           </div>
         </div>
 
