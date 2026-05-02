@@ -89,6 +89,7 @@ const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
 const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard"));
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
+const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
