@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Check, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { EmpresaCadastro } from "@/types/empresa";
+
+// Grace period (ms) antes de exibir a tela de "Acesso Restrito".
+// Evita o flash quando os dados de vínculo/empresa ainda estão estabilizando
+// logo após o login (race entre auth, usuario_base e queries).
+const SEM_VINCULOS_GRACE_MS = 1500;
 
 const formatCnpj = (cnpj: string | null) => {
   if (!cnpj) return "";
