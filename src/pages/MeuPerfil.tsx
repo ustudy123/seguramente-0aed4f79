@@ -90,6 +90,7 @@ export default function MeuPerfil() {
     }
   };
 
+  const handleChangePassword = async () => {
     if (!novaSenha || !confirmaSenha) {
       toast.error("Preencha a nova senha e a confirmação");
       return;
