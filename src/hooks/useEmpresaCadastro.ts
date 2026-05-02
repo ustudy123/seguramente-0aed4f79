@@ -217,6 +217,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         .from('plano_acoes')
         .insert({
           tenant_id: tenantId!,
+          empresa_id: obrigacao.empresa_id || empresaId || null,
           codigo: 'TEMP', // trigger will generate
           titulo: obrigacao.titulo,
           descricao: obrigacao.descricao,
