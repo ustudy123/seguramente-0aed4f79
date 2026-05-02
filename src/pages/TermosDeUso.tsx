@@ -19,12 +19,12 @@ export default function TermosDeUso() {
         <div className="prose prose-sm max-w-none space-y-6 text-foreground">
           <section>
             <h2 className="text-xl font-semibold">1. Aceitação dos Termos</h2>
-            <p>Ao acessar e utilizar a plataforma Seguramente, você concorda com estes Termos de Uso. Caso não concorde, não utilize nossos serviços.</p>
+            <p>Ao acessar e utilizar a plataforma YourEyes, você concorda com estes Termos de Uso. Caso não concorde, não utilize nossos serviços.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold">2. Descrição do Serviço</h2>
-            <p>A Seguramente é uma plataforma de gestão de pessoas, saúde e segurança do trabalho que oferece funcionalidades como gestão de colaboradores, atestados, avaliações, treinamentos, entre outros módulos.</p>
+            <p>A YourEyes é uma plataforma de gestão de pessoas, saúde e segurança do trabalho que oferece funcionalidades como gestão de colaboradores, atestados, avaliações, treinamentos, entre outros módulos.</p>
           </section>
 
           <section>
@@ -45,17 +45,17 @@ export default function TermosDeUso() {
 
           <section>
             <h2 className="text-xl font-semibold">5. Propriedade Intelectual</h2>
-            <p>Todo o conteúdo, design, código e funcionalidades da plataforma são de propriedade da Seguramente, protegidos por leis de propriedade intelectual.</p>
+            <p>Todo o conteúdo, design, código e funcionalidades da plataforma são de propriedade da YourEyes, protegidos por leis de propriedade intelectual.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold">6. Disponibilidade</h2>
-            <p>A Seguramente se esforça para manter a plataforma disponível 24/7, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência.</p>
+            <p>A YourEyes se esforça para manter a plataforma disponível 24/7, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold">7. Limitação de Responsabilidade</h2>
-            <p>A Seguramente não se responsabiliza por danos indiretos, incidentais ou consequentes decorrentes do uso ou impossibilidade de uso da plataforma.</p>
+            <p>A YourEyes não se responsabiliza por danos indiretos, incidentais ou consequentes decorrentes do uso ou impossibilidade de uso da plataforma.</p>
           </section>
 
           <section>
@@ -65,7 +65,7 @@ export default function TermosDeUso() {
 
           <section>
             <h2 className="text-xl font-semibold">9. Contato</h2>
-            <p>Em caso de dúvidas sobre estes Termos, entre em contato pelo e-mail: contato@seguramente.app</p>
+            <p>Em caso de dúvidas sobre estes Termos, entre em contato pelo e-mail: contato@youreyes.com.br</p>
           </section>
         </div>
       </div>
