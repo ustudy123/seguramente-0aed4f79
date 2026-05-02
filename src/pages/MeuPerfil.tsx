@@ -43,8 +43,15 @@ export default function MeuPerfil() {
         .update({ nome_completo: nomeCompleto })
         .eq("user_id", profile.user_id);
       if (error) throw error;
+      // Sync com usuarios_base (tela de Configurações > Usuários)
+      await (supabase as any)
+        .from("usuarios_base")
+        .update({ nome_completo: nomeCompleto })
+        .eq("auth_user_id", profile.user_id);
       toast.success("Perfil atualizado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      refetch?.();
     } catch (err: any) {
       toast.error(err.message || "Erro ao atualizar perfil");
     } finally {
