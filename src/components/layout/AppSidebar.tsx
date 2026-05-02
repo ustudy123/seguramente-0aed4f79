@@ -419,7 +419,7 @@ const CollapsibleSection = ({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
 
