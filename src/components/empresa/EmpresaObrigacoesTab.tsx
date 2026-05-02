@@ -12,7 +12,7 @@ import {
   Edit,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { EmpresaCadastro, EmpresaObrigacao, OBRIGACOES_TEMPLATES } from '@/types/empresa';
+import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
 import { OBRIGACOES_TEMPLATES as templates } from '@/types/empresa';
 import { useEmpresaCadastro } from '@/hooks/useEmpresaCadastro';
 
@@ -20,11 +20,23 @@ interface Props {
   cadastro: EmpresaCadastro | null;
   onTabChange?: (tab: string) => void;
 }
-...
-export function EmpresaObrigacoesTab({
-  cadastro,
-  onTabChange
-}: Props) {
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  pendente: { label: 'Pendente', color: 'bg-muted text-muted-foreground', icon: Clock },
+  conforme: { label: 'Conforme', color: 'bg-accent text-accent-foreground', icon: CheckCircle2 },
+  nao_conforme: { label: 'Não Conforme', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
+  em_adequacao: { label: 'Em Adequação', color: 'bg-warning/10 text-warning', icon: RefreshCw },
+  nao_aplicavel: { label: 'N/A', color: 'bg-secondary text-secondary-foreground', icon: CheckCircle2 },
+};
+
+const CRITICIDADE_COLOR: Record<string, string> = {
+  baixa: 'border-l-muted-foreground',
+  media: 'border-l-warning',
+  alta: 'border-l-orange-500',
+  critica: 'border-l-destructive',
+};
+
+export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
   const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro();
 
   // Detect obligations from cadastro data
@@ -111,6 +123,7 @@ export function EmpresaObrigacoesTab({
           {obrigacoes.map((obrigacao) => {
             const statusConf = STATUS_CONFIG[obrigacao.status] || STATUS_CONFIG.pendente;
             const StatusIcon = statusConf.icon;
+            const isTac = obrigacao.subcategoria === 'tac';
 
             return (
               <Card
@@ -136,13 +149,26 @@ export function EmpresaObrigacoesTab({
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {statusConf.label}
                       </Badge>
+                      
+                      {isTac && onTabChange && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => onTabChange('indicadores')}
+                          className="text-xs h-8"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Editar TAC
+                        </Button>
+                      )}
+
                       {!obrigacao.acao_gerada_id && obrigacao.status !== 'conforme' && obrigacao.status !== 'nao_aplicavel' && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleCriarAcao(obrigacao)}
                           disabled={criarAcaoDeObrigacao.isPending}
-                          className="text-xs"
+                          className="text-xs h-8"
                         >
                           <Plus className="w-3 h-3 mr-1" />
                           Criar Ação
