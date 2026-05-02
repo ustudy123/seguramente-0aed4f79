@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2, Edit } from 'lucide-react';
 import type { EmpresaCadastro, TacDetalhe } from '@/types/empresa';
 
@@ -106,111 +107,150 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                 </p>
               )}
 
-              {(data.tac_detalhes || []).map((tac, idx) => {
-                const list = data.tac_detalhes || [];
-                const updateAt = (patch: Partial<TacDetalhe>) => {
-                  const next = list.map((t, i) => (i === idx ? { ...t, ...patch } : t));
-                  onChange({ tac_detalhes: next });
-                };
-                const removeAt = () => {
-                  const next = list.filter((_, i) => i !== idx);
-                  onChange({ tac_detalhes: next });
-                };
-                return (
-                  <div key={idx} className="p-3 border rounded-md bg-background space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono">TAC #{idx + 1}</Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Edit className="w-3 h-3" />
-                          Editável
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={removeAt}
-                        className="text-destructive hover:text-destructive h-8 w-8 p-0"
+              {(data.tac_detalhes || []).length > 0 && (
+                <Accordion
+                  type="single"
+                  collapsible
+                  defaultValue={(data.tac_detalhes || []).length === 1 ? 'tac-0' : undefined}
+                  className="space-y-2"
+                >
+                  {(data.tac_detalhes || []).map((tac, idx) => {
+                    const list = data.tac_detalhes || [];
+                    const updateAt = (patch: Partial<TacDetalhe>) => {
+                      const next = list.map((t, i) => (i === idx ? { ...t, ...patch } : t));
+                      onChange({ tac_detalhes: next });
+                    };
+                    const removeAt = () => {
+                      const next = list.filter((_, i) => i !== idx);
+                      onChange({ tac_detalhes: next });
+                    };
+                    const resumo = [
+                      tac.numero,
+                      tac.orgao_emissor,
+                      tac.status,
+                    ]
+                      .filter(Boolean)
+                      .join(' • ');
+                    return (
+                      <AccordionItem
+                        key={idx}
+                        value={`tac-${idx}`}
+                        className="border rounded-md bg-background px-3"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Nº / Identificador *</Label>
-                        <Input
-                          placeholder="Ex.: TAC 123/2024"
-                          value={tac.numero || ''}
-                          onChange={(e) => updateAt({ numero: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Órgão Emissor</Label>
-                        <Input
-                          placeholder="Ex.: MPT, MTE"
-                          value={tac.orgao_emissor || ''}
-                          onChange={(e) => updateAt({ orgao_emissor: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Data de Assinatura</Label>
-                        <Input
-                          type="date"
-                          value={tac.data_assinatura || ''}
-                          onChange={(e) => updateAt({ data_assinatura: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <Label className="text-xs">Obrigações / Cláusulas</Label>
-                        <Textarea
-                          placeholder="Resumo das obrigações..."
-                          rows={2}
-                          value={tac.obrigacoes || ''}
-                          onChange={(e) => updateAt({ obrigacoes: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Prazo</Label>
-                        <Input
-                          placeholder="Ex.: 12 meses"
-                          value={tac.prazo || ''}
-                          onChange={(e) => updateAt({ prazo: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <Label className="text-xs">Penalidades em caso de descumprimento</Label>
-                        <Input
-                          placeholder="Ex.: Multa de R$ 50.000 por cláusula"
-                          value={tac.penalidades || ''}
-                          onChange={(e) => updateAt({ penalidades: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Status</Label>
-                        <Select
-                          value={tac.status || ''}
-                          onValueChange={(v) => updateAt({ status: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Em cumprimento">Em cumprimento</SelectItem>
-                            <SelectItem value="Em negociação">Em negociação</SelectItem>
-                            <SelectItem value="Pendente de assinatura">Pendente de assinatura</SelectItem>
-                            <SelectItem value="Em atraso">Em atraso</SelectItem>
-                            <SelectItem value="Descumprido">Descumprido</SelectItem>
-                            <SelectItem value="Suspenso">Suspenso</SelectItem>
-                            <SelectItem value="Cumprido / Encerrado">Cumprido / Encerrado</SelectItem>
-                            <SelectItem value="Arquivado">Arquivado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                        <div className="flex items-center justify-between gap-2">
+                          <AccordionTrigger className="flex-1 hover:no-underline py-3">
+                            <div className="flex items-center gap-2 flex-1 text-left">
+                              <Badge variant="outline" className="font-mono shrink-0">
+                                TAC #{idx + 1}
+                              </Badge>
+                              <span className="text-sm font-medium truncate">
+                                {tac.numero || 'Sem identificador'}
+                              </span>
+                              {resumo && (
+                                <span className="text-xs text-muted-foreground truncate hidden md:inline">
+                                  {resumo}
+                                </span>
+                              )}
+                            </div>
+                          </AccordionTrigger>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeAt();
+                            }}
+                            className="text-destructive hover:text-destructive h-8 w-8 p-0 shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <AccordionContent className="pt-2 pb-3">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Edit className="w-3 h-3" />
+                              Editável
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Nº / Identificador *</Label>
+                              <Input
+                                placeholder="Ex.: TAC 123/2024"
+                                value={tac.numero || ''}
+                                onChange={(e) => updateAt({ numero: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Órgão Emissor</Label>
+                              <Input
+                                placeholder="Ex.: MPT, MTE"
+                                value={tac.orgao_emissor || ''}
+                                onChange={(e) => updateAt({ orgao_emissor: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Data de Assinatura</Label>
+                              <Input
+                                type="date"
+                                value={tac.data_assinatura || ''}
+                                onChange={(e) => updateAt({ data_assinatura: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-1 md:col-span-2">
+                              <Label className="text-xs">Obrigações / Cláusulas</Label>
+                              <Textarea
+                                placeholder="Resumo das obrigações..."
+                                rows={2}
+                                value={tac.obrigacoes || ''}
+                                onChange={(e) => updateAt({ obrigacoes: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Prazo</Label>
+                              <Input
+                                placeholder="Ex.: 12 meses"
+                                value={tac.prazo || ''}
+                                onChange={(e) => updateAt({ prazo: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-1 md:col-span-2">
+                              <Label className="text-xs">Penalidades em caso de descumprimento</Label>
+                              <Input
+                                placeholder="Ex.: Multa de R$ 50.000 por cláusula"
+                                value={tac.penalidades || ''}
+                                onChange={(e) => updateAt({ penalidades: e.target.value })}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Status</Label>
+                              <Select
+                                value={tac.status || ''}
+                                onValueChange={(v) => updateAt({ status: v })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Em cumprimento">Em cumprimento</SelectItem>
+                                  <SelectItem value="Em negociação">Em negociação</SelectItem>
+                                  <SelectItem value="Pendente de assinatura">Pendente de assinatura</SelectItem>
+                                  <SelectItem value="Em atraso">Em atraso</SelectItem>
+                                  <SelectItem value="Descumprido">Descumprido</SelectItem>
+                                  <SelectItem value="Suspenso">Suspenso</SelectItem>
+                                  <SelectItem value="Cumprido / Encerrado">Cumprido / Encerrado</SelectItem>
+                                  <SelectItem value="Arquivado">Arquivado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
+              )}
 
               <Button
                 type="button"
