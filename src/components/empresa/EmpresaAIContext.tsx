@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Brain, Info, Pencil, Save, X, FileText } from 'lucide-react';
+import { Brain, Info, Pencil, Save, X, FileText, Maximize2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import type { EmpresaCadastro } from '@/types/empresa';
 import { toast } from 'sonner';
 
@@ -13,15 +21,28 @@ interface EmpresaAIContextProps {
 
 export function EmpresaAIContext({ data, onChange }: EmpresaAIContextProps) {
   const hasContent = !!(data.ai_context && data.ai_context.trim().length > 0);
-  // Inicia em modo visualização se já houver conteúdo, ou em edição se vazio
-  const [isEditing, setIsEditing] = useState(!hasContent);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(data.ai_context || '');
 
   // Sincroniza o draft quando o conteúdo externo muda (ex: troca de empresa)
   useEffect(() => {
     setDraft(data.ai_context || '');
-    setIsEditing(!(data.ai_context && data.ai_context.trim().length > 0));
+    setIsEditing(false);
+    setIsOpen(false);
   }, [data.id]);
+
+  const openView = () => {
+    setDraft(data.ai_context || '');
+    setIsEditing(false);
+    setIsOpen(true);
+  };
+
+  const openEdit = () => {
+    setDraft(data.ai_context || '');
+    setIsEditing(true);
+    setIsOpen(true);
+  };
 
   const handleSave = () => {
     onChange({ ai_context: draft });
@@ -31,8 +52,14 @@ export function EmpresaAIContext({ data, onChange }: EmpresaAIContextProps) {
 
   const handleCancel = () => {
     setDraft(data.ai_context || '');
-    setIsEditing(false);
+    if (hasContent) {
+      setIsEditing(false);
+    } else {
+      setIsOpen(false);
+    }
   };
+
+  const preview = (data.ai_context || '').slice(0, 180);
 
   return (
     <div className="space-y-6">
@@ -52,91 +79,115 @@ export function EmpresaAIContext({ data, onChange }: EmpresaAIContextProps) {
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="ai_context" className="flex items-center gap-2">
-              Descrição do Contexto da Empresa
-              <Info className="w-4 h-4 text-muted-foreground" />
-            </Label>
-            {!isEditing && hasContent && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                className="gap-2"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Editar
-              </Button>
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          Descrição do Contexto da Empresa
+          <Info className="w-4 h-4 text-muted-foreground" />
+        </Label>
+
+        {hasContent ? (
+          <div className="rounded-lg border border-border bg-muted/30 p-5">
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <FileText className="w-3.5 h-3.5" />
+                <span>Contexto salvo · {data.ai_context!.length} caracteres</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button type="button" variant="outline" size="sm" onClick={openEdit} className="gap-2">
+                  <Pencil className="w-3.5 h-3.5" />
+                  Editar
+                </Button>
+                <Button type="button" size="sm" onClick={openView} className="gap-2">
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  Abrir Contexto
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {preview}{(data.ai_context || '').length > 180 ? '…' : ''}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-8 flex flex-col items-center justify-center text-center text-muted-foreground">
+            <FileText className="w-8 h-8 mb-2 opacity-50" />
+            <p className="text-sm mb-3">Nenhum contexto cadastrado ainda.</p>
+            <Button type="button" variant="outline" size="sm" onClick={openEdit} className="gap-2">
+              <Pencil className="w-3.5 h-3.5" />
+              Adicionar Contexto
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              Contexto para Inteligência Artificial
+            </DialogTitle>
+            <DialogDescription>
+              {isEditing
+                ? 'Edite o contexto da empresa que será utilizado pelas ferramentas de I.A.'
+                : 'Visualização completa do contexto cadastrado.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto py-2">
+            {isEditing ? (
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Ex: Empresa focada em inovação no setor têxtil, com forte cultura de segurança e sustentabilidade..."
+                  className="min-h-[400px] resize-y"
+                  maxLength={3000}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  autoFocus
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Dica: Inclua informações sobre o setor, porte, objetivos estratégicos e referências internas.
+                  </p>
+                  <span className={`text-xs shrink-0 ml-2 ${draft.length >= 2800 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {draft.length}/3.000
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border bg-muted/30 p-5">
+                <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {data.ai_context}
+                </div>
+              </div>
             )}
           </div>
 
-          {isEditing ? (
-            <>
-              <Textarea
-                id="ai_context"
-                placeholder="Ex: Empresa focada em inovação no setor têxtil, com forte cultura de segurança e sustentabilidade. Atualmente revisando processos de NR-12 e buscando certificação ISO 45001. Referência interna: Manual de Conduta v2.0..."
-                className="min-h-[300px] resize-y"
-                maxLength={3000}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                autoFocus
-              />
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                  Dica: Inclua informações sobre o setor, porte, objetivos estratégicos, referências a documentos internos e qualquer detalhe que ajude a I.A. a entender melhor sua empresa.
-                </p>
-                <span className={`text-xs shrink-0 ml-2 ${draft.length >= 2800 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  {draft.length}/3.000
-                </span>
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                {hasContent && (
-                  <Button type="button" variant="ghost" onClick={handleCancel} className="gap-2">
-                    <X className="w-4 h-4" />
-                    Cancelar
-                  </Button>
-                )}
+          <DialogFooter className="gap-2">
+            {isEditing ? (
+              <>
+                <Button type="button" variant="ghost" onClick={handleCancel} className="gap-2">
+                  <X className="w-4 h-4" />
+                  Cancelar
+                </Button>
                 <Button type="button" onClick={handleSave} className="gap-2">
                   <Save className="w-4 h-4" />
                   Salvar Contexto
                 </Button>
-              </div>
-            </>
-          ) : (
-            <div className="rounded-lg border border-border bg-muted/30 p-5 min-h-[200px]">
-              {hasContent ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground border-b border-border/60 pb-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Contexto salvo · {data.ai_context!.length} caracteres</span>
-                  </div>
-                  <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {data.ai_context}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center py-8 text-muted-foreground">
-                  <FileText className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">Nenhum contexto cadastrado ainda.</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditing(true)}
-                    className="mt-3 gap-2"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                    Adicionar Contexto
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+              </>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={() => setIsEditing(true)} className="gap-2">
+                  <Pencil className="w-4 h-4" />
+                  Editar
+                </Button>
+                <Button type="button" onClick={() => setIsOpen(false)}>
+                  Fechar
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
