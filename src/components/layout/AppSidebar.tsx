@@ -312,7 +312,7 @@ const CollapsibleSection = ({
         // (1) Container visual quando expandido
         "rounded-xl transition-all duration-200",
         isOpen
-          ? "bg-white/[0.03] border border-white/[0.06] p-1 shadow-inner shadow-black/10"
+          ? "bg-white/[0.10] border border-white/[0.14] p-1 shadow-sm shadow-black/5"
           : "border border-transparent"
       )}
     >
