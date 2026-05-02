@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
+import { buscarCnpj, formatCnpj, validateCnpj } from '@/lib/brasilapi';
 
 const TEMPLATE_COLUMNS = [
   'Razão Social*',
@@ -160,19 +161,34 @@ export function EmpresaImportExport() {
           continue;
         }
 
-        const razaoSocial = rawRazaoSocial?.toString().trim();
-        const cnpjRaw = rawCnpj?.toString().trim();
+        const razaoSocialInput = rawRazaoSocial?.toString().trim();
+        const cnpjInput = rawCnpj?.toString().trim();
 
-        if (!razaoSocial) {
-          errors.push(`Linha ${i + 2}: Razão Social é obrigatória`);
-          continue;
-        }
-        if (!cnpjRaw) {
+        if (!cnpjInput) {
           errors.push(`Linha ${i + 2}: CNPJ é obrigatório`);
           continue;
         }
 
-        const cnpj = cnpjRaw.replace(/\D/g, '');
+        const cnpjLimpo = cnpjInput.replace(/\D/g, '');
+        if (!validateCnpj(cnpjLimpo)) {
+          errors.push(`Linha ${i + 2}: CNPJ inválido (${cnpjInput})`);
+          continue;
+        }
+
+        const cnpjFormatado = formatCnpj(cnpjLimpo);
+        
+        // Tenta buscar informações extras do CNPJ para enriquecer ou preencher vazios
+        let infoApi = null;
+        try {
+          // Busca apenas se faltar informações básicas ou para validar
+          infoApi = await buscarCnpj(cnpjLimpo);
+        } catch (e) {
+          console.error(`Erro ao buscar CNPJ ${cnpjLimpo}:`, e);
+        }
+
+        const razaoSocial = razaoSocialInput || infoApi?.razao_social || 'Empresa sem Razão Social';
+        const nomeFantasia = row['Nome Fantasia']?.toString().trim() || infoApi?.nome_fantasia || null;
+        
         const grauRiscoRaw = row['Grau de Risco (1-4)']?.toString().trim();
         const grauRisco = grauRiscoRaw ? parseInt(grauRiscoRaw, 10) : null;
         const totalColabRaw = row['Total Colaboradores']?.toString().trim();
@@ -182,19 +198,19 @@ export function EmpresaImportExport() {
           tenant_id: tenantId,
           tipo_pessoa: 'pj',
           razao_social: razaoSocial,
-          nome_fantasia: row['Nome Fantasia']?.toString().trim() || null,
-          cnpj,
+          nome_fantasia: nomeFantasia,
+          cnpj: cnpjFormatado,
           inscricao_estadual: row['Inscrição Estadual']?.toString().trim() || null,
-          telefone: row['Telefone']?.toString().trim() || null,
-          email: row['E-mail']?.toString().trim() || null,
-          cep: row['CEP']?.toString().trim().replace(/\D/g, '') || null,
-          endereco: row['Endereço']?.toString().trim() || null,
-          numero: row['Número']?.toString().trim() || null,
-          bairro: row['Bairro']?.toString().trim() || null,
-          cidade: row['Cidade']?.toString().trim() || null,
-          estado: row['Estado']?.toString().trim().toUpperCase() || null,
-          cnae_principal: row['CNAE Principal']?.toString().trim() || null,
-          cnae_descricao: row['Descrição CNAE']?.toString().trim() || null,
+          telefone: row['Telefone']?.toString().trim() || infoApi?.telefone || null,
+          email: row['E-mail']?.toString().trim() || infoApi?.email || null,
+          cep: row['CEP']?.toString().trim().replace(/\D/g, '') || infoApi?.cep || null,
+          endereco: row['Endereço']?.toString().trim() || infoApi?.logradouro || null,
+          numero: row['Número']?.toString().trim() || infoApi?.numero || null,
+          bairro: row['Bairro']?.toString().trim() || infoApi?.bairro || null,
+          cidade: row['Cidade']?.toString().trim() || infoApi?.municipio || null,
+          estado: row['Estado']?.toString().trim().toUpperCase() || infoApi?.uf || null,
+          cnae_principal: row['CNAE Principal']?.toString().trim() || (infoApi?.cnae_fiscal ? String(infoApi.cnae_fiscal) : null),
+          cnae_descricao: row['Descrição CNAE']?.toString().trim() || infoApi?.cnae_fiscal_descricao || null,
           grau_risco: grauRisco && !isNaN(grauRisco) ? grauRisco : null,
           total_colaboradores: totalColab && !isNaN(totalColab) ? totalColab : null,
           jornada_padrao: row['Jornada Padrão']?.toString().trim() || null,
