@@ -222,7 +222,7 @@ export default function MeuPerfil() {
             <Label>E-mail</Label>
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
               <Mail className="h-4 w-4 shrink-0" />
-              {(profile as any)?.email || "—"}
+              {user?.email || (profile as any)?.email || "—"}
             </div>
             <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado por aqui. Contate o administrador.</p>
           </div>
