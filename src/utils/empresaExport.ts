@@ -1,15 +1,27 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { EmpresaCadastro } from '@/types/empresa';
+import type { EmpresaCadastro, EmpresaObrigacao } from '@/types/empresa';
 
 type Empresa = EmpresaCadastro & { ativo: boolean };
 
 const fmt = (v: unknown): string => {
   if (v === null || v === undefined || v === '') return '—';
   if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
-  if (Array.isArray(v)) return v.length ? `${v.length} item(ns)` : '—';
-  if (typeof v === 'object') return JSON.stringify(v);
+  if (Array.isArray(v)) {
+    if (v.length === 0) return '—';
+    // If it's an array of objects, try to format them
+    return v.map(item => {
+      if (typeof item === 'object') return JSON.stringify(item);
+      return String(item);
+    }).join(' | ');
+  }
+  if (typeof v === 'object') {
+    // Better object formatting for JSONB
+    return Object.entries(v)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(' | ');
+  }
   return String(v);
 };
 
@@ -37,127 +49,158 @@ const fmtCep = (cep: string | null | undefined) => {
 const fmtDate = (d: string | null | undefined) => {
   if (!d) return '—';
   try {
-    return new Date(d).toLocaleDateString('pt-BR');
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+    return date.toLocaleDateString('pt-BR');
   } catch {
     return d;
   }
 };
 
+// Helper to find Matrix name
+const getMatrizName = (matrizId: string | null, empresas: Empresa[]) => {
+  if (!matrizId) return '—';
+  const m = empresas.find(e => e.id === matrizId);
+  return m ? m.razao_social || m.nome_fantasia || matrizId : matrizId;
+};
+
+// Helper to find Grupo name
+const getGrupoName = (grupoId: string | null, grupos: any[]) => {
+  if (!grupoId) return '—';
+  const g = grupos.find(gr => gr.id === grupoId);
+  return g ? g.nome || grupoId : grupoId;
+};
+
 // ===== Section schema (every step of the cadastro) =====
-const sections = (e: Empresa): { title: string; rows: [string, string][] }[] => [
-  {
-    title: 'Dados Básicos',
-    rows: [
-      ['Razão Social', fmt(e.razao_social)],
-      ['Nome Fantasia', fmt(e.nome_fantasia)],
-      ['Tipo de Pessoa', e.tipo_pessoa === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'],
-      ['CNPJ', fmtCnpj(e.cnpj)],
-      ['CPF', fmtCpf(e.cpf)],
-      ['CEI', fmt(e.cei)],
-      ['CAEPF', fmt(e.caepf)],
-      ['Inscrição Estadual', fmt(e.inscricao_estadual)],
-      ['Inscrição Municipal', fmt(e.inscricao_municipal)],
-      ['CEP', fmtCep(e.cep)],
-      ['Endereço', fmt(e.endereco)],
-      ['Número', fmt(e.numero)],
-      ['Complemento', fmt(e.complemento)],
-      ['Bairro', fmt(e.bairro)],
-      ['Cidade', fmt(e.cidade)],
-      ['Estado', fmt(e.estado)],
-      ['Telefone', fmt(e.telefone)],
-      ['E-mail', fmt(e.email)],
-      ['Website', fmt(e.website)],
-      ['Status', e.ativo ? 'Ativa' : 'Inativa'],
-      ['Total de Colaboradores', fmt(e.total_colaboradores)],
-    ],
-  },
-  {
-    title: 'Enquadramento Legal (CNAE / Risco / SESMT / CIPA)',
-    rows: [
-      ['CNAE Principal', fmt(e.cnae_principal)],
-      ['Descrição CNAE', fmt(e.cnae_descricao)],
-      ['CNAEs Secundários', (e.cnaes_secundarios || []).map(c => `${c.codigo} - ${c.descricao}`).join(' | ') || '—'],
-      ['Grau de Risco', fmt(e.grau_risco)],
-      ['Grau de Risco Ajustado', fmt(e.grau_risco_ajustado)],
-      ['Justificativa do Ajuste', fmt(e.grau_risco_justificativa)],
-      ['SESMT Obrigatório', fmt(e.sesmt_obrigatorio)],
-      ['SESMT Situação', fmt(e.sesmt_situacao)],
-      ['SESMT Profissionais', (e.sesmt_profissionais || []).map(p => `${p.tipo}: ${p.nome} (${p.registro})`).join(' | ') || '—'],
-      ['CIPA Obrigatória', fmt(e.cipa_obrigatoria)],
-      ['CIPA Situação', fmt(e.cipa_situacao)],
-      ['CIPA Mandato Início', fmtDate(e.cipa_data_mandato_inicio)],
-      ['CIPA Mandato Fim', fmtDate(e.cipa_data_mandato_fim)],
-      ['CIPA Membros', (e.cipa_membros || []).map(m => `${m.nome} (${m.funcao} - ${m.tipo})`).join(' | ') || '—'],
-    ],
-  },
-  {
-    title: 'Inclusão (PCD / Jovem Aprendiz)',
-    rows: [
-      ['PCD Obrigatória', fmt(e.pcd_obrigatoria)],
-      ['PCD Quantidade Exigida', fmt(e.pcd_quantidade_exigida)],
-      ['PCD Quantidade Atual', fmt(e.pcd_quantidade_atual)],
-      ['PCD Percentual Exigido', fmt(e.pcd_percentual_exigido)],
-      ['Aprendiz Quantidade Mínima', fmt(e.aprendiz_quantidade_minima)],
-      ['Aprendiz Quantidade Máxima', fmt(e.aprendiz_quantidade_maxima)],
-      ['Aprendiz Quantidade Atual', fmt(e.aprendiz_quantidade_atual)],
-    ],
-  },
-  {
-    title: 'Indicadores (FAP / TAC)',
-    rows: [
-      ['FAP Atual', fmt(e.fap_atual)],
-      ['FAP Classificação', fmt(e.fap_classificacao)],
-      ['FAP Histórico', (e.fap_historico || []).map(h => `${h.ano}: ${h.valor}`).join(' | ') || '—'],
-      ['Possui TAC', fmt(e.tac_possui)],
-      ['TAC Detalhes', (e.tac_detalhes || []).map(t => `${t.numero} (${t.orgao_emissor}) - ${t.status}`).join(' | ') || '—'],
-    ],
-  },
-  {
-    title: 'Jornada e Turnos',
-    rows: [
-      ['Jornada Padrão', fmt(e.jornada_padrao)],
-      ['Possui 3º Turno', fmt(e.possui_terceiro_turno)],
-      ['Escalas Especiais', fmt(e.possui_escalas_especiais)],
-      ['Turnos', (e.turnos || []).map(t => `${t.nome}: ${t.horario_inicio}-${t.horario_fim}`).join(' | ') || '—'],
-      ['Trabalho em Altura (NR-35)', fmt(e.trabalho_altura)],
-      ['Espaço Confinado (NR-33)', fmt(e.espaco_confinado)],
-      ['Insalubridade (NR-15)', fmt(e.insalubridade)],
-      ['Periculosidade (NR-16)', fmt(e.periculosidade)],
-      ['Aposentadoria Especial', fmt(e.aposentadoria_especial)],
-    ],
-  },
-  {
-    title: 'Hierarquia / Grupo Econômico',
-    rows: [
-      ['Tipo de Unidade', fmt(e.tipo_unidade)],
-      ['Grupo Econômico (ID)', fmt(e.grupo_economico_id)],
-      ['Matriz (ID)', fmt(e.matriz_id)],
-    ],
-  },
-  {
-    title: 'Contexto IA',
-    rows: [
-      ['Contexto para IA', fmt(e.ai_context)],
-    ],
-  },
-  {
-    title: 'Auditoria',
-    rows: [
-      ['Atualizado por', fmt(e.atualizado_por)],
-      ['Criado em', fmtDate(e.created_at)],
-      ['Atualizado em', fmtDate(e.updated_at)],
-    ],
-  },
-];
+const sections = (e: Empresa, empresas: Empresa[], grupos: any[], obligacoes: EmpresaObrigacao[]): { title: string; rows: [string, string][] }[] => {
+  // Filter obligations for THIS company (based on tenant_id or company id if applicable)
+  // Since we found obligations tenant_id = company id, we filter by e.id
+  const myObligations = obligacoes.filter(ob => ob.tenant_id === e.id);
+
+  return [
+    {
+      title: 'Dados Básicos',
+      rows: [
+        ['Razão Social', fmt(e.razao_social)],
+        ['Nome Fantasia', fmt(e.nome_fantasia)],
+        ['Tipo de Pessoa', e.tipo_pessoa === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'],
+        ['CNPJ', fmtCnpj(e.cnpj)],
+        ['CPF', fmtCpf(e.cpf)],
+        ['CEI', fmt(e.cei)],
+        ['CAEPF', fmt(e.caepf)],
+        ['Inscrição Estadual', fmt(e.inscricao_estadual)],
+        ['Inscrição Municipal', fmt(e.inscricao_municipal)],
+        ['CEP', fmtCep(e.cep)],
+        ['Endereço', fmt(e.endereco)],
+        ['Número', fmt(e.numero)],
+        ['Complemento', fmt(e.complemento)],
+        ['Bairro', fmt(e.bairro)],
+        ['Cidade', fmt(e.cidade)],
+        ['Estado', fmt(e.estado)],
+        ['Telefone', fmt(e.telefone)],
+        ['E-mail', fmt(e.email)],
+        ['Website', fmt(e.website)],
+        ['Status', e.ativo ? 'Ativa' : 'Inativa'],
+        ['Total de Colaboradores', fmt(e.total_colaboradores)],
+      ],
+    },
+    {
+      title: 'Enquadramento Legal (CNAE / Risco / SESMT / CIPA)',
+      rows: [
+        ['CNAE Principal', fmt(e.cnae_principal)],
+        ['Descrição CNAE', fmt(e.cnae_descricao)],
+        ['CNAEs Secundários', (e.cnaes_secundarios || []).map(c => `${c.codigo} - ${c.descricao}`).join(' | ') || '—'],
+        ['Grau de Risco', fmt(e.grau_risco)],
+        ['Grau de Risco Ajustado', fmt(e.grau_risco_ajustado)],
+        ['Justificativa do Ajuste', fmt(e.grau_risco_justificativa)],
+        ['SESMT Obrigatório', fmt(e.sesmt_obrigatorio)],
+        ['SESMT Situação', fmt(e.sesmt_situacao)],
+        ['SESMT Profissionais', (e.sesmt_profissionais || []).map(p => `${p.tipo}: ${p.nome} (${p.registro})`).join(' | ') || '—'],
+        ['CIPA Obrigatória', fmt(e.cipa_obrigatoria)],
+        ['CIPA Situação', fmt(e.cipa_situacao)],
+        ['CIPA Mandato Início', fmtDate(e.cipa_data_mandato_inicio)],
+        ['CIPA Mandato Fim', fmtDate(e.cipa_data_mandato_fim)],
+        ['CIPA Membros', (e.cipa_membros || []).map(m => `${m.nome} (${m.funcao} - ${m.tipo})`).join(' | ') || '—'],
+      ],
+    },
+    {
+      title: 'Inclusão (PCD / Jovem Aprendiz)',
+      rows: [
+        ['PCD Obrigatória', fmt(e.pcd_obrigatoria)],
+        ['PCD Quantidade Exigida', fmt(e.pcd_quantidade_exigida)],
+        ['PCD Quantidade Atual', fmt(e.pcd_quantidade_atual)],
+        ['PCD Percentual Exigido', fmt(e.pcd_percentual_exigido)],
+        ['Aprendiz Quantidade Mínima', fmt(e.aprendiz_quantidade_minima)],
+        ['Aprendiz Quantidade Máxima', fmt(e.aprendiz_quantidade_maxima)],
+        ['Aprendiz Quantidade Atual', fmt(e.aprendiz_quantidade_atual)],
+      ],
+    },
+    {
+      title: 'Indicadores (FAP / TAC)',
+      rows: [
+        ['FAP Atual', fmt(e.fap_atual)],
+        ['FAP Classificação', fmt(e.fap_classificacao)],
+        ['FAP Histórico', (e.fap_historico || []).map(h => `${h.ano}: ${h.valor}`).join(' | ') || '—'],
+        ['Possui TAC', fmt(e.tac_possui)],
+        ['TAC Detalhes', (e.tac_detalhes || []).map(t => `${t.numero} (${t.orgao_emissor}) - ${t.status}`).join(' | ') || '—'],
+      ],
+    },
+    {
+      title: 'Jornada e Condições Especiais',
+      rows: [
+        ['Jornada Padrão', fmt(e.jornada_padrao)],
+        ['Possui 3º Turno', fmt(e.possui_terceiro_turno)],
+        ['Escalas Especiais', fmt(e.possui_escalas_especiais)],
+        ['Turnos', (e.turnos || []).map(t => `${t.nome}: ${t.horario_inicio}-${t.horario_fim}`).join(' | ') || '—'],
+        ['Trabalho em Altura (NR-35)', fmt(e.trabalho_altura)],
+        ['Espaço Confinado (NR-33)', fmt(e.espaco_confinado)],
+        ['Insalubridade (NR-15)', fmt(e.insalubridade)],
+        ['Periculosidade (NR-16)', fmt(e.periculosidade)],
+        ['Aposentadoria Especial', fmt(e.aposentadoria_especial)],
+        ['Condições Especiais Detalhes', fmt(e.condicoes_especiais_detalhes)],
+      ],
+    },
+    {
+      title: 'Hierarquia / Grupo Econômico',
+      rows: [
+        ['Tipo de Unidade', e.tipo_unidade === 'matriz' ? 'Matriz' : 'Filial'],
+        ['Grupo Econômico', getGrupoName(e.grupo_economico_id, grupos)],
+        ['Matriz de Referência', getMatrizName(e.matriz_id, empresas)],
+      ],
+    },
+    {
+      title: 'Obrigações Detectadas',
+      rows: myObligations.length > 0 ? myObligations.map(ob => [
+        ob.titulo, 
+        `${ob.status.toUpperCase()} | Criticidade: ${ob.criticidade.toUpperCase()} | Categoria: ${ob.categoria}${ob.base_legal ? ` | Base: ${ob.base_legal}` : ''}`
+      ]) as [string, string][] : [['Sem obrigações', 'Nenhuma obrigação detectada para esta empresa']],
+    },
+    {
+      title: 'Contexto IA',
+      rows: [
+        ['Contexto para IA', fmt(e.ai_context)],
+      ],
+    },
+    {
+      title: 'Auditoria',
+      rows: [
+        ['Atualizado por', fmt(e.atualizado_por)],
+        ['Criado em', fmtDate(e.created_at)],
+        ['Atualizado em', fmtDate(e.updated_at)],
+        ['Logo URL', fmt(e.logo_url)],
+      ],
+    },
+  ];
+};
 
 // ===== Excel export =====
-export function exportEmpresasToXlsx(empresas: Empresa[]) {
+export function exportEmpresasToXlsx(empresas: Empresa[], grupos: any[] = [], obligacoes: EmpresaObrigacao[] = []) {
   const wb = XLSX.utils.book_new();
 
   // Sheet 1: Resumo (uma linha por empresa, todos os campos planos)
   const resumoRows = empresas.map(e => {
     const obj: Record<string, string> = {};
-    sections(e).forEach(sec => {
+    sections(e, empresas, grupos, obligacoes).forEach(sec => {
       sec.rows.forEach(([k, v]) => {
         obj[`${sec.title} | ${k}`] = v;
       });
@@ -169,10 +212,10 @@ export function exportEmpresasToXlsx(empresas: Empresa[]) {
 
   // Sheet 2..N: Uma sheet por seção (linhas = empresas, colunas = campos da seção)
   if (empresas.length > 0) {
-    const baseSections = sections(empresas[0]);
+    const baseSections = sections(empresas[0], empresas, grupos, obligacoes);
     baseSections.forEach((sec, idx) => {
       const rows = empresas.map(e => {
-        const secData = sections(e)[idx];
+        const secData = sections(e, empresas, grupos, obligacoes)[idx];
         const obj: Record<string, string> = {
           'Razão Social': e.razao_social || '—',
           'CNPJ/CPF': e.tipo_pessoa === 'pf' ? fmtCpf(e.cpf) : fmtCnpj(e.cnpj),
@@ -194,7 +237,7 @@ export function exportEmpresasToXlsx(empresas: Empresa[]) {
 }
 
 // ===== PDF export =====
-export function exportEmpresasToPdf(empresas: Empresa[]) {
+export function exportEmpresasToPdf(empresas: Empresa[], grupos: any[] = [], obligacoes: EmpresaObrigacao[] = []) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -241,7 +284,7 @@ export function exportEmpresasToPdf(empresas: Empresa[]) {
     y += 6;
 
     // Sections
-    sections(empresa).forEach(sec => {
+    sections(empresa, empresas, grupos, obligacoes).forEach(sec => {
       autoTable(doc, {
         startY: y,
         head: [[sec.title]],
@@ -259,11 +302,13 @@ export function exportEmpresasToPdf(empresas: Empresa[]) {
           cellPadding: 2,
         },
         columnStyles: {
-          0: { cellWidth: 60, fontStyle: 'bold', fillColor: [243, 244, 246] },
+          0: { cellWidth: 50, fontStyle: 'bold', fillColor: [243, 244, 246] },
           1: { cellWidth: 'auto' },
         },
         margin: { left: 10, right: 10 },
-        didDrawCell: () => {},
+        // Ensure table stays on page or breaks correctly
+        pageBreak: 'auto',
+        rowPageBreak: 'auto',
       });
       // @ts-expect-error lastAutoTable injected by autoTable
       y = (doc.lastAutoTable?.finalY || y) + 4;
