@@ -409,7 +409,8 @@ export function EmpresaImportExport() {
                 </ul>
               </div>
             )}
-          </CardContent>
+          </div>
+        </CardContent>
         </Card>
       )}
     </div>
