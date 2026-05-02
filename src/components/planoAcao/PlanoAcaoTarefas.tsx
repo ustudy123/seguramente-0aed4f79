@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
+import { confirm } from "@/components/ui/confirm-dialog";
 import type { PlanoTarefa, TarefaStatus } from "@/types/planoAcao";
 
 interface PlanoAcaoTarefasProps {
@@ -126,8 +127,15 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
     });
   };
 
-  const handleDeleteTarefa = async (tarefaId: string) => {
-    await deleteTarefa({ id: tarefaId, acaoId });
+  const handleDeleteTarefa = async (tarefa: PlanoTarefa) => {
+    const ok = await confirm({
+      title: "Excluir tarefa",
+      description: `Tem certeza que deseja excluir a tarefa "${tarefa.titulo}"? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    await deleteTarefa({ id: tarefa.id, acaoId });
   };
 
   const sortedTarefas = [...tarefas].sort((a, b) => {
@@ -236,7 +244,7 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => handleDeleteTarefa(tarefa.id)}
+                          onClick={() => handleDeleteTarefa(tarefa)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Excluir
