@@ -115,7 +115,9 @@ export interface FapHistorico {
 }
 
 export interface TacDetalhe {
+  numero: string;
   orgao_emissor: string;
+  data_assinatura?: string;
   obrigacoes: string;
   prazo: string;
   penalidades: string;
