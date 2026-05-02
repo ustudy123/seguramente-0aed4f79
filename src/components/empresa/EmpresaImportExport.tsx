@@ -201,7 +201,7 @@ export function EmpresaImportExport() {
       setImporting(false);
       e.target.value = '';
     }
-  }, []);
+  }, [tenantId, user?.email, queryClient]);
 
   return (
     <div className="space-y-6">
