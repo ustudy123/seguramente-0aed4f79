@@ -151,10 +151,14 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         return data;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro'] });
       queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
-      toast.success('Cadastro da empresa salvo com sucesso!');
+      
+      // Se não for um salvamento manual (detectado pela ausência de algum flag ou apenas por ser upsert sem toast extra),
+      // podemos decidir não mostrar o toast. Mas para simplificar e atender o pedido do usuário
+      // de não ter popups a cada campo, vamos remover o toast de sucesso aqui,
+      // já que a UI na página Empresa.tsx já mostra o status de salvamento.
     },
     onError: (error: Error) => {
       toast.error('Erro ao salvar cadastro: ' + error.message);
