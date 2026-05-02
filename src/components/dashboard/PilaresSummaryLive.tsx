@@ -16,6 +16,8 @@ interface PilarSummary {
   bgColor: string;
   bgLight: string;
   indicatorType: IndicatorType;
+  legenda: string;
+  comoCalcula: string;
 }
 
 const pilares: PilarSummary[] = [
@@ -29,6 +31,8 @@ const pilares: PilarSummary[] = [
     bgColor: "bg-primary",
     bgLight: "bg-primary/10",
     indicatorType: "organizacao",
+    legenda: "Estrutura de cargos, departamentos e admissões.",
+    comoCalcula: "Cargos definidos + departamentos + andamento de admissões.",
   },
   {
     id: 2,
@@ -40,6 +44,8 @@ const pilares: PilarSummary[] = [
     bgColor: "bg-success",
     bgLight: "bg-success/10",
     indicatorType: "condicoes",
+    legenda: "Ambiente, EPIs e riscos ocupacionais.",
+    comoCalcula: "NR-17 atendida (40%) + EPIs disponíveis (30%) + riscos mapeados (30%).",
   },
   {
     id: 3,
@@ -51,6 +57,8 @@ const pilares: PilarSummary[] = [
     bgColor: "bg-info",
     bgLight: "bg-info/10",
     indicatorType: "experiencia",
+    legenda: "Clima, escuta ativa e engajamento das pessoas.",
+    comoCalcula: "Média dos sinais ativos: humor positivo, ouvidoria sem pendências e posts no feed.",
   },
   {
     id: 4,
@@ -62,6 +70,8 @@ const pilares: PilarSummary[] = [
     bgColor: "bg-warning",
     bgLight: "bg-warning/10",
     indicatorType: "governanca",
+    legenda: "Planos de ação, evidências e conformidade de terceiros.",
+    comoCalcula: "Ações concluídas (40%) + evidências enviadas (30%) + terceiros conformes (30%).",
   },
 ];
 
@@ -226,6 +236,16 @@ export const PilaresSummaryLive = () => {
                       className={cn("h-full rounded-full", pilar.bgColor)}
                     />
                   </div>
+                </div>
+
+                {/* Legenda explicativa */}
+                <div className="mt-3 pt-3 border-t border-border/60 space-y-1">
+                  <p className="text-[11px] leading-snug text-foreground/80">
+                    {pilar.legenda}
+                  </p>
+                  <p className="text-[10px] leading-snug text-muted-foreground">
+                    <span className="font-semibold">Como é calculado:</span> {pilar.comoCalcula}
+                  </p>
                 </div>
               </motion.button>
             );
