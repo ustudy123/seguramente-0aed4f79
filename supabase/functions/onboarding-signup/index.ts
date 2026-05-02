@@ -342,7 +342,7 @@ serve(async (req) => {
     { nome: "Consultor Externo", descricao: "Acesso restrito para consultores e auditores externos.", cor: "#475569", tipo_usuario_sugerido: "consultor" },
   ];
 
-  const { error: perfisError } = await admin
+  const { data: createdPerfis, error: perfisError } = await admin
     .from("perfis_acesso")
     .insert(defaultPerfis.map(p => ({
       tenant_id: tenant.id,
@@ -351,51 +351,55 @@ serve(async (req) => {
       ativo: true,
       permite_acumulo: false,
       total_usuarios: 0,
-    })));
+    })))
+    .select("id, nome");
 
   if (perfisError) {
     console.error("Error creating default perfis_acesso:", perfisError.message);
   }
 
-  // 5) Create empresa_cadastro (pre-registration) if documento provided
-  if (documento) {
-    const empresaPayload: Record<string, unknown> = {
+  // 5) Create the first user in usuarios_base (the owner)
+  const { data: usuarioBase, error: usuarioBaseError } = await admin
+    .from("usuarios_base")
+    .insert({
       tenant_id: tenant.id,
-      razao_social: tenantNome,
-      nome_fantasia: tenantNome,
-      tipo_pessoa: tipoPessoa === "pf" ? "pf" : "pj",
-      cnpj: tipoPessoa === "pj" ? documento : null,
-      cpf: tipoPessoa === "pf" ? documento : null,
-      email: email || null,
-      telefone: telefone || null,
-      tipo_unidade: "matriz",
-      ativo: true,
-      total_colaboradores: 0,
-      cnaes_secundarios: [],
-      sesmt_profissionais: [],
-      cipa_membros: [],
-      fap_historico: [],
-      tac_detalhes: [],
-      turnos: [],
-      condicoes_especiais_detalhes: {},
-      sesmt_obrigatorio: false,
-      cipa_obrigatoria: false,
-      pcd_obrigatoria: false,
-      pcd_quantidade_exigida: 0,
-      pcd_quantidade_atual: 0,
-      aprendiz_quantidade_minima: 0,
-      aprendiz_quantidade_maxima: 0,
-      aprendiz_quantidade_atual: 0,
-      tac_possui: false,
-      possui_terceiro_turno: false,
-      possui_escalas_especiais: false,
-      trabalho_altura: false,
-      espaco_confinado: false,
-      insalubridade: false,
-      periculosidade: false,
-      aposentadoria_especial: false,
-    };
+      auth_user_id: userId,
+      nome_completo: nomeCompleto,
+      email_principal: email,
+      telefone_principal: telefone || null,
+      tipo_usuario: "administrador",
+      status: "ativo",
+      email_validado: true,
+      origem_cadastro: "signup",
+    })
+    .select("id")
+    .single();
 
+  if (usuarioBaseError) {
+    console.error("Error creating usuario_base:", usuarioBaseError.message);
+  } else if (usuarioBase && createdPerfis) {
+    // 6) Link the user to the "Administrador Master" profile
+    const adminMasterPerfil = createdPerfis.find(p => p.nome === "Administrador Master");
+    if (adminMasterPerfil) {
+      const { error: vinculoError } = await admin
+        .from("usuario_perfil_vinculos")
+        .insert({
+          tenant_id: tenant.id,
+          usuario_id: usuarioBase.id,
+          perfil_id: adminMasterPerfil.id,
+          ativo: true,
+          is_perfil_principal: true,
+        });
+
+      if (vinculoError) {
+        console.error("Error creating usuario_perfil_vinculos:", vinculoError.message);
+      }
+    }
+  }
+
+  // 7) Create empresa_cadastro (pre-registration) if documento provided
+  if (documento) {
+// ... keep existing code
     const { error: empresaError } = await admin
       .from("empresa_cadastro")
       .insert(empresaPayload);
@@ -406,21 +410,11 @@ serve(async (req) => {
     }
   }
 
-  // 5) Create programa_validador_clientes record for onboarding portal
+  // 8) Create programa_validador_clientes record for onboarding portal
   const { data: pvCliente, error: pvError } = await admin
     .from("programa_validador_clientes")
     .insert({
-      tenant_id: tenant.id,
-      nome_empresa: tenantNome,
-      cnpj: tipoPessoa === "pj" ? documento : null,
-      poc_nome: nomeCompleto,
-      poc_email: email || null,
-      poc_telefone: telefone || null,
-      fase: "ativo",
-      tipo_cliente: "tester",
-      conta_ativada: true,
-      conta_ativada_em: new Date().toISOString(),
-      user_id: userId,
+// ... keep existing code
     })
     .select("onboarding_token")
     .single();
