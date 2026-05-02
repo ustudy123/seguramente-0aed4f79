@@ -18,6 +18,7 @@ interface ConfirmOptions {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "default" | "destructive";
+  requiredWord?: string;
 }
 
 let globalResolve: ((value: boolean) => void) | null = null;
