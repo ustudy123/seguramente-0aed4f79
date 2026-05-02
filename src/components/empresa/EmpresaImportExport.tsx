@@ -108,8 +108,18 @@ export function EmpresaImportExport() {
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
-        const razaoSocial = row['Razão Social']?.trim();
-        const cnpj = row['CNPJ']?.trim();
+        
+        // Pega os valores considerando que podem ou não ter o asterisco
+        const rawRazaoSocial = row['Razão Social*'] || row['Razão Social'];
+        const rawCnpj = row['CNPJ*'] || row['CNPJ'];
+
+        // Pula a linha de exemplo se ela estiver presente
+        if (rawRazaoSocial?.toString().includes('(EXEMPLO')) {
+          continue;
+        }
+
+        const razaoSocial = rawRazaoSocial?.toString().trim();
+        const cnpj = rawCnpj?.toString().trim();
 
         if (!razaoSocial) {
           errors.push(`Linha ${i + 2}: Razão Social é obrigatória`);
