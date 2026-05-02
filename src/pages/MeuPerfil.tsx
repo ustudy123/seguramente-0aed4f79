@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { User, Mail, Briefcase, Building2, Shield, KeyRound, Camera } from "lucide-react";
+import { User, Mail, Briefcase, Building2, Shield, KeyRound, Camera, ArrowLeft } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function MeuPerfil() {
-  const { profile, isSuperAdmin } = useAuthContext();
+  const { profile, user, isSuperAdmin, refetch } = useAuthContext() as any;
   const { tenant } = useTenant();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [nomeCompleto, setNomeCompleto] = useState(profile?.nome_completo || "");
   const [saving, setSaving] = useState(false);
