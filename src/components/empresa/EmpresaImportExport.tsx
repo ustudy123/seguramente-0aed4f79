@@ -6,9 +6,9 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 const TEMPLATE_COLUMNS = [
-  'Razão Social',
+  'Razão Social*',
   'Nome Fantasia',
-  'CNPJ',
+  'CNPJ*',
   'Inscrição Estadual',
   'Telefone',
   'E-mail',
@@ -25,11 +25,31 @@ const TEMPLATE_COLUMNS = [
   'Jornada Padrão',
 ];
 
+const EXAMPLE_ROW = [
+  'Empresa Exemplo Ltda (EXEMPLO - PODE APAGAR)',
+  'Exemplo',
+  '00.000.000/0000-00',
+  '123456789',
+  '(11) 99999-9999',
+  'exemplo@empresa.com',
+  '01234-567',
+  'Rua Exemplo',
+  '123',
+  'Centro',
+  'São Paulo',
+  'SP',
+  '4120-4/00',
+  'Construção de edifícios',
+  '3',
+  '10',
+  '44h semanais',
+];
+
 const TEMPLATE_INSTRUCTIONS = [
   ['Campo', 'Obrigatório', 'Formato', 'Exemplo'],
-  ['Razão Social', 'Sim', 'Texto', 'Empresa ABC Ltda'],
+  ['Razão Social*', 'Sim', 'Texto', 'Empresa ABC Ltda'],
   ['Nome Fantasia', 'Não', 'Texto', 'ABC'],
-  ['CNPJ', 'Sim', '00.000.000/0000-00', '12.345.678/0001-90'],
+  ['CNPJ*', 'Sim', '00.000.000/0000-00', '12.345.678/0001-90'],
   ['Inscrição Estadual', 'Não', 'Texto', '123456789'],
   ['Telefone', 'Não', '(00) 0000-0000', '(11) 3000-0000'],
   ['E-mail', 'Não', 'E-mail válido', 'contato@empresa.com'],
@@ -54,7 +74,7 @@ export function EmpresaImportExport() {
     const wb = XLSX.utils.book_new();
 
     // Dados sheet
-    const wsData = XLSX.utils.aoa_to_sheet([TEMPLATE_COLUMNS]);
+    const wsData = XLSX.utils.aoa_to_sheet([TEMPLATE_COLUMNS, EXAMPLE_ROW]);
     XLSX.utils.book_append_sheet(wb, wsData, 'Dados');
 
     // Instruções sheet
@@ -88,8 +108,18 @@ export function EmpresaImportExport() {
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
-        const razaoSocial = row['Razão Social']?.trim();
-        const cnpj = row['CNPJ']?.trim();
+        
+        // Pega os valores considerando que podem ou não ter o asterisco
+        const rawRazaoSocial = row['Razão Social*'] || row['Razão Social'];
+        const rawCnpj = row['CNPJ*'] || row['CNPJ'];
+
+        // Pula a linha de exemplo se ela estiver presente
+        if (rawRazaoSocial?.toString().includes('(EXEMPLO')) {
+          continue;
+        }
+
+        const razaoSocial = rawRazaoSocial?.toString().trim();
+        const cnpj = rawCnpj?.toString().trim();
 
         if (!razaoSocial) {
           errors.push(`Linha ${i + 2}: Razão Social é obrigatória`);
