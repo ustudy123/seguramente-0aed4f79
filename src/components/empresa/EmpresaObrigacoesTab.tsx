@@ -105,7 +105,7 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
           size="sm"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
-          Sincronizar Obrigações
+          Gerar Obrigações
         </Button>
       </div>
 
