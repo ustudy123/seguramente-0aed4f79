@@ -111,10 +111,11 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Planos & Desenvolvimento",
+    label: "Planejamento Estratégico",
     color: "text-emerald-400",
-    sectionIcon: Target,
+    sectionIcon: Compass,
     items: [
+      { title: "Dashboard Estratégico", icon: Compass, path: "/estrategia" },
       { title: "Metas", icon: Target, path: "/metas" },
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
@@ -430,7 +431,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     
     // Add direct links
     items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Início" });
-    items.push({ title: "Estratégia & Governança", path: "/estrategia", icon: Compass, sectionLabel: "Estratégia" });
+    items.push({ title: "Planejamento Estratégico", path: "/estrategia", icon: Compass, sectionLabel: "Estratégia" });
 
     filteredSections.forEach((section) => {
       section.items.forEach((item) => {

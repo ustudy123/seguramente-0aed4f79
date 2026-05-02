@@ -52,7 +52,7 @@ export default function Estrategia() {
             ) : (
               <>
                 <Compass className="w-7 h-7 text-primary" />
-                Estratégia & Governança
+                Planejamento Estratégico
               </>
             )}
           </h1>
@@ -61,11 +61,11 @@ export default function Estrategia() {
               ? "Estrutura hierárquica e organizacional da empresa" 
               : tab === "cultura"
               ? "Identidade, valores e cultura organizacional"
-              : "Planejamento estratégico, cultura organizacional e estrutura que viram ação"}
+              : "Planejamento estratégico de alto nível, cultura e governança"}
           </p>
           {tab !== "organograma" && tab !== "cultura" && (
             <p className="text-muted-foreground mt-1 text-sm">
-              O módulo Estratégia e Governança é essencial para ajudar a planejar e organizar a direção da empresa. Ele fornece ferramentas para melhorar a cultura organizacional e a estrutura interna.
+              O módulo Planejamento Estratégico é essencial para ajudar a definir a direção da empresa através de ferramentas clássicas de gestão.
             </p>
           )}
         </div>
