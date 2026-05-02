@@ -177,10 +177,15 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                         </Button>
                       )}
                       {obrigacao.acao_gerada_id && (
-                        <Badge variant="default" className="text-xs">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => navigate(`/plano-acao/${obrigacao.acao_gerada_id}`)}
+                          className="text-xs h-8"
+                        >
                           <Target className="w-3 h-3 mr-1" />
                           Ação vinculada
-                        </Badge>
+                        </Button>
                       )}
                     </div>
                   </div>
