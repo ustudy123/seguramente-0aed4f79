@@ -187,6 +187,7 @@ export function EmpresaImportExport() {
       if (success > 0) {
         toast.success(`${success} empresa(s) importada(s) com sucesso!`);
         queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
+        queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list_ativa'] });
       }
       if (errors.length > 0) {
         toast.warning(`${errors.length} erro(s) encontrado(s)`);
