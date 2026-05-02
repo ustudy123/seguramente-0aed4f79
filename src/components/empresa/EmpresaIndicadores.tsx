@@ -93,8 +93,125 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                 TAC ativo — obrigações devem ser monitoradas com rigor
               </span>
             </div>
+
+            <div className="space-y-3">
+              {(data.tac_detalhes || []).length === 0 && (
+                <p className="text-xs text-muted-foreground italic">
+                  Nenhum TAC cadastrado. Clique em "Adicionar TAC" para incluir um identificador.
+                </p>
+              )}
+
+              {(data.tac_detalhes || []).map((tac, idx) => {
+                const list = data.tac_detalhes || [];
+                const updateAt = (patch: Partial<TacDetalhe>) => {
+                  const next = list.map((t, i) => (i === idx ? { ...t, ...patch } : t));
+                  onChange({ tac_detalhes: next });
+                };
+                const removeAt = () => {
+                  const next = list.filter((_, i) => i !== idx);
+                  onChange({ tac_detalhes: next });
+                };
+                return (
+                  <div key={idx} className="p-3 border rounded-md bg-background space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">TAC #{idx + 1}</Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeAt}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Nº / Identificador *</Label>
+                        <Input
+                          placeholder="Ex.: TAC 123/2024"
+                          value={tac.numero || ''}
+                          onChange={(e) => updateAt({ numero: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Órgão Emissor</Label>
+                        <Input
+                          placeholder="Ex.: MPT, MTE"
+                          value={tac.orgao_emissor || ''}
+                          onChange={(e) => updateAt({ orgao_emissor: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Data de Assinatura</Label>
+                        <Input
+                          type="date"
+                          value={tac.data_assinatura || ''}
+                          onChange={(e) => updateAt({ data_assinatura: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs">Obrigações / Cláusulas</Label>
+                        <Textarea
+                          placeholder="Resumo das obrigações..."
+                          rows={2}
+                          value={tac.obrigacoes || ''}
+                          onChange={(e) => updateAt({ obrigacoes: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Prazo</Label>
+                        <Input
+                          placeholder="Ex.: 12 meses"
+                          value={tac.prazo || ''}
+                          onChange={(e) => updateAt({ prazo: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs">Penalidades em caso de descumprimento</Label>
+                        <Input
+                          placeholder="Ex.: Multa de R$ 50.000 por cláusula"
+                          value={tac.penalidades || ''}
+                          onChange={(e) => updateAt({ penalidades: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Status</Label>
+                        <Input
+                          placeholder="Ex.: Em cumprimento"
+                          value={tac.status || ''}
+                          onChange={(e) => updateAt({ status: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const novo: TacDetalhe = {
+                    numero: '',
+                    orgao_emissor: '',
+                    data_assinatura: '',
+                    obrigacoes: '',
+                    prazo: '',
+                    penalidades: '',
+                    status: 'Em cumprimento',
+                  };
+                  onChange({ tac_detalhes: [...(data.tac_detalhes || []), novo] });
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Adicionar TAC
+              </Button>
+            </div>
+
             <p className="text-xs text-muted-foreground">
-              Use a aba "Obrigações" para registrar as cláusulas do TAC e gerar ações de cumprimento.
+              Use a aba "Obrigações" para registrar as cláusulas de cada TAC e gerar ações de cumprimento.
             </p>
           </div>
         )}
