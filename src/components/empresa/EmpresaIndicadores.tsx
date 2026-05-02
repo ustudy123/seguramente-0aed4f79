@@ -171,8 +171,18 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleArquivar(globalIdx)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                 title="Arquivar"
+              >
+                <Archive className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleExcluirAtivo(globalIdx)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Excluir"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
