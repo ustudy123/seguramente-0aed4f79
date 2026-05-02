@@ -43,8 +43,8 @@ const Dashboard = () => {
       {/* KPIs Operacionais */}
       <DashboardKPIs />
 
-      {/* Quick Actions */}
-      <QuickActions />
+      {/* Pendências */}
+      <PendingTasks />
 
       {/* Alertas Críticos */}
       <AlertasCriticos />
