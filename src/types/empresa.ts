@@ -320,6 +320,6 @@ export const OBRIGACOES_TEMPLATES: ObrigacaoTemplate[] = [
     base_legal: 'CLT Art. 429',
     criticidade: 'media',
     origem_campo: 'aprendiz_quantidade_atual',
-    condicao: (c) => c.aprendiz_quantidade_minima > 0 && c.aprendiz_quantidade_atual < c.aprendiz_quantidade_minima,
+    condicao: (c) => c.aprendiz_obrigatorio && c.aprendiz_quantidade_atual < c.aprendiz_quantidade_minima,
   },
 ];
