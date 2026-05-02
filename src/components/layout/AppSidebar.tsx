@@ -121,7 +121,7 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Planos & Desenvolvimento",
+    label: "Avaliações e Desenvolvimento",
     color: "text-emerald-400",
     sectionIcon: Target,
     items: [
