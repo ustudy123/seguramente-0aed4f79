@@ -273,18 +273,71 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
         </ClickableInfoCard>
 
         {/* GUT Score */}
-        {acao.pontuacao_gut && (
-          <Card 
-            className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all duration-200"
-            onClick={() => setShowGutModal(true)}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
+        <Card className="hover:shadow-md hover:border-primary/30 transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between gap-2">
+              <button
+                type="button"
+                className="flex items-center gap-2 hover:text-primary"
+                onClick={() => setShowGutModal(true)}
+              >
                 <AlertTriangle className="h-4 w-4 text-primary" />
                 Matriz GUT
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </button>
+              {!isEditingGut ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setGutDraft({
+                      gravidade: acao.gravidade || 1,
+                      urgencia: acao.urgencia || 1,
+                      tendencia: acao.tendencia || 1,
+                    });
+                    setIsEditingGut(true);
+                  }}
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Editar
+                </Button>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    disabled={isUpdatingAcao}
+                    onClick={async () => {
+                      await updateAcao({
+                        id: acaoId,
+                        data: {
+                          gravidade: gutDraft.gravidade,
+                          urgencia: gutDraft.urgencia,
+                          tendencia: gutDraft.tendencia,
+                        } as any,
+                      });
+                      setIsEditingGut(false);
+                    }}
+                  >
+                    <Save className="h-3 w-3 mr-1" />
+                    Salvar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => setIsEditingGut(false)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!isEditingGut ? (
               <div className="flex items-center gap-4 text-sm">
                 <div className="text-center">
                   <div className="text-lg font-bold text-red-600">{acao.gravidade || 0}</div>
@@ -299,13 +352,39 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
                   <div className="text-xs text-muted-foreground">Tendência</div>
                 </div>
                 <div className="text-center border-l pl-4">
-                  <div className="text-lg font-bold text-primary">{acao.pontuacao_gut}</div>
+                  <div className="text-lg font-bold text-primary">
+                    {acao.pontuacao_gut ?? (acao.gravidade || 0) * (acao.urgencia || 0) * (acao.tendencia || 0)}
+                  </div>
                   <div className="text-xs text-muted-foreground">Score</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {(["gravidade", "urgencia", "tendencia"] as const).map((key) => (
+                  <div key={key} className="space-y-1">
+                    <Label className="text-xs capitalize">{key}</Label>
+                    <Select
+                      value={String(gutDraft[key])}
+                      onValueChange={(v) => setGutDraft((d) => ({ ...d, [key]: Number(v) }))}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+                <div className="col-span-3 text-center text-xs text-muted-foreground">
+                  Score previsto: <span className="font-bold text-primary">{gutDraft.gravidade * gutDraft.urgencia * gutDraft.tendencia}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Origem */}
         <ClickableInfoCard cardKey="origem" icon={Navigation} title="Origem">
