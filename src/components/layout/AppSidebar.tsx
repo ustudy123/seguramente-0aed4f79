@@ -115,7 +115,7 @@ const menuSections: MenuSection[] = [
     color: "text-emerald-400",
     sectionIcon: Compass,
     items: [
-      { title: "Dashboard Estratégico", icon: Compass, path: "/estrategia" },
+      { title: "Planejamento Estratégico", icon: Compass, path: "/estrategia" },
       { title: "Metas", icon: Target, path: "/metas" },
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
     ],
