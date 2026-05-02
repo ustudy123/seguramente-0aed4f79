@@ -683,37 +683,49 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-white/[0.08] space-y-0.5">
-        <NavLink
-          to="/suporte"
-          onClick={isMobile ? onClose : undefined}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              isActive
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-            )
-          }
-        >
-          <LifeBuoy className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[13px]">Suporte</span>}
-        </NavLink>
-        <NavLink
-          to="/configuracoes"
-          onClick={isMobile ? onClose : undefined}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-              isActive
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
-            )
-          }
-        >
-          <Settings className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
-          {!isCollapsed && <span className="text-[13px]">Configurações</span>}
-        </NavLink>
+      <div className="p-3 border-t border-white/[0.06] space-y-1 bg-black/20 backdrop-blur-sm">
+        <div className="neon-section" style={{ "--accent-h": "320", "--accent-s": "85%", "--accent-l": "60%" } as React.CSSProperties}>
+          <NavLink
+            to="/suporte"
+            onClick={isMobile ? onClose : undefined}
+            className={({ isActive }) =>
+              cn(
+                "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 overflow-hidden",
+                isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/65"
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
+                  <LifeBuoy className="w-[14px] h-[14px]" strokeWidth={2} />
+                </span>
+                {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Suporte</span>}
+              </>
+            )}
+          </NavLink>
+        </div>
+        <div className="neon-section" style={{ "--accent-h": "220", "--accent-s": "20%", "--accent-l": "70%" } as React.CSSProperties}>
+          <NavLink
+            to="/configuracoes"
+            onClick={isMobile ? onClose : undefined}
+            className={({ isActive }) =>
+              cn(
+                "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 overflow-hidden",
+                isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/65"
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
+                  <Settings className="w-[14px] h-[14px]" strokeWidth={2} />
+                </span>
+                {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Configurações</span>}
+              </>
+            )}
+          </NavLink>
+        </div>
       </div>
     </motion.aside>
   );
