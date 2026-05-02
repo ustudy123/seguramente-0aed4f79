@@ -93,7 +93,6 @@ const menuSections: MenuSection[] = [
       { title: "Funções", icon: Users, path: "/cadastros/cargos" },
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Prestadores de Serviços", icon: HardHat, path: "/terceiros" },
-      { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
     ],
   },
   {
@@ -161,6 +160,7 @@ const menuSections: MenuSection[] = [
     sectionIcon: DollarSign,
     items: [
       { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
+      { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
       { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
       { title: "Hub Contábil", icon: FileText, path: "/hub-contabil" },
     ],
