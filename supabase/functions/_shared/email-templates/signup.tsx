@@ -10,6 +10,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -23,35 +24,30 @@ interface SignupEmailProps {
   confirmationUrl: string
 }
 
+const LOGO_URL = 'https://youreyes.com.br/logo-youreyes.svg'
+
 export const SignupEmail = ({
-  siteName,
   siteUrl,
   recipient,
   confirmationUrl,
 }: SignupEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme seu e-mail — Seguramente</Preview>
+    <Preview>Confirme seu e-mail — YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>🛡️ Seguramente</Text>
+          <Img src={LOGO_URL} alt="YourEyes" width="64" height="64" style={logoImg} />
+          <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Confirme seu e-mail</Heading>
         <Text style={text}>
           Obrigado por se cadastrar no{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Seguramente</strong>
+            <strong>YourEyes</strong>
           </Link>
-          !
-        </Text>
-        <Text style={text}>
-          Por favor, confirme seu endereço de e-mail (
-          <Link href={`mailto:${recipient}`} style={link}>
-            {recipient}
-          </Link>
-          ) clicando no botão abaixo:
+          ! Para concluir seu cadastro ({recipient}), confirme seu e-mail clicando no botão abaixo:
         </Text>
         <Section style={buttonContainer}>
           <Button style={button} href={confirmationUrl}>
@@ -63,7 +59,7 @@ export const SignupEmail = ({
         </Text>
         <Hr style={divider} />
         <Text style={brand}>
-          Seguramente — Plataforma de SST
+          YourEyes — Plataforma de SST
         </Text>
       </Container>
     </Body>
@@ -75,7 +71,8 @@ export default SignupEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '32px 28px', maxWidth: '480px', margin: '0 auto' }
 const logoSection = { textAlign: 'center' as const, marginBottom: '8px' }
-const logoText = { fontSize: '24px', fontWeight: 'bold' as const, color: 'hsl(262, 52%, 50%)', margin: '0' }
+const logoImg = { display: 'block', margin: '0 auto 8px' }
+const logoText = { fontSize: '22px', fontWeight: 'bold' as const, color: 'hsl(262, 52%, 50%)', margin: '0' }
 const divider = { borderColor: '#e8e5f0', margin: '16px 0' }
 const h1 = {
   fontSize: '22px',
