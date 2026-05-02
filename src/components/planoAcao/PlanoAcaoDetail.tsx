@@ -89,6 +89,12 @@ export function PlanoAcaoDetail({ acaoId, onClose }: PlanoAcaoDetailProps) {
   const [selectedInfoCard, setSelectedInfoCard] = useState<string | null>(null);
   const [showGutModal, setShowGutModal] = useState(false);
   const [showConcluirDialog, setShowConcluirDialog] = useState(false);
+  const [isEditingGut, setIsEditingGut] = useState(false);
+  const [gutDraft, setGutDraft] = useState<{ gravidade: number; urgencia: number; tendencia: number }>({
+    gravidade: 1,
+    urgencia: 1,
+    tendencia: 1,
+  });
   
   const { useAcao, useTarefas, useHistorico, useComentarios, updateAcao, isUpdatingAcao } = usePlanoAcao();
   
