@@ -1,9 +1,10 @@
+import { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, UserCheck, GraduationCap } from 'lucide-react';
+import { AlertTriangle, UserCheck, GraduationCap, Info } from 'lucide-react';
 import type { EmpresaCadastro } from '@/types/empresa';
 
 interface Props {
@@ -12,6 +13,34 @@ interface Props {
 }
 
 export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
+  const totalColab = data.total_colaboradores || 0;
+  const pctPCD = data.pcd_percentual_exigido || 0;
+
+  // Auto-cálculo Cota PCD: total_colaboradores * % / 100 (arredondado para cima)
+  useEffect(() => {
+    if (!data.pcd_obrigatoria) return;
+    if (totalColab > 0 && pctPCD > 0) {
+      const calculado = Math.ceil((totalColab * pctPCD) / 100);
+      if (calculado !== (data.pcd_quantidade_exigida || 0)) {
+        onChange({ pcd_quantidade_exigida: calculado });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalColab, pctPCD, data.pcd_obrigatoria]);
+
+  // Auto-cálculo Jovem Aprendiz: 5% mínimo e 15% máximo sobre total de colaboradores
+  useEffect(() => {
+    if (totalColab > 0) {
+      const minCalc = Math.ceil(totalColab * 0.05);
+      const maxCalc = Math.ceil(totalColab * 0.15);
+      const updates: Partial<EmpresaCadastro> = {};
+      if (minCalc !== (data.aprendiz_quantidade_minima || 0)) updates.aprendiz_quantidade_minima = minCalc;
+      if (maxCalc !== (data.aprendiz_quantidade_maxima || 0)) updates.aprendiz_quantidade_maxima = maxCalc;
+      if (Object.keys(updates).length > 0) onChange(updates);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalColab]);
+
   const pcdPercentual = data.pcd_quantidade_exigida
     ? ((data.pcd_quantidade_atual || 0) / data.pcd_quantidade_exigida) * 100
     : 0;
@@ -46,6 +75,14 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
 
         {data.pcd_obrigatoria && (
           <>
+            {totalColab === 0 && (
+              <div className="flex items-center gap-2 p-3 bg-info/10 border border-info/30 rounded-lg">
+                <Info className="w-4 h-4 text-info shrink-0" />
+                <span className="text-xs">
+                  Preencha <strong>Total de Colaboradores</strong> na aba <strong>Dados</strong> para o cálculo automático da cota.
+                </span>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>% Exigido</Label>
@@ -62,8 +99,15 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                 <Input
                   type="number"
                   value={data.pcd_quantidade_exigida || ''}
+                  readOnly={totalColab > 0 && pctPCD > 0}
+                  className={totalColab > 0 && pctPCD > 0 ? 'bg-muted cursor-not-allowed' : ''}
                   onChange={(e) => onChange({ pcd_quantidade_exigida: parseInt(e.target.value) || 0 })}
                 />
+                {totalColab > 0 && pctPCD > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Calculado: {totalColab} × {pctPCD}% = {data.pcd_quantidade_exigida || 0}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Qtd. Atual</Label>
