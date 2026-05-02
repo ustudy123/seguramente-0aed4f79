@@ -161,6 +161,17 @@ export function EmpresaImportExport() {
           continue;
         }
 
+        // Pula linhas totalmente vazias (acontece quando o template
+        // pré-aloca células de texto vazias na coluna C — o XLSX devolve
+        // essas linhas como objetos sem dados úteis).
+        const isRowEmpty = Object.values(row).every((v) => {
+          if (v === null || v === undefined) return true;
+          return v.toString().trim() === '';
+        });
+        if (isRowEmpty) {
+          continue;
+        }
+
         const razaoSocialInput = rawRazaoSocial?.toString().trim();
         const cnpjInput = rawCnpj?.toString().trim();
 
