@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload } from 'lucide-react';
+import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmpresaImportExport } from './EmpresaImportExport';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import { exportEmpresasToXlsx, exportEmpresasToPdf } from '@/utils/empresaExport';
 import type { EmpresaCadastro } from '@/types/empresa';
 import type { GrupoEconomico } from '@/hooks/useGruposEconomicos';
 
@@ -107,25 +108,33 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
     toast.success(`${selectedIds.size} empresa(s) ${ativo ? 'ativada(s)' : 'inativada(s)'}`);
   };
 
-  // Export
-  const handleExport = () => {
-    const rows = filtered.map(e => ({
-      'Razão Social': e.razao_social || '',
-      'Nome Fantasia': e.nome_fantasia || '',
-      'Tipo Pessoa': e.tipo_pessoa === 'pf' ? 'PF' : 'PJ',
-      'CNPJ/CPF': (e.tipo_pessoa === 'pf' ? e.cpf : e.cnpj) || '',
-      'CNAE': e.cnae_principal || '',
-      'Grau de Risco': e.grau_risco ?? '',
-      'Cidade': e.cidade || '',
-      'UF': e.estado || '',
-      'Status': e.ativo ? 'Ativa' : 'Inativa',
-      'Total Colaboradores': e.total_colaboradores ?? '',
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Empresas');
-    XLSX.writeFile(wb, 'empresas.xlsx');
-    toast.success('Exportação concluída!');
+  // Export — completo (todas as etapas do cadastro), em XLSX ou PDF
+  const handleExportXlsx = () => {
+    if (filtered.length === 0) {
+      toast.warning('Nenhuma empresa para exportar com os filtros atuais.');
+      return;
+    }
+    try {
+      exportEmpresasToXlsx(filtered);
+      toast.success(`${filtered.length} empresa(s) exportada(s) em Excel!`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao gerar planilha.');
+    }
+  };
+
+  const handleExportPdf = () => {
+    if (filtered.length === 0) {
+      toast.warning('Nenhuma empresa para exportar com os filtros atuais.');
+      return;
+    }
+    try {
+      exportEmpresasToPdf(filtered);
+      toast.success(`${filtered.length} empresa(s) exportada(s) em PDF!`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao gerar PDF.');
+    }
   };
 
   const grauRiscoBadge = (grau: number | null) => {
@@ -258,10 +267,31 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-1" />
-            Exportar
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-1" />
+                Exportar
+                <ChevronDown className="w-3 h-3 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-popover">
+              <DropdownMenuItem onClick={handleExportXlsx} className="cursor-pointer">
+                <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" />
+                <div className="flex flex-col">
+                  <span className="font-medium">Exportar como Planilha</span>
+                  <span className="text-xs text-muted-foreground">.xlsx — todos os dados</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPdf} className="cursor-pointer">
+                <FileText className="w-4 h-4 mr-2 text-red-600" />
+                <div className="flex flex-col">
+                  <span className="font-medium">Exportar como PDF</span>
+                  <span className="text-xs text-muted-foreground">Relatório completo formatado</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
             <Upload className="w-4 h-4 mr-1" />
             Importar
