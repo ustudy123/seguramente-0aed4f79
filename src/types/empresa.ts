@@ -122,6 +122,9 @@ export interface TacDetalhe {
   prazo: string;
   penalidades: string;
   status: string;
+  arquivado?: boolean;
+  arquivado_em?: string;
+  motivo_arquivamento?: string;
 }
 
 export interface Turno {
