@@ -38,6 +38,7 @@ import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 
 export default function Departamentos() {
   const { departamentos, isLoading, createDepartamento, updateDepartamento, deleteDepartamento } = useDepartamentos();
+  const { filiais } = useFiliais();
   const { sincronizar } = useSyncCadastros();
 
   useEffect(() => {
@@ -47,19 +48,32 @@ export default function Departamentos() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedDepartamento, setSelectedDepartamento] = useState<Departamento | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nome: string;
+    descricao: string;
+    ativo: boolean;
+    filial_id: string | null;
+  }>({
     nome: "",
     descricao: "",
     ativo: true,
+    filial_id: null,
   });
+
+  const filiaisAtivas = filiais.filter((f) => f.ativo);
 
   const filteredDepartamentos = departamentos.filter((dep) =>
     dep.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getFilialNome = (filialId: string | null) => {
+    if (!filialId) return "-";
+    return filiais.find((f) => f.id === filialId)?.nome || "-";
+  };
+
   const handleOpenCreate = () => {
     setSelectedDepartamento(null);
-    setFormData({ nome: "", descricao: "", ativo: true });
+    setFormData({ nome: "", descricao: "", ativo: true, filial_id: null });
     setIsFormOpen(true);
   };
 
@@ -69,6 +83,7 @@ export default function Departamentos() {
       nome: departamento.nome,
       descricao: departamento.descricao || "",
       ativo: departamento.ativo,
+      filial_id: departamento.filial_id ?? null,
     });
     setIsFormOpen(true);
   };
