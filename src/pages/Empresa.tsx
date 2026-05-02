@@ -167,12 +167,16 @@ export default function Empresa() {
   };
 
   const handleSave = async () => {
-    await upsertCadastro.mutateAsync(formData);
-    clearDraft();
-    setHasChanges(false);
-    setRascunhoRestaurado(false);
-    setViewMode('list');
-    setSelectedEmpresaId(null);
+    try {
+      await upsertCadastro.mutateAsync(formData);
+      clearDraft();
+      setHasChanges(false);
+      setRascunhoRestaurado(false);
+      toast.success('Alterações salvas com sucesso!');
+      // Mantém na tela de edição conforme solicitado
+    } catch (error: any) {
+      toast.error('Erro ao salvar: ' + (error?.message || 'Erro desconhecido'));
+    }
   };
 
   const handleEdit = (id: string) => {
