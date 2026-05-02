@@ -438,7 +438,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
     
     // Add direct links
     items.push({ title: "Início", path: "/", icon: Home, sectionLabel: "Início" });
-    items.push({ title: "Planejamento Estratégico", path: "/estrategia", icon: Compass, sectionLabel: "Estratégia" });
+
 
     filteredSections.forEach((section) => {
       section.items.forEach((item) => {
