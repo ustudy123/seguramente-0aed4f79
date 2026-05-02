@@ -386,7 +386,18 @@ export function JornadaImportacao() {
               <CheckCircle className="h-4 w-4 text-green-600" /> Importação Concluída
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 text-center pb-8">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">
+                Foram aceitos <span className="font-bold text-foreground">{resultado.importados + resultado.atualizados}</span> registros de jornada com sucesso.
+              </p>
+              {resultado.erros > 0 && (
+                <p className="text-xs text-destructive">
+                  {resultado.erros} registros foram ignorados ou apresentaram erro.
+                </p>
+              )}
+            </div>
+
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-muted/50 rounded-lg text-center">
                 <p className="text-2xl font-bold text-foreground">{resultado.importados}</p>
