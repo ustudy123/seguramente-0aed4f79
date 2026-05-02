@@ -153,7 +153,23 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
           <h3 className="font-semibold">Jovem Aprendiz (CLT Art. 429)</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={data.aprendiz_obrigatorio || false}
+              onCheckedChange={(v) => onChange({ aprendiz_obrigatorio: v })}
+            />
+            <Label>Obrigatória</Label>
+          </div>
+          {data.aprendiz_obrigatorio && (
+            <p className="text-xs text-muted-foreground">
+              Empresas com 7+ empregados devem contratar aprendizes (5% a 15% das funções que exijam formação profissional)
+            </p>
+          )}
+        </div>
+
+        {data.aprendiz_obrigatorio && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Qtd. Mínima</Label>
             <Input
