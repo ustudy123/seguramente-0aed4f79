@@ -60,6 +60,7 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
     for (const template of obrigacoesNaoRegistradas) {
       await createObrigacao.mutateAsync({
         tenant_id: cadastro.tenant_id,
+        empresa_id: cadastro.id,
         categoria: template.categoria,
         subcategoria: template.subcategoria,
         titulo: template.titulo,
