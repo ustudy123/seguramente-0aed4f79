@@ -70,13 +70,13 @@ export const EmpresaSelector = () => {
     return (
       <div
         className={cn(
-          "hidden md:flex items-center gap-2 max-w-[320px] rounded-md border px-3 py-1.5 text-sm bg-background/50",
+          "hidden md:flex items-center gap-2 max-w-[320px] rounded-md border px-3 py-1.5 text-sm bg-white",
           isProfissional ? "border-amber-400/50" : "border-border/50"
         )}
       >
         {isProfissional && <Shield className="w-3.5 h-3.5 shrink-0 text-amber-500" />}
         <Building2 className="w-4 h-4 shrink-0 text-primary" />
-        <span className="truncate text-sm font-medium text-secondary-foreground">
+        <span className="truncate text-sm font-semibold text-slate-900">
           {unica.razao_social || unica.nome_fantasia || "Empresa"}
         </span>
         {isProfissional && (
