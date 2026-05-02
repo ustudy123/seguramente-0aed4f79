@@ -75,9 +75,14 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
 
         {data.pcd_obrigatoria && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label>% Exigido</Label>
+            {totalColab === 0 && (
+              <div className="flex items-center gap-2 p-3 bg-info/10 border border-info/30 rounded-lg">
+                <Info className="w-4 h-4 text-info shrink-0" />
+                <span className="text-xs">
+                  Preencha <strong>Total de Colaboradores</strong> na aba <strong>Dados</strong> para o cálculo automático da cota.
+                </span>
+              </div>
+            )}
                 <Input
                   type="number"
                   step="0.01"
