@@ -22,6 +22,7 @@ interface EmpresaListProps {
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
   grupos?: GrupoEconomico[];
+  obrigacoes?: any[];
 }
 
 export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [] }: EmpresaListProps) {
