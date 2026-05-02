@@ -74,7 +74,7 @@ export function EmpresaImportExport() {
     const wb = XLSX.utils.book_new();
 
     // Dados sheet
-    const wsData = XLSX.utils.aoa_to_sheet([TEMPLATE_COLUMNS]);
+    const wsData = XLSX.utils.aoa_to_sheet([TEMPLATE_COLUMNS, EXAMPLE_ROW]);
     XLSX.utils.book_append_sheet(wb, wsData, 'Dados');
 
     // Instruções sheet
