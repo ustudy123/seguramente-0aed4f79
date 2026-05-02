@@ -28,7 +28,9 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalColab, pctPCD, data.pcd_obrigatoria]);
 
-  // Auto-cálculo Jovem Aprendiz: 5% mínimo e 15% máximo sobre total de colaboradores
+  // Removido auto-cálculo Jovem Aprendiz conforme solicitado pelo usuário.
+  // A regra de Jovem Aprendiz é complexa e deve ser informada manualmente.
+  /*
   useEffect(() => {
     if (totalColab > 0) {
       const minCalc = Math.ceil(totalColab * 0.05);
@@ -38,8 +40,8 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
       if (maxCalc !== (data.aprendiz_quantidade_maxima || 0)) updates.aprendiz_quantidade_maxima = maxCalc;
       if (Object.keys(updates).length > 0) onChange(updates);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalColab]);
+  */
 
   const pcdPercentual = data.pcd_quantidade_exigida
     ? ((data.pcd_quantidade_atual || 0) / data.pcd_quantidade_exigida) * 100
