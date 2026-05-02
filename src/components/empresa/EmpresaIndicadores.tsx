@@ -169,9 +169,6 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
     );
   };
 
-
-  const fapValor = data.fap_atual ?? 0;
-
   return (
     <div className="space-y-8">
       {/* FAP */}
