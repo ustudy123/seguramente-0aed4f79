@@ -114,6 +114,9 @@ export function StepColaboradores({ cliente, onConcluir, onBack }: { cliente: Cl
         <div className="text-center py-4 space-y-2">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
           <p className="text-lg font-semibold">Importação concluída</p>
+          <p className="text-sm text-muted-foreground">
+            Foram aceitos <span className="font-bold text-foreground">{importResult.colaboradores_criados}</span> colaboradores de <span className="font-bold text-foreground">{importResult.total}</span> registros na planilha.
+          </p>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-primary/5 rounded-lg p-3 text-center">

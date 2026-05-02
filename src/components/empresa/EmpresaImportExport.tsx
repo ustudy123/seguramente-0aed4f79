@@ -353,8 +353,27 @@ export function EmpresaImportExport() {
       {/* Import Results */}
       {importResult && (
         <Card>
-          <CardContent className="p-6 space-y-3">
-            <h4 className="font-medium">Resultado da Validação</h4>
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-1">
+              <h4 className="font-medium text-lg">Resultado da Importação</h4>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {importResult.success} empresa(s) aceita(s)
+                </span>
+                {" "}com sucesso.
+                {(importResult.duplicadas.length > 0 || importResult.errors.length > 0) && (
+                  <>
+                    {" "}Foram ignoradas/rejeitadas{" "}
+                    <span className="font-medium text-warning">
+                      {importResult.duplicadas.length + importResult.errors.length}
+                    </span>
+                    {" "}linhas.
+                  </>
+                )}
+              </p>
+            </div>
+            
+            <div className="space-y-3 pt-2 border-t">
             
             {importResult.success > 0 && (
               <div className="flex items-center gap-2 text-sm">
@@ -390,7 +409,8 @@ export function EmpresaImportExport() {
                 </ul>
               </div>
             )}
-          </CardContent>
+          </div>
+        </CardContent>
         </Card>
       )}
     </div>
