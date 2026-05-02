@@ -31,16 +31,16 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme a alteração de e-mail — Seguramente</Preview>
+    <Preview>Confirme a alteração de e-mail — YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>🛡️ Seguramente</Text>
+          <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Confirme a alteração de e-mail</Heading>
         <Text style={text}>
-          Você solicitou a alteração do e-mail da sua conta no Seguramente de{' '}
+          Você solicitou a alteração do e-mail da sua conta no YourEyes de{' '}
           <Link href={`mailto:${email}`} style={link}>
             {email}
           </Link>{' '}
@@ -63,7 +63,7 @@ export const EmailChangeEmail = ({
         </Text>
         <Hr style={divider} />
         <Text style={brand}>
-          Seguramente — Plataforma de SST
+          YourEyes — Plataforma de SST
         </Text>
       </Container>
     </Body>

@@ -29,18 +29,18 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Você foi convidado(a) para o Seguramente</Preview>
+    <Preview>Você foi convidado(a) para o YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>🛡️ Seguramente</Text>
+          <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Você foi convidado(a)!</Heading>
         <Text style={text}>
           Você recebeu um convite para acessar a plataforma{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Seguramente</strong>
+            <strong>YourEyes</strong>
           </Link>
           , a solução completa em Saúde e Segurança do Trabalho.
         </Text>
@@ -57,7 +57,7 @@ export const InviteEmail = ({
         </Text>
         <Hr style={divider} />
         <Text style={brand}>
-          Seguramente — Plataforma de SST
+          YourEyes — Plataforma de SST
         </Text>
       </Container>
     </Body>

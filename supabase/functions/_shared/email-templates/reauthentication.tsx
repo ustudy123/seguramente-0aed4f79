@@ -21,11 +21,11 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu código de verificação — Seguramente</Preview>
+    <Preview>Seu código de verificação — YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>🛡️ Seguramente</Text>
+          <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Código de verificação</Heading>
@@ -37,7 +37,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
         </Text>
         <Hr style={divider} />
         <Text style={brand}>
-          Seguramente — Plataforma de SST
+          YourEyes — Plataforma de SST
         </Text>
       </Container>
     </Body>
