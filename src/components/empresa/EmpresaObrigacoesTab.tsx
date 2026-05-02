@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,6 +38,7 @@ const CRITICIDADE_COLOR: Record<string, string> = {
 };
 
 export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
+  const navigate = useNavigate();
   const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro();
 
   // Detect obligations from cadastro data
@@ -175,10 +177,15 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
                         </Button>
                       )}
                       {obrigacao.acao_gerada_id && (
-                        <Badge variant="default" className="text-xs">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => navigate(`/plano-acao/${obrigacao.acao_gerada_id}`)}
+                          className="text-xs h-8"
+                        >
                           <Target className="w-3 h-3 mr-1" />
                           Ação vinculada
-                        </Badge>
+                        </Button>
                       )}
                     </div>
                   </div>
