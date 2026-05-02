@@ -433,6 +433,38 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
     setNovaEmpresaId(""); setNovoTipo("gestor"); setNovoContexto("");
   }
 
+  async function handleVincularTodas() {
+    const idsExistentes = new Set(
+      vinculos.filter(v => v.status === "ativo").map((v: any) => v.empresa_id)
+    );
+    const pendentes = empresas.filter((e: any) => !idsExistentes.has(e.id));
+    if (pendentes.length === 0) {
+      toast.info("Todas as empresas já estão vinculadas a este usuário.");
+      return;
+    }
+    const hoje = new Date().toISOString().split("T")[0];
+    let ok = 0;
+    for (const emp of pendentes) {
+      try {
+        await createVinculo.mutateAsync({
+          usuario_id: usuario.id,
+          empresa_id: emp.id,
+          tipo_vinculo: novoTipo as any,
+          contexto_operacional: novoContexto,
+          status: "ativo",
+          data_inicio: hoje,
+        });
+        ok++;
+      } catch (e) {
+        console.error("Falha ao vincular empresa", emp.id, e);
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['usuario-vinculos', usuario.id] });
+    toast.success(`${ok} empresa(s) vinculada(s) com sucesso.`);
+    setAddingVinculo(false);
+    setNovaEmpresaId(""); setNovoTipo("gestor"); setNovoContexto("");
+  }
+
   const isBloqueado = usuario.status === "bloqueado" || usuario.status === "suspenso";
 
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
