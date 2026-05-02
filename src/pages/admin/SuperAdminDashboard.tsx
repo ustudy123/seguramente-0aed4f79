@@ -3,21 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   Users, 
-   Plus,
-   Bug, 
+  Plus,
+  Bug, 
   Search, 
   MoreVertical,
-   Shield,
-   TrendingUp,
-   CheckCircle,
-   XCircle,
-   UserPlus,
-   Eye,
-   Edit,
-   Power,
-   ArrowLeft,
-   BookOpen,
- } from 'lucide-react';
+  Shield,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  UserPlus,
+  Eye,
+  Edit,
+  Power,
+  ArrowLeft,
+  BookOpen,
+  FileText,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
