@@ -91,8 +91,15 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
                 <Input
                   type="number"
                   value={data.pcd_quantidade_exigida || ''}
+                  readOnly={totalColab > 0 && pctPCD > 0}
+                  className={totalColab > 0 && pctPCD > 0 ? 'bg-muted cursor-not-allowed' : ''}
                   onChange={(e) => onChange({ pcd_quantidade_exigida: parseInt(e.target.value) || 0 })}
                 />
+                {totalColab > 0 && pctPCD > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Calculado: {totalColab} × {pctPCD}% = {data.pcd_quantidade_exigida || 0}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Qtd. Atual</Label>
