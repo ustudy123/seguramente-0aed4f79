@@ -137,6 +137,10 @@ export default function SuperAdminDashboard() {
                   <Bug className="w-4 h-4 mr-2" />
                   QA & Testes IA
                 </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/blog')}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Blog
+                </Button>
               <Button onClick={() => setShowTenantForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Empresa
