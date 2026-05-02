@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePlanoAcao } from "@/hooks/usePlanoAcao";
+import { confirm } from "@/components/ui/confirm-dialog";
 import type { PlanoTarefa, TarefaStatus } from "@/types/planoAcao";
 
 interface PlanoAcaoTarefasProps {
