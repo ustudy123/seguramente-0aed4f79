@@ -30,16 +30,33 @@ const formatCnpj = (cnpj: string | null) => {
  */
 export function EmpresaSelecaoObrigatoria() {
   const { empresas, empresaAtiva, setEmpresaAtiva, isProfissional, semVinculos, isLoading } = useEmpresaAtiva();
+  const { loading: authLoading, user } = useAuth();
   const [selected, setSelected] = useState<EmpresaCadastro | null>(null);
+
+  // Debounce do "semVinculos" para evitar flash da tela de Acesso Restrito
+  // enquanto auth/usuario_base/empresas ainda estão sincronizando após login.
+  const [semVinculosConfirmado, setSemVinculosConfirmado] = useState(false);
+  useEffect(() => {
+    if (!semVinculos || authLoading || isLoading) {
+      setSemVinculosConfirmado(false);
+      return;
+    }
+    const t = setTimeout(() => setSemVinculosConfirmado(true), SEM_VINCULOS_GRACE_MS);
+    return () => clearTimeout(t);
+  }, [semVinculos, authLoading, isLoading]);
+
+  // Não mostrar se ainda não temos usuário ou auth carregando
+  if (!user || authLoading) return null;
 
   // Não mostrar para não-profissionais
   if (!isProfissional) return null;
 
-  // Não mostrar durante loading
+  // Não mostrar durante loading dos dados de empresas/vínculos
   if (isLoading) return null;
 
-  // Profissional sem vínculos — mensagem bloqueante
+  // Profissional sem vínculos — só mostra após o grace period confirmar
   if (semVinculos) {
+    if (!semVinculosConfirmado) return null;
     return (
       <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
