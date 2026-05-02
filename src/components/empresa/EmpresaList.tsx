@@ -21,11 +21,12 @@ interface EmpresaListProps {
   onEdit: (id: string) => void;
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
+  onDelete?: (id: string, nome: string) => void;
   grupos?: GrupoEconomico[];
   obrigacoes?: any[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
