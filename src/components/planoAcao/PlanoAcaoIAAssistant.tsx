@@ -214,27 +214,10 @@ export function PlanoAcaoIAAssistant({
                   <Lightbulb className="h-4 w-4 mr-1" />
                   Sugerir Ações
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => { setActiveTab("5w2h"); limpar(); }}
-                  className={activeTab === "5w2h" 
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700" 
-                    : "bg-white/5 text-indigo-200 border border-white/10 hover:bg-white/10 hover:text-white"}
-                >
-                  <FileText className="h-4 w-4 mr-1" />
-                  Gerar 5W2H
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => { setActiveTab("priorizar"); limpar(); }}
-                  className={activeTab === "priorizar" 
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700" 
-                    : "bg-white/5 text-indigo-200 border border-white/10 hover:bg-white/10 hover:text-white"}
-                >
-                  <BarChart3 className="h-4 w-4 mr-1" />
-                  Priorizar (GUT)
-                </Button>
               </div>
+
+              {/* Bloco 5W2H/GUT removido */}
+              {false && (
 
               {/* Input Forms */}
               {activeTab === "sugerir" && (
