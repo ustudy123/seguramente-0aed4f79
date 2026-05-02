@@ -36,10 +36,10 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "seguramente"
-const SENDER_DOMAIN = "notify.seguramente.app.br"
-const ROOT_DOMAIN = "seguramente.app.br"
-const FROM_DOMAIN = "seguramente.app.br" // Domain shown in From address (may be root or sender subdomain)
+const SITE_NAME = "YourEyes"
+const SENDER_DOMAIN = "notify.seguramente.app.br" // Lovable Email sender (configured no painel; trocar exige reconfigurar o email domain)
+const ROOT_DOMAIN = "youreyes.com.br"
+const FROM_DOMAIN = "youreyes.com.br" // Domain shown in From address
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
