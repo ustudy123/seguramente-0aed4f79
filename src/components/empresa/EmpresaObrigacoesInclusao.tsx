@@ -28,7 +28,9 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalColab, pctPCD, data.pcd_obrigatoria]);
 
-  // Auto-cálculo Jovem Aprendiz: 5% mínimo e 15% máximo sobre total de colaboradores
+  // Removido auto-cálculo Jovem Aprendiz conforme solicitado pelo usuário.
+  // A regra de Jovem Aprendiz é complexa e deve ser informada manualmente.
+  /*
   useEffect(() => {
     if (totalColab > 0) {
       const minCalc = Math.ceil(totalColab * 0.05);
@@ -38,8 +40,8 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
       if (maxCalc !== (data.aprendiz_quantidade_maxima || 0)) updates.aprendiz_quantidade_maxima = maxCalc;
       if (Object.keys(updates).length > 0) onChange(updates);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalColab]);
+  */
 
   const pcdPercentual = data.pcd_quantidade_exigida
     ? ((data.pcd_quantidade_atual || 0) / data.pcd_quantidade_exigida) * 100
@@ -151,48 +153,67 @@ export function EmpresaObrigacoesInclusao({ data, onChange }: Props) {
           <h3 className="font-semibold">Jovem Aprendiz (CLT Art. 429)</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Qtd. Mínima</Label>
-            <Input
-              type="number"
-              value={data.aprendiz_quantidade_minima || ''}
-              onChange={(e) => onChange({ aprendiz_quantidade_minima: parseInt(e.target.value) || 0 })}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={data.aprendiz_obrigatorio || false}
+              onCheckedChange={(v) => onChange({ aprendiz_obrigatorio: v })}
             />
+            <Label>Obrigatória</Label>
           </div>
-          <div className="space-y-2">
-            <Label>Qtd. Máxima</Label>
-            <Input
-              type="number"
-              value={data.aprendiz_quantidade_maxima || ''}
-              onChange={(e) => onChange({ aprendiz_quantidade_maxima: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Qtd. Atual</Label>
-            <Input
-              type="number"
-              value={data.aprendiz_quantidade_atual || ''}
-              onChange={(e) => onChange({ aprendiz_quantidade_atual: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-          <div className="flex flex-col justify-end gap-1">
-            {(data.aprendiz_quantidade_minima || 0) > 0 && (
-              <Badge variant={aprendizPercentual >= 100 ? 'default' : 'destructive'}>
-                {aprendizPercentual >= 100 ? 'Conforme' : 'Abaixo da cota'}
-              </Badge>
-            )}
-          </div>
+          {data.aprendiz_obrigatorio && (
+            <p className="text-xs text-muted-foreground">
+              Empresas com 7+ empregados devem contratar aprendizes (5% a 15% das funções que exijam formação profissional)
+            </p>
+          )}
         </div>
 
-        {(data.aprendiz_quantidade_minima || 0) > 0 && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Progresso</span>
-              <span>{Math.round(aprendizPercentual)}%</span>
+        {data.aprendiz_obrigatorio && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Qtd. Mínima</Label>
+                <Input
+                  type="number"
+                  value={data.aprendiz_quantidade_minima || ''}
+                  onChange={(e) => onChange({ aprendiz_quantidade_minima: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Qtd. Máxima</Label>
+                <Input
+                  type="number"
+                  value={data.aprendiz_quantidade_maxima || ''}
+                  onChange={(e) => onChange({ aprendiz_quantidade_maxima: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Qtd. Atual</Label>
+                <Input
+                  type="number"
+                  value={data.aprendiz_quantidade_atual || ''}
+                  onChange={(e) => onChange({ aprendiz_quantidade_atual: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="flex flex-col justify-end gap-1">
+                {(data.aprendiz_quantidade_minima || 0) > 0 && (
+                  <Badge variant={aprendizPercentual >= 100 ? 'default' : 'destructive'}>
+                    {aprendizPercentual >= 100 ? 'Conforme' : 'Abaixo da cota'}
+                  </Badge>
+                )}
+              </div>
             </div>
-            <Progress value={Math.min(aprendizPercentual, 100)} />
-          </div>
+
+            {(data.aprendiz_quantidade_minima || 0) > 0 && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Progresso</span>
+                  <span>{Math.round(aprendizPercentual)}%</span>
+                </div>
+                <Progress value={Math.min(aprendizPercentual, 100)} />
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

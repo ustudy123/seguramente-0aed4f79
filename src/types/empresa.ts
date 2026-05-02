@@ -52,6 +52,7 @@ export interface EmpresaCadastro {
   pcd_percentual_exigido: number | null;
   
   // Jovem Aprendiz
+  aprendiz_obrigatorio: boolean;
   aprendiz_quantidade_minima: number;
   aprendiz_quantidade_maxima: number;
   aprendiz_quantidade_atual: number;
@@ -137,6 +138,7 @@ export interface Turno {
 export interface EmpresaObrigacao {
   id: string;
   tenant_id: string;
+  empresa_id: string | null;
   categoria: string;
   subcategoria: string | null;
   titulo: string;
@@ -319,6 +321,6 @@ export const OBRIGACOES_TEMPLATES: ObrigacaoTemplate[] = [
     base_legal: 'CLT Art. 429',
     criticidade: 'media',
     origem_campo: 'aprendiz_quantidade_atual',
-    condicao: (c) => c.aprendiz_quantidade_minima > 0 && c.aprendiz_quantidade_atual < c.aprendiz_quantidade_minima,
+    condicao: (c) => c.aprendiz_obrigatorio && c.aprendiz_quantidade_atual < c.aprendiz_quantidade_minima,
   },
 ];

@@ -39,7 +39,7 @@ const CRITICIDADE_COLOR: Record<string, string> = {
 
 export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
   const navigate = useNavigate();
-  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro();
+  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro(cadastro?.id);
 
   // Detect obligations from cadastro data
   const obrigacoesDetectadas = useMemo(() => {
@@ -60,6 +60,7 @@ export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
     for (const template of obrigacoesNaoRegistradas) {
       await createObrigacao.mutateAsync({
         tenant_id: cadastro.tenant_id,
+        empresa_id: cadastro.id,
         categoria: template.categoria,
         subcategoria: template.subcategoria,
         titulo: template.titulo,

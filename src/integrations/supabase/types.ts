@@ -3523,6 +3523,7 @@ export type Database = {
         Row: {
           ai_context: string | null
           aposentadoria_especial: boolean | null
+          aprendiz_obrigatorio: boolean | null
           aprendiz_quantidade_atual: number | null
           aprendiz_quantidade_maxima: number | null
           aprendiz_quantidade_minima: number | null
@@ -3592,6 +3593,7 @@ export type Database = {
         Insert: {
           ai_context?: string | null
           aposentadoria_especial?: boolean | null
+          aprendiz_obrigatorio?: boolean | null
           aprendiz_quantidade_atual?: number | null
           aprendiz_quantidade_maxima?: number | null
           aprendiz_quantidade_minima?: number | null
@@ -3661,6 +3663,7 @@ export type Database = {
         Update: {
           ai_context?: string | null
           aposentadoria_especial?: boolean | null
+          aprendiz_obrigatorio?: boolean | null
           aprendiz_quantidade_atual?: number | null
           aprendiz_quantidade_maxima?: number | null
           aprendiz_quantidade_minima?: number | null
@@ -3825,6 +3828,7 @@ export type Database = {
           created_at: string
           criticidade: string | null
           descricao: string | null
+          empresa_id: string | null
           id: string
           origem: string | null
           origem_campo: string | null
@@ -3843,6 +3847,7 @@ export type Database = {
           created_at?: string
           criticidade?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           origem?: string | null
           origem_campo?: string | null
@@ -3861,6 +3866,7 @@ export type Database = {
           created_at?: string
           criticidade?: string | null
           descricao?: string | null
+          empresa_id?: string | null
           id?: string
           origem?: string | null
           origem_campo?: string | null
@@ -3878,6 +3884,13 @@ export type Database = {
             columns: ["acao_gerada_id"]
             isOneToOne: false
             referencedRelation: "plano_acoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_obrigacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresa_cadastro"
             referencedColumns: ["id"]
           },
           {

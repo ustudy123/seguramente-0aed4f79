@@ -78,6 +78,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         tac_detalhes: rest.tac_detalhes as unknown as Json,
         turnos: rest.turnos as unknown as Json,
         condicoes_especiais_detalhes: rest.condicoes_especiais_detalhes as unknown as Json,
+        aprendiz_obrigatorio: rest.aprendiz_obrigatorio || false,
       };
 
       if (empresaId) {
@@ -137,27 +138,38 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     },
   });
 
-  // Obrigações
+  // Obrigações da empresa específica
   const { data: obrigacoes = [], isLoading: obrigacoesLoading } = useQuery({
-    queryKey: ['empresa_obrigacoes', tenantId],
+    queryKey: ['empresa_obrigacoes', tenantId, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('empresa_obrigacoes')
         .select('*')
-        .eq('tenant_id', tenantId!)
-        .order('created_at', { ascending: false });
+        .eq('tenant_id', tenantId!);
+      
+      if (empresaId) {
+        query = query.eq('empresa_id', empresaId);
+      } else {
+        // Se não houver empresa_id (ex: criando nova), não deve trazer obrigações de outras
+        return [];
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as EmpresaObrigacao[];
     },
-    enabled: !!tenantId,
+    enabled: !!tenantId && !!empresaId,
   });
 
   const createObrigacao = useMutation({
-    mutationFn: async (obrigacao: Omit<EmpresaObrigacao, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (obrigacao: Omit<EmpresaObrigacao, 'id' | 'created_at' | 'updated_at'> & { empresa_id?: string }) => {
       const { data, error } = await supabase
         .from('empresa_obrigacoes')
-        .insert(obrigacao)
+        .insert({
+          ...obrigacao,
+          empresa_id: obrigacao.empresa_id || empresaId || null
+        })
         .select()
         .single();
       if (error) throw error;
@@ -205,6 +217,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
         .from('plano_acoes')
         .insert({
           tenant_id: tenantId!,
+          empresa_id: obrigacao.empresa_id || empresaId || null,
           codigo: 'TEMP', // trigger will generate
           titulo: obrigacao.titulo,
           descricao: obrigacao.descricao,
