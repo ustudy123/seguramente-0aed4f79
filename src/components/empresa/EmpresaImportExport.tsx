@@ -81,6 +81,24 @@ export function EmpresaImportExport() {
 
     // Dados sheet
     const wsData = XLSX.utils.aoa_to_sheet([TEMPLATE_COLUMNS, EXAMPLE_ROW]);
+
+    // Força a coluna C (CNPJ) a ser tratada como texto, aceitando CNPJ
+    // formatado (00.000.000/0000-00) ou somente números (00000000000000)
+    // sem perder zeros à esquerda nem virar notação científica.
+    const range = XLSX.utils.decode_range(wsData['!ref'] || 'A1');
+    for (let R = 0; R <= range.e.r; R++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: 2 }); // coluna C
+      const cell = wsData[cellAddress];
+      if (cell) {
+        cell.t = 's';
+        cell.z = '@';
+        if (cell.v != null) cell.v = String(cell.v);
+      }
+    }
+    // Define formato de texto para toda a coluna C
+    wsData['!cols'] = wsData['!cols'] || [];
+    wsData['!cols'][2] = { wch: 22, z: '@' };
+
     XLSX.utils.book_append_sheet(wb, wsData, 'Dados');
 
     // Instruções sheet
