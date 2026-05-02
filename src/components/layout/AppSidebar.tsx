@@ -57,8 +57,6 @@ interface MenuSection {
   items: MenuItem[];
   color: string;
   sectionIcon: React.ElementType;
-  /** HSL hue for the section's neon accent (0-360) */
-  hue: number;
 }
 
 const normalizeSearchText = (value: string) =>
@@ -88,7 +86,6 @@ const menuSections: MenuSection[] = [
     label: "Estrutura Organizacional",
     color: "text-cyan-400",
     sectionIcon: Building2,
-    hue: 190, // Cyan
     items: [
       { title: "Empresa", icon: Building2, path: "/empresa" },
       { title: "Estabelecimento ou Obra", icon: Building2, path: "/cadastros/filiais" },
@@ -103,7 +100,6 @@ const menuSections: MenuSection[] = [
     label: "Planejamento e Cultura",
     color: "text-emerald-400",
     sectionIcon: Compass,
-    hue: 145, // Emerald
     items: [
       { title: "Identidade Estratégica", icon: Heart, path: "/estrategia?tab=cultura" },
       { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
@@ -116,7 +112,6 @@ const menuSections: MenuSection[] = [
     label: "Saúde & Segurança",
     color: "text-amber-400",
     sectionIcon: HeartPulse,
-    hue: 35, // Amber/Orange
     items: [
       { title: "Compliance SST", icon: FileText, path: "/compliance-sst" },
       { title: "Incidentes & Acidentes", icon: ShieldAlert, path: "/incidentes-acidentes" },
@@ -129,7 +124,6 @@ const menuSections: MenuSection[] = [
     label: "Avaliações e Desenvolvimento",
     color: "text-emerald-400",
     sectionIcon: Target,
-    hue: 95, // Lime/Neon green
     items: [
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
       { title: "PDI", icon: Target, path: "/pdi" },
@@ -139,7 +133,6 @@ const menuSections: MenuSection[] = [
     label: "Pessoas",
     color: "text-violet-400",
     sectionIcon: Users,
-    hue: 270, // Violet
     items: [
       { title: "Cultura e Celebrações", icon: Sparkles, path: "/cultura-celebracoes" },
       { title: "Contratos de Experiência", icon: FileText, path: "/contratos-experiencia" },
@@ -160,14 +153,12 @@ const menuSections: MenuSection[] = [
     label: "Documentos & Registros",
     color: "text-rose-400",
     sectionIcon: FileText,
-    hue: 340, // Pink/Rose
     items: [{ title: "Documentos", icon: FileText, path: "/documentos" }],
   },
   {
     label: "Financeiro",
     color: "text-teal-400",
     sectionIcon: DollarSign,
-    hue: 175, // Teal
     items: [
       { title: "Financeiro", icon: DollarSign, path: "/financeiro" },
       { title: "Benefícios", icon: Heart, path: "/financeiro/beneficios" },
@@ -178,7 +169,6 @@ const menuSections: MenuSection[] = [
     label: "Academia",
     color: "text-indigo-400",
     sectionIcon: BookOpen,
-    hue: 245, // Indigo
     items: [{ title: "Academia", icon: BookOpen, path: "/academia" }],
   },
 ];
@@ -254,28 +244,19 @@ const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolea
       to={item.path || "/"}
       onClick={onNavigate}
       className={cn(
-        "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 group/link overflow-hidden",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
+        // (5) Barra lateral no ativo
+        "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:rounded-r-full before:transition-all before:duration-200",
         isActive
-          ? "neon-link-active font-semibold"
-          : "neon-link-idle text-sidebar-foreground/65"
+          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20 before:h-5 before:bg-sidebar-primary-foreground"
+          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground before:h-0 before:bg-transparent"
       )}
     >
-      <span
-        className={cn(
-          "relative w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200",
-          isActive ? "neon-icon-tile" : "neon-icon-tile-idle"
-        )}
-      >
-        <item.icon className="w-[14px] h-[14px]" strokeWidth={2} />
-      </span>
-      <span className="text-[12.5px] tracking-tight relative z-10">{item.title}</span>
-      {isActive && (
-        <span
-          className="ml-auto w-1.5 h-1.5 rounded-full neon-pulse"
-          style={{ background: "currentColor" }}
-          aria-hidden
-        />
-      )}
+      <item.icon
+        className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors", !isActive && "opacity-75")}
+        strokeWidth={1.75}
+      />
+      <span className="text-[13px]">{item.title}</span>
     </NavLink>
   );
 };
@@ -301,21 +282,13 @@ const CollapsibleSection = ({
       item.children?.some((c) => checkIsActive(c.path, location.pathname, location.search))
   );
 
-  // Inject hue as CSS var for the entire section subtree
-  const sectionStyle = {
-    "--accent-h": String(section.hue),
-    "--accent-s": "90%",
-    "--accent-l": "60%",
-  } as React.CSSProperties;
-
   if (isCollapsed) {
     return (
-      <div className="mb-1 neon-section" style={sectionStyle}>
+      <div className="mb-1">
         <div className="pt-1 flex items-center justify-center px-2 mb-1">
           <section.sectionIcon
-            className="w-4 h-4 opacity-70"
-            strokeWidth={2}
-            style={{ color: `hsl(${section.hue} 90% 65%)` }}
+            className={cn("w-4 h-4", section.color, "opacity-50")}
+            strokeWidth={1.75}
           />
         </div>
         {section.items.map((item) => {
@@ -326,19 +299,14 @@ const CollapsibleSection = ({
             <NavLink
               key={item.title}
               to={item.path || "/"}
-              title={item.title}
               className={cn(
-                "flex items-center justify-center py-1.5 my-0.5 mx-1 rounded-lg transition-all duration-200"
+                "flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                  : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
               )}
             >
-              <span
-                className={cn(
-                  "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200",
-                  isActive ? "neon-icon-tile" : "neon-icon-tile-idle hover:neon-icon-tile"
-                )}
-              >
-                <item.icon className="w-[16px] h-[16px]" strokeWidth={2} />
-              </span>
+              <item.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
             </NavLink>
           );
         })}
@@ -347,47 +315,47 @@ const CollapsibleSection = ({
   }
 
   return (
-    <motion.div
-      layout
+    <div
       className={cn(
-        "neon-section rounded-xl transition-all duration-300",
-        isOpen ? "neon-section-card p-1.5" : "border border-transparent"
+        // (1) Container visual quando expandido
+        "rounded-xl transition-all duration-200",
+        isOpen
+          ? "bg-white/[0.10] border border-white/[0.14] p-1 shadow-sm shadow-black/5"
+          : "border border-transparent"
       )}
-      style={sectionStyle}
     >
       <button
         onClick={onToggle}
         className={cn(
-          "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-all duration-200 group cursor-pointer",
-          !isOpen && "hover:bg-white/[0.04]",
+          "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200",
+          "hover:bg-white/[0.04] group cursor-pointer",
+          // (3) Pai destacado quando aberto ou com filho ativo
+          isOpen && "bg-white/[0.06]",
           !isOpen && hasActiveChild && "bg-white/[0.04]"
         )}
       >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <div
           className={cn(
-            "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200",
-            isOpen || hasActiveChild ? "neon-icon-tile" : "neon-icon-tile-idle"
+            "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors",
+            isOpen || hasActiveChild ? "bg-white/[0.12]" : "bg-white/[0.05]"
           )}
         >
-          <section.sectionIcon className="w-3.5 h-3.5" strokeWidth={2.25} />
-        </motion.div>
+          <section.sectionIcon className={cn("w-3.5 h-3.5", section.color)} strokeWidth={2} />
+        </div>
         <p
           className={cn(
-            "flex-1 text-left text-[12.5px] font-semibold tracking-wide transition-colors uppercase",
-            isOpen ? "neon-section-header" : hasActiveChild
-              ? "text-sidebar-foreground/85"
-              : "text-sidebar-foreground/45 group-hover:text-sidebar-foreground/70"
+            "flex-1 text-left text-[13px] font-semibold tracking-[0.02em] transition-colors",
+            isOpen || hasActiveChild
+              ? "text-sidebar-foreground/90"
+              : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
           )}
         >
           {section.label}
         </p>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 transition-all duration-300",
-            isOpen ? "rotate-180" : "rotate-0",
-            isOpen ? "text-sidebar-foreground/70" : "text-sidebar-foreground/25 group-hover:text-sidebar-foreground/45"
+            "w-3.5 h-3.5 text-sidebar-foreground/25 group-hover:text-sidebar-foreground/45 transition-all duration-200",
+            isOpen && "rotate-180 text-sidebar-foreground/60"
           )}
         />
       </button>
@@ -397,29 +365,23 @@ const CollapsibleSection = ({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="space-y-0.5 mt-1.5 pt-1 px-0.5">
-              {section.items.map((item, idx) =>
+            {/* (2) Guia vertical conectando pai e subitens */}
+            <div className="space-y-0.5 mt-1 ml-3 pl-3 border-l border-white/[0.08]">
+              {section.items.map((item) =>
                 item.children ? (
                   <SidebarSubItem key={item.title} item={item} isCollapsed={false} />
                 ) : (
-                  <motion.div
-                    key={item.title}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.25, delay: idx * 0.03, ease: "easeOut" }}
-                  >
-                    <SidebarLink item={item} isCollapsed={false} onNavigate={onNavigate} />
-                  </motion.div>
+                  <SidebarLink key={item.title} item={item} isCollapsed={false} onNavigate={onNavigate} />
                 )
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
 
@@ -530,7 +492,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       initial={false}
       animate={{ width: isCollapsed ? 72 : 264 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-screen gradient-sidebar flex flex-col fixed left-0 top-0 z-40 relative overflow-hidden before:content-[''] before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-transparent before:via-cyan-400/20 before:to-transparent"
+      className="h-screen gradient-sidebar border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-40"
     >
       {/* Logo */}
       <div className="p-4 flex items-center justify-center border-b border-white/[0.08] bg-white rounded-b-xl">
@@ -607,28 +569,22 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
           </div>
         ) : (
           <div className="space-y-1">
-            {/* Início — standalone neon link (blue hue) */}
-            <div className="neon-section" style={{ "--accent-h": "210", "--accent-s": "95%", "--accent-l": "60%" } as React.CSSProperties}>
-              <NavLink
-                to="/"
-                onClick={isMobile ? onClose : undefined}
-                className={({ isActive }) =>
-                  cn(
-                    "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 mb-1 overflow-hidden",
-                    isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/70"
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
-                      <Home className="w-[14px] h-[14px]" strokeWidth={2} />
-                    </span>
-                    {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Início</span>}
-                  </>
-                )}
-              </NavLink>
-            </div>
+            <NavLink
+              to="/"
+              onClick={isMobile ? onClose : undefined}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1",
+                  "font-semibold",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                    : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                )
+              }
+            >
+              <Home className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
+              {!isCollapsed && <span className="text-[13px]">Início</span>}
+            </NavLink>
 
 
             {/* Estrutura Organizacional first */}
@@ -654,27 +610,22 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
                   onNavigate={isMobile ? onClose : undefined}
                 />
                 {section.label === "Pessoas" && (
-                  <div className="neon-section mt-1" style={{ "--accent-h": "30", "--accent-s": "95%", "--accent-l": "60%" } as React.CSSProperties}>
-                    <NavLink
-                      to="/pendencias"
-                      onClick={isMobile ? onClose : undefined}
-                      className={({ isActive }) =>
-                        cn(
-                          "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 mb-1 overflow-hidden",
-                          isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/70"
-                        )
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
-                            <ClipboardList className="w-[14px] h-[14px]" strokeWidth={2} />
-                          </span>
-                          {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Pendências</span>}
-                        </>
-                      )}
-                    </NavLink>
-                  </div>
+                  <NavLink
+                    to="/pendencias"
+                    onClick={isMobile ? onClose : undefined}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 mb-1 mt-1",
+                        "font-semibold",
+                        isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                      )
+                    }
+                  >
+                    <ClipboardList className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors opacity-75")} strokeWidth={1.75} />
+                    {!isCollapsed && <span className="text-[13px]">Pendências</span>}
+                  </NavLink>
                 )}
               </div>
             ))}
@@ -683,49 +634,37 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-white/[0.06] space-y-1 bg-black/20 backdrop-blur-sm">
-        <div className="neon-section" style={{ "--accent-h": "320", "--accent-s": "85%", "--accent-l": "60%" } as React.CSSProperties}>
-          <NavLink
-            to="/suporte"
-            onClick={isMobile ? onClose : undefined}
-            className={({ isActive }) =>
-              cn(
-                "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 overflow-hidden",
-                isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/65"
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
-                  <LifeBuoy className="w-[14px] h-[14px]" strokeWidth={2} />
-                </span>
-                {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Suporte</span>}
-              </>
-            )}
-          </NavLink>
-        </div>
-        <div className="neon-section" style={{ "--accent-h": "220", "--accent-s": "20%", "--accent-l": "70%" } as React.CSSProperties}>
-          <NavLink
-            to="/configuracoes"
-            onClick={isMobile ? onClose : undefined}
-            className={({ isActive }) =>
-              cn(
-                "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 overflow-hidden",
-                isActive ? "neon-link-active font-semibold" : "neon-link-idle text-sidebar-foreground/65"
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span className={cn("w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0", isActive ? "neon-icon-tile" : "neon-icon-tile-idle")}>
-                  <Settings className="w-[14px] h-[14px]" strokeWidth={2} />
-                </span>
-                {!isCollapsed && <span className="text-[12.5px] tracking-tight relative z-10">Configurações</span>}
-              </>
-            )}
-          </NavLink>
-        </div>
+      <div className="p-3 border-t border-white/[0.08] space-y-0.5">
+        <NavLink
+          to="/suporte"
+          onClick={isMobile ? onClose : undefined}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+              isActive
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+            )
+          }
+        >
+          <LifeBuoy className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
+          {!isCollapsed && <span className="text-[13px]">Suporte</span>}
+        </NavLink>
+        <NavLink
+          to="/configuracoes"
+          onClick={isMobile ? onClose : undefined}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+              isActive
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
+                : "text-sidebar-foreground/55 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+            )
+          }
+        >
+          <Settings className="w-[18px] h-[18px] opacity-75" strokeWidth={1.75} />
+          {!isCollapsed && <span className="text-[13px]">Configurações</span>}
+        </NavLink>
       </div>
     </motion.aside>
   );
