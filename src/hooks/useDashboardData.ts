@@ -116,10 +116,14 @@ export const useDashboardData = () => {
       const ouvidoriaPendente = ouvidoriaRes.count || 0;
       const feedHoje = feedRes.count || 0;
       const humorPositivo = humores.filter(h => ["feliz", "motivado", "tranquilo", "grato", "animado"].includes(h.humor)).length;
-      const humorScore = humores.length > 0 ? (humorPositivo / humores.length) * 40 : 0;
-      const ouvidoriaScore = ouvidoriaPendente === 0 && humores.length > 0 ? 30 : ouvidoriaPendente > 0 ? Math.max(0, 30 - ouvidoriaPendente * 5) : 0;
-      const feedScore = feedHoje > 0 ? 30 : humores.length > 0 ? 10 : 0;
-      const scoreExperiencia = Math.min(100, Math.round(humorScore + ouvidoriaScore + feedScore));
+      // Score só com base em sinais reais (sem pontuação de cortesia)
+      const expSubs: number[] = [];
+      if (humores.length > 0) expSubs.push((humorPositivo / humores.length) * 100);
+      if (ouvidoriaPendente > 0) expSubs.push(Math.max(0, 100 - ouvidoriaPendente * 10));
+      if (feedHoje > 0) expSubs.push(100);
+      const scoreExperiencia = expSubs.length
+        ? Math.round(expSubs.reduce((a, b) => a + b, 0) / expSubs.length)
+        : 0;
 
       // Calcular métricas Pilar 4
       const acoes = acoesRes.data || [];

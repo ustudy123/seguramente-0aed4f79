@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { User, Mail, Briefcase, Building2, Shield, KeyRound, Camera } from "lucide-react";
+import { User, Mail, Briefcase, Building2, Shield, KeyRound, Camera, ArrowLeft } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function MeuPerfil() {
-  const { profile, isSuperAdmin } = useAuthContext();
+  const { profile, user, isSuperAdmin, refetch } = useAuthContext() as any;
   const { tenant } = useTenant();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [nomeCompleto, setNomeCompleto] = useState(profile?.nome_completo || "");
   const [saving, setSaving] = useState(false);
@@ -41,8 +43,15 @@ export default function MeuPerfil() {
         .update({ nome_completo: nomeCompleto })
         .eq("user_id", profile.user_id);
       if (error) throw error;
+      // Sync com usuarios_base (tela de Configurações > Usuários)
+      await (supabase as any)
+        .from("usuarios_base")
+        .update({ nome_completo: nomeCompleto })
+        .eq("auth_user_id", profile.user_id);
       toast.success("Perfil atualizado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      refetch?.();
     } catch (err: any) {
       toast.error(err.message || "Erro ao atualizar perfil");
     } finally {
@@ -82,6 +91,7 @@ export default function MeuPerfil() {
       toast.success("Foto atualizada!");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      refetch?.();
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar foto");
     } finally {
@@ -121,14 +131,20 @@ export default function MeuPerfil() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <User className="h-6 w-6 text-primary" />
-          Meu Perfil
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Gerencie suas informações pessoais e segurança da conta
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <User className="h-6 w-6 text-primary" />
+            Meu Perfil
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Gerencie suas informações pessoais e segurança da conta
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
       </div>
 
       {/* Avatar + info básica */}
@@ -206,7 +222,7 @@ export default function MeuPerfil() {
             <Label>E-mail</Label>
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
               <Mail className="h-4 w-4 shrink-0" />
-              {(profile as any)?.email || "—"}
+              {user?.email || (profile as any)?.email || "—"}
             </div>
             <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado por aqui. Contate o administrador.</p>
           </div>
