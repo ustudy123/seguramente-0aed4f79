@@ -61,7 +61,7 @@ export default function Estrategia() {
               ? "Estrutura hierárquica e organizacional da empresa" 
               : tab === "cultura"
               ? "Identidade, valores e cultura organizacional"
-              : "Planejamento estratégico, cultura organizacional e estrutura que viram ação"}
+              : "Planejamento estratégico de alto nível, cultura e governança"}
           </p>
           {tab !== "organograma" && tab !== "cultura" && (
             <p className="text-muted-foreground mt-1 text-sm">
