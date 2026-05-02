@@ -91,6 +91,7 @@ export default function MeuPerfil() {
       toast.success("Foto atualizada!");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+      refetch?.();
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar foto");
     } finally {
