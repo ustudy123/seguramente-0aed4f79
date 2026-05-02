@@ -57,6 +57,8 @@ interface MenuSection {
   items: MenuItem[];
   color: string;
   sectionIcon: React.ElementType;
+  /** HSL hue for the section's neon accent (0-360) */
+  hue: number;
 }
 
 const normalizeSearchText = (value: string) =>
