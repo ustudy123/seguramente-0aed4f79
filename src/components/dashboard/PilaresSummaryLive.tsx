@@ -237,6 +237,16 @@ export const PilaresSummaryLive = () => {
                     />
                   </div>
                 </div>
+
+                {/* Legenda explicativa */}
+                <div className="mt-3 pt-3 border-t border-border/60 space-y-1">
+                  <p className="text-[11px] leading-snug text-foreground/80">
+                    {pilar.legenda}
+                  </p>
+                  <p className="text-[10px] leading-snug text-muted-foreground">
+                    <span className="font-semibold">Como é calculado:</span> {pilar.comoCalcula}
+                  </p>
+                </div>
               </motion.button>
             );
           })}
