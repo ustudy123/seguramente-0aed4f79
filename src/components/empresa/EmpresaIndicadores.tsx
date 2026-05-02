@@ -25,6 +25,9 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
   const arquivados = tacList.filter((t) => t.arquivado);
 
   // Edição via dialog (rascunho local — só persiste no onChange ao salvar)
+  // editIdx === null  -> fechado
+  // editIdx === -1    -> criando novo (ainda não está na lista)
+  // editIdx >= 0      -> editando item existente
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [draft, setDraft] = useState<TacDetalhe | null>(null);
 
@@ -33,6 +36,19 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
     if (!item) return;
     setEditIdx(idx);
     setDraft({ ...item });
+  };
+
+  const openNew = () => {
+    setEditIdx(-1);
+    setDraft({
+      numero: '',
+      orgao_emissor: '',
+      data_assinatura: '',
+      obrigacoes: '',
+      prazo: '',
+      penalidades: '',
+      status: 'Em cumprimento',
+    });
   };
 
   const closeEditor = () => {
@@ -46,10 +62,31 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
       toast.error('Informe o Nº / Identificador do TAC.');
       return;
     }
-    const next = tacList.map((t, i) => (i === editIdx ? draft : t));
-    onChange({ tac_detalhes: next });
-    toast.success('TAC atualizado.');
+    if (editIdx === -1) {
+      // novo
+      onChange({ tac_detalhes: [...tacList, draft] });
+      toast.success('TAC adicionado.');
+    } else {
+      const next = tacList.map((t, i) => (i === editIdx ? draft : t));
+      onChange({ tac_detalhes: next });
+      toast.success('TAC atualizado.');
+    }
     closeEditor();
+  };
+
+  const handleExcluirAtivo = async (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    const ok = await confirm({
+      title: '⚠️ Excluir este TAC?',
+      description: `Tem certeza que quer excluir o TAC "${item.numero || 'sem identificador'}"? Ele será removido da lista de ativos. Use "Arquivar" se quiser preservar o histórico.`,
+      confirmLabel: 'Sim, excluir',
+      cancelLabel: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    onChange({ tac_detalhes: tacList.filter((_, i) => i !== idx) });
+    toast.success('TAC excluído.');
   };
 
   const handleArquivar = async (idx: number) => {
@@ -134,8 +171,18 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleArquivar(globalIdx)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                 title="Arquivar"
+              >
+                <Archive className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleExcluirAtivo(globalIdx)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Excluir"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -270,24 +317,7 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const novo: TacDetalhe = {
-                      numero: '',
-                      orgao_emissor: '',
-                      data_assinatura: '',
-                      obrigacoes: '',
-                      prazo: '',
-                      penalidades: '',
-                      status: 'Em cumprimento',
-                    };
-                    const next = [...tacList, novo];
-                    onChange({ tac_detalhes: next });
-                    // Abrir editor já no novo
-                    setTimeout(() => {
-                      setEditIdx(next.length - 1);
-                      setDraft({ ...novo });
-                    }, 0);
-                  }}
+                  onClick={openNew}
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Adicionar TAC
