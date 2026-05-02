@@ -494,7 +494,7 @@ export function usePlanoAcao(filters?: PlanoAcaoFilters) {
         updateData.data_conclusao = new Date().toISOString();
         updateData.concluida_por = user?.id;
         updateData.concluida_por_nome = userName;
-      } else if (data.status && data.status !== "concluida") {
+      } else if (data.status) {
         // Se está sendo desmarcada, limpar dados de conclusão
         updateData.data_conclusao = null;
         updateData.concluida_por = null;
