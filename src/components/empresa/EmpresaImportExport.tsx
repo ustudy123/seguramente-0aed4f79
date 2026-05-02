@@ -163,7 +163,7 @@ export function EmpresaImportExport() {
           cidade: row['Cidade']?.toString().trim() || null,
           estado: row['Estado']?.toString().trim().toUpperCase() || null,
           cnae_principal: row['CNAE Principal']?.toString().trim() || null,
-          descricao_cnae: row['Descrição CNAE']?.toString().trim() || null,
+          cnae_descricao: row['Descrição CNAE']?.toString().trim() || null,
           grau_risco: grauRisco && !isNaN(grauRisco) ? grauRisco : null,
           total_colaboradores: totalColab && !isNaN(totalColab) ? totalColab : null,
           jornada_padrao: row['Jornada Padrão']?.toString().trim() || null,
