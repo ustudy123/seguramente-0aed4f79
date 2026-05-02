@@ -25,7 +25,7 @@ interface EmpresaListProps {
   obrigacoes?: any[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [] }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [], obrigacoes = [] }: EmpresaListProps) {
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
