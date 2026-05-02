@@ -35,6 +35,7 @@ export function confirm(options: ConfirmOptions | string = {}): Promise<boolean>
       confirmLabel: opts.confirmLabel || "Confirmar",
       cancelLabel: opts.cancelLabel || "Cancelar",
       variant: opts.variant || "destructive",
+      requiredWord: opts.requiredWord,
     });
   });
 }
