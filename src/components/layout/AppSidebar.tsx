@@ -254,19 +254,28 @@ const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolea
       to={item.path || "/"}
       onClick={onNavigate}
       className={cn(
-        "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
-        // (5) Barra lateral no ativo
-        "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:rounded-r-full before:transition-all before:duration-200",
+        "relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 group/link overflow-hidden",
         isActive
-          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20 before:h-5 before:bg-sidebar-primary-foreground"
-          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground before:h-0 before:bg-transparent"
+          ? "neon-link-active font-semibold"
+          : "neon-link-idle text-sidebar-foreground/65"
       )}
     >
-      <item.icon
-        className={cn("w-[18px] h-[18px] flex-shrink-0 transition-colors", !isActive && "opacity-75")}
-        strokeWidth={1.75}
-      />
-      <span className="text-[13px]">{item.title}</span>
+      <span
+        className={cn(
+          "relative w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200",
+          isActive ? "neon-icon-tile" : "neon-icon-tile-idle"
+        )}
+      >
+        <item.icon className="w-[14px] h-[14px]" strokeWidth={2} />
+      </span>
+      <span className="text-[12.5px] tracking-tight relative z-10">{item.title}</span>
+      {isActive && (
+        <span
+          className="ml-auto w-1.5 h-1.5 rounded-full neon-pulse"
+          style={{ background: "currentColor" }}
+          aria-hidden
+        />
+      )}
     </NavLink>
   );
 };
