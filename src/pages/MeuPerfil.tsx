@@ -20,6 +20,8 @@ export default function MeuPerfil() {
 
   const [nomeCompleto, setNomeCompleto] = useState(profile?.nome_completo || "");
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change
   const [senhaAtual, setSenhaAtual] = useState("");
