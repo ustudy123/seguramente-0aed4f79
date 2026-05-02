@@ -318,7 +318,7 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                 )}
               </TabsContent>
             </Tabs>
-            </div>
+
 
             <p className="text-xs text-muted-foreground">
               Use a aba "Obrigações" para registrar as cláusulas de cada TAC e gerar ações de cumprimento.
