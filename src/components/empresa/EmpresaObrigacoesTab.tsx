@@ -39,7 +39,7 @@ const CRITICIDADE_COLOR: Record<string, string> = {
 
 export function EmpresaObrigacoesTab({ cadastro, onTabChange }: Props) {
   const navigate = useNavigate();
-  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro();
+  const { obrigacoes, createObrigacao, criarAcaoDeObrigacao } = useEmpresaCadastro(cadastro?.id);
 
   // Detect obligations from cadastro data
   const obrigacoesDetectadas = useMemo(() => {
