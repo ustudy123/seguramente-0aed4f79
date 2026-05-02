@@ -19,7 +19,7 @@ export default function PoliticaPrivacidade() {
         <div className="prose prose-sm max-w-none space-y-6 text-foreground">
           <section>
             <h2 className="text-xl font-semibold">1. Introdução</h2>
-            <p>A Seguramente está comprometida em proteger a privacidade dos dados pessoais dos seus usuários, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).</p>
+            <p>A YourEyes está comprometida em proteger a privacidade dos dados pessoais dos seus usuários, em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).</p>
           </section>
 
           <section>
@@ -83,7 +83,7 @@ export default function PoliticaPrivacidade() {
 
           <section>
             <h2 className="text-xl font-semibold">9. Contato do Encarregado (DPO)</h2>
-            <p>Para exercer seus direitos ou esclarecer dúvidas sobre o tratamento de dados, entre em contato: privacidade@seguramente.app</p>
+            <p>Para exercer seus direitos ou esclarecer dúvidas sobre o tratamento de dados, entre em contato: privacidade@youreyes.com.br</p>
           </section>
         </div>
       </div>

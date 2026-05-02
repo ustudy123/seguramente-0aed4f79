@@ -393,7 +393,7 @@ export default function Register() {
                     <FormControl>
                       <div className="flex">
                         <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
-                          seguramente.app/
+                          youreyes.com.br/
                         </span>
                         <Input className="rounded-l-none" placeholder="minha-empresa" {...field} />
                       </div>
