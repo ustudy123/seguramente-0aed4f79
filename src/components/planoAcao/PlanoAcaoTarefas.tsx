@@ -127,8 +127,15 @@ export function PlanoAcaoTarefas({ acaoId, tarefas }: PlanoAcaoTarefasProps) {
     });
   };
 
-  const handleDeleteTarefa = async (tarefaId: string) => {
-    await deleteTarefa({ id: tarefaId, acaoId });
+  const handleDeleteTarefa = async (tarefa: PlanoTarefa) => {
+    const ok = await confirm({
+      title: "Excluir tarefa",
+      description: `Tem certeza que deseja excluir a tarefa "${tarefa.titulo}"? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    await deleteTarefa({ id: tarefa.id, acaoId });
   };
 
   const sortedTarefas = [...tarefas].sort((a, b) => {
