@@ -236,10 +236,12 @@ const SidebarLink = ({ item, onNavigate }: { item: MenuItem; isCollapsed: boolea
       to={item.path || "/"}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group/link",
+        // (5) Barra lateral no ativo
+        "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:rounded-r-full before:transition-all before:duration-200",
         isActive
-          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20"
-          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+          ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-md shadow-sidebar-primary/20 before:h-5 before:bg-sidebar-primary-foreground"
+          : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground before:h-0 before:bg-transparent"
       )}
     >
       <item.icon
@@ -305,19 +307,29 @@ const CollapsibleSection = ({
   }
 
   return (
-    <div>
+    <div
+      className={cn(
+        // (1) Container visual quando expandido
+        "rounded-xl transition-all duration-200",
+        isOpen
+          ? "bg-white/[0.03] border border-white/[0.06] p-1 shadow-inner shadow-black/10"
+          : "border border-transparent"
+      )}
+    >
       <button
         onClick={onToggle}
         className={cn(
           "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200",
           "hover:bg-white/[0.04] group cursor-pointer",
-          hasActiveChild && "bg-white/[0.04]"
+          // (3) Pai destacado quando aberto ou com filho ativo
+          isOpen && "bg-white/[0.06]",
+          !isOpen && hasActiveChild && "bg-white/[0.04]"
         )}
       >
         <div
           className={cn(
             "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors",
-            hasActiveChild ? "bg-white/[0.1]" : "bg-white/[0.05]"
+            isOpen || hasActiveChild ? "bg-white/[0.12]" : "bg-white/[0.05]"
           )}
         >
           <section.sectionIcon className={cn("w-3.5 h-3.5", section.color)} strokeWidth={2} />
@@ -325,8 +337,8 @@ const CollapsibleSection = ({
         <p
           className={cn(
             "flex-1 text-left text-[13px] font-semibold tracking-[0.02em] transition-colors",
-            hasActiveChild
-              ? "text-sidebar-foreground/80"
+            isOpen || hasActiveChild
+              ? "text-sidebar-foreground/90"
               : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
           )}
         >
@@ -335,7 +347,7 @@ const CollapsibleSection = ({
         <ChevronDown
           className={cn(
             "w-3.5 h-3.5 text-sidebar-foreground/25 group-hover:text-sidebar-foreground/45 transition-all duration-200",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180 text-sidebar-foreground/60"
           )}
         />
       </button>
@@ -348,7 +360,8 @@ const CollapsibleSection = ({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="space-y-0.5 mt-1 ml-1">
+            {/* (2) Guia vertical conectando pai e subitens */}
+            <div className="space-y-0.5 mt-1 ml-3 pl-3 border-l border-white/[0.08]">
               {section.items.map((item) =>
                 item.children ? (
                   <SidebarSubItem key={item.title} item={item} isCollapsed={false} />
