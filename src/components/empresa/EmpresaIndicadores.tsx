@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -5,8 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2, Edit, Archive, ArchiveRestore } from 'lucide-react';
+import { confirm } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 import type { EmpresaCadastro, TacDetalhe } from '@/types/empresa';
 
 interface Props {
@@ -16,6 +20,154 @@ interface Props {
 
 export function EmpresaIndicadores({ data, onChange }: Props) {
   const fapValor = data.fap_atual ?? 0;
+  const tacList = data.tac_detalhes || [];
+  const ativos = tacList.filter((t) => !t.arquivado);
+  const arquivados = tacList.filter((t) => t.arquivado);
+
+  // Edição via dialog (rascunho local — só persiste no onChange ao salvar)
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [draft, setDraft] = useState<TacDetalhe | null>(null);
+
+  const openEditor = (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    setEditIdx(idx);
+    setDraft({ ...item });
+  };
+
+  const closeEditor = () => {
+    setEditIdx(null);
+    setDraft(null);
+  };
+
+  const saveDraft = () => {
+    if (editIdx === null || !draft) return;
+    if (!draft.numero?.trim()) {
+      toast.error('Informe o Nº / Identificador do TAC.');
+      return;
+    }
+    const next = tacList.map((t, i) => (i === editIdx ? draft : t));
+    onChange({ tac_detalhes: next });
+    toast.success('TAC atualizado.');
+    closeEditor();
+  };
+
+  const handleArquivar = async (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    const ok = await confirm({
+      title: 'Arquivar este TAC?',
+      description: `O TAC "${item.numero || 'sem identificador'}" será movido para a aba "Arquivados". Você poderá restaurá-lo depois.`,
+      confirmLabel: 'Arquivar',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    const next = tacList.map((t, i) =>
+      i === idx
+        ? { ...t, arquivado: true, arquivado_em: new Date().toISOString(), status: 'Arquivado' }
+        : t
+    );
+    onChange({ tac_detalhes: next });
+    toast.success('TAC arquivado.');
+  };
+
+  const handleRestaurar = (idx: number) => {
+    const next = tacList.map((t, i) =>
+      i === idx
+        ? { ...t, arquivado: false, arquivado_em: undefined, status: 'Em cumprimento' }
+        : t
+    );
+    onChange({ tac_detalhes: next });
+    toast.success('TAC restaurado para "Ativos".');
+  };
+
+  const handleExcluirDefinitivo = async (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    const ok = await confirm({
+      title: '⚠️ Excluir definitivamente?',
+      description: `Esta ação é IRREVERSÍVEL. O TAC "${item.numero || 'sem identificador'}" será removido permanentemente do histórico. Tem certeza que quer excluir?`,
+      confirmLabel: 'Sim, excluir definitivamente',
+      cancelLabel: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    onChange({ tac_detalhes: tacList.filter((_, i) => i !== idx) });
+    toast.success('TAC excluído definitivamente.');
+  };
+
+  const renderTacRow = (tac: TacDetalhe, globalIdx: number, archived: boolean) => {
+    const resumo = [tac.orgao_emissor, tac.status].filter(Boolean).join(' • ');
+    return (
+      <div
+        key={globalIdx}
+        className="flex items-center justify-between gap-2 border rounded-md bg-background px-3 py-2.5"
+      >
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Badge variant="outline" className="font-mono shrink-0">
+            TAC #{globalIdx + 1}
+          </Badge>
+          <span className="text-sm font-medium truncate">
+            {tac.numero || 'Sem identificador'}
+          </span>
+          {resumo && (
+            <span className="text-xs text-muted-foreground truncate hidden md:inline">
+              • {resumo}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {!archived ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => openEditor(globalIdx)}
+                className="h-8 gap-1"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleArquivar(globalIdx)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Arquivar"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRestaurar(globalIdx)}
+                className="h-8 gap-1"
+              >
+                <ArchiveRestore className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Restaurar</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleExcluirDefinitivo(globalIdx)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Excluir definitivamente"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -100,179 +252,73 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
               </span>
             </div>
 
-            <div className="space-y-3">
-              {(data.tac_detalhes || []).length === 0 && (
-                <p className="text-xs text-muted-foreground italic">
-                  Nenhum TAC cadastrado. Clique em "Adicionar TAC" para incluir um identificador.
-                </p>
-              )}
+            <Tabs defaultValue="ativos" className="w-full">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <TabsList>
+                  <TabsTrigger value="ativos" className="gap-2">
+                    Ativos
+                    <Badge variant="secondary" className="h-5 px-1.5">{ativos.length}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="arquivados" className="gap-2">
+                    <Archive className="w-3.5 h-3.5" />
+                    Arquivados
+                    <Badge variant="secondary" className="h-5 px-1.5">{arquivados.length}</Badge>
+                  </TabsTrigger>
+                </TabsList>
 
-              {(data.tac_detalhes || []).length > 0 && (
-                <Accordion
-                  type="single"
-                  collapsible
-                  defaultValue={(data.tac_detalhes || []).length === 1 ? 'tac-0' : undefined}
-                  className="space-y-2"
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const novo: TacDetalhe = {
+                      numero: '',
+                      orgao_emissor: '',
+                      data_assinatura: '',
+                      obrigacoes: '',
+                      prazo: '',
+                      penalidades: '',
+                      status: 'Em cumprimento',
+                    };
+                    const next = [...tacList, novo];
+                    onChange({ tac_detalhes: next });
+                    // Abrir editor já no novo
+                    setTimeout(() => {
+                      setEditIdx(next.length - 1);
+                      setDraft({ ...novo });
+                    }, 0);
+                  }}
                 >
-                  {(data.tac_detalhes || []).map((tac, idx) => {
-                    const list = data.tac_detalhes || [];
-                    const updateAt = (patch: Partial<TacDetalhe>) => {
-                      const next = list.map((t, i) => (i === idx ? { ...t, ...patch } : t));
-                      onChange({ tac_detalhes: next });
-                    };
-                    const removeAt = () => {
-                      const next = list.filter((_, i) => i !== idx);
-                      onChange({ tac_detalhes: next });
-                    };
-                    const resumo = [
-                      tac.numero,
-                      tac.orgao_emissor,
-                      tac.status,
-                    ]
-                      .filter(Boolean)
-                      .join(' • ');
-                    return (
-                      <AccordionItem
-                        key={idx}
-                        value={`tac-${idx}`}
-                        className="border rounded-md bg-background px-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <AccordionTrigger className="flex-1 hover:no-underline py-3">
-                            <div className="flex items-center gap-2 flex-1 text-left">
-                              <Badge variant="outline" className="font-mono shrink-0">
-                                TAC #{idx + 1}
-                              </Badge>
-                              <span className="text-sm font-medium truncate">
-                                {tac.numero || 'Sem identificador'}
-                              </span>
-                              {resumo && (
-                                <span className="text-xs text-muted-foreground truncate hidden md:inline">
-                                  {resumo}
-                                </span>
-                              )}
-                            </div>
-                          </AccordionTrigger>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeAt();
-                            }}
-                            className="text-destructive hover:text-destructive h-8 w-8 p-0 shrink-0"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <AccordionContent className="pt-2 pb-3">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Edit className="w-3 h-3" />
-                              Editável
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs">Nº / Identificador *</Label>
-                              <Input
-                                placeholder="Ex.: TAC 123/2024"
-                                value={tac.numero || ''}
-                                onChange={(e) => updateAt({ numero: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Órgão Emissor</Label>
-                              <Input
-                                placeholder="Ex.: MPT, MTE"
-                                value={tac.orgao_emissor || ''}
-                                onChange={(e) => updateAt({ orgao_emissor: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Data de Assinatura</Label>
-                              <Input
-                                type="date"
-                                value={tac.data_assinatura || ''}
-                                onChange={(e) => updateAt({ data_assinatura: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-1 md:col-span-2">
-                              <Label className="text-xs">Obrigações / Cláusulas</Label>
-                              <Textarea
-                                placeholder="Resumo das obrigações..."
-                                rows={2}
-                                value={tac.obrigacoes || ''}
-                                onChange={(e) => updateAt({ obrigacoes: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Prazo</Label>
-                              <Input
-                                placeholder="Ex.: 12 meses"
-                                value={tac.prazo || ''}
-                                onChange={(e) => updateAt({ prazo: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-1 md:col-span-2">
-                              <Label className="text-xs">Penalidades em caso de descumprimento</Label>
-                              <Input
-                                placeholder="Ex.: Multa de R$ 50.000 por cláusula"
-                                value={tac.penalidades || ''}
-                                onChange={(e) => updateAt({ penalidades: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Status</Label>
-                              <Select
-                                value={tac.status || ''}
-                                onValueChange={(v) => updateAt({ status: v })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Em cumprimento">Em cumprimento</SelectItem>
-                                  <SelectItem value="Em negociação">Em negociação</SelectItem>
-                                  <SelectItem value="Pendente de assinatura">Pendente de assinatura</SelectItem>
-                                  <SelectItem value="Em atraso">Em atraso</SelectItem>
-                                  <SelectItem value="Descumprido">Descumprido</SelectItem>
-                                  <SelectItem value="Suspenso">Suspenso</SelectItem>
-                                  <SelectItem value="Cumprido / Encerrado">Cumprido / Encerrado</SelectItem>
-                                  <SelectItem value="Arquivado">Arquivado</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
-              )}
+                  <Plus className="w-4 h-4 mr-1" />
+                  Adicionar TAC
+                </Button>
+              </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const novo: TacDetalhe = {
-                    numero: '',
-                    orgao_emissor: '',
-                    data_assinatura: '',
-                    obrigacoes: '',
-                    prazo: '',
-                    penalidades: '',
-                    status: 'Em cumprimento',
-                  };
-                  onChange({ tac_detalhes: [...(data.tac_detalhes || []), novo] });
-                }}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Adicionar TAC
-              </Button>
-            </div>
+              <TabsContent value="ativos" className="space-y-2 mt-3">
+                {ativos.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center">
+                    Nenhum TAC ativo. Clique em "Adicionar TAC" para incluir um identificador.
+                  </p>
+                ) : (
+                  ativos.map((tac) =>
+                    renderTacRow(tac, tacList.indexOf(tac), false)
+                  )
+                )}
+              </TabsContent>
+
+              <TabsContent value="arquivados" className="space-y-2 mt-3">
+                {arquivados.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center">
+                    Nenhum TAC arquivado.
+                  </p>
+                ) : (
+                  arquivados.map((tac) =>
+                    renderTacRow(tac, tacList.indexOf(tac), true)
+                  )
+                )}
+              </TabsContent>
+            </Tabs>
+
 
             <p className="text-xs text-muted-foreground">
               Use a aba "Obrigações" para registrar as cláusulas de cada TAC e gerar ações de cumprimento.
@@ -280,6 +326,106 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
           </div>
         )}
       </section>
+
+      {/* Dialog de edição do TAC */}
+      <Dialog open={editIdx !== null} onOpenChange={(o) => !o && closeEditor()}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-4 h-4 text-primary" />
+              {editIdx !== null && tacList[editIdx]?.numero
+                ? `Editar TAC — ${tacList[editIdx]?.numero}`
+                : 'Novo TAC'}
+            </DialogTitle>
+            <DialogDescription>
+              As alterações só serão aplicadas ao clicar em <strong>Salvar</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          {draft && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-2">
+              <div className="space-y-1 md:col-span-2">
+                <Label className="text-xs">Nº / Identificador *</Label>
+                <Input
+                  placeholder="Ex.: TAC 123/2024"
+                  value={draft.numero || ''}
+                  onChange={(e) => setDraft({ ...draft, numero: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Órgão Emissor</Label>
+                <Input
+                  placeholder="Ex.: MPT, MTE"
+                  value={draft.orgao_emissor || ''}
+                  onChange={(e) => setDraft({ ...draft, orgao_emissor: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Data de Assinatura</Label>
+                <Input
+                  type="date"
+                  value={draft.data_assinatura || ''}
+                  onChange={(e) => setDraft({ ...draft, data_assinatura: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <Label className="text-xs">Obrigações / Cláusulas</Label>
+                <Textarea
+                  placeholder="Resumo das obrigações..."
+                  rows={3}
+                  value={draft.obrigacoes || ''}
+                  onChange={(e) => setDraft({ ...draft, obrigacoes: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prazo</Label>
+                <Input
+                  placeholder="Ex.: 12 meses"
+                  value={draft.prazo || ''}
+                  onChange={(e) => setDraft({ ...draft, prazo: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Status</Label>
+                <Select
+                  value={draft.status || ''}
+                  onValueChange={(v) => setDraft({ ...draft, status: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Em cumprimento">Em cumprimento</SelectItem>
+                    <SelectItem value="Em negociação">Em negociação</SelectItem>
+                    <SelectItem value="Pendente de assinatura">Pendente de assinatura</SelectItem>
+                    <SelectItem value="Em atraso">Em atraso</SelectItem>
+                    <SelectItem value="Descumprido">Descumprido</SelectItem>
+                    <SelectItem value="Suspenso">Suspenso</SelectItem>
+                    <SelectItem value="Cumprido / Encerrado">Cumprido / Encerrado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <Label className="text-xs">Penalidades em caso de descumprimento</Label>
+                <Input
+                  placeholder="Ex.: Multa de R$ 50.000 por cláusula"
+                  value={draft.penalidades || ''}
+                  onChange={(e) => setDraft({ ...draft, penalidades: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={closeEditor}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={saveDraft}>
+              Salvar alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
