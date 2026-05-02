@@ -426,14 +426,6 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-
-            <p className="text-xs text-muted-foreground">
-              Use a aba "Obrigações" para registrar as cláusulas de cada TAC e gerar ações de cumprimento.
-            </p>
-          </div>
-        )}
-      </section>
     </div>
   );
 }
