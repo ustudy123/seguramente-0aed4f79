@@ -119,13 +119,19 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                 return (
                   <div key={idx} className="p-3 border rounded-md bg-background space-y-3">
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline">TAC #{idx + 1}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono">TAC #{idx + 1}</Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Edit className="w-3 h-3" />
+                          Editável
+                        </span>
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={removeAt}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-8 w-8 p-0"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
