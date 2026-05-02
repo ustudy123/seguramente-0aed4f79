@@ -111,10 +111,11 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    label: "Planos & Desenvolvimento",
+    label: "Planejamento Estratégico",
     color: "text-emerald-400",
-    sectionIcon: Target,
+    sectionIcon: Compass,
     items: [
+      { title: "Dashboard Estratégico", icon: Compass, path: "/estrategia" },
       { title: "Metas", icon: Target, path: "/metas" },
       { title: "Plano de Ação", icon: Target, path: "/plano-acao" },
       { title: "Avaliações", icon: Star, path: "/avaliacoes" },
