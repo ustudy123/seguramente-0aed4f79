@@ -27,7 +27,7 @@ export default function Empresa() {
   const [activeTab, setActiveTab] = useState('dados');
   const { user, profile } = useAuth();
 
-  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai', 'importar'];
+  const TABS = ['dados', 'enquadramento', 'inclusao', 'indicadores', 'jornada', 'obrigacoes', 'ai'];
   const currentTabIndex = TABS.indexOf(activeTab);
   const isFirstTab = currentTabIndex === 0;
   const isLastTab = currentTabIndex === TABS.length - 1;
@@ -325,7 +325,7 @@ export default function Empresa() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
           <TabsTrigger value="dados" className="text-xs">
             <Building2 className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Dados
@@ -353,10 +353,6 @@ export default function Empresa() {
           <TabsTrigger value="ai" className="text-xs">
             <Brain className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
             Contexto I.A.
-          </TabsTrigger>
-          <TabsTrigger value="importar" className="text-xs">
-            <Upload className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
-            Importar
           </TabsTrigger>
         </TabsList>
 
@@ -443,15 +439,6 @@ export default function Empresa() {
             </CardContent>
           </TabsContent>
 
-          <TabsContent value="importar" className="mt-0">
-            <CardHeader>
-              <CardTitle className="text-lg">Importação de Empresas</CardTitle>
-              <CardDescription>Importe empresas via Excel/CSV ou baixe o modelo</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmpresaImportExport />
-            </CardContent>
-          </TabsContent>
         </Card>
         {/* Bottom navigation */}
         <div className="flex items-center justify-between pt-2">
