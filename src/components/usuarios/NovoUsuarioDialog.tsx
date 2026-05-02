@@ -386,6 +386,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     setDadosReaproveitados(false);
     setModoVinculo("empresa");
     setGrupoSelecionadoId("");
+    setEmpresasSelecionadas([]);
     onOpenChange(false);
   }
 
