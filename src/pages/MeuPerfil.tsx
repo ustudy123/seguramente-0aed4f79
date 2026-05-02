@@ -50,7 +50,46 @@ export default function MeuPerfil() {
     }
   };
 
-  const handleChangePassword = async () => {
+  const handleAvatarUpload = async (file: File) => {
+    if (!profile?.user_id) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB.");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${profile.user_id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, cacheControl: "3600" });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", profile.user_id);
+      if (updErr) throw updErr;
+      await (supabase as any)
+        .from("usuarios_base")
+        .update({ foto_url: publicUrl })
+        .eq("auth_user_id", profile.user_id);
+      toast.success("Foto atualizada!");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar foto");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
     if (!novaSenha || !confirmaSenha) {
       toast.error("Preencha a nova senha e a confirmação");
       return;
