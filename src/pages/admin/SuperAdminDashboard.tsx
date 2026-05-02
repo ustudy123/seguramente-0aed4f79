@@ -3,21 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   Users, 
-   Plus,
-   Bug, 
+  Plus,
+  Bug, 
   Search, 
   MoreVertical,
-   Shield,
-   TrendingUp,
-   CheckCircle,
-   XCircle,
-   UserPlus,
-   Eye,
-   Edit,
-   Power,
-   ArrowLeft,
-   BookOpen,
- } from 'lucide-react';
+  Shield,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  UserPlus,
+  Eye,
+  Edit,
+  Power,
+  ArrowLeft,
+  BookOpen,
+  FileText,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -136,6 +137,10 @@ export default function SuperAdminDashboard() {
                 <Button variant="outline" onClick={() => navigate('/admin/qa')}>
                   <Bug className="w-4 h-4 mr-2" />
                   QA & Testes IA
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/blog')}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Blog
                 </Button>
               <Button onClick={() => setShowTenantForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
