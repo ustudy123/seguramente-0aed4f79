@@ -86,26 +86,35 @@ export function EmpresaAIContext({ data, onChange }: EmpresaAIContextProps) {
         </Label>
 
         {hasContent ? (
-          <div className="rounded-lg border border-border bg-muted/30 p-5">
-            <div className="flex items-start justify-between gap-4 mb-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <FileText className="w-3.5 h-3.5" />
-                <span>Contexto salvo · {data.ai_context!.length} caracteres</span>
+          <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-5 shadow-sm">
+            <div className="absolute -right-12 -top-12 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/15 rounded-md p-1.5">
+                    <Brain className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-foreground">Contexto Salvo</span>
+                    <span className="text-xs text-muted-foreground">{data.ai_context!.length} caracteres registrados</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button type="button" variant="outline" size="sm" onClick={openEdit} className="gap-2 bg-background/70 backdrop-blur">
+                    <Pencil className="w-3.5 h-3.5" />
+                    Editar
+                  </Button>
+                  <Button type="button" size="sm" onClick={openView} className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md">
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    Abrir Contexto
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button type="button" variant="outline" size="sm" onClick={openEdit} className="gap-2">
-                  <Pencil className="w-3.5 h-3.5" />
-                  Editar
-                </Button>
-                <Button type="button" size="sm" onClick={openView} className="gap-2">
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  Abrir Contexto
-                </Button>
-              </div>
+              <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed">
+                {preview}{(data.ai_context || '').length > 180 ? '…' : ''}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {preview}{(data.ai_context || '').length > 180 ? '…' : ''}
-            </p>
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-border bg-muted/20 p-8 flex flex-col items-center justify-center text-center text-muted-foreground">
