@@ -134,7 +134,7 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
         {tipoPessoa === 'pj' ? (
           <>
             <div className="space-y-2">
-              <Label>CNPJ</Label>
+              <Label>CNPJ *</Label>
               <div className="flex gap-2">
                 <Input
                   placeholder="00.000.000/0000-00"
