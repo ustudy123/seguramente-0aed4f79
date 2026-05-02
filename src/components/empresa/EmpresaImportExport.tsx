@@ -73,7 +73,7 @@ const TEMPLATE_INSTRUCTIONS = [
 
 export function EmpresaImportExport() {
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
+  const [importResult, setImportResult] = useState<{ success: number; errors: string[]; duplicadas: string[] } | null>(null);
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -147,7 +147,23 @@ export function EmpresaImportExport() {
       }
 
       const errors: string[] = [];
+      const duplicadas: string[] = [];
       let success = 0;
+
+      // Busca CNPJs já existentes no tenant para validar duplicidade
+      const { data: existentes } = await supabase
+        .from('empresa_cadastro')
+        .select('cnpj, razao_social')
+        .eq('tenant_id', tenantId);
+
+      const cnpjsExistentes = new Set(
+        (existentes || [])
+          .map((e: any) => (e.cnpj || '').replace(/\D/g, ''))
+          .filter((c: string) => c.length === 14)
+      );
+
+      // Set para rastrear CNPJs duplicados dentro da própria planilha
+      const cnpjsNaPlanilha = new Set<string>();
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
@@ -187,7 +203,19 @@ export function EmpresaImportExport() {
         }
 
         const cnpjFormatado = formatCnpj(cnpjLimpo);
-        
+
+        // Valida duplicidade: já existe no banco
+        if (cnpjsExistentes.has(cnpjLimpo)) {
+          duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} já cadastrado no sistema`);
+          continue;
+        }
+        // Valida duplicidade: aparece duas vezes na mesma planilha
+        if (cnpjsNaPlanilha.has(cnpjLimpo)) {
+          duplicadas.push(`Linha ${i + 2}: CNPJ ${cnpjFormatado} duplicado na planilha`);
+          continue;
+        }
+        cnpjsNaPlanilha.add(cnpjLimpo);
+
         // Tenta buscar informações extras do CNPJ para enriquecer ou preencher vazios
         let infoApi = null;
         try {
@@ -240,17 +268,22 @@ export function EmpresaImportExport() {
         success++;
       }
 
-      setImportResult({ success, errors });
+      setImportResult({ success, errors, duplicadas });
 
       if (success > 0) {
         toast.success(`${success} empresa(s) importada(s) com sucesso!`);
         queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
         queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list_ativa'] });
       }
+      if (duplicadas.length > 0) {
+        toast.warning(`${duplicadas.length} empresa(s) ignorada(s) por já existirem (CNPJ duplicado)`, {
+          duration: 6000,
+        });
+      }
       if (errors.length > 0) {
         toast.warning(`${errors.length} erro(s) encontrado(s)`);
       }
-      if (success === 0 && errors.length === 0) {
+      if (success === 0 && errors.length === 0 && duplicadas.length === 0) {
         toast.info('Nenhuma linha válida encontrada na planilha.');
       }
     } catch (err) {
@@ -327,6 +360,20 @@ export function EmpresaImportExport() {
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="w-4 h-4 text-accent-foreground" />
                 <span>{importResult.success} empresa(s) válida(s)</span>
+              </div>
+            )}
+
+            {importResult.duplicadas.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-warning">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>{importResult.duplicadas.length} empresa(s) ignorada(s) (já cadastradas):</span>
+                </div>
+                <ul className="text-xs space-y-1 max-h-40 overflow-y-auto">
+                  {importResult.duplicadas.map((d, i) => (
+                    <li key={i} className="text-warning">{d}</li>
+                  ))}
+                </ul>
               </div>
             )}
 

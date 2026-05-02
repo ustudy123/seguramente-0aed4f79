@@ -67,6 +67,42 @@ export function useEmpresaCadastro(empresaId?: string | null) {
   const upsertCadastro = useMutation({
     mutationFn: async (updates: Partial<EmpresaCadastro>) => {
       const { id, created_at, updated_at, ...rest } = updates;
+
+      // Validação de CNPJ/CPF duplicado no tenant
+      const cnpjLimpo = rest.cnpj ? rest.cnpj.replace(/\D/g, '') : '';
+      const cpfLimpo = rest.cpf ? rest.cpf.replace(/\D/g, '') : '';
+      const targetId = empresaId || cadastro?.id || null;
+
+      if (cnpjLimpo.length === 14) {
+        const { data: dupes } = await supabase
+          .from('empresa_cadastro')
+          .select('id, razao_social, cnpj')
+          .eq('tenant_id', tenantId!)
+          .not('cnpj', 'is', null);
+        const conflito = (dupes || []).find((e: any) => {
+          const c = (e.cnpj || '').replace(/\D/g, '');
+          return c === cnpjLimpo && e.id !== targetId;
+        });
+        if (conflito) {
+          throw new Error(`CNPJ já cadastrado para a empresa "${(conflito as any).razao_social || 'sem nome'}".`);
+        }
+      }
+
+      if (cpfLimpo.length === 11) {
+        const { data: dupes } = await supabase
+          .from('empresa_cadastro')
+          .select('id, razao_social, cpf')
+          .eq('tenant_id', tenantId!)
+          .not('cpf', 'is', null);
+        const conflito = (dupes || []).find((e: any) => {
+          const c = (e.cpf || '').replace(/\D/g, '');
+          return c === cpfLimpo && e.id !== targetId;
+        });
+        if (conflito) {
+          throw new Error(`CPF já cadastrado para a empresa "${(conflito as any).razao_social || 'sem nome'}".`);
+        }
+      }
+
       const payload: Record<string, unknown> = {
         ...rest,
         tenant_id: tenantId!,
