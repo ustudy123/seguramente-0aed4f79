@@ -79,23 +79,36 @@ export function EmpresaImportExport() {
   const handleDownloadTemplate = () => {
     const wb = XLSX.utils.book_new();
 
-    // Dados sheet
+    // Pre-aloca 500 linhas para que a coluna C fique pré-formatada como texto
+    // mesmo nas células ainda vazias. Sem isso, ao digitar um CNPJ longo
+    // (ex.: 09766240000125), o Excel converte para notação científica
+    // (9,76624E+12) porque o formato da célula vazia ainda é "Geral".
+    const PRE_ALLOC_ROWS = 500;
     const wsData = XLSX.utils.aoa_to_sheet([TEMPLATE_COLUMNS, EXAMPLE_ROW]);
 
-    // Força a coluna C (CNPJ) a ser tratada como texto, aceitando CNPJ
-    // formatado (00.000.000/0000-00) ou somente números (00000000000000)
-    // sem perder zeros à esquerda nem virar notação científica.
-    const range = XLSX.utils.decode_range(wsData['!ref'] || 'A1');
-    for (let R = 0; R <= range.e.r; R++) {
+    // Marca TODAS as células da coluna C (preenchidas + vazias) como texto.
+    for (let R = 0; R <= PRE_ALLOC_ROWS; R++) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: 2 }); // coluna C
-      const cell = wsData[cellAddress];
-      if (cell) {
-        cell.t = 's';
-        cell.z = '@';
-        if (cell.v != null) cell.v = String(cell.v);
+      const existing = wsData[cellAddress];
+      if (existing) {
+        existing.t = 's';
+        existing.z = '@';
+        if (existing.v != null) existing.v = String(existing.v);
+      } else {
+        // Cria célula vazia já formatada como texto.
+        // Sem o campo `v`, o Excel descarta a célula ao salvar,
+        // então usamos string vazia para preservar a formatação.
+        wsData[cellAddress] = { t: 's', v: '', z: '@' };
       }
     }
-    // Define largura para a coluna C
+
+    // Atualiza o range da planilha para incluir as linhas pré-alocadas.
+    wsData['!ref'] = XLSX.utils.encode_range({
+      s: { r: 0, c: 0 },
+      e: { r: PRE_ALLOC_ROWS, c: TEMPLATE_COLUMNS.length - 1 },
+    });
+
+    // Define a coluna C com formato texto e largura adequada.
     wsData['!cols'] = wsData['!cols'] || [];
     wsData['!cols'][2] = { wch: 22 };
 
