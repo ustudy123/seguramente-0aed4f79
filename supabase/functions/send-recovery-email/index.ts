@@ -75,20 +75,20 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Seguramente <noreply@seguramente.app.br>",
+        from: "YourEyes <noreply@youreyes.com.br>",
         to: [email],
-        subject: "Recuperação de senha — Seguramente",
+        subject: "Recuperação de senha — YourEyes",
         html: `
           <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
             <div style="text-align: center; margin-bottom: 8px;">
-              <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ Seguramente</p>
+              <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">YourEyes</p>
             </div>
             <hr style="border-color: #e8e5f0; margin: 16px 0;" />
             <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">
               Recuperar senha
             </h1>
             <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
-              ${userName ? `Olá, ${userName}! ` : ""}Recebemos uma solicitação para redefinir sua senha na plataforma <strong>Seguramente</strong>.
+              ${userName ? `Olá, ${userName}! ` : ""}Recebemos uma solicitação para redefinir sua senha na plataforma <strong>YourEyes</strong>.
             </p>
             <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
               Clique no botão abaixo para criar uma nova senha. Este link é válido por 1 hora.
@@ -102,7 +102,7 @@ serve(async (req) => {
               Se você não solicitou a recuperação de senha, ignore este e-mail.
             </p>
             <hr style="border-color: #e8e5f0; margin: 16px 0;" />
-            <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">Seguramente — Plataforma de SST</p>
+            <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">YourEyes — Plataforma de SST</p>
           </div>
         `,
       }),

@@ -26,16 +26,16 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Redefinição de senha — Seguramente</Preview>
+    <Preview>Redefinição de senha — YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>🛡️ Seguramente</Text>
+          <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Redefinir senha</Heading>
         <Text style={text}>
-          Recebemos uma solicitação para redefinir sua senha no Seguramente.
+          Recebemos uma solicitação para redefinir sua senha no YourEyes.
           Clique no botão abaixo para escolher uma nova senha.
         </Text>
         <Section style={buttonContainer}>
@@ -49,7 +49,7 @@ export const RecoveryEmail = ({
         </Text>
         <Hr style={divider} />
         <Text style={brand}>
-          Seguramente — Plataforma de SST
+          YourEyes — Plataforma de SST
         </Text>
       </Container>
     </Body>

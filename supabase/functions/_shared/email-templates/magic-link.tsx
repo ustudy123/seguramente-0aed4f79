@@ -26,16 +26,16 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu link de acesso — Seguramente</Preview>
+    <Preview>Seu link de acesso — YourEyes</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>🛡️ Seguramente</Text>
+          <Text style={logoText}>YourEyes</Text>
         </Section>
         <Hr style={divider} />
         <Heading style={h1}>Seu link de acesso</Heading>
         <Text style={text}>
-          Clique no botão abaixo para acessar o Seguramente. Este link expira em breve.
+          Clique no botão abaixo para acessar o YourEyes. Este link expira em breve.
         </Text>
         <Section style={buttonContainer}>
           <Button style={button} href={confirmationUrl}>
@@ -47,7 +47,7 @@ export const MagicLinkEmail = ({
         </Text>
         <Hr style={divider} />
         <Text style={brand}>
-          Seguramente — Plataforma de SST
+          YourEyes — Plataforma de SST
         </Text>
       </Container>
     </Body>
