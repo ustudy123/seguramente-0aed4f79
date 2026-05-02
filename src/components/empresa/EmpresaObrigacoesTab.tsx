@@ -9,6 +9,7 @@ import {
   Target,
   RefreshCw,
   Plus,
+  Edit,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmpresaCadastro, EmpresaObrigacao, OBRIGACOES_TEMPLATES } from '@/types/empresa';
