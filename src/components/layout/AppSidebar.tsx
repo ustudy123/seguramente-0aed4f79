@@ -301,13 +301,21 @@ const CollapsibleSection = ({
       item.children?.some((c) => checkIsActive(c.path, location.pathname, location.search))
   );
 
+  // Inject hue as CSS var for the entire section subtree
+  const sectionStyle = {
+    "--accent-h": String(section.hue),
+    "--accent-s": "90%",
+    "--accent-l": "60%",
+  } as React.CSSProperties;
+
   if (isCollapsed) {
     return (
-      <div className="mb-1">
+      <div className="mb-1 neon-section" style={sectionStyle}>
         <div className="pt-1 flex items-center justify-center px-2 mb-1">
           <section.sectionIcon
-            className={cn("w-4 h-4", section.color, "opacity-50")}
-            strokeWidth={1.75}
+            className="w-4 h-4 opacity-70"
+            strokeWidth={2}
+            style={{ color: `hsl(${section.hue} 90% 65%)` }}
           />
         </div>
         {section.items.map((item) => {
@@ -318,14 +326,19 @@ const CollapsibleSection = ({
             <NavLink
               key={item.title}
               to={item.path || "/"}
+              title={item.title}
               className={cn(
-                "flex items-center justify-center py-2.5 rounded-lg transition-all duration-200 my-0.5",
-                isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/20"
-                  : "text-sidebar-foreground/70 hover:bg-white/[0.06] hover:text-sidebar-foreground"
+                "flex items-center justify-center py-1.5 my-0.5 mx-1 rounded-lg transition-all duration-200"
               )}
             >
-              <item.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+              <span
+                className={cn(
+                  "w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200",
+                  isActive ? "neon-icon-tile" : "neon-icon-tile-idle hover:neon-icon-tile"
+                )}
+              >
+                <item.icon className="w-[16px] h-[16px]" strokeWidth={2} />
+              </span>
             </NavLink>
           );
         })}
@@ -334,47 +347,47 @@ const CollapsibleSection = ({
   }
 
   return (
-    <div
+    <motion.div
+      layout
       className={cn(
-        // (1) Container visual quando expandido
-        "rounded-xl transition-all duration-200",
-        isOpen
-          ? "bg-white/[0.10] border border-white/[0.14] p-1 shadow-sm shadow-black/5"
-          : "border border-transparent"
+        "neon-section rounded-xl transition-all duration-300",
+        isOpen ? "neon-section-card p-1.5" : "border border-transparent"
       )}
+      style={sectionStyle}
     >
       <button
         onClick={onToggle}
         className={cn(
-          "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200",
-          "hover:bg-white/[0.04] group cursor-pointer",
-          // (3) Pai destacado quando aberto ou com filho ativo
-          isOpen && "bg-white/[0.06]",
+          "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-all duration-200 group cursor-pointer",
+          !isOpen && "hover:bg-white/[0.04]",
           !isOpen && hasActiveChild && "bg-white/[0.04]"
         )}
       >
-        <div
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={cn(
-            "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors",
-            isOpen || hasActiveChild ? "bg-white/[0.12]" : "bg-white/[0.05]"
+            "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200",
+            isOpen || hasActiveChild ? "neon-icon-tile" : "neon-icon-tile-idle"
           )}
         >
-          <section.sectionIcon className={cn("w-3.5 h-3.5", section.color)} strokeWidth={2} />
-        </div>
+          <section.sectionIcon className="w-3.5 h-3.5" strokeWidth={2.25} />
+        </motion.div>
         <p
           className={cn(
-            "flex-1 text-left text-[13px] font-semibold tracking-[0.02em] transition-colors",
-            isOpen || hasActiveChild
-              ? "text-sidebar-foreground/90"
-              : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
+            "flex-1 text-left text-[12.5px] font-semibold tracking-wide transition-colors uppercase",
+            isOpen ? "neon-section-header" : hasActiveChild
+              ? "text-sidebar-foreground/85"
+              : "text-sidebar-foreground/45 group-hover:text-sidebar-foreground/70"
           )}
         >
           {section.label}
         </p>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 text-sidebar-foreground/25 group-hover:text-sidebar-foreground/45 transition-all duration-200",
-            isOpen && "rotate-180 text-sidebar-foreground/60"
+            "w-3.5 h-3.5 transition-all duration-300",
+            isOpen ? "rotate-180" : "rotate-0",
+            isOpen ? "text-sidebar-foreground/70" : "text-sidebar-foreground/25 group-hover:text-sidebar-foreground/45"
           )}
         />
       </button>
@@ -384,16 +397,22 @@ const CollapsibleSection = ({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            {/* (2) Guia vertical conectando pai e subitens */}
-            <div className="space-y-0.5 mt-1 ml-3 pl-3 border-l border-white/[0.08]">
-              {section.items.map((item) =>
+            <div className="space-y-0.5 mt-1.5 pt-1 px-0.5">
+              {section.items.map((item, idx) =>
                 item.children ? (
                   <SidebarSubItem key={item.title} item={item} isCollapsed={false} />
                 ) : (
-                  <SidebarLink key={item.title} item={item} isCollapsed={false} onNavigate={onNavigate} />
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, delay: idx * 0.03, ease: "easeOut" }}
+                  >
+                    <SidebarLink item={item} isCollapsed={false} onNavigate={onNavigate} />
+                  </motion.div>
                 )
               )}
             </div>
