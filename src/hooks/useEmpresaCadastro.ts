@@ -320,6 +320,7 @@ export function useEmpresaCadastro(empresaId?: string | null) {
     error,
     upsertCadastro,
     toggleAtivoEmpresa,
+    deleteEmpresa,
     obrigacoes,
     obrigacoesLoading,
     createObrigacao,
