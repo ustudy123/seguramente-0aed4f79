@@ -214,16 +214,12 @@ export default function Empresa() {
   const handleDeleteEmpresa = async (id: string, nome: string) => {
     const { confirm } = await import('@/components/ui/confirm-dialog');
     const ok = await confirm({
-      title: 'Excluir empresa permanentemente?',
-      description:
-        `Você está prestes a excluir a empresa "${nome}". Esta ação é IRREVERSÍVEL e removerá ` +
-        `todos os vínculos de usuários e obrigações associadas. ` +
-        `\n\nA exclusão só será concluída se não houver colaboradores ou prestadores de serviço cadastrados nesta empresa, ` +
-        `e somente o Administrador Master pode realizar esta operação. ` +
-        `\n\nTem absoluta certeza que deseja prosseguir?`,
-      confirmLabel: 'Sim, excluir empresa',
+      title: 'Excluir Empresa?',
+      description: `Tem certeza que deseja excluir a empresa "${nome}"?`,
+      confirmLabel: 'Excluir',
       cancelLabel: 'Cancelar',
       variant: 'destructive',
+      requiredWord: 'EXCLUIR',
     });
     if (!ok) return;
     deleteEmpresa.mutate(id, {
