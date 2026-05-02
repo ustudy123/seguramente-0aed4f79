@@ -144,7 +144,7 @@ const sections = (e: Empresa, empresas: Empresa[], grupos: any[], obligacoes: Em
         ['PCD Obrigatória', fmt(e.pcd_obrigatoria)],
         ['PCD Quantidade Exigida', fmt(e.pcd_quantidade_exigida)],
         ['PCD Quantidade Atual', fmt(e.pcd_quantidade_atual)],
-        ['PCD Percentual Exigido', fmt(e.pcd_percentual_exigido) ? `${fmt(e.pcd_percentual_exigido)}%` : '—'],
+        ['PCD Percentual Exigido', e.pcd_percentual_exigido ? `${e.pcd_percentual_exigido}%` : '—'],
         ['Aprendiz Quantidade Mínima', fmt(e.aprendiz_quantidade_minima)],
         ['Aprendiz Quantidade Máxima', fmt(e.aprendiz_quantidade_maxima)],
         ['Aprendiz Quantidade Atual', fmt(e.aprendiz_quantidade_atual)],
