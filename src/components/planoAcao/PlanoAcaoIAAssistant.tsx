@@ -216,9 +216,6 @@ export function PlanoAcaoIAAssistant({
                 </Button>
               </div>
 
-              {/* Bloco 5W2H/GUT removido */}
-              {false && (
-
               {/* Input Forms */}
               {activeTab === "sugerir" && (
                 <div className="space-y-3">
