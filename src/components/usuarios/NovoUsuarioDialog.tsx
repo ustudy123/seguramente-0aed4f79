@@ -90,9 +90,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   const [buscandoCpf, setBuscandoCpf] = useState(false);
   const [colaboradorEncontrado, setColaboradorEncontrado] = useState<ColaboradorEncontrado | null>(null);
   const [dadosReaproveitados, setDadosReaproveitados] = useState(false);
-  // Modo de vínculo: empresa individual ou grupo econômico
-  const [modoVinculo, setModoVinculo] = useState<"empresa" | "grupo">("empresa");
+  // Modo de vínculo: empresa individual, múltiplas empresas, ou grupo econômico
+  const [modoVinculo, setModoVinculo] = useState<"empresa" | "multiplas" | "grupo">("empresa");
   const [grupoSelecionadoId, setGrupoSelecionadoId] = useState<string>("");
+  const [empresasSelecionadas, setEmpresasSelecionadas] = useState<string[]>([]);
+  const [empresaPopoverOpen, setEmpresaPopoverOpen] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState<boolean>(true);
   const [emailErro, setEmailErro] = useState<string | null>(null);
 
