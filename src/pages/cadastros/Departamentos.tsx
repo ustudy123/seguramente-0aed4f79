@@ -33,7 +33,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useDepartamentos, Departamento } from "@/hooks/useCadastros";
+import { useDepartamentos, useFiliais, Departamento } from "@/hooks/useCadastros";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncCadastros } from "@/hooks/useSyncCadastros";
 
 export default function Departamentos() {
