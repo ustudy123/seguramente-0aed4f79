@@ -109,12 +109,17 @@ export function EmpresaImportExport() {
         return;
       }
 
+      if (!tenantId) {
+        toast.error('Tenant não identificado. Recarregue a página.');
+        return;
+      }
+
       const errors: string[] = [];
       let success = 0;
 
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
-        
+
         // Pega os valores considerando que podem ou não ter o asterisco
         const rawRazaoSocial = row['Razão Social*'] || row['Razão Social'];
         const rawCnpj = row['CNPJ*'] || row['CNPJ'];
@@ -125,34 +130,72 @@ export function EmpresaImportExport() {
         }
 
         const razaoSocial = rawRazaoSocial?.toString().trim();
-        const cnpj = rawCnpj?.toString().trim();
+        const cnpjRaw = rawCnpj?.toString().trim();
 
         if (!razaoSocial) {
           errors.push(`Linha ${i + 2}: Razão Social é obrigatória`);
           continue;
         }
-        if (!cnpj) {
+        if (!cnpjRaw) {
           errors.push(`Linha ${i + 2}: CNPJ é obrigatório`);
           continue;
         }
 
-        // For now, just count - actual import would create tenants
+        const cnpj = cnpjRaw.replace(/\D/g, '');
+        const grauRiscoRaw = row['Grau de Risco (1-4)']?.toString().trim();
+        const grauRisco = grauRiscoRaw ? parseInt(grauRiscoRaw, 10) : null;
+        const totalColabRaw = row['Total Colaboradores']?.toString().trim();
+        const totalColab = totalColabRaw ? parseInt(totalColabRaw, 10) : null;
+
+        const payload: Record<string, unknown> = {
+          tenant_id: tenantId,
+          tipo_pessoa: 'pj',
+          razao_social: razaoSocial,
+          nome_fantasia: row['Nome Fantasia']?.toString().trim() || null,
+          cnpj,
+          inscricao_estadual: row['Inscrição Estadual']?.toString().trim() || null,
+          telefone: row['Telefone']?.toString().trim() || null,
+          email: row['E-mail']?.toString().trim() || null,
+          cep: row['CEP']?.toString().trim().replace(/\D/g, '') || null,
+          endereco: row['Endereço']?.toString().trim() || null,
+          numero: row['Número']?.toString().trim() || null,
+          bairro: row['Bairro']?.toString().trim() || null,
+          cidade: row['Cidade']?.toString().trim() || null,
+          estado: row['Estado']?.toString().trim().toUpperCase() || null,
+          cnae_principal: row['CNAE Principal']?.toString().trim() || null,
+          descricao_cnae: row['Descrição CNAE']?.toString().trim() || null,
+          grau_risco: grauRisco && !isNaN(grauRisco) ? grauRisco : null,
+          total_colaboradores: totalColab && !isNaN(totalColab) ? totalColab : null,
+          jornada_padrao: row['Jornada Padrão']?.toString().trim() || null,
+          atualizado_por: user?.email || null,
+        };
+
+        const { error } = await supabase
+          .from('empresa_cadastro')
+          .insert(payload as any);
+
+        if (error) {
+          errors.push(`Linha ${i + 2} (${razaoSocial}): ${error.message}`);
+          continue;
+        }
+
         success++;
       }
 
       setImportResult({ success, errors });
 
       if (success > 0) {
-        toast.success(`${success} empresa(s) validada(s) com sucesso!`);
+        toast.success(`${success} empresa(s) importada(s) com sucesso!`);
+        queryClient.invalidateQueries({ queryKey: ['empresa_cadastro_list'] });
       }
       if (errors.length > 0) {
         toast.warning(`${errors.length} erro(s) encontrado(s)`);
       }
-
-      toast.info(
-        'Importação em modo de validação. Para criar as empresas, use o painel de Super Admin.'
-      );
+      if (success === 0 && errors.length === 0) {
+        toast.info('Nenhuma linha válida encontrada na planilha.');
+      }
     } catch (err) {
+      console.error('Erro na importação:', err);
       toast.error('Erro ao ler o arquivo');
     } finally {
       setImporting(false);
