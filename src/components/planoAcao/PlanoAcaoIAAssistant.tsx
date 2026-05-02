@@ -214,26 +214,6 @@ export function PlanoAcaoIAAssistant({
                   <Lightbulb className="h-4 w-4 mr-1" />
                   Sugerir Ações
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => { setActiveTab("5w2h"); limpar(); }}
-                  className={activeTab === "5w2h" 
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700" 
-                    : "bg-white/5 text-indigo-200 border border-white/10 hover:bg-white/10 hover:text-white"}
-                >
-                  <FileText className="h-4 w-4 mr-1" />
-                  Gerar 5W2H
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => { setActiveTab("priorizar"); limpar(); }}
-                  className={activeTab === "priorizar" 
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700" 
-                    : "bg-white/5 text-indigo-200 border border-white/10 hover:bg-white/10 hover:text-white"}
-                >
-                  <BarChart3 className="h-4 w-4 mr-1" />
-                  Priorizar (GUT)
-                </Button>
               </div>
 
               {/* Input Forms */}
@@ -257,32 +237,8 @@ export function PlanoAcaoIAAssistant({
                 </div>
               )}
 
-              {(activeTab === "5w2h" || activeTab === "priorizar") && (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Título da ação"
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value)}
-                    className="w-full px-3 py-2 rounded-md text-sm bg-white/5 border border-white/10 text-white placeholder:text-indigo-300/40 focus:border-indigo-400/50 focus:outline-none focus:ring-1 focus:ring-indigo-400/20"
-                  />
-                  <Textarea
-                    placeholder="Descrição da ação..."
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value)}
-                    rows={2}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-indigo-300/40 focus:border-indigo-400/50 focus:ring-indigo-400/20"
-                  />
-                  <Button 
-                    onClick={activeTab === "5w2h" ? handleGerar5W2H : handlePriorizar} 
-                    disabled={isLoading || !titulo.trim()}
-                    className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700 disabled:opacity-40"
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                    {activeTab === "5w2h" ? "Gerar 5W2H" : "Calcular GUT"}
-                  </Button>
-                </div>
-              )}
+
+
 
               {/* Results */}
               {resultado && (
