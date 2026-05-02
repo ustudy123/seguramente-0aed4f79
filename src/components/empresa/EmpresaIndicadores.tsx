@@ -32,7 +32,12 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
               step="0.0001"
               placeholder="Ex: 1.0000"
               value={data.fap_atual ?? ''}
-              onChange={(e) => onChange({ fap_atual: parseFloat(e.target.value) || null })}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '') return onChange({ fap_atual: null });
+                const n = parseFloat(v);
+                onChange({ fap_atual: isNaN(n) ? null : n });
+              }}
             />
           </div>
           <div className="space-y-2">
