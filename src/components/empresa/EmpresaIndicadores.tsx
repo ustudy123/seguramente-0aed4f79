@@ -25,50 +25,49 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
           <h3 className="font-semibold">FAP — Fator Acidentário de Prevenção</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>FAP Atual</Label>
             <Input
               type="number"
               step="0.0001"
-              placeholder="Ex: 1.0000"
+              min="0.5"
+              max="2"
+              placeholder="Ex: 1.0000 (varia de 0,5000 a 2,0000)"
               value={data.fap_atual ?? ''}
               onChange={(e) => {
                 const v = e.target.value;
-                if (v === '') return onChange({ fap_atual: null });
+                if (v === '') return onChange({ fap_atual: null, fap_classificacao: null });
                 const n = parseFloat(v);
-                onChange({ fap_atual: isNaN(n) ? null : n });
+                if (isNaN(n)) return onChange({ fap_atual: null, fap_classificacao: null });
+                const classificacao = n === 1 ? 'Neutro' : n < 1 ? 'Bônus' : 'Malus';
+                onChange({ fap_atual: n, fap_classificacao: classificacao });
               }}
             />
-          </div>
-          <div className="space-y-2">
-            <Label>Classificação</Label>
-            <Input
-              placeholder="Ex: Bônus / Malus"
-              value={data.fap_classificacao || ''}
-              onChange={(e) => onChange({ fap_classificacao: e.target.value })}
-            />
+            <p className="text-xs text-muted-foreground">
+              Faixa legal: 0,5000 a 2,0000 (Lei nº 10.666/2003)
+            </p>
           </div>
           <div className="flex items-end">
             {fapValor > 0 && (
               <Badge
-                variant={fapValor > 1.5 ? 'destructive' : fapValor < 1.0 ? 'default' : 'secondary'}
+                variant={fapValor > 1 ? 'destructive' : fapValor < 1 ? 'default' : 'secondary'}
               >
-                {fapValor > 1.5
-                  ? 'FAP Elevado — Atenção'
-                  : fapValor < 1.0
-                  ? 'FAP Favorável'
-                  : 'FAP Neutro'}
+                {fapValor > 1
+                  ? `FAP Malus (${fapValor.toFixed(4)}) — RAT majorado`
+                  : fapValor < 1
+                  ? `FAP Bônus (${fapValor.toFixed(4)}) — RAT reduzido`
+                  : 'FAP Neutro (1,0000) — RAT original'}
               </Badge>
             )}
           </div>
         </div>
 
-        {fapValor > 1.5 && (
+        {fapValor > 1 && (
           <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg">
             <AlertTriangle className="w-4 h-4 text-destructive" />
             <span className="text-sm text-destructive font-medium">
-              FAP elevado indica alta acidentalidade — considere criar um plano de redução
+              FAP em faixa Malus (&gt; 1,0000) — RAT majorado. Avalie plano de redução de acidentalidade.
             </span>
           </div>
         )}
