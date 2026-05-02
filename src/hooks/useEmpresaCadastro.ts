@@ -217,7 +217,6 @@ export function useEmpresaCadastro(empresaId?: string | null) {
           gravidade: obrigacao.criticidade === 'critica' ? 5 : obrigacao.criticidade === 'alta' ? 4 : 3,
           urgencia: obrigacao.criticidade === 'critica' ? 5 : obrigacao.criticidade === 'alta' ? 4 : 3,
           tendencia: 3,
-          pontuacao_gut: 0,
           prazo: obrigacao.prazo_sugerido,
           criado_por: user?.id,
           criado_por_nome: user?.email,
