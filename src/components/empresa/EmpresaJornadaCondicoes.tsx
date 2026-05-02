@@ -2,8 +2,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, HardHat, AlertTriangle } from 'lucide-react';
 import type { EmpresaCadastro } from '@/types/empresa';
+
+const JORNADAS_PADRONIZADAS = [
+  '44h semanais — 8h diárias (seg a sex) + 4h sábado',
+  '40h semanais — 8h diárias (seg a sex)',
+  '36h semanais — Escala 12x36',
+  '36h semanais — Turno ininterrupto de revezamento (CF art. 7º XIV)',
+  '30h semanais — 6h diárias (seg a sex)',
+  '25h semanais — Tempo parcial (CLT art. 58-A)',
+  '220h mensais — Jornada mensal padrão',
+  '180h mensais — Jornada mensal reduzida',
+  'Escala 5x1 (5 dias trabalhados x 1 folga)',
+  'Escala 5x2 (5 dias trabalhados x 2 folgas)',
+  'Escala 6x1 (6 dias trabalhados x 1 folga)',
+  'Escala 4x2 (4 dias trabalhados x 2 folgas)',
+  'Escala 12x36 (12h trabalhadas x 36h descanso)',
+  'Escala 24x48 (24h trabalhadas x 48h descanso)',
+  'Escala 24x72 (24h trabalhadas x 72h descanso)',
+  'Jornada 4x3 (4 dias x 3 folgas)',
+  'Banco de Horas (CLT art. 59 §2º)',
+  'Jornada 12x36 (vigilância/saúde)',
+  'Outro / Personalizada',
+];
 
 interface Props {
   data: Partial<EmpresaCadastro>;
@@ -33,11 +56,37 @@ export function EmpresaJornadaCondicoes({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Jornada Padrão</Label>
-            <Input
-              placeholder="Ex: 44h semanais, 8h diárias"
-              value={data.jornada_padrao || ''}
-              onChange={(e) => onChange({ jornada_padrao: e.target.value })}
-            />
+            <Select
+              value={
+                JORNADAS_PADRONIZADAS.includes(data.jornada_padrao || '')
+                  ? data.jornada_padrao || ''
+                  : data.jornada_padrao
+                  ? 'Outro / Personalizada'
+                  : ''
+              }
+              onValueChange={(v) =>
+                onChange({ jornada_padrao: v === 'Outro / Personalizada' ? '' : v })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a jornada/escala" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                {JORNADAS_PADRONIZADAS.map((j) => (
+                  <SelectItem key={j} value={j}>
+                    {j}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(!JORNADAS_PADRONIZADAS.includes(data.jornada_padrao || '') ||
+              data.jornada_padrao === '') && (
+              <Input
+                placeholder="Descreva a jornada personalizada (ex.: 6x2 com sábado alternado)"
+                value={data.jornada_padrao || ''}
+                onChange={(e) => onChange({ jornada_padrao: e.target.value })}
+              />
+            )}
           </div>
         </div>
 
