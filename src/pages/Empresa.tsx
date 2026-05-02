@@ -137,23 +137,23 @@ export default function Empresa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cadastro, viewMode, cliente, user, profile, selectedEmpresaId]);
 
-  // Auto-save em localStorage com debounce a cada alteração
+  // Auto-save no banco de dados com debounce
   useEffect(() => {
-    if (!draftKey) return;
     if (viewMode === 'list') return;
     if (!hasChanges) return;
-    const t = setTimeout(() => {
+
+    const t = setTimeout(async () => {
       try {
-        localStorage.setItem(
-          draftKey,
-          JSON.stringify({ data: formData, savedAt: new Date().toISOString() })
-        );
-      } catch {
-        /* quota / serialization issues — ignore */
+        await upsertCadastro.mutateAsync(formData);
+        setHasChanges(false);
+        // Não limpamos o rascunho local aqui para evitar perda em caso de oscilação de rede,
+        // mas o estado principal agora está sincronizado com o banco.
+      } catch (error) {
+        console.error('Erro no salvamento automático:', error);
       }
-    }, 600);
+    }, 1500); // Debounce de 1.5s para não sobrecarregar o banco
     return () => clearTimeout(t);
-  }, [formData, hasChanges, draftKey, viewMode]);
+  }, [formData, hasChanges, viewMode, upsertCadastro]);
 
   const clearDraft = () => {
     if (draftKey) {
