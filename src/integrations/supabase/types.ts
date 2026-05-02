@@ -20153,6 +20153,7 @@ export type Database = {
         Returns: undefined
       }
       converter_banco_horas_vencido: { Args: never; Returns: undefined }
+      delete_empresa_segura: { Args: { _empresa_id: string }; Returns: Json }
       epi_atualizar_estoque_local_otimista: {
         Args: {
           p_estoque_local_id: string

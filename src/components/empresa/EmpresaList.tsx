@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
+import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmpresaImportExport } from './EmpresaImportExport';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { exportEmpresasToXlsx, exportEmpresasToPdf } from '@/utils/empresaExport';
 import type { EmpresaCadastro } from '@/types/empresa';
 import type { GrupoEconomico } from '@/hooks/useGruposEconomicos';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface EmpresaListProps {
   empresas: (EmpresaCadastro & { ativo: boolean })[];
@@ -21,11 +22,14 @@ interface EmpresaListProps {
   onEdit: (id: string) => void;
   onNew: () => void;
   onToggleAtivo: (id: string, ativo: boolean) => void;
+  onDelete?: (id: string, nome: string) => void;
   grupos?: GrupoEconomico[];
   obrigacoes?: any[];
 }
 
-export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+  const { hasRole, isSuperAdmin } = useAuthContext() as any;
+  const podeExcluir = isSuperAdmin || hasRole?.('owner');
   const [search, setSearch] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroUF, setFiltroUF] = useState<string>('todos');
@@ -446,6 +450,17 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                           <ToggleLeft className="w-5 h-5" />
                         )}
                       </Button>
+                      {podeExcluir && onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(emp.id, emp.razao_social || emp.nome_fantasia || 'sem nome')}
+                          title="Excluir empresa (apenas Administrador Master, sem colaboradores/prestadores)"
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
