@@ -142,10 +142,22 @@ export default function MeuPerfil() {
                   {profile?.nome_completo ? getInitials(profile.nome_completo) : "U"}
                 </AvatarFallback>
               </Avatar>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleAvatarUpload(f);
+                }}
+              />
               <button
-                className="absolute bottom-0 right-0 bg-card border border-border rounded-full p-1.5 shadow-sm hover:bg-muted transition-colors"
-                title="Alterar foto (em breve)"
-                onClick={() => toast.info("Upload de foto em breve")}
+                type="button"
+                disabled={uploadingAvatar}
+                className="absolute bottom-0 right-0 bg-card border border-border rounded-full p-1.5 shadow-sm hover:bg-muted transition-colors disabled:opacity-50"
+                title={uploadingAvatar ? "Enviando..." : "Alterar foto"}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <Camera className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
