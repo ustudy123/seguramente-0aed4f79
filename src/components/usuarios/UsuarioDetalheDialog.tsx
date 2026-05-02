@@ -897,9 +897,21 @@ export function UsuarioDetalheDialog({ usuario, open, onOpenChange }: Props) {
                           onChange={e => setNovoContexto(e.target.value)} placeholder="Ex: SST, RH…" />
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button size="sm" onClick={handleAddVinculo} disabled={createVinculo.isPending}>
                         {createVinculo.isPending && <Loader2 className="w-3 h-3 mr-1 animate-spin" />} Salvar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={handleVincularTodas}
+                        disabled={createVinculo.isPending}
+                        title="Vincula este usuário a todas as empresas do tenant com o papel selecionado"
+                      >
+                        {createVinculo.isPending
+                          ? <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          : <Building2 className="w-3.5 h-3.5 mr-1" />}
+                        Vincular todas as empresas ({empresas.length})
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setAddingVinculo(false)}>Cancelar</Button>
                     </div>
