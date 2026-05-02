@@ -47,9 +47,9 @@ const EXAMPLE_ROW = [
 
 const TEMPLATE_INSTRUCTIONS = [
   ['Campo', 'Obrigatório', 'Formato', 'Exemplo'],
-  ['Razão Social', 'Sim', 'Texto', 'Empresa ABC Ltda'],
+  ['Razão Social*', 'Sim', 'Texto', 'Empresa ABC Ltda'],
   ['Nome Fantasia', 'Não', 'Texto', 'ABC'],
-  ['CNPJ', 'Sim', '00.000.000/0000-00', '12.345.678/0001-90'],
+  ['CNPJ*', 'Sim', '00.000.000/0000-00', '12.345.678/0001-90'],
   ['Inscrição Estadual', 'Não', 'Texto', '123456789'],
   ['Telefone', 'Não', '(00) 0000-0000', '(11) 3000-0000'],
   ['E-mail', 'Não', 'E-mail válido', 'contato@empresa.com'],
