@@ -303,7 +303,6 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       }
 
       if (modoVinculo === "empresa") {
-        // Vínculo com empresa individual
         await createVinculo.mutateAsync({
           usuario_id: usuario.id,
           empresa_id: data.empresa_id!,
@@ -312,8 +311,18 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           status: "ativo",
           data_inicio: new Date().toISOString().split("T")[0],
         });
+      } else if (modoVinculo === "multiplas") {
+        for (const empId of empresasSelecionadas) {
+          await createVinculo.mutateAsync({
+            usuario_id: usuario.id,
+            empresa_id: empId,
+            tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
+            contexto_operacional: data.contexto_operacional,
+            status: "ativo",
+            data_inicio: new Date().toISOString().split("T")[0],
+          });
+        }
       } else {
-        // Vínculo com todas as empresas do grupo
         const empresasDoGrupo = empresas.filter((e: any) => e.grupo_economico_id === grupoSelecionadoId);
         if (empresasDoGrupo.length === 0) {
           toast.error("Nenhuma empresa encontrada neste grupo econômico");
