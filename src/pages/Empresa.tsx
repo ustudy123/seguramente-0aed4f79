@@ -59,14 +59,36 @@ export default function Empresa() {
 
   const [formData, setFormData] = useState<Partial<EmpresaCadastro>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [rascunhoRestaurado, setRascunhoRestaurado] = useState(false);
+
+  // Chave do rascunho — isolada por usuário e por empresa (ou "new")
+  const draftKey = user?.id
+    ? `empresa-draft:${user.id}:${selectedEmpresaId || 'new'}`
+    : null;
 
   useEffect(() => {
     const docClean = cliente?.cnpj?.replace(/\D/g, '') || '';
     const onboardingIsCnpj = docClean.length === 14;
     const onboardingIsCpf = docClean.length === 11;
 
+    // Tenta restaurar rascunho local primeiro
+    const tryLoadDraft = (): Partial<EmpresaCadastro> | null => {
+      if (!draftKey) return null;
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.data) {
+          return parsed.data as Partial<EmpresaCadastro>;
+        }
+      } catch {
+        /* ignore */
+      }
+      return null;
+    };
+
     if (viewMode === 'edit' && cadastro) {
-      setFormData({
+      const base: Partial<EmpresaCadastro> = {
         ...cadastro,
         razao_social: cadastro.razao_social || cliente?.nome_empresa || '',
         cnpj: cadastro.cnpj || (onboardingIsCnpj ? cliente?.cnpj : '') || '',
@@ -76,29 +98,68 @@ export default function Empresa() {
         total_colaboradores: cadastro.total_colaboradores || cliente?.quantidade_colaboradores || 0,
         tipo_pessoa: cadastro.tipo_pessoa || (onboardingIsCpf ? 'pf' : 'pj'),
         endereco: cadastro.endereco || cliente?.endereco || '',
-      });
+      };
+      const draft = tryLoadDraft();
+      if (draft && !rascunhoRestaurado) {
+        setFormData({ ...base, ...draft });
+        setRascunhoRestaurado(true);
+        toast.info('Rascunho local restaurado — continue de onde parou.');
+      } else {
+        setFormData(base);
+      }
     }
-    
+
     if (viewMode === 'new') {
-      if (cliente) {
-        setFormData({
-          razao_social: cliente.nome_empresa || '',
-          cnpj: onboardingIsCnpj ? cliente.cnpj : '',
-          cpf: onboardingIsCpf ? cliente.cnpj : '',
-          email: cliente.poc_email || user?.email || '',
-          telefone: cliente.poc_telefone || profile?.telefone || '',
-          total_colaboradores: cliente.quantidade_colaboradores || 0,
-          tipo_pessoa: onboardingIsCpf ? 'pf' : 'pj',
-          endereco: cliente.endereco || '',
-        });
-        } else {
-          setFormData({
+      const base: Partial<EmpresaCadastro> = cliente
+        ? {
+            razao_social: cliente.nome_empresa || '',
+            cnpj: onboardingIsCnpj ? cliente.cnpj : '',
+            cpf: onboardingIsCpf ? cliente.cnpj : '',
+            email: cliente.poc_email || user?.email || '',
+            telefone: cliente.poc_telefone || profile?.telefone || '',
+            total_colaboradores: cliente.quantidade_colaboradores || 0,
+            tipo_pessoa: onboardingIsCpf ? 'pf' : 'pj',
+            endereco: cliente.endereco || '',
+          }
+        : {
             email: user?.email || '',
             telefone: profile?.telefone || '',
-          });
-        }
+          };
+      const draft = tryLoadDraft();
+      if (draft && !rascunhoRestaurado) {
+        setFormData({ ...base, ...draft });
+        setRascunhoRestaurado(true);
+        toast.info('Rascunho local restaurado — continue de onde parou.');
+      } else {
+        setFormData(base);
+      }
     }
-  }, [cadastro, viewMode, cliente, user, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cadastro, viewMode, cliente, user, profile, selectedEmpresaId]);
+
+  // Auto-save em localStorage com debounce a cada alteração
+  useEffect(() => {
+    if (!draftKey) return;
+    if (viewMode === 'list') return;
+    if (!hasChanges) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({ data: formData, savedAt: new Date().toISOString() })
+        );
+      } catch {
+        /* quota / serialization issues — ignore */
+      }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [formData, hasChanges, draftKey, viewMode]);
+
+  const clearDraft = () => {
+    if (draftKey) {
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+    }
+  };
 
   const handleChange = (updates: Partial<EmpresaCadastro>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -107,7 +168,9 @@ export default function Empresa() {
 
   const handleSave = async () => {
     await upsertCadastro.mutateAsync(formData);
+    clearDraft();
     setHasChanges(false);
+    setRascunhoRestaurado(false);
     setViewMode('list');
     setSelectedEmpresaId(null);
   };
@@ -116,6 +179,7 @@ export default function Empresa() {
     setSelectedEmpresaId(id);
     setViewMode('edit');
     setHasChanges(false);
+    setRascunhoRestaurado(false);
   };
 
   const handleNew = () => {
@@ -123,6 +187,7 @@ export default function Empresa() {
     setFormData({});
     setViewMode('new');
     setHasChanges(false);
+    setRascunhoRestaurado(false);
   };
 
   const handleToggleAtivo = (id: string, ativo: boolean) => {
@@ -132,10 +197,26 @@ export default function Empresa() {
     });
   };
 
+  const handleDescartarRascunho = () => {
+    clearDraft();
+    setRascunhoRestaurado(false);
+    setHasChanges(false);
+    toast.success('Rascunho descartado.');
+    // força recarregar dados base
+    if (viewMode === 'edit' && selectedEmpresaId) {
+      const id = selectedEmpresaId;
+      setSelectedEmpresaId(null);
+      setTimeout(() => setSelectedEmpresaId(id), 0);
+    } else {
+      setFormData({});
+    }
+  };
+
   const handleBack = () => {
     setViewMode('list');
     setSelectedEmpresaId(null);
     setHasChanges(false);
+    setRascunhoRestaurado(false);
   };
 
   // LIST VIEW
@@ -222,6 +303,20 @@ export default function Empresa() {
           )}
           Salvar
         </Button>
+      </div>
+
+      {/* Aviso de auto-save / rascunho */}
+      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          💾 As alterações são salvas automaticamente neste navegador como <strong>rascunho</strong>.
+          Você pode fechar a aba e continuar depois — clique em <strong>Salvar</strong> para gravar definitivamente.
+          {rascunhoRestaurado && <span className="ml-1 text-primary font-medium">(rascunho restaurado)</span>}
+        </p>
+        {rascunhoRestaurado && (
+          <Button variant="ghost" size="sm" onClick={handleDescartarRascunho}>
+            Descartar rascunho
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
