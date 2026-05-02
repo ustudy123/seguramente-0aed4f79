@@ -682,6 +682,16 @@ export function ImportPlanilhaModal({
                     <CheckCircle className="w-10 h-10 text-success" />
                   </div>
                   <h3 className="text-lg font-semibold">Importação Concluída!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Foram processados {resultado.colaboradoresInseridos + resultado.colaboradoresAtualizados + resultado.erros.length} registros.
+                    <br />
+                    <span className="font-medium text-success">
+                      {resultado.colaboradoresInseridos + resultado.colaboradoresAtualizados} registros aceitos
+                    </span>
+                    {resultado.erros.length > 0 && (
+                      <> e <span className="font-medium text-destructive">{resultado.erros.length} rejeitados</span></>
+                    )}.
+                  </p>
                 </div>
 
                 {/* Estatísticas */}
