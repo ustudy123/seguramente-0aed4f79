@@ -530,7 +530,7 @@ export const AppSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: AppSide
       initial={false}
       animate={{ width: isCollapsed ? 72 : 264 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-screen gradient-sidebar border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-40"
+      className="h-screen gradient-sidebar flex flex-col fixed left-0 top-0 z-40 relative overflow-hidden before:content-[''] before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-transparent before:via-cyan-400/20 before:to-transparent"
     >
       {/* Logo */}
       <div className="p-4 flex items-center justify-center border-b border-white/[0.08] bg-white rounded-b-xl">
