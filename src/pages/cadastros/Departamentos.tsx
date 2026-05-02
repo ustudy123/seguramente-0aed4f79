@@ -173,13 +173,13 @@ export default function Departamentos() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={5} className="text-center py-8">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : filteredDepartamentos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={5} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <Building2 className="w-8 h-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
