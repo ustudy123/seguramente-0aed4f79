@@ -195,6 +195,9 @@ export default function Departamentos() {
                 <TableRow key={departamento.id}>
                   <TableCell className="font-medium">{departamento.nome}</TableCell>
                   <TableCell className="text-muted-foreground">
+                    {getFilialNome(departamento.filial_id)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {departamento.descricao || "-"}
                   </TableCell>
                   <TableCell>
