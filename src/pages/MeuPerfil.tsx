@@ -131,14 +131,20 @@ export default function MeuPerfil() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <User className="h-6 w-6 text-primary" />
-          Meu Perfil
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Gerencie suas informações pessoais e segurança da conta
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <User className="h-6 w-6 text-primary" />
+            Meu Perfil
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Gerencie suas informações pessoais e segurança da conta
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
       </div>
 
       {/* Avatar + info básica */}
