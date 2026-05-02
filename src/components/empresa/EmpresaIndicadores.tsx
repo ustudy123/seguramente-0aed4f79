@@ -20,6 +20,157 @@ interface Props {
 
 export function EmpresaIndicadores({ data, onChange }: Props) {
   const fapValor = data.fap_atual ?? 0;
+  const tacList = data.tac_detalhes || [];
+  const ativos = tacList.filter((t) => !t.arquivado);
+  const arquivados = tacList.filter((t) => t.arquivado);
+
+  // Edição via dialog (rascunho local — só persiste no onChange ao salvar)
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [draft, setDraft] = useState<TacDetalhe | null>(null);
+
+  const openEditor = (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    setEditIdx(idx);
+    setDraft({ ...item });
+  };
+
+  const closeEditor = () => {
+    setEditIdx(null);
+    setDraft(null);
+  };
+
+  const saveDraft = () => {
+    if (editIdx === null || !draft) return;
+    if (!draft.numero?.trim()) {
+      toast.error('Informe o Nº / Identificador do TAC.');
+      return;
+    }
+    const next = tacList.map((t, i) => (i === editIdx ? draft : t));
+    onChange({ tac_detalhes: next });
+    toast.success('TAC atualizado.');
+    closeEditor();
+  };
+
+  const handleArquivar = async (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    const ok = await confirm({
+      title: 'Arquivar este TAC?',
+      description: `O TAC "${item.numero || 'sem identificador'}" será movido para a aba "Arquivados". Você poderá restaurá-lo depois.`,
+      confirmLabel: 'Arquivar',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    const next = tacList.map((t, i) =>
+      i === idx
+        ? { ...t, arquivado: true, arquivado_em: new Date().toISOString(), status: 'Arquivado' }
+        : t
+    );
+    onChange({ tac_detalhes: next });
+    toast.success('TAC arquivado.');
+  };
+
+  const handleRestaurar = (idx: number) => {
+    const next = tacList.map((t, i) =>
+      i === idx
+        ? { ...t, arquivado: false, arquivado_em: undefined, status: 'Em cumprimento' }
+        : t
+    );
+    onChange({ tac_detalhes: next });
+    toast.success('TAC restaurado para "Ativos".');
+  };
+
+  const handleExcluirDefinitivo = async (idx: number) => {
+    const item = tacList[idx];
+    if (!item) return;
+    const ok = await confirm({
+      title: '⚠️ Excluir definitivamente?',
+      description: `Esta ação é IRREVERSÍVEL. O TAC "${item.numero || 'sem identificador'}" será removido permanentemente do histórico. Tem certeza que quer excluir?`,
+      confirmLabel: 'Sim, excluir definitivamente',
+      cancelLabel: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    onChange({ tac_detalhes: tacList.filter((_, i) => i !== idx) });
+    toast.success('TAC excluído definitivamente.');
+  };
+
+  const renderTacRow = (tac: TacDetalhe, globalIdx: number, archived: boolean) => {
+    const resumo = [tac.orgao_emissor, tac.status].filter(Boolean).join(' • ');
+    return (
+      <div
+        key={globalIdx}
+        className="flex items-center justify-between gap-2 border rounded-md bg-background px-3 py-2.5"
+      >
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Badge variant="outline" className="font-mono shrink-0">
+            TAC #{globalIdx + 1}
+          </Badge>
+          <span className="text-sm font-medium truncate">
+            {tac.numero || 'Sem identificador'}
+          </span>
+          {resumo && (
+            <span className="text-xs text-muted-foreground truncate hidden md:inline">
+              • {resumo}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {!archived ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => openEditor(globalIdx)}
+                className="h-8 gap-1"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleArquivar(globalIdx)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Arquivar"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRestaurar(globalIdx)}
+                className="h-8 gap-1"
+              >
+                <ArchiveRestore className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Restaurar</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleExcluirDefinitivo(globalIdx)}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Excluir definitivamente"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+
+  const fapValor = data.fap_atual ?? 0;
 
   return (
     <div className="space-y-8">
