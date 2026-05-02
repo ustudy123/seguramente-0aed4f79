@@ -52,7 +52,7 @@ export default function Estrategia() {
             ) : (
               <>
                 <Compass className="w-7 h-7 text-primary" />
-                Estratégia & Governança
+                Planejamento Estratégico
               </>
             )}
           </h1>
