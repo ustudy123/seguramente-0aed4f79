@@ -95,9 +95,9 @@ export function EmpresaImportExport() {
         if (cell.v != null) cell.v = String(cell.v);
       }
     }
-    // Define formato de texto para toda a coluna C
+    // Define largura para a coluna C
     wsData['!cols'] = wsData['!cols'] || [];
-    wsData['!cols'][2] = { wch: 22, z: '@' };
+    wsData['!cols'][2] = { wch: 22 };
 
     XLSX.utils.book_append_sheet(wb, wsData, 'Dados');
 
