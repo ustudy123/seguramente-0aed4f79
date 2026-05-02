@@ -30,6 +30,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
   const [filtroGrauRisco, setFiltroGrauRisco] = useState<string>('todos');
   const [filtroGrupo, setFiltroGrupo] = useState<string>('todos');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importOpen, setImportOpen] = useState(false);
 
   // Stats
   const stats = useMemo(() => {
