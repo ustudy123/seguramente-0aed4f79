@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2, Edit } from 'lucide-react';
 import type { EmpresaCadastro, TacDetalhe } from '@/types/empresa';
 
 interface Props {
