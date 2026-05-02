@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, TrendingUp, FileWarning, Plus, Trash2, Edit } from 'lucide-react';
 import type { EmpresaCadastro, TacDetalhe } from '@/types/empresa';
@@ -188,11 +189,24 @@ export function EmpresaIndicadores({ data, onChange }: Props) {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Status</Label>
-                        <Input
-                          placeholder="Ex.: Em cumprimento"
+                        <Select
                           value={tac.status || ''}
-                          onChange={(e) => updateAt({ status: e.target.value })}
-                        />
+                          onValueChange={(v) => updateAt({ status: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Em cumprimento">Em cumprimento</SelectItem>
+                            <SelectItem value="Em negociação">Em negociação</SelectItem>
+                            <SelectItem value="Pendente de assinatura">Pendente de assinatura</SelectItem>
+                            <SelectItem value="Em atraso">Em atraso</SelectItem>
+                            <SelectItem value="Descumprido">Descumprido</SelectItem>
+                            <SelectItem value="Suspenso">Suspenso</SelectItem>
+                            <SelectItem value="Cumprido / Encerrado">Cumprido / Encerrado</SelectItem>
+                            <SelectItem value="Arquivado">Arquivado</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
