@@ -439,15 +439,6 @@ export default function Empresa() {
             </CardContent>
           </TabsContent>
 
-          <TabsContent value="importar" className="mt-0">
-            <CardHeader>
-              <CardTitle className="text-lg">Importação de Empresas</CardTitle>
-              <CardDescription>Importe empresas via Excel/CSV ou baixe o modelo</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmpresaImportExport />
-            </CardContent>
-          </TabsContent>
         </Card>
         {/* Bottom navigation */}
         <div className="flex items-center justify-between pt-2">
