@@ -214,6 +214,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         toast.error(firstError?.message || "Preencha todos os campos obrigatórios");
         return;
       }
+    } else if (modoVinculo === "multiplas") {
+      if (empresasSelecionadas.length === 0) {
+        toast.error("Selecione ao menos uma empresa");
+        return;
+      }
     } else {
       if (!grupoSelecionadoId) {
         toast.error("Selecione um grupo econômico");
