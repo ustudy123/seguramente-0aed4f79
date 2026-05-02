@@ -6,9 +6,9 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 const TEMPLATE_COLUMNS = [
-  'Razão Social',
+  'Razão Social*',
   'Nome Fantasia',
-  'CNPJ',
+  'CNPJ*',
   'Inscrição Estadual',
   'Telefone',
   'E-mail',
@@ -23,6 +23,26 @@ const TEMPLATE_COLUMNS = [
   'Grau de Risco (1-4)',
   'Total Colaboradores',
   'Jornada Padrão',
+];
+
+const EXAMPLE_ROW = [
+  'Empresa Exemplo Ltda (EXEMPLO - PODE APAGAR)',
+  'Exemplo',
+  '00.000.000/0000-00',
+  '123456789',
+  '(11) 99999-9999',
+  'exemplo@empresa.com',
+  '01234-567',
+  'Rua Exemplo',
+  '123',
+  'Centro',
+  'São Paulo',
+  'SP',
+  '4120-4/00',
+  'Construção de edifícios',
+  '3',
+  '10',
+  '44h semanais',
 ];
 
 const TEMPLATE_INSTRUCTIONS = [
