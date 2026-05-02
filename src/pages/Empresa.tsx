@@ -325,7 +325,10 @@ export default function Empresa() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EmpresaObrigacoesTab cadastro={viewMode === 'edit' ? cadastro : null} />
+              <EmpresaObrigacoesTab 
+                cadastro={viewMode === 'edit' ? cadastro : null} 
+                onTabChange={setActiveTab}
+              />
             </CardContent>
           </TabsContent>
 
