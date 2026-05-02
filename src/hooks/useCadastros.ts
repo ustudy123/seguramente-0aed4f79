@@ -11,6 +11,7 @@ export interface Departamento {
   nome: string;
   descricao: string | null;
   responsavel_id: string | null;
+  filial_id: string | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;
