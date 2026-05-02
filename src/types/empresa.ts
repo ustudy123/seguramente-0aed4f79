@@ -138,6 +138,7 @@ export interface Turno {
 export interface EmpresaObrigacao {
   id: string;
   tenant_id: string;
+  empresa_id: string | null;
   categoria: string;
   subcategoria: string | null;
   titulo: string;
