@@ -130,7 +130,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
       return;
     }
     try {
-      exportEmpresasToPdf(filtered);
+      exportEmpresasToPdf(filtered, grupos, obrigacoes);
       toast.success(`${filtered.length} empresa(s) exportada(s) em PDF!`);
     } catch (err) {
       console.error(err);
