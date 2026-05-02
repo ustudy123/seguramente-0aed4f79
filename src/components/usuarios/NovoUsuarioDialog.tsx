@@ -11,7 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck, Building2, Layers } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, UserCheck, Search, ShieldCheck, Building2, Layers, Check, X, ListChecks } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUsuarios, TIPO_USUARIO_LABELS, UsuarioTipo, calcularQualidade } from "@/hooks/useUsuarios";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,9 +90,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
   const [buscandoCpf, setBuscandoCpf] = useState(false);
   const [colaboradorEncontrado, setColaboradorEncontrado] = useState<ColaboradorEncontrado | null>(null);
   const [dadosReaproveitados, setDadosReaproveitados] = useState(false);
-  // Modo de vínculo: empresa individual ou grupo econômico
-  const [modoVinculo, setModoVinculo] = useState<"empresa" | "grupo">("empresa");
+  // Modo de vínculo: empresa individual, múltiplas empresas, ou grupo econômico
+  const [modoVinculo, setModoVinculo] = useState<"empresa" | "multiplas" | "grupo">("empresa");
   const [grupoSelecionadoId, setGrupoSelecionadoId] = useState<string>("");
+  const [empresasSelecionadas, setEmpresasSelecionadas] = useState<string[]>([]);
+  const [empresaPopoverOpen, setEmpresaPopoverOpen] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState<boolean>(true);
   const [emailErro, setEmailErro] = useState<string | null>(null);
 
@@ -210,6 +214,11 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
         toast.error(firstError?.message || "Preencha todos os campos obrigatórios");
         return;
       }
+    } else if (modoVinculo === "multiplas") {
+      if (empresasSelecionadas.length === 0) {
+        toast.error("Selecione ao menos uma empresa");
+        return;
+      }
     } else {
       if (!grupoSelecionadoId) {
         toast.error("Selecione um grupo econômico");
@@ -294,7 +303,6 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
       }
 
       if (modoVinculo === "empresa") {
-        // Vínculo com empresa individual
         await createVinculo.mutateAsync({
           usuario_id: usuario.id,
           empresa_id: data.empresa_id!,
@@ -303,8 +311,18 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
           status: "ativo",
           data_inicio: new Date().toISOString().split("T")[0],
         });
+      } else if (modoVinculo === "multiplas") {
+        for (const empId of empresasSelecionadas) {
+          await createVinculo.mutateAsync({
+            usuario_id: usuario.id,
+            empresa_id: empId,
+            tipo_vinculo: data.tipo_vinculo as UsuarioTipo,
+            contexto_operacional: data.contexto_operacional,
+            status: "ativo",
+            data_inicio: new Date().toISOString().split("T")[0],
+          });
+        }
       } else {
-        // Vínculo com todas as empresas do grupo
         const empresasDoGrupo = empresas.filter((e: any) => e.grupo_economico_id === grupoSelecionadoId);
         if (empresasDoGrupo.length === 0) {
           toast.error("Nenhuma empresa encontrada neste grupo econômico");
@@ -355,6 +373,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     setDadosReaproveitados(false);
     setModoVinculo("empresa");
     setGrupoSelecionadoId("");
+    setEmpresasSelecionadas([]);
     onOpenChange(false);
   }
 
@@ -367,6 +386,7 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
     setDadosReaproveitados(false);
     setModoVinculo("empresa");
     setGrupoSelecionadoId("");
+    setEmpresasSelecionadas([]);
     onOpenChange(false);
   }
 
@@ -583,30 +603,42 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                   {/* Toggle: empresa ou grupo */}
                   <div className="sm:col-span-2 space-y-1.5">
                     <Label>Tipo de Vínculo *</Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <button
                         type="button"
-                        onClick={() => { setModoVinculo("empresa"); setGrupoSelecionadoId(""); }}
-                        className={`flex items-center gap-2 justify-center p-2.5 rounded-lg border text-sm font-medium transition-all ${
+                        onClick={() => { setModoVinculo("empresa"); setGrupoSelecionadoId(""); setEmpresasSelecionadas([]); }}
+                        className={`flex items-center gap-1.5 justify-center p-2.5 rounded-lg border text-xs font-medium transition-all ${
                           modoVinculo === "empresa"
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
                         }`}
                       >
                         <Building2 className="w-4 h-4" />
-                        Empresa específica
+                        Uma empresa
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setModoVinculo("grupo"); setValue("empresa_id", ""); }}
-                        className={`flex items-center gap-2 justify-center p-2.5 rounded-lg border text-sm font-medium transition-all ${
+                        onClick={() => { setModoVinculo("multiplas"); setValue("empresa_id", ""); setGrupoSelecionadoId(""); }}
+                        className={`flex items-center gap-1.5 justify-center p-2.5 rounded-lg border text-xs font-medium transition-all ${
+                          modoVinculo === "multiplas"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <ListChecks className="w-4 h-4" />
+                        Múltiplas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setModoVinculo("grupo"); setValue("empresa_id", ""); setEmpresasSelecionadas([]); }}
+                        className={`flex items-center gap-1.5 justify-center p-2.5 rounded-lg border text-xs font-medium transition-all ${
                           modoVinculo === "grupo"
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border bg-muted/30 text-muted-foreground hover:border-primary/40"
                         }`}
                       >
                         <Layers className="w-4 h-4" />
-                        Grupo econômico
+                        Grupo
                       </button>
                     </div>
                   </div>
@@ -645,6 +677,121 @@ export function NovoUsuarioDialog({ open, onOpenChange }: Props) {
                         </SelectContent>
                       </Select>
                       {errors.empresa_id && <p className="text-xs text-destructive">{errors.empresa_id.message}</p>}
+                    </div>
+                  )}
+
+                  {/* Múltiplas empresas (busca por nome/CNPJ) */}
+                  {modoVinculo === "multiplas" && (
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Label>Empresas para vincular *</Label>
+                      <Popover open={empresaPopoverOpen} onOpenChange={setEmpresaPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between font-normal"
+                          >
+                            <span className="truncate">
+                              {empresasSelecionadas.length === 0
+                                ? "Buscar por nome ou CNPJ..."
+                                : `${empresasSelecionadas.length} empresa(s) selecionada(s)`}
+                            </span>
+                            <Search className="w-4 h-4 opacity-50 shrink-0" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                          <Command
+                            filter={(value, search) => {
+                              // value contém "razao|fantasia|cnpj"
+                              const term = search.toLowerCase().replace(/\D/g, "");
+                              const text = value.toLowerCase();
+                              if (text.includes(search.toLowerCase())) return 1;
+                              if (term && text.replace(/\D/g, "").includes(term)) return 1;
+                              return 0;
+                            }}
+                          >
+                            <CommandInput placeholder="Pesquisar nome ou CNPJ..." />
+                            <CommandList className="max-h-64">
+                              <CommandEmpty>Nenhuma empresa encontrada.</CommandEmpty>
+                              <CommandGroup>
+                                {empresas.map((e: any) => {
+                                  const checked = empresasSelecionadas.includes(e.id);
+                                  const cnpjFmt = e.cnpj
+                                    ? e.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")
+                                    : "";
+                                  return (
+                                    <CommandItem
+                                      key={e.id}
+                                      value={`${e.razao_social || ""}|${e.nome_fantasia || ""}|${e.cnpj || ""}`}
+                                      onSelect={() => {
+                                        setEmpresasSelecionadas(prev =>
+                                          prev.includes(e.id) ? prev.filter(x => x !== e.id) : [...prev, e.id]
+                                        );
+                                      }}
+                                      className="flex items-start gap-2"
+                                    >
+                                      <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${checked ? "bg-primary border-primary" : "border-input"}`}>
+                                        {checked && <Check className="w-3 h-3 text-primary-foreground" />}
+                                      </div>
+                                      <div className="flex flex-col gap-0.5 min-w-0">
+                                        <span className="font-medium leading-tight truncate">
+                                          {e.razao_social}
+                                          {e.nome_fantasia && e.nome_fantasia !== e.razao_social && (
+                                            <span className="text-muted-foreground ml-1.5 font-normal">({e.nome_fantasia})</span>
+                                          )}
+                                        </span>
+                                        {cnpjFmt && (
+                                          <span className="text-xs text-muted-foreground leading-tight">CNPJ: {cnpjFmt}</span>
+                                        )}
+                                      </div>
+                                    </CommandItem>
+                                  );
+                                })}
+                              </CommandGroup>
+                            </CommandList>
+                            <div className="flex items-center justify-between gap-2 border-t p-2">
+                              <button
+                                type="button"
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                                onClick={() => setEmpresasSelecionadas(empresas.map((e: any) => e.id))}
+                              >
+                                Selecionar todas
+                              </button>
+                              <button
+                                type="button"
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                                onClick={() => setEmpresasSelecionadas([])}
+                              >
+                                Limpar
+                              </button>
+                            </div>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {empresasSelecionadas.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {empresasSelecionadas.slice(0, 6).map(id => {
+                            const emp = empresas.find((e: any) => e.id === id);
+                            if (!emp) return null;
+                            return (
+                              <Badge key={id} variant="secondary" className="gap-1 pr-1">
+                                <span className="truncate max-w-[180px]">{emp.razao_social || emp.nome_fantasia}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setEmpresasSelecionadas(prev => prev.filter(x => x !== id))}
+                                  className="rounded hover:bg-muted-foreground/20 p-0.5"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                          {empresasSelecionadas.length > 6 && (
+                            <Badge variant="outline">+{empresasSelecionadas.length - 6}</Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
