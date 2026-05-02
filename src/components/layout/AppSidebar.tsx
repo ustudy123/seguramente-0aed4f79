@@ -94,6 +94,7 @@ const menuSections: MenuSection[] = [
       { title: "Colaboradores", icon: Users, path: "/colaboradores" },
       { title: "Organograma", icon: Users, path: "/estrategia?tab=organograma" },
       { title: "Cultura", icon: Heart, path: "/estrategia?tab=cultura" },
+      { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" },
       { title: "Rede de Parceiros", icon: Store, path: "/marketplace" },
     ],
   },
@@ -117,7 +118,6 @@ const menuSections: MenuSection[] = [
       { title: "Ergonomia", icon: Activity, path: "/ergonomia" },
       { title: "Psicossocial NR-01", icon: Brain, path: "/psicossocial" },
       { title: "EPIs", icon: Shield, path: "/epis" },
-      { title: "Terceiros & SST", icon: HardHat, path: "/terceiros" },
     ],
   },
   {
