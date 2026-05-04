@@ -314,6 +314,35 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Contrato Social / Prestação de Serviço</Label>
+            <div 
+              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={(e) => setContractFile(e.target.files?.[0] || null)}
+              />
+              {contractFile ? (
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <FileText className="w-5 h-5" />
+                  <span className="text-sm font-medium">{contractFile.name}</span>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setContractFile(null); }}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <Upload className="w-6 h-6" />
+                  <span className="text-xs">Clique para anexar o arquivo do contrato</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div>
             <Label>Observações</Label>
             <Textarea value={form.observacoes || ""} onChange={(e) => set("observacoes", e.target.value)} rows={2} />
@@ -321,8 +350,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.razao_social || !form.cnpj || isPending}>
-              {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            <Button onClick={handleSubmit} disabled={!form.razao_social || !form.cnpj || isPending || uploadingContract}>
+              {isPending || uploadingContract ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               {initial ? "Salvar" : "Cadastrar"}
             </Button>
           </div>
