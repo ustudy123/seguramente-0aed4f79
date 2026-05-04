@@ -90,6 +90,8 @@ const Documentos = () => {
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
+  const [auditSearchTerm, setAuditSearchTerm] = useState("");
+  const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
   const [expandAllSignal, setExpandAllSignal] = useState({ expand: false, key: 0 });
   const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
