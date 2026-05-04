@@ -272,12 +272,12 @@ const BOREOUT_TEMPLATES: FatorTemplate[] = [
 
 function buildFatores(
   templates: FatorTemplate[],
-  dimensionMap: Record<string, string>,
+  dimensionMap: Record<string, DimensionMatcher>,
   radarData: RadarDimensao[] | undefined,
 ): FatorConfig[] {
   return templates.map(t => ({
     ...t,
-    valor: resolveRadarScore(radarData, dimensionMap[t.key] || '', t.fallback),
+    valor: resolveRadarScore(radarData, dimensionMap[t.key], t.fallback),
   }));
 }
 
