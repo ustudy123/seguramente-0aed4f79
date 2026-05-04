@@ -158,15 +158,9 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   )}
                 </Button>
               </div>
-              {!!data.id && !!data.cnpj ? (
-                <p className="text-xs text-muted-foreground">
-                  CNPJ definido no cadastro inicial e não pode ser alterado. Use a lupa para buscar/atualizar endereço e demais dados na Receita Federal.
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Clique na lupa para preencher automaticamente
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Clique na lupa para buscar/atualizar dados na Receita Federal.
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Inscrição Estadual</Label>
