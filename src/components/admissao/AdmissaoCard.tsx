@@ -37,6 +37,7 @@ interface AdmissaoCardProps {
 }
 
 export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
+  const [showChecklist, setShowChecklist] = useState(false);
   const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
 
   const documentosEnviados = documentos.filter(d => d.status !== 'pendente').length;
