@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileText,
-  Activity
+  Activity,
+  Flame,
+  Battery
 } from "lucide-react";
 import {
   Dialog,
