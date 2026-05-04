@@ -215,6 +215,19 @@ export function PsicossocialDashboard() {
                   </p>
                 </div>
               )}
+              
+              {ipsConsolidado != null && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4 w-full gap-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+                  onClick={() => setShowDashboardAvancado(true)}
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Análise Detalhada
+                </Button>
+              )}
+
               <div className="mt-3 w-full grid grid-cols-5 gap-0.5 text-xs">
                 {[
                   { label: '0-34', nome: 'Crítico', color: 'bg-red-500' },
