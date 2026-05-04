@@ -20,6 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DocumentUpload } from './DocumentUpload';
 import { WorkflowTimeline } from './WorkflowTimeline';
+import { DocumentChecklistModal } from './DocumentChecklistModal';
+import { useState } from 'react';
 import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
