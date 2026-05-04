@@ -11,7 +11,8 @@ import {
   DollarSign,
   ArrowLeft,
   Edit,
-  Trash2
+  Trash2,
+  ClipboardCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
