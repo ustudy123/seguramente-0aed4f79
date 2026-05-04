@@ -60,6 +60,7 @@ const INDICES_INFO = [
 export function PsicossocialDashboard() {
   const [showAssistente, setShowAssistente] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [campanhaParaEditar, setCampanhaParaEditar] = useState<CampanhaPsicossocial | undefined>();
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
   const [bannerResultados, setBannerResultados] = useState<CampanhaPsicossocial | null>(null);
@@ -69,8 +70,15 @@ export function PsicossocialDashboard() {
 
   const handleNovaCampanha = () => {
     setInstrumentoPreSelecionado(undefined);
+    setCampanhaParaEditar(undefined);
     setShowForm(false);
     setShowAssistente(true);
+  };
+
+  const handleEditarCampanha = (campanha: CampanhaPsicossocial) => {
+    setCampanhaParaEditar(campanha);
+    setInstrumentoPreSelecionado(campanha.instrumento);
+    setShowForm(true);
   };
 
   const handleAssistenteSelect = (instrumento: string, _manual: boolean) => {
@@ -126,6 +134,7 @@ export function PsicossocialDashboard() {
         <CampanhaForm
           open={showForm}
           onOpenChange={setShowForm}
+          campanhaParaEditar={campanhaParaEditar}
           instrumentoSugerido={instrumentoPreSelecionado}
         />
       </div>
@@ -356,7 +365,11 @@ export function PsicossocialDashboard() {
 
           {/* Tab: Campanhas (agora primeiro) */}
           <TabsContent value="campanhas" className="mt-4">
-            <CampanhaList campanhas={campanhas} onNovaCampanha={handleNovaCampanha} />
+            <CampanhaList 
+              campanhas={campanhas} 
+              onNovaCampanha={handleNovaCampanha} 
+              onEditarCampanha={handleEditarCampanha} 
+            />
           </TabsContent>
 
           {/* Tab: Burnout & Boreout */}

@@ -123,8 +123,8 @@ interface CampanhaFormProps {
   instrumentoSugerido?: string;
 }
 
-export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumentoSugerido }: CampanhaFormProps) {
-  const { criarCampanha, campanhas } = usePsicossocial();
+export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaParaEditar, instrumentoSugerido }: CampanhaFormProps) {
+  const { criarCampanha, editarCampanha, campanhas } = usePsicossocial();
   const { empresaAtivaId } = useEmpresaAtiva();
   const { user } = useAuthContext();
   const { departamentos } = useDepartamentos();
@@ -133,9 +133,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
   // Situações de trabalho (pares Setor+Função) vinculadas à campanha
-  const [situacoes, setSituacoes] = useState<SituacaoTrabalhoCampanha[]>(
-    campanhaAnterior?.situacoes_trabalho ?? []
-  );
+  const [situacoes, setSituacoes] = useState<SituacaoTrabalhoCampanha[]>([]);
   const [novoSetor, setNovoSetor] = useState('');
   const [novaFuncao, setNovaFuncao] = useState('');
   const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
@@ -145,22 +143,69 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const funcaoInputRef = useRef<HTMLInputElement | null>(null);
 
   const isReaplicacao = !!campanhaAnterior;
+  const isEdicao = !!campanhaParaEditar;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: isReaplicacao ? `Reaplicação - ${campanhaAnterior.nome}` : "",
+      nome: "",
       descricao: "",
-      tipo: isReaplicacao ? 'extraordinaria' : 'regular',
-      instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
+      tipo: 'regular',
+      instrumento: 'sipro',
       periodicidade: 'trimestral',
       data_inicio: "",
       data_fim: "",
-      politica_uso_dados: campanhaAnterior?.politica_uso_dados ?? POLITICA_USO_DADOS_PADRAO,
-      blocos_dinamicos: campanhaAnterior?.blocos_dinamicos ?? [],
-      campanha_anterior_id: campanhaAnterior?.id,
+      politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
+      blocos_dinamicos: [],
     },
   });
+
+  // Atualizar valores quando entrar em modo edição ou reaplicação
+  useEffect(() => {
+    if (open) {
+      if (isEdicao && campanhaParaEditar) {
+        form.reset({
+          nome: campanhaParaEditar.nome,
+          descricao: campanhaParaEditar.descricao || "",
+          tipo: campanhaParaEditar.tipo,
+          instrumento: campanhaParaEditar.instrumento || 'sipro',
+          periodicidade: campanhaParaEditar.periodicidade,
+          data_inicio: campanhaParaEditar.data_inicio,
+          data_fim: campanhaParaEditar.data_fim,
+          politica_uso_dados: campanhaParaEditar.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
+          blocos_dinamicos: campanhaParaEditar.blocos_dinamicos || [],
+        });
+        setSituacoes(campanhaParaEditar.situacoes_trabalho ?? []);
+      } else if (isReaplicacao && campanhaAnterior) {
+        form.reset({
+          nome: `Reaplicação - ${campanhaAnterior.nome}`,
+          descricao: "",
+          tipo: 'extraordinaria',
+          instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
+          periodicidade: 'trimestral',
+          data_inicio: "",
+          data_fim: "",
+          politica_uso_dados: campanhaAnterior.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
+          blocos_dinamicos: campanhaAnterior.blocos_dinamicos || [],
+          campanha_anterior_id: campanhaAnterior.id,
+        });
+        setSituacoes(campanhaAnterior.situacoes_trabalho ?? []);
+      } else {
+        form.reset({
+          nome: "",
+          descricao: "",
+          tipo: 'regular',
+          instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
+          periodicidade: 'trimestral',
+          data_inicio: "",
+          data_fim: "",
+          politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
+          blocos_dinamicos: [],
+        });
+        setSituacoes([]);
+      }
+    }
+  }, [open, isEdicao, isReaplicacao, campanhaParaEditar, campanhaAnterior, instrumentoSugerido, form]);
 
   const tipo = form.watch("tipo");
   const instrumento = form.watch("instrumento");
