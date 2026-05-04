@@ -357,6 +357,55 @@ export function usePsicossocial() {
     },
   });
 
+  // Editar campanha existente
+  const editarCampanha = useMutation({
+    mutationFn: async ({ id, dados }: { id: string; dados: Partial<NovaCampanha> }): Promise<CampanhaPsicossocial> => {
+      if (!tenantId) throw new Error("Tenant não identificado");
+
+      const { data, error } = await supabase
+        .from("questionario_psicossocial_campanhas")
+        .update({
+          nome: dados.nome,
+          descricao: dados.descricao,
+          tipo: dados.tipo,
+          instrumento: dados.instrumento,
+          periodicidade: dados.periodicidade,
+          data_inicio: dados.data_inicio,
+          data_fim: dados.data_fim,
+          anonimo: dados.anonimo,
+          permite_identificacao_voluntaria: dados.permite_identificacao_voluntaria,
+          mensagem_institucional: dados.mensagem_institucional,
+          politica_uso_dados: dados.politica_uso_dados,
+          departamentos_ids: dados.departamentos_ids,
+          cargos_ids: dados.cargos_ids,
+          blocos_dinamicos: dados.blocos_dinamicos,
+          situacoes_trabalho: dados.situacoes_trabalho as any,
+          motivo_extraordinaria: dados.motivo_extraordinaria,
+          evento_gatilho_tipo: dados.evento_gatilho_tipo,
+          evento_gatilho_id: dados.evento_gatilho_id,
+          campanha_anterior_id: dados.campanha_anterior_id,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return {
+        ...data,
+        radar_data: (data as any).radar_data as unknown as RadarDimensao[] | undefined,
+        situacoes_trabalho: (data as any).situacoes_trabalho as unknown as import("@/types/psicossocial").SituacaoTrabalhoCampanha[] | undefined,
+      } as unknown as CampanhaPsicossocial;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["psicossocial-campanhas"] });
+      toast.success("Campanha atualizada com sucesso!");
+    },
+    onError: (error) => {
+      toast.error(`Erro ao atualizar campanha: ${error.message}`);
+    },
+  });
+
   // ==================== CONVITES ====================
 
   // Buscar convites de uma campanha
@@ -673,6 +722,7 @@ export function usePsicossocial() {
     isLoadingCampanhas,
     refetchCampanhas,
     criarCampanha,
+    editarCampanha,
     atualizarStatusCampanha,
 
     // Convites

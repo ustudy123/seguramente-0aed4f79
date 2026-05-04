@@ -12,6 +12,7 @@ import {
   UserPlus,
   Database,
   Loader2,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,10 @@ const MINIMO_ANONIMATO = 5;
 interface CampanhaListProps {
   campanhas: CampanhaPsicossocial[];
   onNovaCampanha: () => void;
+  onEditarCampanha: (campanha: CampanhaPsicossocial) => void;
 }
 
-export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
+export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: CampanhaListProps) {
   const [selectedCampanha, setSelectedCampanha] = useState<CampanhaPsicossocial | null>(null);
   const [showDistribuicao, setShowDistribuicao] = useState(false);
   const [showResultados, setShowResultados] = useState(false);
@@ -132,6 +134,10 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
     setExpandedCampanha(prev => prev === campanha.id ? null : campanha.id);
   };
 
+  const handleEditar = (campanha: CampanhaPsicossocial) => {
+    onEditarCampanha(campanha);
+  };
+
   if (campanhas.length === 0) {
     return (
       <Card>
@@ -168,6 +174,7 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
                 onDistribuir={() => handleDistribuir(campanha)}
                 onVerResultados={() => handleVerResultados(campanha)}
                 onGerenciarParticipacao={() => handleGerenciarParticipacao(campanha)}
+                onEditar={() => handleEditar(campanha)}
                 isExpanded={expandedCampanha === campanha.id}
                 isExportandoGRO={exportandoGRO === campanha.id}
               />
@@ -221,11 +228,12 @@ interface CampanhaCardProps {
   onDistribuir: () => void;
   onVerResultados: () => void;
   onGerenciarParticipacao: () => void;
+  onEditar: () => void;
   isExpanded: boolean;
   isExportandoGRO?: boolean;
 }
 
-function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, isExpanded, isExportandoGRO }: CampanhaCardProps) {
+function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResultados, onGerenciarParticipacao, onEditar, isExpanded, isExportandoGRO }: CampanhaCardProps) {
   const { useEstatisticasCampanha } = usePsicossocial();
   const { data: stats } = useEstatisticasCampanha(campanha.id);
 
@@ -336,6 +344,12 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {(campanha.status === 'rascunho' || (campanha.status === 'ativa' && (campanha.total_respostas || 0) === 0)) && (
+              <DropdownMenuItem id={`menu-editar-campanha-${campanha.id}`} onClick={onEditar}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Editar Campanha
+              </DropdownMenuItem>
+            )}
             {campanha.status === 'rascunho' && (
               <DropdownMenuItem id={`menu-ativar-campanha-${campanha.id}`} onClick={onAtivar}>
                 <Play className="h-4 w-4 mr-2" />

@@ -120,11 +120,12 @@ interface CampanhaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campanhaAnterior?: CampanhaPsicossocial;
+  campanhaParaEditar?: CampanhaPsicossocial;
   instrumentoSugerido?: string;
 }
 
-export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumentoSugerido }: CampanhaFormProps) {
-  const { criarCampanha, campanhas } = usePsicossocial();
+export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaParaEditar, instrumentoSugerido }: CampanhaFormProps) {
+  const { criarCampanha, editarCampanha, campanhas } = usePsicossocial();
   const { empresaAtivaId } = useEmpresaAtiva();
   const { user } = useAuthContext();
   const { departamentos } = useDepartamentos();
@@ -133,9 +134,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const [empresaDados, setEmpresaDados] = useState<EmpresaDados | null>(null);
   const [blocosAutoDetectados, setBlocosAutoDetectados] = useState<string[]>([]);
   // Situações de trabalho (pares Setor+Função) vinculadas à campanha
-  const [situacoes, setSituacoes] = useState<SituacaoTrabalhoCampanha[]>(
-    campanhaAnterior?.situacoes_trabalho ?? []
-  );
+  const [situacoes, setSituacoes] = useState<SituacaoTrabalhoCampanha[]>([]);
   const [novoSetor, setNovoSetor] = useState('');
   const [novaFuncao, setNovaFuncao] = useState('');
   const [setorPopoverOpen, setSetorPopoverOpen] = useState(false);
@@ -145,22 +144,69 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
   const funcaoInputRef = useRef<HTMLInputElement | null>(null);
 
   const isReaplicacao = !!campanhaAnterior;
+  const isEdicao = !!campanhaParaEditar;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: isReaplicacao ? `Reaplicação - ${campanhaAnterior.nome}` : "",
+      nome: "",
       descricao: "",
-      tipo: isReaplicacao ? 'extraordinaria' : 'regular',
-      instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
+      tipo: 'regular',
+      instrumento: 'sipro',
       periodicidade: 'trimestral',
       data_inicio: "",
       data_fim: "",
-      politica_uso_dados: campanhaAnterior?.politica_uso_dados ?? POLITICA_USO_DADOS_PADRAO,
-      blocos_dinamicos: campanhaAnterior?.blocos_dinamicos ?? [],
-      campanha_anterior_id: campanhaAnterior?.id,
+      politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
+      blocos_dinamicos: [],
     },
   });
+
+  // Atualizar valores quando entrar em modo edição ou reaplicação
+  useEffect(() => {
+    if (open) {
+      if (isEdicao && campanhaParaEditar) {
+        form.reset({
+          nome: campanhaParaEditar.nome,
+          descricao: campanhaParaEditar.descricao || "",
+          tipo: campanhaParaEditar.tipo,
+          instrumento: campanhaParaEditar.instrumento || 'sipro',
+          periodicidade: campanhaParaEditar.periodicidade,
+          data_inicio: campanhaParaEditar.data_inicio,
+          data_fim: campanhaParaEditar.data_fim,
+          politica_uso_dados: campanhaParaEditar.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
+          blocos_dinamicos: campanhaParaEditar.blocos_dinamicos || [],
+        });
+        setSituacoes(campanhaParaEditar.situacoes_trabalho ?? []);
+      } else if (isReaplicacao && campanhaAnterior) {
+        form.reset({
+          nome: `Reaplicação - ${campanhaAnterior.nome}`,
+          descricao: "",
+          tipo: 'extraordinaria',
+          instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
+          periodicidade: 'trimestral',
+          data_inicio: "",
+          data_fim: "",
+          politica_uso_dados: campanhaAnterior.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
+          blocos_dinamicos: campanhaAnterior.blocos_dinamicos || [],
+          campanha_anterior_id: campanhaAnterior.id,
+        });
+        setSituacoes(campanhaAnterior.situacoes_trabalho ?? []);
+      } else {
+        form.reset({
+          nome: "",
+          descricao: "",
+          tipo: 'regular',
+          instrumento: (instrumentoSugerido as FormValues['instrumento']) ?? 'sipro',
+          periodicidade: 'trimestral',
+          data_inicio: "",
+          data_fim: "",
+          politica_uso_dados: POLITICA_USO_DADOS_PADRAO,
+          blocos_dinamicos: [],
+        });
+        setSituacoes([]);
+      }
+    }
+  }, [open, isEdicao, isReaplicacao, campanhaParaEditar, campanhaAnterior, instrumentoSugerido, form]);
 
   const tipo = form.watch("tipo");
   const instrumento = form.watch("instrumento");
@@ -279,24 +325,44 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
       return; // bloqueia submissão
     }
 
-    await criarCampanha.mutateAsync({
-      nome: data.nome,
-      descricao: data.descricao,
-      tipo: data.tipo,
-      instrumento: data.instrumento,
-      periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
-      data_inicio: data.data_inicio,
-      data_fim: data.data_fim,
-      anonimo: true,
-      permite_identificacao_voluntaria: false,
-      mensagem_institucional: undefined,
-      politica_uso_dados: data.politica_uso_dados,
-      blocos_dinamicos: data.blocos_dinamicos,
-      situacoes_trabalho: situacoes,
-      motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
-      evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
-      campanha_anterior_id: data.campanha_anterior_id,
-    });
+    if (isEdicao && campanhaParaEditar) {
+      await editarCampanha.mutateAsync({
+        id: campanhaParaEditar.id,
+        dados: {
+          nome: data.nome,
+          descricao: data.descricao,
+          tipo: data.tipo,
+          instrumento: data.instrumento,
+          periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
+          data_inicio: data.data_inicio,
+          data_fim: data.data_fim,
+          politica_uso_dados: data.politica_uso_dados,
+          blocos_dinamicos: data.blocos_dinamicos,
+          situacoes_trabalho: situacoes,
+          motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
+          evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
+        },
+      });
+    } else {
+      await criarCampanha.mutateAsync({
+        nome: data.nome,
+        descricao: data.descricao,
+        tipo: data.tipo,
+        instrumento: data.instrumento,
+        periodicidade: data.tipo === 'regular' ? data.periodicidade : undefined,
+        data_inicio: data.data_inicio,
+        data_fim: data.data_fim,
+        anonimo: true,
+        permite_identificacao_voluntaria: false,
+        mensagem_institucional: undefined,
+        politica_uso_dados: data.politica_uso_dados,
+        blocos_dinamicos: data.blocos_dinamicos,
+        situacoes_trabalho: situacoes,
+        motivo_extraordinaria: data.tipo === 'extraordinaria' ? data.motivo_extraordinaria : undefined,
+        evento_gatilho_tipo: data.tipo === 'extraordinaria' ? data.evento_gatilho_tipo : undefined,
+        campanha_anterior_id: data.campanha_anterior_id,
+      });
+    }
     form.reset();
     setSituacoes([]);
     setSituacaoError(null);
@@ -313,15 +379,19 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isReaplicacao ? (
+            {isEdicao ? (
+              <Brain className="h-5 w-5 text-blue-600" />
+            ) : isReaplicacao ? (
               <RefreshCw className="h-5 w-5 text-amber-600" />
             ) : (
               <Brain className="h-5 w-5 text-purple-600" />
             )}
-            {isReaplicacao ? 'Reaplicação Extraordinária' : 'Nova Campanha Psicossocial'}
+            {isEdicao ? 'Editar Campanha' : isReaplicacao ? 'Reaplicação Extraordinária' : 'Nova Campanha Psicossocial'}
           </DialogTitle>
           <DialogDescription>
-            {isReaplicacao
+            {isEdicao
+              ? 'Atualize as configurações da campanha atual'
+              : isReaplicacao
               ? 'Configure uma reaplicação controlada baseada na campanha anterior'
               : 'Configure uma nova campanha de avaliação de riscos psicossociais'
             }
@@ -401,7 +471,7 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, instrumento
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Tipo de Campanha */}
-            {!isReaplicacao && (
+            {!isReaplicacao && !isEdicao && (
               <FormField
                 control={form.control}
                 name="tipo"
