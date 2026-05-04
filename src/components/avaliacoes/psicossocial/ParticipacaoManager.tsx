@@ -99,6 +99,19 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     },
   });
 
+  // Total de respostas reais (inclui Link Geral anônimo)
+  const { data: totalRespostasReais = 0 } = useQuery({
+    queryKey: ["psicossocial-respostas-count", campanha.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("questionario_psicossocial_respostas")
+        .select("id", { count: "exact", head: true })
+        .eq("campanha_id", campanha.id);
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
   // Adicionar participante elegível
   const adicionarParticipante = useMutation({
     mutationFn: async (dados: typeof form) => {
@@ -168,10 +181,12 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     a.click();
   };
 
-  // Estatísticas
-  const total = participacoes.length;
-  const responderam = participacoes.filter(p => p.respondido).length;
-  const pendentes = total - responderam;
+  // Estatísticas — combina elegíveis individuais + respostas anônimas (Link Geral)
+  const elegiveis = participacoes.length;
+  const respondidosIndividuais = participacoes.filter(p => p.respondido).length;
+  const responderam = Math.max(respondidosIndividuais, totalRespostasReais);
+  const total = Math.max(elegiveis, responderam);
+  const pendentes = Math.max(0, elegiveis - respondidosIndividuais);
   const taxa = total > 0 ? Math.round((responderam / total) * 100) : 0;
   const MINIMO = 5;
 
@@ -195,7 +210,12 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <Users className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Elegíveis</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{total}</p>
+            <p className="text-2xl font-bold mt-1">{elegiveis}</p>
+            {totalRespostasReais > elegiveis && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                +{totalRespostasReais} via Link Geral (anônimo)
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
