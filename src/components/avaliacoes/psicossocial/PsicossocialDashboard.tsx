@@ -60,7 +60,8 @@ const INDICES_INFO = [
 
 export function PsicossocialDashboard() {
   const [showAssistente, setShowAssistente] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+   const [showForm, setShowForm] = useState(false);
+  const [showDashboardAvancado, setShowDashboardAvancado] = useState(false);
   const [campanhaParaEditar, setCampanhaParaEditar] = useState<CampanhaPsicossocial | undefined>();
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
