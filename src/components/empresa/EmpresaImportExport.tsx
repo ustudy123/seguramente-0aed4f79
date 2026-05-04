@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
-import { buscarCnpj, formatCnpj, validateCnpj } from '@/lib/brasilapi';
+import { buscarCnpj } from '@/lib/brasilapi';
+import { formatCnpj, validateCnpj } from '@/lib/cnpj';
 
 const TEMPLATE_COLUMNS = [
   'Razão Social*',
