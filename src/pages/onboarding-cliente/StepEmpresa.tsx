@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2, CheckCheck } from "lucide-react";
+import { Sparkles, Loader2, CheckCheck, Search } from "lucide-react";
+import { buscarCnpj, cleanCnpj, formatCnpj } from "@/lib/brasilapi";
 import type { Cliente } from "./types";
 
 export function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcluir: () => void }) {
