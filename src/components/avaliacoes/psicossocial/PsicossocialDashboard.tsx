@@ -79,7 +79,7 @@ export function PsicossocialDashboard() {
     console.log("Iniciando edição da campanha:", campanha.id);
     setCampanhaParaEditar(campanha);
     setInstrumentoPreSelecionado(campanha.instrumento);
-    setShowAssistente(false); // Garante que o assistente não abra
+    setShowAssistente(false); 
     setShowForm(true);
   };
 
