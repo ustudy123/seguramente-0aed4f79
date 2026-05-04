@@ -155,10 +155,16 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const inventario = useMemo((): InventarioItem[] => {
     if (campanhasValidas.length === 0) return [];
 
+    const campanhasParaProcessar = filtroCampanha === "todos" 
+      ? campanhasValidas 
+      : campanhasValidas.filter(c => c.id === filtroCampanha);
+
+    if (campanhasParaProcessar.length === 0) return [];
+
     // Agregar por subject — média ponderada pelo total_respostas
     const agregado: Record<string, { somaScore: number; pesoTotal: number; campanhas: number }> = {};
 
-    campanhasValidas.forEach(campanha => {
+    campanhasParaProcessar.forEach(campanha => {
       const peso = campanha.total_respostas ?? 1;
       const radar = campanha.radar_data as RadarDimensao[];
 
