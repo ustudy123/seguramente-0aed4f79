@@ -21,6 +21,7 @@ export default function Terceiros() {
   const [editing, setEditing] = useState<Terceiro | null>(null);
   const [selected, setSelected] = useState<Terceiro | null>(null);
   const [showGuia, setShowGuia] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const filtered = terceiros.filter(
     (t) =>
