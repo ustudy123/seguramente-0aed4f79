@@ -276,6 +276,12 @@ export function AdmissaoDetail({
           </div>
         </TabsContent>
       </Tabs>
+
+      <DocumentChecklistModal 
+        open={showChecklist} 
+        onOpenChange={setShowChecklist} 
+        admissao={admissao} 
+      />
     </motion.div>
   );
 }
