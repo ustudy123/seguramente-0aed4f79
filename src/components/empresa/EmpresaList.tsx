@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown, Trash2 } from 'lucide-react';
+import { formatCnpj } from '@/lib/cnpj';
+import { formatCpf } from '@/lib/cpf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmpresaImportExport } from './EmpresaImportExport';
 import { Button } from '@/components/ui/button';
@@ -389,7 +391,9 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                     </div>
                   </TableCell>
                   <TableCell className="text-sm font-mono">
-                    {emp.tipo_pessoa === 'pf' ? emp.cpf || '—' : emp.cnpj || '—'}
+                    {emp.tipo_pessoa === 'pf' 
+                      ? (emp.cpf ? formatCpf(emp.cpf) : '—') 
+                      : (emp.cnpj ? formatCnpj(emp.cnpj) : '—')}
                   </TableCell>
                   <TableCell>
                     <Badge variant={emp.tipo_unidade === 'matriz' ? 'default' : 'outline'} className="text-xs">
