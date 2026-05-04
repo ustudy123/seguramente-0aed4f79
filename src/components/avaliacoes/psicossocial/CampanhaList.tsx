@@ -291,7 +291,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
                 </div>
               )}
             </div>
-          ))}
+          )))}
         </CardContent>
       </Card>
 
