@@ -286,7 +286,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
         <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            {format(new Date(campanha.data_inicio), "dd/MM/yyyy", { locale: ptBR })} - {format(new Date(campanha.data_fim), "dd/MM/yyyy", { locale: ptBR })}
+            {format(addDays(new Date(campanha.data_inicio + 'T00:00:00'), 0), "dd/MM/yyyy", { locale: ptBR })} - {format(addDays(new Date(campanha.data_fim + 'T00:00:00'), 0), "dd/MM/yyyy", { locale: ptBR })}
           </span>
           {stats && (
             <span className="flex items-center gap-1">
