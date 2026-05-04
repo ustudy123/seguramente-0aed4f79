@@ -147,16 +147,7 @@ export function PsicossocialDashboard() {
     <TooltipProvider>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Brain className="h-6 w-6 text-purple-600" />
-              Gestão Psicossocial
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              NR-01 · NR-17 · ISO 45001 · ISO 45003 — Análise multidimensional baseada em evidências
-            </p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
           <div className="flex items-center gap-2">
             <Button id="btn-nova-campanha" onClick={handleNovaCampanha} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
               <Plus className="h-4 w-4" />
