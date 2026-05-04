@@ -105,19 +105,32 @@ interface Props {
 }
 
 export function IndicesDerivadosDashboard({ campanhas }: Props) {
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
+
+  const validas = useMemo(() => {
+    return campanhas.filter(
+      (c) => (c.total_respostas || 0) >= MINIMO_ANONIMATO
+    ).sort((a, b) => new Date(b.data_fim || b.created_at).getTime() - new Date(a.data_fim || a.created_at).getTime());
+  }, [campanhas]);
+
   const dados = useMemo(() => {
-    // Campanhas encerradas com respostas suficientes
-    const validas = campanhas.filter(
-      (c) => c.status === "encerrada" && (c.total_respostas || 0) >= MINIMO_ANONIMATO
-    );
     if (validas.length === 0) return null;
 
-    // Ordenar por data para pegar a mais recente e anterior
-    const ordenadas = [...validas].sort(
-      (a, b) => new Date(b.data_fim || b.created_at).getTime() - new Date(a.data_fim || a.created_at).getTime()
-    );
-    const atual = ordenadas[0];
-    const anterior = ordenadas.length > 1 ? ordenadas[1] : null;
+    let atual: CampanhaPsicossocial;
+    let anterior: CampanhaPsicossocial | null = null;
+
+    if (filtroCampanha === "recente") {
+      // Priorizar campanhas encerradas, senão pegar a mais recente
+      const encerradas = validas.filter(c => c.status === "encerrada");
+      atual = encerradas.length > 0 ? encerradas[0] : validas[0];
+      
+      const indexAtual = validas.findIndex(c => c.id === atual.id);
+      anterior = validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
+    } else {
+      atual = validas.find(c => c.id === filtroCampanha) || validas[0];
+      const indexAtual = validas.findIndex(c => c.id === atual.id);
+      anterior = validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
+    }
 
     return INDICES.map((idx) => {
       const scoreAtual = (atual[idx.campo] as number | null) ?? null;
