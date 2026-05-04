@@ -55,6 +55,9 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
   const [showResultados, setShowResultados] = useState(false);
   const [expandedCampanha, setExpandedCampanha] = useState<string | null>(null);
   const [exportandoGRO, setExportandoGRO] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [instrumentFilter, setInstrumentFilter] = useState<string>("todos");
 
   const { atualizarStatusCampanha } = usePsicossocial();
   const { importarDaCampanha } = useGRORiscos();
