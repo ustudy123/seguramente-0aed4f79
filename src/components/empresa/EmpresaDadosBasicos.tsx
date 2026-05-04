@@ -181,11 +181,6 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                 disabled={false}
                 className=""
               />
-              {!!data.id && !!data.cpf && (
-                <p className="text-xs text-muted-foreground">
-                  CPF informado no cadastro inicial. Não pode ser alterado.
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label>CEI</Label>
