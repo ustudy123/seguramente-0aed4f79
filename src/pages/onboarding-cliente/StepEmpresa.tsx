@@ -96,7 +96,28 @@ export function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcl
         </div>
         <div>
           <Label htmlFor="cnpj">CNPJ *</Label>
-          <Input id="cnpj" value={form.cnpj} onChange={e => setForm(f => ({ ...f, cnpj: e.target.value }))} className="mt-1" placeholder="00.000.000/0000-00" />
+          <div className="flex gap-2 mt-1">
+            <Input 
+              id="cnpj" 
+              value={form.cnpj} 
+              onChange={e => handleCnpjChange(e.target.value)} 
+              placeholder="00.000.000/0000-00" 
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleBuscarCnpj}
+              disabled={buscandoCnpj}
+              title="Buscar dados do CNPJ"
+            >
+              {buscandoCnpj ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
         <div>
           <Label htmlFor="cnae">CNAE</Label>
