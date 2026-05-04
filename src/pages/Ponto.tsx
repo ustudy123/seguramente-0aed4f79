@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, LogIn, LogOut, Coffee, Utensils,
   History, FileText, Shield, UserCheck, Wallet, BarChart3,
   Bell, Lock, FileDown, Settings, HardDrive, FileSpreadsheet, Scale,
-  MapPin, Loader2, Link2, HelpCircle,
+  MapPin, Loader2, Link2, HelpCircle, Search,
 } from "lucide-react";
 import { GuiaRapidoPonto } from "@/components/ponto/GuiaRapidoPonto";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,8 @@ const Ponto = () => {
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deptFilter, setDeptFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("dashboard");
   
   // Modals
@@ -116,9 +118,20 @@ const Ponto = () => {
   const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const handleToday = () => setSelectedDate(new Date());
 
-  const filteredPontos = pontosDiarios.filter(
-    (ponto) => statusFilter === "all" || ponto.status === statusFilter
-  );
+  const filteredPontos = pontosDiarios.filter((ponto) => {
+    const matchesStatus = statusFilter === "all" || ponto.status === statusFilter;
+    const matchesSearch = ponto.colaborador_nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         ponto.colaborador_cpf.includes(searchTerm);
+    
+    // Para filtrar por departamento, precisamos cruzar com a lista de colaboradores
+    const colab = colaboradores.find(c => c.id === ponto.colaborador_id);
+    const matchesDept = deptFilter === "all" || (colab && colab.departamento === deptFilter);
+
+    return matchesStatus && matchesSearch && matchesDept;
+  });
+
+  // Extrair lista única de departamentos dos colaboradores ativos
+  const departamentos = Array.from(new Set(colaboradores.map(c => c.departamento).filter(Boolean))) as string[];
 
   const handleRegistrarPonto = async () => {
     if (!selectedColaborador) return;
@@ -276,26 +289,59 @@ const Ponto = () => {
         {/* Registros */}
         <TabsContent value="registros" className="space-y-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button id="btn-ponto-prev-dia" variant="outline" size="icon" onClick={handlePrevDay}><ChevronLeft className="w-4 h-4" /></Button>
-                <div className="px-4 py-2 bg-muted rounded-lg min-w-[180px] text-center">
-                  <span className="font-medium">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button id="btn-ponto-prev-dia" variant="outline" size="icon" onClick={handlePrevDay}><ChevronLeft className="w-4 h-4" /></Button>
+                  <div className="px-4 py-2 bg-muted rounded-lg min-w-[180px] text-center">
+                    <span className="font-medium">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                  </div>
+                  <Button id="btn-ponto-next-dia" variant="outline" size="icon" onClick={handleNextDay}><ChevronRight className="w-4 h-4" /></Button>
+                  <Button id="btn-ponto-hoje" variant="outline" size="sm" onClick={handleToday}>Hoje</Button>
                 </div>
-                <Button id="btn-ponto-next-dia" variant="outline" size="icon" onClick={handleNextDay}><ChevronRight className="w-4 h-4" /></Button>
-                <Button id="btn-ponto-hoje" variant="outline" size="sm" onClick={handleToday}>Hoje</Button>
+                
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Buscar colaborador ou CPF..." 
+                      className="pl-9" 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Status</SelectItem>
-                  <SelectItem value="regular">Regular</SelectItem>
-                  <SelectItem value="atraso">Atraso</SelectItem>
-                  <SelectItem value="falta">Falta</SelectItem>
-                  <SelectItem value="incompleto">Incompleto</SelectItem>
-                  <SelectItem value="justificado">Justificado</SelectItem>
-                </SelectContent>
-              </Select>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Status</Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="Status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos Status</SelectItem>
+                      <SelectItem value="regular">Regular</SelectItem>
+                      <SelectItem value="atraso">Atraso</SelectItem>
+                      <SelectItem value="falta">Falta</SelectItem>
+                      <SelectItem value="incompleto">Incompleto</SelectItem>
+                      <SelectItem value="justificado">Justificado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Departamento</Label>
+                  <Select value={deptFilter} onValueChange={setDeptFilter}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="Departamento" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos Departamentos</SelectItem>
+                      {departamentos.map(dept => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </motion.div>
 
