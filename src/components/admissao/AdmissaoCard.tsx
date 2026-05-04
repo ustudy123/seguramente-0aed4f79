@@ -25,6 +25,8 @@ import {
 import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DocumentChecklistModal } from './DocumentChecklistModal';
+import { useState } from 'react';
 
 interface AdmissaoCardProps {
   admissao: Admissao;
