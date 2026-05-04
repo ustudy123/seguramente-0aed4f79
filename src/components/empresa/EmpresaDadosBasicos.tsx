@@ -119,9 +119,8 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               tipo_pessoa: v as 'pf' | 'pj',
               ...(v === 'pf' ? { cnpj: null } : { cpf: null, cei: null, caepf: null }),
             })}
-            disabled={!!data.id && !!(data.cnpj || data.cpf)}
           >
-            <SelectTrigger className={!!data.id && !!(data.cnpj || data.cpf) ? 'bg-muted cursor-not-allowed' : ''}>
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
