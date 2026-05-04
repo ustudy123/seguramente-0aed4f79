@@ -391,7 +391,9 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                     </div>
                   </TableCell>
                   <TableCell className="text-sm font-mono">
-                    {emp.tipo_pessoa === 'pf' ? emp.cpf || '—' : emp.cnpj || '—'}
+                    {emp.tipo_pessoa === 'pf' 
+                      ? (emp.cpf ? formatCpf(emp.cpf) : '—') 
+                      : (emp.cnpj ? formatCnpj(emp.cnpj) : '—')}
                   </TableCell>
                   <TableCell>
                     <Badge variant={emp.tipo_unidade === 'matriz' ? 'default' : 'outline'} className="text-xs">
