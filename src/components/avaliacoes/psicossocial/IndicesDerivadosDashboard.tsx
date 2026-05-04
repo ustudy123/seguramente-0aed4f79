@@ -141,8 +141,13 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
     }
 
     return INDICES.map((idx) => {
-      const scoreAtual = (atual[idx.campo] as number | null) ?? null;
-      const scoreAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
+      const rawAtual = (atual[idx.campo] as number | null) ?? null;
+      const rawAnterior = anterior ? ((anterior[idx.campo] as number | null) ?? null) : null;
+
+      // Os scores no banco são PROTETIVOS (alto = saudável). Para os cards que
+      // exibem escala de RISCO (invertido = true), convertemos: risco = 100 - score.
+      const scoreAtual = rawAtual != null && idx.invertido ? Math.max(0, 100 - rawAtual) : rawAtual;
+      const scoreAnterior = rawAnterior != null && idx.invertido ? Math.max(0, 100 - rawAnterior) : rawAnterior;
 
       let tendencia: "up" | "down" | "stable" | null = null;
       if (scoreAtual != null && scoreAnterior != null) {
