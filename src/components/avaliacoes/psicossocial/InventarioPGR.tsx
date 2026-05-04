@@ -212,7 +212,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
     // Ordenar por gravidade (crítico → alto → médio → baixo)
     const ordem: Record<string, number> = { critico: 0, alto: 1, medio: 2, baixo: 3 };
     return items.sort((a, b) => (ordem[a.nivelKey] ?? 4) - (ordem[b.nivelKey] ?? 4));
-  }, [campanhasValidas, isSipro]);
+  }, [campanhasValidas, isSipro, filtroCampanha]);
 
   const criticos = inventario.filter(i => i.nivelKey === 'critico').length;
   const altos = inventario.filter(i => i.nivelKey === 'alto').length;
