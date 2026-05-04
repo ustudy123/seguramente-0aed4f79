@@ -90,6 +90,8 @@ const Documentos = () => {
   
   const [activeTab, setActiveTab] = useState("arvore");
   const [searchTerm, setSearchTerm] = useState("");
+  const [auditSearchTerm, setAuditSearchTerm] = useState("");
+  const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
   const [expandAllSignal, setExpandAllSignal] = useState({ expand: false, key: 0 });
   const [selectedPasta, setSelectedPasta] = useState<DocumentoPastaNode | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -689,16 +691,55 @@ ${pop.referencias ? `<h2>12. Referências</h2><p>${pop.referencias}</p>` : ""}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="h-full bg-card rounded-xl border border-border p-6 overflow-auto"
+            className="h-full bg-card rounded-xl border border-border p-6 flex flex-col gap-4 overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
                 <History className="w-5 h-5 text-primary" />
-                Trilha de Auditoria
-              </h3>
-              <Badge variant="outline">{auditLogs.length} registros</Badge>
+                <h3 className="font-semibold">Trilha de Auditoria</h3>
+                <Badge variant="outline">{auditLogs.length} registros</Badge>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Filtrar por nome ou usuário..." 
+                    className="pl-10 w-full sm:w-64"
+                    value={auditSearchTerm}
+                    onChange={(e) => setAuditSearchTerm(e.target.value)}
+                  />
+                </div>
+                <select 
+                  className="h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  value={auditActionFilter}
+                  onChange={(e) => setAuditActionFilter(e.target.value)}
+                >
+                  <option value="all">Ações: Todas</option>
+                  <option value="upload">Upload</option>
+                  <option value="move">Movimentação</option>
+                  <option value="rename">Renomeação</option>
+                  <option value="delete">Exclusão</option>
+                  <option value="restore">Restauração</option>
+                </select>
+              </div>
             </div>
-            <DocumentoAuditLog logs={auditLogs} loading={loadingAudit} />
+
+            <ScrollArea className="flex-1">
+              <DocumentoAuditLog 
+                loading={loadingAudit} 
+                logs={auditLogs.filter(log => {
+                  const term = auditSearchTerm.toLowerCase();
+                  const matchesSearch = !auditSearchTerm || 
+                    log.documento_nome.toLowerCase().includes(term) ||
+                    (log.usuario_nome || "").toLowerCase().includes(term);
+                  
+                  const matchesAction = auditActionFilter === "all" || log.acao === auditActionFilter;
+                  
+                  return matchesSearch && matchesAction;
+                })} 
+              />
+            </ScrollArea>
           </motion.div>
         </TabsContent>
       </Tabs>
