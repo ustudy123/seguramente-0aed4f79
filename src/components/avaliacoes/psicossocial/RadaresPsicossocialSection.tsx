@@ -549,24 +549,27 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const [gerandoBoreout, setGerandoBoreout] = useState(false);
   const [acoesCriadas, setAcoesCriadas] = useState<string[]>([]);
   const [creatingActionFor, setCreatingActionFor] = useState<string | null>(null);
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
 
-  // Ações existentes por fator (estado local — em produção viria do Supabase)
-  const [existingActionsByFator, setExistingActionsByFator] = useState<
-    Record<string, { titulo: string; status: string }[]>
-  >({});
+  // Filtrar campanhas válidas (com dados de radar e respostas suficientes)
+  const campanhasValidas = useMemo(() => {
+    return campanhas.filter(
+      c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
+        && (c.total_respostas || 0) >= MINIMO_ANONIMATO
+    ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [campanhas]);
 
   // Agregar radar_data das campanhas com dados suficientes
   const radarAgregado = useMemo<RadarDimensao[] | undefined>(() => {
-    const campanhasComDados = campanhas.filter(
-      c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
-        && (c.total_respostas || 0) >= MINIMO_ANONIMATO
-    );
-    if (campanhasComDados.length === 0) return undefined;
+    if (campanhasValidas.length === 0) return undefined;
 
-    // Usar a campanha mais recente com dados
-    const maisRecente = campanhasComDados[0]; // já vem ordenado por created_at desc
-    return maisRecente.radar_data;
-  }, [campanhas]);
+    if (filtroCampanha === "recente") {
+      return campanhasValidas[0].radar_data as RadarDimensao[];
+    }
+
+    const selecionada = campanhasValidas.find(c => c.id === filtroCampanha);
+    return selecionada?.radar_data as RadarDimensao[] | undefined;
+  }, [campanhasValidas, filtroCampanha]);
 
   const temDadosReais = !!radarAgregado;
 
