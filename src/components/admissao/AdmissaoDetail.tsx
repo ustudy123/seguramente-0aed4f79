@@ -11,7 +11,8 @@ import {
   DollarSign,
   ArrowLeft,
   Edit,
-  Trash2
+  Trash2,
+  ClipboardCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DocumentUpload } from './DocumentUpload';
 import { WorkflowTimeline } from './WorkflowTimeline';
+import { DocumentChecklistModal } from './DocumentChecklistModal';
+import { useState } from 'react';
 import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -62,6 +65,7 @@ export function AdmissaoDetail({
   onRejeitarEtapa,
   isAdmin = false
 }: AdmissaoDetailProps) {
+  const [showChecklist, setShowChecklist] = useState(false);
   const { dadosPessoais, dadosContato, dadosProfissionais, dadosBancarios, documentos, status, historicoAprovacao, dataCriacao } = admissao;
 
   const initials = dadosPessoais.nomeCompleto
@@ -107,6 +111,10 @@ export function AdmissaoDetail({
         </div>
 
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowChecklist(true)} className="gap-2">
+            <ClipboardCheck className="h-4 w-4" />
+            Checklist
+          </Button>
           <Button variant="outline" onClick={onEdit}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
@@ -268,6 +276,12 @@ export function AdmissaoDetail({
           </div>
         </TabsContent>
       </Tabs>
+
+      <DocumentChecklistModal 
+        open={showChecklist} 
+        onOpenChange={setShowChecklist} 
+        admissao={admissao} 
+      />
     </motion.div>
   );
 }

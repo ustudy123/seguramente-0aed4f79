@@ -9,7 +9,8 @@ import {
   MoreVertical,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  ClipboardCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,8 @@ import {
 import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DocumentChecklistModal } from './DocumentChecklistModal';
+import { useState } from 'react';
 
 interface AdmissaoCardProps {
   admissao: Admissao;
@@ -34,6 +37,7 @@ interface AdmissaoCardProps {
 }
 
 export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
+  const [showChecklist, setShowChecklist] = useState(false);
   const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
 
   const documentosEnviados = documentos.filter(d => d.status !== 'pendente').length;
@@ -89,6 +93,9 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onView(admissao.id)}>
                 <Eye className="h-4 w-4 mr-2" /> Visualizar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowChecklist(true)}>
+                <ClipboardCheck className="h-4 w-4 mr-2" /> Checklist de Docs
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(admissao.id)}>
                 <FileText className="h-4 w-4 mr-2" /> Editar
@@ -168,6 +175,12 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
           {dataCriacao ? `Criado em ${format(dataCriacao, "dd/MM/yyyy", { locale: ptBR })}` : ''}
         </span>
       </div>
+
+      <DocumentChecklistModal 
+        open={showChecklist} 
+        onOpenChange={setShowChecklist} 
+        admissao={admissao} 
+      />
     </motion.div>
   );
 }
