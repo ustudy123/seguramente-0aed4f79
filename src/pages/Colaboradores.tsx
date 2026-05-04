@@ -955,16 +955,22 @@ function DesligadosTab() {
   const { tenantId } = useAuth();
   const navigate = useNavigate();
 
+  const { empresaAtivaId } = useEmpresaAtiva();
   const { data: desligados = [], isLoading } = useQuery({
-    queryKey: ["colaboradores-desligados", tenantId],
+    queryKey: ["colaboradores-desligados", tenantId, empresaAtivaId],
     queryFn: async (): Promise<ColaboradorExtendido[]> => {
       if (!tenantId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("admissoes")
         .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
         .eq("tenant_id", tenantId)
-        .eq("status", "desligado")
-        .order("updated_at", { ascending: false });
+        .eq("status", "desligado");
+
+      if (empresaAtivaId) {
+        query = query.eq("empresa_id", empresaAtivaId);
+      }
+
+      const { data, error } = await query.order("updated_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
