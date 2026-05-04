@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Search } from "lucide-react";
+import { Loader2, X, Search, Upload, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
-import { formatCnpj, cleanCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { formatCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
   open: boolean;
