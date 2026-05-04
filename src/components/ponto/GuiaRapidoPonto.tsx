@@ -45,7 +45,7 @@ const PASSOS = [
     titulo: "O que é esse módulo?",
     subtitulo: "Visão geral — para quem é e o que resolve",
     descricao:
-      "O Controle de Ponto do Seguramente registra, audita e fecha a jornada dos colaboradores em conformidade com a Portaria 671/2021 (REP-C/REP-P). Tudo é rastreável, com geolocalização, selfie e validações automáticas para garantir segurança jurídica ao empregador.",
+      "O Controle de Ponto do YourEyes registra, audita e fecha a jornada dos colaboradores em conformidade com a Portaria 671/2021 (REP-C/REP-P). Tudo é rastreável, com geolocalização, selfie e validações automáticas para garantir segurança jurídica ao empregador.",
     destaques: [
       { icon: Users, label: "Para: RH, Gestores e DP" },
       { icon: ShieldCheck, label: "Conformidade Portaria 671/2021" },

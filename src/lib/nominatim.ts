@@ -29,7 +29,7 @@ export async function geocodeCidade(
         }),
       {
         headers: {
-          "User-Agent": "Seguramente/1.0",
+          "User-Agent": "YourEyes/1.0",
           Accept: "application/json",
         },
       }

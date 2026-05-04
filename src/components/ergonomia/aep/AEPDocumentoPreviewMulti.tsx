@@ -239,7 +239,7 @@ export const AEPDocumentoPreviewMulti = forwardRef<HTMLDivElement, AEPDocumentoP
 
         {/* Footer */}
         <footer className="mt-8 pt-4 border-t text-center text-xs text-gray-500">
-          <p>Documento gerado automaticamente pelo Sistema Seguramente</p>
+          <p>Documento gerado automaticamente pelo Sistema YourEyes</p>
           <p>Versão {empresa.versao} • {new Date().toLocaleDateString('pt-BR')}</p>
         </footer>
       </div>

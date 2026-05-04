@@ -25,7 +25,7 @@ const PASSOS = [
     titulo: "O que e esse modulo?",
     subtitulo: "Visao geral — governanca e inteligencia SST",
     descricao:
-      "O modulo de Compliance SST do Seguramente permite importar, analisar e monitorar documentos legais de Saude e Seguranca do Trabalho (PGR, PCMSO, LTCAT) com inteligencia artificial. O sistema audita a coerencia normativa, gera alertas e planos de acao automaticamente.",
+      "O modulo de Compliance SST do YourEyes permite importar, analisar e monitorar documentos legais de Saude e Seguranca do Trabalho (PGR, PCMSO, LTCAT) com inteligencia artificial. O sistema audita a coerencia normativa, gera alertas e planos de acao automaticamente.",
     destaques: [
       { icon: Brain, label: "Extracao inteligente com IA (GPT-4o)" },
       { icon: Shield, label: "Auditoria normativa NR-01 / NR-07" },
@@ -150,7 +150,7 @@ const PASSOS = [
     titulo: "Documentos e Recursos",
     subtitulo: "Material de referencia offline",
     descricao:
-      "O Seguramente gera registros completos para compliance SST. Baixe o Manual Completo em PDF para ter um guia de referencia offline com todos os passos e orientacoes normativas.",
+      "O YourEyes gera registros completos para compliance SST. Baixe o Manual Completo em PDF para ter um guia de referencia offline com todos os passos e orientacoes normativas.",
     acoes: [
       "**Documentos importados** — historico completo com rastreabilidade",
       "**Alertas e pendencias** — notificacoes automaticas de risco",

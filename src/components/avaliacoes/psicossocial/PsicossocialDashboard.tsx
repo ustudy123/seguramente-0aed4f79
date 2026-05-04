@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 const MINIMO_ANONIMATO = 5;
 
 const INDICES_INFO = [
-  { codigo: 'IPS', nome: 'Índice Psicossocial Seguramente', desc: 'Score geral do ambiente organizacional (0-100). É o termômetro principal da saúde psicossocial da empresa.', color: 'bg-purple-100 text-purple-600', destaque: true },
+  { codigo: 'IPS', nome: 'Índice Psicossocial YourEyes', desc: 'Score geral do ambiente organizacional (0-100). É o termômetro principal da saúde psicossocial da empresa.', color: 'bg-purple-100 text-purple-600', destaque: true },
   { codigo: 'IRP-S', nome: 'Risco Psicossocial', desc: 'Mede a exposição da equipe a fatores de risco como sobrecarga, conflito e falta de suporte.', color: 'bg-red-100 text-red-600', destaque: false },
   { codigo: 'IBO-S', nome: 'Burnout', desc: 'Detecta indícios de esgotamento profissional: exaustão emocional, despersonalização e baixa realização.', color: 'bg-orange-100 text-orange-600', destaque: false },
   { codigo: 'IBD-S', nome: 'Boreout', desc: 'Identifica falta de desafio e engajamento. Tão prejudicial quanto o Burnout para turnover e produtividade.', color: 'bg-slate-100 text-slate-600', destaque: false },

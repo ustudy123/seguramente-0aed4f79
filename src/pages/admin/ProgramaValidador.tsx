@@ -974,7 +974,7 @@ function DetalheCliente({
               {cliente.cnpj && <p><span className="text-muted-foreground">CNPJ:</span> {cliente.cnpj}</p>}
               {cliente.tamanho_empresa && <p><span className="text-muted-foreground">Porte:</span> {cliente.tamanho_empresa}</p>}
               {cliente.quantidade_colaboradores && <p><span className="text-muted-foreground">Colaboradores:</span> {cliente.quantidade_colaboradores}</p>}
-              {cliente.responsavel_seguramente && <p><span className="text-muted-foreground">Resp. Seguramente:</span> {cliente.responsavel_seguramente}</p>}
+              {cliente.responsavel_YourEyes && <p><span className="text-muted-foreground">Resp. YourEyes:</span> {cliente.responsavel_YourEyes}</p>}
               {cliente.endereco && <p><span className="text-muted-foreground">Endereço:</span> {cliente.endereco}</p>}
               {cliente.representante && <p><span className="text-muted-foreground">Representante:</span> {cliente.representante}</p>}
             </CardContent>
@@ -1035,7 +1035,7 @@ function DetalheCliente({
         isLoading={gerarDocLinkMutation.isPending}
         nomeEmpresa={cliente.nome_empresa}
         pocNome={cliente.poc_nome}
-        responsavelSeguramente={cliente.responsavel_seguramente}
+        responsavelYourEyes={cliente.responsavel_YourEyes}
       />
     </div>
   );
@@ -1056,7 +1056,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
     segmento: '',
     tamanho_empresa: '',
     quantidade_colaboradores: '',
-    responsavel_seguramente: '',
+    responsavel_YourEyes: '',
     data_inicio_piloto: '',
     data_fim_piloto: '',
     observacoes: '',
@@ -1123,7 +1123,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
         segmento: form.segmento || null,
         tamanho_empresa: (form.tamanho_empresa as any) || null,
         quantidade_colaboradores: form.quantidade_colaboradores ? parseInt(form.quantidade_colaboradores) : null,
-        responsavel_seguramente: form.responsavel_seguramente || null,
+        responsavel_YourEyes: form.responsavel_YourEyes || null,
         data_inicio_piloto: form.data_inicio_piloto || null,
         data_fim_piloto: form.data_fim_piloto || null,
         observacoes: form.observacoes || null,
@@ -1250,7 +1250,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           </Select>
         </div>
         <div><Label>Qtd. Colaboradores</Label><Input type="number" value={form.quantidade_colaboradores} onChange={e => setForm(p => ({ ...p, quantidade_colaboradores: e.target.value }))} /></div>
-        <div><Label>Responsável Seguramente</Label><Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} /></div>
+        <div><Label>Responsável YourEyes</Label><Input value={form.responsavel_YourEyes} onChange={e => setForm(p => ({ ...p, responsavel_YourEyes: e.target.value }))} /></div>
 
         <div className="col-span-2">
           <Label>Endereço (para contrato)</Label>

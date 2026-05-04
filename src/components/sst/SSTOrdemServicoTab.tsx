@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-const PROD_URL = "https://seguramente.app.br";
+const PROD_URL = "https://YourEyes.app.br";
 
 interface ColaboradorRow {
   id: string;

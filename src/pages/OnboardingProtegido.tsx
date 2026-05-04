@@ -573,7 +573,7 @@ export default function OnboardingProtegido() {
 
       if (error) throw error;
 
-      toast.success('Onboarding concluído! Bem-vindo ao Seguramente! 🎉');
+      toast.success('Onboarding concluído! Bem-vindo ao YourEyes! 🎉');
       refetch();
       navigate('/');
     } catch (e) {
@@ -616,7 +616,7 @@ export default function OnboardingProtegido() {
               <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">Seguramente</p>
+              <p className="text-sm font-bold text-foreground">YourEyes</p>
               <p className="text-xs text-muted-foreground">Configuração Inicial</p>
             </div>
           </div>
@@ -633,7 +633,7 @@ export default function OnboardingProtegido() {
             </div>
             <div className="flex-1">
               <h1 className="text-lg font-bold">
-                Bem-vindo ao Seguramente{nomeUsuario ? `, ${nomeUsuario}` : ''}! 👋
+                Bem-vindo ao YourEyes{nomeUsuario ? `, ${nomeUsuario}` : ''}! 👋
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Vamos configurar sua empresa para que o sistema gere os primeiros indicadores. São poucos passos e leva apenas alguns minutos.

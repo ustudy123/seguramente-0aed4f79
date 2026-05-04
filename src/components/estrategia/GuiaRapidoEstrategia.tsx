@@ -25,7 +25,7 @@ const PASSOS = [
     titulo: "O que é esse módulo?",
     subtitulo: "Visão geral — planejamento e governança",
     descricao:
-      "O módulo de Estratégia & Governança do Seguramente fornece ferramentas para diagnóstico estratégico (SWOT), inovação (Oceano Azul), gestão de cultura organizacional e estrutura hierárquica (Organograma). Tudo com escopo configurável por empresa ou grupo econômico.",
+      "O módulo de Estratégia & Governança do YourEyes fornece ferramentas para diagnóstico estratégico (SWOT), inovação (Oceano Azul), gestão de cultura organizacional e estrutura hierárquica (Organograma). Tudo com escopo configurável por empresa ou grupo econômico.",
     destaques: [
       { icon: Target, label: "Análise SWOT com ações vinculadas" },
       { icon: Waves, label: "Estratégia Oceano Azul" },
@@ -132,7 +132,7 @@ const PASSOS = [
     titulo: "Documentos e Recursos",
     subtitulo: "Material de referência offline",
     descricao:
-      "O Seguramente registra todas as análises estratégicas com histórico e rastreabilidade. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
+      "O YourEyes registra todas as análises estratégicas com histórico e rastreabilidade. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
     acoes: [
       "**Análise SWOT** — diagnóstico com ações vinculadas",
       "**Oceano Azul** — inovação com acompanhamento de iniciativas",

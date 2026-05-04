@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Cliente, TipoDoc } from './types';
 
-const LOGO_URL = 'https://youreyes.com.br/lovable-uploads/logo-seguramente.png';
+const LOGO_URL = 'https://youreyes.com.br/lovable-uploads/logo-YourEyes.png';
 const SUDOCLIN_CNPJ = '00.000.000/0001-00';
 
 const ABNT_CSS = `
@@ -151,11 +151,11 @@ function gerarHeaderHtml(): string {
     <button class="btn-primary" onclick="(function(){var a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(document.documentElement.outerHTML);a.download='contrato.html';a.click();})()">⬇ Baixar</button>
   </div>
   <div class="contract-header">
-    <img src="${LOGO_URL}" alt="Seguramente" onerror="this.style.display='none'" />
+    <img src="${LOGO_URL}" alt="YourEyes" onerror="this.style.display='none'" />
     <div class="contract-header-info">
-      <strong>SEGURAMENTE TECNOLOGIA LTDA</strong><br>
+      <strong>YourEyes TECNOLOGIA LTDA</strong><br>
       CNPJ: ${SUDOCLIN_CNPJ}<br>
-      seguramente.app.br
+      YourEyes.app.br
     </div>
   </div>`;
 }
@@ -163,8 +163,8 @@ function gerarHeaderHtml(): string {
 function gerarFooterHtml(): string {
   return `
   <div class="contract-footer">
-    Documento gerado eletronicamente pela plataforma Seguramente · seguramente.app.br<br>
-    SEGURAMENTE TECNOLOGIA LTDA — CNPJ: ${SUDOCLIN_CNPJ}
+    Documento gerado eletronicamente pela plataforma YourEyes · YourEyes.app.br<br>
+    YourEyes TECNOLOGIA LTDA — CNPJ: ${SUDOCLIN_CNPJ}
   </div>`;
 }
 
@@ -193,7 +193,7 @@ function gerarHtmlContratoTester(cliente: Cliente): string {
 ${gerarHeaderHtml()}
 
 <h1>CONTRATO DE PARTICIPAÇÃO NO PROGRAMA VALIDADOR</h1>
-<h1>E USO DA PLATAFORMA SEGURAMENTE</h1>
+<h1>E USO DA PLATAFORMA YourEyes</h1>
 <p style="text-align:center;margin-top:0;font-size:11pt;color:#555;">Instrumento Particular de Adesão ao Programa Validador</p>
 
 <p>Pelo presente instrumento particular, celebrado entre as partes abaixo qualificadas:</p>
@@ -202,15 +202,15 @@ ${gerarHeaderHtml()}
   <p><strong>CONTRATANTE (EMPRESA VALIDADORA):</strong><br>
   <strong>${empresa}</strong>, inscrita no CNPJ nº ${cnpj}${cliente.endereco ? `, com sede em ${cliente.endereco}` : ''}, neste ato representada por <strong>${rep}</strong>, doravante denominada simplesmente <strong>EMPRESA VALIDADORA</strong>.</p>
   <p style="margin-top:12px;margin-bottom:0;"><strong>CONTRATADA:</strong><br>
-  <strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, doravante denominada simplesmente <strong>SEGURAMENTE</strong>.</p>
+  <strong>YourEyes TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, doravante denominada simplesmente <strong>YourEyes</strong>.</p>
 </div>
 
 <p>As partes acima identificadas têm, entre si, justo e contratado o presente instrumento, que se regerá pelas cláusulas e condições a seguir estipuladas.</p>
 
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 1 – OBJETO</span>
-  <p>O presente contrato tem por objeto a participação da EMPRESA VALIDADORA no Programa Validador da Plataforma Seguramente, permitindo o acesso e utilização da plataforma em fase de validação (Beta), nos termos e condições estabelecidos neste instrumento e em seus anexos.</p>
-  <p>A plataforma Seguramente é um sistema digital destinado ao apoio à gestão organizacional, incluindo funcionalidades relacionadas a:</p>
+  <p>O presente contrato tem por objeto a participação da EMPRESA VALIDADORA no Programa Validador da Plataforma YourEyes, permitindo o acesso e utilização da plataforma em fase de validação (Beta), nos termos e condições estabelecidos neste instrumento e em seus anexos.</p>
+  <p>A plataforma YourEyes é um sistema digital destinado ao apoio à gestão organizacional, incluindo funcionalidades relacionadas a:</p>
   <ol type="I">
     <li>gestão de saúde e segurança do trabalho;</li>
     <li>organização de dados empresariais;</li>
@@ -224,9 +224,9 @@ ${gerarHeaderHtml()}
   <span class="clausula-titulo">CLÁUSULA 2 – NATUREZA DO PROGRAMA</span>
   <p>A EMPRESA VALIDADORA declara ter pleno conhecimento e reconhece expressamente que:</p>
   <ol type="I">
-    <li>o Seguramente encontra-se em fase de desenvolvimento e validação (Beta), sujeito a alterações e aprimoramentos;</li>
+    <li>o YourEyes encontra-se em fase de desenvolvimento e validação (Beta), sujeito a alterações e aprimoramentos;</li>
     <li>o sistema poderá sofrer atualizações, ajustes e melhorias ao longo do período contratual;</li>
-    <li>eventuais falhas ou instabilidades técnicas podem ocorrer durante o período de validação, sem que isso configure inadimplemento por parte da SEGURAMENTE.</li>
+    <li>eventuais falhas ou instabilidades técnicas podem ocorrer durante o período de validação, sem que isso configure inadimplemento por parte da YourEyes.</li>
   </ol>
 </div>
 
@@ -247,7 +247,7 @@ ${gerarHeaderHtml()}
   <ol type="I">
     <li>utilizar efetivamente a plataforma durante o período do programa;</li>
     <li>fornecer feedbacks estruturados sobre funcionalidades, usabilidade e desempenho;</li>
-    <li>participar de reuniões periódicas de acompanhamento agendadas pela SEGURAMENTE;</li>
+    <li>participar de reuniões periódicas de acompanhamento agendadas pela YourEyes;</li>
     <li>responder pesquisas de satisfação e avaliação;</li>
     <li>colaborar com a evolução e melhoria contínua do sistema.</li>
   </ol>
@@ -255,13 +255,13 @@ ${gerarHeaderHtml()}
 
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 6 – LIMITAÇÃO DE RESPONSABILIDADE</span>
-  <p>A plataforma Seguramente constitui ferramenta de apoio à gestão organizacional e não substitui consultorias técnicas, jurídicas, contábeis ou de saúde especializadas.</p>
-  <p>A SEGURAMENTE não se responsabiliza por quaisquer decisões tomadas pela EMPRESA VALIDADORA com base nas informações apresentadas pelo sistema, cabendo ao usuário a devida diligência na análise e interpretação dos dados.</p>
+  <p>A plataforma YourEyes constitui ferramenta de apoio à gestão organizacional e não substitui consultorias técnicas, jurídicas, contábeis ou de saúde especializadas.</p>
+  <p>A YourEyes não se responsabiliza por quaisquer decisões tomadas pela EMPRESA VALIDADORA com base nas informações apresentadas pelo sistema, cabendo ao usuário a devida diligência na análise e interpretação dos dados.</p>
 </div>
 
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 7 – SEGURANÇA DA INFORMAÇÃO</span>
-  <p>A SEGURAMENTE adota medidas técnicas e organizacionais adequadas para proteção das informações armazenadas no sistema, incluindo criptografia de dados em repouso e em trânsito (TLS 1.2+), controle de acesso por autenticação, backups automáticos diários e monitoramento de segurança.</p>
+  <p>A YourEyes adota medidas técnicas e organizacionais adequadas para proteção das informações armazenadas no sistema, incluindo criptografia de dados em repouso e em trânsito (TLS 1.2+), controle de acesso por autenticação, backups automáticos diários e monitoramento de segurança.</p>
   <p>Os dados são armazenados em infraestrutura de computação em nuvem segura (Supabase/AWS), localizada em servidores certificados.</p>
 </div>
 
@@ -269,7 +269,7 @@ ${gerarHeaderHtml()}
   <span class="clausula-titulo">CLÁUSULA 8 – PROTEÇÃO DE DADOS PESSOAIS (LGPD)</span>
   <p>As partes reconhecem e declaram que o tratamento de dados pessoais realizado no âmbito deste contrato observará rigorosamente as disposições da <strong>Lei n.º 13.709/2018 (Lei Geral de Proteção de Dados — LGPD)</strong>.</p>
   <p>A EMPRESA VALIDADORA atua como <strong>controladora</strong> dos dados inseridos na plataforma, sendo responsável pelas decisões sobre o tratamento desses dados, incluindo os de seus colaboradores.</p>
-  <p>A SEGURAMENTE atua como <strong>operadora</strong>, processando os dados exclusivamente conforme as instruções da EMPRESA VALIDADORA e nos limites estabelecidos neste contrato e no Acordo de Tratamento de Dados (DPA), constante do Anexo III.</p>
+  <p>A YourEyes atua como <strong>operadora</strong>, processando os dados exclusivamente conforme as instruções da EMPRESA VALIDADORA e nos limites estabelecidos neste contrato e no Acordo de Tratamento de Dados (DPA), constante do Anexo III.</p>
   <p>Os dados inseridos no sistema são e permanecerão de propriedade exclusiva da EMPRESA VALIDADORA.</p>
 </div>
 
@@ -280,7 +280,7 @@ ${gerarHeaderHtml()}
 
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 10 – PROPRIEDADE INTELECTUAL</span>
-  <p>A plataforma Seguramente, incluindo seu código-fonte, design, interfaces, funcionalidades, marca e demais elementos, constitui propriedade intelectual exclusiva da SEGURAMENTE, protegida pela legislação brasileira de propriedade intelectual.</p>
+  <p>A plataforma YourEyes, incluindo seu código-fonte, design, interfaces, funcionalidades, marca e demais elementos, constitui propriedade intelectual exclusiva da YourEyes, protegida pela legislação brasileira de propriedade intelectual.</p>
   <p>O presente contrato não transfere à EMPRESA VALIDADORA qualquer direito de propriedade sobre a plataforma, sendo-lhe concedida apenas licença de uso não exclusiva e intransferível pelo período contratual.</p>
 </div>
 
@@ -288,7 +288,7 @@ ${gerarHeaderHtml()}
   <span class="clausula-titulo">CLÁUSULA 11 – DOCUMENTOS INTEGRANTES</span>
   <p>Fazem parte integrante deste contrato, para todos os fins legais, os seguintes anexos incorporados ao presente instrumento:</p>
   <ul>
-    <li><strong>Anexo I</strong> — Termos de Uso da Plataforma Seguramente;</li>
+    <li><strong>Anexo I</strong> — Termos de Uso da Plataforma YourEyes;</li>
     <li><strong>Anexo II</strong> — Política de Privacidade e Proteção de Dados;</li>
     <li><strong>Anexo III</strong> — Acordo de Tratamento de Dados (DPA) — LGPD;</li>
     <li><strong>Anexo IV</strong> — Anexo Operacional da Plataforma;</li>
@@ -301,7 +301,7 @@ ${gerarHeaderHtml()}
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 12 – RESCISÃO E ENCERRAMENTO</span>
   <p>O presente contrato poderá ser rescindido por qualquer das partes, mediante notificação por escrito com antecedência mínima de 15 (quinze) dias, sem ônus para nenhuma das partes.</p>
-  <p>Em caso de rescisão, a EMPRESA VALIDADORA terá o prazo de 30 (trinta) dias para exportar seus dados da plataforma, após o qual poderão ser eliminados pela SEGURAMENTE.</p>
+  <p>Em caso de rescisão, a EMPRESA VALIDADORA terá o prazo de 30 (trinta) dias para exportar seus dados da plataforma, após o qual poderão ser eliminados pela YourEyes.</p>
 </div>
 
 <div class="clausula">
@@ -319,19 +319,19 @@ ${gerarHeaderHtml()}
     <p style="font-size:10pt;color:#555;">${empresa}<br>CNPJ: ${cnpj}</p>
   </div>
   <div class="assinatura-bloco">
-    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p><strong>YourEyes TECNOLOGIA LTDA</strong></p>
     <p>Representante Legal</p>
   </div>
 </div>
 
 <!-- ═══════════════════ ANEXO I ═══════════════════ -->
 <div class="page-break">
-  <h3>ANEXO I — TERMOS DE USO DA PLATAFORMA SEGURAMENTE</h3>
+  <h3>ANEXO I — TERMOS DE USO DA PLATAFORMA YourEyes</h3>
   <p style="text-align:center;font-size:11pt;color:#555;">Integrante do Contrato de Participação no Programa Validador</p>
 
   <div class="clausula">
     <span class="clausula-titulo">1. ACEITAÇÃO DOS TERMOS</span>
-    <p>Ao utilizar a plataforma Seguramente, o usuário e a EMPRESA VALIDADORA declaram ter lido, compreendido e concordado com os presentes Termos de Uso em sua integralidade. O uso da plataforma implica aceitação automática e irretratável destes termos.</p>
+    <p>Ao utilizar a plataforma YourEyes, o usuário e a EMPRESA VALIDADORA declaram ter lido, compreendido e concordado com os presentes Termos de Uso em sua integralidade. O uso da plataforma implica aceitação automática e irretratável destes termos.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">2. USO PERMITIDO</span>
@@ -343,11 +343,11 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">4. PROPRIEDADE INTELECTUAL</span>
-    <p>Todo o conteúdo, código-fonte, design, interfaces, logotipos e funcionalidades da plataforma são protegidos pelas leis de propriedade intelectual e são de titularidade exclusiva da SEGURAMENTE. É proibida qualquer reprodução, cópia ou redistribuição sem autorização prévia e expressa por escrito.</p>
+    <p>Todo o conteúdo, código-fonte, design, interfaces, logotipos e funcionalidades da plataforma são protegidos pelas leis de propriedade intelectual e são de titularidade exclusiva da YourEyes. É proibida qualquer reprodução, cópia ou redistribuição sem autorização prévia e expressa por escrito.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">5. DISPONIBILIDADE DO SERVIÇO</span>
-    <p>A SEGURAMENTE envidará seus melhores esforços para manter a plataforma disponível em regime 24 (vinte e quatro) horas por dia, 7 (sete) dias por semana, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência mínima de 48 horas.</p>
+    <p>A YourEyes envidará seus melhores esforços para manter a plataforma disponível em regime 24 (vinte e quatro) horas por dia, 7 (sete) dias por semana, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência mínima de 48 horas.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">6. MODIFICAÇÕES DOS TERMOS</span>
@@ -362,7 +362,7 @@ ${gerarHeaderHtml()}
 
   <div class="clausula">
     <span class="clausula-titulo">1. COLETA E TIPOS DE DADOS</span>
-    <p>A SEGURAMENTE coleta e processa dados inseridos pelos usuários na plataforma, incluindo: dados de colaboradores (nome, CPF, data de nascimento, cargo, dados trabalhistas), dados de saúde ocupacional, documentos empresariais e dados de uso da plataforma (logs de acesso, ações realizadas, endereço IP).</p>
+    <p>A YourEyes coleta e processa dados inseridos pelos usuários na plataforma, incluindo: dados de colaboradores (nome, CPF, data de nascimento, cargo, dados trabalhistas), dados de saúde ocupacional, documentos empresariais e dados de uso da plataforma (logs de acesso, ações realizadas, endereço IP).</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">2. FINALIDADE DO TRATAMENTO</span>
@@ -374,7 +374,7 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">4. DIREITOS DOS TITULARES</span>
-    <p>Os titulares de dados pessoais têm direito a: acesso aos seus dados, correção de dados inexatos, portabilidade, eliminação, informação sobre compartilhamentos e revogação do consentimento. Solicitações devem ser encaminhadas para <strong>privacidade@seguramente.app.br</strong>.</p>
+    <p>Os titulares de dados pessoais têm direito a: acesso aos seus dados, correção de dados inexatos, portabilidade, eliminação, informação sobre compartilhamentos e revogação do consentimento. Solicitações devem ser encaminhadas para <strong>privacidade@YourEyes.app.br</strong>.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">5. COOKIES E RASTREAMENTO</span>
@@ -382,7 +382,7 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">6. SEGURANÇA E INCIDENTES</span>
-    <p>Em caso de incidente de segurança que possa afetar dados pessoais, a SEGURAMENTE notificará a EMPRESA VALIDADORA e, quando exigido por lei, a Autoridade Nacional de Proteção de Dados (ANPD), no prazo de 72 (setenta e duas) horas após ciência do evento.</p>
+    <p>Em caso de incidente de segurança que possa afetar dados pessoais, a YourEyes notificará a EMPRESA VALIDADORA e, quando exigido por lei, a Autoridade Nacional de Proteção de Dados (ANPD), no prazo de 72 (setenta e duas) horas após ciência do evento.</p>
   </div>
 </div>
 
@@ -393,12 +393,12 @@ ${gerarHeaderHtml()}
 
   <div class="partes" style="margin-top:20px;">
     <p><strong>CONTROLADOR:</strong> ${empresa}, CNPJ ${cnpj}, representada por ${rep}.</p>
-    <p><strong>OPERADOR:</strong> SEGURAMENTE TECNOLOGIA LTDA.</p>
+    <p><strong>OPERADOR:</strong> YourEyes TECNOLOGIA LTDA.</p>
   </div>
 
   <div class="clausula">
     <span class="clausula-titulo">1. OBJETO DO ACORDO</span>
-    <p>O presente Acordo de Tratamento de Dados regula o tratamento de dados pessoais realizado pela SEGURAMENTE na qualidade de operadora, conforme instruções do CONTROLADOR, no âmbito da Lei Geral de Proteção de Dados (Lei n.º 13.709/2018 — LGPD) e do Regulamento Geral de Proteção de Dados da União Europeia (GDPR), quando aplicável.</p>
+    <p>O presente Acordo de Tratamento de Dados regula o tratamento de dados pessoais realizado pela YourEyes na qualidade de operadora, conforme instruções do CONTROLADOR, no âmbito da Lei Geral de Proteção de Dados (Lei n.º 13.709/2018 — LGPD) e do Regulamento Geral de Proteção de Dados da União Europeia (GDPR), quando aplicável.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">2. CATEGORIAS DE DADOS TRATADOS</span>
@@ -437,11 +437,11 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">2. SUPORTE TÉCNICO</span>
-    <p>O suporte técnico será prestado por meio de e-mail (suporte@seguramente.app.br) e WhatsApp, em horário comercial (segunda a sexta-feira, das 9h às 18h, horário de Brasília). O SLA de primeira resposta é de até 24 horas úteis para chamados de baixa prioridade e 4 horas úteis para chamados críticos.</p>
+    <p>O suporte técnico será prestado por meio de e-mail (suporte@YourEyes.app.br) e WhatsApp, em horário comercial (segunda a sexta-feira, das 9h às 18h, horário de Brasília). O SLA de primeira resposta é de até 24 horas úteis para chamados de baixa prioridade e 4 horas úteis para chamados críticos.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">3. COMPROMISSOS DE FEEDBACK</span>
-    <p>A EMPRESA VALIDADORA se compromete a participar de reuniões mensais de acompanhamento, com duração aproximada de 60 minutos, agendadas pela SEGURAMENTE, e a responder pesquisas de satisfação enviadas periodicamente, com prazo de resposta de até 5 (cinco) dias úteis.</p>
+    <p>A EMPRESA VALIDADORA se compromete a participar de reuniões mensais de acompanhamento, com duração aproximada de 60 minutos, agendadas pela YourEyes, e a responder pesquisas de satisfação enviadas periodicamente, com prazo de resposta de até 5 (cinco) dias úteis.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">4. MÓDULOS DISPONIBILIZADOS</span>
@@ -449,7 +449,7 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">5. LIMITAÇÕES DO PERÍODO BETA</span>
-    <p>Durante o Programa Validador, algumas funcionalidades podem estar em desenvolvimento ou sujeitas a alterações. A SEGURAMENTE comunicará quaisquer indisponibilidades programadas com antecedência mínima de 48 (quarenta e oito) horas. Alterações estruturais no sistema serão comunicadas com antecedência mínima de 7 (sete) dias.</p>
+    <p>Durante o Programa Validador, algumas funcionalidades podem estar em desenvolvimento ou sujeitas a alterações. A YourEyes comunicará quaisquer indisponibilidades programadas com antecedência mínima de 48 (quarenta e oito) horas. Alterações estruturais no sistema serão comunicadas com antecedência mínima de 7 (sete) dias.</p>
   </div>
 </div>
 
@@ -460,23 +460,23 @@ ${gerarHeaderHtml()}
 
   <div class="clausula">
     <span class="clausula-titulo">1. ELEGIBILIDADE</span>
-    <p>Podem participar do Programa Validador empresas de qualquer porte e segmento que tenham interesse genuíno na utilização da plataforma Seguramente e disponibilidade para contribuir com o processo de validação e melhoria do produto.</p>
+    <p>Podem participar do Programa Validador empresas de qualquer porte e segmento que tenham interesse genuíno na utilização da plataforma YourEyes e disponibilidade para contribuir com o processo de validação e melhoria do produto.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">2. BENEFÍCIOS GARANTIDOS</span>
-    <p>As empresas participantes têm garantidos os seguintes benefícios: acesso gratuito à plataforma pelo período de 6 meses; desconto de 50% na assinatura após o beta pelo período mínimo de 12 meses; atendimento prioritário da equipe Seguramente; participação direta no roadmap do produto; acesso antecipado a novas funcionalidades.</p>
+    <p>As empresas participantes têm garantidos os seguintes benefícios: acesso gratuito à plataforma pelo período de 6 meses; desconto de 50% na assinatura após o beta pelo período mínimo de 12 meses; atendimento prioritário da equipe YourEyes; participação direta no roadmap do produto; acesso antecipado a novas funcionalidades.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">3. OBRIGAÇÕES DO VALIDADOR</span>
-    <p>Para manutenção dos benefícios, a EMPRESA VALIDADORA deve: utilizar a plataforma com regularidade mínima mensal; fornecer feedbacks honestos e construtivos; participar das reuniões de acompanhamento agendadas; notificar a SEGURAMENTE sobre eventuais inconsistências ou bugs identificados.</p>
+    <p>Para manutenção dos benefícios, a EMPRESA VALIDADORA deve: utilizar a plataforma com regularidade mínima mensal; fornecer feedbacks honestos e construtivos; participar das reuniões de acompanhamento agendadas; notificar a YourEyes sobre eventuais inconsistências ou bugs identificados.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">4. ENCERRAMENTO ANTECIPADO</span>
-    <p>A SEGURAMENTE reserva-se o direito de encerrar a participação de empresa que não cumprir as obrigações previstas neste Anexo, mediante notificação prévia de 15 (quinze) dias, sem prejuízo dos dados já inseridos na plataforma, que permanecerão acessíveis por 30 (trinta) dias adicionais para exportação.</p>
+    <p>A YourEyes reserva-se o direito de encerrar a participação de empresa que não cumprir as obrigações previstas neste Anexo, mediante notificação prévia de 15 (quinze) dias, sem prejuízo dos dados já inseridos na plataforma, que permanecerão acessíveis por 30 (trinta) dias adicionais para exportação.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">5. TRANSIÇÃO PARA PLANO COMERCIAL</span>
-    <p>Ao término do período beta, a SEGURAMENTE apresentará à EMPRESA VALIDADORA proposta comercial para continuidade do uso da plataforma, com o desconto previsto neste contrato. A empresa terá 30 (trinta) dias para aceitar ou declinar a proposta.</p>
+    <p>Ao término do período beta, a YourEyes apresentará à EMPRESA VALIDADORA proposta comercial para continuidade do uso da plataforma, com o desconto previsto neste contrato. A empresa terá 30 (trinta) dias para aceitar ou declinar a proposta.</p>
   </div>
 </div>
 
@@ -491,7 +491,7 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">2. QUEM TEM ACESSO AOS DADOS?</span>
-    <p>O acesso aos dados da EMPRESA VALIDADORA é restrito aos usuários por ela cadastrados e a colaboradores da SEGURAMENTE com função técnica específica, mediante autenticação multifator. Nenhum dado é compartilhado, vendido ou cedido a terceiros sem autorização expressa do CONTROLADOR.</p>
+    <p>O acesso aos dados da EMPRESA VALIDADORA é restrito aos usuários por ela cadastrados e a colaboradores da YourEyes com função técnica específica, mediante autenticação multifator. Nenhum dado é compartilhado, vendido ou cedido a terceiros sem autorização expressa do CONTROLADOR.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">3. COMO SÃO GERENCIADAS AS SENHAS?</span>
@@ -499,7 +499,7 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">4. O QUE ACONTECE EM CASO DE INCIDENTE DE SEGURANÇA?</span>
-    <p>Em caso de identificação de incidente que possa comprometer dados pessoais, a SEGURAMENTE adotará imediatamente medidas de contenção e notificará a EMPRESA VALIDADORA em até 72 (setenta e duas) horas, conforme exigido pelo art. 48 da LGPD, descrevendo a natureza do incidente, as categorias e quantidade de dados afetados e as medidas adotadas.</p>
+    <p>Em caso de identificação de incidente que possa comprometer dados pessoais, a YourEyes adotará imediatamente medidas de contenção e notificará a EMPRESA VALIDADORA em até 72 (setenta e duas) horas, conforme exigido pelo art. 48 da LGPD, descrevendo a natureza do incidente, as categorias e quantidade de dados afetados e as medidas adotadas.</p>
   </div>
   <div class="clausula">
     <span class="clausula-titulo">5. COMO SÃO REALIZADOS OS BACKUPS?</span>
@@ -507,7 +507,7 @@ ${gerarHeaderHtml()}
   </div>
   <div class="clausula">
     <span class="clausula-titulo">6. BOAS PRÁTICAS RECOMENDADAS AO USUÁRIO</span>
-    <p>Para garantir a segurança do ambiente, recomendamos: não compartilhar credenciais de acesso; realizar logout ao encerrar o uso em dispositivos compartilhados; notificar imediatamente a SEGURAMENTE em caso de suspeita de acesso indevido; manter atualizado o e-mail de recuperação de conta; e utilizar dispositivos com software de segurança atualizado.</p>
+    <p>Para garantir a segurança do ambiente, recomendamos: não compartilhar credenciais de acesso; realizar logout ao encerrar o uso em dispositivos compartilhados; notificar imediatamente a YourEyes em caso de suspeita de acesso indevido; manter atualizado o e-mail de recuperação de conta; e utilizar dispositivos com software de segurança atualizado.</p>
   </div>
 
   <p style="margin-top:40px;"><strong>Ao assinar o Contrato principal, a EMPRESA VALIDADORA declara ter lido, compreendido e concordado integralmente com este FAQ e com todos os demais Anexos do contrato.</strong></p>
@@ -543,19 +543,19 @@ export function gerarHtmlDocumento(tipo: TipoDoc, cliente: Cliente): string {
 ${gerarHeaderHtml()}
 
 <h1>ATA DE REUNIÃO DE KICKOFF</h1>
-<h2>PROGRAMA VALIDADOR SEGURAMENTE</h2>
+<h2>PROGRAMA VALIDADOR YourEyes</h2>
 
 <div class="partes">
   <p><strong>DATA DA REUNIÃO:</strong> ${dataGeracao}</p>
   <p><strong>EMPRESA VALIDADORA:</strong> ${empresa} — CNPJ ${cnpj}</p>
   <p><strong>REPRESENTANTE DA EMPRESA:</strong> ${rep}</p>
-  <p><strong>RESPONSÁVEL SEGURAMENTE:</strong> ___________________</p>
+  <p><strong>RESPONSÁVEL YourEyes:</strong> ___________________</p>
   <p><strong>MODALIDADE:</strong> ☐ Presencial &nbsp; ☐ Videoconferência &nbsp; ☐ Híbrida</p>
 </div>
 
 <div class="clausula">
   <span class="clausula-titulo">1. OBJETIVO DA REUNIÃO</span>
-  <p>A presente reunião teve por objetivo formalizar o início do Programa Validador, apresentar a plataforma Seguramente, alinhar expectativas entre as partes, definir cronograma de uso e estabelecer os responsáveis pelo projeto em ambas as organizações.</p>
+  <p>A presente reunião teve por objetivo formalizar o início do Programa Validador, apresentar a plataforma YourEyes, alinhar expectativas entre as partes, definir cronograma de uso e estabelecer os responsáveis pelo projeto em ambas as organizações.</p>
 </div>
 
 <div class="clausula">
@@ -616,7 +616,7 @@ ________________________________________________________________________________
     <p style="font-size:10pt;color:#555;">${empresa}</p>
   </div>
   <div class="assinatura-bloco">
-    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p><strong>YourEyes TECNOLOGIA LTDA</strong></p>
     <p>Responsável pelo Programa</p>
   </div>
 </div>
@@ -652,13 +652,13 @@ function gerarHtmlContratoPagante(cliente: Cliente): string {
 ${gerarHeaderHtml()}
 
 <h1>CONTRATO DE LICENÇA DE USO DE SOFTWARE</h1>
-<h1>E PRESTAÇÃO DE SERVIÇOS – PLATAFORMA SEGURAMENTE</h1>
+<h1>E PRESTAÇÃO DE SERVIÇOS – PLATAFORMA YourEyes</h1>
 <p style="text-align:center;margin-top:4px;font-size:10pt;color:#666;">Gerado em ${dataGeracao}</p>
 
 <p>Pelo presente instrumento particular, de um lado:</p>
 
 <div class="partes">
-  <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº ${SUDOCLIN_CNPJ}, doravante denominada <strong>SEGURAMENTE</strong>.</p>
+  <p><strong>YourEyes TECNOLOGIA LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº ${SUDOCLIN_CNPJ}, doravante denominada <strong>YourEyes</strong>.</p>
   <p style="margin-top:12px;margin-bottom:0;">E de outro lado:</p>
   <p style="margin-bottom:0;"><strong>${empresa}</strong>, inscrita no CNPJ nº ${cnpj}, com sede em ${endereco}, neste ato representada por <strong>${rep}</strong>, doravante denominada <strong>CLIENTE</strong>.</p>
 </div>
@@ -667,7 +667,7 @@ ${gerarHeaderHtml()}
 
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 1 — OBJETO</span>
-  <p>O presente contrato tem por objeto a concessão ao CLIENTE de licença de uso não exclusiva e intransferível da plataforma digital Seguramente, disponibilizada no modelo Software as a Service (SaaS). A plataforma Seguramente consiste em sistema digital destinado ao apoio à gestão organizacional das empresas, incluindo funcionalidades relacionadas a:</p>
+  <p>O presente contrato tem por objeto a concessão ao CLIENTE de licença de uso não exclusiva e intransferível da plataforma digital YourEyes, disponibilizada no modelo Software as a Service (SaaS). A plataforma YourEyes consiste em sistema digital destinado ao apoio à gestão organizacional das empresas, incluindo funcionalidades relacionadas a:</p>
   <ol type="I">
     <li>gestão de saúde e segurança do trabalho;</li>
     <li>organização de informações empresariais;</li>
@@ -680,21 +680,21 @@ ${gerarHeaderHtml()}
 </div>
 
 <div class="clausula"><span class="clausula-titulo">CLÁUSULA 2 — NATUREZA DA LICENÇA</span><p>A licença concedida ao CLIENTE é não exclusiva, intransferível e limitada ao período de vigência do contrato. O CLIENTE não adquire qualquer direito de propriedade sobre o software, limitando-se ao direito de uso conforme as condições estabelecidas neste contrato.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 3 — CONDIÇÕES DE ACESSO</span><p>O acesso ao sistema será realizado mediante credenciais de usuário e autenticação digital. O CLIENTE é responsável por controlar os usuários cadastrados, manter a confidencialidade das credenciais e garantir o uso adequado da plataforma. A SEGURAMENTE não se responsabiliza por acessos indevidos decorrentes de negligência do CLIENTE no controle de usuários.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 4 — SERVIÇOS INCLUÍDOS</span><p>O contrato inclui: disponibilização da plataforma Seguramente, acesso às funcionalidades contratadas, atualizações e melhorias do sistema, manutenção técnica da plataforma e suporte técnico dentro das condições estabelecidas no Anexo III (SLA).</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 5 — DISPONIBILIDADE DO SISTEMA</span><p>A SEGURAMENTE adotará esforços razoáveis para manter a plataforma disponível. Eventuais indisponibilidades podem ocorrer em razão de manutenções programadas, atualizações do sistema, falhas de infraestrutura ou eventos fora do controle da SEGURAMENTE. Tais situações não configuram descumprimento contratual.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 6 — PLANOS E REMUNERAÇÃO</span><p>Pela utilização da plataforma, o CLIENTE pagará à SEGURAMENTE o valor de <strong>${valorMensal}</strong>, com vencimento no ${diaVenc}, conforme plano${cliente.plano ? ` <strong>${cliente.plano}</strong>` : ''} contratado. Os valores poderão ser cobrados em periodicidade mensal ou anual, conforme plano contratado.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 7 — INADIMPLÊNCIA</span><p>Em caso de atraso no pagamento, poderão ser aplicados encargos de multa, juros e correção monetária, e a SEGURAMENTE poderá suspender o acesso à plataforma até a regularização do pagamento. Persistindo a inadimplência por período superior a 30 dias, a SEGURAMENTE poderá rescindir o contrato.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 8 — SUPORTE TÉCNICO</span><p>A SEGURAMENTE disponibilizará suporte técnico para dúvidas de uso do sistema, orientação operacional e identificação de falhas técnicas. O suporte não inclui consultoria especializada, análise jurídica ou assessoria técnica personalizada. As condições detalhadas de suporte e SLA constam do Anexo III.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 9 — LIMITAÇÃO DE RESPONSABILIDADE</span><p>A plataforma Seguramente constitui ferramenta de apoio à gestão empresarial. A SEGURAMENTE não se responsabiliza por decisões tomadas pelo CLIENTE com base nos dados do sistema, interpretações equivocadas de relatórios ou informações incorretas inseridas pelos usuários. A responsabilidade pela análise e utilização das informações é exclusivamente do CLIENTE.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 10 — SEGURANÇA DA INFORMAÇÃO</span><p>A SEGURAMENTE adota medidas técnicas e organizacionais de segurança da informação, incluindo controle de acesso, monitoramento de infraestrutura, segregação de dados entre empresas e práticas de proteção digital. Os dados são armazenados em infraestrutura de computação em nuvem operada por provedores especializados.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 11 — PROTEÇÃO DE DADOS (LGPD)</span><p>O tratamento de dados pessoais observará as disposições da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Para fins legais, o CLIENTE atua como CONTROLADOR dos dados e a SEGURAMENTE atua como OPERADORA dos dados. A SEGURAMENTE compromete-se a tratar os dados exclusivamente conforme as instruções do CLIENTE.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 3 — CONDIÇÕES DE ACESSO</span><p>O acesso ao sistema será realizado mediante credenciais de usuário e autenticação digital. O CLIENTE é responsável por controlar os usuários cadastrados, manter a confidencialidade das credenciais e garantir o uso adequado da plataforma. A YourEyes não se responsabiliza por acessos indevidos decorrentes de negligência do CLIENTE no controle de usuários.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 4 — SERVIÇOS INCLUÍDOS</span><p>O contrato inclui: disponibilização da plataforma YourEyes, acesso às funcionalidades contratadas, atualizações e melhorias do sistema, manutenção técnica da plataforma e suporte técnico dentro das condições estabelecidas no Anexo III (SLA).</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 5 — DISPONIBILIDADE DO SISTEMA</span><p>A YourEyes adotará esforços razoáveis para manter a plataforma disponível. Eventuais indisponibilidades podem ocorrer em razão de manutenções programadas, atualizações do sistema, falhas de infraestrutura ou eventos fora do controle da YourEyes. Tais situações não configuram descumprimento contratual.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 6 — PLANOS E REMUNERAÇÃO</span><p>Pela utilização da plataforma, o CLIENTE pagará à YourEyes o valor de <strong>${valorMensal}</strong>, com vencimento no ${diaVenc}, conforme plano${cliente.plano ? ` <strong>${cliente.plano}</strong>` : ''} contratado. Os valores poderão ser cobrados em periodicidade mensal ou anual, conforme plano contratado.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 7 — INADIMPLÊNCIA</span><p>Em caso de atraso no pagamento, poderão ser aplicados encargos de multa, juros e correção monetária, e a YourEyes poderá suspender o acesso à plataforma até a regularização do pagamento. Persistindo a inadimplência por período superior a 30 dias, a YourEyes poderá rescindir o contrato.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 8 — SUPORTE TÉCNICO</span><p>A YourEyes disponibilizará suporte técnico para dúvidas de uso do sistema, orientação operacional e identificação de falhas técnicas. O suporte não inclui consultoria especializada, análise jurídica ou assessoria técnica personalizada. As condições detalhadas de suporte e SLA constam do Anexo III.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 9 — LIMITAÇÃO DE RESPONSABILIDADE</span><p>A plataforma YourEyes constitui ferramenta de apoio à gestão empresarial. A YourEyes não se responsabiliza por decisões tomadas pelo CLIENTE com base nos dados do sistema, interpretações equivocadas de relatórios ou informações incorretas inseridas pelos usuários. A responsabilidade pela análise e utilização das informações é exclusivamente do CLIENTE.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 10 — SEGURANÇA DA INFORMAÇÃO</span><p>A YourEyes adota medidas técnicas e organizacionais de segurança da informação, incluindo controle de acesso, monitoramento de infraestrutura, segregação de dados entre empresas e práticas de proteção digital. Os dados são armazenados em infraestrutura de computação em nuvem operada por provedores especializados.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 11 — PROTEÇÃO DE DADOS (LGPD)</span><p>O tratamento de dados pessoais observará as disposições da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Para fins legais, o CLIENTE atua como CONTROLADOR dos dados e a YourEyes atua como OPERADORA dos dados. A YourEyes compromete-se a tratar os dados exclusivamente conforme as instruções do CLIENTE.</p></div>
 <div class="clausula"><span class="clausula-titulo">CLÁUSULA 12 — CONFIDENCIALIDADE</span><p>As partes comprometem-se a manter confidenciais todas as informações obtidas em razão deste contrato, incluindo dados empresariais, informações organizacionais, dados de colaboradores e informações técnicas da plataforma. Essa obrigação permanecerá válida mesmo após o encerramento do contrato.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 13 — PROPRIEDADE INTELECTUAL</span><p>Todos os direitos relacionados à plataforma Seguramente pertencem exclusivamente à SEGURAMENTE, incluindo software, algoritmos, estrutura do sistema, design e metodologias. É proibida qualquer forma de reprodução, modificação, engenharia reversa ou distribuição sem autorização.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 14 — USO INDEVIDO DA PLATAFORMA</span><p>É proibido utilizar a plataforma para práticas ilegais, violação de direitos de terceiros, uso fraudulento ou inserção de informações falsas. A SEGURAMENTE poderá suspender o acesso em caso de uso indevido.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 13 — PROPRIEDADE INTELECTUAL</span><p>Todos os direitos relacionados à plataforma YourEyes pertencem exclusivamente à YourEyes, incluindo software, algoritmos, estrutura do sistema, design e metodologias. É proibida qualquer forma de reprodução, modificação, engenharia reversa ou distribuição sem autorização.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 14 — USO INDEVIDO DA PLATAFORMA</span><p>É proibido utilizar a plataforma para práticas ilegais, violação de direitos de terceiros, uso fraudulento ou inserção de informações falsas. A YourEyes poderá suspender o acesso em caso de uso indevido.</p></div>
 <div class="clausula"><span class="clausula-titulo">CLÁUSULA 15 — ENCERRAMENTO DO CONTRATO</span><p>O contrato poderá ser encerrado: (I) por qualquer das partes, mediante aviso prévio de 30 dias; (II) por inadimplência; (III) por descumprimento contratual.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 16 — EXPORTAÇÃO DE DADOS</span><p>Em caso de encerramento do contrato, o CLIENTE poderá solicitar a exportação dos dados armazenados na plataforma, dentro de prazo razoável definido pela SEGURAMENTE.</p></div>
-<div class="clausula"><span class="clausula-titulo">CLÁUSULA 17 — ALTERAÇÕES NA PLATAFORMA</span><p>A SEGURAMENTE poderá realizar melhorias, atualizações ou modificações na plataforma visando evolução tecnológica do sistema.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 16 — EXPORTAÇÃO DE DADOS</span><p>Em caso de encerramento do contrato, o CLIENTE poderá solicitar a exportação dos dados armazenados na plataforma, dentro de prazo razoável definido pela YourEyes.</p></div>
+<div class="clausula"><span class="clausula-titulo">CLÁUSULA 17 — ALTERAÇÕES NA PLATAFORMA</span><p>A YourEyes poderá realizar melhorias, atualizações ou modificações na plataforma visando evolução tecnológica do sistema.</p></div>
 
 <div class="clausula">
   <span class="clausula-titulo">CLÁUSULA 18 — DOCUMENTOS INTEGRANTES</span>
@@ -716,7 +716,7 @@ ${gerarHeaderHtml()}
 
 <div class="assinaturas">
   <div class="assinatura-bloco">
-    <p><strong>SEGURAMENTE TECNOLOGIA LTDA</strong></p>
+    <p><strong>YourEyes TECNOLOGIA LTDA</strong></p>
     <p>Representante: ______________________</p>
     <p style="font-size:10pt;color:#666;">${dataGeracao}</p>
   </div>
@@ -729,24 +729,24 @@ ${gerarHeaderHtml()}
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page-break"><h3>ANEXO I — TERMOS DE USO DA PLATAFORMA</h3></div>
-<div class="clausula"><span class="clausula-titulo">1. ACEITAÇÃO DOS TERMOS</span><p>Ao acessar e utilizar a plataforma Seguramente, o CLIENTE declara ter lido, compreendido e concordado com todos os Termos de Uso aqui estabelecidos.</p></div>
-<div class="clausula"><span class="clausula-titulo">2. DESCRIÇÃO DA PLATAFORMA</span><p>A plataforma Seguramente é um sistema SaaS destinado ao apoio à gestão organizacional, oferecendo funcionalidades de gestão de saúde e segurança do trabalho, recursos humanos, indicadores e relatórios gerenciais.</p></div>
+<div class="clausula"><span class="clausula-titulo">1. ACEITAÇÃO DOS TERMOS</span><p>Ao acessar e utilizar a plataforma YourEyes, o CLIENTE declara ter lido, compreendido e concordado com todos os Termos de Uso aqui estabelecidos.</p></div>
+<div class="clausula"><span class="clausula-titulo">2. DESCRIÇÃO DA PLATAFORMA</span><p>A plataforma YourEyes é um sistema SaaS destinado ao apoio à gestão organizacional, oferecendo funcionalidades de gestão de saúde e segurança do trabalho, recursos humanos, indicadores e relatórios gerenciais.</p></div>
 <div class="clausula"><span class="clausula-titulo">3. CADASTRO E RESPONSABILIDADES</span><p>O CLIENTE é responsável por manter suas credenciais em sigilo, comunicar imediatamente qualquer uso não autorizado e garantir que todos os usuários cadastrados cumpram estes Termos.</p></div>
 <div class="clausula"><span class="clausula-titulo">4. USOS PERMITIDOS E PROIBIDOS</span><p>É vedado utilizar a plataforma para fins ilícitos, praticar engenharia reversa do software, comercializar acesso a terceiros, inserir conteúdo falso ou prejudicial, ou violar direitos de terceiros.</p></div>
-<div class="clausula"><span class="clausula-titulo">5. ATUALIZAÇÕES</span><p>A SEGURAMENTE pode atualizar estes Termos periodicamente. O CLIENTE será notificado de alterações relevantes.</p></div>
+<div class="clausula"><span class="clausula-titulo">5. ATUALIZAÇÕES</span><p>A YourEyes pode atualizar estes Termos periodicamente. O CLIENTE será notificado de alterações relevantes.</p></div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page-break"><h3>ANEXO II — POLÍTICA DE PRIVACIDADE E LGPD</h3></div>
-<div class="clausula"><span class="clausula-titulo">1. COMPROMISSO COM A PRIVACIDADE</span><p>A SEGURAMENTE está comprometida com a proteção dos dados pessoais dos usuários da plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p></div>
-<div class="clausula"><span class="clausula-titulo">2. PAPÉIS NO TRATAMENTO DE DADOS</span><p>Para os fins desta política: o CLIENTE atua como Controlador dos dados pessoais inseridos na plataforma; a SEGURAMENTE atua como Operadora, processando os dados conforme instruções do CLIENTE.</p></div>
+<div class="clausula"><span class="clausula-titulo">1. COMPROMISSO COM A PRIVACIDADE</span><p>A YourEyes está comprometida com a proteção dos dados pessoais dos usuários da plataforma, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p></div>
+<div class="clausula"><span class="clausula-titulo">2. PAPÉIS NO TRATAMENTO DE DADOS</span><p>Para os fins desta política: o CLIENTE atua como Controlador dos dados pessoais inseridos na plataforma; a YourEyes atua como Operadora, processando os dados conforme instruções do CLIENTE.</p></div>
 <div class="clausula"><span class="clausula-titulo">3. DADOS COLETADOS E FINALIDADES</span><p>A plataforma coleta e processa: dados de cadastro e acesso, dados de colaboradores inseridos pelo CLIENTE, registros de utilização do sistema e dados para geração de relatórios e indicadores. Esses dados são utilizados exclusivamente para as finalidades contratadas.</p></div>
 <div class="clausula"><span class="clausula-titulo">4. SEGURANÇA E ARMAZENAMENTO</span><p>Os dados são armazenados em infraestrutura certificada, com criptografia em repouso e em trânsito, controle de acesso por perfil e backups automáticos. Os dados são mantidos pelo período contratual e conforme exigências legais aplicáveis.</p></div>
-<div class="clausula"><span class="clausula-titulo">5. DIREITOS DO TITULAR</span><p>Os titulares dos dados pessoais podem exercer seus direitos de acesso, correção, exclusão e portabilidade por meio do CLIENTE (Controlador), que deverá encaminhar as solicitações à SEGURAMENTE quando aplicável.</p></div>
-<div class="clausula"><span class="clausula-titulo">6. COMPARTILHAMENTO DE DADOS</span><p>A SEGURAMENTE não vende, aluga ou compartilha dados pessoais com terceiros, exceto quando necessário para a prestação dos serviços contratados ou por exigência legal.</p></div>
+<div class="clausula"><span class="clausula-titulo">5. DIREITOS DO TITULAR</span><p>Os titulares dos dados pessoais podem exercer seus direitos de acesso, correção, exclusão e portabilidade por meio do CLIENTE (Controlador), que deverá encaminhar as solicitações à YourEyes quando aplicável.</p></div>
+<div class="clausula"><span class="clausula-titulo">6. COMPARTILHAMENTO DE DADOS</span><p>A YourEyes não vende, aluga ou compartilha dados pessoais com terceiros, exceto quando necessário para a prestação dos serviços contratados ou por exigência legal.</p></div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page-break"><h3>ANEXO III — SLA E SUPORTE TÉCNICO</h3></div>
-<div class="clausula"><span class="clausula-titulo">1. DISPONIBILIDADE</span><p>A SEGURAMENTE compromete-se a manter a plataforma disponível com uptime mínimo de <strong>99% ao mês</strong>, excluindo janelas de manutenção programadas previamente comunicadas.</p></div>
+<div class="clausula"><span class="clausula-titulo">1. DISPONIBILIDADE</span><p>A YourEyes compromete-se a manter a plataforma disponível com uptime mínimo de <strong>99% ao mês</strong>, excluindo janelas de manutenção programadas previamente comunicadas.</p></div>
 <div class="clausula"><span class="clausula-titulo">2. JANELAS DE MANUTENÇÃO</span><p>Manutenções programadas serão comunicadas com antecedência mínima de 48 horas e realizadas preferencialmente em horários de menor utilização (0h–6h).</p></div>
 <div class="clausula"><span class="clausula-titulo">3. CANAIS E HORÁRIOS DE SUPORTE</span><p>O suporte técnico está disponível por e-mail e sistema de chamados, em dias úteis, das 08h às 18h (horário de Brasília).</p></div>
 <div class="clausula">
@@ -758,7 +758,7 @@ ${gerarHeaderHtml()}
     <li><strong>Baixo</strong> (dúvidas e solicitações): resposta em até 2 dias úteis.</li>
   </ul>
 </div>
-<div class="clausula"><span class="clausula-titulo">5. CRÉDITOS POR INDISPONIBILIDADE</span><p>Caso a disponibilidade mensal seja inferior ao SLA contratado, o CLIENTE poderá solicitar crédito proporcional, conforme análise da SEGURAMENTE mediante solicitação formal.</p></div>
+<div class="clausula"><span class="clausula-titulo">5. CRÉDITOS POR INDISPONIBILIDADE</span><p>Caso a disponibilidade mensal seja inferior ao SLA contratado, o CLIENTE poderá solicitar crédito proporcional, conforme análise da YourEyes mediante solicitação formal.</p></div>
 <div class="clausula"><span class="clausula-titulo">6. EXCLUSÕES DO SLA</span><p>Não são cobertos por este SLA: indisponibilidades causadas por falhas de conectividade do CLIENTE, ataques DDoS de grande escala, casos fortuitos ou de força maior, uso indevido da plataforma pelo CLIENTE ou terceiros autorizados por ele.</p></div>
 
 ${gerarFooterHtml()}

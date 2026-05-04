@@ -84,7 +84,7 @@ export function AfiliadosDashboard() {
         <div className="flex gap-2">
           <Input
             readOnly
-            value={profissional.link_afiliado || `https://seguramente.app/ref/${profissional.codigo_afiliado || profissional.id.slice(0, 8)}`}
+            value={profissional.link_afiliado || `https://YourEyes.app/ref/${profissional.codigo_afiliado || profissional.id.slice(0, 8)}`}
             className="text-xs bg-white"
           />
           <Button size="sm" variant="outline" onClick={copyLink} className="shrink-0 gap-1.5">

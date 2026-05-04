@@ -114,7 +114,7 @@ export default function AssinaturaContrato() {
 
           if (pastaDestino?.id) {
             const htmlFinal = contrato?.html_assinado || contrato?.html_contrato || '';
-            const nomeArq = `Contrato-Seguramente-${nomeEmpresa.replace(/\s+/g, '-')}-Assinado.html`;
+            const nomeArq = `Contrato-YourEyes-${nomeEmpresa.replace(/\s+/g, '-')}-Assinado.html`;
             const storagePath = `programa-validador/${tenantId}/contratos/${nomeArq}`;
 
             const blob = new Blob([htmlFinal], { type: 'text/html' });
@@ -206,7 +206,7 @@ export default function AssinaturaContrato() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <FileText className="w-6 h-6 text-primary" />
-            <span className="font-semibold text-primary">Seguramente</span>
+            <span className="font-semibold text-primary">YourEyes</span>
           </div>
           <h1 className="text-2xl font-bold">Contrato de Participação</h1>
           <p className="text-muted-foreground text-sm">Programa Validador Beta</p>

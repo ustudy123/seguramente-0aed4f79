@@ -1,6 +1,6 @@
 /**
- * SIPRO — Instrumento Psicossocial Seguramente
- * Instrumento proprietário do Seguramente
+ * SIPRO — Instrumento Psicossocial YourEyes
+ * Instrumento proprietário do YourEyes
  *
  * 10 eixos — 35 questões base:
  *   1. Demandas Quantitativas e Ritmo de Trabalho (4q) — peso 15%

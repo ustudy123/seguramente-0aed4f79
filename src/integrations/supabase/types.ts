@@ -17061,7 +17061,7 @@ export type Database = {
           poc_telefone: string | null
           quantidade_colaboradores: number | null
           representante: string | null
-          responsavel_seguramente: string | null
+          responsavel_YourEyes: string | null
           segmento: string | null
           tamanho_empresa: string | null
           tenant_id: string | null
@@ -17103,7 +17103,7 @@ export type Database = {
           poc_telefone?: string | null
           quantidade_colaboradores?: number | null
           representante?: string | null
-          responsavel_seguramente?: string | null
+          responsavel_YourEyes?: string | null
           segmento?: string | null
           tamanho_empresa?: string | null
           tenant_id?: string | null
@@ -17145,7 +17145,7 @@ export type Database = {
           poc_telefone?: string | null
           quantidade_colaboradores?: number | null
           representante?: string | null
-          responsavel_seguramente?: string | null
+          responsavel_YourEyes?: string | null
           segmento?: string | null
           tamanho_empresa?: string | null
           tenant_id?: string | null

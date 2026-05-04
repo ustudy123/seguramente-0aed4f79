@@ -80,7 +80,7 @@ export default function OnboardingCliente() {
             <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
             <h2 className="text-lg font-semibold">Link inválido ou expirado</h2>
             <p className="text-sm text-muted-foreground">
-              Este link de onboarding não é válido. Entre em contato com a equipe Seguramente.
+              Este link de onboarding não é válido. Entre em contato com a equipe YourEyes.
             </p>
           </CardContent>
         </Card>
@@ -108,7 +108,7 @@ export default function OnboardingCliente() {
     {
       id: 'ata',
       label: 'Ata de Kickoff',
-      sublabel: ataAceita ? `Assinada em ${ataLink?.aceito_em ? new Date(ataLink.aceito_em).toLocaleDateString('pt-BR') : '-'}` : ataLink ? 'Aguardando sua assinatura' : 'Será disponibilizada pela equipe Seguramente',
+      sublabel: ataAceita ? `Assinada em ${ataLink?.aceito_em ? new Date(ataLink.aceito_em).toLocaleDateString('pt-BR') : '-'}` : ataLink ? 'Aguardando sua assinatura' : 'Será disponibilizada pela equipe YourEyes',
       done: ataAceita,
       pending: !!ataLink && !ataAceita,
       link: ataLink && !ataAceita ? `${window.location.origin}/aceite-documento/${ataLink.token}` : undefined,
@@ -157,7 +157,7 @@ export default function OnboardingCliente() {
               <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">Seguramente</p>
+              <p className="text-sm font-bold text-foreground">YourEyes</p>
               <p className="text-xs text-muted-foreground">Portal de Implantação</p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function OnboardingCliente() {
             </div>
             <div className="flex-1">
               <h1 className="text-lg font-bold">
-                Bem-vindo ao Seguramente{cliente.poc_nome ? `, ${cliente.poc_nome.split(' ')[0]}` : ''}! 👋
+                Bem-vindo ao YourEyes{cliente.poc_nome ? `, ${cliente.poc_nome.split(' ')[0]}` : ''}! 👋
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Vamos configurar a <strong>{cliente.nome_empresa}</strong> para que o sistema possa gerar os primeiros indicadores organizacionais.
@@ -294,7 +294,7 @@ export default function OnboardingCliente() {
                           id: 'ata',
                           icon: <CheckCheck className="w-5 h-5" />,
                           title: 'Ata de Kickoff',
-                          desc: ataAceita ? 'Ata assinada por todas as partes.' : ataLink ? 'Aguardando sua assinatura.' : 'Será disponibilizada pela equipe Seguramente.',
+                          desc: ataAceita ? 'Ata assinada por todas as partes.' : ataLink ? 'Aguardando sua assinatura.' : 'Será disponibilizada pela equipe YourEyes.',
                           done: ataAceita,
                           action: ataLink && !ataAceita ? () => window.open(`${window.location.origin}/aceite-documento/${ataLink.token}`, '_blank') : undefined,
                           actionLabel: 'Assinar agora',
@@ -425,7 +425,7 @@ export default function OnboardingCliente() {
 
         <div className="text-center py-4">
           <p className="text-xs text-muted-foreground">
-            Dúvidas? Entre em contato com a equipe Seguramente.
+            Dúvidas? Entre em contato com a equipe YourEyes.
             {cliente.poc_email && <> · <a href={`mailto:${cliente.poc_email}`} className="underline">{cliente.poc_email}</a></>}
           </p>
         </div>

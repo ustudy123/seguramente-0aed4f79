@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
 import authBg from "@/assets/auth-bg.jpg";
-import brandingLogo from "@/assets/logo-seguramente-branding.png";
+import brandingLogo from "@/assets/logo-YourEyes-branding.png";
 
 export function AuthLayout() {
   return (

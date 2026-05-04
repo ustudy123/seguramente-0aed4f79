@@ -108,7 +108,7 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
       doc.setFont("helvetica", "normal");
       const identificacao = [
         ["Campanha", campanha.nome],
-        ["Instrumento", isSipro ? "SIPRO — Índice Seguramente de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
+        ["Instrumento", isSipro ? "SIPRO — Índice YourEyes de Risco Psicossocial Organizacional" : (campanha.instrumento?.toUpperCase() ?? "N/D")],
         ["Período", `${campanha.data_inicio ?? "?"} a ${campanha.data_fim ?? "atual"}`],
         ["Total de Respondentes", String(campanha.total_respostas ?? 0)],
         ["Empresas Avaliadas", empresaNome ?? "N/D"],
@@ -194,11 +194,11 @@ export function RelatorioModal({ open, onClose, campanhas, empresaNome }: Relato
         {
           titulo: "4.1 Instrumento Utilizado",
           corpo: isSipro
-            ? "SIPRO — Indice Seguramente de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma Seguramente, proporcionando avaliacao mais assertiva do que questionarios isolados. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
+            ? "SIPRO — Indice YourEyes de Risco Psicossocial Organizacional. Instrumento autoral desenvolvido com base nos modelos COPSOQ III, HSE e PROART, adaptado ao contexto brasileiro. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma YourEyes, proporcionando avaliacao mais assertiva do que questionarios isolados. Score calculado por dimensao em escala 0-100, onde score alto indica maior risco. Atende aos requisitos da NR-01."
             : `${campanha.instrumento?.toUpperCase()} — Instrumento internacional de avaliação de riscos psicossociais. Escala Likert 0-4, onde score alto indica melhor condição (modelo protetivo), com inversão para cálculo de risco.`,
         },
         {
-          titulo: "4.2 Cálculo do IPS (Índice Psicossocial Seguramente)",
+          titulo: "4.2 Cálculo do IPS (Índice Psicossocial YourEyes)",
           corpo: "O IPS é calculado como média ponderada pelo número de respondentes em cada campanha ativa. Classificação: ≥80 = Saudável; 65-79 = Estável; 50-64 = Atenção; 35-49 = Risco; <35 = Crítico. Mínimo de 5 respondentes exigido para garantir confidencialidade (ISO 45003 §6.1.2).",
         },
         {

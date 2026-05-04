@@ -79,7 +79,7 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("Seguramente - Gestao Inteligente de Riscos Psicossociais", margin, 22);
+      doc.text("YourEyes - Gestao Inteligente de Riscos Psicossociais", margin, 22);
       doc.text("NR-01 | NR-17 | ISO 45001 | ISO 45003", pageW - margin, 22, { align: "right" });
 
       y = 44;
@@ -251,7 +251,7 @@ export function ExportarRelatorio({ campanha, stats, dimensoes, analiseIA }: Exp
         doc.setPage(i);
         doc.setFontSize(7);
         doc.setTextColor(140, 140, 140);
-        const rodape = `Seguramente - Relatorio Psicossocial | ${sanitize(campanha.nome)} | Pagina ${i}/${totalPages}`;
+        const rodape = `YourEyes - Relatorio Psicossocial | ${sanitize(campanha.nome)} | Pagina ${i}/${totalPages}`;
         doc.text(rodape, pageW / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
       }
 

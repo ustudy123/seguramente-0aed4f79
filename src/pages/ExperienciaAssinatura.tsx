@@ -119,7 +119,7 @@ export default function ExperienciaAssinatura() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <FileText className="w-6 h-6 text-blue-600" />
-            <span className="font-semibold text-blue-600">Seguramente</span>
+            <span className="font-semibold text-blue-600">YourEyes</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
             {TIPO_LABELS[data.tipo_documento] || "Documento de Experiência"}

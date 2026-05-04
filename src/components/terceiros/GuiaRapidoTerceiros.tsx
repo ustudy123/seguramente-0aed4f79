@@ -26,7 +26,7 @@ const PASSOS = [
     titulo: "O que e esse modulo?",
     subtitulo: "Visao geral — para quem e e o que resolve",
     descricao:
-      "O modulo de Terceiros & SST do Seguramente permite controlar todo o ciclo de compliance de prestadores de servico: cadastro, documentacao, treinamentos, permissoes de trabalho e monitoramento de vencimentos. Tudo em conformidade com as NRs aplicaveis.",
+      "O modulo de Terceiros & SST do YourEyes permite controlar todo o ciclo de compliance de prestadores de servico: cadastro, documentacao, treinamentos, permissoes de trabalho e monitoramento de vencimentos. Tudo em conformidade com as NRs aplicaveis.",
     destaques: [
       { icon: Shield, label: "Compliance NR-01 / NR-06 / NR-35" },
       { icon: Users, label: "Para: RH, SST e Gestores" },
@@ -169,7 +169,7 @@ const PASSOS = [
     titulo: "Documentos e Recursos",
     subtitulo: "Tudo que o sistema gera para voce",
     descricao:
-      "O Seguramente gera registros completos para compliance com terceiros. Baixe o Manual Completo em PDF para ter um guia de referencia offline.",
+      "O YourEyes gera registros completos para compliance com terceiros. Baixe o Manual Completo em PDF para ter um guia de referencia offline.",
     acoes: [
       "**Ficha cadastral** — dados completos do terceiro e trabalhadores",
       "**Historico documental** — timeline de todos os envios e validades",

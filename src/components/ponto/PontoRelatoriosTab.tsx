@@ -87,11 +87,11 @@ export function PontoRelatoriosTab() {
     const dataGeracao = format(new Date(), "ddMMyyyy");
     const horaGeracao = format(new Date(), "HHmmss");
     const cnpj = "00000000000000"; // placeholder
-    const razaoSocial = "SEGURAMENTE".padEnd(150);
+    const razaoSocial = "YourEyes".padEnd(150);
     conteudo += `1${cnpj}${razaoSocial}${dataGeracao}${horaGeracao}\n`;
 
     // Registro tipo 2 - Identificação do REP-P
-    conteudo += `2SEGURAMENTE REP-P v1.0\n`;
+    conteudo += `2YourEyes REP-P v1.0\n`;
 
     // Registro tipo 3 - Marcações de ponto (uma por linha)
     let seq = 0;

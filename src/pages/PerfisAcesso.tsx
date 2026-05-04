@@ -110,7 +110,7 @@ export default function PerfisAcesso() {
           <div>
             <h1 className="text-xl font-bold text-foreground">Perfis & Níveis de Acesso</h1>
             <p className="text-sm text-muted-foreground">
-              Configure quem pode acessar o quê no Seguramente
+              Configure quem pode acessar o quê no YourEyes
             </p>
           </div>
         </div>

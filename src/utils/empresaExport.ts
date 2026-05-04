@@ -260,7 +260,7 @@ export function exportEmpresasToPdf(empresas: Empresa[], grupos: any[] = [], obl
   
   doc.setFontSize(12);
   doc.setTextColor(100, 116, 139);
-  doc.text('Seguramente — Segurança Jurídica do Empregador', pageWidth / 2, 60, { align: 'center' });
+  doc.text('YourEyes — Segurança Jurídica do Empregador', pageWidth / 2, 60, { align: 'center' });
 
   doc.setDrawColor(226, 232, 240);
   doc.line(40, 70, pageWidth - 40, 70);
@@ -348,7 +348,7 @@ export function exportEmpresasToPdf(empresas: Empresa[], grupos: any[] = [], obl
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);
-    doc.text(`Relatório Gerado por Seguramente — Página ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+    doc.text(`Relatório Gerado por YourEyes — Página ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
   }
 
   const ts = new Date().toISOString().slice(0, 10);

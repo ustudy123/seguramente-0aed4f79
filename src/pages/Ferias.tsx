@@ -538,7 +538,7 @@ const Ferias = () => {
             <div className="bg-card rounded-xl border border-border p-10 text-center">
               <Sun className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">Nenhuma solicitação de férias encontrada.</p>
-              <p className="text-xs text-muted-foreground mt-1">No Seguramente, férias não são ausência — são parte da organização do trabalho.</p>
+              <p className="text-xs text-muted-foreground mt-1">No YourEyes, férias não são ausência — são parte da organização do trabalho.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

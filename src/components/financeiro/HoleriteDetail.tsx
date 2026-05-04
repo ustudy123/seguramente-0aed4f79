@@ -65,7 +65,7 @@ function gerarPDFBlob(item: FolhaItem, competencia: string, eventos: EventoFicti
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("SEGURAMENTE", margin, 12);
+  doc.text("YourEyes", margin, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("Recibo de Pagamento de Salário", margin, 19);

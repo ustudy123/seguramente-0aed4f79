@@ -180,7 +180,7 @@ function classificarNivelIRPS(score: number): NivelIRPS {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Calcula o IRP-S (Índice de Risco Psicossocial Seguramente) conforme
+ * Calcula o IRP-S (Índice de Risco Psicossocial YourEyes) conforme
  * modelo estatístico documentado:
  *
  * Etapa 1: Coletar respostas na escala 1–5.
