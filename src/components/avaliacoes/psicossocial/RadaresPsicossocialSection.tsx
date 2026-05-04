@@ -72,13 +72,16 @@ interface DimensionMatcher {
   inverted: boolean;
 }
 
+// IMPORTANTE: No SIPRO, TODAS as dimensões do radar seguem convenção protetiva
+// (score alto = saudável / baixo risco). Para gerar score de RISCO de burnout/boreout
+// invertemos sempre (100 - score). Ex.: IPS=100 → risco=0; IPS=20 → risco=80.
 const BURNOUT_DIMENSION_MAP: Record<string, DimensionMatcher> = {
-  sobrecargaCognitiva: { aliases: ['demandas cognitivas', 'demanda cognitiva', 'carga cognitiva'], inverted: false },
-  ritmoTrabalho:       { aliases: ['demandas quantitativas', 'demanda quantitativa', 'ritmo de trabalho', 'ritmo'], inverted: false },
+  sobrecargaCognitiva: { aliases: ['demandas cognitivas', 'demanda cognitiva', 'carga cognitiva'], inverted: true },
+  ritmoTrabalho:       { aliases: ['demandas quantitativas', 'demanda quantitativa', 'ritmo de trabalho', 'ritmo'], inverted: true },
   faltaPausas:         { aliases: ['recuperacao e equilibrio', 'recuperacao', 'equilibrio trabalho-vida', 'equilibrio trabalho vida', 'pausas'], inverted: true },
-  humorNegativo:       { aliases: ['demandas emocionais', 'demanda emocional', 'burnout / esgotamento', 'burnout', 'esgotamento'], inverted: false },
+  humorNegativo:       { aliases: ['demandas emocionais', 'demanda emocional', 'burnout / esgotamento', 'burnout', 'esgotamento'], inverted: true },
   denuncias:           { aliases: ['conflito de papeis', 'relacionamentos e suporte', 'suporte dos colegas', 'suporte da lideranca'], inverted: true },
-  exigenciasEmocionais:{ aliases: ['demandas emocionais', 'demanda emocional', 'exigencias emocionais'], inverted: false },
+  exigenciasEmocionais:{ aliases: ['demandas emocionais', 'demanda emocional', 'exigencias emocionais'], inverted: true },
 };
 
 const BOREOUT_DIMENSION_MAP: Record<string, DimensionMatcher> = {
