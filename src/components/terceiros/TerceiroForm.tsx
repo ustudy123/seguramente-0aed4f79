@@ -102,8 +102,43 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       contrato_fim: form.contrato_fim || null,
     };
     
-    await onSubmit(submissionData);
-    onOpenChange(false);
+    try {
+      // First create/update the third party
+      const result = await (onSubmit(submissionData) as any);
+      
+      // If there's a contract file, upload it to terceiro_documentos
+      if (contractFile && result?.id) {
+        setUploadingContract(true);
+        const ts = Date.now();
+        const safeName = contractFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const path = `${tenantId}/terceiros/${result.id}/contratos/${ts}_${safeName}`;
+        
+        const { error: upErr } = await supabase.storage
+          .from("documentos")
+          .upload(path, contractFile);
+          
+        if (upErr) throw upErr;
+
+        await supabase.from("terceiro_documentos" as any).insert({
+          tenant_id: tenantId,
+          terceiro_id: result.id,
+          tipo: "Contrato",
+          nome: `Contrato Original - ${contractFile.name}`,
+          arquivo_url: path,
+          arquivo_nome: contractFile.name,
+          arquivo_tamanho: contractFile.size,
+          status: "valido",
+          criado_por: user?.id,
+        });
+      }
+      
+      onOpenChange(false);
+      setContractFile(null);
+    } catch (error: any) {
+      console.error("Erro ao salvar terceiro:", error);
+    } finally {
+      setUploadingContract(false);
+    }
   };
 
   return (
