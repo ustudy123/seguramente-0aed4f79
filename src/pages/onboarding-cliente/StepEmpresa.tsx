@@ -19,6 +19,38 @@ export function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcl
     responsavel: cliente.poc_nome || '',
   });
   const [salvando, setSalvando] = useState(false);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+
+  const handleBuscarCnpj = useCallback(async () => {
+    const clean = cleanCnpj(form.cnpj);
+    if (clean.length !== 14) {
+      toast.error("Digite um CNPJ válido com 14 dígitos");
+      return;
+    }
+    setBuscandoCnpj(true);
+    try {
+      const result = await buscarCnpj(clean);
+      if (result) {
+        setForm(f => ({
+          ...f,
+          razao_social: result.razao_social || f.razao_social,
+          cnae: String(result.cnae_fiscal) || f.cnae,
+          cidade: result.municipio || f.cidade,
+        }));
+        toast.success("Dados do CNPJ carregados!");
+      } else {
+        toast.error("CNPJ não encontrado");
+      }
+    } catch {
+      toast.error("Erro ao buscar CNPJ");
+    } finally {
+      setBuscandoCnpj(false);
+    }
+  }, [form.cnpj]);
+
+  const handleCnpjChange = (value: string) => {
+    setForm(f => ({ ...f, cnpj: formatCnpj(value) }));
+  };
 
   async function salvar() {
     if (!form.razao_social || !form.cnpj) {
