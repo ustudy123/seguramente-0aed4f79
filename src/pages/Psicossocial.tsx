@@ -18,10 +18,10 @@ export default function Psicossocial() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Brain className="h-7 w-7 text-primary" />
-            Gestão Psicossocial NR-01
+            Gestão Psicossocial
           </h1>
-          <p className="text-muted-foreground">
-            Monitoramento contínuo de riscos psicossociais, campanhas de avaliação e indicadores organizacionais
+          <p className="text-muted-foreground text-sm">
+            NR-01 · NR-17 · ISO 45001 · ISO 45003 — Monitoramento de riscos e indicadores organizacionais
           </p>
         </div>
         <Button
