@@ -348,6 +348,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
               <TableHead>Tipo</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>CNAE</TableHead>
+              <TableHead className="text-center">Colaboradores</TableHead>
               <TableHead className="text-center">GR</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
