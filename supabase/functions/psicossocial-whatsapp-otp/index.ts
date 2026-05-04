@@ -34,15 +34,37 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (!campanha_id) {
+    if (!campanha_id && action !== "status") {
       return new Response(
         JSON.stringify({ erro: "Campanha não informada" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // ─── STATUS DA INSTÂNCIA ──────────────────────────────
+    if (action === "status") {
+      if (!whatsapiToken || !whatsapiBaseUrl) {
+        return new Response(
+          JSON.stringify({ erro: "WhatsApp API não configurada" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const statusResponse = await fetch(`${whatsapiBaseUrl}/instance/status`, {
+        method: "GET",
+        headers: {
+          token: whatsapiToken,
+        },
+      });
+
+      const statusResult = await statusResponse.json();
+      return new Response(
+        JSON.stringify({ sucesso: true, status: statusResult }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ─── CONFIRMAR USO (chamado APÓS submissão do questionário) ──
-    // Aceita o hash já calculado (o respondente não precisa reenviar o telefone em texto puro).
     if (action === "confirmar_uso") {
       const hashFinal = telefone_hash_direto || (telefone ? await hashPhone(telefone.replace(/\D/g, "")) : null);
       if (!hashFinal) {
@@ -137,8 +159,16 @@ Deno.serve(async (req) => {
 
       if (!enviado) {
         console.error("Erro ao enviar WhatsApp:", JSON.stringify(whatsResult));
+        
+        let erroAmigavel = "Erro ao enviar o código via WhatsApp.";
+        if (whatsResult?.message === "WhatsApp disconnected") {
+          erroAmigavel = "O serviço de WhatsApp está temporariamente desconectado. Por favor, entre em contato com o administrador do sistema.";
+        } else if (whatsResult?.error === "Unauthorized") {
+          erroAmigavel = "Falha na autenticação do serviço de WhatsApp. O administrador precisa revisar as chaves de API.";
+        }
+
         return new Response(
-          JSON.stringify({ erro: "Erro ao enviar o código. Verifique o número." }),
+          JSON.stringify({ erro: erroAmigavel, originalError: whatsResult }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -158,7 +188,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Buscar OTP válido mais recente
       const { data: otp } = await supabase
         .from("psicossocial_otp_verificacao")
         .select("*")
@@ -177,7 +206,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Incrementar tentativas
       await supabase
         .from("psicossocial_otp_verificacao")
         .update({ tentativas: otp.tentativas + 1 })
@@ -197,20 +225,16 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Marcar como verificado
       await supabase
         .from("psicossocial_otp_verificacao")
         .update({ verificado: true, verificado_em: new Date().toISOString() })
         .eq("id", otp.id);
 
-      // NÃO registrar telefone como usado aqui — só após o questionário ser concluído.
-      // Isso evita que respondentes que abandonem antes de finalizar fiquem bloqueados.
       return new Response(
         JSON.stringify({ sucesso: true, telefone_hash: telefoneHash }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
 
     return new Response(
       JSON.stringify({ erro: "Ação inválida" }),
