@@ -269,7 +269,7 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
             </div>
           ) : (
             filteredCampanhas.map((campanha) => (
-            <div key={campanha.id} className="border rounded-lg overflow-hidden">
+              <div key={campanha.id} className="border rounded-lg overflow-hidden">
               <CampanhaCard 
                 campanha={campanha}
                 onAtivar={() => handleAtivar(campanha)}
