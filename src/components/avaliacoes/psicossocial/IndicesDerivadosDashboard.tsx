@@ -175,10 +175,31 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Activity className="h-5 w-5 text-purple-600" />
-        <h3 className="font-semibold text-base">Índices Derivados SIPRO</h3>
-        <Badge variant="outline" className="text-xs">Última campanha encerrada</Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-purple-600" />
+          <h3 className="font-semibold text-base">Índices Derivados SIPRO</h3>
+          <Badge variant="outline" className="text-xs">
+            {filtroCampanha === "recente" ? "Última campanha analisada" : "Campanha selecionada"}
+          </Badge>
+        </div>
+
+        {validas.length > 0 && (
+          <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-md border border-purple-100">
+            <Filter className="h-3 w-3 text-muted-foreground ml-1" />
+            <Select value={filtroCampanha} onValueChange={setFiltroCampanha}>
+              <SelectTrigger className="w-[180px] h-7 text-[10px] border-none bg-transparent focus:ring-0">
+                <SelectValue placeholder="Escolher Campanha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recente">Mais Recente</SelectItem>
+                {validas.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
