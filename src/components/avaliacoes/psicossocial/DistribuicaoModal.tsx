@@ -38,8 +38,8 @@ export function DistribuicaoModal({ open, onOpenChange, campanha }: Distribuicao
   const [loadingToken, setLoadingToken] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Sempre usa a URL publicada para garantir acesso anônimo sem login Lovable
-  const baseUrl = import.meta.env.VITE_APP_URL || "https://youreyes.com.br";
+  // Usa a URL do ambiente ou a URL publicada (preferencialmente o novo domínio)
+  const baseUrl = window.location.origin;
   const linkGeral = tokenPublico ? `${baseUrl}/questionario/${tokenPublico}` : null;
 
   // Busca ou gera o token público da campanha
