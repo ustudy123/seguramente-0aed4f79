@@ -110,10 +110,10 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
   useEffect(() => {
     if (campanhas.length === 1) {
       setFiltroCampanha(campanhas[0].id);
-    } else {
+    } else if (filtroCampanha !== "recente" && !campanhas.some(c => c.id === filtroCampanha)) {
       setFiltroCampanha("recente");
     }
-  }, [campanhas]);
+  }, [campanhas, filtroCampanha]);
 
   const validas = useMemo(() => {
     return campanhas.filter(

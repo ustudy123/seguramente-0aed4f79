@@ -122,10 +122,10 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   useEffect(() => {
     if (campanhas.length === 1) {
       setFiltroCampanha(campanhas[0].id);
-    } else {
+    } else if (filtroCampanha !== "todos" && !campanhas.some(c => c.id === filtroCampanha)) {
       setFiltroCampanha("todos");
     }
-  }, [campanhas]);
+  }, [campanhas, filtroCampanha]);
 
   const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
 
