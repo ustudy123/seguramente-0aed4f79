@@ -115,6 +115,7 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("todos");
   const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
 
   // GAP-P2: Riscos GRO que precisam de reavaliação (pós-ação concluída)
