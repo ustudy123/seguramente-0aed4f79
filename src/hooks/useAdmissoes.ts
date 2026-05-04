@@ -275,7 +275,7 @@ export function useAdmissoes() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admissoes', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['admissoes', tenantId, empresaAtivaId] });
     },
   });
 
