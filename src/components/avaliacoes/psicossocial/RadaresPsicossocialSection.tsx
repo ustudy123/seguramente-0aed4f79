@@ -550,6 +550,9 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const [acoesCriadas, setAcoesCriadas] = useState<string[]>([]);
   const [creatingActionFor, setCreatingActionFor] = useState<string | null>(null);
   const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
+  const [existingActionsByFator, setExistingActionsByFator] = useState<
+    Record<string, { titulo: string; status: string }[]>
+  >({});
 
   // Filtrar campanhas válidas (com dados de radar e respostas suficientes)
   const campanhasValidas = useMemo(() => {
