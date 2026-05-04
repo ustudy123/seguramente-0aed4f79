@@ -228,6 +228,14 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
           );
         })}
       </AnimatePresence>
+
+      {editAcao && (
+        <PlanoAcaoFormModal
+          open={!!editAcao}
+          onOpenChange={(open) => !open && setEditAcao(null)}
+          editData={editAcao}
+        />
+      )}
     </div>
   );
 }
