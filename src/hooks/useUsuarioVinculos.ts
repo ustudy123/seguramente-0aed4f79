@@ -24,6 +24,7 @@ const TIPOS_ACESSO_GLOBAL = [
   "owner",
   "admin",
   "administrador",
+  "gestor",
 ] as const;
 
 export interface UsuarioVinculo {
