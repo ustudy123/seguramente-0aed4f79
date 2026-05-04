@@ -13,6 +13,7 @@ import {
   Flame,
   ClipboardList,
   Info,
+  LayoutDashboard,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ import { InventarioPGR } from "./InventarioPGR";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
+import { DashboardAvancadoIPS } from "./DashboardAvancadoIPS";
 
 import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
@@ -59,7 +61,8 @@ const INDICES_INFO = [
 
 export function PsicossocialDashboard() {
   const [showAssistente, setShowAssistente] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+   const [showForm, setShowForm] = useState(false);
+  const [showDashboardAvancado, setShowDashboardAvancado] = useState(false);
   const [campanhaParaEditar, setCampanhaParaEditar] = useState<CampanhaPsicossocial | undefined>();
   const [instrumentoPreSelecionado, setInstrumentoPreSelecionado] = useState<string | undefined>();
   const [bannerDistribuir, setBannerDistribuir] = useState<CampanhaPsicossocial | null>(null);
@@ -213,6 +216,19 @@ export function PsicossocialDashboard() {
                   </p>
                 </div>
               )}
+              
+              {ipsConsolidado != null && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4 w-full gap-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+                  onClick={() => setShowDashboardAvancado(true)}
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Análise Detalhada
+                </Button>
+              )}
+
               <div className="mt-3 w-full grid grid-cols-5 gap-0.5 text-xs">
                 {[
                   { label: '0-34', nome: 'Crítico', color: 'bg-red-500' },
@@ -499,6 +515,12 @@ export function PsicossocialDashboard() {
             campanha={bannerResultados}
           />
         )}
+
+        <DashboardAvancadoIPS
+          open={showDashboardAvancado}
+          onOpenChange={setShowDashboardAvancado}
+          campanhas={campanhas}
+        />
       </div>
     </TooltipProvider>
   );
