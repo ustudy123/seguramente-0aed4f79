@@ -451,6 +451,12 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                       )}
                     </div>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="secondary" className="gap-1 px-2">
+                      <Users className="w-3 h-3 text-muted-foreground" />
+                      {(counts as any)[emp.id] || 0}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-center">{grauRiscoBadge(emp.grau_risco)}</TableCell>
                   <TableCell>
                     <Badge className={emp.ativo ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}>
