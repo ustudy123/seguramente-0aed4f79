@@ -43,14 +43,23 @@ export const EmpresaAtivaProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Filtra empresas para profissionais com vínculos
   const empresas = useMemo(() => {
+    let lista: EmpresaCadastro[];
     if (!isProfissional) {
-      return todasEmpresas;
+      lista = todasEmpresas;
+    } else if (empresaIdsPermitidas.length === 0) {
+      // Profissional sem vínculos: lista vazia
+      lista = [];
+    } else {
+      lista = todasEmpresas.filter((e) => empresaIdsPermitidas.includes(e.id));
     }
-    // Profissional: filtrar apenas empresas vinculadas (pode ser lista vazia)
-    if (empresaIdsPermitidas.length === 0) {
-      return [];
-    }
-    return todasEmpresas.filter((e) => empresaIdsPermitidas.includes(e.id));
+    // Defesa contra duplicatas (mesmo id aparecendo mais de uma vez por race
+    // condition de fetch/cache). Garante 1 entrada por empresa no seletor.
+    const seen = new Set<string>();
+    return lista.filter((e) => {
+      if (!e?.id || seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
   }, [todasEmpresas, isProfissional, empresaIdsPermitidas]);
 
   const isLoading = loadingEmpresas || loadingVinculos;
