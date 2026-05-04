@@ -171,7 +171,50 @@ serve(async (req) => {
           findings.push({ categoria: "edge_functions", severidade: "critico", titulo: `Edge Function "${fn}" inacessível`, descricao: `Erro de conexão: ${e.message}`, sugestao: "Verificar se a edge function está deployada e acessível.", modulo: "Edge Functions" });
         }
       }
-    }
+      }
+
+      // Check WhatsApp Connectivity
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/psicossocial-whatsapp-otp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") || ""}`,
+          },
+          body: JSON.stringify({ action: "status" }),
+        });
+        const data = await resp.json();
+        if (data?.status?.message === "WhatsApp disconnected") {
+          findings.push({ 
+            categoria: "edge_functions", 
+            severidade: "critico", 
+            titulo: "WhatsApp Desconectado", 
+            descricao: "A instância do WhatsApp no gateway está desconectada. Os OTPs psicossociais não estão sendo enviados.", 
+            sugestao: "Reconectar a instância do WhatsApp no gateway (QR Code) e verificar se o chip está ativo.", 
+            modulo: "Psicossocial" 
+          });
+        } else if (!resp.ok) {
+          findings.push({ 
+            categoria: "edge_functions", 
+            severidade: "alto", 
+            titulo: "Erro ao checar status do WhatsApp", 
+            descricao: data?.erro || "Erro desconhecido", 
+            sugestao: "Verificar chaves WHATSAPI_TOKEN e WHATSAPI_BASE_URL nas secrets.", 
+            modulo: "Psicossocial" 
+          });
+        } else {
+          findings.push({ 
+            categoria: "edge_functions", 
+            severidade: "info", 
+            titulo: "WhatsApp Conectado ✓", 
+            descricao: "Instância do WhatsApp está operacional.", 
+            sugestao: "", 
+            modulo: "Psicossocial" 
+          });
+        }
+      } catch (e) {
+        findings.push({ categoria: "edge_functions", severidade: "medio", titulo: "Falha na verificação de status do WhatsApp", descricao: e.message, sugestao: "Tentar novamente mais tarde.", modulo: "Psicossocial" });
+      }
 
     // ═══════════════════════════════════════════════════
     // 4. MÓDULOS ESPECÍFICOS
