@@ -36,6 +36,7 @@ import { InventarioPGR } from "./InventarioPGR";
 import { AlertasPsicossociaisPanel } from "./AlertasPsicossociaisPanel";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { IndiceConfiabilidadeCard } from "./IndiceConfiabilidadeCard";
+import { DashboardAvancadoIPS } from "./DashboardAvancadoIPS";
 
 import { OnboardingEmptyState } from "./OnboardingEmptyState";
 import { ProximaAcaoBanner } from "./ProximaAcaoBanner";
