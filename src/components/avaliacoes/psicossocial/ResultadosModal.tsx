@@ -66,7 +66,11 @@ interface ResultadosModalProps {
 export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModalProps) {
   const { useEstatisticasCampanha, useRespostasCampanha } = usePsicossocial();
   const { data: stats, isLoading: loadingStats } = useEstatisticasCampanha(campanha.id);
-  const { data: respostas = [], isLoading: loadingRespostas } = useRespostasCampanha(campanha.id);
+  // Removemos a busca manual de respostas aqui pois as estatísticas já trazem o IPS e radar agregados,
+  // e as respostas individuais são sensíveis ao anonimato. Se precisarmos de detalhes por dimensão,
+  // eles devem vir de 'stats'.
+  const loadingRespostas = false;
+  const respostas: any[] = [];
   const { user, profile } = useAuthContext();
   const { tenantId } = useTenant();
   const { empresaAtivaId } = useEmpresaAtiva();
@@ -107,18 +111,14 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
   // Para SIPRO (IRP-S): maior score = maior risco → críticas têm score ALTO, pontos fortes têm score BAIXO
   // Para demais: menor score = pior → críticas têm score BAIXO, pontos fortes têm score ALTO
   const dimensoesAgregadas = (() => {
-    if (!stats?.anonimato_garantido || respostas.length < MINIMO_ANONIMATO) return [];
-    const mapa: Record<string, number[]> = {};
-    respostas.forEach(r => {
-      r.indicadores?.detalhes?.forEach(d => {
-        if (!mapa[d.bloco]) mapa[d.bloco] = [];
-        mapa[d.bloco].push(d.media);
-      });
-    });
-    const arr = Object.entries(mapa).map(([bloco, valores]) => ({
-      bloco,
-      media: Math.round(valores.reduce((a, b) => a + b, 0) / valores.length),
+    if (!stats?.anonimato_garantido || !stats?.radar || stats.radar.length === 0) return [];
+    
+    // Usamos os dados do radar que já estão agregados nas estatísticas
+    const arr = stats.radar.map(d => ({
+      bloco: d.subject,
+      media: d.value,
     }));
+
     // SIPRO: ordenar do mais crítico (maior score) para o menos
     // Outros: ordenar do mais crítico (menor score) para o melhor
     return isSipro

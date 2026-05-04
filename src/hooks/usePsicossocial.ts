@@ -86,7 +86,7 @@ export function calcularIndicadores(
     const resultado = calcularIRPS(respostas, dimensoes);
 
     const radar: RadarDimensao[] = dimensoes.map(dim => ({
-      subject: dim.nome.split(' ').slice(0, 2).join(' '),
+      subject: dim.nome,
       value: resultado.porDimensao[dim.id]?.score ?? 0,
       fullMark: 100,
     }));
@@ -153,7 +153,7 @@ export function calcularIndicadores(
   }));
 
   const radar: RadarDimensao[] = dimensoesBase.map(dim => ({
-    subject: dim.nome.split(' ').slice(0, 2).join(' '),
+    subject: dim.nome,
     value: porDimensao[dim.id]?.score ?? 50,
     fullMark: 100,
   }));
@@ -498,7 +498,7 @@ export function usePsicossocial() {
       if (allRadar.length > 0) {
         const subjects = allRadar[0].map(d => d.subject);
         radar = subjects.map(subject => ({
-          subject,
+          subject: subject, // Mantemos o nome completo para garantir o match no ResultadosModal
           value: Math.round(
             allRadar.reduce((acc, r) => {
               const found = r.find(d => d.subject === subject);
