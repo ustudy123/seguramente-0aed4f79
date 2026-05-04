@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -105,7 +105,15 @@ interface Props {
 }
 
 export function IndicesDerivadosDashboard({ campanhas }: Props) {
-  const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
+  const [filtroCampanha, setFiltroCampanha] = useState<string>(campanhas.length === 1 ? campanhas[0].id : "recente");
+
+  useEffect(() => {
+    if (campanhas.length === 1) {
+      setFiltroCampanha(campanhas[0].id);
+    } else {
+      setFiltroCampanha("recente");
+    }
+  }, [campanhas]);
 
   const validas = useMemo(() => {
     return campanhas.filter(
