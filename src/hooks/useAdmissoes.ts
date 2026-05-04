@@ -35,15 +35,21 @@ export function useAdmissoes() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['admissoes', tenantId],
+    queryKey: ['admissoes', tenantId, empresaAtivaId],
     queryFn: async (): Promise<AdmissaoCompleta[]> => {
       if (!tenantId) return [];
 
       // Fetch admissões
-      const { data: admissoesData, error: admissoesError } = await supabase
+      let query = supabase
         .from('admissoes')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('tenant_id', tenantId);
+
+      if (empresaAtivaId) {
+        query = query.eq('empresa_id', empresaAtivaId);
+      }
+
+      const { data: admissoesData, error: admissoesError } = await query
         .order('created_at', { ascending: false });
 
       if (admissoesError) throw admissoesError;
