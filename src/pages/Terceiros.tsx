@@ -125,6 +125,7 @@ export default function Terceiros() {
       />
 
       <GuiaRapidoTerceiros open={showGuia} onOpenChange={setShowGuia} />
+      <ImportarTerceirosModal open={showImport} onOpenChange={setShowImport} />
     </div>
   );
 }
