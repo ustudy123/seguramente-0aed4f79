@@ -561,10 +561,10 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   useEffect(() => {
     if (campanhas.length === 1) {
       setFiltroCampanha(campanhas[0].id);
-    } else {
+    } else if (filtroCampanha !== "recente" && !campanhas.some(c => c.id === filtroCampanha)) {
       setFiltroCampanha("recente");
     }
-  }, [campanhas]);
+  }, [campanhas, filtroCampanha]);
   const [existingActionsByFator, setExistingActionsByFator] = useState<
     Record<string, { titulo: string; status: string }[]>
   >({});
