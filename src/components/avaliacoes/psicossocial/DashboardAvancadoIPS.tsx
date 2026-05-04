@@ -355,6 +355,10 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
               </div>
             </TabsContent>
 
+            <TabsContent value="burnout" className="space-y-6">
+              <RadaresPsicossocialSection campanhas={campanhasFiltradas} />
+            </TabsContent>
+
             <TabsContent value="indices" className="space-y-6">
               <IndicesDerivadosDashboard campanhas={campanhasFiltradas} />
             </TabsContent>
