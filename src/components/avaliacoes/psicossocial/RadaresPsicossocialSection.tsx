@@ -729,16 +729,37 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
               <Brain className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
-                {temDadosReais ? (
-                  <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">
-                    Dados Reais
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
-                    Estimativa
-                  </Badge>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
+                    {temDadosReais ? (
+                      <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">
+                        Dados Reais
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
+                        Estimativa
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {campanhasValidas.length > 0 && (
+                  <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-lg border border-primary/10 shadow-sm">
+                    <Filter className="h-3.5 w-3.5 text-primary/60" />
+                    <Select value={filtroCampanha} onValueChange={setFiltroCampanha}>
+                      <SelectTrigger className="w-[200px] h-8 text-xs border-none bg-transparent focus:ring-0">
+                        <SelectValue placeholder="Filtrar por Campanha" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recente">Mais Recente</SelectItem>
+                        {campanhasValidas.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
