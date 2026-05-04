@@ -210,7 +210,12 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <Users className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Elegíveis</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{total}</p>
+            <p className="text-2xl font-bold mt-1">{elegiveis}</p>
+            {totalRespostasReais > elegiveis && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                +{totalRespostasReais} via Link Geral (anônimo)
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
