@@ -30,6 +30,27 @@ interface EmpresaListProps {
 }
 
 export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+  const { tenantId } = useAuthContext() as any;
+  const { data: counts = [] } = useQuery({
+    queryKey: ['empresa_colaboradores_counts', tenantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('admissoes')
+        .select('empresa_id')
+        .eq('tenant_id', tenantId!)
+        .eq('status', 'concluido');
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      data.forEach(row => {
+        if (row.empresa_id) {
+          map[row.empresa_id] = (map[row.empresa_id] || 0) + 1;
+        }
+      });
+      return map;
+    },
+    enabled: !!tenantId,
+  });
+
   const { hasRole, isSuperAdmin } = useAuthContext() as any;
   const podeExcluir = isSuperAdmin || hasRole?.('owner');
   const [search, setSearch] = useState('');
