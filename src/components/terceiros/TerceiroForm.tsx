@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Search } from "lucide-react";
+import { Loader2, X, Search, Upload, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { TIPOS_SERVICO } from "@/types/terceiros";
 import type { Terceiro, TerceiroAcesso } from "@/types/terceiros";
-import { formatCnpj, cleanCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { formatCnpj, validateCnpj, buscarCnpj } from "@/lib/brasilapi";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
   open: boolean;
@@ -22,9 +24,13 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
+  const { user, tenantId } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [servicoSearch, setServicoSearch] = useState("");
   const [customServicos, setCustomServicos] = useState<string[]>([]);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [uploadingContract, setUploadingContract] = useState(false);
+  const [contractFile, setContractFile] = useState<File | null>(null);
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
     nome_fantasia: initial?.nome_fantasia || "",
@@ -96,8 +102,43 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
       contrato_fim: form.contrato_fim || null,
     };
     
-    await onSubmit(submissionData);
-    onOpenChange(false);
+    try {
+      // First create/update the third party
+      const result = await (onSubmit(submissionData) as any);
+      
+      // If there's a contract file, upload it to terceiro_documentos
+      if (contractFile && result?.id) {
+        setUploadingContract(true);
+        const ts = Date.now();
+        const safeName = contractFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const path = `${tenantId}/terceiros/${result.id}/contratos/${ts}_${safeName}`;
+        
+        const { error: upErr } = await supabase.storage
+          .from("documentos")
+          .upload(path, contractFile);
+          
+        if (upErr) throw upErr;
+
+        await supabase.from("terceiro_documentos" as any).insert({
+          tenant_id: tenantId,
+          terceiro_id: result.id,
+          tipo: "Contrato",
+          nome: `Contrato Original - ${contractFile.name}`,
+          arquivo_url: path,
+          arquivo_nome: contractFile.name,
+          arquivo_tamanho: contractFile.size,
+          status: "valido",
+          criado_por: user?.id,
+        });
+      }
+      
+      onOpenChange(false);
+      setContractFile(null);
+    } catch (error: any) {
+      console.error("Erro ao salvar terceiro:", error);
+    } finally {
+      setUploadingContract(false);
+    }
   };
 
   return (
@@ -273,6 +314,35 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Contrato Social / Prestação de Serviço</Label>
+            <div 
+              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={(e) => setContractFile(e.target.files?.[0] || null)}
+              />
+              {contractFile ? (
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <FileText className="w-5 h-5" />
+                  <span className="text-sm font-medium">{contractFile.name}</span>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setContractFile(null); }}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <Upload className="w-6 h-6" />
+                  <span className="text-xs">Clique para anexar o arquivo do contrato</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div>
             <Label>Observações</Label>
             <Textarea value={form.observacoes || ""} onChange={(e) => set("observacoes", e.target.value)} rows={2} />
@@ -280,8 +350,8 @@ export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending 
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.razao_social || !form.cnpj || isPending}>
-              {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            <Button onClick={handleSubmit} disabled={!form.razao_social || !form.cnpj || isPending || uploadingContract}>
+              {isPending || uploadingContract ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               {initial ? "Salvar" : "Cadastrar"}
             </Button>
           </div>

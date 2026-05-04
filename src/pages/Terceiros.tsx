@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck, BookOpen } from "lucide-react";
+import { Plus, Search, Building2, LayoutDashboard, List, Clock, ClipboardCheck, BookOpen, Upload } from "lucide-react";
+import { ImportarTerceirosModal } from "@/components/terceiros/ImportarTerceirosModal";
 import { useTerceiros } from "@/hooks/useTerceiros";
 import { TerceiroDashboard } from "@/components/terceiros/TerceiroDashboard";
 import { TerceiroList } from "@/components/terceiros/TerceiroList";
@@ -20,6 +21,7 @@ export default function Terceiros() {
   const [editing, setEditing] = useState<Terceiro | null>(null);
   const [selected, setSelected] = useState<Terceiro | null>(null);
   const [showGuia, setShowGuia] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const filtered = terceiros.filter(
     (t) =>
@@ -52,6 +54,9 @@ export default function Terceiros() {
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setShowGuia(true)}>
             <BookOpen className="w-4 h-4 mr-2" /> Guia Rapido
+          </Button>
+          <Button variant="outline" onClick={() => setShowImport(true)}>
+            <Upload className="w-4 h-4 mr-2" /> Importar
           </Button>
           <Button onClick={() => { setEditing(null); setShowForm(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Novo Terceiro
@@ -120,6 +125,7 @@ export default function Terceiros() {
       />
 
       <GuiaRapidoTerceiros open={showGuia} onOpenChange={setShowGuia} />
+      <ImportarTerceirosModal open={showImport} onOpenChange={setShowImport} />
     </div>
   );
 }
