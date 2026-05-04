@@ -5,7 +5,7 @@ import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
   Meh, TrendingDown, MessageSquareWarning, Zap, ExternalLink,
-  ChevronDown, ChevronUp, Plus, Info, Minus, RefreshCw
+  ChevronDown, ChevronUp, Plus, Info, Minus, RefreshCw, Filter
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
