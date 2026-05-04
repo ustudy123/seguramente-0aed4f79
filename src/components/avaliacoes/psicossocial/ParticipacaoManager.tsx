@@ -99,6 +99,19 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
     },
   });
 
+  // Total de respostas reais (inclui Link Geral anônimo)
+  const { data: totalRespostasReais = 0 } = useQuery({
+    queryKey: ["psicossocial-respostas-count", campanha.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("questionario_psicossocial_respostas")
+        .select("id", { count: "exact", head: true })
+        .eq("campanha_id", campanha.id);
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
   // Adicionar participante elegível
   const adicionarParticipante = useMutation({
     mutationFn: async (dados: typeof form) => {
