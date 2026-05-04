@@ -182,26 +182,33 @@ export function EpiEntregaList({
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="flex flex-col gap-4 p-4 bg-muted/50 rounded-lg">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+      <div className="flex flex-col gap-4 p-5 bg-card border rounded-xl shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <Search className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Filtros de Busca</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Filtrar por colaborador ou CPF..."
+                placeholder="Pesquisar por nome ou CPF do colaborador..."
                 value={filtroColaborador}
                 onChange={(e) => setFiltroColaborador(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-10 border-muted-foreground/20 focus-visible:ring-primary"
               />
             </div>
           </div>
-          <div className="w-full sm:w-48">
+          <div className="md:col-span-4">
             <Select value={filtroEpi} onValueChange={setFiltroEpi}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por EPI" />
+              <SelectTrigger className="h-10 border-muted-foreground/20">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Todos os EPIs" />
+                </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os EPIs</SelectItem>
+                <SelectItem value="all">Todos os tipos de EPI</SelectItem>
                 {episUnicos.map((epi) => (
                   <SelectItem key={epi.id} value={epi.id}>
                     {epi.nome}
@@ -210,17 +217,20 @@ export function EpiEntregaList({
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full sm:w-40">
+          <div className="md:col-span-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="h-10 border-muted-foreground/20">
+                <div className="flex items-center gap-2">
+                  <RotateCcw className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Status" />
+                </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="ativa">Ativas</SelectItem>
-                <SelectItem value="devolvido">Devolvidas</SelectItem>
-                <SelectItem value="extraviado">Extraviadas</SelectItem>
-                <SelectItem value="vencido">Vencidas</SelectItem>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="ativa">🟢 Em Uso (Ativas)</SelectItem>
+                <SelectItem value="devolvido">🔵 Devolvidas</SelectItem>
+                <SelectItem value="extraviado">🔴 Extraviadas</SelectItem>
+                <SelectItem value="vencido">🟠 Vencidas</SelectItem>
               </SelectContent>
             </Select>
           </div>
