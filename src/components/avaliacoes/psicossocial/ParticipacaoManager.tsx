@@ -62,8 +62,8 @@ interface ParticipacaoManagerProps {
   campanha: CampanhaPsicossocial;
 }
 
-// Sempre usa a URL publicada para garantir acesso anônimo sem login Lovable
-const BASE_URL = import.meta.env.VITE_APP_URL || "https://youreyes.com.br";
+// Usa a URL atual do navegador para garantir que o domínio correto seja utilizado
+const BASE_URL = typeof window !== 'undefined' ? window.location.origin : "https://youreyes.com.br";
 
 function getLinkParticipacao(token: string) {
   return `${BASE_URL}/p/${token}`;
