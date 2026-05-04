@@ -137,8 +137,16 @@ Deno.serve(async (req) => {
 
       if (!enviado) {
         console.error("Erro ao enviar WhatsApp:", JSON.stringify(whatsResult));
+        
+        let erroAmigavel = "Erro ao enviar o código via WhatsApp.";
+        if (whatsResult?.message === "WhatsApp disconnected") {
+          erroAmigavel = "O serviço de WhatsApp está temporariamente desconectado. Por favor, entre em contato com o administrador do sistema.";
+        } else if (whatsResult?.error === "Unauthorized") {
+          erroAmigavel = "Falha na autenticação do serviço de WhatsApp. O administrador precisa revisar as chaves de API.";
+        }
+
         return new Response(
-          JSON.stringify({ erro: "Erro ao enviar o código. Verifique o número." }),
+          JSON.stringify({ erro: erroAmigavel, originalError: whatsResult }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
