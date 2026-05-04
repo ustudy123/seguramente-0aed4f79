@@ -216,7 +216,7 @@ export function SaldoLocalDashboard() {
       >
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Package className="w-5 h-5 text-primary" />
@@ -226,10 +226,22 @@ export function SaldoLocalDashboard() {
                   Visualize o saldo de cada EPI em cada local de estoque
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative w-full sm:w-[280px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar EPI ou local..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 h-10 border-muted-foreground/20"
+                  />
+                </div>
                 <Select value={filtroLocal} onValueChange={setFiltroLocal}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Filtrar local" />
+                  <SelectTrigger className="w-full sm:w-[200px] h-10 border-muted-foreground/20">
+                    <div className="flex items-center gap-2">
+                      <Warehouse className="w-4 h-4 text-muted-foreground" />
+                      <SelectValue placeholder="Filtrar local" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos os locais</SelectItem>
@@ -239,15 +251,6 @@ export function SaldoLocalDashboard() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="relative max-w-sm mt-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar EPI ou local..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
             </div>
           </CardHeader>
           <CardContent>
