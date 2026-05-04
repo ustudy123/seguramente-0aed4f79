@@ -140,8 +140,8 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   value={data.cnpj || ''}
                   onChange={handleCnpjChange}
                   maxLength={18}
-                  disabled={!!data.id && !!data.cnpj}
-                  className={!!data.id && !!data.cnpj ? 'bg-muted cursor-not-allowed' : ''}
+                  disabled={false}
+                  className=""
                 />
                 <Button
                   type="button"
