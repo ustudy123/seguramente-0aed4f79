@@ -3,7 +3,7 @@
 describe("Módulo EPI - Gestão de EPIs", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.app.br";
+  const baseUrl = (Cypress.config("baseUrl") as string) || "https://YourEyes.app.br";
   const uniqueId = Date.now();
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

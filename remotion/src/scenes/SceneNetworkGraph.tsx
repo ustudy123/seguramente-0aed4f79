@@ -55,7 +55,7 @@ export const SceneNetworkGraph = () => {
       >
         <div style={{ fontSize: 72, fontWeight: 800, color: "#FFFFFF", letterSpacing: -1.5, lineHeight: 1.05 }}>
           Todos os módulos do{" "}
-          <span style={{ color: PURPLE, textShadow: `0 0 30px ${PURPLE_GLOW}0.6)` }}>SeguraMente</span>
+          <span style={{ color: PURPLE, textShadow: `0 0 30px ${PURPLE_GLOW}0.6)` }}>YourEyes</span>
         </div>
         <div style={{ fontSize: 56, fontWeight: 700, color: PURPLE, marginTop: 10, letterSpacing: -1 }}>
           conversam entre si.

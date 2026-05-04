@@ -38,7 +38,7 @@ export const Scene1Integration = () => {
         }}
       >
         <div style={{ fontSize: 52, fontWeight: 800, color: "#F8F5FF", letterSpacing: -1 }}>
-          Todos os módulos do <span style={{ color: "#A78BFA" }}>Seguramente</span>
+          Todos os módulos do <span style={{ color: "#A78BFA" }}>YourEyes</span>
         </div>
         <div style={{ fontSize: 48, fontWeight: 700, color: "#7C3AED", marginTop: 8 }}>
           conversam entre si.

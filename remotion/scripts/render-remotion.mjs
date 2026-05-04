@@ -32,7 +32,7 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/seguramente-especialistas.mp4",
+  outputLocation: "/mnt/documents/YourEyes-especialistas.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,

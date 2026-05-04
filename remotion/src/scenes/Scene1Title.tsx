@@ -148,7 +148,7 @@ export const Scene1Title = () => {
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}>
-            Seguramente
+            YourEyes
           </span>
         </div>
 

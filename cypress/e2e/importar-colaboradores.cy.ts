@@ -3,7 +3,7 @@
 describe("Colaboradores - Modal de Importação", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
-  const baseUrl = (Cypress.config("baseUrl") as string) || "https://seguramente.app.br";
+  const baseUrl = (Cypress.config("baseUrl") as string) || "https://YourEyes.app.br";
 
   function closeEmpresaModalIfNeeded() {
     cy.get("body", { timeout: 15000 }).then(($body) => {

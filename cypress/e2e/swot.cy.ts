@@ -3,7 +3,7 @@
 describe("Módulo SWOT — Estratégia & Governança", () => {
   const email = "renata_sophia_cortereal@cafefrossard.com";
   const password = "123456";
-  const baseUrl = Cypress.config("baseUrl") || "https://seguramente.app.br";
+  const baseUrl = Cypress.config("baseUrl") || "https://YourEyes.app.br";
   const uniqueId = Date.now();
 
   function closeEmpresaModalIfNeeded() {

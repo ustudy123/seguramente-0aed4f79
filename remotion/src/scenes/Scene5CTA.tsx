@@ -47,7 +47,7 @@ export const Scene5CTA: React.FC = () => {
         }}
       >
         <Img
-          src={staticFile("images/logo-seguramente.png")}
+          src={staticFile("images/logo-YourEyes.png")}
           style={{ height: 120, width: "auto", objectFit: "contain" }}
         />
       </div>
@@ -73,7 +73,7 @@ export const Scene5CTA: React.FC = () => {
 
       {/* URL */}
       <TextReveal
-        text="seguramente.lovable.app"
+        text="YourEyes.lovable.app"
         delay={40}
         fontSize={26}
         color={COLORS.lilac}

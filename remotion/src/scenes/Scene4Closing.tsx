@@ -138,7 +138,7 @@ export const Scene4Closing = () => {
             textTransform: "uppercase",
           }}
         >
-          Seguramente
+          YourEyes
         </div>
       </div>
     </AbsoluteFill>
