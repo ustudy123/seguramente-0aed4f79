@@ -24,9 +24,13 @@ interface Props {
 }
 
 export function TerceiroForm({ open, onOpenChange, onSubmit, initial, isPending }: Props) {
+  const { user, tenantId } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [servicoSearch, setServicoSearch] = useState("");
   const [customServicos, setCustomServicos] = useState<string[]>([]);
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [uploadingContract, setUploadingContract] = useState(false);
+  const [contractFile, setContractFile] = useState<File | null>(null);
   const [form, setForm] = useState<Partial<Terceiro>>({
     razao_social: initial?.razao_social || "",
     nome_fantasia: initial?.nome_fantasia || "",
