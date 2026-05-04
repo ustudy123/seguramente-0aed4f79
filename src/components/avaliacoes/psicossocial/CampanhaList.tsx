@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   Brain, 
   Calendar, 
@@ -13,6 +13,9 @@ import {
   Database,
   Loader2,
   Pencil,
+  Search,
+  Filter,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
