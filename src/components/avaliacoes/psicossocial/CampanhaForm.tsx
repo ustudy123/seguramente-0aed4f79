@@ -120,6 +120,7 @@ interface CampanhaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campanhaAnterior?: CampanhaPsicossocial;
+  campanhaParaEditar?: CampanhaPsicossocial;
   instrumentoSugerido?: string;
 }
 
