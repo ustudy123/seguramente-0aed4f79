@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { PlanoAcao } from "@/types/planoAcao";
+import { PlanoAcaoFormModal } from "./PlanoAcaoFormModal";
 
 interface PlanoAcaoListProps {
   acoes: PlanoAcao[];
