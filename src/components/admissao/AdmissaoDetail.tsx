@@ -111,6 +111,10 @@ export function AdmissaoDetail({
         </div>
 
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowChecklist(true)} className="gap-2">
+            <ClipboardCheck className="h-4 w-4" />
+            Checklist
+          </Button>
           <Button variant="outline" onClick={onEdit}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
