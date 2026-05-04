@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown, Trash2 } from 'lucide-react';
+import { formatCnpj } from '@/lib/cnpj';
+import { formatCpf } from '@/lib/cpf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmpresaImportExport } from './EmpresaImportExport';
 import { Button } from '@/components/ui/button';
