@@ -156,7 +156,10 @@ function desvioPadrao(valores: number[]): number {
  * Protetor com resposta 1 (mínima proteção) → vira 5 (máximo risco)
  */
 function recodificarItem(raw: number, invertida: boolean): number {
-  return invertida ? 6 - raw : raw;
+  // Escala original: 0..4 (5 pontos)
+  // Regra SIPRO: escala 1..5
+  const raw1to5 = raw + 1;
+  return invertida ? 6 - raw1to5 : raw1to5;
 }
 
 /**
