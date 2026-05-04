@@ -5,10 +5,9 @@ import {
   Target, 
   Brain, 
   Info,
-  ArrowRight,
+  LayoutDashboard,
   ShieldCheck,
-  Zap,
-  LayoutDashboard
+  Zap
 } from "lucide-react";
 import {
   Dialog,
@@ -21,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { IPSHistoricoChart } from "./IPSHistoricoChart";
 import { IndicesDerivadosDashboard } from "./IndicesDerivadosDashboard";
 import { RadarPsicossocial } from "./RadarPsicossocial";
@@ -165,7 +165,7 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {radarData.slice(0, 4).map((d, i) => {
                   const score = d.value;
-                  const isHighRisk = score < 50; // Na escala IPS (bom), < 50 é risco
+                  const isHighRisk = score < 50; 
                   return (
                     <Card key={i} className={cn(isHighRisk ? "border-amber-200 bg-amber-50/20" : "")}>
                       <CardHeader className="p-4 pb-0">
