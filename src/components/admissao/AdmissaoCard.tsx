@@ -94,6 +94,9 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
               <DropdownMenuItem onClick={() => onView(admissao.id)}>
                 <Eye className="h-4 w-4 mr-2" /> Visualizar
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowChecklist(true)}>
+                <ClipboardCheck className="h-4 w-4 mr-2" /> Checklist de Docs
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(admissao.id)}>
                 <FileText className="h-4 w-4 mr-2" /> Editar
               </DropdownMenuItem>
