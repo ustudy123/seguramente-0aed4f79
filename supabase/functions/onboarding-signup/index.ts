@@ -26,6 +26,14 @@ type Payload = {
   tipoPessoa?: string;
   documento?: string;
   telefone?: string;
+  // Address fields
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
   // Fallback userId for signup flow (no session)
   userId?: string;
 };
