@@ -31,7 +31,7 @@ import { useGRORiscos } from "@/hooks/useGRORiscos";
 import { DistribuicaoModal } from "./DistribuicaoModal";
 import { ResultadosModal } from "./ResultadosModal";
 import { ParticipacaoManager } from "./ParticipacaoManager";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -286,7 +286,7 @@ function CampanhaCard({ campanha, onAtivar, onEncerrar, onDistribuir, onVerResul
         <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            {format(new Date(campanha.data_inicio), "dd/MM/yyyy", { locale: ptBR })} - {format(new Date(campanha.data_fim), "dd/MM/yyyy", { locale: ptBR })}
+            {format(parseISO(campanha.data_inicio), "dd/MM/yyyy", { locale: ptBR })} - {format(parseISO(campanha.data_fim), "dd/MM/yyyy", { locale: ptBR })}
           </span>
           {stats && (
             <span className="flex items-center gap-1">
