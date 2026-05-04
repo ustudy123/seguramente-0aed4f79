@@ -151,6 +151,17 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
     onEditarCampanha(campanha);
   };
 
+  const filteredCampanhas = useMemo(() => {
+    return campanhas.filter((c) => {
+      const matchesSearch = c.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (c.descricao?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "todos" || c.status === statusFilter;
+      const matchesInstrument = instrumentFilter === "todos" || c.instrumento === instrumentFilter;
+      
+      return matchesSearch && matchesStatus && matchesInstrument;
+    });
+  }, [campanhas, searchTerm, statusFilter, instrumentFilter]);
+
   if (campanhas.length === 0) {
     return (
       <Card>
