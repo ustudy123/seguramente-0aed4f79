@@ -515,6 +515,12 @@ export function PsicossocialDashboard() {
             campanha={bannerResultados}
           />
         )}
+
+        <DashboardAvancadoIPS
+          open={showDashboardAvancado}
+          onOpenChange={setShowDashboardAvancado}
+          campanhas={campanhas}
+        />
       </div>
     </TooltipProvider>
   );
