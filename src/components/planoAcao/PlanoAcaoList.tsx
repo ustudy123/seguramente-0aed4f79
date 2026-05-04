@@ -72,6 +72,7 @@ const ORIGEM_LABELS: Record<string, { label: string }> = {
 
 export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação encontrada" }: PlanoAcaoListProps) {
   const navigate = useNavigate();
+  const [editAcao, setEditAcao] = useState<PlanoAcao | null>(null);
 
   if (isLoading) {
     return (
