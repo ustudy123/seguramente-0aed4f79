@@ -446,7 +446,16 @@ serve(async (req) => {
   const { data: pvCliente, error: pvError } = await admin
     .from("programa_validador_clientes")
     .insert({
-// ... keep existing code
+      tenant_id: tenant.id,
+      nome_empresa: tenantNome,
+      cnpj: tipoPessoa === "pj" ? documento : null,
+      poc_nome: nomeCompleto,
+      poc_email: email,
+      poc_telefone: telefone || null,
+      plano: plano,
+      fase: "onboarding",
+      user_id: userId,
+      endereco: endereco ? `${endereco}${numero ? ', ' + numero : ''}${complemento ? ' - ' + complemento : ''}` : null,
     })
     .select("onboarding_token")
     .single();
