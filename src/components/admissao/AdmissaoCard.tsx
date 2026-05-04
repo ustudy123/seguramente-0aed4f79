@@ -175,6 +175,12 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
           {dataCriacao ? `Criado em ${format(dataCriacao, "dd/MM/yyyy", { locale: ptBR })}` : ''}
         </span>
       </div>
+
+      <DocumentChecklistModal 
+        open={showChecklist} 
+        onOpenChange={setShowChecklist} 
+        admissao={admissao} 
+      />
     </motion.div>
   );
 }
