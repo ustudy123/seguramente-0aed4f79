@@ -160,7 +160,7 @@ export function QuestionarioResponder({
       </div>
 
       {/* Navegação por dimensões - Pills */}
-      <div className="flex gap-1.5 flex-wrap">
+      <div className="flex gap-1.5 flex-wrap overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
         {dimProgresso.map((dim, i) => {
           const completa = dim.respondidas === dim.total;
           const parcial = dim.respondidas > 0 && !completa;
@@ -173,7 +173,7 @@ export function QuestionarioResponder({
                 setDimAtual(i);
               }}
               className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium transition-all border",
+                "px-2.5 py-1 rounded-full text-xs font-medium transition-all border shrink-0",
                 atual && "ring-2 ring-primary ring-offset-1",
                 completa && "bg-emerald-100 border-emerald-300 text-emerald-700",
                 parcial && "bg-amber-100 border-amber-300 text-amber-700",
@@ -200,7 +200,7 @@ export function QuestionarioResponder({
             "border-2",
             dimensaoAtual?.tipo === 'risco' ? 'border-orange-200' : 'border-emerald-200'
           )}>
-            <CardContent className="pt-5 space-y-5">
+            <CardContent className="p-4 sm:pt-5 space-y-4 sm:space-y-5">
               {/* Cabeçalho da dimensão */}
               <div className="flex items-start gap-3">
                 <div className={cn(
@@ -242,20 +242,22 @@ export function QuestionarioResponder({
                           </span>
                         )}
                       </p>
-                      <div className="grid grid-cols-5 gap-1.5">
+                      <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
                         {(pergunta.invertida ? ESCALA_PROTETOR : ESCALA_RISCO).map(op => (
                           <button
                             key={op.valor}
                             onClick={() => onRespostaChange(pergunta.id, op.valor)}
                             className={cn(
-                              "flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all text-center",
+                              "flex flex-col items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 rounded-lg border-2 transition-all text-center h-full justify-between",
                               respostaAtual === op.valor
-                                ? `${op.cor} border-current ring-2 ring-current ring-offset-1 scale-105`
+                                ? `${op.cor} border-current ring-2 ring-current ring-offset-1 scale-[1.02] sm:scale-105`
                                 : "border-border hover:border-current " + op.cor
                             )}
                           >
-                            <span className="text-lg leading-none">{op.emoji}</span>
-                            <span className="text-[10px] font-medium leading-tight">{op.label}</span>
+                            <span className="text-base sm:text-lg leading-none">{op.emoji}</span>
+                            <span className="text-[8px] sm:text-[10px] font-medium leading-tight break-words w-full px-0.5">
+                              {op.label}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -269,18 +271,24 @@ export function QuestionarioResponder({
       </AnimatePresence>
 
       {/* Navegação */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={irAnterior}
-          disabled={dimAtual === 0}
-          className="gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Anterior
-        </Button>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center justify-between w-full sm:w-auto sm:gap-4 order-2 sm:order-1">
+          <Button
+            variant="outline"
+            onClick={irAnterior}
+            disabled={dimAtual === 0}
+            className="gap-2 text-xs sm:text-sm h-9 sm:h-10"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </Button>
 
-        <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground sm:hidden">
+            Dimensão {dimAtual + 1} de {dimensoes.length}
+          </span>
+        </div>
+
+        <span className="hidden sm:inline text-sm text-muted-foreground order-2">
           Dimensão {dimAtual + 1} de {dimensoes.length}
         </span>
 
@@ -288,7 +296,7 @@ export function QuestionarioResponder({
           <Button
             onClick={irProximo}
             disabled={!todasRespondidas}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto order-1 sm:order-3 text-xs sm:text-sm h-9 sm:h-10"
             title={!todasRespondidas ? "Responda todas as questões desta dimensão antes de avançar" : ""}
           >
             Próxima
@@ -298,7 +306,7 @@ export function QuestionarioResponder({
           <Button
             onClick={onConcluir}
             disabled={!todasDimensoesRespondidas}
-            className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+            className="gap-2 w-full sm:w-auto order-1 sm:order-3 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm h-9 sm:h-10"
             title={!todasDimensoesRespondidas ? "Responda todas as questões antes de enviar" : ""}
           >
             <CheckCircle2 className="h-4 w-4" />
