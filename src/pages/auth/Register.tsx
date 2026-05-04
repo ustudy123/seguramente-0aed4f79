@@ -206,6 +206,14 @@ export default function Register() {
           userId: authData.user.id,
           email: data.email,
           telefone: data.whatsapp,
+          // Address from CNPJ lookup if available
+          endereco: cnpjData?.logradouro || null,
+          numero: cnpjData?.numero || null,
+          complemento: cnpjData?.complemento || null,
+          bairro: cnpjData?.bairro || null,
+          cidade: cnpjData?.municipio || null,
+          estado: cnpjData?.uf || null,
+          cep: cnpjData?.cep || null,
         },
       });
 

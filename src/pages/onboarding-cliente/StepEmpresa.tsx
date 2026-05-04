@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2, CheckCheck } from "lucide-react";
+import { Sparkles, Loader2, CheckCheck, Search } from "lucide-react";
+import { buscarCnpj, cleanCnpj, formatCnpj } from "@/lib/brasilapi";
 import type { Cliente } from "./types";
 
 export function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcluir: () => void }) {
@@ -18,6 +19,38 @@ export function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcl
     responsavel: cliente.poc_nome || '',
   });
   const [salvando, setSalvando] = useState(false);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+
+  const handleBuscarCnpj = useCallback(async () => {
+    const clean = cleanCnpj(form.cnpj);
+    if (clean.length !== 14) {
+      toast.error("Digite um CNPJ válido com 14 dígitos");
+      return;
+    }
+    setBuscandoCnpj(true);
+    try {
+      const result = await buscarCnpj(clean);
+      if (result) {
+        setForm(f => ({
+          ...f,
+          razao_social: result.razao_social || f.razao_social,
+          cnae: String(result.cnae_fiscal) || f.cnae,
+          cidade: result.municipio || f.cidade,
+        }));
+        toast.success("Dados do CNPJ carregados!");
+      } else {
+        toast.error("CNPJ não encontrado");
+      }
+    } catch {
+      toast.error("Erro ao buscar CNPJ");
+    } finally {
+      setBuscandoCnpj(false);
+    }
+  }, [form.cnpj]);
+
+  const handleCnpjChange = (value: string) => {
+    setForm(f => ({ ...f, cnpj: formatCnpj(value) }));
+  };
 
   async function salvar() {
     if (!form.razao_social || !form.cnpj) {
@@ -63,7 +96,28 @@ export function StepEmpresa({ cliente, onConcluir }: { cliente: Cliente; onConcl
         </div>
         <div>
           <Label htmlFor="cnpj">CNPJ *</Label>
-          <Input id="cnpj" value={form.cnpj} onChange={e => setForm(f => ({ ...f, cnpj: e.target.value }))} className="mt-1" placeholder="00.000.000/0000-00" />
+          <div className="flex gap-2 mt-1">
+            <Input 
+              id="cnpj" 
+              value={form.cnpj} 
+              onChange={e => handleCnpjChange(e.target.value)} 
+              placeholder="00.000.000/0000-00" 
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleBuscarCnpj}
+              disabled={buscandoCnpj}
+              title="Buscar dados do CNPJ"
+            >
+              {buscandoCnpj ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
         <div>
           <Label htmlFor="cnae">CNAE</Label>

@@ -26,6 +26,14 @@ type Payload = {
   tipoPessoa?: string;
   documento?: string;
   telefone?: string;
+  // Address fields
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
   // Fallback userId for signup flow (no session)
   userId?: string;
 };
@@ -104,6 +112,13 @@ serve(async (req) => {
   const tipoPessoa = (payload.tipoPessoa ?? "").trim();
   const documento = (payload.documento ?? "").trim();
   const telefone = (payload.telefone ?? "").trim();
+  const endereco = (payload.endereco ?? "").trim();
+  const numero = (payload.numero ?? "").trim();
+  const complemento = (payload.complemento ?? "").trim();
+  const bairro = (payload.bairro ?? "").trim();
+  const cidade = (payload.cidade ?? "").trim();
+  const estado = (payload.estado ?? "").trim();
+  const cep = (payload.cep ?? "").trim();
 
   // Mode 1: Superadmin creating owner for existing tenant (with password or invite)
   if (existingTenantId && email && nomeCompleto) {
@@ -399,7 +414,24 @@ serve(async (req) => {
 
   // 7) Create empresa_cadastro (pre-registration) if documento provided
   if (documento) {
-// ... keep existing code
+    const docField = tipoPessoa === "pf" ? "cpf" : "cnpj";
+    const empresaPayload = {
+      tenant_id: tenant.id,
+      razao_social: tenantNome,
+      [docField]: documento,
+      tipo_pessoa: tipoPessoa || "pj",
+      telefone: telefone || null,
+      email: email || null,
+      endereco: endereco || null,
+      numero: numero || null,
+      complemento: complemento || null,
+      bairro: bairro || null,
+      cidade: cidade || null,
+      estado: estado || null,
+      cep: cep || null,
+      ativo: true,
+    };
+
     const { error: empresaError } = await admin
       .from("empresa_cadastro")
       .insert(empresaPayload);
@@ -414,7 +446,16 @@ serve(async (req) => {
   const { data: pvCliente, error: pvError } = await admin
     .from("programa_validador_clientes")
     .insert({
-// ... keep existing code
+      tenant_id: tenant.id,
+      nome_empresa: tenantNome,
+      cnpj: tipoPessoa === "pj" ? documento : null,
+      poc_nome: nomeCompleto,
+      poc_email: email,
+      poc_telefone: telefone || null,
+      plano: plano,
+      fase: "onboarding",
+      user_id: userId,
+      endereco: endereco ? `${endereco}${numero ? ', ' + numero : ''}${complemento ? ' - ' + complemento : ''}` : null,
     })
     .select("onboarding_token")
     .single();

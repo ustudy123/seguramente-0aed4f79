@@ -119,9 +119,8 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               tipo_pessoa: v as 'pf' | 'pj',
               ...(v === 'pf' ? { cnpj: null } : { cpf: null, cei: null, caepf: null }),
             })}
-            disabled={!!data.id && !!(data.cnpj || data.cpf)}
           >
-            <SelectTrigger className={!!data.id && !!(data.cnpj || data.cpf) ? 'bg-muted cursor-not-allowed' : ''}>
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -141,8 +140,8 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   value={data.cnpj || ''}
                   onChange={handleCnpjChange}
                   maxLength={18}
-                  disabled={!!data.id && !!data.cnpj}
-                  className={!!data.id && !!data.cnpj ? 'bg-muted cursor-not-allowed' : ''}
+                  disabled={false}
+                  className=""
                 />
                 <Button
                   type="button"
@@ -159,15 +158,9 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
                   )}
                 </Button>
               </div>
-              {!!data.id && !!data.cnpj ? (
-                <p className="text-xs text-muted-foreground">
-                  CNPJ definido no cadastro inicial e não pode ser alterado. Use a lupa para buscar/atualizar endereço e demais dados na Receita Federal.
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Clique na lupa para preencher automaticamente
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Clique na lupa para buscar/atualizar dados na Receita Federal.
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Inscrição Estadual</Label>
@@ -185,14 +178,9 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               <CpfInput
                 value={data.cpf || ''}
                 onChange={(value) => onChange({ cpf: value })}
-                disabled={!!data.id && !!data.cpf}
-                className={!!data.id && !!data.cpf ? 'bg-muted cursor-not-allowed' : ''}
+                disabled={false}
+                className=""
               />
-              {!!data.id && !!data.cpf && (
-                <p className="text-xs text-muted-foreground">
-                  CPF informado no cadastro inicial. Não pode ser alterado.
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label>CEI</Label>
