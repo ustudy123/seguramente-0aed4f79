@@ -15,8 +15,8 @@ interface AtaKickoffData {
   horario_fim: string;
   local: string;
   modalidade: string;
-  responsavel_YourEyes: string;
-  participantes_YourEyes: string;
+  responsavel_seguramente: string;
+  participantes_seguramente: string;
   participantes_cliente: string;
   objetivo: string;
   pauta: string[];
@@ -32,10 +32,10 @@ interface Props {
   isLoading: boolean;
   nomeEmpresa: string;
   pocNome: string | null;
-  responsavelYourEyes: string | null;
+  responsavelSeguramente: string | null;
 }
 
-export function AtaKickoffDialog({ open, onClose, onEnviar, isLoading, nomeEmpresa, pocNome, responsavelYourEyes }: Props) {
+export function AtaKickoffDialog({ open, onClose, onEnviar, isLoading, nomeEmpresa, pocNome, responsavelSeguramente }: Props) {
   const hoje = format(new Date(), 'yyyy-MM-dd');
   const [preview, setPreview] = useState(false);
   const [form, setForm] = useState<AtaKickoffData>({
@@ -44,8 +44,8 @@ export function AtaKickoffDialog({ open, onClose, onEnviar, isLoading, nomeEmpre
     horario_fim: '10:00',
     local: 'Videoconferência (Google Meet / Zoom)',
     modalidade: 'Online',
-    responsavel_YourEyes: responsavelYourEyes || 'Equipe YourEyes',
-    participantes_YourEyes: responsavelYourEyes || 'Representante YourEyes',
+    responsavel_seguramente: responsavelSeguramente || 'Equipe YourEyes',
+    participantes_seguramente: responsavelSeguramente || 'Representante YourEyes',
     participantes_cliente: pocNome || '',
     objetivo: 'Apresentação da plataforma YourEyes, alinhamento de expectativas, definição do escopo inicial e cronograma de implantação.',
     pauta: [
@@ -121,8 +121,8 @@ export function AtaKickoffDialog({ open, onClose, onEnviar, isLoading, nomeEmpre
   <tr><td>Data</td><td>${dataFormatada}</td></tr>
   <tr><td>Horário</td><td>${form.horario_inicio}${form.horario_fim ? ' às ' + form.horario_fim : ''}</td></tr>
   <tr><td>Local / Modalidade</td><td>${form.local} (${form.modalidade})</td></tr>
-  <tr><td>Responsável YourEyes</td><td>${form.responsavel_YourEyes}</td></tr>
-  <tr><td>Participantes YourEyes</td><td>${form.participantes_YourEyes}</td></tr>
+  <tr><td>Responsável YourEyes</td><td>${form.responsavel_seguramente}</td></tr>
+  <tr><td>Participantes YourEyes</td><td>${form.participantes_seguramente}</td></tr>
   <tr><td>Participantes ${nomeEmpresa}</td><td>${form.participantes_cliente}</td></tr>
 </table>
 
@@ -159,7 +159,7 @@ ${form.observacoes ? `<div class="section">
   <div class="assinatura-bloco">
     <div class="assinatura-linha">
       YourEyes TECNOLOGIA LTDA<br>
-      <small>${form.responsavel_YourEyes}</small>
+      <small>${form.responsavel_seguramente}</small>
     </div>
   </div>
   <div class="assinatura-bloco">
@@ -246,11 +246,11 @@ ${form.observacoes ? `<div class="section">
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <Label>Responsável YourEyes</Label>
-                  <Input value={form.responsavel_YourEyes} onChange={e => setForm(p => ({ ...p, responsavel_YourEyes: e.target.value }))} />
+                  <Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} />
                 </div>
                 <div>
                   <Label>Participantes YourEyes</Label>
-                  <Input value={form.participantes_YourEyes} onChange={e => setForm(p => ({ ...p, participantes_YourEyes: e.target.value }))} placeholder="Nome(s) dos representantes" />
+                  <Input value={form.participantes_seguramente} onChange={e => setForm(p => ({ ...p, participantes_seguramente: e.target.value }))} placeholder="Nome(s) dos representantes" />
                 </div>
                 <div>
                   <Label>Participantes do Cliente ({nomeEmpresa})</Label>

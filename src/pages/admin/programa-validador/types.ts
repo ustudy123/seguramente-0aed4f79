@@ -28,7 +28,7 @@ export interface Cliente {
   quantidade_colaboradores: number | null;
   aceita_beta: boolean;
   observacoes: string | null;
-  responsavel_YourEyes: string | null;
+  responsavel_seguramente: string | null;
   endereco: string | null;
   representante: string | null;
   cidade_foro: string | null;
