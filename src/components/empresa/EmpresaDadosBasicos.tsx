@@ -184,8 +184,8 @@ export function EmpresaDadosBasicos({ data, onChange, matrizes = [], currentEmpr
               <CpfInput
                 value={data.cpf || ''}
                 onChange={(value) => onChange({ cpf: value })}
-                disabled={!!data.id && !!data.cpf}
-                className={!!data.id && !!data.cpf ? 'bg-muted cursor-not-allowed' : ''}
+                disabled={false}
+                className=""
               />
               {!!data.id && !!data.cpf && (
                 <p className="text-xs text-muted-foreground">
