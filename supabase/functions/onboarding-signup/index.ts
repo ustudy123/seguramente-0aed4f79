@@ -112,6 +112,13 @@ serve(async (req) => {
   const tipoPessoa = (payload.tipoPessoa ?? "").trim();
   const documento = (payload.documento ?? "").trim();
   const telefone = (payload.telefone ?? "").trim();
+  const endereco = (payload.endereco ?? "").trim();
+  const numero = (payload.numero ?? "").trim();
+  const complemento = (payload.complemento ?? "").trim();
+  const bairro = (payload.bairro ?? "").trim();
+  const cidade = (payload.cidade ?? "").trim();
+  const estado = (payload.estado ?? "").trim();
+  const cep = (payload.cep ?? "").trim();
 
   // Mode 1: Superadmin creating owner for existing tenant (with password or invite)
   if (existingTenantId && email && nomeCompleto) {
