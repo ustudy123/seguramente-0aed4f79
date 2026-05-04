@@ -549,7 +549,22 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const [gerandoBoreout, setGerandoBoreout] = useState(false);
   const [acoesCriadas, setAcoesCriadas] = useState<string[]>([]);
   const [creatingActionFor, setCreatingActionFor] = useState<string | null>(null);
-  const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
+  
+  // Se houver apenas uma campanha filtrada, usamos ela como filtro automático
+  const campaignIdFromProps = useMemo(() => {
+    return campanhas.length === 1 ? campanhas[0].id : "recente";
+  }, [campanhas]);
+
+  const [filtroCampanha, setFiltroCampanha] = useState<string>(campaignIdFromProps);
+
+  // Sincronizar filtro quando as campanhas filtradas mudarem no pai
+  useEffect(() => {
+    if (campanhas.length === 1) {
+      setFiltroCampanha(campanhas[0].id);
+    } else {
+      setFiltroCampanha("recente");
+    }
+  }, [campanhas]);
   const [existingActionsByFator, setExistingActionsByFator] = useState<
     Record<string, { titulo: string; status: string }[]>
   >({});
