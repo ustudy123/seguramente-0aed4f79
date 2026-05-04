@@ -213,7 +213,30 @@ Deno.serve(async (req) => {
 
       // NÃO registrar telefone como usado aqui — só após o questionário ser concluído.
       // Isso evita que respondentes que abandonem antes de finalizar fiquem bloqueados.
+    // ─── STATUS DA INSTÂNCIA ──────────────────────────────
+    if (action === "status") {
+      if (!whatsapiToken || !whatsapiBaseUrl) {
+        return new Response(
+          JSON.stringify({ erro: "WhatsApp API não configurada" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const statusResponse = await fetch(`${whatsapiBaseUrl}/instance/status`, {
+        method: "GET",
+        headers: {
+          token: whatsapiToken,
+        },
+      });
+
+      const statusResult = await statusResponse.json();
       return new Response(
+        JSON.stringify({ sucesso: true, status: statusResult }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+
         JSON.stringify({ sucesso: true, telefone_hash: telefoneHash }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
