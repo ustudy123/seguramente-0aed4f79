@@ -78,7 +78,7 @@ export function AuthLayout() {
               ))}
             </div>
 
-            <p className="text-white/60 text-xs pt-4">© 2026 YOUREYES. Todos os direitos reservados.</p>
+            <p className="text-white/60 text-xs pt-4">© 2026 YourEyes. Todos os direitos reservados.</p>
           </div>
         </motion.div>
 
