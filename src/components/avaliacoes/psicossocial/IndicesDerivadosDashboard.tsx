@@ -164,7 +164,7 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
         tendencia,
       };
     });
-  }, [campanhas]);
+  }, [campanhas, validas, filtroCampanha]);
 
   if (!dados) {
     return (
