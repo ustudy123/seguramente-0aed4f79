@@ -24,7 +24,7 @@ import {
   BLOCOS_DINAMICOS,
 } from "@/types/psicossocial";
 import { toast } from "sonner";
-import logoSeguramente from "@/assets/logo-seguramente.png";
+import logoYourEyes from "@/assets/logo-YourEyes.png";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
@@ -73,7 +73,7 @@ function getInstrumentoLabel(instrumento?: string) {
     case 'copsoq': return 'COPSOQ III — 13 dimensões psicossociais';
     case 'hse': return 'HSE Management Standards — 7 padrões';
     case 'proart': return 'PROART — Protocolo de Avaliação de Riscos';
-    case 'sipro': return 'SIPRO — Índice Seguramente de Risco Psicossocial';
+    case 'sipro': return 'SIPRO — Índice YourEyes de Risco Psicossocial';
     default: return 'Questionário Psicossocial';
   }
 }
@@ -526,8 +526,8 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
               </div>
 
               <img
-                src={logoSeguramente}
-                alt="Seguramente"
+                src={logoYourEyes}
+                alt="YourEyes"
                 className="h-7 mx-auto opacity-40 mt-2"
               />
             </CardContent>
@@ -547,7 +547,7 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <Brain className="h-4 w-4 text-white" />
             </div>
-            <span className="font-semibold text-sm">Seguramente</span>
+            <span className="font-semibold text-sm">YourEyes</span>
           </div>
           <div className="flex items-center gap-2">
             <Shield className="h-3.5 w-3.5 text-emerald-500" />

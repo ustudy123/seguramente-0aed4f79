@@ -114,7 +114,7 @@ export function ContratacaoModal({ servico, open, onClose, onConfirm, isLoading 
               <div className="text-xs text-amber-800">
                 <p className="font-medium">Termo de Ciência</p>
                 <p className="mt-1">
-                  O Seguramente registra apenas que o atendimento ocorreu. Nenhum conteúdo
+                  O YourEyes registra apenas que o atendimento ocorreu. Nenhum conteúdo
                   clínico, gravação ou prontuário será armazenado na plataforma, garantindo
                   total conformidade com a LGPD e ética profissional.
                 </p>

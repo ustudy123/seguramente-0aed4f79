@@ -42,7 +42,7 @@ const PASSOS = [
     cor: ROXO,
     paragrafos: [
       'Acesse o menu lateral > "Avaliacoes" > "Psicossocial". Clique no botao "Nova Campanha" no canto superior direito da tela.',
-      'O Assistente de Selecao ira aparecer para recomendar o instrumento mais adequado. Para a maioria das empresas, o SIPRO e o instrumento mais indicado. Ele e um instrumento autoral do Seguramente, desenvolvido com base nos tres modelos internacionais validados (COPSOQ III, HSE e PROART) e adaptado ao contexto brasileiro. Sua principal vantagem e a integracao nativa com os demais modulos da plataforma - GRO, Planos de Acao, Motor AET, Afastamentos e Indicadores de Saude -, tornando a avaliacao muito mais assertiva do que um questionario isolado. Atende aos requisitos da NR-01.',
+      'O Assistente de Selecao ira aparecer para recomendar o instrumento mais adequado. Para a maioria das empresas, o SIPRO e o instrumento mais indicado. Ele e um instrumento autoral do YourEyes, desenvolvido com base nos tres modelos internacionais validados (COPSOQ III, HSE e PROART) e adaptado ao contexto brasileiro. Sua principal vantagem e a integracao nativa com os demais modulos da plataforma - GRO, Planos de Acao, Motor AET, Afastamentos e Indicadores de Saude -, tornando a avaliacao muito mais assertiva do que um questionario isolado. Atende aos requisitos da NR-01.',
       'Preencha o nome da campanha e defina o periodo de coleta (data de inicio e fim). Voce pode criar campanhas regulares (trimestrais, semestrais ou anuais) ou campanhas extraordinarias para situacoes urgentes.',
     ],
     dica: "Dica: Campanhas trimestrais constroem um historico robusto e permitem medir o impacto das acoes ao longo do tempo.",
@@ -156,7 +156,7 @@ const GLOSSARIO: [string, string][] = [
   ["AET",           "Analise Ergonomica do Trabalho. Estudo aprofundado de situacoes criticas, exigido pela NR-17."],
   ["5W2H",          "Modelo de plano de acao: O que, Por que, Onde, Quando, Quem, Como, Quanto custa."],
   ["Sit. Trabalho", "Combinacao de Setor + Funcao que representa um grupo de colaboradores avaliados."],
-  ["SIPRO",         "Instrumento autoral do Seguramente, criado com base no COPSOQ III, HSE e PROART. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma. Recomendado na maioria dos cenarios."],
+  ["SIPRO",         "Instrumento autoral do YourEyes, criado com base no COPSOQ III, HSE e PROART. Integrado nativamente com GRO, Planos de Acao, Motor AET e indicadores da plataforma. Recomendado na maioria dos cenarios."],
   ["Camp. Regular", "Avaliacao periodica programada (trimestral, semestral ou anual)."],
   ["Camp. Extraord.","Avaliacao urgente disparada por evento critico (acidente, reestruturacao)."],
 ];
@@ -192,7 +192,7 @@ export function ManualPsicossocial() {
         doc.setFontSize(7);
         text(doc, MUTED);
         doc.text(
-          `Seguramente - Manual do Usuario | Gestao Psicossocial | Pagina ${cur}/${total}`,
+          `YourEyes - Manual do Usuario | Gestao Psicossocial | Pagina ${cur}/${total}`,
           pageW / 2, pageH - 8, { align: "center" }
         );
       };
@@ -243,7 +243,7 @@ export function ManualPsicossocial() {
         `Emitido em ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`,
         margin, pageH - 20
       );
-      doc.text("seguramente.app", pageW - margin, pageH - 20, { align: "right" });
+      doc.text("YourEyes.app", pageW - margin, pageH - 20, { align: "right" });
 
       // ── SUMARIO ──────────────────────────────────────────────────────────
       doc.addPage();
@@ -480,7 +480,7 @@ export function ManualPsicossocial() {
 
       rodape();
 
-      doc.save(`Manual_Psicossocial_Seguramente_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      doc.save(`Manual_Psicossocial_YourEyes_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Manual gerado com sucesso!");
     } catch (err) {
       console.error(err);

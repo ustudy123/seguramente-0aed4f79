@@ -104,7 +104,7 @@ export default function PerfisContent() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">Perfis & Níveis de Acesso</h2>
-            <p className="text-sm text-muted-foreground">Configure quem pode acessar o quê no Seguramente</p>
+            <p className="text-sm text-muted-foreground">Configure quem pode acessar o quê no YourEyes</p>
           </div>
         </div>
         <Button onClick={() => { setPerfilEditando(undefined); setPerfilFormOpen(true); }} className="shrink-0">

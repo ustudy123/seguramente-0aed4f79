@@ -455,7 +455,7 @@ export function ComunicacaoTrabalhadores({ riscos }: ComunicacaoTrabalhadoresPro
                     responsável de SST da empresa. Sua participação é fundamental para um ambiente
                     de trabalho mais seguro e saudável.
                   </p>
-                  <p className="mt-1 font-medium">Sistema Seguramente · {dataGeracao}</p>
+                  <p className="mt-1 font-medium">Sistema YourEyes · {dataGeracao}</p>
                 </div>
               )}
             </CardContent>

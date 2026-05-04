@@ -189,7 +189,7 @@ export function ResultadosCiclo() {
       // Rodapé
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
-      doc.text("Gerado pelo Seguramente — Avaliação de Desempenho", pageW / 2, 285, { align: "center" });
+      doc.text("Gerado pelo YourEyes — Avaliação de Desempenho", pageW / 2, 285, { align: "center" });
 
       doc.save(`avaliacao-${cicloAtual.nome.replace(/\s+/g, "_")}.pdf`);
       toast.success("PDF gerado com sucesso!");

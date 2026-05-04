@@ -37,7 +37,7 @@ const PASSOS = [
     subtitulo: "O que e e para que serve",
     cor: VERDE,
     paragrafos: [
-      'O modulo de Ergonomia Inteligente do Seguramente centraliza toda a gestao de riscos ergonomicos da sua empresa. Ele foi desenvolvido para apoiar o atendimento as exigencias da NR-17 (Ergonomia), NR-01 (Gestao de Riscos Ocupacionais) e as diretrizes da ISO 45001/45003, reunindo em um so lugar tudo que voce precisa: identificacao de riscos, analise tecnica, planos de acao e documentos de conformidade.',
+      'O modulo de Ergonomia Inteligente do YourEyes centraliza toda a gestao de riscos ergonomicos da sua empresa. Ele foi desenvolvido para apoiar o atendimento as exigencias da NR-17 (Ergonomia), NR-01 (Gestao de Riscos Ocupacionais) e as diretrizes da ISO 45001/45003, reunindo em um so lugar tudo que voce precisa: identificacao de riscos, analise tecnica, planos de acao e documentos de conformidade.',
       'Voce nao precisa ser especialista em ergonomia para usar este modulo. O sistema orienta cada etapa com linguagem simples, automatiza os calculos de criticidade e gera a documentacao tecnica com um clique. O objetivo e que o RH, o gestor ou o tecnico de SST consiga gerenciar os riscos ergonomicos de forma organizada e documentada. A norma orienta; o sistema operacionaliza.',
       'A estrutura do modulo aplica o ciclo GRO (Gerenciamento de Riscos Ocupacionais) em 5 etapas: Avaliar Riscos (AEP), Inventario GRO, Riscos Prioritarios, Plano de Acao e Monitoramento. Cada etapa tem uma funcao clara e se integra com as demais.',
     ],
@@ -207,7 +207,7 @@ export function ManualErgonomia() {
         doc.setFontSize(7);
         text(doc, MUTED);
         doc.text(
-          `Seguramente - Manual do Usuario | Ergonomia Inteligente | Pagina ${cur}/${total}`,
+          `YourEyes - Manual do Usuario | Ergonomia Inteligente | Pagina ${cur}/${total}`,
           pageW / 2, pageH - 8, { align: "center" }
         );
       };
@@ -258,7 +258,7 @@ export function ManualErgonomia() {
         `Emitido em ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`,
         margin, pageH - 20
       );
-      doc.text("seguramente.app", pageW - margin, pageH - 20, { align: "right" });
+      doc.text("YourEyes.app", pageW - margin, pageH - 20, { align: "right" });
 
       rodape();
 
@@ -316,7 +316,7 @@ export function ManualErgonomia() {
       doc.setFont("helvetica", "normal");
       text(doc, CINZA);
       const introLinhas = doc.splitTextToSize(
-        "Este manual foi escrito para gestores de RH, responsaveis por Saude e Seguranca do Trabalho (SST), engenheiros de seguranca e qualquer lider que precise gerenciar riscos ergonomicos sem ser especialista na area. Voce nao precisa conhecer normas tecnicas - o sistema aplica a legislacao automaticamente. Seu papel e tomar as decisoes; o Seguramente cuida da conformidade.",
+        "Este manual foi escrito para gestores de RH, responsaveis por Saude e Seguranca do Trabalho (SST), engenheiros de seguranca e qualquer lider que precise gerenciar riscos ergonomicos sem ser especialista na area. Voce nao precisa conhecer normas tecnicas - o sistema aplica a legislacao automaticamente. Seu papel e tomar as decisoes; o YourEyes cuida da conformidade.",
         pageW - 2 * margin - 8
       );
       doc.setFontSize(8.5);
@@ -497,7 +497,7 @@ export function ManualErgonomia() {
       text(doc, WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Obrigado por usar o Seguramente!", pageW / 2, pageH / 2 - 20, { align: "center" });
+      doc.text("Obrigado por usar o YourEyes!", pageW / 2, pageH / 2 - 20, { align: "center" });
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
@@ -512,7 +512,7 @@ export function ManualErgonomia() {
 
       doc.setFontSize(9);
       doc.setTextColor(167, 243, 208);
-      doc.text("seguramente.app", pageW / 2, pageH / 2 + 20, { align: "center" });
+      doc.text("YourEyes.app", pageW / 2, pageH / 2 + 20, { align: "center" });
       doc.text(
         `Gerado em ${format(new Date(), "dd/MM/yyyy 'as' HH:mm")}`,
         pageW / 2, pageH / 2 + 28, { align: "center" }
@@ -520,7 +520,7 @@ export function ManualErgonomia() {
 
       rodape();
 
-      doc.save(`Manual_Ergonomia_Seguramente_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      doc.save(`Manual_Ergonomia_YourEyes_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Manual gerado com sucesso!");
     } catch (err) {
       console.error(err);

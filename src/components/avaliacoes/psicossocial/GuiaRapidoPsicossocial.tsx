@@ -47,7 +47,7 @@ const PASSOS = [
     titulo: "O que é esse módulo?",
     subtitulo: "Visão geral — para quem é e o que resolve",
     descricao:
-      "O módulo Psicossocial do Seguramente ajuda sua empresa a identificar, avaliar e tratar riscos relacionados ao trabalho — como estresse excessivo, falta de autonomia e esgotamento — de forma automática e em conformidade com a lei (NR-01).",
+      "O módulo Psicossocial do YourEyes ajuda sua empresa a identificar, avaliar e tratar riscos relacionados ao trabalho — como estresse excessivo, falta de autonomia e esgotamento — de forma automática e em conformidade com a lei (NR-01).",
     destaques: [
       { icon: Users, label: "Para: RH, Gestores e SST" },
       { icon: ShieldCheck, label: "Exigido pela NR-01 / GRO" },
@@ -68,7 +68,7 @@ const PASSOS = [
     acoes: [
       "Clique em **Nova Campanha** no topo da página",
       "O **Assistente** vai recomendar o instrumento ideal para o seu caso",
-      "Escolha o **SIPRO** para avaliação geral — instrumento autoral do Seguramente, integrado com GRO, AET e demais módulos (recomendado na maioria dos casos)",
+      "Escolha o **SIPRO** para avaliação geral — instrumento autoral do YourEyes, integrado com GRO, AET e demais módulos (recomendado na maioria dos casos)",
       "Defina o nome, período de início e fim da campanha",
       "Avance para configurar os grupos de trabalho (próximo passo)",
     ],
@@ -208,7 +208,7 @@ const PASSOS = [
     titulo: "Documentos e Recursos",
     subtitulo: "Tudo que o sistema gera para você",
     descricao:
-      "O Seguramente gera automaticamente todos os documentos necessários para conformidade legal e auditoria. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
+      "O YourEyes gera automaticamente todos os documentos necessários para conformidade legal e auditoria. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
     acoes: [
       "**Inventário de Riscos Ocupacionais** — exportável para o PGR",
       "**Plano de Ação 5W2H** — gerado automaticamente para riscos Alto/Crítico",

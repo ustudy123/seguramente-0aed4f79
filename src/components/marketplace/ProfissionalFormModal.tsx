@@ -341,7 +341,7 @@ export function ProfissionalFormModal({ open, onClose, onSuccess }: Profissional
             <div className="flex items-start gap-2">
               <Shield className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
               <div className="text-sm text-amber-800">
-                <p className="font-semibold">Código de Ética e Conduta do Seguramente</p>
+                <p className="font-semibold">Código de Ética e Conduta do YourEyes</p>
                 <ul className="list-disc ml-4 mt-2 space-y-1 text-xs">
                   <li>Atuar exclusivamente dentro do escopo legal da profissão</li>
                   <li>Não armazenar conteúdo clínico ou sensível na plataforma</li>

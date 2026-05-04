@@ -42,7 +42,7 @@ export const AEPDocumentoPreview = forwardRef<HTMLDivElement, AEPDocumentoPrevie
         <div className="text-center mb-6 border-b-2 border-black pb-4">
           <h1 className="text-xl font-bold mb-1">MODELO DE DOCUMENTO</h1>
           <h2 className="text-lg font-bold">AEP – ANÁLISE ERGONÔMICA PRELIMINAR</h2>
-          <p className="text-sm">(Gerada pelo Sistema Seguramente)</p>
+          <p className="text-sm">(Gerada pelo Sistema YourEyes)</p>
         </div>
 
         {/* 1. Identificação */}
@@ -104,7 +104,7 @@ export const AEPDocumentoPreview = forwardRef<HTMLDivElement, AEPDocumentoPrevie
             <li>Observação do trabalho real</li>
             <li>Informações organizacionais</li>
             <li>Evidências documentais, visuais e audiovisuais</li>
-            <li>Indicadores gerados pelo sistema Seguramente</li>
+            <li>Indicadores gerados pelo sistema YourEyes</li>
           </ul>
           <p className="text-xs mt-2">Visando:</p>
           <ul className="text-xs list-disc ml-4">
@@ -279,7 +279,7 @@ export const AEPDocumentoPreview = forwardRef<HTMLDivElement, AEPDocumentoPrevie
             <p className="text-xs">(nenhuma ação recomendada)</p>
           )}
           <p className="text-xs mt-2 italic">
-            📌 As ações devem ser registradas e acompanhadas no Módulo de Ações do Seguramente.
+            📌 As ações devem ser registradas e acompanhadas no Módulo de Ações do YourEyes.
           </p>
         </section>
 
@@ -332,7 +332,7 @@ export const AEPDocumentoPreview = forwardRef<HTMLDivElement, AEPDocumentoPrevie
 
         {/* Footer */}
         <div className="mt-8 pt-4 border-t text-center text-xs text-gray-500">
-          <p>Documento gerado pelo Sistema Seguramente</p>
+          <p>Documento gerado pelo Sistema YourEyes</p>
           <p>Data de geração: {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
         </div>
       </div>

@@ -221,7 +221,7 @@ export function LandingDiagnostico({ onClose, onComplete }: Props) {
                 {nivel === "adequado" && (
                   <p>
                     <strong className="text-green-400">Bom trabalho!</strong> Sua empresa demonstra maturidade em gestão de riscos. 
-                    Com o SeguraMente, você pode automatizar e aprofundar ainda mais seus controles, garantindo 100% de compliance.
+                    Com o YourEyes, você pode automatizar e aprofundar ainda mais seus controles, garantindo 100% de compliance.
                   </p>
                 )}
               </div>
@@ -231,7 +231,7 @@ export function LandingDiagnostico({ onClose, onComplete }: Props) {
                 onClick={() => onComplete({ respostas, pontuacao, nivel })}
                 className="w-full bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white py-6 text-lg rounded-xl"
               >
-                {nivel === "critico" ? "QUERO PROTEGER MINHA EMPRESA AGORA" : "QUERO CONHECER O SEGURAMENTE"}
+                {nivel === "critico" ? "QUERO PROTEGER MINHA EMPRESA AGORA" : "QUERO CONHECER O YourEyes"}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </motion.div>

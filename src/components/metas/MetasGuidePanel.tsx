@@ -255,7 +255,7 @@ export function MetasGuidePanel() {
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-foreground">Manual completo de Metas</h2>
             <p className="max-w-4xl text-sm leading-relaxed text-muted-foreground">
-              Este guia explica, em linguagem simples e sem lacunas, como funciona o módulo de Metas do Seguramente:
+              Este guia explica, em linguagem simples e sem lacunas, como funciona o módulo de Metas do YourEyes:
               criação, desdobramento, acompanhamento, evidências, IA, consolidação, governança e cuidados de uso.
             </p>
           </div>

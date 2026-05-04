@@ -306,7 +306,7 @@ export function InstrumentosVisualizacao() {
               <div className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-violet-600" />
-                  <span><strong>Instrumento autoral Seguramente</strong></span>
+                  <span><strong>Instrumento autoral YourEyes</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Hash className="h-4 w-4 text-violet-600" />

@@ -329,7 +329,7 @@ export default function AceiteDocumento() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <FileText className="w-6 h-6 text-primary" />
-            <span className="font-semibold text-primary">Seguramente</span>
+            <span className="font-semibold text-primary">YourEyes</span>
           </div>
           <h1 className="text-2xl font-bold">Ata de Kickoff</h1>
           <p className="text-muted-foreground text-sm">

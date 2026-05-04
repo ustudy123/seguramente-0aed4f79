@@ -37,7 +37,7 @@ const PASSOS = [
     subtitulo: "O que e e para que serve",
     cor: VERMELHO,
     paragrafos: [
-      'O modulo de Incidentes & Acidentes do Seguramente centraliza o registro, investigacao e gestao de todos os eventos de seguranca da empresa — desde quase-acidentes ate acidentes com afastamento ou obito. Ele foi desenvolvido para apoiar o atendimento a Lei 8.213/91 (CAT), ao e-Social (S-2210/S-2220), a NR-01 (GRO/PGR) e as diretrizes da ISO 45001, reunindo em um so lugar tudo que voce precisa: registro do evento, investigacao de causas, plano de acao e documentacao legal.',
+      'O modulo de Incidentes & Acidentes do YourEyes centraliza o registro, investigacao e gestao de todos os eventos de seguranca da empresa — desde quase-acidentes ate acidentes com afastamento ou obito. Ele foi desenvolvido para apoiar o atendimento a Lei 8.213/91 (CAT), ao e-Social (S-2210/S-2220), a NR-01 (GRO/PGR) e as diretrizes da ISO 45001, reunindo em um so lugar tudo que voce precisa: registro do evento, investigacao de causas, plano de acao e documentacao legal.',
       'O modulo aplica a logica da Piramide de Bird: para cada acidente grave, existem dezenas de incidentes nao registrados que poderiam ter evitado aquele acidente. Ao registrar todos os eventos — inclusive os quase-acidentes — a empresa constroi um banco de dados de aprendizado organizacional que alimenta o PGR e o GRO de SST.',
       'A estrutura do modulo guia voce em um fluxo completo: registro do evento, caracterizacao do ocorrido, investigacao de causas, emissao da CAT (quando aplicavel), vinculacao de plano de acao e acompanhamento da resolucao. Tudo integrado com os modulos de Documentos, Plano de Acao e Ergonomia.',
     ],
@@ -65,7 +65,7 @@ const PASSOS = [
       'CAT (Comunicacao de Acidente do Trabalho): O sistema exibe os campos de CAT quando o evento e classificado como acidente. Preencha: se a CAT foi emitida (sim/nao), numero da CAT, data de emissao, tipo de CAT (inicial, reabertura ou comunicacao de obito) e observacoes. Voce pode tambem anexar o arquivo PDF da CAT diretamente no registro.',
       'Prazo legal da CAT: conforme o Art. 22 da Lei 8.213/91, a CAT deve ser emitida no primeiro dia util apos o acidente. Em caso de obito, deve ser emitida imediatamente. O nao cumprimento sujeita a empresa a multa. O sistema alerta quando ha acidentes sem CAT emitida no painel de estatisticas (card "CAT Pendentes").',
     ],
-    dica: "e-Social: acidentes do trabalho devem ser comunicados ao e-Social pelo evento S-2210 (acidente) ou S-2220 (monitoramento de saude). O Seguramente registra os dados necessarios para que o DP ou o gestor de SST preencha esses eventos no portal do governo. Mantenha os dados atualizados no registro para facilitar esse processo.",
+    dica: "e-Social: acidentes do trabalho devem ser comunicados ao e-Social pelo evento S-2210 (acidente) ou S-2220 (monitoramento de saude). O YourEyes registra os dados necessarios para que o DP ou o gestor de SST preencha esses eventos no portal do governo. Mantenha os dados atualizados no registro para facilitar esse processo.",
   },
   {
     num: "04",
@@ -87,7 +87,7 @@ const PASSOS = [
     paragrafos: [
       'Ao registrar um acidente grave (tipo acidente com gravidade diferente de sem_lesao, afastamento ou obito), o sistema cria automaticamente uma pasta de investigacao no modulo de Documentos. A pasta e nomeada com o codigo do evento e a data (ex: "Acidente ACD-2024-001 — 15/01/2024") e criada dentro da estrutura de pastas de Investigacao de Incidentes.',
       'A pasta criada automaticamente contem 5 subpastas padrao: (1) Relato do Ocorrido — para o relato formal do acidente; (2) Analise de Causa Raiz — para metodologias como Arvore de Causas, 5 Porques ou Diagrama de Ishikawa; (3) Plano de Acao — para o plano corretivo documentado; (4) Evidencias e Fotos — para imagens do local, equipamentos envolvidos e danos; (5) CAT — para o arquivo da Comunicacao de Acidente do Trabalho.',
-      'Alem da pasta automatica, o sistema permite anexar arquivos diretamente no registro do evento (aba de anexos no detalhe do evento). Os anexos ficam armazenados no banco de dados do Seguramente, vinculados ao evento, e podem ser acessados por qualquer usuario com permissao. Use esta funcionalidade para centralizar toda a documentacao da investigacao em um unico lugar.',
+      'Alem da pasta automatica, o sistema permite anexar arquivos diretamente no registro do evento (aba de anexos no detalhe do evento). Os anexos ficam armazenados no banco de dados do YourEyes, vinculados ao evento, e podem ser acessados por qualquer usuario com permissao. Use esta funcionalidade para centralizar toda a documentacao da investigacao em um unico lugar.',
     ],
     dica: "Boa pratica de investigacao: o relato do ocorrido deve ser feito pelo supervisor direto nas primeiras 24 horas. A analise de causa raiz deve envolver o trabalhador, o supervisor e o tecnico de SST. O plano de acao deve ter responsavel, prazo e evidencia de conclusao. Esses tres documentos sao a base de qualquer defesa em acao trabalhista ou fiscalizacao.",
   },
@@ -158,7 +158,7 @@ const PASSOS = [
     cor: VERDE,
     paragrafos: [
       'O FAP (Fator Acidentario de Prevencao) e um multiplicador calculado pelo INSS que pode aumentar ou reduzir em ate 100% a aliquota do RAT (Risco Ambiental do Trabalho) da empresa. O RAT varia de 1% a 3% sobre a folha de pagamento conforme o grau de risco da atividade (CNAE). Com o FAP, o custo efetivo pode variar de 0,5% a 6% — uma diferenca significativa na folha.',
-      'O simulador do Seguramente exibe: (a) RAT atual da empresa com base no CNAE; (b) Score de risco estimado com base nos eventos registrados; (c) Projecao de B91 e NTEP — se os acidentes registrados possuem nexo tecnico que pode ser usado pelo INSS; (d) Simulacao de cenarios — "se eu reduzir X acidentes, qual seria meu FAP estimado?"; (e) Alertas de risco de enquadramento em NTEP por categoria de acidente.',
+      'O simulador do YourEyes exibe: (a) RAT atual da empresa com base no CNAE; (b) Score de risco estimado com base nos eventos registrados; (c) Projecao de B91 e NTEP — se os acidentes registrados possuem nexo tecnico que pode ser usado pelo INSS; (d) Simulacao de cenarios — "se eu reduzir X acidentes, qual seria meu FAP estimado?"; (e) Alertas de risco de enquadramento em NTEP por categoria de acidente.',
       'Para usar o simulador: acesse a aba "Analise" → secao "Simulador FAP/RAT". Informe o numero de funcionarios e as horas trabalhadas no periodo. O sistema calcula automaticamente a Taxa de Frequencia e projeta o impacto no FAP com base nos dados registrados. Exporte o relatorio para apresentar ao Financeiro ou a Diretoria como argumento para investimento em prevencao.',
     ],
     dica: "Cada acidente com afastamento > 15 dias pode contribuir para um beneficio B91 no INSS por ate 3 anos. Nesse periodo, a empresa e computada na estatistica que define o FAP do proximo bienio. Registrar e tratar desvios, investigar causas raiz e implementar acoes corretivas efetivas e a estrategia mais eficaz para manter o FAP abaixo de 1,0.",
@@ -178,12 +178,12 @@ const PASSOS = [
   {
     num: "13",
     titulo: "Integracao com Outros Modulos",
-    subtitulo: "Como Incidentes & Acidentes se conecta com o ecossistema Seguramente",
+    subtitulo: "Como Incidentes & Acidentes se conecta com o ecossistema YourEyes",
     cor: VERDE,
     paragrafos: [
       'O modulo de Incidentes & Acidentes se integra nativamente com outros modulos da plataforma: (1) Documentos — a pasta de investigacao e criada automaticamente para acidentes graves, centralizando toda a documentacao; (2) Plano de Acao — acoes corretivas e preventivas criadas a partir de eventos e desvios aparecem no Plano de Acao Global; (3) Terceiros & SST — desvios e incidentes envolvendo prestadores de servico podem ser vinculados ao cadastro de terceiros.',
       '(4) Ergonomia — os fatores ergonomicos marcados nos eventos alimentam o Inventario GRO e a AEP. Quando um fator aparece repetidamente, o sistema recomenda a revisao ergonomica do posto. (5) Psicossocial — indicadores de estresse/exaustao registrados nos eventos sao cruzados com os dados das campanhas psicossociais para identificar grupos de risco.',
-      '(6) Saude / Afastamentos — acidentes com afastamento podem ser vinculados diretamente a um registro de afastamento no modulo de Saude. (7) e-Social — os dados de acidente preenchidos no Seguramente sao os mesmos exigidos pelo evento S-2210 do e-Social. (8) Compliance SST — os desvios e incidentes alimentam o painel de conformidade legal da empresa.',
+      '(6) Saude / Afastamentos — acidentes com afastamento podem ser vinculados diretamente a um registro de afastamento no modulo de Saude. (7) e-Social — os dados de acidente preenchidos no YourEyes sao os mesmos exigidos pelo evento S-2210 do e-Social. (8) Compliance SST — os desvios e incidentes alimentam o painel de conformidade legal da empresa.',
     ],
     dica: "Visao integrada: o ciclo e: o desvio revela o risco → o incidente confirma o perigo → a ergonomia identifica a causa organizacional → o psicossocial confirma os fatores humanos → a saude monitora o impacto → o plano de acao fecha o ciclo → o FAP reflete o resultado. Cada modulo alimenta o outro com dados concretos para uma gestao preventiva e compliant.",
   },
@@ -262,7 +262,7 @@ export function ManualIncidentes() {
         doc.setFontSize(7);
         text(doc, MUTED);
         doc.text(
-          `Seguramente - Manual do Usuario | Incidentes & Acidentes | Pagina ${cur}/${total}`,
+          `YourEyes - Manual do Usuario | Incidentes & Acidentes | Pagina ${cur}/${total}`,
           pageW / 2, pageH - 8, { align: "center" }
         );
       };
@@ -313,7 +313,7 @@ export function ManualIncidentes() {
         `Emitido em ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`,
         margin, pageH - 20
       );
-      doc.text("seguramente.app", pageW - margin, pageH - 20, { align: "right" });
+      doc.text("YourEyes.app", pageW - margin, pageH - 20, { align: "right" });
 
       rodape();
 
@@ -555,7 +555,7 @@ export function ManualIncidentes() {
       text(doc, WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Obrigado por usar o Seguramente!", pageW / 2, pageH / 2 - 20, { align: "center" });
+      doc.text("Obrigado por usar o YourEyes!", pageW / 2, pageH / 2 - 20, { align: "center" });
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
@@ -570,7 +570,7 @@ export function ManualIncidentes() {
 
       doc.setFontSize(9);
       doc.setTextColor(252, 165, 165);
-      doc.text("seguramente.app", pageW / 2, pageH / 2 + 20, { align: "center" });
+      doc.text("YourEyes.app", pageW / 2, pageH / 2 + 20, { align: "center" });
       doc.text(
         `Gerado em ${format(new Date(), "dd/MM/yyyy 'as' HH:mm")}`,
         pageW / 2, pageH / 2 + 28, { align: "center" }
@@ -578,7 +578,7 @@ export function ManualIncidentes() {
 
       rodape();
 
-      doc.save(`Manual_Incidentes_Acidentes_Seguramente_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      doc.save(`Manual_Incidentes_Acidentes_YourEyes_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       toast.success("Manual gerado com sucesso!");
     } catch (err) {
       console.error(err);

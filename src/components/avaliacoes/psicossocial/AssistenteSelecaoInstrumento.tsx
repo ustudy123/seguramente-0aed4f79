@@ -106,7 +106,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     motivosCopsoq.push("COPSOQ III também é referência para diagnósticos abrangentes");
   } else if (c.objetivo === 'pgr') {
     sipro += 25; copsoq += 15;
-    motivosSipro.push("integração nativa ao PGR dentro do Seguramente");
+    motivosSipro.push("integração nativa ao PGR dentro do YourEyes");
     motivosCopsoq.push("COPSOQ aceito em auditoria de PGR");
   } else if (c.objetivo === 'gestao_lideranca') {
     hse += 25; copsoq += 18; sipro += 8;
@@ -232,7 +232,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
 
   if (sys.totalCampanhasAnteriores === 0) {
     sipro += 10; copsoq += 8;
-    motivosSipro.push("primeira campanha — SIPRO integrado ao fluxo do Seguramente");
+    motivosSipro.push("primeira campanha — SIPRO integrado ao fluxo do YourEyes");
   } else if (sys.totalCampanhasAnteriores >= 2) {
     copsoq += 10; proart += 8;
     motivosCopsoq.push("histórico de campanhas — COPSOQ permite comparação longitudinal");
@@ -246,7 +246,7 @@ function calcularScores(sys: SystemData, c: ChecklistRespostas): InstrumentoScor
     {
       id: 'sipro' as const,
       nome: 'SIPRO',
-      descricao: 'Instrumento autoral Seguramente — alinhado à NR-01, NR-17, ISO 45001 e ISO 45003. Diagnóstico multidimensional com 52 itens e cálculo integrado ao sistema.',
+      descricao: 'Instrumento autoral YourEyes — alinhado à NR-01, NR-17, ISO 45001 e ISO 45003. Diagnóstico multidimensional com 52 itens e cálculo integrado ao sistema.',
       score: normalize(sipro),
       motivos: motivosSipro.filter(Boolean).slice(0, 4),
       cor: 'text-purple-700',
@@ -738,7 +738,7 @@ export function AssistenteSelecaoInstrumento({
                   <DialogTitle>Recomendação do Assistente</DialogTitle>
                 </div>
                 <DialogDescription>
-                  Baseada na análise organizacional realizada pelo Assistente Seguramente
+                  Baseada na análise organizacional realizada pelo Assistente YourEyes
                 </DialogDescription>
               </DialogHeader>
 

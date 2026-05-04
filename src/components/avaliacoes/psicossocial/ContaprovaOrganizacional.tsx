@@ -1,7 +1,7 @@
 /**
  * Contraprova Organizacional
  * Cruza a percepção dos colaboradores (IPS do questionário) com
- * evidências operacionais de outros módulos do Seguramente:
+ * evidências operacionais de outros módulos do YourEyes:
  *  - Atestados / Afastamentos (saúde)
  *  - Jornada excessiva (ponto)
  *  - Bem-estar (registro contínuo)

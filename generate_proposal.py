@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 
 def create_pdf():
     doc = SimpleDocTemplate(
-        "/mnt/documents/Plano_App_Ponto_Seguramente_v2.pdf",
+        "/mnt/documents/Plano_App_Ponto_YourEyes_v2.pdf",
         pagesize=A4,
         rightMargin=2*cm,
         leftMargin=2*cm,
@@ -64,7 +64,7 @@ def create_pdf():
 
     # Logo
     try:
-        logo_path = "/dev-server/src/assets/logo-seguramente-branding.png"
+        logo_path = "/dev-server/src/assets/logo-YourEyes-branding.png"
         img = Image(logo_path, width=6*cm, height=2*cm)
         img.hAlign = 'CENTER'
         content.append(img)
@@ -101,7 +101,7 @@ def create_pdf():
         "<b>1º Acesso:</b> O colaborador informa o CPF e recebe um código de validação único via WhatsApp.",
         "<b>Definição de PIN:</b> Após validar, ele cadastra uma senha numérica de 4 dígitos (PIN) de sua preferência.",
         "<b>Uso Diário:</b> Para bater o ponto, basta abrir o ícone na tela do celular e digitar o PIN. Não precisa de login complexo todo dia.",
-        "<b>Instalação:</b> O sistema exibirá um convite para 'Adicionar à tela de início', criando o ícone do Seguramente ao lado do WhatsApp e outros apps."
+        "<b>Instalação:</b> O sistema exibirá um convite para 'Adicionar à tela de início', criando o ícone do YourEyes ao lado do WhatsApp e outros apps."
     ]
     for item in items:
         content.append(Paragraph(f"• {item}", styles['BulletPoint']))
@@ -150,7 +150,7 @@ def create_pdf():
     # Technical Feasibility
     content.append(Paragraph("<b>Viabilidade Técnica e Prazo</b>", styles['SubTitle']))
     content.append(Paragraph(
-        "A estrutura atual do Seguramente já possui 80% da tecnologia necessária. "
+        "A estrutura atual do YourEyes já possui 80% da tecnologia necessária. "
         "A implementação focará na criação desta nova interface 'Mobile-First' e no sistema de segurança por PIN.",
         styles['NormalJustified']
     ))

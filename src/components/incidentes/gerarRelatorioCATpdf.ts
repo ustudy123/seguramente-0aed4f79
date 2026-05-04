@@ -150,7 +150,7 @@ export const gerarRelatorioCATpdf = (evento: EventoSST) => {
   doc.setTextColor(120);
   doc.text("Este documento é de uso interno e serve como apoio para preenchimento da CAT nos sistemas oficiais.", margin, y);
   y += 4;
-  doc.text("O Seguramente é repositório e sistema de gestão documental, não substitui responsabilidades técnicas legais dos profissionais.", margin, y);
+  doc.text("O YourEyes é repositório e sistema de gestão documental, não substitui responsabilidades técnicas legais dos profissionais.", margin, y);
 
   doc.save(`Relatorio_${evento.tipo === "acidente" ? "Acidente" : "Incidente"}_${evento.codigo || "evento"}.pdf`);
 };

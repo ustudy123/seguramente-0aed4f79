@@ -24,7 +24,7 @@ import logoYoureyes from "@/assets/logo-youreyes.svg";
 
 const WHATSAPP_NUMBER = "5546993375044";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "Olá! Vim pelo site da YOUREYES e gostaria de agendar uma demonstração da plataforma."
+  "Olá! Vim pelo site da YourEyes e gostaria de agendar uma demonstração da plataforma."
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
 const openWhatsApp = () => window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
@@ -205,13 +205,13 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-orange-500/10 pointer-events-none" />
                 <img
                   src={mockupDashboard}
-                  alt="Dashboard YOUREYES - Painel de controle inteligente"
+                  alt="Dashboard YourEyes - Painel de controle inteligente"
                   className="w-full h-auto rounded-xl shadow-2xl relative z-10"
                   loading="lazy"
                 />
               </div>
               <p className="text-center text-[10px] uppercase tracking-widest text-gray-500 mt-6 font-bold opacity-60">
-                Visualização real da plataforma YOUREYES
+                Visualização real da plataforma YourEyes
               </p>
             </motion.div>
 
@@ -340,7 +340,7 @@ export default function LandingPage() {
               IA que <span style={{ backgroundImage: 'linear-gradient(90deg, hsl(207 90% 55%), hsl(152 66% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trabalha por você</span> 24 horas por dia
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-              Enquanto seus concorrentes usam planilhas, o YOUREYES usa <strong className="text-white">GPT-4o e visão computacional</strong> para automatizar 
+              Enquanto seus concorrentes usam planilhas, o YourEyes usa <strong className="text-white">GPT-4o e visão computacional</strong> para automatizar 
               o que antes levava semanas. Isso não é marketing — é tecnologia real rodando agora.
             </p>
           </motion.div>
@@ -379,7 +379,7 @@ export default function LandingPage() {
               Gestão Psicossocial <span style={{ color: 'hsl(33 100% 50%)' }}>Completa</span> e Automatizada
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-              O YOUREYES é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores de riscos psicossociais exigidos pela NR-01 atualizada, 
+              O YourEyes é a <strong className="text-white">única plataforma</strong> que cobre 100% dos fatores de riscos psicossociais exigidos pela NR-01 atualizada, 
               com questionários validados, indicadores automáticos e relatórios prontos para a fiscalização.
             </p>
           </motion.div>
@@ -561,14 +561,14 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <motion.div {...fadeUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Por que o YOUREYES é <span style={{ color: 'hsl(33 100% 50%)' }}>diferente</span>?
+              Por que o YourEyes é <span style={{ color: 'hsl(33 100% 50%)' }}>diferente</span>?
             </h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {[
               { title: "Outros softwares", items: ["Planilhas disfarçadas de sistema", "Sem IA real — apenas formulários", "SST separado do RH", "Sem gestão psicossocial", "Sem compliance NR-01 atualizada", "Interface ultrapassada"], bad: true },
-              { title: "YOUREYES", items: ["Plataforma inteligente com IA real (GPT-4o)", "Detecção automática de riscos", "SST + RH + Psicossocial integrados", "100% compliance NR-01 atualizada", "Indicadores em tempo real", "Design moderno e intuitivo"], bad: false },
+              { title: "YourEyes", items: ["Plataforma inteligente com IA real (GPT-4o)", "Detecção automática de riscos", "SST + RH + Psicossocial integrados", "100% compliance NR-01 atualizada", "Indicadores em tempo real", "Design moderno e intuitivo"], bad: false },
             ].map((col, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.15 }}>
                 <div className="rounded-2xl p-8 h-full" style={{ background: col.bad ? 'hsl(0 20% 10%)' : 'hsl(215 55% 12%)', border: `1px solid ${col.bad ? 'hsl(0 40% 25% / 0.3)' : 'hsl(152 50% 42% / 0.2)'}` }}>
@@ -602,7 +602,7 @@ export default function LandingPage() {
               <LayoutDashboard className="w-4 h-4 mr-1" /> A PLATAFORMA POR DENTRO
             </Badge>
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Veja o YOUREYES <span style={{ color: 'hsl(152 66% 55%)' }}>em ação</span>
+              Veja o YourEyes <span style={{ color: 'hsl(152 66% 55%)' }}>em ação</span>
             </h2>
             <p className="text-gray-400 max-w-3xl mx-auto text-lg">
               Interface moderna, indicadores em tempo real e governança integrada — desenhado para quem decide.
@@ -639,7 +639,7 @@ export default function LandingPage() {
           <motion.div {...fadeUp}>
             <MessageSquare className="w-16 h-16 mx-auto mb-6" style={{ color: 'hsl(152 60% 50%)' }} />
             <h2 className="text-3xl md:text-5xl font-black mb-4">
-              Veja o YOUREYES funcionando na <span style={{ color: 'hsl(152 60% 50%)' }}>sua empresa</span>
+              Veja o YourEyes funcionando na <span style={{ color: 'hsl(152 60% 50%)' }}>sua empresa</span>
             </h2>
             <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
               Agende uma demonstração personalizada por <strong className="text-white">WhatsApp</strong>. 
@@ -885,7 +885,7 @@ export default function LandingPage() {
             A pergunta é: <strong style={{ color: 'hsl(33 100% 50%)' }}>"Quanto vai custar NÃO adequar?"</strong>
           </p>
           <p className="text-gray-500 text-sm mb-8">
-            Uma única multa do MTE paga 5 anos de YOUREYES. Um único processo por burnout paga 10 anos. 
+            Uma única multa do MTE paga 5 anos de YourEyes. Um único processo por burnout paga 10 anos. 
             A escolha é sua: investir centavos em prevenção ou milhares em correção.
           </p>
           <Button
@@ -904,7 +904,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="py-8 px-4 text-center text-sm" style={{ borderTop: '1px solid hsl(215 40% 16%)', color: 'hsl(215 15% 55%)' }}>
-        <p>© {new Date().getFullYear()} YOUREYES — Plataforma de Gestão Inteligente de SST e RH</p>
+        <p>© {new Date().getFullYear()} YourEyes — Plataforma de Gestão Inteligente de SST e RH</p>
         <p className="mt-1 text-xs" style={{ color: 'hsl(215 15% 40%)' }}>Este site não é afiliado ao Ministério do Trabalho e Emprego (MTE).</p>
       </footer>
 

@@ -207,7 +207,7 @@ export function ManualComplianceSST() {
         `Emitido em ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`,
         margin, pageH - 20
       );
-      doc.text("seguramente.app", pageW - margin, pageH - 20, { align: "right" });
+      doc.text("YourEyes.app", pageW - margin, pageH - 20, { align: "right" });
 
       // ── SUMARIO ──
       doc.addPage();
@@ -442,7 +442,7 @@ export function ManualComplianceSST() {
           doc.setFontSize(7);
           text(doc, MUTED);
           doc.text(
-            `Seguramente  |  Compliance SST  |  Pag. ${pg}/${totalPages}`,
+            `YourEyes  |  Compliance SST  |  Pag. ${pg}/${totalPages}`,
             pageW / 2, pageH - 8, { align: "center" }
           );
         }

@@ -1,5 +1,5 @@
 /**
- * Tipos do Questionário Psicossocial Seguramente
+ * Tipos do Questionário Psicossocial YourEyes
  * Baseado em modelos internacionais (JD-R, COPSOQ, ISO 45003)
  * Adaptado à legislação brasileira (NR-01 e NR-17)
  */
@@ -14,7 +14,7 @@ export type ConviteEnviadoVia = 'link' | 'qrcode' | 'whatsapp' | 'email';
 export type InstrumentoPsicossocial = 'copsoq' | 'hse' | 'proart' | 'sipro' | 'customizado';
 export type EscopoCampanha = 'empresa' | 'unidade' | 'setor' | 'funcao' | 'grupo';
 
-// IPS - Índice Psicossocial Seguramente (0-100, higher = healthier)
+// IPS - Índice Psicossocial YourEyes (0-100, higher = healthier)
 export type IPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 
 export function calcularIPSClassificacao(score: number): IPSClassificacao {
@@ -25,7 +25,7 @@ export function calcularIPSClassificacao(score: number): IPSClassificacao {
   return 'critico';
 }
 
-// IRP-S — Índice de Risco Psicossocial Seguramente (0-100, higher = more risk)
+// IRP-S — Índice de Risco Psicossocial YourEyes (0-100, higher = more risk)
 // Faixas espelham o IPS: IRP-S = 100 - IPS
 export type IRPSClassificacao = 'saudavel' | 'estavel' | 'atencao' | 'risco' | 'critico';
 
@@ -134,8 +134,8 @@ export const INSTRUMENTOS: InstrumentoConfig[] = [
   {
     id: 'sipro',
     nome: 'SIPRO',
-    descricao: 'Índice Seguramente de Risco Psicossocial Organizacional',
-    uso: 'Instrumento autoral do Seguramente — 10 eixos psicossociais adaptados à NR-01/NR-17/ISO 45003 com blocos dinâmicos CET',
+    descricao: 'Índice YourEyes de Risco Psicossocial Organizacional',
+    uso: 'Instrumento autoral do YourEyes — 10 eixos psicossociais adaptados à NR-01/NR-17/ISO 45003 com blocos dinâmicos CET',
     totalPerguntas: 35,
     dimensoes: ['Demandas Quantitativas/Ritmo', 'Demandas Cognitivas', 'Demandas Emocionais', 'Autonomia e Controle', 'Clareza de Papéis', 'Reconhecimento e Justiça', 'Relacionamentos e Suporte', 'Sentido do Trabalho', 'Recuperação e Equilíbrio', 'Sinais Precoces'],
   },

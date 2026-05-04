@@ -210,7 +210,7 @@ export function gerarAvisoFeriasPDF(data: FeriasDocData): jsPDF {
   // Footer
   doc.setFontSize(7);
   doc.setTextColor(150);
-  doc.text("Documento gerado automaticamente pelo sistema Seguramente", pageWidth / 2, 285, { align: "center" });
+  doc.text("Documento gerado automaticamente pelo sistema YourEyes", pageWidth / 2, 285, { align: "center" });
 
   return doc;
 }
@@ -317,7 +317,7 @@ export function gerarReciboFeriasPDF(data: FeriasDocData): jsPDF {
 
   doc.setFontSize(7);
   doc.setTextColor(150);
-  doc.text("Documento gerado automaticamente pelo sistema Seguramente", pageWidth / 2, 285, { align: "center" });
+  doc.text("Documento gerado automaticamente pelo sistema YourEyes", pageWidth / 2, 285, { align: "center" });
 
   return doc;
 }

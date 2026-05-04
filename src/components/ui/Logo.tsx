@@ -18,7 +18,7 @@ export function Logo({ size = "md", showText = true }: LogoProps) {
     <div className="flex items-center justify-center">
       <img
         src={logoImage}
-        alt="YOUREYES"
+        alt="YourEyes"
         className={`${sizeClasses[size]} w-auto object-contain`}
       />
     </div>

@@ -156,7 +156,7 @@ export function AEPFormAcoes({ acoes, onChange }: AEPFormAcoesProps) {
         )}
 
         <p className="text-sm text-muted-foreground mt-4">
-          📌 As ações devem ser registradas e acompanhadas no Módulo de Ações do Seguramente.
+          📌 As ações devem ser registradas e acompanhadas no Módulo de Ações do YourEyes.
         </p>
       </CardContent>
     </Card>

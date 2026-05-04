@@ -1,11 +1,11 @@
-# 📘 SEGURAMENTE — Manual Completo do Sistema
+# 📘 YourEyes — Manual Completo do Sistema
 ## Plataforma de Governança do Trabalho Humano com Inteligência Artificial
 
 ---
 
 ## 🏛️ VISÃO GERAL
 
-O **Seguramente** é uma plataforma SaaS de **Governança do Trabalho Humano** que unifica, em um só ambiente, a gestão de pessoas, segurança e saúde do trabalho (SST), ergonomia, compliance, cultura organizacional e desenvolvimento humano — tudo potencializado por **Inteligência Artificial**.
+O **YourEyes** é uma plataforma SaaS de **Governança do Trabalho Humano** que unifica, em um só ambiente, a gestão de pessoas, segurança e saúde do trabalho (SST), ergonomia, compliance, cultura organizacional e desenvolvimento humano — tudo potencializado por **Inteligência Artificial**.
 
 A plataforma opera sob o princípio: **"Ação é evidência, e evidência é proteção."** Cada diagnóstico, indicador ou risco identificado resulta em uma ação estruturada, rastreável e auditável.
 
@@ -648,7 +648,7 @@ Widget flutuante disponível em todas as telas.
 
 ## 🤖 MAPA COMPLETO DE INTELIGÊNCIA ARTIFICIAL
 
-O Seguramente utiliza a **API da OpenAI** com 26 Edge Functions de IA:
+O YourEyes utiliza a **API da OpenAI** com 26 Edge Functions de IA:
 
 | Função | Modelo | Descrição |
 |--------|--------|-----------|
@@ -728,7 +728,7 @@ O Seguramente utiliza a **API da OpenAI** com 26 Edge Functions de IA:
 
 ---
 
-# 🎤 PITCH DE VENDAS — SEGURAMENTE
+# 🎤 PITCH DE VENDAS — YourEyes
 
 ---
 
@@ -744,11 +744,11 @@ O Seguramente utiliza a **API da OpenAI** com 26 Edge Functions de IA:
 
 ---
 
-## A SOLUÇÃO: SEGURAMENTE
+## A SOLUÇÃO: YourEyes
 
 ### Uma plataforma que une **Governança, Compliance e Cuidado Humano** — potencializada por **Inteligência Artificial**.
 
-O Seguramente não é apenas mais um software de RH.  
+O YourEyes não é apenas mais um software de RH.  
 É a **primeira plataforma brasileira de Governança do Trabalho Humano**.
 
 Unificamos **mais de 20 módulos** em uma única ferramenta que transforma cada diagnóstico em ação, cada ação em evidência, e cada evidência em proteção jurídica.
@@ -815,7 +815,7 @@ Unificamos **mais de 20 módulos** em uma única ferramenta que transforma cada 
 
 ## CHAMADA FINAL
 
-> ### "O Seguramente não gerencia pessoas. Ele **governa o trabalho humano.**"
+> ### "O YourEyes não gerencia pessoas. Ele **governa o trabalho humano.**"
 >
 > Cada ação é evidência.  
 > Cada evidência é proteção.  
@@ -825,6 +825,6 @@ Unificamos **mais de 20 módulos** em uma única ferramenta que transforma cada 
 
 ---
 
-*Seguramente — Plataforma de Governança do Trabalho Humano com Inteligência Artificial*
+*YourEyes — Plataforma de Governança do Trabalho Humano com Inteligência Artificial*
 
 © 2026 — Todos os direitos reservados.

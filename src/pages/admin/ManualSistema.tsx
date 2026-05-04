@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-const MANUAL_URL = "/MANUAL_SEGURAMENTE.md";
+const MANUAL_URL = "/MANUAL_YourEyes.md";
 
 function extractToc(md: string) {
   const lines = md.split("\n");
@@ -136,7 +136,7 @@ export default function ManualSistema() {
         heightLeft -= pdfHeight - 20;
       }
 
-      pdf.save("Manual_Seguramente.pdf");
+      pdf.save("Manual_YourEyes.pdf");
       toast.success("PDF baixado com sucesso!");
     } catch {
       toast.error("Erro ao gerar PDF.");
@@ -168,7 +168,7 @@ export default function ManualSistema() {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-foreground leading-tight">Manual do Sistema</h1>
-                <p className="text-xs text-muted-foreground">Seguramente — Documentação Completa</p>
+                <p className="text-xs text-muted-foreground">YourEyes — Documentação Completa</p>
               </div>
             </div>
           </div>

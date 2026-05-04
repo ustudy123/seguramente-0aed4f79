@@ -124,7 +124,7 @@ export default function Usuarios() {
             Usuários
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Identidades digitais, vínculos e ciclo de vida no Seguramente
+            Identidades digitais, vínculos e ciclo de vida no YourEyes
           </p>
         </div>
         <Button onClick={() => setShowNovo(true)}>

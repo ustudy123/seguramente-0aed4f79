@@ -274,7 +274,7 @@ export default function Empresa() {
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Aqui você visualiza e gerencia todas as empresas cadastradas no sistema. 
-              O Seguramente é <strong>multiempresa</strong> — você pode cadastrar quantas empresas precisar 
+              O YourEyes é <strong>multiempresa</strong> — você pode cadastrar quantas empresas precisar 
               (matrizes, filiais e estabelecimentos) e alternar entre elas pelo seletor no cabeçalho.
             </p>
           </div>

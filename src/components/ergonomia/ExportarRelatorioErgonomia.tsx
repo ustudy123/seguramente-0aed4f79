@@ -106,7 +106,7 @@ export function ExportarRelatorioErgonomia({ riscos, empresaNome }: ExportarRela
       doc.text("RELATÓRIO DE METODOLOGIA — GRO ERGONÔMICO", margin, 13);
       doc.setFontSize(8.5);
       doc.setFont("helvetica", "normal");
-      doc.text("Seguramente — Gestão Integrada de Riscos Ocupacionais", margin, 22);
+      doc.text("YourEyes — Gestão Integrada de Riscos Ocupacionais", margin, 22);
       doc.text("NR-01 · NR-17 · ISO 45001 · ISO 45003", pageW - margin, 22, { align: "right" });
       doc.setTextColor(30, 30, 30);
       y = 44;
@@ -157,7 +157,7 @@ export function ExportarRelatorioErgonomia({ riscos, empresaNome }: ExportarRela
       const metodText = [
         "A avaliação de riscos adota a metodologia matricial de Probabilidade × Severidade (P×S) conforme",
         "preconizado pela NR-01 (Portaria MTE 1.419/2024) e alinhado à ISO 45001:2018. O nível de risco é",
-        "calculado automaticamente pelo sistema Seguramente com base nos parâmetros a seguir:",
+        "calculado automaticamente pelo sistema YourEyes com base nos parâmetros a seguir:",
       ];
       metodText.forEach(t => { doc.text(t, margin, y); y += 5; });
       y += 3;
@@ -416,7 +416,7 @@ export function ExportarRelatorioErgonomia({ riscos, empresaNome }: ExportarRela
         doc.setFontSize(6.5);
         doc.setTextColor(160, 160, 160);
         doc.text(
-          `Seguramente — Relatório GRO Ergonômico${empresaNome ? " · " + empresaNome : ""} · Página ${i}/${totalPages}`,
+          `YourEyes — Relatório GRO Ergonômico${empresaNome ? " · " + empresaNome : ""} · Página ${i}/${totalPages}`,
           pageW / 2,
           pageH - 7,
           { align: "center" }

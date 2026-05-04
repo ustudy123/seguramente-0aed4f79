@@ -67,7 +67,7 @@ function gerarCertificadoHTML(cert: Certificado, empresaNome?: string): string {
     </div>
     <div class="col">
       <div class="line"></div>
-      <div class="value">${empresaNome || "Seguramente"}</div>
+      <div class="value">${empresaNome || "YourEyes"}</div>
       <div class="label">Empresa</div>
     </div>
   </div>

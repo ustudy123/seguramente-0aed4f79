@@ -117,7 +117,7 @@ const PASSOS = [
     subtitulo: "Registros e materiais de referencia",
     cor: AZUL,
     paragrafos: [
-      'O Seguramente gera automaticamente todos os registros necessarios para compliance com terceiros: fichas cadastrais, historico documental, permissoes de trabalho e relatorios de conformidade.',
+      'O YourEyes gera automaticamente todos os registros necessarios para compliance com terceiros: fichas cadastrais, historico documental, permissoes de trabalho e relatorios de conformidade.',
       'Todos os registros possuem timestamp, usuario responsavel e rastreabilidade completa. Isso garante validade juridica e subsidia a defesa em processos trabalhistas.',
       'Baixe este Manual do Modulo em PDF para ter um guia de referencia offline com todos os passos e orientacoes normativas.',
     ],
@@ -219,7 +219,7 @@ export function ManualTerceiros() {
         `Emitido em ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`,
         margin, pageH - 20
       );
-      doc.text("seguramente.app", pageW - margin, pageH - 20, { align: "right" });
+      doc.text("YourEyes.app", pageW - margin, pageH - 20, { align: "right" });
 
       // ── SUMARIO ──
       doc.addPage();
@@ -436,7 +436,7 @@ export function ManualTerceiros() {
           doc.setFontSize(7);
           text(doc, MUTED);
           doc.text(
-            `Seguramente - Manual do Usuario | Terceiros & SST | Pagina ${pg}/${totalPages}`,
+            `YourEyes - Manual do Usuario | Terceiros & SST | Pagina ${pg}/${totalPages}`,
             pageW / 2, pageH - 8, { align: "center" }
           );
         }

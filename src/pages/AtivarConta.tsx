@@ -267,7 +267,7 @@ export default function AtivarConta() {
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <Shield className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-white font-semibold text-lg">Seguramente</span>
+              <span className="text-white font-semibold text-lg">YourEyes</span>
             </div>
             <div className="space-y-3">
               <h1 className="text-4xl font-bold text-white leading-tight">
@@ -324,7 +324,7 @@ export default function AtivarConta() {
               </div>
               <div>
                 <h2 className="text-white font-bold text-lg">Ativação de Conta</h2>
-                <p className="text-white/70 text-xs">Portal de Implantação Seguramente</p>
+                <p className="text-white/70 text-xs">Portal de Implantação YourEyes</p>
               </div>
             </div>
           </div>
@@ -460,7 +460,7 @@ export default function AtivarConta() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Aceites obrigatórios</p>
 
               {[
-                { key: "termos", label: "Termos de Uso do Seguramente" },
+                { key: "termos", label: "Termos de Uso do YourEyes" },
                 { key: "privacidade", label: "Política de Privacidade" },
                 { key: "dpa", label: "DPA — Acordo de Processamento de Dados (LGPD)" },
               ].map(({ key, label }) => (

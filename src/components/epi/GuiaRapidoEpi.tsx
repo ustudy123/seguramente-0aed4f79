@@ -26,7 +26,7 @@ const PASSOS = [
     titulo: "O que é esse módulo?",
     subtitulo: "Visão geral — para quem é e o que resolve",
     descricao:
-      "O módulo de Gestão de EPIs do Seguramente permite controlar todo o ciclo de vida dos Equipamentos de Proteção Individual: cadastro, estoque, entrega com assinatura digital, devolução, alertas automáticos e auditoria com IA. Tudo em conformidade com a NR-06.",
+      "O módulo de Gestão de EPIs do YourEyes permite controlar todo o ciclo de vida dos Equipamentos de Proteção Individual: cadastro, estoque, entrega com assinatura digital, devolução, alertas automáticos e auditoria com IA. Tudo em conformidade com a NR-06.",
     destaques: [
       { icon: ShieldCheck, label: "Conformidade NR-06" },
       { icon: Users, label: "Para: RH, SST e Gestores" },
@@ -187,7 +187,7 @@ const PASSOS = [
     titulo: "Documentos e Recursos",
     subtitulo: "Tudo que o sistema gera para você",
     descricao:
-      "O Seguramente gera automaticamente todos os registros necessários para conformidade com a NR-06. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
+      "O YourEyes gera automaticamente todos os registros necessários para conformidade com a NR-06. Baixe o Manual Completo em PDF para ter um guia de referência offline.",
     acoes: [
       "**Ficha de EPI digital** — assinada eletronicamente, substituição legal ao papel",
       "**Comprovante de entrega** — imprimível com dados completos da entrega",

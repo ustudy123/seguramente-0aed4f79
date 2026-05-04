@@ -44,12 +44,12 @@ export function AtaKickoffDialog({ open, onClose, onEnviar, isLoading, nomeEmpre
     horario_fim: '10:00',
     local: 'Videoconferência (Google Meet / Zoom)',
     modalidade: 'Online',
-    responsavel_seguramente: responsavelSeguramente || 'Equipe Seguramente',
-    participantes_seguramente: responsavelSeguramente || 'Representante Seguramente',
+    responsavel_seguramente: responsavelSeguramente || 'Equipe YourEyes',
+    participantes_seguramente: responsavelSeguramente || 'Representante YourEyes',
     participantes_cliente: pocNome || '',
-    objetivo: 'Apresentação da plataforma Seguramente, alinhamento de expectativas, definição do escopo inicial e cronograma de implantação.',
+    objetivo: 'Apresentação da plataforma YourEyes, alinhamento de expectativas, definição do escopo inicial e cronograma de implantação.',
     pauta: [
-      'Apresentação da plataforma Seguramente e seus módulos',
+      'Apresentação da plataforma YourEyes e seus módulos',
       'Alinhamento de expectativas e objetivos do projeto',
       'Definição do responsável interno pelo sistema',
       'Escopo inicial e prioridades de implantação',
@@ -112,17 +112,17 @@ export function AtaKickoffDialog({ open, onClose, onEnviar, isLoading, nomeEmpre
 </head>
 <body>
 
-<div class="header-logo"><span>SEGURAMENTE</span></div>
+<div class="header-logo"><span>YourEyes</span></div>
 
 <h1>Ata de Reunião de Kickoff</h1>
-<h2>Implantação da Plataforma Seguramente — ${nomeEmpresa}</h2>
+<h2>Implantação da Plataforma YourEyes — ${nomeEmpresa}</h2>
 
 <table class="meta-table">
   <tr><td>Data</td><td>${dataFormatada}</td></tr>
   <tr><td>Horário</td><td>${form.horario_inicio}${form.horario_fim ? ' às ' + form.horario_fim : ''}</td></tr>
   <tr><td>Local / Modalidade</td><td>${form.local} (${form.modalidade})</td></tr>
-  <tr><td>Responsável Seguramente</td><td>${form.responsavel_seguramente}</td></tr>
-  <tr><td>Participantes Seguramente</td><td>${form.participantes_seguramente}</td></tr>
+  <tr><td>Responsável YourEyes</td><td>${form.responsavel_seguramente}</td></tr>
+  <tr><td>Participantes YourEyes</td><td>${form.participantes_seguramente}</td></tr>
   <tr><td>Participantes ${nomeEmpresa}</td><td>${form.participantes_cliente}</td></tr>
 </table>
 
@@ -158,7 +158,7 @@ ${form.observacoes ? `<div class="section">
 <div class="assinaturas">
   <div class="assinatura-bloco">
     <div class="assinatura-linha">
-      SEGURAMENTE TECNOLOGIA LTDA<br>
+      YourEyes TECNOLOGIA LTDA<br>
       <small>${form.responsavel_seguramente}</small>
     </div>
   </div>
@@ -171,7 +171,7 @@ ${form.observacoes ? `<div class="section">
 </div>
 
 <div class="footer">
-  Documento gerado pela plataforma Seguramente em ${dataFormatada}
+  Documento gerado pela plataforma YourEyes em ${dataFormatada}
 </div>
 
 </body>
@@ -245,11 +245,11 @@ ${form.observacoes ? `<div class="section">
               <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Participantes</p>
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <Label>Responsável Seguramente</Label>
+                  <Label>Responsável YourEyes</Label>
                   <Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Participantes Seguramente</Label>
+                  <Label>Participantes YourEyes</Label>
                   <Input value={form.participantes_seguramente} onChange={e => setForm(p => ({ ...p, participantes_seguramente: e.target.value }))} placeholder="Nome(s) dos representantes" />
                 </div>
                 <div>

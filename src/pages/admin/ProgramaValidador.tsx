@@ -974,7 +974,7 @@ function DetalheCliente({
               {cliente.cnpj && <p><span className="text-muted-foreground">CNPJ:</span> {cliente.cnpj}</p>}
               {cliente.tamanho_empresa && <p><span className="text-muted-foreground">Porte:</span> {cliente.tamanho_empresa}</p>}
               {cliente.quantidade_colaboradores && <p><span className="text-muted-foreground">Colaboradores:</span> {cliente.quantidade_colaboradores}</p>}
-              {cliente.responsavel_seguramente && <p><span className="text-muted-foreground">Resp. Seguramente:</span> {cliente.responsavel_seguramente}</p>}
+              {cliente.responsavel_seguramente && <p><span className="text-muted-foreground">Resp. YourEyes:</span> {cliente.responsavel_seguramente}</p>}
               {cliente.endereco && <p><span className="text-muted-foreground">Endereço:</span> {cliente.endereco}</p>}
               {cliente.representante && <p><span className="text-muted-foreground">Representante:</span> {cliente.representante}</p>}
             </CardContent>
@@ -1250,7 +1250,7 @@ function NovoClienteDialog({ onSuccess }: { onSuccess: () => void }) {
           </Select>
         </div>
         <div><Label>Qtd. Colaboradores</Label><Input type="number" value={form.quantidade_colaboradores} onChange={e => setForm(p => ({ ...p, quantidade_colaboradores: e.target.value }))} /></div>
-        <div><Label>Responsável Seguramente</Label><Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} /></div>
+        <div><Label>Responsável YourEyes</Label><Input value={form.responsavel_seguramente} onChange={e => setForm(p => ({ ...p, responsavel_seguramente: e.target.value }))} /></div>
 
         <div className="col-span-2">
           <Label>Endereço (para contrato)</Label>

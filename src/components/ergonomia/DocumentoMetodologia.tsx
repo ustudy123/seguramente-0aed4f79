@@ -68,7 +68,7 @@ export function DocumentoMetodologia({ riscos }: DocumentoMetodologiaProps) {
       conteudo: (
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>
-            Este documento descreve a metodologia adotada no sistema <strong>Seguramente</strong> para
+            Este documento descreve a metodologia adotada no sistema <strong>YourEyes</strong> para
             identificação, avaliação, controle e monitoramento de riscos ergonômicos (físicos e
             psicossociais) no âmbito do <strong>Gerenciamento de Riscos Ocupacionais (GRO)</strong>,
             como parte integrante do Programa de Gerenciamento de Riscos (PGR).
@@ -197,7 +197,7 @@ export function DocumentoMetodologia({ riscos }: DocumentoMetodologiaProps) {
       conteudo: (
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>
-            O instrumento psicossocial adotado é o <strong>SIPRO (Seguramente Instrumento de Rastreio
+            O instrumento psicossocial adotado é o <strong>SIPRO (YourEyes Instrumento de Rastreio
             Psicossocial Ocupacional)</strong>, adaptado ao contexto brasileiro com base no
             COPSOQ III e na ISO 45003.
           </p>
@@ -230,7 +230,7 @@ export function DocumentoMetodologia({ riscos }: DocumentoMetodologiaProps) {
       conteudo: (
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>
-            O sistema Seguramente utiliza modelos de IA generativa para apoiar — não substituir — a
+            O sistema YourEyes utiliza modelos de IA generativa para apoiar — não substituir — a
             análise ergonômica e psicossocial. As funcionalidades de IA incluem:
           </p>
           <ul className="list-disc list-inside space-y-1 text-xs">
@@ -314,7 +314,7 @@ export function DocumentoMetodologia({ riscos }: DocumentoMetodologiaProps) {
           <div className="flex items-center gap-2 mt-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             <p className="text-[11px] text-emerald-700 font-medium">
-              Documento gerado automaticamente pelo sistema Seguramente — v{VERSAO}
+              Documento gerado automaticamente pelo sistema YourEyes — v{VERSAO}
             </p>
           </div>
         </div>
@@ -395,7 +395,7 @@ export function DocumentoMetodologia({ riscos }: DocumentoMetodologiaProps) {
                 <p className="text-sm font-bold text-foreground">DOCUMENTO DE METODOLOGIA</p>
                 <p className="text-sm font-bold text-foreground">Gerenciamento de Riscos Ergonômicos e Psicossociais</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Versão {VERSAO} · {dataGeracao} · Sistema Seguramente
+                  Versão {VERSAO} · {dataGeracao} · Sistema YourEyes
                 </p>
                 <div className="flex justify-center gap-2 mt-2 flex-wrap">
                   {["NR-1", "NR-17", "ISO 45001", "ISO 45003"].map((n) => (

@@ -91,7 +91,7 @@ export function DenunciaForm({ profissionalId, profissionalNome, contratacaoId, 
           <div className="p-3 bg-muted/50 rounded-xl">
             <p className="font-medium text-sm">{profissionalNome}</p>
             <p className="text-[11px] text-muted-foreground">
-              A denúncia será analisada pela equipe administrativa do Seguramente.
+              A denúncia será analisada pela equipe administrativa do YourEyes.
             </p>
           </div>
 

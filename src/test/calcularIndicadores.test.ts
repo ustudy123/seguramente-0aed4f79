@@ -4,7 +4,7 @@ import { calcularIPSClassificacao } from "@/types/psicossocial";
 import { calcularIndicadores } from "@/hooks/usePsicossocial";
 
 // ============================================================
-// Testes unitários: cálculo IPS (Índice Psicossocial Seguramente)
+// Testes unitários: cálculo IPS (Índice Psicossocial YourEyes)
 // ============================================================
 
 describe("calcularIPSClassificacao", () => {

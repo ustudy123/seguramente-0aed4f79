@@ -807,7 +807,7 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
         <CardContent className="pt-4">
           <p className="text-xs text-muted-foreground">
             <strong>Metodologia:</strong> Os scores de Burnout e Boreout são derivados das dimensões IBO-S e IBD-S do instrumento SIPRO
-            (Índice Seguramente de Risco Psicossocial Organizacional). Os critérios avaliados incluem fatores ocupacionais,
+            (Índice YourEyes de Risco Psicossocial Organizacional). Os critérios avaliados incluem fatores ocupacionais,
             organizacionais e individuais conforme ISO 45003, NR-01 e NR-17. Disponível quando houver mínimo de 5 respostas na campanha.
             Clique em cada fator para ver a análise detalhada e criar ações corretivas/preventivas vinculadas ao Plano de Ação.
           </p>
