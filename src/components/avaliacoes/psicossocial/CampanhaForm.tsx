@@ -168,17 +168,16 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
       
       if (isEdicao && campanhaParaEditar) {
         console.log("Carregando dados para edição:", campanhaParaEditar.nome);
-        form.reset({
-          nome: campanhaParaEditar.nome,
-          descricao: campanhaParaEditar.descricao || "",
-          tipo: campanhaParaEditar.tipo,
-          instrumento: campanhaParaEditar.instrumento || 'sipro',
-          periodicidade: campanhaParaEditar.periodicidade,
-          data_inicio: campanhaParaEditar.data_inicio,
-          data_fim: campanhaParaEditar.data_fim,
-          politica_uso_dados: campanhaParaEditar.politica_uso_dados || POLITICA_USO_DADOS_PADRAO,
-          blocos_dinamicos: campanhaParaEditar.blocos_dinamicos || [],
-        });
+        form.setValue("nome", campanhaParaEditar.nome);
+        form.setValue("descricao", campanhaParaEditar.descricao || "");
+        form.setValue("tipo", campanhaParaEditar.tipo);
+        form.setValue("instrumento", campanhaParaEditar.instrumento || 'sipro');
+        form.setValue("periodicidade", campanhaParaEditar.periodicidade);
+        form.setValue("data_inicio", campanhaParaEditar.data_inicio);
+        form.setValue("data_fim", campanhaParaEditar.data_fim);
+        form.setValue("politica_uso_dados", campanhaParaEditar.politica_uso_dados || POLITICA_USO_DADOS_PADRAO);
+        form.setValue("blocos_dinamicos", campanhaParaEditar.blocos_dinamicos || []);
+        
         setSituacoes(campanhaParaEditar.situacoes_trabalho ?? []);
       } else if (isReaplicacao && campanhaAnterior) {
         form.reset({
