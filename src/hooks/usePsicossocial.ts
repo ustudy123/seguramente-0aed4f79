@@ -771,6 +771,7 @@ export function usePsicossocial() {
     isLoadingCampanhas,
     refetchCampanhas,
     criarCampanha,
+    editarCampanha,
     atualizarStatusCampanha,
 
     // Convites
