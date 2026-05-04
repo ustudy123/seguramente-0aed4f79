@@ -164,7 +164,10 @@ export function CampanhaForm({ open, onOpenChange, campanhaAnterior, campanhaPar
   // Atualizar valores quando entrar em modo edição ou reaplicação
   useEffect(() => {
     if (open) {
+      console.log("CampanhaForm aberto. Modo:", isEdicao ? "Edição" : isReaplicacao ? "Reaplicação" : "Criação");
+      
       if (isEdicao && campanhaParaEditar) {
+        console.log("Carregando dados para edição:", campanhaParaEditar.nome);
         form.reset({
           nome: campanhaParaEditar.nome,
           descricao: campanhaParaEditar.descricao || "",

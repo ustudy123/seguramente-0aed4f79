@@ -69,15 +69,17 @@ export function PsicossocialDashboard() {
   const { campanhas, campanhasAtivas, isLoadingCampanhas } = usePsicossocial();
 
   const handleNovaCampanha = () => {
-    setInstrumentoPreSelecionado(undefined);
     setCampanhaParaEditar(undefined);
+    setInstrumentoPreSelecionado(undefined);
     setShowForm(false);
     setShowAssistente(true);
   };
 
   const handleEditarCampanha = (campanha: CampanhaPsicossocial) => {
+    console.log("Iniciando edição da campanha:", campanha.id);
     setCampanhaParaEditar(campanha);
     setInstrumentoPreSelecionado(campanha.instrumento);
+    setShowAssistente(false); // Garante que o assistente não abra
     setShowForm(true);
   };
 
