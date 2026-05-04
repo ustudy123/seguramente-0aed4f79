@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -12,9 +12,11 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  Filter,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 
@@ -103,19 +105,32 @@ interface Props {
 }
 
 export function IndicesDerivadosDashboard({ campanhas }: Props) {
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
+
+  const validas = useMemo(() => {
+    return campanhas.filter(
+      (c) => (c.total_respostas || 0) >= MINIMO_ANONIMATO
+    ).sort((a, b) => new Date(b.data_fim || b.created_at).getTime() - new Date(a.data_fim || a.created_at).getTime());
+  }, [campanhas]);
+
   const dados = useMemo(() => {
-    // Campanhas encerradas com respostas suficientes
-    const validas = campanhas.filter(
-      (c) => c.status === "encerrada" && (c.total_respostas || 0) >= MINIMO_ANONIMATO
-    );
     if (validas.length === 0) return null;
 
-    // Ordenar por data para pegar a mais recente e anterior
-    const ordenadas = [...validas].sort(
-      (a, b) => new Date(b.data_fim || b.created_at).getTime() - new Date(a.data_fim || a.created_at).getTime()
-    );
-    const atual = ordenadas[0];
-    const anterior = ordenadas.length > 1 ? ordenadas[1] : null;
+    let atual: CampanhaPsicossocial;
+    let anterior: CampanhaPsicossocial | null = null;
+
+    if (filtroCampanha === "recente") {
+      // Priorizar campanhas encerradas, senão pegar a mais recente
+      const encerradas = validas.filter(c => c.status === "encerrada");
+      atual = encerradas.length > 0 ? encerradas[0] : validas[0];
+      
+      const indexAtual = validas.findIndex(c => c.id === atual.id);
+      anterior = validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
+    } else {
+      atual = validas.find(c => c.id === filtroCampanha) || validas[0];
+      const indexAtual = validas.findIndex(c => c.id === atual.id);
+      anterior = validas.length > indexAtual + 1 ? validas[indexAtual + 1] : null;
+    }
 
     return INDICES.map((idx) => {
       const scoreAtual = (atual[idx.campo] as number | null) ?? null;
@@ -160,10 +175,31 @@ export function IndicesDerivadosDashboard({ campanhas }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Activity className="h-5 w-5 text-purple-600" />
-        <h3 className="font-semibold text-base">Índices Derivados SIPRO</h3>
-        <Badge variant="outline" className="text-xs">Última campanha encerrada</Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-purple-600" />
+          <h3 className="font-semibold text-base">Índices Derivados SIPRO</h3>
+          <Badge variant="outline" className="text-xs">
+            {filtroCampanha === "recente" ? "Última campanha analisada" : "Campanha selecionada"}
+          </Badge>
+        </div>
+
+        {validas.length > 0 && (
+          <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-md border border-purple-100">
+            <Filter className="h-3 w-3 text-muted-foreground ml-1" />
+            <Select value={filtroCampanha} onValueChange={setFiltroCampanha}>
+              <SelectTrigger className="w-[180px] h-7 text-[10px] border-none bg-transparent focus:ring-0">
+                <SelectValue placeholder="Escolher Campanha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recente">Mais Recente</SelectItem>
+                {validas.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

@@ -5,7 +5,7 @@ import {
   Flame, Battery, Sparkles, CheckCircle2, AlertTriangle,
   Brain, Users, Clock, Heart, Target, RotateCcw, HelpCircle,
   Meh, TrendingDown, MessageSquareWarning, Zap, ExternalLink,
-  ChevronDown, ChevronUp, Plus, Info, Minus, RefreshCw
+  ChevronDown, ChevronUp, Plus, Info, Minus, RefreshCw, Filter
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -548,24 +549,30 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
   const [gerandoBoreout, setGerandoBoreout] = useState(false);
   const [acoesCriadas, setAcoesCriadas] = useState<string[]>([]);
   const [creatingActionFor, setCreatingActionFor] = useState<string | null>(null);
-
-  // Ações existentes por fator (estado local — em produção viria do Supabase)
+  const [filtroCampanha, setFiltroCampanha] = useState<string>("recente");
   const [existingActionsByFator, setExistingActionsByFator] = useState<
     Record<string, { titulo: string; status: string }[]>
   >({});
 
-  // Agregar radar_data das campanhas com dados suficientes
-  const radarAgregado = useMemo<RadarDimensao[] | undefined>(() => {
-    const campanhasComDados = campanhas.filter(
+  // Filtrar campanhas válidas (com dados de radar e respostas suficientes)
+  const campanhasValidas = useMemo(() => {
+    return campanhas.filter(
       c => c.radar_data && Array.isArray(c.radar_data) && c.radar_data.length > 0
         && (c.total_respostas || 0) >= MINIMO_ANONIMATO
-    );
-    if (campanhasComDados.length === 0) return undefined;
-
-    // Usar a campanha mais recente com dados
-    const maisRecente = campanhasComDados[0]; // já vem ordenado por created_at desc
-    return maisRecente.radar_data;
+    ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [campanhas]);
+
+  // Agregar radar_data das campanhas com dados suficientes
+  const radarAgregado = useMemo<RadarDimensao[] | undefined>(() => {
+    if (campanhasValidas.length === 0) return undefined;
+
+    if (filtroCampanha === "recente") {
+      return campanhasValidas[0].radar_data as RadarDimensao[];
+    }
+
+    const selecionada = campanhasValidas.find(c => c.id === filtroCampanha);
+    return selecionada?.radar_data as RadarDimensao[] | undefined;
+  }, [campanhasValidas, filtroCampanha]);
 
   const temDadosReais = !!radarAgregado;
 
@@ -722,16 +729,37 @@ export function RadaresPsicossocialSection({ campanhas = [] }: RadaresPsicossoci
               <Brain className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
-                {temDadosReais ? (
-                  <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">
-                    Dados Reais
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
-                    Estimativa
-                  </Badge>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm">Diagnóstico de Burnout & Boreout</p>
+                    {temDadosReais ? (
+                      <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">
+                        Dados Reais
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
+                        Estimativa
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {campanhasValidas.length > 0 && (
+                  <div className="flex items-center gap-2 bg-background/50 p-1.5 rounded-lg border border-primary/10 shadow-sm">
+                    <Filter className="h-3.5 w-3.5 text-primary/60" />
+                    <Select value={filtroCampanha} onValueChange={setFiltroCampanha}>
+                      <SelectTrigger className="w-[200px] h-8 text-xs border-none bg-transparent focus:ring-0">
+                        <SelectValue placeholder="Filtrar por Campanha" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recente">Mais Recente</SelectItem>
+                        {campanhasValidas.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
