@@ -414,7 +414,24 @@ serve(async (req) => {
 
   // 7) Create empresa_cadastro (pre-registration) if documento provided
   if (documento) {
-// ... keep existing code
+    const docField = tipoPessoa === "pf" ? "cpf" : "cnpj";
+    const empresaPayload = {
+      tenant_id: tenant.id,
+      razao_social: tenantNome,
+      [docField]: documento,
+      tipo_pessoa: tipoPessoa || "pj",
+      telefone: telefone || null,
+      email: email || null,
+      endereco: endereco || null,
+      numero: numero || null,
+      complemento: complemento || null,
+      bairro: bairro || null,
+      cidade: cidade || null,
+      estado: estado || null,
+      cep: cep || null,
+      ativo: true,
+    };
+
     const { error: empresaError } = await admin
       .from("empresa_cadastro")
       .insert(empresaPayload);
