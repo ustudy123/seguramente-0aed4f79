@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   Brain, 
   Calendar, 
@@ -13,12 +13,23 @@ import {
   Database,
   Loader2,
   Pencil,
+  Search,
+  Filter,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +63,9 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
   const [showResultados, setShowResultados] = useState(false);
   const [expandedCampanha, setExpandedCampanha] = useState<string | null>(null);
   const [exportandoGRO, setExportandoGRO] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [instrumentFilter, setInstrumentFilter] = useState<string>("todos");
 
   const { atualizarStatusCampanha } = usePsicossocial();
   const { importarDaCampanha } = useGRORiscos();
@@ -145,6 +159,17 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
     onEditarCampanha(campanha);
   };
 
+  const filteredCampanhas = useMemo(() => {
+    return campanhas.filter((c) => {
+      const matchesSearch = c.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (c.descricao?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "todos" || c.status === statusFilter;
+      const matchesInstrument = instrumentFilter === "todos" || c.instrumento === instrumentFilter;
+      
+      return matchesSearch && matchesStatus && matchesInstrument;
+    });
+  }, [campanhas, searchTerm, statusFilter, instrumentFilter]);
+
   if (campanhas.length === 0) {
     return (
       <Card>
@@ -165,15 +190,86 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Campanhas</CardTitle>
-          <CardDescription>
-            Gerencie suas campanhas de avaliação psicossocial
-          </CardDescription>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle>Campanhas</CardTitle>
+              <CardDescription>
+                Gerencie suas campanhas de avaliação psicossocial
+              </CardDescription>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome ou descrição..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1 h-7 w-7"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos Status</SelectItem>
+                  <SelectItem value="rascunho">Rascunho</SelectItem>
+                  <SelectItem value="ativa">Ativa</SelectItem>
+                  <SelectItem value="encerrada">Encerrada</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <Brain className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Instrumento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos Instrumentos</SelectItem>
+                  <SelectItem value="sipro">SIPRO</SelectItem>
+                  <SelectItem value="copsoq">COPSOQ III</SelectItem>
+                  <SelectItem value="hse">HSE</SelectItem>
+                  <SelectItem value="proart">PROART</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {campanhas.map((campanha) => (
-            <div key={campanha.id} className="border rounded-lg overflow-hidden">
+          {filteredCampanhas.length === 0 ? (
+            <div className="text-center py-12 border rounded-lg border-dashed">
+              <Search className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
+              <p className="text-muted-foreground">Nenhuma campanha encontrada com os filtros aplicados.</p>
+              {(searchTerm !== "" || statusFilter !== "todos" || instrumentFilter !== "todos") && (
+                <Button 
+                  variant="link" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("todos");
+                    setInstrumentFilter("todos");
+                  }}
+                  className="mt-2"
+                >
+                  Limpar todos os filtros
+                </Button>
+              )}
+            </div>
+          ) : (
+            filteredCampanhas.map((campanha) => (
+              <div key={campanha.id} className="border rounded-lg overflow-hidden">
               <CampanhaCard 
                 campanha={campanha}
                 onAtivar={() => handleAtivar(campanha)}
@@ -203,7 +299,8 @@ export function CampanhaList({ campanhas, onNovaCampanha, onEditarCampanha }: Ca
                 </div>
               )}
             </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 
