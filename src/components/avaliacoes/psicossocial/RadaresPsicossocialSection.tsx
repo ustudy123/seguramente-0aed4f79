@@ -63,40 +63,61 @@ function calcularNivel(score: number): NivelRisco {
 // Radar `subject` usa as 2 primeiras palavras do nome da dimensão.
 // Para SIPRO: scores altos = mais risco. Para protetores invertidos, invertemos (100 - score).
 
-const BURNOUT_DIMENSION_MAP: Record<string, string> = {
-  sobrecargaCognitiva: 'Demandas Cognitivas',
-  ritmoTrabalho: 'Demandas Quantitativas',
-  faltaPausas: 'Recuperação e',
-  humorNegativo: 'Demandas Emocionais',
-  denuncias: 'Relacionamentos e',    // Relacionamentos e Suporte — invertido
-  exigenciasEmocionais: 'Demandas Emocionais',
+// Cada chave aceita múltiplos aliases de subject (sem acentos, lowercase) para
+// suportar diferentes versões de instrumentos (SIPRO antigo, COPSOQ, HSE etc.).
+// `inverted: true` significa dimensão protetora (score alto = bom) e precisa
+// ser invertida (100 - score) para virar score de risco.
+interface DimensionMatcher {
+  aliases: string[];
+  inverted: boolean;
+}
+
+const BURNOUT_DIMENSION_MAP: Record<string, DimensionMatcher> = {
+  sobrecargaCognitiva: { aliases: ['demandas cognitivas', 'demanda cognitiva', 'carga cognitiva'], inverted: false },
+  ritmoTrabalho:       { aliases: ['demandas quantitativas', 'demanda quantitativa', 'ritmo de trabalho', 'ritmo'], inverted: false },
+  faltaPausas:         { aliases: ['recuperacao e equilibrio', 'recuperacao', 'equilibrio trabalho-vida', 'equilibrio trabalho vida', 'pausas'], inverted: true },
+  humorNegativo:       { aliases: ['demandas emocionais', 'demanda emocional', 'burnout / esgotamento', 'burnout', 'esgotamento'], inverted: false },
+  denuncias:           { aliases: ['conflito de papeis', 'relacionamentos e suporte', 'suporte dos colegas', 'suporte da lideranca'], inverted: true },
+  exigenciasEmocionais:{ aliases: ['demandas emocionais', 'demanda emocional', 'exigencias emocionais'], inverted: false },
 };
 
-const BOREOUT_DIMENSION_MAP: Record<string, string> = {
-  baixoDesafio: 'Autonomia e',       // Autonomia e Controle — invertido
-  repetitividade: 'Clareza de',      // Clareza de Papéis — invertido
-  faltaSentido: 'Sentido do',        // Sentido do Trabalho — invertido
-  apatia: 'Reconhecimento e',        // Reconhecimento e Justiça — invertido
-  desconexao: 'Relacionamentos e',   // Relacionamentos e Suporte — invertido
+const BOREOUT_DIMENSION_MAP: Record<string, DimensionMatcher> = {
+  baixoDesafio:   { aliases: ['autonomia e controle', 'influencia e controle', 'previsibilidade'], inverted: true },
+  repetitividade: { aliases: ['clareza de papeis', 'conflito de papeis'], inverted: true },
+  faltaSentido:   { aliases: ['sentido do trabalho', 'sentido'], inverted: true },
+  apatia:         { aliases: ['reconhecimento e justica', 'reconhecimento e recompensas', 'reconhecimento'], inverted: true },
+  desconexao:     { aliases: ['relacionamentos e suporte', 'suporte dos colegas', 'suporte da lideranca'], inverted: true },
 };
 
-// Dimensões protetoras cujo score precisa ser invertido (100 - score)
-// porque score alto do SIPRO = bom → mas para burnout/boreout precisamos score alto = ruim
-const INVERTED_DIMENSIONS = new Set([
-  'Autonomia e', 'Clareza de', 'Reconhecimento e',
-  'Relacionamentos e', 'Sentido do',
-]);
+function normalize(s: string): string {
+  return (s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
 
 function resolveRadarScore(
   radarData: RadarDimensao[] | undefined,
-  subjectPrefix: string,
+  matcher: DimensionMatcher | undefined,
   fallback: number
 ): number {
-  if (!radarData || radarData.length === 0) return fallback;
-  const match = radarData.find(d => d.subject === subjectPrefix);
-  if (!match) return fallback;
-  const raw = match.value;
-  return INVERTED_DIMENSIONS.has(subjectPrefix) ? Math.max(0, 100 - raw) : raw;
+  if (!matcher || !radarData || radarData.length === 0) return fallback;
+  const normalizedSubjects = radarData.map(d => ({ raw: d, norm: normalize(d.subject) }));
+
+  for (const alias of matcher.aliases) {
+    const aliasNorm = normalize(alias);
+    // Tenta match exato, depois "começa com", depois "contém"
+    const found =
+      normalizedSubjects.find(s => s.norm === aliasNorm) ||
+      normalizedSubjects.find(s => s.norm.startsWith(aliasNorm)) ||
+      normalizedSubjects.find(s => s.norm.includes(aliasNorm));
+    if (found) {
+      const raw = found.raw.value;
+      return matcher.inverted ? Math.max(0, 100 - raw) : raw;
+    }
+  }
+  return fallback;
 }
 
 // ────────── templates de fatores (sem valor fixo) ──────────
@@ -251,12 +272,12 @@ const BOREOUT_TEMPLATES: FatorTemplate[] = [
 
 function buildFatores(
   templates: FatorTemplate[],
-  dimensionMap: Record<string, string>,
+  dimensionMap: Record<string, DimensionMatcher>,
   radarData: RadarDimensao[] | undefined,
 ): FatorConfig[] {
   return templates.map(t => ({
     ...t,
-    valor: resolveRadarScore(radarData, dimensionMap[t.key] || '', t.fallback),
+    valor: resolveRadarScore(radarData, dimensionMap[t.key], t.fallback),
   }));
 }
 
