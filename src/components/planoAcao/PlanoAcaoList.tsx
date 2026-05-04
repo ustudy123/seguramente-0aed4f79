@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { PlanoAcao } from "@/types/planoAcao";
+import { PlanoAcaoFormModal } from "./PlanoAcaoFormModal";
 
 interface PlanoAcaoListProps {
   acoes: PlanoAcao[];
@@ -71,6 +72,7 @@ const ORIGEM_LABELS: Record<string, { label: string }> = {
 
 export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação encontrada" }: PlanoAcaoListProps) {
   const navigate = useNavigate();
+  const [editAcao, setEditAcao] = useState<PlanoAcao | null>(null);
 
   if (isLoading) {
     return (
@@ -171,7 +173,7 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
                               <Eye className="h-4 w-4 mr-2" />
                               Visualizar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditAcao(acao); }}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
@@ -226,6 +228,14 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
           );
         })}
       </AnimatePresence>
+
+      {editAcao && (
+        <PlanoAcaoFormModal
+          open={!!editAcao}
+          onOpenChange={(open) => !open && setEditAcao(null)}
+          editData={editAcao}
+        />
+      )}
     </div>
   );
 }
