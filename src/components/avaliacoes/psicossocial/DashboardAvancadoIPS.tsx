@@ -146,9 +146,11 @@ export function DashboardAvancadoIPS({ open, onOpenChange, campanhas }: Dashboar
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todas as Campanhas</SelectItem>
-                    {campanhas.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                    ))}
+                    {campanhas
+                      .filter(c => (c.total_respostas || 0) >= 5)
+                      .map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 
