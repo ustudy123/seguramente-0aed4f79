@@ -473,10 +473,14 @@ export function PsicossocialDashboard() {
           onSelectInstrumento={handleAssistenteSelect}
         />
 
-        {/* Modal de Nova Campanha */}
+        {/* Modal de Nova Campanha / Edição */}
         <CampanhaForm
           open={showForm}
-          onOpenChange={setShowForm}
+          onOpenChange={(o) => {
+            setShowForm(o);
+            if (!o) setCampanhaParaEditar(undefined);
+          }}
+          campanhaParaEditar={campanhaParaEditar}
           instrumentoSugerido={instrumentoPreSelecionado}
         />
 
