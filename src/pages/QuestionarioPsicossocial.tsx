@@ -223,8 +223,9 @@ export default function QuestionarioPsicossocial({ tokenTipo = 'publico' }: Prop
             setLoading(false);
             return;
           }
-          if (data.status !== 'ativa') {
-            setError("Esta campanha não está mais ativa");
+          const hoje = new Date().toISOString().split('T')[0];
+          if (data.status !== 'ativa' || data.data_inicio > hoje) {
+            setError("Esta campanha não está ativa no momento ou ainda não iniciou.");
             setLoading(false);
             return;
           }

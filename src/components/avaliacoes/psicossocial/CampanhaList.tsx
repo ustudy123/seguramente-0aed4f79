@@ -56,6 +56,11 @@ export function CampanhaList({ campanhas, onNovaCampanha }: CampanhaListProps) {
   const { tenantId } = useAuthContext();
 
   const handleAtivar = (campanha: CampanhaPsicossocial) => {
+    const hoje = new Date().toISOString().split('T')[0];
+    if (campanha.data_inicio > hoje) {
+      toast.info(`Esta campanha está agendada para iniciar em ${format(new Date(campanha.data_inicio), "dd/MM/yyyy")}. Ela será ativada automaticamente nesta data.`);
+      return;
+    }
     atualizarStatusCampanha.mutate({ id: campanha.id, status: 'ativa' });
   };
 
