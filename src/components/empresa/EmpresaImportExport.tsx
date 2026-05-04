@@ -9,7 +9,7 @@ import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { buscarCnpj } from '@/lib/brasilapi';
-import { formatCnpj, validateCnpj } from '@/lib/cnpj';
+import { formatCnpj, validateCnpj, cleanCnpj } from '@/lib/cnpj';
 
 const TEMPLATE_COLUMNS = [
   'Razão Social*',
