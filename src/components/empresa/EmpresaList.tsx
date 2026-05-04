@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
-import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown, Trash2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Building2, Search, Filter, Download, Plus, ToggleLeft, ToggleRight, Edit, Eye, CheckSquare, Square, AlertTriangle, Layers, GitBranch, Upload, FileSpreadsheet, FileText, ChevronDown, Trash2, Users } from 'lucide-react';
 import { formatCnpj } from '@/lib/cnpj';
 import { formatCpf } from '@/lib/cpf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -30,6 +32,27 @@ interface EmpresaListProps {
 }
 
 export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo, onDelete, grupos = [], obrigacoes = [] }: EmpresaListProps) {
+  const { tenantId } = useAuthContext() as any;
+  const { data: counts = [] } = useQuery({
+    queryKey: ['empresa_colaboradores_counts', tenantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('admissoes')
+        .select('empresa_id')
+        .eq('tenant_id', tenantId!)
+        .eq('status', 'concluido');
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      data.forEach(row => {
+        if (row.empresa_id) {
+          map[row.empresa_id] = (map[row.empresa_id] || 0) + 1;
+        }
+      });
+      return map;
+    },
+    enabled: !!tenantId,
+  });
+
   const { hasRole, isSuperAdmin } = useAuthContext() as any;
   const podeExcluir = isSuperAdmin || hasRole?.('owner');
   const [search, setSearch] = useState('');
@@ -348,6 +371,7 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
               <TableHead>Tipo</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>CNAE</TableHead>
+              <TableHead className="text-center">Colaboradores</TableHead>
               <TableHead className="text-center">GR</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -426,6 +450,12 @@ export function EmpresaList({ empresas, isLoading, onEdit, onNew, onToggleAtivo,
                         <p className="text-xs text-muted-foreground truncate max-w-[200px]">{emp.cnae_descricao}</p>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="secondary" className="gap-1 px-2">
+                      <Users className="w-3 h-3 text-muted-foreground" />
+                      {(counts as any)[emp.id] || 0}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-center">{grauRiscoBadge(emp.grau_risco)}</TableCell>
                   <TableCell>
