@@ -117,7 +117,16 @@ export function InventarioPGR({ campanhas }: InventarioPGRProps) {
   const [expanded, setExpanded] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
-  const [filtroCampanha, setFiltroCampanha] = useState<string>("todos");
+  const [filtroCampanha, setFiltroCampanha] = useState<string>(campanhas.length === 1 ? campanhas[0].id : "todos");
+
+  useEffect(() => {
+    if (campanhas.length === 1) {
+      setFiltroCampanha(campanhas[0].id);
+    } else {
+      setFiltroCampanha("todos");
+    }
+  }, [campanhas]);
+
   const { importarDaCampanha, riscos: groRiscos } = useGRORiscos();
 
   // GAP-P2: Riscos GRO que precisam de reavaliação (pós-ação concluída)
