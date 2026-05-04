@@ -161,9 +161,9 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
         classificacao: ipsClass,
         total_respostas: stats.concluidos,
         taxa_participacao: stats.taxa_participacao,
-        dimensoes_criticas: dimensoesAgregadas.filter(d => d.media < 50).map(d => d.bloco),
-        dimensoes_atencao: dimensoesAgregadas.filter(d => d.media >= 50 && d.media < 65).map(d => d.bloco),
-        dimensoes_saudaveis: dimensoesAgregadas.filter(d => d.media >= 80).map(d => d.bloco),
+        dimensoes_criticas: dimensoesAgregadas.filter(d => isSipro ? d.media >= 50 : d.media < 50).map(d => d.bloco),
+        dimensoes_atencao: dimensoesAgregadas.filter(d => isSipro ? (d.media >= 36 && d.media < 50) : (d.media >= 50 && d.media < 65)).map(d => d.bloco),
+        dimensoes_saudaveis: dimensoesAgregadas.filter(d => isSipro ? d.media <= 20 : d.media >= 80).map(d => d.bloco),
       };
 
       const { data, error } = await supabase.functions.invoke('ai-psicossocial-analise', {
@@ -191,7 +191,7 @@ export function ResultadosModal({ open, onOpenChange, campanha }: ResultadosModa
             instrumento: campanha.instrumento || 'copsoq',
             ips,
             classificacao: ipsClass,
-            dimensoes_criticas: dimensoesAgregadas.filter(d => d.media < 50).map(d => d.bloco),
+            dimensoes_criticas: dimensoesAgregadas.filter(d => isSipro ? d.media >= 50 : d.media < 50).map(d => d.bloco),
           },
           modo: 'plano_acao',
         },
