@@ -65,6 +65,7 @@ export function AdmissaoDetail({
   onRejeitarEtapa,
   isAdmin = false
 }: AdmissaoDetailProps) {
+  const [showChecklist, setShowChecklist] = useState(false);
   const { dadosPessoais, dadosContato, dadosProfissionais, dadosBancarios, documentos, status, historicoAprovacao, dataCriacao } = admissao;
 
   const initials = dadosPessoais.nomeCompleto
