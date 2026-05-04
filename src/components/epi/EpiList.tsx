@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Calendar,
   MoreHorizontal,
+  Search,
 } from "lucide-react";
 import {
   Table,
@@ -86,12 +87,21 @@ export function EpiList({
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Buscar EPIs..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
-      />
+      <div className="flex flex-col gap-4 p-5 bg-card border rounded-xl shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <Search className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Pesquisa de Estoque</h3>
+        </div>
+        <div className="relative max-w-2xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, categoria, CA, marca ou modelo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 h-11 border-muted-foreground/20 focus-visible:ring-primary text-base"
+          />
+        </div>
+      </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
