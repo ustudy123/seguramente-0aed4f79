@@ -197,7 +197,7 @@ export function EmpresaImportExport() {
           continue;
         }
 
-        const cnpjLimpo = cnpjInput.replace(/\D/g, '');
+        const cnpjLimpo = cleanCnpj(cnpjInput);
         if (!validateCnpj(cnpjLimpo)) {
           errors.push(`Linha ${i + 2}: CNPJ inválido (${cnpjInput})`);
           continue;
