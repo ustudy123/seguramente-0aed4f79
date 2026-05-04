@@ -24,7 +24,7 @@ import {
   BLOCOS_DINAMICOS,
 } from "@/types/psicossocial";
 import { toast } from "sonner";
-import logoYourEyes from "@/assets/logo-YourEyes.png";
+import logoYourEyes from "@/assets/logo-youreyes.svg";
 import { getDimensoesByInstrumento } from "@/data/instrumentos";
 import { supabasePublic } from "@/lib/supabasePublic";
 
