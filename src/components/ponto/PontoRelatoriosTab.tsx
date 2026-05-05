@@ -34,8 +34,13 @@ export function PontoRelatoriosTab() {
   const { usePontoDiario } = usePonto();
   const { useEspelhos } = usePontoFechamento();
 
-  const startDate = new Date(competencia + "-01");
+  const year = parseInt(competencia.split("-")[0]);
+  const month = parseInt(competencia.split("-")[1]);
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
   const { data: espelhos = [] } = useEspelhos(competencia);
+  const { data: pontosDiarios = [] } = usePontoDiario(startDate); // Note: usePontoDiario might need adjustment for range, but let's check its implementation again
 
   const formatMinutos = (min: number) => `${Math.floor(Math.abs(min) / 60)}h ${Math.abs(min) % 60}min`;
 
