@@ -288,7 +288,7 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
               name="trimestre"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Trimestre</FormLabel>
+                  <FormLabel>Trimestre da Entrega</FormLabel>
                   <Select 
                     onValueChange={(v) => field.onChange(parseInt(v))} 
                     value={field.value?.toString()}

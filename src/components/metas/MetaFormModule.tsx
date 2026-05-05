@@ -288,7 +288,7 @@ export function MetaFormModule({
           <Input type="number" value={form.ano || new Date().getFullYear()} onChange={e => set("ano", parseInt(e.target.value))} />
         </div>
         <div className="space-y-1.5">
-          <Label>Trimestre</Label>
+          <Label>Trimestre da Entrega</Label>
           <Select value={form.trimestre?.toString() || ""} onValueChange={v => set("trimestre", v ? parseInt(v) : undefined)}>
             <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
             <SelectContent>
