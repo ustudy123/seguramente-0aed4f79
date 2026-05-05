@@ -229,7 +229,10 @@ export function usePonto() {
     }) => {
       if (!tenantId || !user) throw new Error("Usuário não autenticado");
 
-      const agora = new Date();
+      const agoraUtc = new Date();
+      // Ajustar para fuso horário de Brasília (UTC-3)
+      const agora = new Date(agoraUtc.getTime() - (3 * 60 * 60 * 1000));
+      
       const userAgent = navigator.userAgent;
       const dispositivo = /Mobile|Android|iPhone/i.test(userAgent) ? "Mobile" : "Desktop";
 
