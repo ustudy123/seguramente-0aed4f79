@@ -526,11 +526,9 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
             onDelete={(id) => deleteOrgNode.mutate(id)}
             onAddChild={openDialogForParent}
             onAddSibling={(parentId) => openDialogForParent(parentId || "")}
-            onEdit={(id, updates) => {
-              updateOrgNode.mutate({ id, ...updates }, {
-                onSuccess: () => toast.success("Posição atualizada"),
-                onError: () => toast.error("Erro ao atualizar posição"),
-              });
+            onEdit={(id) => {
+              const node = organograma.find(n => n.id === id);
+              if (node) openDialogForEdit(node);
             }}
             onMove={(draggedId, targetId, position) => {
               const isDescendant = (parentId: string, checkId: string): boolean => {
