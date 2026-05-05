@@ -274,20 +274,19 @@ export function PlanoAcaoIAAssistant({
                         return (
                           <div 
                             key={idx}
-                            onClick={() => toggleSelect(idx)}
-                            className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                            className={`p-3 rounded-lg border transition-all ${
                               isCreated
                                 ? "bg-emerald-500/10 border-emerald-500/30 opacity-70 cursor-default"
                                 : isSelected
-                                ? "bg-indigo-500/15 border-indigo-400/40 shadow-md shadow-indigo-500/10"
-                                : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
+                                ? "bg-indigo-500/15 border-indigo-400/40 shadow-md shadow-indigo-500/10 cursor-pointer"
+                                : "bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20 cursor-pointer"
                             }`}
+                            onClick={() => !isCreated && toggleSelect(idx)}
                           >
                             <div className="flex items-start gap-3">
-                              <div
-                                className="mt-0.5 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
+                                <div
+                                  className="mt-0.5 shrink-0"
+                                >
                                 {isCreated ? (
                                   <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
                                     <Check className="h-3.5 w-3.5 text-white" />
