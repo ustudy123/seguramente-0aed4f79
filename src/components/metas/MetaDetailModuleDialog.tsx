@@ -268,22 +268,58 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                   <p className="text-sm text-muted-foreground text-center py-4">Nenhuma evidência anexada.</p>
                 ) : (
                   evidencias.map((e: any) => (
-                    <div key={e.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+                    <div key={e.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-2 border border-border/50">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px]">{e.tipo}</Badge>
-                          <span className="font-medium">{e.titulo || e.arquivo_nome || "Evidência"}</span>
+                          <Badge variant="outline" className="text-[10px] capitalize">{e.tipo}</Badge>
+                          <span className="font-medium text-sm">{e.titulo || e.arquivo_nome || "Evidência"}</span>
                         </div>
                         <span className="text-muted-foreground shrink-0">{new Date(e.created_at).toLocaleDateString("pt-BR")}</span>
                       </div>
-                      {e.descricao && <p className="text-muted-foreground">{e.descricao}</p>}
-                      {e.link_externo && (
-                        <a href={e.link_externo} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
-                          🔗 {e.link_externo}
-                        </a>
-                      )}
-                      {e.periodo_referencia && <span className="text-muted-foreground">📅 {e.periodo_referencia}</span>}
-                      {e.criado_por_nome && <span className="text-muted-foreground">👤 {e.criado_por_nome}</span>}
+                      
+                      {e.descricao && <p className="text-muted-foreground leading-relaxed">{e.descricao}</p>}
+                      
+                      <div className="flex flex-wrap items-center gap-3 pt-1">
+                        {e.link_externo && (
+                          <a 
+                            href={e.link_externo} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="flex items-center gap-1 text-primary hover:underline font-medium"
+                          >
+                            <ExternalLink className="h-3 w-3" /> Ver Link
+                          </a>
+                        )}
+                        
+                        {e.arquivo_url && (
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="h-auto p-0 text-primary font-medium gap-1"
+                            onClick={() => handleDownloadEvidencia(e.arquivo_url)}
+                          >
+                            <Download className="h-3 w-3" /> 
+                            {e.arquivo_nome || "Baixar Arquivo"}
+                          </Button>
+                        )}
+                      </div>
+
+                      <Separator className="my-2 opacity-50" />
+                      
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-3">
+                          {e.periodo_referencia && (
+                            <span className="flex items-center gap-1">
+                              <CalendarIcon className="h-3 w-3" /> {e.periodo_referencia}
+                            </span>
+                          )}
+                          {e.criado_por_nome && (
+                            <span className="flex items-center gap-1 text-primary/80">
+                              <Users className="h-3 w-3" /> {e.criado_por_nome}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))
                 )}
