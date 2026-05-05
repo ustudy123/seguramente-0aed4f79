@@ -123,6 +123,19 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
     refetchEvidencias();
   };
 
+  const handleDownloadEvidencia = async (path: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("documentos")
+        .createSignedUrl(path, 3600);
+
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (error: any) {
+      toast.error("Erro ao gerar link de download: " + error.message);
+    }
+  };
+
   const handleAnaliseRisco = async () => {
     if (!meta) return;
     setIsAnalysing(true);
