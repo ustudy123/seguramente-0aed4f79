@@ -185,7 +185,10 @@ export default function CompletarCadastro() {
     try {
       const { error } = await supabase
         .from("admissoes")
-        .update({ onboarding_status: 'em_analise' })
+        .update({ 
+          onboarding_status: 'em_analise',
+          status: 'em_analise'
+        })
         .eq("id", colaborador.id);
 
       if (error) throw error;
