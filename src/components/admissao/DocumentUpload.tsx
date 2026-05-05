@@ -25,7 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Extended document type that includes urlPreview
-interface DocumentoAdmissaoExtended {
+export interface DocumentoAdmissaoExtended {
   id: string;
   nome: string;
   tipo: string;
