@@ -604,24 +604,31 @@ export function PsicossocialSuperAdminPanel() {
   );
 }
 
-function KPI({ label, value, icon: Icon, color, sub }: {
-  label: string; value: number | string; icon: any; color: string; sub?: string;
+function KPI({ label, value, icon: Icon, color, sub, trend }: {
+  label: string; value: number | string; icon: any; color: string; sub?: string; trend?: string;
 }) {
   return (
     <Card className={cn(
-      "relative overflow-hidden border-0 text-white shadow-md hover:shadow-lg transition-shadow",
+      "relative overflow-hidden border-0 text-white shadow-md hover:shadow-lg transition-all duration-300 group",
       "bg-gradient-to-br", color,
     )}>
-      <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
-      <CardContent className="p-4 relative">
+      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-2xl group-hover:scale-150 transition-transform duration-500" />
+      <CardContent className="p-5 relative">
         <div className="flex items-start justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider opacity-90 font-medium">{label}</p>
-            <p className="text-2xl md:text-3xl font-bold mt-1 tabular-nums">{value}</p>
-            {sub && <p className="text-[11px] opacity-80 mt-1 truncate">{sub}</p>}
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase font-black tracking-widest opacity-80">{label}</p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-3xl font-black tabular-nums tracking-tighter">{value}</p>
+              {trend && (
+                <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                  {trend}
+                </span>
+              )}
+            </div>
+            {sub && <p className="text-[11px] font-medium opacity-90 mt-1 truncate leading-tight">{sub}</p>}
           </div>
-          <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm">
-            <Icon className="w-4 h-4" />
+          <div className="p-2.5 rounded-2xl bg-white/15 backdrop-blur-md shadow-inner group-hover:rotate-12 transition-transform">
+            <Icon className="w-5 h-5" />
           </div>
         </div>
       </CardContent>
