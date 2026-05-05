@@ -94,6 +94,8 @@ export interface AdmissaoFormData {
   exame_admissional_medico?: string;
   exame_admissional_crm?: string;
   exame_admissional_observacoes?: string;
+  foto_url?: string;
+  onboarding_status?: string;
 }
 
 // Status labels and colors
