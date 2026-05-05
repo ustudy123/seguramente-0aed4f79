@@ -280,7 +280,7 @@ serve(async (req) => {
         newUserId = newUser.user.id;
         const sendResult = await sendViaResend(
           email,
-          "Bem-vindo ao Seguramente",
+          "Bem-vindo ao YourEyes",
           buildInviteHtml(nomeCompleto, `${SITE_URL}/login`, "password")
         );
         if (sendResult?.ok) {
