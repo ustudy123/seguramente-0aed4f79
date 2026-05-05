@@ -7,7 +7,7 @@ interface GeneratePdfFromHtmlOptions {
 }
 
 const PDF_MARGIN_MM = 15;
-const PDF_RENDER_SCALE = 3;
+const PDF_RENDER_SCALE = 2; // Reduced from 3 to avoid memory issues
 const LONG_TEXT_MIN_LENGTH = 80;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
