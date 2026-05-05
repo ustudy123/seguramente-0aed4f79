@@ -388,7 +388,36 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
               </FormItem>
             )}
           />
+        <div className="grid grid-cols-2 gap-4">
           <FormField
+            control={form.control}
+            name="data_inicio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data de Início</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="data_fim"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data de Fim</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
             control={form.control}
             name="premiacao_descricao"
             render={({ field }) => (
