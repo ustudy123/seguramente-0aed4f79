@@ -90,11 +90,19 @@ export function normalizeManualHtml(html: string) {
   documentNode.head.appendChild(baseStyle);
 
   const textElements = documentNode.body.querySelectorAll("p, li, td, blockquote");
+  const headingElements = documentNode.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
+
+  headingElements.forEach((el) => {
+    appendInlineStyle(el as HTMLElement, "margin-bottom: 8px !important; margin-top: 16px !important; page-break-after: avoid !important;");
+  });
 
   textElements.forEach((element) => {
     const text = element.textContent?.replace(/\s+/g, " ").trim() || "";
 
     if (text.length < LONG_TEXT_MIN_LENGTH || hasCenteredAncestor(element)) {
+      if (element.tagName === "P") {
+        appendInlineStyle(element, "margin-top: 0 !important; margin-bottom: 12px !important;");
+      }
       return;
     }
 
@@ -108,8 +116,10 @@ export function normalizeManualHtml(html: string) {
         "overflow-wrap: break-word !important",
         "word-spacing: 0.05em !important",
         "letter-spacing: normal !important",
-        "line-height: 1.65",
+        "line-height: 1.6",
         "hyphens: none !important",
+        "margin-top: 0 !important",
+        "margin-bottom: 12px !important",
       ].join(";") + ";"
     );
   });
