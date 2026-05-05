@@ -33,6 +33,7 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     comportamentos_nao_tolerados: [] as string[],
   });
   const [newValue, setNewValue] = useState({ valores: "", principios: "", comportamentos_esperados: "", comportamentos_nao_tolerados: "" });
+  const [activeTab, setActiveTab] = useState("editor");
   const [manualOpen, setManualOpen] = useState(false);
   const [manualHtml, setManualHtml] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
