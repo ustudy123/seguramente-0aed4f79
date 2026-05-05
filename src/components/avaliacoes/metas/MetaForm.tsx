@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -74,6 +75,24 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
 
   const tipo = form.watch("tipo");
   const periodo = form.watch("periodo");
+  const data_inicio = form.watch("data_inicio");
+
+  // Efeito para identificar automaticamente o trimestre e ano pelas datas
+  useEffect(() => {
+    if (data_inicio) {
+      const date = new Date(data_inicio + "T00:00:00");
+      if (!isNaN(date.getTime())) {
+        const mes = date.getMonth();
+        const trimestreSugerido = Math.floor(mes / 3) + 1;
+        const anoSugerido = date.getFullYear();
+
+        if (periodo === "trimestral") {
+          form.setValue("trimestre", trimestreSugerido);
+        }
+        form.setValue("ano", anoSugerido);
+      }
+    }
+  }, [data_inicio, periodo, form]);
 
   const onSubmit = async (data: FormData) => {
     const colaborador = colaboradores.find(c => c.id === data.colaborador_id);
@@ -369,7 +388,36 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
               </FormItem>
             )}
           />
+        <div className="grid grid-cols-2 gap-4">
           <FormField
+            control={form.control}
+            name="data_inicio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data de Início</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="data_fim"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data de Fim</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
             control={form.control}
             name="premiacao_descricao"
             render={({ field }) => (
