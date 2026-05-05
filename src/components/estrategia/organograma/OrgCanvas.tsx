@@ -17,6 +17,8 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Attach wheel listener as non-passive so preventDefault works
   useEffect(() => {
