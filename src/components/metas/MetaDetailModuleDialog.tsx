@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -41,6 +41,36 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
   const [checkinObs, setCheckinObs] = useState("");
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [riskAnalysis, setRiskAnalysis] = useState<any>(null);
+
+  // Cálculo automático de progresso baseado no valor atual
+  useEffect(() => {
+    if (meta?.valor_alvo !== undefined && checkinValue !== "") {
+      const val = parseFloat(checkinValue);
+      const target = meta.valor_alvo;
+      const baseline = meta.valor_baseline ?? 0;
+      
+      if (!isNaN(val) && target !== baseline) {
+        let prog = 0;
+        const direcao = meta.indicador_direcao || 'maior_melhor';
+        
+        if (direcao === 'maior_melhor') {
+          prog = ((val - baseline) / (target - baseline)) * 100;
+        } else if (direcao === 'menor_melhor') {
+          prog = ((baseline - val) / (baseline - target)) * 100;
+        } else if (direcao === 'igual_melhor') {
+          // Para 'igual_melhor', o progresso é inversamente proporcional à distância do alvo
+          const diff = Math.abs(target - val);
+          const range = Math.max(Math.abs(target - baseline), 1);
+          prog = Math.max(0, (1 - diff / range) * 100);
+        } else {
+          prog = (val / target) * 100;
+        }
+        
+        // Arredondar para o inteiro mais próximo
+        setCheckinProgress(Math.round(prog).toString());
+      }
+    }
+  }, [checkinValue, meta?.valor_alvo, meta?.valor_baseline, meta?.indicador_direcao]);
 
   const { data: checkins = [] } = useQuery({
     queryKey: ["meta-checkins-detail", meta?.id],
@@ -226,8 +256,21 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                         <Input type="number" value={checkinValue} onChange={e => setCheckinValue(e.target.value)} placeholder={String(meta.valor_atual || 0)} />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Progresso (%)</Label>
-                        <Input type="number" value={checkinProgress} onChange={e => setCheckinProgress(e.target.value)} placeholder={String(meta.progresso)} />
+                        <Label className="text-xs flex items-center justify-between">
+                          Progresso (%)
+                          {meta.valor_alvo !== undefined && (
+                            <span className="text-[10px] text-primary flex items-center gap-0.5">
+                              <Sparkles className="h-2 w-2" /> Automático
+                            </span>
+                          )}
+                        </Label>
+                        <Input 
+                          type="number" 
+                          value={checkinProgress} 
+                          onChange={e => setCheckinProgress(e.target.value)} 
+                          placeholder={String(meta.progresso)}
+                          className={meta.valor_alvo !== undefined ? "bg-primary/5" : ""}
+                        />
                       </div>
                     </div>
                     <div className="space-y-1">
