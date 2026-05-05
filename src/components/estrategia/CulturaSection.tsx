@@ -284,74 +284,165 @@ export function CulturaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary" /> Missão, Visão e Valores
+            <Heart className="w-5 h-5 text-primary" /> Cultura Organizacional
           </h3>
-          <p className="text-sm text-muted-foreground">Formalize a identidade cultural da empresa</p>
+          <p className="text-sm text-muted-foreground">Formalize e gerencie a identidade cultural da empresa</p>
         </div>
         <div className="flex items-center gap-2">
-          {cachedManual && (
-            <Button variant="outline" onClick={handleViewCached}>
-              <Eye className="w-4 h-4 mr-1" /> Ver Manual
-            </Button>
+          {activeTab === "editor" && (
+            <>
+              {cachedManual && (
+                <Button variant="outline" size="sm" onClick={handleViewCached}>
+                  <Eye className="w-4 h-4 mr-1" /> Ver Manual
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={handleGenerateManual} disabled={manualLoading}>
+                <Sparkles className="w-4 h-4 mr-1" /> {cachedManual ? "Regerar Manual" : "Gerar Manual com IA"}
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={upsertCultura.isPending}>
+                <Save className="w-4 h-4 mr-1" /> {upsertCultura.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </>
           )}
-          <Button variant="outline" onClick={handleGenerateManual} disabled={manualLoading}>
-            <Sparkles className="w-4 h-4 mr-1" /> {cachedManual ? "Regerar Manual" : "Gerar Manual com IA"}
-          </Button>
-          <Button onClick={handleSave} disabled={upsertCultura.isPending}>
-            <Save className="w-4 h-4 mr-1" /> {upsertCultura.isPending ? "Salvando..." : "Salvar"}
-          </Button>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Missão</CardTitle>
-            <AiButton campo="missao" label="Missão" />
-          </CardHeader>
-          <CardContent>
-            <Textarea value={form.missao} onChange={(e) => setForm({ ...form, missao: e.target.value })} placeholder="Por que existimos? Qual o propósito da empresa?" rows={4} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Visão</CardTitle>
-            <AiButton campo="visao" label="Visão" />
-          </CardHeader>
-          <CardContent>
-            <Textarea value={form.visao} onChange={(e) => setForm({ ...form, visao: e.target.value })} placeholder="Onde queremos chegar? Como será o futuro?" rows={4} />
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="editor" className="gap-2">
+            <LayoutGrid className="w-4 h-4" /> Editor de Cultura
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="gap-2">
+            <ListTodo className="w-4 h-4" /> Painel de Gestão
+          </TabsTrigger>
+        </TabsList>
 
-      {listFields.map(({ key, label, color }) => (
-        <Card key={key}>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">{label}</CardTitle>
-            <AiButton campo={key} label={label} />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                placeholder={`Adicionar ${label.toLowerCase()}...`}
-                value={newValue[key]}
-                onChange={(e) => setNewValue({ ...newValue, [key]: e.target.value })}
-                onKeyDown={(e) => e.key === "Enter" && addItem(key)}
-              />
-              <Button variant="outline" size="icon" onClick={() => addItem(key)}><Plus className="w-4 h-4" /></Button>
+        <TabsContent value="editor" className="space-y-6 mt-6">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm">Missão</CardTitle>
+                <AiButton campo="missao" label="Missão" />
+              </CardHeader>
+              <CardContent>
+                <Textarea value={form.missao} onChange={(e) => setForm({ ...form, missao: e.target.value })} placeholder="Por que existimos? Qual o propósito da empresa?" rows={4} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm">Visão</CardTitle>
+                <AiButton campo="visao" label="Visão" />
+              </CardHeader>
+              <CardContent>
+                <Textarea value={form.visao} onChange={(e) => setForm({ ...form, visao: e.target.value })} placeholder="Onde queremos chegar? Como será o futuro?" rows={4} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {listFields.map(({ key, label, color }) => (
+            <Card key={key}>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm">{label}</CardTitle>
+                <AiButton campo={key} label={label} />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={`Adicionar ${label.toLowerCase()}...`}
+                    value={newValue[key]}
+                    onChange={(e) => setNewValue({ ...newValue, [key]: e.target.value })}
+                    onKeyDown={(e) => e.key === "Enter" && addItem(key)}
+                  />
+                  <Button variant="outline" size="icon" onClick={() => addItem(key)}><Plus className="w-4 h-4" /></Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {form[key].map((item, i) => (
+                    <Badge key={i} className={`${color} gap-1`}>
+                      {item}
+                      <button onClick={() => removeItem(key, i)} className="ml-1 hover:opacity-70"><X className="w-3 h-3" /></button>
+                    </Badge>
+                  ))}
+                  {form[key].length === 0 && <p className="text-xs text-muted-foreground">Nenhum item adicionado</p>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-6 space-y-6">
+          <div className="grid md:grid-cols-3 gap-4">
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" /> Visão Estruturada
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-primary mb-1">Propósito (Missão)</h4>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg border">
+                    {form.missao || "Missão não definida"}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-primary mb-1">Destino (Visão)</h4>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg border">
+                    {form.visao || "Visão não definida"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-semibold text-primary mb-1">Valores Base</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {form.valores.map((v, i) => <Badge key={i} variant="secondary">{v}</Badge>)}
+                      {form.valores.length === 0 && <span className="text-xs text-muted-foreground italic">Vazio</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-primary mb-1">Princípios</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {form.principios.map((p, i) => <Badge key={i} variant="secondary">{p}</Badge>)}
+                      {form.principios.length === 0 && <span className="text-xs text-muted-foreground italic">Vazio</span>}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <Card className="bg-emerald-500/5 border-emerald-500/20">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm text-emerald-700">O que incentivamos</CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs space-y-2">
+                  {form.comportamentos_esperados.map((c, i) => (
+                    <div key={i} className="flex gap-2 items-start">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5" />
+                      <span>{c}</span>
+                    </div>
+                  ))}
+                  {form.comportamentos_esperados.length === 0 && <p className="italic text-muted-foreground">Nenhum comportamento listado</p>}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-red-500/5 border-red-500/20">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm text-red-700">Não tolerado</CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs space-y-2">
+                  {form.comportamentos_nao_tolerados.map((c, i) => (
+                    <div key={i} className="flex gap-2 items-start">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5" />
+                      <span>{c}</span>
+                    </div>
+                  ))}
+                  {form.comportamentos_nao_tolerados.length === 0 && <p className="italic text-muted-foreground">Nenhum comportamento listado</p>}
+                </CardContent>
+              </Card>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {form[key].map((item, i) => (
-                <Badge key={i} className={`${color} gap-1`}>
-                  {item}
-                  <button onClick={() => removeItem(key, i)} className="ml-1 hover:opacity-70"><X className="w-3 h-3" /></button>
-                </Badge>
-              ))}
-              {form[key].length === 0 && <p className="text-xs text-muted-foreground">Nenhum item adicionado</p>}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <ManualCulturaModal
         open={manualOpen}
