@@ -44,6 +44,24 @@ function hasCenteredAncestor(element: Element | null) {
   return false;
 }
 
+function hasVisualContainerStyle(element: HTMLElement) {
+  const style = element.getAttribute("style") || "";
+  return /(background|background-color|background-image|linear-gradient|box-shadow|border(?!-collapse)|border-radius|padding)/i.test(style);
+}
+
+function hasOpaqueInlineBackground(element: HTMLElement) {
+  const style = element.getAttribute("style") || "";
+  if (!/(background|background-color)/i.test(style)) return false;
+  if (/transparent/i.test(style)) return false;
+  if (/rgba\([^)]*,\s*0(?:\.0+)?\s*\)/i.test(style)) return false;
+  return true;
+}
+
+function usesLightInlineText(element: HTMLElement) {
+  const style = element.getAttribute("style") || "";
+  return /color\s*:\s*(#fff(?:fff)?|white|rgb\(255\s*,\s*255\s*,\s*255\))/i.test(style);
+}
+
 export function normalizeManualHtml(html: string) {
   if (!html.trim()) return html;
 
@@ -91,9 +109,47 @@ export function normalizeManualHtml(html: string) {
 
   const textElements = documentNode.body.querySelectorAll("p, li, td, blockquote");
   const headingElements = documentNode.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
+  const visualContainers = documentNode.body.querySelectorAll("div, section, article, header");
+
+  visualContainers.forEach((container) => {
+    const htmlElement = container as HTMLElement;
+    const inlineStyle = htmlElement.getAttribute("style") || "";
+
+    if (/linear-gradient/i.test(inlineStyle) && !/background-color/i.test(inlineStyle)) {
+      appendInlineStyle(htmlElement, "background-color: #1e3a5f !important;");
+    }
+
+    if (hasVisualContainerStyle(htmlElement)) {
+      appendInlineStyle(
+        htmlElement,
+        "break-inside: avoid !important; page-break-inside: avoid !important; overflow: visible !important;"
+      );
+    }
+  });
 
   headingElements.forEach((el) => {
-    appendInlineStyle(el as HTMLElement, "margin-bottom: 8px !important; margin-top: 16px !important; page-break-after: avoid !important;");
+    const heading = el as HTMLElement;
+    appendInlineStyle(
+      heading,
+      [
+        "margin-bottom: 8px !important",
+        "margin-top: 16px !important",
+        "page-break-after: avoid !important",
+        "break-after: avoid !important",
+        "page-break-inside: avoid !important",
+        "break-inside: avoid !important",
+        "background-clip: padding-box !important",
+        "-webkit-print-color-adjust: exact",
+        "print-color-adjust: exact",
+      ].join(";") + ";"
+    );
+
+    if (usesLightInlineText(heading) && !hasOpaqueInlineBackground(heading)) {
+      appendInlineStyle(
+        heading,
+        "color: #ffffff !important; background: #1e3a5f !important; display: block !important; padding: 12px 16px !important; border-radius: 12px !important;"
+      );
+    }
   });
 
   textElements.forEach((element) => {
@@ -137,6 +193,13 @@ function collectSections(root: HTMLElement): HTMLElement[] {
   const sections: HTMLElement[] = [];
   const isHeading = (el: HTMLElement) => el && el.tagName && /^H[1-6]$/i.test(el.tagName);
 
+  const isStandaloneRenderable = (node: HTMLElement) => {
+    if (["STYLE", "SCRIPT"].includes(node.tagName)) return false;
+    if (isHeading(node)) return true;
+    if (["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(node.tagName)) return true;
+    return hasVisualContainerStyle(node);
+  };
+
   // Deeply collect all significant elements
   const walk = (node: HTMLElement) => {
     const children = Array.from(node.children) as HTMLElement[];
@@ -147,9 +210,9 @@ function collectSections(root: HTMLElement): HTMLElement[] {
       isHeading(c) || ["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(c.tagName)
     );
 
-    if (isGenericContainer && (hasManyBlockChildren || node === root)) {
+    if (isGenericContainer && (hasManyBlockChildren || node === root) && !hasVisualContainerStyle(node)) {
       children.forEach(walk);
-    } else if (node.tagName !== "STYLE" && node.tagName !== "SCRIPT") {
+    } else if (isStandaloneRenderable(node)) {
       sections.push(node);
     }
   };
@@ -176,7 +239,7 @@ function collectSections(root: HTMLElement): HTMLElement[] {
       
       // Keep adding elements until we hit another heading or a large block
       let j = i + 1;
-      while (j < sections.length && j < i + 4) { // Limit grouping to prevent massive blocks
+      while (j < sections.length && j < i + 5) { // Limit grouping to prevent massive blocks
         const next = sections[j];
         if (isHeading(next)) break;
         
@@ -188,7 +251,7 @@ function collectSections(root: HTMLElement): HTMLElement[] {
         wrapper.appendChild(nextClone);
         
         // Stop if it's a large block (like a table)
-        if (["TABLE", "UL", "OL"].includes(next.tagName)) {
+        if (["TABLE", "UL", "OL"].includes(next.tagName) || hasVisualContainerStyle(next)) {
           j++;
           break;
         }
@@ -338,15 +401,43 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           currentY = PDF_MARGIN_MM;
           continue;
         }
-        const sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
+        let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
+        if (y + sliceH < canvas.height) {
+          const scanStart = Math.max(24, sliceH - 120);
+          const scanEnd = Math.max(scanStart, sliceH - 8);
+          let bestBreak = -1;
+
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          if (ctx) {
+            for (let row = scanEnd; row >= scanStart; row -= 2) {
+              const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
+              let inkPixels = 0;
+
+              for (let i = 0; i < imageData.length; i += 4) {
+                const alpha = imageData[i + 3];
+                const isDark = imageData[i] < 245 || imageData[i + 1] < 245 || imageData[i + 2] < 245;
+                if (alpha > 10 && isDark) inkPixels += 1;
+              }
+
+              if (inkPixels < canvas.width * 0.015) {
+                bestBreak = row;
+                break;
+              }
+            }
+          }
+
+          if (bestBreak > 0) {
+            sliceH = bestBreak;
+          }
+        }
         const slice = document.createElement("canvas");
         slice.width = canvas.width;
         slice.height = sliceH;
-        const ctx = slice.getContext("2d");
-        if (!ctx) throw new Error("Falha ao preparar slice.");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, slice.width, slice.height);
-        ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const sliceCtx = slice.getContext("2d");
+        if (!sliceCtx) throw new Error("Falha ao preparar slice.");
+        sliceCtx.fillStyle = "#ffffff";
+        sliceCtx.fillRect(0, 0, slice.width, slice.height);
+        sliceCtx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
         const sliceMm = (sliceH * contentWidth) / canvas.width;
         addCanvasAsImage(slice, sliceMm);
         y += sliceH;
