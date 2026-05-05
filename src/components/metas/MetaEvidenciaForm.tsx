@@ -141,30 +141,121 @@ export function MetaEvidenciaForm({ metaId, onSave, isSaving }: MetaEvidenciaFor
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Período de Referência</Label>
-            <Input type="month" value={periodoRef} onChange={e => setPeriodoRef(e.target.value)} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-10",
+                    !periodoRef && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {periodoRef ? format(periodoRef, "MMMM 'de' yyyy", { locale: ptBR }) : <span>Selecione o mês</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={periodoRef}
+                  onSelect={setPeriodoRef}
+                  initialFocus
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
+
         <div className="space-y-1">
           <Label className="text-xs">Título *</Label>
           <Input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ex: Relatório mensal de acidentes" />
         </div>
+
         <div className="space-y-1">
           <Label className="text-xs">Descrição</Label>
           <Textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={2} placeholder="Detalhes sobre a evidência..." />
         </div>
-        {(tipo === "link" || tipo === "documento") && (
+
+        {tipo === "link" ? (
           <div className="space-y-1">
             <Label className="text-xs flex items-center gap-1">
-              <Link2 className="h-3 w-3" /> {tipo === "link" ? "URL" : "URL do Arquivo"}
+              <Link2 className="h-3 w-3" /> URL do Link Externo
             </Label>
             <Input value={linkExterno} onChange={e => setLinkExterno(e.target.value)} placeholder="https://..." />
           </div>
-        )}
-        <div className="flex justify-end gap-2">
+        ) : tipo !== "texto" ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1">
+              {tipo === "imagem" ? <ImageIcon className="h-3 w-3" /> : <File className="h-3 w-3" />}
+              Arquivo da Evidência
+            </Label>
+            
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept={tipo === "imagem" ? "image/*" : undefined}
+              />
+              
+              {!file ? (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full border-dashed h-20 flex flex-col gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Clique para selecionar ou arraste o arquivo</span>
+                </Button>
+              ) : (
+                <div className="flex items-center justify-between p-2 bg-accent/50 rounded-md border">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    {tipo === "imagem" ? <ImageIcon className="h-4 w-4 shrink-0" /> : <File className="h-4 w-4 shrink-0" />}
+                    <span className="text-xs truncate font-medium">{file.name}</span>
+                    <span className="text-[10px] text-muted-foreground">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7"
+                    onClick={() => setFile(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-1">
+                <Separator className="flex-1" />
+                <span className="text-[10px] text-muted-foreground uppercase">ou informe uma URL</span>
+                <Separator className="flex-1" />
+              </div>
+
+              <div className="space-y-1">
+                <Input 
+                  value={linkExterno} 
+                  onChange={e => setLinkExterno(e.target.value)} 
+                  placeholder="Se preferir, cole o link direto do arquivo aqui" 
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex justify-end gap-2 pt-2">
           <Button size="sm" variant="outline" onClick={resetForm}>Cancelar</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={isSaving} className="gap-1">
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Salvar
+          <Button size="sm" onClick={handleSubmit} disabled={isSaving || isUploading} className="gap-1">
+            {isSaving || isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {isUploading ? "Enviando..." : "Salvar"}
           </Button>
         </div>
       </CardContent>
