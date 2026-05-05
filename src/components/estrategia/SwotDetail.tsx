@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEstrategia } from "@/hooks/useEstrategia";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { EstrategiaSwot, SwotTipo, SwotClassificacao, SwotImpacto } from "@/types/estrategia";
 import { SWOT_TIPO_LABELS, SWOT_CLASSIFICACAO_LABELS, SWOT_IMPACTO_LABELS } from "@/types/estrategia";
@@ -36,6 +37,12 @@ const CLASSIFICACAO_DESCRICOES: Record<SwotClassificacao, string> = {
   cultural: "Envolve valores, comportamentos e clima organizacional.",
   pessoas: "Diz respeito a talentos, competências e capital humano.",
   mercado: "Fatores externos como concorrência, regulação e tendências.",
+};
+
+const IMPACTO_DESCRICOES: Record<SwotImpacto, string> = {
+  baixo: "Pouca influência no resultado geral; fácil de gerenciar ou contornar.",
+  medio: "Influência moderada; exige atenção e planejamento para lidar com os efeitos.",
+  alto: "Influência crítica; pode determinar o sucesso ou fracasso da estratégia.",
 };
 
 const QUADRANTE_DICAS: Record<SwotTipo, { descricao: string; exemplos: string[] }> = {
@@ -108,20 +115,39 @@ export function SwotDetail({ swot, onBack }: Props) {
           </AlertDialog>
         </div>
 
-        {/* Legenda das classificações */}
+        {/* Legenda das classificações e impactos */}
         <Card className="border-dashed">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="w-4 h-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">Classificações</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {(Object.entries(CLASSIFICACAO_DESCRICOES) as [SwotClassificacao, string][]).map(([key, desc]) => (
-                <div key={key} className="flex items-start gap-2 p-2 rounded-md bg-muted/40">
-                  <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5">{SWOT_CLASSIFICACAO_LABELS[key]}</Badge>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+          <CardContent className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Info className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Classificações</p>
                 </div>
-              ))}
+                <div className="space-y-2">
+                  {(Object.entries(CLASSIFICACAO_DESCRICOES) as [SwotClassificacao, string][]).map(([key, desc]) => (
+                    <div key={key} className="flex items-start gap-2 p-2 rounded-md bg-muted/40">
+                      <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5 w-20 justify-center">{SWOT_CLASSIFICACAO_LABELS[key]}</Badge>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Grau de Impacto</p>
+                </div>
+                <div className="space-y-2">
+                  {(Object.entries(IMPACTO_DESCRICOES) as [SwotImpacto, string][]).map(([key, desc]) => (
+                    <div key={key} className="flex items-start gap-2 p-2 rounded-md bg-muted/40">
+                      <Badge className={cn("text-[10px] shrink-0 mt-0.5 w-20 justify-center", IMPACTO_COLORS[key])}>{SWOT_IMPACTO_LABELS[key]}</Badge>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
