@@ -114,12 +114,15 @@ export default function CompletarCadastro() {
   const handleUploadDocument = async (documentoId: string, file: File) => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${colaborador.tenant_id}/${colaborador.id}-${documentoId}-${Math.random()}.${fileExt}`;
+      const fileName = `${colaborador.tenant_id}/admissoes/${colaborador.id}/docs/${documentoId}-${Math.random()}.${fileExt}`;
       const filePath = `admissao/documentos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
