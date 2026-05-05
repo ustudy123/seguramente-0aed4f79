@@ -249,7 +249,7 @@ serve(async (req) => {
       if (confirmationUrl) {
         const sendResult = await sendViaResend(
           email,
-          "Você foi convidado para o Seguramente",
+          "Você foi convidado para o YourEyes",
           buildInviteHtml(nomeCompleto, confirmationUrl, "invite")
         );
         if (sendResult?.ok) {
