@@ -132,13 +132,17 @@ export function normalizeManualHtml(html: string) {
     appendInlineStyle(
       heading,
       [
-        "margin-bottom: 8px !important",
+        "margin-bottom: 12px !important",
         "margin-top: 16px !important",
+        "line-height: 1.25 !important",
+        "padding-bottom: 6px !important",
         "page-break-after: avoid !important",
         "break-after: avoid !important",
         "page-break-inside: avoid !important",
         "break-inside: avoid !important",
         "background-clip: padding-box !important",
+        "overflow-wrap: break-word !important",
+        "word-wrap: break-word !important",
         "-webkit-print-color-adjust: exact",
         "print-color-adjust: exact",
       ].join(";") + ";"
