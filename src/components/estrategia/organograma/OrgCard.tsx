@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const CARD_STYLE = {
   gradient: "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5",
