@@ -284,10 +284,9 @@ export function PlanoAcaoIAAssistant({
                             onClick={() => !isCreated && toggleSelect(idx)}
                           >
                             <div className="flex items-start gap-3">
-                              <div
-                                className="mt-0.5 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
+                                <div
+                                  className="mt-0.5 shrink-0"
+                                >
                                 {isCreated ? (
                                   <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
                                     <Check className="h-3.5 w-3.5 text-white" />
