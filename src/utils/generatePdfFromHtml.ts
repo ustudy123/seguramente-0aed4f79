@@ -393,12 +393,14 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     };
 
     const sliceTallCanvas = (canvas: HTMLCanvasElement) => {
-      // Section is taller than a full page — split it across pages at pixel
-      // boundaries (last resort; only triggered for oversize blocks).
-      const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
+      // Reserve a small safety buffer (~3mm) at the bottom of every page to
+      // prevent descenders (g, p, q, y, ç) from being clipped at page edge.
+      const safetyMm = 3;
+      const safeUsableHeight = usableHeight - safetyMm;
+      const pageHeightPx = Math.floor((canvas.width * safeUsableHeight) / contentWidth);
       let y = 0;
       while (y < canvas.height) {
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY - safetyMm;
         const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
         if (availablePx < 60) {
           pdf.addPage();
@@ -407,13 +409,17 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         }
         let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
         if (y + sliceH < canvas.height) {
-          const scanStart = Math.max(24, sliceH - 120);
+          const scanStart = Math.max(24, sliceH - 160);
           const scanEnd = Math.max(scanStart, sliceH - 8);
           let bestBreak = -1;
 
           const ctx = canvas.getContext("2d", { willReadFrequently: true });
           if (ctx) {
-            for (let row = scanEnd; row >= scanStart; row -= 2) {
+            // Look for a band of consecutive blank rows (not just one), so we
+            // don't break in the middle of descenders.
+            const requiredBlankBand = 6;
+            let blankRun = 0;
+            for (let row = scanEnd; row >= scanStart; row -= 1) {
               const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
               let inkPixels = 0;
 
@@ -423,9 +429,14 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
                 if (alpha > 10 && isDark) inkPixels += 1;
               }
 
-              if (inkPixels < canvas.width * 0.015) {
-                bestBreak = row;
-                break;
+              if (inkPixels < canvas.width * 0.01) {
+                blankRun += 1;
+                if (blankRun >= requiredBlankBand) {
+                  bestBreak = row + requiredBlankBand; // break at top of blank band
+                  break;
+                }
+              } else {
+                blankRun = 0;
               }
             }
           }
