@@ -57,7 +57,7 @@ async function sendViaResend(email: string, subject: string, html: string): Prom
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Seguramente <noreply@seguramente.app.br>",
+        from: "YourEyes <noreply@youreyes.com.br>",
         to: [email],
         subject,
         html,
