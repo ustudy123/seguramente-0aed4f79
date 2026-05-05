@@ -285,6 +285,39 @@ export function PontoRelatoriosTab() {
         </div>
       </div>
 
+      {/* Data preview/summary */}
+      {!carregandoRegistros && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Resumo do Período</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-2xl font-bold">{registrosMes.length}</p>
+                <p className="text-xs text-muted-foreground">Total de Batidas</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{new Set(registrosMes.map(r => r.colaborador_cpf)).size}</p>
+                <p className="text-xs text-muted-foreground">Colaboradores</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-red-500">
+                  {registrosMes.filter(r => r.status === "falta").length}
+                </p>
+                <p className="text-xs text-muted-foreground">Faltas Identificadas</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-orange-500">
+                  {espelhos.length > 0 ? "Fechado" : "Aberto"}
+                </p>
+                <p className="text-xs text-muted-foreground">Status do Mês</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Report description */}
       <Card>
         <CardContent className="p-4">
