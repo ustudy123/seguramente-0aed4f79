@@ -44,6 +44,24 @@ function hasCenteredAncestor(element: Element | null) {
   return false;
 }
 
+function hasVisualContainerStyle(element: HTMLElement) {
+  const style = element.getAttribute("style") || "";
+  return /(background|background-color|background-image|linear-gradient|box-shadow|border(?!-collapse)|border-radius|padding)/i.test(style);
+}
+
+function hasOpaqueInlineBackground(element: HTMLElement) {
+  const style = element.getAttribute("style") || "";
+  if (!/(background|background-color)/i.test(style)) return false;
+  if (/transparent/i.test(style)) return false;
+  if (/rgba\([^)]*,\s*0(?:\.0+)?\s*\)/i.test(style)) return false;
+  return true;
+}
+
+function usesLightInlineText(element: HTMLElement) {
+  const style = element.getAttribute("style") || "";
+  return /color\s*:\s*(#fff(?:fff)?|white|rgb\(255\s*,\s*255\s*,\s*255\))/i.test(style);
+}
+
 export function normalizeManualHtml(html: string) {
   if (!html.trim()) return html;
 
@@ -91,9 +109,47 @@ export function normalizeManualHtml(html: string) {
 
   const textElements = documentNode.body.querySelectorAll("p, li, td, blockquote");
   const headingElements = documentNode.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
+  const visualContainers = documentNode.body.querySelectorAll("div, section, article, header");
+
+  visualContainers.forEach((container) => {
+    const htmlElement = container as HTMLElement;
+    const inlineStyle = htmlElement.getAttribute("style") || "";
+
+    if (/linear-gradient/i.test(inlineStyle) && !/background-color/i.test(inlineStyle)) {
+      appendInlineStyle(htmlElement, "background-color: #1e3a5f !important;");
+    }
+
+    if (hasVisualContainerStyle(htmlElement)) {
+      appendInlineStyle(
+        htmlElement,
+        "break-inside: avoid !important; page-break-inside: avoid !important; overflow: visible !important;"
+      );
+    }
+  });
 
   headingElements.forEach((el) => {
-    appendInlineStyle(el as HTMLElement, "margin-bottom: 8px !important; margin-top: 16px !important; page-break-after: avoid !important;");
+    const heading = el as HTMLElement;
+    appendInlineStyle(
+      heading,
+      [
+        "margin-bottom: 8px !important",
+        "margin-top: 16px !important",
+        "page-break-after: avoid !important",
+        "break-after: avoid !important",
+        "page-break-inside: avoid !important",
+        "break-inside: avoid !important",
+        "background-clip: padding-box !important",
+        "-webkit-print-color-adjust: exact",
+        "print-color-adjust: exact",
+      ].join(";") + ";"
+    );
+
+    if (usesLightInlineText(heading) && !hasOpaqueInlineBackground(heading)) {
+      appendInlineStyle(
+        heading,
+        "color: #ffffff !important; background: #1e3a5f !important; display: block !important; padding: 12px 16px !important; border-radius: 12px !important;"
+      );
+    }
   });
 
   textElements.forEach((element) => {
