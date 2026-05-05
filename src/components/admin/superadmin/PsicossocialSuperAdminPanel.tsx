@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,32 +17,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Brain, Search, AlertTriangle, Activity, TrendingUp, Users,
   CheckCircle2, AlertCircle, Filter, X, ChevronRight, Sparkles,
-  Building2, FileBarChart, RefreshCw,
+  Building2, FileBarChart, RefreshCw, Layers, LayoutGrid, List,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area,
 } from "recharts";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLE: Record<string, string> = {
-  rascunho: "bg-slate-500/10 text-slate-600 border-slate-500/30",
-  ativa: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
-  encerrada: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  rascunho: "bg-slate-500/10 text-slate-600 border-slate-500/30 font-medium",
+  ativa: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-medium",
+  encerrada: "bg-blue-500/10 text-blue-600 border-blue-500/30 font-medium",
 };
 
 const CLASSIF_COLORS: Record<string, string> = {
-  saudavel: "#10b981",
-  estavel: "#22c55e",
-  atencao: "#f59e0b",
-  risco: "#ef4444",
-  critico: "#7c2d12",
-  baixo: "#10b981",
-  moderado: "#f59e0b",
-  elevado: "#ef4444",
-  sem_classificacao: "#94a3b8",
+  saudavel: "hsl(142 71% 45%)",
+  estavel: "hsl(142 71% 45%)",
+  atencao: "hsl(38 92% 50%)",
+  risco: "hsl(0 84% 60%)",
+  critico: "hsl(12 76% 25%)",
+  baixo: "hsl(142 71% 45%)",
+  moderado: "hsl(38 92% 50%)",
+  elevado: "hsl(0 84% 60%)",
+  sem_classificacao: "hsl(215 16% 47%)",
 };
 
 const CLASSIF_LABEL: Record<string, string> = {
