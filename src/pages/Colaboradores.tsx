@@ -227,6 +227,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       centro_custo: (colab as any).centro_custo || null,
       gestor_imediato: (colab as any).gestor_imediato || null,
       data_admissao: colab.data_admissao,
+      foto_url: colab.foto_url,
     });
     setShowForm(true);
   };
