@@ -177,14 +177,14 @@ export function MetaFormModule({
     toast.success("Sugestão aplicada!");
   };
 
-  // Efeito para identificar automaticamente o trimestre e ano pelas datas
+  // Efeito para identificar automaticamente o trimestre e ano pela data fim
   useEffect(() => {
-    if (form.data_inicio) {
-      const dataInicio = new Date(form.data_inicio + "T00:00:00");
-      if (!isNaN(dataInicio.getTime())) {
-        const mes = dataInicio.getMonth();
+    if (form.data_fim) {
+      const dataFim = new Date(form.data_fim + "T00:00:00");
+      if (!isNaN(dataFim.getTime())) {
+        const mes = dataFim.getMonth();
         const trimestreSugerido = Math.floor(mes / 3) + 1;
-        const anoSugerido = dataInicio.getFullYear();
+        const anoSugerido = dataFim.getFullYear();
 
         if (form.periodo === "trimestral" && form.trimestre !== trimestreSugerido) {
           set("trimestre", trimestreSugerido);
@@ -195,7 +195,7 @@ export function MetaFormModule({
         }
       }
     }
-  }, [form.data_inicio, form.periodo]);
+  }, [form.data_fim, form.periodo]);
 
   const handleSubmit = async () => {
     if (!form.titulo?.trim()) {
@@ -289,8 +289,8 @@ export function MetaFormModule({
         </div>
         <div className="space-y-1.5">
           <Label>Trimestre da Entrega</Label>
-          <Select value={form.trimestre?.toString() || ""} onValueChange={v => set("trimestre", v ? parseInt(v) : undefined)}>
-            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+          <Select disabled value={form.trimestre?.toString() || ""} onValueChange={v => set("trimestre", v ? parseInt(v) : undefined)}>
+            <SelectTrigger className="bg-muted cursor-not-allowed"><SelectValue placeholder="Automático" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="1">1º Trimestre</SelectItem>
               <SelectItem value="2">2º Trimestre</SelectItem>
