@@ -150,12 +150,27 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   };
 
   const openDialogForParent = (parentId: string) => {
+    setEditingNode(null);
     setForm({ ...INITIAL_FORM, parent_id: parentId });
     setOcupanteSearch("");
     setShowNew(true);
   };
 
-  const handleCreate = async () => {
+  const openDialogForEdit = (node: EstrategiaOrganograma) => {
+    setEditingNode(node);
+    setForm({
+      titulo: node.titulo,
+      nome_ocupante: node.nome_ocupante || "",
+      parent_id: node.parent_id || "",
+      cargo_id: node.cargo_id || "",
+      colaborador_id: node.colaborador_id || "",
+      selectedOcupantes: [] // Editing only supports one at a time for now
+    });
+    setOcupanteSearch("");
+    setShowNew(true);
+  };
+
+  const handleCreateOrUpdate = async () => {
     if (!form.titulo.trim()) {
       toast.error("Preencha o nome da função");
       return;
