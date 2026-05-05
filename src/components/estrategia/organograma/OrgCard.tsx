@@ -106,17 +106,24 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEd
       </div>
 
       <div className="flex justify-center mb-2">
-        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", CARD_STYLE.badge)}>
-          <Briefcase className="w-5 h-5" />
+        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", !fotoUrl && CARD_STYLE.badge)}>
+          {fotoUrl ? (
+            <Avatar className="w-10 h-10 border-2 border-primary/20">
+              <AvatarImage src={fotoUrl} alt={ocupanteNome || "Ocupante"} />
+              <AvatarFallback><User className="w-5 h-5" /></AvatarFallback>
+            </Avatar>
+          ) : (
+            <Briefcase className="w-5 h-5" />
+          )}
         </div>
       </div>
 
       <p className="text-sm font-semibold text-foreground leading-tight">{node.titulo}</p>
 
-      {node.nome_ocupante && (
+      {ocupanteNome && (
         <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-          <User className="w-3 h-3" />
-          {node.nome_ocupante}
+          {!fotoUrl && <User className="w-3 h-3" />}
+          {ocupanteNome}
         </p>
       )}
 
