@@ -10,7 +10,7 @@ import { User, Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
-import { DocumentoStatus } from "@/types/admissao";
+import { DocumentoStatus, AdmissaoStatus } from "@/types/admissao";
 
 export default function CompletarCadastro() {
   const { token } = useParams();
@@ -80,7 +80,10 @@ export default function CompletarCadastro() {
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -88,14 +91,17 @@ export default function CompletarCadastro() {
         .from("documentos")
         .getPublicUrl(filePath);
 
+      // Force cache bust for the display
+      const publicUrlWithBust = `${publicUrl}?t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from("admissoes")
-        .update({ foto_url: publicUrl })
+        .update({ foto_url: publicUrlWithBust })
         .eq("id", colaborador.id);
 
       if (updateError) throw updateError;
 
-      setColaborador({ ...colaborador, foto_url: publicUrl });
+      setColaborador({ ...colaborador, foto_url: publicUrlWithBust });
       toast.success("Foto atualizada com sucesso!");
     } catch (error) {
       console.error("Erro no upload da foto:", error);
@@ -108,22 +114,25 @@ export default function CompletarCadastro() {
   const handleUploadDocument = async (documentoId: string, file: File) => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${colaborador.tenant_id}/${colaborador.id}-${documentoId}-${Math.random()}.${fileExt}`;
+      const fileName = `${colaborador.tenant_id}/admissoes/${colaborador.id}/docs/${documentoId}-${Math.random()}.${fileExt}`;
       const filePath = `admissao/documentos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
       const { error: updateError } = await supabase
         .from("admissao_documentos")
         .update({
-          arquivo_url: filePath,
+          arquivo_url: filePath, // Store path for private access
           arquivo_nome: file.name,
           arquivo_tamanho: file.size,
-          status: 'enviado',
+          status: 'enviado' as DocumentoStatus,
           data_envio: new Date().toISOString()
         })
         .eq("id", documentoId);
@@ -187,7 +196,7 @@ export default function CompletarCadastro() {
         .from("admissoes")
         .update({ 
           onboarding_status: 'em_analise',
-          status: 'em_analise'
+          status: 'em_analise' as AdmissaoStatus
         })
         .eq("id", colaborador.id);
 
