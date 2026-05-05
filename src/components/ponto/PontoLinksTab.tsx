@@ -17,7 +17,13 @@ function generateToken(): string {
 }
 
 function getPontoExternoUrl(token: string): string {
-  return `${window.location.origin}/ponto-externo/${token}`;
+  const customDomain = "https://youreyes.com.br";
+  // Se estiver em desenvolvimento/preview, mantém o origin atual, senão usa o novo domínio
+  const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+    ? window.location.origin 
+    : customDomain;
+    
+  return `${baseUrl}/ponto-externo/${token}`;
 }
 
 export function PontoLinksTab() {
