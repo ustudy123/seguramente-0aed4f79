@@ -286,6 +286,7 @@ export function PlanoAcaoIAAssistant({
                             <div className="flex items-start gap-3">
                                 <div
                                   className="mt-0.5 shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                 {isCreated ? (
                                   <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
