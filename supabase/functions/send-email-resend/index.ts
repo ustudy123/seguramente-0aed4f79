@@ -26,7 +26,7 @@ interface TemplateEntry {
 const TEMPLATES: Record<string, TemplateEntry> = {
   'convite-colaborador': {
     component: ConviteColaboradorEmail,
-    subject: 'Você foi convidado para o Seguramente',
+    subject: 'Você foi convidado para o YourEyes',
   },
   'alerta-saude': {
     component: AlertaSaudeEmail,
@@ -54,7 +54,7 @@ const TEMPLATES: Record<string, TemplateEntry> = {
   },
   'generico': {
     component: GenericoEmail,
-    subject: (data) => data?.assunto || 'Notificação Seguramente',
+    subject: (data) => data?.assunto || 'Notificação YourEyes',
   },
 }
 
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       : template.subject
 
     // Send via Resend
-    const fromAddress = from || 'Seguramente <noreply@seguramente.app.br>'
+    const fromAddress = from || 'YourEyes <noreply@youreyes.com.br>'
 
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',

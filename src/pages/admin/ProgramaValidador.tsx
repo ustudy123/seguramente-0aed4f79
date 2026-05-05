@@ -460,7 +460,11 @@ function DetalheCliente({
       return data;
     },
     onSuccess: (data) => {
-      const url = `${window.location.origin}/aceite-documento/${data.token}`;
+      const customDomain = "https://youreyes.com.br";
+      const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+        ? window.location.origin 
+        : customDomain;
+      const url = `${baseUrl}/aceite-documento/${data.token}`;
       navigator.clipboard.writeText(url).then(() => {
         toast.success('Link de aceite copiado para a área de transferência!');
       });
@@ -473,7 +477,11 @@ function DetalheCliente({
   });
 
   const copiarLink = (token: string) => {
-    const url = `${window.location.origin}/contrato-assinatura/${token}`;
+    const customDomain = "https://youreyes.com.br";
+    const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+      ? window.location.origin 
+      : customDomain;
+    const url = `${baseUrl}/contrato-assinatura/${token}`;
     navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
   };
 
@@ -556,7 +564,11 @@ function DetalheCliente({
             size="sm"
             className="gap-2 text-xs"
             onClick={() => {
-              const url = `${window.location.origin}/onboarding-cliente/${(cliente as any).onboarding_token}`;
+              const customDomain = "https://youreyes.com.br";
+              const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+                ? window.location.origin 
+                : customDomain;
+              const url = `${baseUrl}/onboarding-cliente/${(cliente as any).onboarding_token}`;
               navigator.clipboard.writeText(url);
               toast.success("Link do portal copiado!");
             }}

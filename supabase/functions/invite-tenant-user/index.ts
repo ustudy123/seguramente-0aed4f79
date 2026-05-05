@@ -17,12 +17,12 @@ function buildInviteHtml(nomeCompleto: string, confirmationUrl: string, method: 
   return `
     <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 8px;">
-        <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ Seguramente</p>
+        <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ YourEyes</p>
       </div>
       <hr style="border-color: #e8e5f0; margin: 16px 0;" />
       <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">Olá, ${nomeCompleto}!</h1>
       <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
-        Você foi convidado(a) para acessar a plataforma <strong>Seguramente</strong>, a solução completa em Saúde e Segurança do Trabalho.
+        Você foi convidado(a) para acessar a plataforma <strong>YourEyes</strong>, a solução completa em Saúde e Segurança do Trabalho.
       </p>
       <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
         ${method === "invite"
@@ -38,7 +38,7 @@ function buildInviteHtml(nomeCompleto: string, confirmationUrl: string, method: 
         Se você não esperava este convite, pode ignorar este e-mail com segurança.
       </p>
       <hr style="border-color: #e8e5f0; margin: 16px 0;" />
-      <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">Seguramente — Plataforma de SST</p>
+      <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">YourEyes — Plataforma de SST</p>
     </div>
   `;
 }
@@ -57,7 +57,7 @@ async function sendViaResend(email: string, subject: string, html: string): Prom
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Seguramente <noreply@seguramente.app.br>",
+        from: "YourEyes <noreply@youreyes.com.br>",
         to: [email],
         subject,
         html,
@@ -249,7 +249,7 @@ serve(async (req) => {
       if (confirmationUrl) {
         const sendResult = await sendViaResend(
           email,
-          "Você foi convidado para o Seguramente",
+          "Você foi convidado para o YourEyes",
           buildInviteHtml(nomeCompleto, confirmationUrl, "invite")
         );
         if (sendResult?.ok) {
@@ -280,7 +280,7 @@ serve(async (req) => {
         newUserId = newUser.user.id;
         const sendResult = await sendViaResend(
           email,
-          "Bem-vindo ao Seguramente",
+          "Bem-vindo ao YourEyes",
           buildInviteHtml(nomeCompleto, `${SITE_URL}/login`, "password")
         );
         if (sendResult?.ok) {
