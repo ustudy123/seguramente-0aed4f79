@@ -363,12 +363,17 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                         Documentos
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {
-                        const link = `${window.location.origin}/completar-cadastro/${colab.onboarding_token}`;
+                        const token = colab.onboarding_token;
+                        if (!token) {
+                          toast.error("Token de onboarding não encontrado.");
+                          return;
+                        }
+                        const link = `${window.location.origin}/completar-cadastro/${token}`;
                         navigator.clipboard.writeText(link);
                         toast.success("Link copiado para a área de transferência!");
                       }}>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copiar Link de Cadastro
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Compartilhar Link
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive" onClick={() => {
