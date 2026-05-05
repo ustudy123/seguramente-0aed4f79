@@ -54,6 +54,11 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
     setIsPanning(false);
   }, []);
 
+  const resetView = useCallback(() => {
+    setScale(1);
+    setTranslate({ x: 0, y: 0 });
+  }, []);
+
   const exportAs = async (format: "png" | "pdf") => {
     if (!contentRef.current) return;
     setIsExporting(true);
