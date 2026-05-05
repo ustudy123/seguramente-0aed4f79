@@ -38,7 +38,7 @@ function buildInviteHtml(nomeCompleto: string, confirmationUrl: string, method: 
         Se você não esperava este convite, pode ignorar este e-mail com segurança.
       </p>
       <hr style="border-color: #e8e5f0; margin: 16px 0;" />
-      <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">Seguramente — Plataforma de SST</p>
+      <p style="font-size: 11px; color: #b3b3b3; text-align: center; margin: 8px 0 0;">YourEyes — Plataforma de SST</p>
     </div>
   `;
 }
