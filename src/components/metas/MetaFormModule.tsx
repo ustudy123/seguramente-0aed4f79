@@ -177,6 +177,26 @@ export function MetaFormModule({
     toast.success("Sugestão aplicada!");
   };
 
+  // Efeito para identificar automaticamente o trimestre e ano pelas datas
+  useEffect(() => {
+    if (form.data_inicio) {
+      const dataInicio = new Date(form.data_inicio + "T00:00:00");
+      if (!isNaN(dataInicio.getTime())) {
+        const mes = dataInicio.getMonth();
+        const trimestreSugerido = Math.floor(mes / 3) + 1;
+        const anoSugerido = dataInicio.getFullYear();
+
+        if (form.periodo === "trimestral" && form.trimestre !== trimestreSugerido) {
+          set("trimestre", trimestreSugerido);
+        }
+        
+        if (form.ano !== anoSugerido) {
+          set("ano", anoSugerido);
+        }
+      }
+    }
+  }, [form.data_inicio, form.periodo]);
+
   const handleSubmit = async () => {
     if (!form.titulo?.trim()) {
       toast.error("Informe o título da meta");
