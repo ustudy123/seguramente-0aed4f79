@@ -129,7 +129,7 @@ export default function CompletarCadastro() {
       const { error: updateError } = await supabase
         .from("admissao_documentos")
         .update({
-          arquivo_url: filePath,
+          arquivo_url: filePath, // Store path for private access
           arquivo_nome: file.name,
           arquivo_tamanho: file.size,
           status: 'enviado',
