@@ -88,6 +88,8 @@ export interface Admissao {
   dataCriacao: Date;
   dataAtualizacao: Date;
   criadoPor: string;
+  fotoUrl?: string;
+  onboarding_status?: string;
 }
 
 export const DOCUMENTOS_OBRIGATORIOS: Omit<DocumentoAdmissao, 'id' | 'status'>[] = [
