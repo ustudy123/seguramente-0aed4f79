@@ -393,14 +393,10 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     };
 
     const sliceTallCanvas = (canvas: HTMLCanvasElement) => {
-      // Reserve a small safety buffer (~3mm) at the bottom of every page to
-      // prevent descenders (g, p, q, y, ç) from being clipped at page edge.
-      const safetyMm = 3;
-      const safeUsableHeight = usableHeight - safetyMm;
-      const pageHeightPx = Math.floor((canvas.width * safeUsableHeight) / contentWidth);
+      const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
       let y = 0;
       while (y < canvas.height) {
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY - safetyMm;
+        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY - 3;
         const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
         if (availablePx < 60) {
           pdf.addPage();
