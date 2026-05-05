@@ -576,19 +576,24 @@ export function PsicossocialSuperAdminPanel() {
         </TabsContent>
 
         {/* === CAMPANHAS === */}
-        <TabsContent value="campanhas" className="mt-4">
-          <Card>
+        <TabsContent value="campanhas" className="mt-6 space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <List className="w-3.5 h-3.5" /> Registros Detalhados de Amostragem
+            </h3>
+          </div>
+          <Card className="border-muted/50 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Campanha</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Tipo / Instrumento</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Respostas</TableHead>
-                    <TableHead className="text-center">IPS</TableHead>
-                    <TableHead>Período</TableHead>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-b-muted/50">
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Título da Campanha</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Unidade Origem</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Instrumento</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Status</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Volume</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">IPS</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Cronograma</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
