@@ -117,6 +117,7 @@ interface ColaboradorExtendido {
   tipo_contrato: string | null;
   onboarding_token: string | null;
   onboarding_status: string | null;
+  foto_url: string | null;
 }
 
 const statusStyles: Record<string, string> = {
