@@ -122,18 +122,22 @@ export function normalizeManualHtml(html: string) {
  * non-splittable units. Falls back to all direct children of the body.
  */
 function collectSections(root: HTMLElement): HTMLElement[] {
+  if (!root || !root.children || root.children.length === 0) return [];
+  
   const direct = Array.from(root.children) as HTMLElement[];
   const sections: HTMLElement[] = [];
 
-  const isHeading = (el: HTMLElement) => /^H[1-6]$/i.test(el.tagName);
+  const isHeading = (el: HTMLElement) => el && el.tagName && /^H[1-6]$/i.test(el.tagName);
 
   for (const child of direct) {
+    if (!child) continue;
+    
     // If a top-level wrapper contains many block children, descend one level
     // so that headings and paragraphs become individual sections.
-    const grandChildren = Array.from(child.children) as HTMLElement[];
+    const grandChildren = Array.from(child.children || []) as HTMLElement[];
     const looksLikeWrapper =
       grandChildren.length > 3 &&
-      grandChildren.some((g) => isHeading(g) || ["P", "DIV", "SECTION", "TABLE", "UL", "OL"].includes(g.tagName));
+      grandChildren.some((g) => g && (isHeading(g) || ["P", "DIV", "SECTION", "TABLE", "UL", "OL"].includes(g.tagName)));
 
     if (looksLikeWrapper && child.tagName !== "TABLE") {
       sections.push(...grandChildren);
@@ -148,15 +152,17 @@ function collectSections(root: HTMLElement): HTMLElement[] {
   let i = 0;
   while (i < sections.length) {
     const current = sections[i];
-    if (isHeading(current) && i + 1 < sections.length) {
+    if (current && isHeading(current) && i + 1 < sections.length) {
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "background:#ffffff;";
+      wrapper.style.cssText = "background:#ffffff; width: 100%; box-sizing: border-box;";
       wrapper.appendChild(current.cloneNode(true));
       wrapper.appendChild(sections[i + 1].cloneNode(true));
       grouped.push(wrapper);
       i += 2;
-    } else {
+    } else if (current) {
       grouped.push(current);
+      i += 1;
+    } else {
       i += 1;
     }
   }
