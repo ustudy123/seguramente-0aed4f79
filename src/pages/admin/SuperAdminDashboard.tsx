@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Plus, Bug, Search, MoreVertical, Shield, TrendingUp, CheckCircle,
   UserPlus, Eye, Power, ArrowLeft, BookOpen, FileText, LayoutDashboard, Target,
-  Activity, MessageSquare,
+  Activity, MessageSquare, Brain,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { LandingLeadsTable } from '@/components/admin/LandingLeadsTable';
 import { SuperAdminOverview } from '@/components/admin/superadmin/SuperAdminOverview';
 import { LeadsCRMKanban } from '@/components/admin/superadmin/LeadsCRMKanban';
 import { TenantsStatusPanel, UsuariosGlobalPanel } from '@/components/admin/superadmin/PanelTenantsUsuarios';
+import { PsicossocialSuperAdminPanel } from '@/components/admin/superadmin/PsicossocialSuperAdminPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -86,12 +87,13 @@ export default function SuperAdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full">
             <TabsTrigger value="overview"><LayoutDashboard className="w-4 h-4 mr-2" />Visão Geral</TabsTrigger>
             <TabsTrigger value="tenants"><Building2 className="w-4 h-4 mr-2" />Empresas</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
             <TabsTrigger value="leads"><Target className="w-4 h-4 mr-2" />Leads CRM</TabsTrigger>
             <TabsTrigger value="landing"><TrendingUp className="w-4 h-4 mr-2" />Landing</TabsTrigger>
+            <TabsTrigger value="psicossocial"><Brain className="w-4 h-4 mr-2" />Psicossocial</TabsTrigger>
             <TabsTrigger value="situacao"><Activity className="w-4 h-4 mr-2" />Situação</TabsTrigger>
           </TabsList>
 
@@ -172,6 +174,8 @@ export default function SuperAdminDashboard() {
           <TabsContent value="leads"><LeadsCRMKanban /></TabsContent>
 
           <TabsContent value="landing"><LandingLeadsTable /></TabsContent>
+
+          <TabsContent value="psicossocial"><PsicossocialSuperAdminPanel /></TabsContent>
 
           <TabsContent value="situacao"><TenantsStatusPanel /></TabsContent>
         </Tabs>

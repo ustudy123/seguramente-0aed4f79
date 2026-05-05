@@ -20426,6 +20426,7 @@ export type Database = {
       }
       superadmin_global_stats: { Args: never; Returns: Json }
       superadmin_growth_series: { Args: { _dias?: number }; Returns: Json }
+      superadmin_psicossocial_overview: { Args: never; Returns: Json }
       superadmin_tenants_status: { Args: never; Returns: Json }
       superadmin_usuarios_global: {
         Args: { _limite?: number; _search?: string }
