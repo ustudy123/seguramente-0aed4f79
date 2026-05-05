@@ -393,7 +393,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
               </Button>
             </DialogTrigger>
             <DialogContent data-organograma-dialog-content="true">
-              <DialogHeader><DialogTitle>Nova Posição no Organograma</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editingNode ? "Editar Posição" : "Nova Posição no Organograma"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 {cargosAtivos.length > 0 && (
                   <div className="space-y-1">
