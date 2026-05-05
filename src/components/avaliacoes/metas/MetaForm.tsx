@@ -290,12 +290,13 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
                 <FormItem>
                   <FormLabel>Trimestre da Entrega</FormLabel>
                   <Select 
+                    disabled
                     onValueChange={(v) => field.onChange(parseInt(v))} 
                     value={field.value?.toString()}
                   >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
+                      <SelectTrigger className="bg-muted cursor-not-allowed">
+                        <SelectValue placeholder="Automático" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
