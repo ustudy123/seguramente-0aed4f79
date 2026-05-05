@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Heart, Plus, X, Save, Loader2, Sparkles, Wand2, Eye } from "lucide-react";
+import { Heart, Plus, X, Save, Loader2, Sparkles, Wand2, Eye, LayoutGrid, ListTodo, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
