@@ -21,15 +21,17 @@ const CARD_STYLE = {
 type DropPosition = "child" | "sibling" | null;
 
 interface OrgCardProps {
-  node: EstrategiaOrganograma;
+  node: EstrategiaOrganograma & { colaborador?: { id: string; nome_completo: string; foto_url?: string } };
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
-  onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
+  onEdit?: (id: string, updates: Partial<EstrategiaOrganograma>) => void;
 }
 
 export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgCardProps) {
+  const fotoUrl = useStorageImageUrl(node.colaborador?.foto_url);
+  const ocupanteNome = node.colaborador?.nome_completo || node.nome_ocupante;
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editTitulo, setEditTitulo] = useState(node.titulo);
