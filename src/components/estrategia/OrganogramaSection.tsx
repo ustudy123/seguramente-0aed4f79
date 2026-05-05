@@ -325,10 +325,9 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                 <div className="max-h-80 overflow-y-auto space-y-2 py-2">
                   {sugestaoNodes.map((node, i) => (
                     <div key={i} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/20">
-                    <Avatar className="w-7 h-7 mt-0.5">
-                        <AvatarImage src={node.foto_url || undefined} />
-                        <AvatarFallback><User className="w-3.5 h-3.5 text-primary" /></AvatarFallback>
-                      </Avatar>
+                    <div className="w-7 h-7 mt-0.5">
+                        <AvatarNode fotoUrl={node.foto_url} />
+                      </div>
                       <div className="min-w-0">
                         <p className="font-medium text-sm">{node.nome}</p>
                         <p className="text-xs text-muted-foreground">{node.cargo}</p>
