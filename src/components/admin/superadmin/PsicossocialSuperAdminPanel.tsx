@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,32 +17,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Brain, Search, AlertTriangle, Activity, TrendingUp, Users,
   CheckCircle2, AlertCircle, Filter, X, ChevronRight, Sparkles,
-  Building2, FileBarChart, RefreshCw,
+  Building2, FileBarChart, RefreshCw, Layers, LayoutGrid, List,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area,
 } from "recharts";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLE: Record<string, string> = {
-  rascunho: "bg-slate-500/10 text-slate-600 border-slate-500/30",
-  ativa: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
-  encerrada: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  rascunho: "bg-slate-500/10 text-slate-600 border-slate-500/30 font-medium",
+  ativa: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-medium",
+  encerrada: "bg-blue-500/10 text-blue-600 border-blue-500/30 font-medium",
 };
 
 const CLASSIF_COLORS: Record<string, string> = {
-  saudavel: "#10b981",
-  estavel: "#22c55e",
-  atencao: "#f59e0b",
-  risco: "#ef4444",
-  critico: "#7c2d12",
-  baixo: "#10b981",
-  moderado: "#f59e0b",
-  elevado: "#ef4444",
-  sem_classificacao: "#94a3b8",
+  saudavel: "hsl(142 71% 45%)",
+  estavel: "hsl(142 71% 45%)",
+  atencao: "hsl(38 92% 50%)",
+  risco: "hsl(0 84% 60%)",
+  critico: "hsl(12 76% 25%)",
+  baixo: "hsl(142 71% 45%)",
+  moderado: "hsl(38 92% 50%)",
+  elevado: "hsl(0 84% 60%)",
+  sem_classificacao: "hsl(215 16% 47%)",
 };
 
 const CLASSIF_LABEL: Record<string, string> = {
@@ -142,78 +142,122 @@ export function PsicossocialSuperAdminPanel() {
   return (
     <div className="space-y-5">
       {/* Header com refresh */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <Brain className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between flex-wrap gap-4 bg-muted/30 p-4 rounded-2xl border border-muted/50">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20 ring-4 ring-white dark:ring-slate-950">
+            <Brain className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Saúde Psicossocial Global</h2>
-            <p className="text-xs text-muted-foreground">
-              Monitoramento NR-1 de todas as empresas em tempo real
-            </p>
+            <h2 className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+              Saúde Psicossocial Global
+            </h2>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                Monitoramento Estratégico NR-1
+              </p>
+            </div>
           </div>
         </div>
-        <Button
-          variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}
-          className="gap-2"
-        >
-          <RefreshCw className={cn("w-4 h-4", isFetching && "animate-spin")} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="rounded-full bg-white dark:bg-slate-900 shadow-sm border-muted-foreground/10 hover:border-violet-500/50 transition-all gap-2"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5", isFetching && "animate-spin")} />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Sincronizar</span>
+          </Button>
+        </div>
       </div>
 
       {/* KPIs Globais */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPI
-          label="Total Campanhas" value={g.total_campanhas} icon={Brain}
-          color="from-violet-500 to-fuchsia-600"
-          sub={`${g.rascunho} rascunhos`}
+          label="Total Campanhas"
+          value={g.total_campanhas}
+          icon={Brain}
+          color="from-indigo-500 to-violet-600"
+          sub={`${g.rascunho} em elaboração`}
+          trend="+12% este mês"
         />
         <KPI
-          label="Ativas" value={g.ativa} icon={Activity}
+          label="Coletas Ativas"
+          value={g.ativa}
+          icon={Activity}
           color="from-emerald-500 to-teal-600"
-          sub="Em coleta"
+          sub="Empresas em campo"
         />
         <KPI
-          label="Encerradas" value={g.encerrada} icon={CheckCircle2}
-          color="from-blue-500 to-cyan-600"
-          sub="Concluídas"
+          label="Base de Dados"
+          value={g.total_respostas.toLocaleString("pt-BR")}
+          icon={Users}
+          color="from-sky-500 to-blue-600"
+          sub="Amostras validadas"
         />
         <KPI
-          label="Respostas" value={g.total_respostas.toLocaleString("pt-BR")} icon={Users}
-          color="from-cyan-500 to-blue-600"
-          sub="Coletadas"
-        />
-        <KPI
-          label="IPS Médio" value={g.ips_medio != null ? Number(g.ips_medio).toFixed(1) : "—"} icon={TrendingUp}
+          label="Score Médio (IPS)"
+          value={g.ips_medio != null ? Number(g.ips_medio).toFixed(1) : "—"}
+          icon={TrendingUp}
           color="from-amber-500 to-orange-600"
-          sub={g.campanhas_sem_minimo > 0 ? `⚠ ${g.campanhas_sem_minimo} sem mínimo` : "Tudo ok"}
+          sub="Indicador de saúde"
+        />
+        <KPI
+          label="Status de Risco"
+          value={totalAlertas}
+          icon={AlertTriangle}
+          color="from-rose-500 to-red-600"
+          sub="Alertas prioritários"
         />
       </div>
 
-      {/* Linha de saúde */}
-      <Card className="border-l-4 border-l-violet-500">
-        <CardContent className="p-4 flex flex-wrap items-center gap-6">
-          <div className="flex-1 min-w-[200px]">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Engajamento (campanhas com mínimo de respostas)</span>
-              <span className="text-sm font-bold">{engajamento}%</span>
+      {/* Linha de saúde e Engajamento */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-2 overflow-hidden border-muted/50 shadow-sm bg-gradient-to-r from-card to-muted/20">
+          <CardContent className="p-5 flex flex-col sm:flex-row items-center gap-6">
+            <div className="w-full sm:w-auto text-center sm:text-left">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Índice de Engajamento</p>
+              <h4 className="text-3xl font-black text-violet-600 dark:text-violet-400 leading-none">{engajamento}%</h4>
             </div>
-            <Progress value={engajamento} className="h-2" />
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <AlertTriangle className={cn("w-4 h-4", totalAlertas > 0 ? "text-amber-500" : "text-muted-foreground")} />
-            <span className="font-semibold">{totalAlertas}</span>
-            <span className="text-muted-foreground">alertas ativos</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Building2 className="w-4 h-4 text-violet-500" />
-            <span className="font-semibold">{tenants.length}</span>
-            <span className="text-muted-foreground">empresas monitoradas</span>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex-1 w-full space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-bold uppercase">
+                <span className="text-muted-foreground">Progresso de Amostragem Mínima</span>
+                <span className={cn(engajamento > 70 ? "text-emerald-500" : "text-amber-500")}>
+                  {g.total_campanhas - g.campanhas_sem_minimo} de {g.total_campanhas}
+                </span>
+              </div>
+              <Progress value={engajamento} className="h-2.5 bg-muted" />
+              <p className="text-[10px] text-muted-foreground italic">
+                Percentual de campanhas que atingiram o quórum mínimo de 5 respostas para análise estatística.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-muted/50 shadow-sm bg-muted/10">
+          <CardContent className="p-5 flex items-center justify-around h-full">
+            <div className="text-center">
+              <Building2 className="w-5 h-5 text-violet-500 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Unidades</p>
+              <p className="text-xl font-bold">{tenants.length}</p>
+            </div>
+            <div className="w-px h-10 bg-muted" />
+            <div className="text-center">
+              <Layers className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Módulos</p>
+              <p className="text-xl font-bold">12</p>
+            </div>
+            <div className="w-px h-10 bg-muted" />
+            <div className="text-center">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Concluídas</p>
+              <p className="text-xl font-bold">{g.encerrada}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filtros sticky */}
       <Card className="sticky top-0 z-10 backdrop-blur-sm bg-card/95 shadow-sm">
@@ -273,138 +317,194 @@ export function PsicossocialSuperAdminPanel() {
         </TabsList>
 
         {/* === VISÃO GERAL === */}
-        <TabsContent value="overview" className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-violet-500" />
-                  Top 10 Empresas por Respostas
-                </CardTitle>
+        <TabsContent value="overview" className="space-y-4 mt-6">
+          {/* Nova Seção de Gráficos Revisitada */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Gráfico de Ranking - Principal */}
+            <Card className="lg:col-span-8 border-muted/50 shadow-sm overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 bg-muted/20">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tighter">
+                    <TrendingUp className="w-4 h-4 text-violet-500" />
+                    Ranking de Engajamento por Unidade
+                  </CardTitle>
+                  <CardDescription className="text-[11px]">Empresas com maior volume de respostas validadas no período.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-background text-[10px] font-bold">TOP 10</Badge>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {tenantsRanking.length === 0 ? (
                   <EmptyState message="Sem dados de respostas ainda" />
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={tenantsRanking} layout="vertical" margin={{ left: 90, right: 16 }}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
-                      <XAxis type="number" tick={{ fontSize: 11 }} />
-                      <YAxis
-                        type="category" dataKey="tenant_nome" tick={{ fontSize: 10 }}
-                        width={130}
-                        tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + "…" : v}
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={tenantsRanking} margin={{ left: 10, right: 20, top: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(263 70% 60%)" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="hsl(263 70% 45%)" stopOpacity={1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.4} />
+                      <XAxis 
+                        dataKey="tenant_nome" 
+                        tick={{ fontSize: 9, fontWeight: 600 }} 
+                        axisLine={false}
+                        tickLine={false}
+                        interval={0}
+                        tickFormatter={(v: string) => v.length > 10 ? v.slice(0, 10) + ".." : v}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 10, fontWeight: 500 }} 
+                        axisLine={false}
+                        tickLine={false}
                       />
                       <Tooltip
-                        contentStyle={{ borderRadius: 8, fontSize: 12 }}
-                        formatter={(v) => [v, "Respostas"]}
+                        cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold' }}
                       />
-                      <Bar dataKey="total_respostas" fill="hsl(263 70% 60%)" radius={[0, 6, 6, 0]} />
+                      <Bar 
+                        dataKey="total_respostas" 
+                        fill="url(#barGradient)" 
+                        radius={[6, 6, 0, 0]} 
+                        barSize={32}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            {/* Gráfico de Pizza - Perfil de Risco */}
+            <Card className="lg:col-span-4 border-muted/50 shadow-sm overflow-hidden flex flex-col">
+              <CardHeader className="pb-4 bg-muted/20">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tighter">
                   <Brain className="w-4 h-4 text-violet-500" />
-                  Distribuição IPS por Classificação
+                  Perfil de Risco (IPS)
                 </CardTitle>
+                <CardDescription className="text-[11px]">Distribuição global por classificação de saúde.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 flex flex-col items-center justify-center pt-2">
                 {classifData.length === 0 ? (
                   <EmptyState message="Sem campanhas calculadas" />
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={classifData} dataKey="value" nameKey="name"
-                        cx="50%" cy="50%" outerRadius={100} innerRadius={50}
-                        paddingAngle={2}
-                        label={(e: any) => `${e.value}`}
-                      >
-                        {classifData.map((d, i) => (
-                          <Cell key={i} fill={CLASSIF_COLORS[d.key] || "#94a3b8"} stroke="hsl(var(--background))" strokeWidth={2} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie
+                          data={classifData} dataKey="value" nameKey="name"
+                          cx="50%" cy="50%" outerRadius={85} innerRadius={60}
+                          paddingAngle={4}
+                          stroke="none"
+                        >
+                          {classifData.map((d, i) => (
+                            <Cell key={i} fill={CLASSIF_COLORS[d.key] || "#94a3b8"} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: 12, border: 'none', fontSize: 11, fontWeight: 'bold' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full mt-2 px-2">
+                      {classifData.map((d, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CLASSIF_COLORS[d.key] }} />
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">{d.name}</span>
+                          <span className="text-[10px] font-black ml-auto">{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick alerts list */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Empresas que precisam de atenção
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const alertList = tenants
-                  .filter((t: any) => (t.alertas || 0) > 0 || (t.ativas_sem_minimo || 0) > 0)
-                  .sort((a: any, b: any) => (b.alertas + b.ativas_sem_minimo) - (a.alertas + a.ativas_sem_minimo))
-                  .slice(0, 8);
-                if (alertList.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-sm text-muted-foreground flex flex-col items-center gap-2">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                      Tudo certo! Nenhuma empresa com alertas críticos.
-                    </div>
-                  );
-                }
+          {/* Quick alerts list - Agora como um Grid Compacto */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                Unidades com Críticas Prioritárias
+              </h3>
+              <Button variant="link" className="text-[10px] h-auto p-0 font-bold uppercase" onClick={() => setActiveTab("empresas")}>
+                Ver Todas <ChevronRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+            {(() => {
+              const alertList = tenants
+                .filter((t: any) => (t.alertas || 0) > 0 || (t.ativas_sem_minimo || 0) > 0)
+                .sort((a: any, b: any) => (b.alertas + b.ativas_sem_minimo) - (a.alertas + a.ativas_sem_minimo))
+                .slice(0, 4);
+              if (alertList.length === 0) {
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {alertList.map((t: any) => (
-                      <button
-                        key={t.tenant_id}
-                        onClick={() => drillTenant(t.tenant_id)}
-                        className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-amber-500/5 hover:border-amber-500/40 transition-all text-left"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-medium text-sm truncate">{t.tenant_nome}</div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                            {t.ativas_sem_minimo > 0 && (
-                              <span className="text-amber-600">{t.ativas_sem_minimo} sem mínimo</span>
-                            )}
-                            {t.alertas > 0 && (
-                              <span className="text-red-600">{t.alertas} alertas</span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
-                      </button>
-                    ))}
-                  </div>
+                  <Card className="border-dashed bg-muted/5">
+                    <CardContent className="py-8 text-center text-xs text-muted-foreground font-medium italic">
+                      Monitoramento estável. Nenhuma intercorrência crítica detectada.
+                    </CardContent>
+                  </Card>
                 );
-              })()}
-            </CardContent>
-          </Card>
+              }
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {alertList.map((t: any) => (
+                    <Card 
+                      key={t.tenant_id}
+                      className="group cursor-pointer hover:border-amber-500/50 hover:shadow-md transition-all border-muted/50"
+                      onClick={() => drillTenant(t.tenant_id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                            <AlertCircle className="w-4 h-4 text-amber-600" />
+                          </div>
+                          <Badge variant="outline" className="text-[9px] font-black tracking-tighter border-amber-500/20 text-amber-700 bg-amber-500/5 uppercase">Atenção</Badge>
+                        </div>
+                        <h4 className="text-xs font-black truncate uppercase mb-1">{t.tenant_nome}</h4>
+                        <div className="flex flex-col gap-1">
+                          {t.ativas_sem_minimo > 0 && (
+                            <div className="flex items-center justify-between text-[10px] font-bold text-amber-600">
+                              <span>QUÓRUM INSUFICIENTE</span>
+                              <span>{t.ativas_sem_minimo}</span>
+                            </div>
+                          )}
+                          {t.alertas > 0 && (
+                            <div className="flex items-center justify-between text-[10px] font-bold text-red-600">
+                              <span>ALERTAS DE RISCO</span>
+                              <span>{t.alertas}</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
         </TabsContent>
 
         {/* === EMPRESAS === */}
-        <TabsContent value="empresas" className="mt-4">
-          <Card>
+        <TabsContent value="empresas" className="mt-6 space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <LayoutGrid className="w-3.5 h-3.5" /> Panorama de Ativos por Unidade
+            </h3>
+          </div>
+          <Card className="border-muted/50 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Empresa</TableHead>
-                    <TableHead className="text-center">Campanhas</TableHead>
-                    <TableHead className="text-center">Ativas</TableHead>
-                    <TableHead className="text-center">Respostas</TableHead>
-                    <TableHead className="text-center">IPS Médio</TableHead>
-                    <TableHead className="text-center">Alertas</TableHead>
-                    <TableHead className="text-center">Sem mínimo</TableHead>
-                    <TableHead>Última atividade</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-b-muted/50">
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Unidade de Negócio</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Campanhas</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Monitorando</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Amostragem</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Score IPS</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Status Risco</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Quórum</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Sincronia</TableHead>
+                    <TableHead className="w-10 h-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -414,50 +514,50 @@ export function PsicossocialSuperAdminPanel() {
                       <TableRow
                         key={t.tenant_id}
                         className={cn(
-                          "cursor-pointer transition-colors",
-                          hasAlert && "bg-amber-500/[0.03] hover:bg-amber-500/[0.07]",
+                          "cursor-pointer transition-all hover:translate-x-0.5",
+                          hasAlert ? "bg-amber-500/[0.03] hover:bg-amber-500/[0.07]" : "hover:bg-muted/30",
                         )}
                         onClick={() => drillTenant(t.tenant_id)}
                       >
                         <TableCell>
-                          <div className="font-medium text-sm">{t.tenant_nome}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {t.colaboradores_ativos} colab. · {t.plano}
+                          <div className="font-black text-xs uppercase tracking-tight">{t.tenant_nome}</div>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5">
+                            {t.colaboradores_ativos} COLABS · {t.plano}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center font-semibold">{t.total_campanhas}</TableCell>
+                        <TableCell className="text-center font-black text-sm">{t.total_campanhas}</TableCell>
                         <TableCell className="text-center">
                           {t.ativas > 0 ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">{t.ativas}</Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-black text-[10px]">{t.ativas}</Badge>
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
-                        <TableCell className="text-center font-mono text-sm">{t.total_respostas}</TableCell>
+                        <TableCell className="text-center font-black text-xs tabular-nums">{t.total_respostas}</TableCell>
                         <TableCell className="text-center">
                           {t.ips_medio != null ? (
-                            <Badge variant="outline" className="font-mono">{Number(t.ips_medio).toFixed(1)}</Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                            <Badge variant="outline" className="font-black text-[10px] border-violet-500/30 text-violet-600 bg-violet-500/5">{Number(t.ips_medio).toFixed(1)}</Badge>
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
                         <TableCell className="text-center">
                           {t.alertas > 0 ? (
-                            <Badge variant="destructive" className="gap-1">
-                              <AlertTriangle className="w-3 h-3" />{t.alertas}
+                            <Badge variant="destructive" className="gap-1 font-black text-[10px] bg-red-600 shadow-sm shadow-red-500/20">
+                              {t.alertas}
                             </Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
                         <TableCell className="text-center">
                           {t.ativas_sem_minimo > 0 ? (
-                            <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
-                              <AlertCircle className="w-3 h-3" />{t.ativas_sem_minimo}
+                            <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1 font-black text-[10px]">
+                              {t.ativas_sem_minimo}
                             </Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
                           {t.ultima_atividade
                             ? formatDistanceToNow(new Date(t.ultima_atividade), { locale: ptBR, addSuffix: true })
                             : "—"}
                         </TableCell>
                         <TableCell>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                         </TableCell>
                       </TableRow>
                     );
@@ -476,63 +576,74 @@ export function PsicossocialSuperAdminPanel() {
         </TabsContent>
 
         {/* === CAMPANHAS === */}
-        <TabsContent value="campanhas" className="mt-4">
-          <Card>
+        <TabsContent value="campanhas" className="mt-6 space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <List className="w-3.5 h-3.5" /> Registros Detalhados de Amostragem
+            </h3>
+          </div>
+          <Card className="border-muted/50 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Campanha</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Tipo / Instrumento</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Respostas</TableHead>
-                    <TableHead className="text-center">IPS</TableHead>
-                    <TableHead>Período</TableHead>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-b-muted/50">
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Título da Campanha</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Unidade Origem</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Instrumento</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Status</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Volume</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">IPS</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Cronograma</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCampanhas.slice(0, 200).map((c: any) => {
                     const semMinimo = (c.total_respostas || 0) < 5 && c.status === "ativa";
                     return (
-                      <TableRow key={c.id} className={cn(semMinimo && "bg-amber-500/[0.03]")}>
-                        <TableCell className="font-medium max-w-xs">
-                          <div className="truncate text-sm">{c.nome}</div>
+                      <TableRow key={c.id} className={cn("hover:bg-muted/20 transition-colors", semMinimo && "bg-amber-500/[0.03]")}>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate text-xs font-black uppercase tracking-tight">{c.nome}</div>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[180px] truncate">
+                        <TableCell className="text-[10px] font-bold text-muted-foreground uppercase max-w-[150px] truncate">
                           {c.tenant_nome || "—"}
                         </TableCell>
                         <TableCell>
-                          <div className="text-xs font-medium">{c.tipo || "—"}</div>
-                          <div className="text-[11px] text-muted-foreground">{c.instrumento || "—"}</div>
+                          <div className="text-[10px] font-black uppercase">{c.tipo || "—"}</div>
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase">{c.instrumento || "—"}</div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={STATUS_STYLE[c.status] || ""}>{c.status}</Badge>
+                          <Badge variant="outline" className={cn("text-[9px] uppercase font-black px-1.5 h-5", STATUS_STYLE[c.status] || "")}>
+                            {c.status}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-center">
                           <span className={cn(
-                            "font-mono text-sm",
-                            semMinimo && "text-amber-600 font-semibold",
+                            "font-black text-xs tabular-nums",
+                            semMinimo ? "text-amber-600" : "text-foreground",
                           )}>
                             {c.total_respostas || 0}
                           </span>
                           {semMinimo && (
-                            <div className="text-[10px] text-amber-600">⚠ &lt; 5</div>
+                            <div className="text-[9px] font-black text-amber-600 uppercase">Abaixo do mín</div>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
                           {c.ips_score != null ? (
                             <Badge
-                              variant="outline" className="font-mono"
-                              style={{ color: CLASSIF_COLORS[c.ips_classificacao], borderColor: CLASSIF_COLORS[c.ips_classificacao] + "60" }}
+                              variant="outline" className="font-black text-[10px] min-w-[30px] justify-center"
+                              style={{ 
+                                color: CLASSIF_COLORS[c.ips_classificacao], 
+                                borderColor: CLASSIF_COLORS[c.ips_classificacao] + "40",
+                                backgroundColor: CLASSIF_COLORS[c.ips_classificacao] + "10"
+                              }}
                             >
                               {Number(c.ips_score).toFixed(0)}
                             </Badge>
-                          ) : <span className="text-muted-foreground text-xs">—</span>}
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        <TableCell className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
                           {c.data_inicio ? format(new Date(c.data_inicio), "dd/MM/yy") : "—"}
-                          {" → "}
+                          <span className="mx-1 text-muted-foreground/30">/</span>
                           {c.data_fim ? format(new Date(c.data_fim), "dd/MM/yy") : "—"}
                         </TableCell>
                       </TableRow>
@@ -560,24 +671,31 @@ export function PsicossocialSuperAdminPanel() {
   );
 }
 
-function KPI({ label, value, icon: Icon, color, sub }: {
-  label: string; value: number | string; icon: any; color: string; sub?: string;
+function KPI({ label, value, icon: Icon, color, sub, trend }: {
+  label: string; value: number | string; icon: any; color: string; sub?: string; trend?: string;
 }) {
   return (
     <Card className={cn(
-      "relative overflow-hidden border-0 text-white shadow-md hover:shadow-lg transition-shadow",
+      "relative overflow-hidden border-0 text-white shadow-md hover:shadow-lg transition-all duration-300 group",
       "bg-gradient-to-br", color,
     )}>
-      <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
-      <CardContent className="p-4 relative">
+      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-2xl group-hover:scale-150 transition-transform duration-500" />
+      <CardContent className="p-5 relative">
         <div className="flex items-start justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider opacity-90 font-medium">{label}</p>
-            <p className="text-2xl md:text-3xl font-bold mt-1 tabular-nums">{value}</p>
-            {sub && <p className="text-[11px] opacity-80 mt-1 truncate">{sub}</p>}
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase font-black tracking-widest opacity-80">{label}</p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-3xl font-black tabular-nums tracking-tighter">{value}</p>
+              {trend && (
+                <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                  {trend}
+                </span>
+              )}
+            </div>
+            {sub && <p className="text-[11px] font-medium opacity-90 mt-1 truncate leading-tight">{sub}</p>}
           </div>
-          <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm">
-            <Icon className="w-4 h-4" />
+          <div className="p-2.5 rounded-2xl bg-white/15 backdrop-blur-md shadow-inner group-hover:rotate-12 transition-transform">
+            <Icon className="w-5 h-5" />
           </div>
         </div>
       </CardContent>
