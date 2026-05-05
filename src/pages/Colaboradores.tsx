@@ -474,6 +474,14 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                           <FolderOpen className="w-4 h-4 mr-2" />
                           Documentos
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          const link = `${window.location.origin}/completar-cadastro/${colab.onboarding_token}`;
+                          navigator.clipboard.writeText(link);
+                          toast.success("Link copiado para a área de transferência!");
+                        }}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiar Link de Cadastro
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => {
                           if (colab.status === "desligado") { toast.error("Colaborador já está desligado"); return; }
