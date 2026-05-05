@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown, Sparkles, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos } from "@/hooks/useCadastros";
 import { useColaboradores } from "@/hooks/useColaboradores";
-import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import { toast } from "sonner";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
@@ -75,13 +74,11 @@ function buildOrgSuggestion(colaboradores: any[]) {
   return nodes;
 }
 
-function OcupanteItem({ colab, isSelected, onToggle }: { 
-  colab: { id: string; nome: string; foto_url?: string | null }; 
+function OcupanteItem({ colab, isSelected, onToggle }: {
+  colab: { id: string; nome: string; foto_url?: string | null };
   isSelected: boolean;
   onToggle: () => void;
 }) {
-  const fotoUrl = useStorageImageUrl(colab.foto_url);
-  
   return (
     <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
       <input
@@ -91,7 +88,7 @@ function OcupanteItem({ colab, isSelected, onToggle }: {
         className="rounded border-input"
       />
       <Avatar className="w-6 h-6">
-        <AvatarImage src={fotoUrl || undefined} />
+        <AvatarImage src={colab.foto_url || undefined} />
         <AvatarFallback><User className="w-3 h-3" /></AvatarFallback>
       </Avatar>
       <span className="truncate">{colab.nome}</span>
@@ -99,12 +96,10 @@ function OcupanteItem({ colab, isSelected, onToggle }: {
   );
 }
 
-
 function AvatarNode({ fotoUrl, size = "default" }: { fotoUrl?: string | null; size?: "small" | "default" }) {
-  const resolvedUrl = useStorageImageUrl(fotoUrl);
   return (
     <Avatar className={cn(size === "small" ? "w-6 h-6" : "w-7 h-7")}>
-      <AvatarImage src={resolvedUrl || undefined} />
+      <AvatarImage src={fotoUrl || undefined} />
       <AvatarFallback><User className={size === "small" ? "w-3 h-3" : "w-3.5 h-3.5"} /></AvatarFallback>
     </Avatar>
   );
