@@ -280,10 +280,10 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="1">Q1 (Jan-Mar)</SelectItem>
-                      <SelectItem value="2">Q2 (Abr-Jun)</SelectItem>
-                      <SelectItem value="3">Q3 (Jul-Set)</SelectItem>
-                      <SelectItem value="4">Q4 (Out-Dez)</SelectItem>
+                      <SelectItem value="1">Q1</SelectItem>
+                      <SelectItem value="2">Q2</SelectItem>
+                      <SelectItem value="3">Q3</SelectItem>
+                      <SelectItem value="4">Q4</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
