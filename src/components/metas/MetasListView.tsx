@@ -151,7 +151,7 @@ export function MetasListView({
                       </Badge>
                       {meta.periodo && (
                         <Badge variant="outline" className="text-[10px]">
-                          {PERIODO_LABELS[meta.periodo]} {meta.ano}
+                          {PERIODO_LABELS[meta.periodo]} {meta.ano} {meta.trimestre ? ` Q${meta.trimestre}` : ""}
                         </Badge>
                       )}
                       {meta.risco_nivel && meta.risco_nivel !== "baixo" && (
