@@ -904,6 +904,8 @@ function AdmissoesTab() {
       dataAcao: w.data_acao ? new Date(w.data_acao) : undefined, observacao: w.observacao || undefined,
     })),
     dataCriacao: new Date(a.created_at), dataAtualizacao: new Date(a.updated_at), criadoPor: a.criado_por || "",
+    fotoUrl: a.foto_url || undefined,
+    onboarding_status: a.onboarding_status || undefined,
   }));
 
   const selectedAdmissaoFormatted = selectedId ? admissoesFormatted.find(a => a.id === selectedId) : null;
