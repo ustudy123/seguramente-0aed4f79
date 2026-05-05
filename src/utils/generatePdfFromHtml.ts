@@ -288,26 +288,35 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     };
 
     for (const section of sections) {
-      const canvas = await renderElementToCanvas(section);
-      if (!canvas.width || !canvas.height) continue;
-
-      const heightMm = (canvas.height * contentWidth) / canvas.width;
-      const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
-
-      if (heightMm <= usableHeight) {
-        // Fits on a page — push to next page if needed
-        if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
-          pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+      try {
+        const canvas = await renderElementToCanvas(section);
+        if (!canvas || !canvas.width || !canvas.height) {
+          console.warn("Seção ignorada por canvas inválido:", section.tagName);
+          continue;
         }
-        addCanvasAsImage(canvas, heightMm);
-      } else {
-        // Section is too tall for a single page — slice safely
-        if (currentY > PDF_MARGIN_MM) {
-          pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+
+        const heightMm = (canvas.height * contentWidth) / canvas.width;
+        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+
+        if (heightMm <= usableHeight) {
+          // Fits on a page — push to next page if needed
+          if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
+            pdf.addPage();
+            currentY = PDF_MARGIN_MM;
+          }
+          addCanvasAsImage(canvas, heightMm);
+        } else {
+          // Section is too tall for a single page — slice safely
+          if (currentY > PDF_MARGIN_MM) {
+            pdf.addPage();
+            currentY = PDF_MARGIN_MM;
+          }
+          sliceTallCanvas(canvas);
         }
-        sliceTallCanvas(canvas);
+      } catch (sectionErr) {
+        console.error("Erro ao renderizar seção do manual:", sectionErr);
+        // Continue to next section instead of failing everything
+        continue;
       }
     }
 
