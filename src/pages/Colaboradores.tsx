@@ -986,7 +986,7 @@ function DesligadosTab() {
       if (!tenantId) return [];
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url")
         .eq("tenant_id", tenantId)
         .eq("status", "desligado");
 
