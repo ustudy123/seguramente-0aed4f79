@@ -86,6 +86,7 @@ export interface EstrategiaOrganograma {
   ordem: number;
   created_at: string;
   updated_at: string;
+  colaborador?: { id: string; nome_completo: string; foto_url?: string };
   children?: EstrategiaOrganograma[];
 }
 
