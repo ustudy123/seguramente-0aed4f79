@@ -176,9 +176,10 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
           style={{
             transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
             transformOrigin: "top center",
-            transition: isPanning ? "none" : "transform 0.15s ease-out",
+            transition: (isPanning || isExporting) ? "none" : "transform 0.15s ease-out",
           }}
           data-canvas="true"
+          ref={contentRef}
         >
           {children}
         </div>
