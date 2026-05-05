@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Users, User, Loader2, Info, Check, ChevronsUpDown, Sparkles, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,30 +114,11 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const tree = buildTree(organograma);
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
 
-  const colaboradoresMap = useMemo(() => {
-    const m = new Map<string, { id: string; nome: string; foto_url?: string | null }[]>();
-    (colaboradores || []).forEach((c) => {
-      if (c.cargo) {
-        const key = c.cargo.toLowerCase();
-        const arr = m.get(key) || [];
-        arr.push({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
-        m.set(key, arr);
-      }
-    });
-    return m;
-  }, [colaboradores]);
-
   const handleCargoSelect = (cargoId: string) => {
     const cargo = cargosAtivos.find((c: any) => c.id === cargoId);
     setForm({ ...INITIAL_FORM, cargo_id: cargoId, titulo: cargo?.nome || "", parent_id: form.parent_id });
     setOcupanteSearch("");
   };
-
-  const ocupantesDisponiveis = useMemo(() => {
-    const key = form.titulo.trim().toLowerCase();
-    if (!key) return [];
-    return colaboradoresMap.get(key) || [];
-  }, [form.titulo, colaboradoresMap]);
 
   const toggleOcupante = (colab: { id: string; nome: string; foto_url?: string | null }) => {
     setForm((prev) => {
@@ -164,7 +145,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
       parent_id: node.parent_id || "",
       cargo_id: node.cargo_id || "",
       colaborador_id: node.colaborador_id || "",
-      selectedOcupantes: [] // Editing only supports one at a time for now
+      selectedOcupantes: node.colaborador_id ? [{ id: node.colaborador_id, nome: node.nome_ocupante || "" }] : []
     });
     setOcupanteSearch("");
     setShowNew(true);
@@ -388,12 +369,12 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
           )}
           <Dialog open={showNew} onOpenChange={setShowNew}>
             <DialogTrigger asChild>
-              <Button size="sm" onClick={() => setForm(INITIAL_FORM)}>
+              <Button size="sm" onClick={() => { setEditingNode(null); setForm(INITIAL_FORM); }}>
                 <Plus className="w-4 h-4 mr-1" /> Nova Posição
               </Button>
             </DialogTrigger>
             <DialogContent data-organograma-dialog-content="true">
-            <DialogHeader><DialogTitle>{editingNode ? "Editar Posição" : "Nova Posição no Organograma"}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingNode ? "Editar Posição" : "Nova Posição no Organograma"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 {cargosAtivos.length > 0 && (
                   <div className="space-y-1">
@@ -450,60 +431,69 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                 </div>
 
                 <div className="space-y-1">
-                <Label>Vincular Colaborador {form.titulo ? `(sugestões para "${form.titulo}")` : ""}</Label>
-                <div className="border rounded-md p-2 space-y-1">
-                  <Input
-                    value={ocupanteSearch}
-                    onChange={(e) => setOcupanteSearch(e.target.value)}
-                    placeholder="Pesquisar colaborador..."
-                    className="h-8 text-sm mb-1"
-                  />
-                  <div className="max-h-40 overflow-y-auto space-y-0.5">
-                    {/* First show exact title matches */}
-                    {ocupantesDisponiveis
-                      .filter((c) => c.nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
-                      .map((c) => (
-                        <OcupanteItem 
-                          key={c.id} 
-                          colab={c} 
-                          isSelected={editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)}
-                          onToggle={() => {
-                            if (editingNode) {
-                              setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome });
-                            } else {
-                              toggleOcupante(c);
-                            }
-                          }}
-                        />
-                      ))}
-                    
-                    {/* Then show other collaborators if searching or if no matches */}
-                    {(ocupanteSearch.length > 1 || ocupantesDisponiveis.length === 0) && 
-                      colaboradores
-                        .filter(c => !ocupantesDisponiveis.some(od => od.id === c.id)) // exclude already shown
-                        .filter(c => c.nome_completo.toLowerCase().includes(ocupanteSearch.toLowerCase()))
-                        .slice(0, 10) // Limit to avoid performance issues
-                        .map(c => (
-                          <OcupanteItem 
-                            key={c.id} 
-                            colab={{ id: c.id, nome: c.nome_completo, foto_url: c.foto_url }} 
-                            isSelected={editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)}
-                            onToggle={() => {
-                              if (editingNode) {
-                                setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome_completo });
-                              } else {
-                                toggleOcupante({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
-                              }
-                            }}
-                          />
-                        ))
-                    }
-
-                    {colaboradores.filter(c => c.nome_completo.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
-                      <p className="text-xs text-muted-foreground px-2 py-1">Nenhum colaborador encontrado</p>
-                    )}
-                  </div>
+                  <Label>Ocupante</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" className="w-full justify-between font-normal text-left overflow-hidden">
+                        <div className="truncate flex-1">
+                          {editingNode ? (
+                            form.nome_ocupante || "Selecione o colaborador..."
+                          ) : (
+                            form.selectedOcupantes.length > 0 
+                              ? `${form.selectedOcupantes.length} selecionado(s)` 
+                              : form.nome_ocupante || "Selecione o(s) colaborador(es)..."
+                          )}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      container={typeof document !== "undefined" ? (document.querySelector("[data-organograma-dialog-content='true']") as HTMLElement | null) : null}
+                      className="w-[--radix-popover-trigger-width] p-0" 
+                      align="start"
+                    >
+                      <Command>
+                        <CommandInput placeholder="Buscar colaborador..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhum colaborador encontrado</CommandEmpty>
+                          <CommandGroup heading="Colaboradores da Empresa">
+                            {colaboradores.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={c.nome_completo}
+                                onSelect={() => {
+                                  if (editingNode) {
+                                    setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome_completo });
+                                  } else {
+                                    toggleOcupante({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div className="relative">
+                                    <Check className={cn(
+                                      "mr-2 h-4 w-4 absolute -left-6",
+                                      (editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)) ? "opacity-100" : "opacity-0"
+                                    )} />
+                                    <Avatar className="w-6 h-6">
+                                      <AvatarImage src={useStorageImageUrl(c.foto_url) || undefined} />
+                                      <AvatarFallback><User className="w-3 h-3" /></AvatarFallback>
+                                    </Avatar>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{c.nome_completo}</span>
+                                    <span className="text-[10px] text-muted-foreground">{c.cargo}</span>
+                                  </div>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
+
                 {!editingNode && (
                   <div className="mt-2 pt-2 border-t">
                     <Label className="text-xs">Ou digite um nome (sem vincular):</Label>
@@ -515,7 +505,6 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                     />
                   </div>
                 )}
-                </div>
 
                 {organograma.length > 0 && (
                   <div className="space-y-1">
@@ -532,10 +521,10 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   </div>
                 )}
 
-              <Button onClick={handleCreateOrUpdate} disabled={!form.titulo.trim() || isCreating} className="w-full">
-                {isCreating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-                {editingNode ? "Salvar Alterações" : "Adicionar"}
-              </Button>
+                <Button onClick={handleCreateOrUpdate} disabled={!form.titulo.trim() || isCreating} className="w-full">
+                  {isCreating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                  {editingNode ? "Salvar Alterações" : "Adicionar"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
