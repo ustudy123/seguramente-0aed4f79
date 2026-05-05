@@ -87,12 +87,13 @@ export default function SuperAdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full">
             <TabsTrigger value="overview"><LayoutDashboard className="w-4 h-4 mr-2" />Visão Geral</TabsTrigger>
             <TabsTrigger value="tenants"><Building2 className="w-4 h-4 mr-2" />Empresas</TabsTrigger>
             <TabsTrigger value="usuarios"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
             <TabsTrigger value="leads"><Target className="w-4 h-4 mr-2" />Leads CRM</TabsTrigger>
             <TabsTrigger value="landing"><TrendingUp className="w-4 h-4 mr-2" />Landing</TabsTrigger>
+            <TabsTrigger value="psicossocial"><Brain className="w-4 h-4 mr-2" />Psicossocial</TabsTrigger>
             <TabsTrigger value="situacao"><Activity className="w-4 h-4 mr-2" />Situação</TabsTrigger>
           </TabsList>
 
