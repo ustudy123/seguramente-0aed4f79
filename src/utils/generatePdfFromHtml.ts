@@ -216,10 +216,22 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   document.body.appendChild(container);
 
   try {
+    // Ensure all images are loaded
+    const images = container.querySelectorAll("img");
+    await Promise.all(
+      Array.from(images).map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
-    await wait(500);
+    await wait(800);
 
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
