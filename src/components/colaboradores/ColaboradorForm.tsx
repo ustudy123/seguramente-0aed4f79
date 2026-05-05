@@ -128,6 +128,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       gestor_imediato: "",
       data_admissao: new Date().toISOString().split("T")[0],
       matricula_esocial: "",
+      foto_url: "",
     },
   });
 
@@ -146,6 +147,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: colaborador.gestor_imediato || "",
         data_admissao: colaborador.data_admissao || "",
         matricula_esocial: colaborador.matricula_esocial || "",
+        foto_url: colaborador.foto_url || "",
       });
     } else if (open && !colaborador) {
       form.reset({
@@ -161,6 +163,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: "",
         data_admissao: new Date().toISOString().split("T")[0],
         matricula_esocial: "",
+        foto_url: "",
       });
     }
   }, [open, colaborador, form]);
