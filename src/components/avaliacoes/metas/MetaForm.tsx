@@ -36,8 +36,8 @@ const formSchema = z.object({
   trimestre: z.number().min(1).max(4).optional(),
   colaborador_id: z.string().optional(),
   departamento_id: z.string().optional(),
-  data_inicio: z.string().optional(),
-  data_fim: z.string().optional(),
+  // data_inicio e data_fim removidos do schema conforme solicitação
+
   peso: z.number().min(0.1).max(10).default(1),
   premiacao_tipo: z.string().optional(),
   premiacao_descricao: z.string().optional(),
