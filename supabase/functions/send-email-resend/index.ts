@@ -26,7 +26,7 @@ interface TemplateEntry {
 const TEMPLATES: Record<string, TemplateEntry> = {
   'convite-colaborador': {
     component: ConviteColaboradorEmail,
-    subject: 'Você foi convidado para o Seguramente',
+    subject: 'Você foi convidado para o YourEyes',
   },
   'alerta-saude': {
     component: AlertaSaudeEmail,
@@ -54,7 +54,7 @@ const TEMPLATES: Record<string, TemplateEntry> = {
   },
   'generico': {
     component: GenericoEmail,
-    subject: (data) => data?.assunto || 'Notificação Seguramente',
+    subject: (data) => data?.assunto || 'Notificação YourEyes',
   },
 }
 
