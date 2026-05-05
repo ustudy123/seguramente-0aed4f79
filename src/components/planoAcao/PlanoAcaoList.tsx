@@ -100,10 +100,19 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
     return new Date(acao.prazo) < new Date();
   };
 
+  const sortedAcoes = [...acoes].sort((a, b) => {
+    const scoreA = a.pontuacao_gut ?? 0;
+    const scoreB = b.pontuacao_gut ?? 0;
+    if (scoreB !== scoreA) {
+      return scoreB - scoreA;
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
   return (
     <div className="space-y-3">
       <AnimatePresence>
-        {acoes.map((acao, idx) => {
+        {sortedAcoes.map((acao, idx) => {
           const prioConfig = PRIORIDADE_CONFIG[acao.prioridade];
           const statusConfig = STATUS_CONFIG[acao.status];
           const StatusIcon = statusConfig?.icon || Clock;
@@ -127,7 +136,7 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     {/* GUT Score */}
-                    <div className="hidden sm:flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-muted">
+                    <div className="hidden sm:flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-muted shrink-0">
                       <span className="text-lg font-bold">{acao.pontuacao_gut || '-'}</span>
                       <span className="text-[10px] text-muted-foreground">GUT</span>
                     </div>
@@ -153,6 +162,10 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
                                 Atrasada
                               </Badge>
                             )}
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-2.5 w-2.5" />
+                              Criado em: {format(new Date(acao.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                            </span>
                           </div>
                           <h3 className="font-medium truncate">{acao.titulo}</h3>
                           {acao.descricao && (
@@ -197,7 +210,7 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
                         )}
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-[10px] h-4">
                             {ORIGEM_LABELS[acao.origem_modulo]?.label || acao.origem_modulo}
                           </Badge>
                         </div>
