@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   TrendingUp, FileText, History, AlertTriangle,
-  Sparkles, Loader2, CheckCircle2, Users,
+  Sparkles, Loader2, CheckCircle2, Users, Download, ExternalLink, Calendar as CalendarIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
