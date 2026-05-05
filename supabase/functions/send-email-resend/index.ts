@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       : template.subject
 
     // Send via Resend
-    const fromAddress = from || 'Seguramente <noreply@seguramente.app.br>'
+    const fromAddress = from || 'YourEyes <noreply@youreyes.com.br>'
 
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
