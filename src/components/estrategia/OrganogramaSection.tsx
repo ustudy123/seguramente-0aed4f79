@@ -474,10 +474,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                                       "mr-2 h-4 w-4 absolute -left-6",
                                       (editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)) ? "opacity-100" : "opacity-0"
                                     )} />
-                                    <Avatar className="w-6 h-6">
-                                      <AvatarImage src={c.foto_url || undefined} />
-                                      <AvatarFallback><User className="w-3 h-3" /></AvatarFallback>
-                                    </Avatar>
+                                    <AvatarNode fotoUrl={c.foto_url} size="small" />
                                   </div>
                                   <div className="flex flex-col">
                                     <span className="text-sm font-medium">{c.nome_completo}</span>
