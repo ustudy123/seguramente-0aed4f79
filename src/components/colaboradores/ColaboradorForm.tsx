@@ -84,6 +84,7 @@ export interface ColaboradorEditData {
   gestor_imediato: string | null;
   data_admissao: string | null;
   matricula_esocial?: string | null;
+  foto_url?: string | null;
 }
 
 interface ColaboradorFormProps {
