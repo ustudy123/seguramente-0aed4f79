@@ -101,7 +101,7 @@ export default function CompletarCadastro() {
 
       if (updateError) throw updateError;
 
-      setColaborador({ ...colaborador, foto_url: publicUrl });
+      setColaborador({ ...colaborador, foto_url: publicUrlWithBust });
       toast.success("Foto atualizada com sucesso!");
     } catch (error) {
       console.error("Erro no upload da foto:", error);
