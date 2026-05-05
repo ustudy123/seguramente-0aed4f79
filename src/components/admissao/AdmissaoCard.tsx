@@ -65,6 +65,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12 border-2 border-primary/20">
+            <AvatarImage src={admissao.fotoUrl} />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials}
             </AvatarFallback>
