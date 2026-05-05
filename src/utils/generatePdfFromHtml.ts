@@ -348,7 +348,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const contentWidth = pdfWidth - PDF_MARGIN_MM * 2;
-    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2;
+    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2 - 3; // 3mm bottom safety to avoid clipping descenders
     const SECTION_GAP_MM = 2;
 
     const sections = collectSections(contentDiv);
