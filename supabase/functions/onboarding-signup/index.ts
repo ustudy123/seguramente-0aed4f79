@@ -168,9 +168,9 @@ serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "Seguramente <noreply@seguramente.app.br>",
+              from: "YourEyes <noreply@youreyes.com.br>",
               to: [email],
-              subject: "Você foi convidado para o Seguramente",
+              subject: "Você foi convidado para o YourEyes",
               html: `
                 <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
                   <div style="text-align: center; margin-bottom: 8px;">
