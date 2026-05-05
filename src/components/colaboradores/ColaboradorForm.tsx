@@ -40,6 +40,7 @@ import { validateCpf, cleanCpf } from "@/lib/cpf";
 import { EmpresaAtivaBanner } from "@/components/ui/empresa-ativa-banner";
 import { CargoComboboxField } from "@/components/colaboradores/CargoComboboxField";
 import { GestorComboboxField } from "@/components/colaboradores/GestorComboboxField";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 
 const TIPOS_VINCULO = [
   { value: "clt", label: "CLT" },
@@ -134,6 +135,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       foto_url: "",
     },
   });
+  const resolvedPhotoUrl = useStorageImageUrl(form.watch("foto_url"), "documentos");
 
   useEffect(() => {
     if (open && colaborador) {
@@ -188,14 +190,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("documentos")
-        .getPublicUrl(filePath);
-
-      // Force cache bust
-      const publicUrlWithBust = `${publicUrl}?t=${Date.now()}`;
-
-      form.setValue("foto_url", publicUrlWithBust);
+      form.setValue("foto_url", filePath);
       toast.success("Foto carregada com sucesso!");
     } catch (error) {
       console.error("Erro no upload:", error);
@@ -330,7 +325,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
               {/* Foto */}
               <div className="flex flex-col items-center justify-center space-y-3 pb-4">
                 <Avatar className="h-24 w-24 border-2 border-primary/10">
-                  <AvatarImage src={form.watch("foto_url") || ""} />
+                  <AvatarImage src={resolvedPhotoUrl || ""} />
                   <AvatarFallback className="bg-primary/5 text-primary text-2xl">
                     <User className="h-12 w-12" />
                   </AvatarFallback>

@@ -94,6 +94,7 @@ import { useEmpresaAtiva } from "@/contexts/EmpresaAtivaContext";
 import { useAfastamentosAtivos } from "@/hooks/useAfastamentosAtivos";
 import { AfastadoBadge } from "@/components/shared/AfastadoBadge";
 import { usePerfilPermissions } from "@/hooks/usePerfilPermissions";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return "-";
@@ -118,6 +119,32 @@ interface ColaboradorExtendido {
   onboarding_token: string | null;
   onboarding_status: string | null;
   foto_url: string | null;
+}
+
+function ColaboradorAvatar({ fotoUrl, nome }: { fotoUrl: string | null; nome: string }) {
+  const resolvedPhotoUrl = useStorageImageUrl(fotoUrl, "documentos");
+
+  return (
+    <Avatar className="h-12 w-12">
+      <AvatarImage src={resolvedPhotoUrl || ""} />
+      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+        {nome.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
+function ColaboradorAvatarSmall({ fotoUrl, nome }: { fotoUrl: string | null; nome: string }) {
+  const resolvedPhotoUrl = useStorageImageUrl(fotoUrl, "documentos");
+
+  return (
+    <Avatar className="h-9 w-9">
+      <AvatarImage src={resolvedPhotoUrl || ""} />
+      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+        {nome.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+      </AvatarFallback>
+    </Avatar>
+  );
 }
 
 const statusStyles: Record<string, string> = {
@@ -200,6 +227,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       centro_custo: (colab as any).centro_custo || null,
       gestor_imediato: (colab as any).gestor_imediato || null,
       data_admissao: colab.data_admissao,
+      foto_url: colab.foto_url,
     });
     setShowForm(true);
   };
@@ -335,12 +363,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={colab.foto_url || ""} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ColaboradorAvatar fotoUrl={colab.foto_url} nome={colab.nome_completo} />
                   <div>
                     <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                       {colab.nome_completo}
@@ -442,12 +465,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                 <TableRow key={colab.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewProfile(colab)}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={colab.foto_url || ""} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                          {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <ColaboradorAvatarSmall fotoUrl={colab.foto_url} nome={colab.nome_completo} />
                       <div>
                         <p className="font-medium text-foreground">{colab.nome_completo}</p>
                         <p className={cn("text-xs truncate max-w-[200px]", colab.email ? "text-muted-foreground" : "text-muted-foreground/60 italic")}>{colab.email || "E-mail não cadastrado"}</p>

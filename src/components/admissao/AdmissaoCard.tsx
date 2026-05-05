@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DocumentChecklistModal } from './DocumentChecklistModal';
 import { useState } from 'react';
+import { useStorageImageUrl } from '@/hooks/useStorageImageUrl';
 
 interface AdmissaoCardProps {
   admissao: Admissao;
@@ -38,6 +39,7 @@ interface AdmissaoCardProps {
 
 export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCardProps) {
   const [showChecklist, setShowChecklist] = useState(false);
+  const resolvedPhotoUrl = useStorageImageUrl(admissao.fotoUrl, 'documentos');
   const { dadosPessoais, dadosProfissionais, documentos = [], status, historicoAprovacao = [], dataCriacao } = admissao;
 
   const documentosEnviados = documentos.filter(d => d.status !== 'pendente').length;
@@ -65,7 +67,7 @@ export function AdmissaoCard({ admissao, onView, onEdit, onDelete }: AdmissaoCar
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12 border-2 border-primary/20">
-            <AvatarImage src={admissao.fotoUrl} />
+            <AvatarImage src={resolvedPhotoUrl || ''} />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials}
             </AvatarFallback>

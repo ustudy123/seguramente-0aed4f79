@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
 import { DocumentoStatus, AdmissaoStatus } from "@/types/admissao";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 
 export default function CompletarCadastro() {
   const { token } = useParams();
@@ -22,6 +23,7 @@ export default function CompletarCadastro() {
   const [documentos, setDocumentos] = useState<DocumentoAdmissaoExtended[]>([]);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resolvedPhotoUrl = useStorageImageUrl(colaborador?.foto_url, "documentos");
 
   useEffect(() => {
     if (token) {
@@ -87,21 +89,14 @@ export default function CompletarCadastro() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("documentos")
-        .getPublicUrl(filePath);
-
-      // Force cache bust for the display
-      const publicUrlWithBust = `${publicUrl}?t=${Date.now()}`;
-
       const { error: updateError } = await supabase
         .from("admissoes")
-        .update({ foto_url: publicUrlWithBust })
+        .update({ foto_url: filePath })
         .eq("id", colaborador.id);
 
       if (updateError) throw updateError;
 
-      setColaborador({ ...colaborador, foto_url: publicUrlWithBust });
+      setColaborador({ ...colaborador, foto_url: filePath });
       toast.success("Foto atualizada com sucesso!");
     } catch (error) {
       console.error("Erro no upload da foto:", error);
@@ -258,7 +253,7 @@ export default function CompletarCadastro() {
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <Avatar className="h-32 w-32 border-4 border-primary/10">
-              <AvatarImage src={colaborador.foto_url} />
+              <AvatarImage src={resolvedPhotoUrl || ""} />
               <AvatarFallback className="bg-primary/5 text-primary text-4xl">
                 <User className="h-16 w-16" />
               </AvatarFallback>
