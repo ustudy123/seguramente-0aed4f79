@@ -106,7 +106,6 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
   const { cargos } = useCargos();
   const { filiais } = useFiliais();
   const { empresaAtivaId } = useEmpresaAtiva();
-  const resolvedPhotoUrl = useStorageImageUrl(form.watch("foto_url"), "documentos");
 
   const isEditMode = !!colaborador;
 
@@ -136,6 +135,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       foto_url: "",
     },
   });
+  const resolvedPhotoUrl = useStorageImageUrl(form.watch("foto_url"), "documentos");
 
   useEffect(() => {
     if (open && colaborador) {
