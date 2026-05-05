@@ -97,6 +97,8 @@ interface ColaboradorFormProps {
 
 export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: ColaboradorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenantId, user } = useAuth();
   const queryClient = useQueryClient();
   const { departamentos } = useDepartamentos();
