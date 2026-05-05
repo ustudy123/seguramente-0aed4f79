@@ -65,7 +65,7 @@ interface OrgTreeProps {
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
-  onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
+  onEdit?: (id: string, updates: Partial<EstrategiaOrganograma>) => void;
 }
 
 export function OrgTree({ roots, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgTreeProps) {
