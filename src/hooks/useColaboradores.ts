@@ -15,6 +15,7 @@ export interface Colaborador {
   data_admissao: string | null;
   empresa_id?: string | null;
   gestor_imediato?: string | null;
+  foto_url?: string | null;
 }
 
 interface UseColaboradoresOptions {
