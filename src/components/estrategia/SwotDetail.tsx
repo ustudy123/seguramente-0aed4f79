@@ -38,6 +38,12 @@ const CLASSIFICACAO_DESCRICOES: Record<SwotClassificacao, string> = {
   mercado: "Fatores externos como concorrência, regulação e tendências.",
 };
 
+const IMPACTO_DESCRICOES: Record<SwotImpacto, string> = {
+  baixo: "Pouca influência no resultado geral; fácil de gerenciar ou contornar.",
+  medio: "Influência moderada; exige atenção e planejamento para lidar com os efeitos.",
+  alto: "Influência crítica; pode determinar o sucesso ou fracasso da estratégia.",
+};
+
 const QUADRANTE_DICAS: Record<SwotTipo, { descricao: string; exemplos: string[] }> = {
   forca: {
     descricao: "Vantagens internas que diferenciam a organização.",
