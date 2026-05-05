@@ -99,6 +99,17 @@ function OcupanteItem({ colab, isSelected, onToggle }: {
   );
 }
 
+
+function AvatarNode({ fotoUrl, size = "default" }: { fotoUrl?: string | null; size?: "small" | "default" }) {
+  const resolvedUrl = useStorageImageUrl(fotoUrl);
+  return (
+    <Avatar className={cn(size === "small" ? "w-6 h-6" : "w-7 h-7")}>
+      <AvatarImage src={resolvedUrl || undefined} />
+      <AvatarFallback><User className={size === "small" ? "w-3 h-3" : "w-3.5 h-3.5"} /></AvatarFallback>
+    </Avatar>
+  );
+}
+
 export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { organograma, loadingOrganograma, createOrgNode, deleteOrgNode, updateOrgNode } = useEstrategia(escopo);
   const { cargos, createCargo } = useCargos();
