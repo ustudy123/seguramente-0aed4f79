@@ -100,7 +100,6 @@ export function PlanoAcaoList({ acoes, isLoading, emptyMessage = "Nenhuma ação
     return new Date(acao.prazo) < new Date();
   };
 
-  return (
   const sortedAcoes = [...acoes].sort((a, b) => {
     const scoreA = a.pontuacao_gut ?? 0;
     const scoreB = b.pontuacao_gut ?? 0;
