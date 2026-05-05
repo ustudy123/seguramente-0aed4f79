@@ -5571,6 +5571,7 @@ export type Database = {
       estrategia_organograma: {
         Row: {
           cargo_id: string | null
+          colaborador_id: string | null
           created_at: string
           departamento_id: string | null
           empresa_id: string | null
@@ -5586,6 +5587,7 @@ export type Database = {
         }
         Insert: {
           cargo_id?: string | null
+          colaborador_id?: string | null
           created_at?: string
           departamento_id?: string | null
           empresa_id?: string | null
@@ -5601,6 +5603,7 @@ export type Database = {
         }
         Update: {
           cargo_id?: string | null
+          colaborador_id?: string | null
           created_at?: string
           departamento_id?: string | null
           empresa_id?: string | null
@@ -5620,6 +5623,13 @@ export type Database = {
             columns: ["cargo_id"]
             isOneToOne: false
             referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_organograma_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "admissoes"
             referencedColumns: ["id"]
           },
           {
