@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEstrategia } from "@/hooks/useEstrategia";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { EstrategiaSwot, SwotTipo, SwotClassificacao, SwotImpacto } from "@/types/estrategia";
 import { SWOT_TIPO_LABELS, SWOT_CLASSIFICACAO_LABELS, SWOT_IMPACTO_LABELS } from "@/types/estrategia";
