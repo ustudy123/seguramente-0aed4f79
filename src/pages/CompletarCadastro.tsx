@@ -196,7 +196,7 @@ export default function CompletarCadastro() {
         .from("admissoes")
         .update({ 
           onboarding_status: 'em_analise',
-          status: 'em_analise'
+          status: 'em_analise' as AdmissaoStatus
         })
         .eq("id", colaborador.id);
 
