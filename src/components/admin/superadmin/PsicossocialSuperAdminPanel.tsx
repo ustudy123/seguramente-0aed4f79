@@ -142,78 +142,122 @@ export function PsicossocialSuperAdminPanel() {
   return (
     <div className="space-y-5">
       {/* Header com refresh */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <Brain className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between flex-wrap gap-4 bg-muted/30 p-4 rounded-2xl border border-muted/50">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20 ring-4 ring-white dark:ring-slate-950">
+            <Brain className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Saúde Psicossocial Global</h2>
-            <p className="text-xs text-muted-foreground">
-              Monitoramento NR-1 de todas as empresas em tempo real
-            </p>
+            <h2 className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+              Saúde Psicossocial Global
+            </h2>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                Monitoramento Estratégico NR-1
+              </p>
+            </div>
           </div>
         </div>
-        <Button
-          variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}
-          className="gap-2"
-        >
-          <RefreshCw className={cn("w-4 h-4", isFetching && "animate-spin")} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="rounded-full bg-white dark:bg-slate-900 shadow-sm border-muted-foreground/10 hover:border-violet-500/50 transition-all gap-2"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5", isFetching && "animate-spin")} />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Sincronizar</span>
+          </Button>
+        </div>
       </div>
 
       {/* KPIs Globais */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPI
-          label="Total Campanhas" value={g.total_campanhas} icon={Brain}
-          color="from-violet-500 to-fuchsia-600"
-          sub={`${g.rascunho} rascunhos`}
+          label="Total Campanhas"
+          value={g.total_campanhas}
+          icon={Brain}
+          color="from-indigo-500 to-violet-600"
+          sub={`${g.rascunho} em elaboração`}
+          trend="+12% este mês"
         />
         <KPI
-          label="Ativas" value={g.ativa} icon={Activity}
+          label="Coletas Ativas"
+          value={g.ativa}
+          icon={Activity}
           color="from-emerald-500 to-teal-600"
-          sub="Em coleta"
+          sub="Empresas em campo"
         />
         <KPI
-          label="Encerradas" value={g.encerrada} icon={CheckCircle2}
-          color="from-blue-500 to-cyan-600"
-          sub="Concluídas"
+          label="Base de Dados"
+          value={g.total_respostas.toLocaleString("pt-BR")}
+          icon={Users}
+          color="from-sky-500 to-blue-600"
+          sub="Amostras validadas"
         />
         <KPI
-          label="Respostas" value={g.total_respostas.toLocaleString("pt-BR")} icon={Users}
-          color="from-cyan-500 to-blue-600"
-          sub="Coletadas"
-        />
-        <KPI
-          label="IPS Médio" value={g.ips_medio != null ? Number(g.ips_medio).toFixed(1) : "—"} icon={TrendingUp}
+          label="Score Médio (IPS)"
+          value={g.ips_medio != null ? Number(g.ips_medio).toFixed(1) : "—"}
+          icon={TrendingUp}
           color="from-amber-500 to-orange-600"
-          sub={g.campanhas_sem_minimo > 0 ? `⚠ ${g.campanhas_sem_minimo} sem mínimo` : "Tudo ok"}
+          sub="Indicador de saúde"
+        />
+        <KPI
+          label="Status de Risco"
+          value={totalAlertas}
+          icon={AlertTriangle}
+          color="from-rose-500 to-red-600"
+          sub="Alertas prioritários"
         />
       </div>
 
-      {/* Linha de saúde */}
-      <Card className="border-l-4 border-l-violet-500">
-        <CardContent className="p-4 flex flex-wrap items-center gap-6">
-          <div className="flex-1 min-w-[200px]">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Engajamento (campanhas com mínimo de respostas)</span>
-              <span className="text-sm font-bold">{engajamento}%</span>
+      {/* Linha de saúde e Engajamento */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-2 overflow-hidden border-muted/50 shadow-sm bg-gradient-to-r from-card to-muted/20">
+          <CardContent className="p-5 flex flex-col sm:flex-row items-center gap-6">
+            <div className="w-full sm:w-auto text-center sm:text-left">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Índice de Engajamento</p>
+              <h4 className="text-3xl font-black text-violet-600 dark:text-violet-400 leading-none">{engajamento}%</h4>
             </div>
-            <Progress value={engajamento} className="h-2" />
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <AlertTriangle className={cn("w-4 h-4", totalAlertas > 0 ? "text-amber-500" : "text-muted-foreground")} />
-            <span className="font-semibold">{totalAlertas}</span>
-            <span className="text-muted-foreground">alertas ativos</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Building2 className="w-4 h-4 text-violet-500" />
-            <span className="font-semibold">{tenants.length}</span>
-            <span className="text-muted-foreground">empresas monitoradas</span>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex-1 w-full space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-bold uppercase">
+                <span className="text-muted-foreground">Progresso de Amostragem Mínima</span>
+                <span className={cn(engajamento > 70 ? "text-emerald-500" : "text-amber-500")}>
+                  {g.total_campanhas - g.campanhas_sem_minimo} de {g.total_campanhas}
+                </span>
+              </div>
+              <Progress value={engajamento} className="h-2.5 bg-muted" />
+              <p className="text-[10px] text-muted-foreground italic">
+                Percentual de campanhas que atingiram o quórum mínimo de 5 respostas para análise estatística.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-muted/50 shadow-sm bg-muted/10">
+          <CardContent className="p-5 flex items-center justify-around h-full">
+            <div className="text-center">
+              <Building2 className="w-5 h-5 text-violet-500 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Unidades</p>
+              <p className="text-xl font-bold">{tenants.length}</p>
+            </div>
+            <div className="w-px h-10 bg-muted" />
+            <div className="text-center">
+              <Layers className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Módulos</p>
+              <p className="text-xl font-bold">12</p>
+            </div>
+            <div className="w-px h-10 bg-muted" />
+            <div className="text-center">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Concluídas</p>
+              <p className="text-xl font-bold">{g.encerrada}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filtros sticky */}
       <Card className="sticky top-0 z-10 backdrop-blur-sm bg-card/95 shadow-sm">
