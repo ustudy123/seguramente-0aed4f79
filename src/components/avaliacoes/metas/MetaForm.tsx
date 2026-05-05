@@ -75,12 +75,12 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
 
   const tipo = form.watch("tipo");
   const periodo = form.watch("periodo");
-  const data_inicio = form.watch("data_inicio");
+  const data_fim = form.watch("data_fim");
 
-  // Efeito para identificar automaticamente o trimestre e ano pelas datas
+  // Efeito para identificar automaticamente o trimestre e ano pela data fim
   useEffect(() => {
-    if (data_inicio) {
-      const date = new Date(data_inicio + "T00:00:00");
+    if (data_fim) {
+      const date = new Date(data_fim + "T00:00:00");
       if (!isNaN(date.getTime())) {
         const mes = date.getMonth();
         const trimestreSugerido = Math.floor(mes / 3) + 1;
@@ -92,7 +92,7 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
         form.setValue("ano", anoSugerido);
       }
     }
-  }, [data_inicio, periodo, form]);
+  }, [data_fim, periodo, form]);
 
   const onSubmit = async (data: FormData) => {
     const colaborador = colaboradores.find(c => c.id === data.colaborador_id);
