@@ -90,8 +90,6 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
       colaborador_nome: colaborador?.nome_completo,
       departamento_id: data.departamento_id,
       departamento_nome: departamento?.nome,
-      data_inicio: data.data_inicio,
-      data_fim: data.data_fim,
       peso: data.peso,
     };
 
