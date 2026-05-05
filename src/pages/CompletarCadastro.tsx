@@ -10,7 +10,7 @@ import { User, Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentUpload } from "@/components/admissao/DocumentUpload";
 import { DocumentoAdmissaoExtended } from "@/components/admissao/DocumentUpload";
-import { DocumentoStatus } from "@/types/admissao";
+import { DocumentoStatus, AdmissaoStatus } from "@/types/admissao";
 
 export default function CompletarCadastro() {
   const { token } = useParams();
