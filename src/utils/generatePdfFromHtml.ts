@@ -401,15 +401,43 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
           currentY = PDF_MARGIN_MM;
           continue;
         }
-        const sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
+        let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
+        if (y + sliceH < canvas.height) {
+          const scanStart = Math.max(24, sliceH - 120);
+          const scanEnd = Math.max(scanStart, sliceH - 8);
+          let bestBreak = -1;
+
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          if (ctx) {
+            for (let row = scanEnd; row >= scanStart; row -= 2) {
+              const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
+              let inkPixels = 0;
+
+              for (let i = 0; i < imageData.length; i += 4) {
+                const alpha = imageData[i + 3];
+                const isDark = imageData[i] < 245 || imageData[i + 1] < 245 || imageData[i + 2] < 245;
+                if (alpha > 10 && isDark) inkPixels += 1;
+              }
+
+              if (inkPixels < canvas.width * 0.015) {
+                bestBreak = row;
+                break;
+              }
+            }
+          }
+
+          if (bestBreak > 0) {
+            sliceH = bestBreak;
+          }
+        }
         const slice = document.createElement("canvas");
         slice.width = canvas.width;
         slice.height = sliceH;
-        const ctx = slice.getContext("2d");
-        if (!ctx) throw new Error("Falha ao preparar slice.");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, slice.width, slice.height);
-        ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const sliceCtx = slice.getContext("2d");
+        if (!sliceCtx) throw new Error("Falha ao preparar slice.");
+        sliceCtx.fillStyle = "#ffffff";
+        sliceCtx.fillRect(0, 0, slice.width, slice.height);
+        sliceCtx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
         const sliceMm = (sliceH * contentWidth) / canvas.width;
         addCanvasAsImage(slice, sliceMm);
         y += sliceH;
