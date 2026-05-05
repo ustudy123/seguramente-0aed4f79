@@ -40,9 +40,14 @@ export function PontoRelatoriosTab() {
   const endDate = new Date(year, month, 0);
 
   const { data: espelhos = [] } = useEspelhos(competencia);
-  const { data: pontosDiarios = [] } = usePontoDiario(startDate); // Note: usePontoDiario might need adjustment for range, but let's check its implementation again
+  const { data: registrosMes = [], isLoading: carregandoRegistros } = usePontoDiario(startDate, endDate);
 
-  const formatMinutos = (min: number) => `${Math.floor(Math.abs(min) / 60)}h ${Math.abs(min) % 60}min`;
+  const formatMinutos = (min: number) => {
+    const totalMinutos = Math.abs(min || 0);
+    const h = Math.floor(totalMinutos / 60);
+    const m = totalMinutos % 60;
+    return `${h}h ${m.toString().padStart(2, "0")}min`;
+  };
 
   const gerarRelatorio = async () => {
     setGerando(true);
