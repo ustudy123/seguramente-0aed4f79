@@ -230,13 +230,10 @@ export const WORKFLOW_STATUS_CORES: Record<MetaWorkflowStatus, string> = {
   cancelada: 'bg-red-200 text-red-800',
 };
 
-export const INDICADOR_TIPO_LABELS: Record<IndicadorTipo, string> = {
+export const INDICADOR_TIPO_LABELS: Record<string, string> = {
   quantitativo: 'Quantitativo',
   qualitativo: 'Qualitativo',
-  percentual: 'Percentual',
   financeiro: 'Financeiro',
-  marco: 'Marco',
-  hibrido: 'Híbrido',
 };
 
 export const INDICADOR_DIRECAO_LABELS: Record<IndicadorDirecao, string> = {
