@@ -177,6 +177,25 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     }
     const titulo = form.titulo.trim();
 
+    if (editingNode) {
+      updateOrgNode.mutate({
+        id: editingNode.id,
+        titulo,
+        nome_ocupante: form.nome_ocupante || undefined,
+        colaborador_id: form.colaborador_id || undefined,
+        parent_id: form.parent_id || undefined,
+        cargo_id: form.cargo_id || undefined,
+      }, {
+        onSuccess: () => {
+          toast.success("Posição atualizada");
+          setShowNew(false);
+          setEditingNode(null);
+        },
+        onError: () => toast.error("Erro ao atualizar posição")
+      });
+      return;
+    }
+
     if (!form.cargo_id) {
       const exists = cargosAtivos.some((c: any) => c.nome.toLowerCase() === titulo.toLowerCase());
       if (!exists) {
