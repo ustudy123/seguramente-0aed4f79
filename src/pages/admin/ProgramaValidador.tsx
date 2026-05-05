@@ -477,7 +477,11 @@ function DetalheCliente({
   });
 
   const copiarLink = (token: string) => {
-    const url = `${window.location.origin}/contrato-assinatura/${token}`;
+    const customDomain = "https://youreyes.com.br";
+    const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+      ? window.location.origin 
+      : customDomain;
+    const url = `${baseUrl}/contrato-assinatura/${token}`;
     navigator.clipboard.writeText(url).then(() => toast.success('Link copiado!'));
   };
 
