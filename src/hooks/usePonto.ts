@@ -110,26 +110,31 @@ export function usePonto() {
   const queryClient = useQueryClient();
 
   // Buscar ponto diário por data
-  const usePontoDiario = (data: Date) => {
+  const usePontoDiario = (data: Date, dataFim?: Date) => {
     const dataStr = format(data, "yyyy-MM-dd");
+    const dataFimStr = dataFim ? format(dataFim, "yyyy-MM-dd") : null;
+    
     return useQuery({
-      queryKey: ["ponto-diario", tenantId, dataStr, empresaAtivaId],
+      queryKey: ["ponto-diario", tenantId, dataStr, dataFimStr, empresaAtivaId],
       queryFn: async (): Promise<PontoDiario[]> => {
         if (!tenantId) return [];
         
-        // Se houver empresa ativa selecionada, filtramos por ela.
-        // Se não houver (ex: SuperAdmin ou empresa não definida no registro), 
-        // buscamos registros onde empresa_id é null ou corresponde ao tenant.
         let query = fromTable("ponto_diario")
           .select("*")
-          .eq("tenant_id", tenantId)
-          .eq("data", dataStr);
+          .eq("tenant_id", tenantId);
+
+        if (dataFimStr) {
+          query = query.gte("data", dataStr).lte("data", dataFimStr);
+        } else {
+          query = query.eq("data", dataStr);
+        }
 
         if (empresaAtivaId) {
           query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
         }
 
         const { data: pontos, error } = await query
+          .order("data")
           .order("colaborador_nome") as { data: PontoDiario[] | null; error: Error | null };
         
         if (error) throw error;
