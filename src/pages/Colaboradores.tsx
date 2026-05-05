@@ -112,6 +112,8 @@ interface ColaboradorExtendido {
   cpf: string;
   filial: string | null;
   tipo_contrato: string | null;
+  onboarding_token: string | null;
+  onboarding_status: string | null;
 }
 
 const statusStyles: Record<string, string> = {
