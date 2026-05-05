@@ -80,13 +80,7 @@ function OcupanteItem({ colab, isSelected, onToggle }: {
   isSelected: boolean;
   onToggle: () => void;
 }) {
-  // Colaborador photo resolved inside component to avoid hook rules in loops/conditionals
-  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
-  const resolvedPhoto = useStorageImageUrl(colab.foto_url);
-
-  useEffect(() => {
-    setFotoUrl(resolvedPhoto);
-  }, [resolvedPhoto]);
+  const fotoUrl = useStorageImageUrl(colab.foto_url);
   
   return (
     <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
