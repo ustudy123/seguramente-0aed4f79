@@ -140,7 +140,7 @@ export function PontoRelatoriosTab() {
   const gerarPDF = () => {
     const doc = new jsPDF();
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
-    const logoColor = [15, 23, 42]; // Slate 900
+    const logoColor: [number, number, number] = [15, 23, 42]; // Slate 900
 
     // Header logic
     const addHeader = (data: any) => {
