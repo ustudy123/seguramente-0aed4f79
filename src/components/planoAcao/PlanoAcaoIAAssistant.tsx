@@ -202,19 +202,7 @@ export function PlanoAcaoIAAssistant({
             exit={{ height: 0, opacity: 0 }}
           >
             <CardContent className="space-y-4 relative z-10">
-              {/* Tabs */}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => { setActiveTab("sugerir"); limpar(); setSelectedIndexes(new Set()); setCreatedIndexes(new Set()); }}
-                  className={activeTab === "sugerir" 
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0 shadow-lg shadow-indigo-500/25 hover:from-indigo-600 hover:to-violet-700" 
-                    : "bg-white/5 text-indigo-200 border border-white/10 hover:bg-white/10 hover:text-white"}
-                >
-                  <Lightbulb className="h-4 w-4 mr-1" />
-                  Sugerir Ações
-                </Button>
-              </div>
+              {/* Tabs removidas */}
 
               {/* Input Forms */}
               {activeTab === "sugerir" && (
