@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, ShieldAlert, Zap, Clock } from "lucide-react";
+import { Loader2, ShieldAlert, Zap, Clock, User, Camera, Trash2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +66,7 @@ const formSchema = z.object({
   gestor_imediato: z.string().optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
   matricula_esocial: z.string().optional(),
+  foto_url: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -83,6 +85,7 @@ export interface ColaboradorEditData {
   gestor_imediato: string | null;
   data_admissao: string | null;
   matricula_esocial?: string | null;
+  foto_url?: string | null;
 }
 
 interface ColaboradorFormProps {
@@ -94,6 +97,8 @@ interface ColaboradorFormProps {
 
 export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: ColaboradorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenantId, user } = useAuth();
   const queryClient = useQueryClient();
   const { departamentos } = useDepartamentos();
@@ -126,6 +131,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
       gestor_imediato: "",
       data_admissao: new Date().toISOString().split("T")[0],
       matricula_esocial: "",
+      foto_url: "",
     },
   });
 
@@ -144,6 +150,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: colaborador.gestor_imediato || "",
         data_admissao: colaborador.data_admissao || "",
         matricula_esocial: colaborador.matricula_esocial || "",
+        foto_url: colaborador.foto_url || "",
       });
     } else if (open && !colaborador) {
       form.reset({
@@ -159,9 +166,38 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         gestor_imediato: "",
         data_admissao: new Date().toISOString().split("T")[0],
         matricula_esocial: "",
+        foto_url: "",
       });
     }
   }, [open, colaborador, form]);
+
+  const handleUploadPhoto = async (file: File) => {
+    if (!tenantId) return;
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${tenantId}/${Math.random()}.${fileExt}`;
+      const filePath = `colaboradores/fotos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documentos")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("documentos")
+        .getPublicUrl(filePath);
+
+      form.setValue("foto_url", publicUrl);
+      toast.success("Foto carregada com sucesso!");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao carregar foto");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!tenantId) {
@@ -186,6 +222,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
             gestor_imediato: data.gestor_imediato || null,
             data_admissao: data.data_admissao,
             matricula_esocial: data.matricula_esocial || null,
+            foto_url: data.foto_url || null,
           })
           .eq("id", colaborador.id)
           .eq("tenant_id", tenantId);
@@ -217,6 +254,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           status: "concluido",
           criado_por: user?.id,
           matricula_esocial: data.matricula_esocial || null,
+          foto_url: data.foto_url || null,
         }).select("id").single();
 
         if (error) {
@@ -282,6 +320,51 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+
+              {/* Foto */}
+              <div className="flex flex-col items-center justify-center space-y-3 pb-4">
+                <Avatar className="h-24 w-24 border-2 border-primary/10">
+                  <AvatarImage src={form.watch("foto_url") || ""} />
+                  <AvatarFallback className="bg-primary/5 text-primary text-2xl">
+                    <User className="h-12 w-12" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    {form.watch("foto_url") ? "Alterar Foto" : "Adicionar Foto"}
+                  </Button>
+                  {form.watch("foto_url") && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => form.setValue("foto_url", "")}
+                      disabled={isUploading}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadPhoto(file);
+                  }}
+                />
+              </div>
 
               {/* Nome */}
               <FormField

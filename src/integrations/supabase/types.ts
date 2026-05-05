@@ -678,6 +678,7 @@ export type Database = {
           exame_admissional_resultado: string | null
           exame_admissional_validade: string | null
           filial: string | null
+          foto_url: string | null
           genero: string | null
           gestor_imediato: string | null
           id: string
@@ -693,6 +694,8 @@ export type Database = {
           nome_pai: string | null
           numero: string | null
           observacoes_desligamento: string | null
+          onboarding_status: string | null
+          onboarding_token: string | null
           resultado_exame_demissional: string | null
           rg: string | null
           salario: number | null
@@ -750,6 +753,7 @@ export type Database = {
           exame_admissional_resultado?: string | null
           exame_admissional_validade?: string | null
           filial?: string | null
+          foto_url?: string | null
           genero?: string | null
           gestor_imediato?: string | null
           id?: string
@@ -765,6 +769,8 @@ export type Database = {
           nome_pai?: string | null
           numero?: string | null
           observacoes_desligamento?: string | null
+          onboarding_status?: string | null
+          onboarding_token?: string | null
           resultado_exame_demissional?: string | null
           rg?: string | null
           salario?: number | null
@@ -822,6 +828,7 @@ export type Database = {
           exame_admissional_resultado?: string | null
           exame_admissional_validade?: string | null
           filial?: string | null
+          foto_url?: string | null
           genero?: string | null
           gestor_imediato?: string | null
           id?: string
@@ -837,6 +844,8 @@ export type Database = {
           nome_pai?: string | null
           numero?: string | null
           observacoes_desligamento?: string | null
+          onboarding_status?: string | null
+          onboarding_token?: string | null
           resultado_exame_demissional?: string | null
           rg?: string | null
           salario?: number | null

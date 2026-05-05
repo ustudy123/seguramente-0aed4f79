@@ -24,11 +24,14 @@ import {
   FolderOpen,
   UserPlus,
   AlertCircle,
+  Share2,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -112,6 +115,9 @@ interface ColaboradorExtendido {
   cpf: string;
   filial: string | null;
   tipo_contrato: string | null;
+  onboarding_token: string | null;
+  onboarding_status: string | null;
+  foto_url: string | null;
 }
 
 const statusStyles: Record<string, string> = {
@@ -221,7 +227,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
       if (!tenantId) return [];
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url")
         .eq("tenant_id", tenantId)
         .eq("status", "concluido");
 
@@ -330,6 +336,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
+                    <AvatarImage src={colab.foto_url || ""} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                       {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </AvatarFallback>
@@ -354,6 +361,14 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                       <DropdownMenuItem onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
                         <FolderOpen className="w-4 h-4 mr-2" />
                         Documentos
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        const link = `${window.location.origin}/completar-cadastro/${colab.onboarding_token}`;
+                        navigator.clipboard.writeText(link);
+                        toast.success("Link copiado para a área de transferência!");
+                      }}>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copiar Link de Cadastro
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive" onClick={() => {
@@ -423,6 +438,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
+                        <AvatarImage src={colab.foto_url || ""} />
                         <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                           {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
                         </AvatarFallback>
@@ -460,6 +476,14 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
                         <DropdownMenuItem onClick={() => navigate(`/documentos?colaborador=${colab.id}`)}>
                           <FolderOpen className="w-4 h-4 mr-2" />
                           Documentos
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          const link = `${window.location.origin}/completar-cadastro/${colab.onboarding_token}`;
+                          navigator.clipboard.writeText(link);
+                          toast.success("Link copiado para a área de transferência!");
+                        }}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiar Link de Cadastro
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => {
@@ -883,6 +907,8 @@ function AdmissoesTab() {
       dataAcao: w.data_acao ? new Date(w.data_acao) : undefined, observacao: w.observacao || undefined,
     })),
     dataCriacao: new Date(a.created_at), dataAtualizacao: new Date(a.updated_at), criadoPor: a.criado_por || "",
+    fotoUrl: a.foto_url || undefined,
+    onboarding_status: a.onboarding_status || undefined,
   }));
 
   const selectedAdmissaoFormatted = selectedId ? admissoesFormatted.find(a => a.id === selectedId) : null;
@@ -962,7 +988,7 @@ function DesligadosTab() {
       if (!tenantId) return [];
       let query = supabase
         .from("admissoes")
-        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato")
+        .select("id, nome_completo, cpf, cargo, departamento, email, celular, filial, data_admissao, status, tipo_contrato, onboarding_token, onboarding_status, foto_url")
         .eq("tenant_id", tenantId)
         .eq("status", "desligado");
 

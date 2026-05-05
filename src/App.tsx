@@ -86,6 +86,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
+const CompletarCadastro = lazy(() => import("./pages/CompletarCadastro"));
 const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard"));
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
@@ -132,6 +133,7 @@ const App = () => (
               <Route path="/experiencia-assinatura/:token" element={<ExperienciaAssinatura />} />
               <Route path="/os/:token" element={<OrdemServicoAssinatura />} />
               <Route path="/aceite-documento/:token" element={<AceiteDocumento />} />
+              <Route path="/completar-cadastro/:token" element={<CompletarCadastro />} />
               <Route path="/onboarding-cliente/:token" element={<OnboardingCliente />} />
               <Route path="/ativar-conta" element={<AtivarConta />} />
               <Route path="/lp" element={<LandingPage />} />
