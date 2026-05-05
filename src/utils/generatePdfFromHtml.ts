@@ -132,13 +132,17 @@ export function normalizeManualHtml(html: string) {
     appendInlineStyle(
       heading,
       [
-        "margin-bottom: 8px !important",
+        "margin-bottom: 12px !important",
         "margin-top: 16px !important",
+        "line-height: 1.25 !important",
+        "padding-bottom: 6px !important",
         "page-break-after: avoid !important",
         "break-after: avoid !important",
         "page-break-inside: avoid !important",
         "break-inside: avoid !important",
         "background-clip: padding-box !important",
+        "overflow-wrap: break-word !important",
+        "word-wrap: break-word !important",
         "-webkit-print-color-adjust: exact",
         "print-color-adjust: exact",
       ].join(";") + ";"
@@ -344,7 +348,7 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const contentWidth = pdfWidth - PDF_MARGIN_MM * 2;
-    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2;
+    const usableHeight = pdfHeight - PDF_MARGIN_MM * 2 - 3; // 3mm bottom safety to avoid clipping descenders
     const SECTION_GAP_MM = 2;
 
     const sections = collectSections(contentDiv);
@@ -389,12 +393,10 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     };
 
     const sliceTallCanvas = (canvas: HTMLCanvasElement) => {
-      // Section is taller than a full page — split it across pages at pixel
-      // boundaries (last resort; only triggered for oversize blocks).
       const pageHeightPx = Math.floor((canvas.width * usableHeight) / contentWidth);
       let y = 0;
       while (y < canvas.height) {
-        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY - 3;
         const availablePx = Math.floor((canvas.width * remainingMm) / contentWidth);
         if (availablePx < 60) {
           pdf.addPage();
@@ -403,13 +405,17 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
         }
         let sliceH = Math.min(pageHeightPx, availablePx, canvas.height - y);
         if (y + sliceH < canvas.height) {
-          const scanStart = Math.max(24, sliceH - 120);
+          const scanStart = Math.max(24, sliceH - 160);
           const scanEnd = Math.max(scanStart, sliceH - 8);
           let bestBreak = -1;
 
           const ctx = canvas.getContext("2d", { willReadFrequently: true });
           if (ctx) {
-            for (let row = scanEnd; row >= scanStart; row -= 2) {
+            // Look for a band of consecutive blank rows (not just one), so we
+            // don't break in the middle of descenders.
+            const requiredBlankBand = 6;
+            let blankRun = 0;
+            for (let row = scanEnd; row >= scanStart; row -= 1) {
               const imageData = ctx.getImageData(0, y + row, canvas.width, 1).data;
               let inkPixels = 0;
 
@@ -419,9 +425,14 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
                 if (alpha > 10 && isDark) inkPixels += 1;
               }
 
-              if (inkPixels < canvas.width * 0.015) {
-                bestBreak = row;
-                break;
+              if (inkPixels < canvas.width * 0.01) {
+                blankRun += 1;
+                if (blankRun >= requiredBlankBand) {
+                  bestBreak = row + requiredBlankBand; // break at top of blank band
+                  break;
+                }
+              } else {
+                blankRun = 0;
               }
             }
           }
