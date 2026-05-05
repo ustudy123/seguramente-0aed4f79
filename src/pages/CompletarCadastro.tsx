@@ -80,7 +80,10 @@ export default function CompletarCadastro() {
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -88,9 +91,12 @@ export default function CompletarCadastro() {
         .from("documentos")
         .getPublicUrl(filePath);
 
+      // Force cache bust for the display
+      const publicUrlWithBust = `${publicUrl}?t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from("admissoes")
-        .update({ foto_url: publicUrl })
+        .update({ foto_url: publicUrlWithBust })
         .eq("id", colaborador.id);
 
       if (updateError) throw updateError;
