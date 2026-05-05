@@ -84,12 +84,14 @@ export function PsicossocialSuperAdminPanel() {
   const campanhas = data?.campanhas || [];
 
   const filteredCampanhas = useMemo(() => {
-    return campanhas.filter((c: any) => {
-      if (filterTenant !== "all" && c.tenant_id !== filterTenant) return false;
-      if (filterStatus !== "all" && c.status !== filterStatus) return false;
-      if (search && !`${c.nome} ${c.tenant_nome}`.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
+    return campanhas
+      .filter((c: any) => {
+        if (filterTenant !== "all" && c.tenant_id !== filterTenant) return false;
+        if (filterStatus !== "all" && c.status !== filterStatus) return false;
+        if (search && !`${c.nome} ${c.tenant_nome}`.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      })
+      .sort((a: any, b: any) => (b.total_respostas || 0) - (a.total_respostas || 0));
   }, [campanhas, filterTenant, filterStatus, search]);
 
   const filteredTenants = useMemo(() => {
