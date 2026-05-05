@@ -33,7 +33,7 @@ export function MetaDetailDialog({ meta, open, onOpenChange }: MetaDetailDialogP
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline">
                   {PERIODO_LABELS[meta.periodo]} {meta.ano}
-                  {meta.trimestre && ` Trimestre ${meta.trimestre}`}
+                  {meta.trimestre && ` Q${meta.trimestre}`}
                 </Badge>
                 <Badge variant="secondary">
                   {CATEGORIA_META_LABELS[(meta.categoria_meta as CategoriaMetaMEA) || "operacional"]}
