@@ -7,7 +7,7 @@ interface GeneratePdfFromHtmlOptions {
 }
 
 const PDF_MARGIN_MM = 15;
-const PDF_RENDER_SCALE = 3;
+const PDF_RENDER_SCALE = 2; // Reduced from 3 to avoid memory issues
 const LONG_TEXT_MIN_LENGTH = 80;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -122,18 +122,22 @@ export function normalizeManualHtml(html: string) {
  * non-splittable units. Falls back to all direct children of the body.
  */
 function collectSections(root: HTMLElement): HTMLElement[] {
+  if (!root || !root.children || root.children.length === 0) return [];
+  
   const direct = Array.from(root.children) as HTMLElement[];
   const sections: HTMLElement[] = [];
 
-  const isHeading = (el: HTMLElement) => /^H[1-6]$/i.test(el.tagName);
+  const isHeading = (el: HTMLElement) => el && el.tagName && /^H[1-6]$/i.test(el.tagName);
 
   for (const child of direct) {
+    if (!child) continue;
+    
     // If a top-level wrapper contains many block children, descend one level
     // so that headings and paragraphs become individual sections.
-    const grandChildren = Array.from(child.children) as HTMLElement[];
+    const grandChildren = Array.from(child.children || []) as HTMLElement[];
     const looksLikeWrapper =
       grandChildren.length > 3 &&
-      grandChildren.some((g) => isHeading(g) || ["P", "DIV", "SECTION", "TABLE", "UL", "OL"].includes(g.tagName));
+      grandChildren.some((g) => g && (isHeading(g) || ["P", "DIV", "SECTION", "TABLE", "UL", "OL"].includes(g.tagName)));
 
     if (looksLikeWrapper && child.tagName !== "TABLE") {
       sections.push(...grandChildren);
@@ -148,15 +152,17 @@ function collectSections(root: HTMLElement): HTMLElement[] {
   let i = 0;
   while (i < sections.length) {
     const current = sections[i];
-    if (isHeading(current) && i + 1 < sections.length) {
+    if (current && isHeading(current) && i + 1 < sections.length) {
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "background:#ffffff;";
+      wrapper.style.cssText = "background:#ffffff; width: 100%; box-sizing: border-box;";
       wrapper.appendChild(current.cloneNode(true));
       wrapper.appendChild(sections[i + 1].cloneNode(true));
       grouped.push(wrapper);
       i += 2;
-    } else {
+    } else if (current) {
       grouped.push(current);
+      i += 1;
+    } else {
       i += 1;
     }
   }
@@ -187,7 +193,8 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     "left: -10000px",
     "width: 794px",
     "background: #ffffff",
-    "opacity: 0",
+    "visibility: visible",
+    "display: block",
     "pointer-events: none",
     "z-index: -9999",
     "overflow: visible",
@@ -215,10 +222,22 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
   document.body.appendChild(container);
 
   try {
+    // Ensure all images are loaded
+    const images = container.querySelectorAll("img");
+    await Promise.all(
+      Array.from(images).map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
-    await wait(500);
+    await wait(800);
 
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -236,17 +255,30 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       if (needsMount) {
         element.style.width = "754px"; // 794 - 2*20 padding
         element.style.boxSizing = "border-box";
+        element.style.background = "#ffffff";
         container.appendChild(element);
-        await wait(50);
+        // Wait a bit longer for layout and images
+        await wait(100);
       }
-      const canvas = await html2canvas(element, {
-        scale: PDF_RENDER_SCALE,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      if (needsMount) container.removeChild(element);
-      return canvas;
+      
+      try {
+        const canvas = await html2canvas(element, {
+          scale: PDF_RENDER_SCALE,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+        });
+        if (needsMount) container.removeChild(element);
+        return canvas;
+      } catch (err) {
+        if (needsMount && element.parentElement === container) {
+          container.removeChild(element);
+        }
+        throw err;
+      }
     };
 
     const addCanvasAsImage = (canvas: HTMLCanvasElement, heightMm: number) => {
@@ -288,26 +320,35 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
     };
 
     for (const section of sections) {
-      const canvas = await renderElementToCanvas(section);
-      if (!canvas.width || !canvas.height) continue;
-
-      const heightMm = (canvas.height * contentWidth) / canvas.width;
-      const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
-
-      if (heightMm <= usableHeight) {
-        // Fits on a page — push to next page if needed
-        if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
-          pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+      try {
+        const canvas = await renderElementToCanvas(section);
+        if (!canvas || !canvas.width || !canvas.height) {
+          console.warn("Seção ignorada por canvas inválido:", section.tagName);
+          continue;
         }
-        addCanvasAsImage(canvas, heightMm);
-      } else {
-        // Section is too tall for a single page — slice safely
-        if (currentY > PDF_MARGIN_MM) {
-          pdf.addPage();
-          currentY = PDF_MARGIN_MM;
+
+        const heightMm = (canvas.height * contentWidth) / canvas.width;
+        const remainingMm = pdfHeight - PDF_MARGIN_MM - currentY;
+
+        if (heightMm <= usableHeight) {
+          // Fits on a page — push to next page if needed
+          if (heightMm > remainingMm && currentY > PDF_MARGIN_MM) {
+            pdf.addPage();
+            currentY = PDF_MARGIN_MM;
+          }
+          addCanvasAsImage(canvas, heightMm);
+        } else {
+          // Section is too tall for a single page — slice safely
+          if (currentY > PDF_MARGIN_MM) {
+            pdf.addPage();
+            currentY = PDF_MARGIN_MM;
+          }
+          sliceTallCanvas(canvas);
         }
-        sliceTallCanvas(canvas);
+      } catch (sectionErr) {
+        console.error("Erro ao renderizar seção do manual:", sectionErr);
+        // Continue to next section instead of failing everything
+        continue;
       }
     }
 

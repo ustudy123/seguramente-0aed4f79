@@ -65,7 +65,7 @@ export function ManualCulturaModal({ open, onClose, html, loading, onPdfGenerate
                     ) : (
                       <FileText className="w-4 h-4 mr-1" />
                     )}
-                    {pdfLoading ? "Gerando PDF..." : "Baixar PDF"}
+                    {pdfLoading ? "Renderizando páginas..." : "Baixar PDF"}
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDownloadHtml}>
                     <Download className="w-4 h-4 mr-1" /> Baixar HTML
