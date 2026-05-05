@@ -37,7 +37,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "YourEyes"
-const SENDER_DOMAIN = "notify.seguramente.app.br" // Lovable Email sender (configured no painel; trocar exige reconfigurar o email domain)
+const SENDER_DOMAIN = "notify.youreyes.com.br"
 const ROOT_DOMAIN = "youreyes.com.br"
 const FROM_DOMAIN = "youreyes.com.br" // Domain shown in From address
 
