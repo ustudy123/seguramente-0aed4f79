@@ -317,120 +317,171 @@ export function PsicossocialSuperAdminPanel() {
         </TabsList>
 
         {/* === VISÃO GERAL === */}
-        <TabsContent value="overview" className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-violet-500" />
-                  Top 10 Empresas por Respostas
-                </CardTitle>
+        <TabsContent value="overview" className="space-y-4 mt-6">
+          {/* Nova Seção de Gráficos Revisitada */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Gráfico de Ranking - Principal */}
+            <Card className="lg:col-span-8 border-muted/50 shadow-sm overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 bg-muted/20">
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tighter">
+                    <TrendingUp className="w-4 h-4 text-violet-500" />
+                    Ranking de Engajamento por Unidade
+                  </CardTitle>
+                  <CardDescription className="text-[11px]">Empresas com maior volume de respostas validadas no período.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-background text-[10px] font-bold">TOP 10</Badge>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {tenantsRanking.length === 0 ? (
                   <EmptyState message="Sem dados de respostas ainda" />
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={tenantsRanking} layout="vertical" margin={{ left: 90, right: 16 }}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
-                      <XAxis type="number" tick={{ fontSize: 11 }} />
-                      <YAxis
-                        type="category" dataKey="tenant_nome" tick={{ fontSize: 10 }}
-                        width={130}
-                        tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + "…" : v}
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={tenantsRanking} margin={{ left: 10, right: 20, top: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(263 70% 60%)" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="hsl(263 70% 45%)" stopOpacity={1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.4} />
+                      <XAxis 
+                        dataKey="tenant_nome" 
+                        tick={{ fontSize: 9, fontWeight: 600 }} 
+                        axisLine={false}
+                        tickLine={false}
+                        interval={0}
+                        tickFormatter={(v: string) => v.length > 10 ? v.slice(0, 10) + ".." : v}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 10, fontWeight: 500 }} 
+                        axisLine={false}
+                        tickLine={false}
                       />
                       <Tooltip
-                        contentStyle={{ borderRadius: 8, fontSize: 12 }}
-                        formatter={(v) => [v, "Respostas"]}
+                        cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold' }}
                       />
-                      <Bar dataKey="total_respostas" fill="hsl(263 70% 60%)" radius={[0, 6, 6, 0]} />
+                      <Bar 
+                        dataKey="total_respostas" 
+                        fill="url(#barGradient)" 
+                        radius={[6, 6, 0, 0]} 
+                        barSize={32}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            {/* Gráfico de Pizza - Perfil de Risco */}
+            <Card className="lg:col-span-4 border-muted/50 shadow-sm overflow-hidden flex flex-col">
+              <CardHeader className="pb-4 bg-muted/20">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tighter">
                   <Brain className="w-4 h-4 text-violet-500" />
-                  Distribuição IPS por Classificação
+                  Perfil de Risco (IPS)
                 </CardTitle>
+                <CardDescription className="text-[11px]">Distribuição global por classificação de saúde.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 flex flex-col items-center justify-center pt-2">
                 {classifData.length === 0 ? (
                   <EmptyState message="Sem campanhas calculadas" />
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={classifData} dataKey="value" nameKey="name"
-                        cx="50%" cy="50%" outerRadius={100} innerRadius={50}
-                        paddingAngle={2}
-                        label={(e: any) => `${e.value}`}
-                      >
-                        {classifData.map((d, i) => (
-                          <Cell key={i} fill={CLASSIF_COLORS[d.key] || "#94a3b8"} stroke="hsl(var(--background))" strokeWidth={2} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie
+                          data={classifData} dataKey="value" nameKey="name"
+                          cx="50%" cy="50%" outerRadius={85} innerRadius={60}
+                          paddingAngle={4}
+                          stroke="none"
+                        >
+                          {classifData.map((d, i) => (
+                            <Cell key={i} fill={CLASSIF_COLORS[d.key] || "#94a3b8"} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: 12, border: 'none', fontSize: 11, fontWeight: 'bold' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full mt-2 px-2">
+                      {classifData.map((d, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CLASSIF_COLORS[d.key] }} />
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">{d.name}</span>
+                          <span className="text-[10px] font-black ml-auto">{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick alerts list */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Empresas que precisam de atenção
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const alertList = tenants
-                  .filter((t: any) => (t.alertas || 0) > 0 || (t.ativas_sem_minimo || 0) > 0)
-                  .sort((a: any, b: any) => (b.alertas + b.ativas_sem_minimo) - (a.alertas + a.ativas_sem_minimo))
-                  .slice(0, 8);
-                if (alertList.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-sm text-muted-foreground flex flex-col items-center gap-2">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                      Tudo certo! Nenhuma empresa com alertas críticos.
-                    </div>
-                  );
-                }
+          {/* Quick alerts list - Agora como um Grid Compacto */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                Unidades com Críticas Prioritárias
+              </h3>
+              <Button variant="link" className="text-[10px] h-auto p-0 font-bold uppercase" onClick={() => setActiveTab("empresas")}>
+                Ver Todas <ChevronRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+            {(() => {
+              const alertList = tenants
+                .filter((t: any) => (t.alertas || 0) > 0 || (t.ativas_sem_minimo || 0) > 0)
+                .sort((a: any, b: any) => (b.alertas + b.ativas_sem_minimo) - (a.alertas + a.ativas_sem_minimo))
+                .slice(0, 4);
+              if (alertList.length === 0) {
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {alertList.map((t: any) => (
-                      <button
-                        key={t.tenant_id}
-                        onClick={() => drillTenant(t.tenant_id)}
-                        className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-amber-500/5 hover:border-amber-500/40 transition-all text-left"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-medium text-sm truncate">{t.tenant_nome}</div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                            {t.ativas_sem_minimo > 0 && (
-                              <span className="text-amber-600">{t.ativas_sem_minimo} sem mínimo</span>
-                            )}
-                            {t.alertas > 0 && (
-                              <span className="text-red-600">{t.alertas} alertas</span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
-                      </button>
-                    ))}
-                  </div>
+                  <Card className="border-dashed bg-muted/5">
+                    <CardContent className="py-8 text-center text-xs text-muted-foreground font-medium italic">
+                      Monitoramento estável. Nenhuma intercorrência crítica detectada.
+                    </CardContent>
+                  </Card>
                 );
-              })()}
-            </CardContent>
-          </Card>
+              }
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {alertList.map((t: any) => (
+                    <Card 
+                      key={t.tenant_id}
+                      className="group cursor-pointer hover:border-amber-500/50 hover:shadow-md transition-all border-muted/50"
+                      onClick={() => drillTenant(t.tenant_id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                            <AlertCircle className="w-4 h-4 text-amber-600" />
+                          </div>
+                          <Badge variant="outline" className="text-[9px] font-black tracking-tighter border-amber-500/20 text-amber-700 bg-amber-500/5 uppercase">Atenção</Badge>
+                        </div>
+                        <h4 className="text-xs font-black truncate uppercase mb-1">{t.tenant_nome}</h4>
+                        <div className="flex flex-col gap-1">
+                          {t.ativas_sem_minimo > 0 && (
+                            <div className="flex items-center justify-between text-[10px] font-bold text-amber-600">
+                              <span>QUÓRUM INSUFICIENTE</span>
+                              <span>{t.ativas_sem_minimo}</span>
+                            </div>
+                          )}
+                          {t.alertas > 0 && (
+                            <div className="flex items-center justify-between text-[10px] font-bold text-red-600">
+                              <span>ALERTAS DE RISCO</span>
+                              <span>{t.alertas}</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
         </TabsContent>
 
         {/* === EMPRESAS === */}
