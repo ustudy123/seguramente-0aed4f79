@@ -336,8 +336,40 @@ export function MetaFormModule({
           </div>
           <div className="grid md:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label>Unidade</Label>
-              <Input value={form.indicador_unidade || ""} onChange={e => set("indicador_unidade", e.target.value)} placeholder="%, R$, un" />
+              <Label>Unidade de Medida</Label>
+              <Select 
+                value={form.indicador_unidade || ""} 
+                onValueChange={v => set("indicador_unidade", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {form.indicador_tipo === "quantitativo" && (
+                    <>
+                      <SelectItem value="%">Porcentagem (%)</SelectItem>
+                      <SelectItem value="un">Unidades (un)</SelectItem>
+                      <SelectItem value="qtd">Quantidade (qtd)</SelectItem>
+                      <SelectItem value="horas">Horas</SelectItem>
+                      <SelectItem value="dias">Dias</SelectItem>
+                    </>
+                  )}
+                  {form.indicador_tipo === "financeiro" && (
+                    <>
+                      <SelectItem value="R$">Real (R$)</SelectItem>
+                      <SelectItem value="US$">Dólar (US$)</SelectItem>
+                      <SelectItem value="€">Euro (€)</SelectItem>
+                    </>
+                  )}
+                  {form.indicador_tipo === "qualitativo" && (
+                    <>
+                      <SelectItem value="nivel">Nível (1-5)</SelectItem>
+                      <SelectItem value="status">Status</SelectItem>
+                      <SelectItem value="conceito">Conceito (A-E)</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Valor Alvo</Label>
