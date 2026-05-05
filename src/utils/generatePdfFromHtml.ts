@@ -193,6 +193,13 @@ function collectSections(root: HTMLElement): HTMLElement[] {
   const sections: HTMLElement[] = [];
   const isHeading = (el: HTMLElement) => el && el.tagName && /^H[1-6]$/i.test(el.tagName);
 
+  const isStandaloneRenderable = (node: HTMLElement) => {
+    if (["STYLE", "SCRIPT"].includes(node.tagName)) return false;
+    if (isHeading(node)) return true;
+    if (["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(node.tagName)) return true;
+    return hasVisualContainerStyle(node);
+  };
+
   // Deeply collect all significant elements
   const walk = (node: HTMLElement) => {
     const children = Array.from(node.children) as HTMLElement[];
@@ -203,9 +210,9 @@ function collectSections(root: HTMLElement): HTMLElement[] {
       isHeading(c) || ["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(c.tagName)
     );
 
-    if (isGenericContainer && (hasManyBlockChildren || node === root)) {
+    if (isGenericContainer && (hasManyBlockChildren || node === root) && !hasVisualContainerStyle(node)) {
       children.forEach(walk);
-    } else if (node.tagName !== "STYLE" && node.tagName !== "SCRIPT") {
+    } else if (isStandaloneRenderable(node)) {
       sections.push(node);
     }
   };
@@ -232,7 +239,7 @@ function collectSections(root: HTMLElement): HTMLElement[] {
       
       // Keep adding elements until we hit another heading or a large block
       let j = i + 1;
-      while (j < sections.length && j < i + 4) { // Limit grouping to prevent massive blocks
+      while (j < sections.length && j < i + 5) { // Limit grouping to prevent massive blocks
         const next = sections[j];
         if (isHeading(next)) break;
         
@@ -244,7 +251,7 @@ function collectSections(root: HTMLElement): HTMLElement[] {
         wrapper.appendChild(nextClone);
         
         // Stop if it's a large block (like a table)
-        if (["TABLE", "UL", "OL"].includes(next.tagName)) {
+        if (["TABLE", "UL", "OL"].includes(next.tagName) || hasVisualContainerStyle(next)) {
           j++;
           break;
         }
