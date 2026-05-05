@@ -139,6 +139,18 @@ const Documentos = () => {
     getSignedUrl,
   } = useDocumentos();
 
+  // Reset estado ao trocar empresa ativa (evita exibir pasta/upload da empresa anterior)
+  useEffect(() => {
+    setSelectedPasta(null);
+    setShowUploadForm(false);
+    setUploadForPastaId(undefined);
+    setNovaVersaoDocId(undefined);
+    setShowCreatePasta(false);
+    setCreatePastaParentId(null);
+    setCreatePastaParentNome(null);
+    setSearchTerm("");
+  }, [empresaAtivaId]);
+
   // Abrir pasta de colaborador se especificado na URL
   useEffect(() => {
     if (colaboradorIdFromUrl && tree.length > 0) {
