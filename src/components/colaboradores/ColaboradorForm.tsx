@@ -171,6 +171,34 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
     }
   }, [open, colaborador, form]);
 
+  const handleUploadPhoto = async (file: File) => {
+    if (!tenantId) return;
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${tenantId}/${Math.random()}.${fileExt}`;
+      const filePath = `colaboradores/fotos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documentos")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("documentos")
+        .getPublicUrl(filePath);
+
+      form.setValue("foto_url", publicUrl);
+      toast.success("Foto carregada com sucesso!");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao carregar foto");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     if (!tenantId) {
       toast.error("Erro: Tenant não identificado");
