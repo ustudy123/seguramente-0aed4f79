@@ -281,16 +281,7 @@ export function MetaFormModule({
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Data Início</Label>
-          <Input type="date" value={form.data_inicio || ""} onChange={e => set("data_inicio", e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Data Fim</Label>
-          <Input type="date" value={form.data_fim || ""} onChange={e => set("data_fim", e.target.value)} />
-        </div>
-      </div>
+      {/* Datas removidas conforme solicitação */}
 
       {/* Indicador */}
       <Card>
