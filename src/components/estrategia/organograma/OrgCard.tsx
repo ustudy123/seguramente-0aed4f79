@@ -193,7 +193,7 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEd
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir posição?</AlertDialogTitle>
             <AlertDialogDescription>
-              A posição "{node.titulo}"{node.nome_ocupante ? ` (${node.nome_ocupante})` : ""} será removida permanentemente.
+              A posição "{node.titulo}"{ocupanteNome ? ` (${ocupanteNome})` : ""} será removida permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
