@@ -181,7 +181,10 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
 
       const { error: uploadError } = await supabase.storage
         .from("documentos")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -189,7 +192,10 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
         .from("documentos")
         .getPublicUrl(filePath);
 
-      form.setValue("foto_url", publicUrl);
+      // Force cache bust
+      const publicUrlWithBust = `${publicUrl}?t=${Date.now()}`;
+
+      form.setValue("foto_url", publicUrlWithBust);
       toast.success("Foto carregada com sucesso!");
     } catch (error) {
       console.error("Erro no upload:", error);
