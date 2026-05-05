@@ -198,17 +198,24 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
     queryKey: ["estrategia_organograma", tenantId, scopeKey, isGrupo],
     queryFn: async () => {
       if (!tenantId) return [];
-      let q = fromTable("estrategia_organograma").select("*").eq("tenant_id", tenantId).order("ordem");
+      let q = fromTable("estrategia_organograma").select(`
+        *,
+        colaborador:colaborador_id (
+          id,
+          nome_completo,
+          foto_url
+        )
+      `).eq("tenant_id", tenantId).order("ordem");
       q = applyScope(q);
-      const { data, error } = await q as { data: EstrategiaOrganograma[] | null; error: Error | null };
+      const { data, error } = await q as { data: any[] | null; error: Error | null };
       if (error) throw error;
-      return (data || []) as EstrategiaOrganograma[];
+      return (data || []) as (EstrategiaOrganograma & { colaborador?: any })[];
     },
     enabled: !!tenantId,
   });
 
   const createOrgNode = useMutation({
-    mutationFn: async (input: { titulo: string; parent_id?: string; cargo_id?: string; departamento_id?: string; nome_ocupante?: string; tipo?: string }) => {
+    mutationFn: async (input: { titulo: string; parent_id?: string; cargo_id?: string; departamento_id?: string; nome_ocupante?: string; colaborador_id?: string; tipo?: string }) => {
       const { data, error } = await fromTable("estrategia_organograma").insert({ ...input, tenant_id: tenantId, ...scopePayload() } as any).select().single() as { data: EstrategiaOrganograma | null; error: Error | null };
       if (error) throw error;
       return data;
