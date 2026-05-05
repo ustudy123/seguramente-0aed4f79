@@ -38,38 +38,10 @@ type TenantPlan = Database['public']['Enums']['tenant_plan'];
    const { data: tenants = [], isLoading: isLoadingTenants } = useQuery({
      queryKey: ['superadmin', 'tenants'],
      queryFn: async (): Promise<TenantWithStats[]> => {
-       const { data: tenantsData, error } = await supabase
-         .from('tenants')
-         .select('*')
-         .order('created_at', { ascending: false });
- 
-       if (error) throw error;
- 
-       // Buscar contagem de usuários e colaboradores por tenant
-       const tenantsWithStats = await Promise.all(
-         (tenantsData || []).map(async (tenant) => {
-           const [usersCount, colabsCount] = await Promise.all([
-             supabase
-               .from('profiles')
-               .select('id', { count: 'exact', head: true })
-               .eq('tenant_id', tenant.id),
-             supabase
-               .from('admissoes')
-               .select('id', { count: 'exact', head: true })
-               .eq('tenant_id', tenant.id)
-               .eq('status', 'concluido')
-           ]);
- 
-           return {
-             ...tenant,
-             total_usuarios: usersCount.count || 0,
-             total_colaboradores: colabsCount.count || 0,
-           };
-         })
-       );
- 
-       return tenantsWithStats;
-     },
+        const { data, error } = await supabase.rpc('superadmin_tenants_list' as any);
+        if (error) throw error;
+        return ((data as unknown) as TenantWithStats[]) || [];
+      },
      enabled: isSuperAdmin,
    });
  
