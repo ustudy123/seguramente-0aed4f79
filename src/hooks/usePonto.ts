@@ -99,7 +99,7 @@ export const STATUS_PONTO_CONFIG: Record<string, { label: string; color: string 
   regular: { label: "Regular", color: "bg-green-100 text-green-800" },
   atraso: { label: "Atraso", color: "bg-yellow-100 text-yellow-800" },
   falta: { label: "Falta", color: "bg-red-100 text-red-800" },
-  incompleto: { label: "Incompleto", color: "bg-orange-100 text-orange-800" },
+  incompleto: { label: "Entrada Registrada", color: "bg-orange-100 text-orange-800" },
   ajuste_pendente: { label: "Ajuste Pendente", color: "bg-blue-100 text-blue-800" },
   justificado: { label: "Justificado", color: "bg-purple-100 text-purple-800" },
 };
