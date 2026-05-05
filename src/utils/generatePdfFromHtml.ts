@@ -236,17 +236,30 @@ export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfF
       if (needsMount) {
         element.style.width = "754px"; // 794 - 2*20 padding
         element.style.boxSizing = "border-box";
+        element.style.background = "#ffffff";
         container.appendChild(element);
-        await wait(50);
+        // Wait a bit longer for layout and images
+        await wait(100);
       }
-      const canvas = await html2canvas(element, {
-        scale: PDF_RENDER_SCALE,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      if (needsMount) container.removeChild(element);
-      return canvas;
+      
+      try {
+        const canvas = await html2canvas(element, {
+          scale: PDF_RENDER_SCALE,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+        });
+        if (needsMount) container.removeChild(element);
+        return canvas;
+      } catch (err) {
+        if (needsMount && element.parentElement === container) {
+          container.removeChild(element);
+        }
+        throw err;
+      }
     };
 
     const addCanvasAsImage = (canvas: HTMLCanvasElement, heightMm: number) => {
