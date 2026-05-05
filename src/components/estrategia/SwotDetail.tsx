@@ -114,20 +114,39 @@ export function SwotDetail({ swot, onBack }: Props) {
           </AlertDialog>
         </div>
 
-        {/* Legenda das classificações */}
+        {/* Legenda das classificações e impactos */}
         <Card className="border-dashed">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="w-4 h-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">Classificações</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {(Object.entries(CLASSIFICACAO_DESCRICOES) as [SwotClassificacao, string][]).map(([key, desc]) => (
-                <div key={key} className="flex items-start gap-2 p-2 rounded-md bg-muted/40">
-                  <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5">{SWOT_CLASSIFICACAO_LABELS[key]}</Badge>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+          <CardContent className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Info className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Classificações</p>
                 </div>
-              ))}
+                <div className="space-y-2">
+                  {(Object.entries(CLASSIFICACAO_DESCRICOES) as [SwotClassificacao, string][]).map(([key, desc]) => (
+                    <div key={key} className="flex items-start gap-2 p-2 rounded-md bg-muted/40">
+                      <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5 w-20 justify-center">{SWOT_CLASSIFICACAO_LABELS[key]}</Badge>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Grau de Impacto</p>
+                </div>
+                <div className="space-y-2">
+                  {(Object.entries(IMPACTO_DESCRICOES) as [SwotImpacto, string][]).map(([key, desc]) => (
+                    <div key={key} className="flex items-start gap-2 p-2 rounded-md bg-muted/40">
+                      <Badge className={cn("text-[10px] shrink-0 mt-0.5 w-20 justify-center", IMPACTO_COLORS[key])}>{SWOT_IMPACTO_LABELS[key]}</Badge>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
