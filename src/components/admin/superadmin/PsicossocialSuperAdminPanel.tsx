@@ -600,44 +600,50 @@ export function PsicossocialSuperAdminPanel() {
                   {filteredCampanhas.slice(0, 200).map((c: any) => {
                     const semMinimo = (c.total_respostas || 0) < 5 && c.status === "ativa";
                     return (
-                      <TableRow key={c.id} className={cn(semMinimo && "bg-amber-500/[0.03]")}>
-                        <TableCell className="font-medium max-w-xs">
-                          <div className="truncate text-sm">{c.nome}</div>
+                      <TableRow key={c.id} className={cn("hover:bg-muted/20 transition-colors", semMinimo && "bg-amber-500/[0.03]")}>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate text-xs font-black uppercase tracking-tight">{c.nome}</div>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[180px] truncate">
+                        <TableCell className="text-[10px] font-bold text-muted-foreground uppercase max-w-[150px] truncate">
                           {c.tenant_nome || "—"}
                         </TableCell>
                         <TableCell>
-                          <div className="text-xs font-medium">{c.tipo || "—"}</div>
-                          <div className="text-[11px] text-muted-foreground">{c.instrumento || "—"}</div>
+                          <div className="text-[10px] font-black uppercase">{c.tipo || "—"}</div>
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase">{c.instrumento || "—"}</div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={STATUS_STYLE[c.status] || ""}>{c.status}</Badge>
+                          <Badge variant="outline" className={cn("text-[9px] uppercase font-black px-1.5 h-5", STATUS_STYLE[c.status] || "")}>
+                            {c.status}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-center">
                           <span className={cn(
-                            "font-mono text-sm",
-                            semMinimo && "text-amber-600 font-semibold",
+                            "font-black text-xs tabular-nums",
+                            semMinimo ? "text-amber-600" : "text-foreground",
                           )}>
                             {c.total_respostas || 0}
                           </span>
                           {semMinimo && (
-                            <div className="text-[10px] text-amber-600">⚠ &lt; 5</div>
+                            <div className="text-[9px] font-black text-amber-600 uppercase">Abaixo do mín</div>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
                           {c.ips_score != null ? (
                             <Badge
-                              variant="outline" className="font-mono"
-                              style={{ color: CLASSIF_COLORS[c.ips_classificacao], borderColor: CLASSIF_COLORS[c.ips_classificacao] + "60" }}
+                              variant="outline" className="font-black text-[10px] min-w-[30px] justify-center"
+                              style={{ 
+                                color: CLASSIF_COLORS[c.ips_classificacao], 
+                                borderColor: CLASSIF_COLORS[c.ips_classificacao] + "40",
+                                backgroundColor: CLASSIF_COLORS[c.ips_classificacao] + "10"
+                              }}
                             >
                               {Number(c.ips_score).toFixed(0)}
                             </Badge>
-                          ) : <span className="text-muted-foreground text-xs">—</span>}
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        <TableCell className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
                           {c.data_inicio ? format(new Date(c.data_inicio), "dd/MM/yy") : "—"}
-                          {" → "}
+                          <span className="mx-1 text-muted-foreground/30">/</span>
                           {c.data_fim ? format(new Date(c.data_fim), "dd/MM/yy") : "—"}
                         </TableCell>
                       </TableRow>
