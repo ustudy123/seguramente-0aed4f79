@@ -104,6 +104,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const { cargos, createCargo } = useCargos();
   const { colaboradores } = useColaboradores();
   const [showNew, setShowNew] = useState(false);
+  const [editingNode, setEditingNode] = useState<EstrategiaOrganograma | null>(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [cargoOpen, setCargoOpen] = useState(false);
   const [ocupanteSearch, setOcupanteSearch] = useState("");
