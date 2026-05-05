@@ -19,16 +19,61 @@ export function PontoSelfieCapture({ selfieFile, selfiePreview, onChange }: Pont
   const startCamera = useCallback(async () => {
     try {
       setError(null);
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 },
-      });
+
+      // Verificar contexto seguro (HTTPS é obrigatório, exceto localhost)
+      if (typeof window !== "undefined" && !window.isSecureContext) {
+        setError("A câmera só funciona em conexões seguras (HTTPS). Abra o link diretamente no navegador.");
+        return;
+      }
+
+      // Verificar suporte do navegador
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError(
+          "Seu navegador não suporta acesso à câmera. Abra este link no Chrome, Safari ou Firefox (não use o navegador interno do WhatsApp/Instagram)."
+        );
+        return;
+      }
+
+      // Tentar com facingMode primeiro; se falhar, tentar sem restrição
+      let mediaStream: MediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false,
+        });
+      } catch (innerErr: any) {
+        if (innerErr?.name === "OverconstrainedError" || innerErr?.name === "NotFoundError") {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } else {
+          throw innerErr;
+        }
+      }
+
       setStream(mediaStream);
       setIsCameraOpen(true);
       setTimeout(() => {
-        if (videoRef.current) videoRef.current.srcObject = mediaStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          videoRef.current.play().catch(() => {});
+        }
       }, 100);
-    } catch {
-      setError("Não foi possível acessar a câmera. Verifique as permissões.");
+    } catch (err: any) {
+      console.error("[PontoSelfieCapture] getUserMedia error:", err);
+      const name = err?.name || "";
+      let msg = "Não foi possível acessar a câmera.";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        msg =
+          "Permissão da câmera negada. Toque no cadeado/ícone na barra de endereço e permita o uso da câmera, depois tente novamente.";
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        msg = "Nenhuma câmera foi encontrada neste dispositivo.";
+      } else if (name === "NotReadableError" || name === "TrackStartError") {
+        msg = "A câmera está sendo usada por outro aplicativo. Feche os outros apps e tente novamente.";
+      } else if (name === "SecurityError") {
+        msg = "Acesso à câmera bloqueado por questões de segurança. Abra o link em uma aba normal do navegador.";
+      } else if (err?.message) {
+        msg = `Não foi possível acessar a câmera: ${err.message}`;
+      }
+      setError(msg);
     }
   }, []);
 
