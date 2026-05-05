@@ -147,33 +147,63 @@ export function PontoRelatoriosTab() {
 
     let y = 40;
 
+    const useEspelhoData = espelhos.length > 0;
+    const sourceData = useEspelhoData ? espelhos : null;
+
     if (tipoRelatorio === "espelho") {
-      espelhos.forEach(e => {
-        if (y > 270) { pdf.addPage(); y = 20; }
-        pdf.setFontSize(11);
-        pdf.text(e.colaborador_nome, 20, y); y += 6;
-        pdf.setFontSize(9);
-        pdf.text(`CPF: ${e.colaborador_cpf} | HE 50%: ${formatMinutos(e.total_horas_extras_50_minutos)} | HE 100%: ${formatMinutos(e.total_horas_extras_100_minutos)} | Faltas: ${e.total_faltas} | Status: ${e.status}`, 20, y);
-        y += 10;
-      });
+      if (useEspelhoData) {
+        espelhos.forEach(e => {
+          if (y > 270) { pdf.addPage(); y = 20; }
+          pdf.setFontSize(11);
+          pdf.text(e.colaborador_nome, 20, y); y += 6;
+          pdf.setFontSize(9);
+          pdf.text(`CPF: ${e.colaborador_cpf} | HE 50%: ${formatMinutos(e.total_horas_extras_50_minutos)} | HE 100%: ${formatMinutos(e.total_horas_extras_100_minutos)} | Faltas: ${e.total_faltas} | Status: ${e.status}`, 20, y);
+          y += 10;
+        });
+      } else {
+        // Fallback to daily records if no closed mirror exists
+        const colabs = Array.from(new Set(registrosMes.map(r => r.colaborador_cpf)));
+        colabs.forEach(cpf => {
+          const r = registrosMes.find(reg => reg.colaborador_cpf === cpf);
+          if (!r) return;
+          if (y > 270) { pdf.addPage(); y = 20; }
+          pdf.setFontSize(11);
+          pdf.text(r.colaborador_nome, 20, y); y += 6;
+          pdf.setFontSize(9);
+          const regsColab = registrosMes.filter(reg => reg.colaborador_cpf === cpf);
+          const totalFaltas = regsColab.filter(reg => reg.status === "falta").length;
+          pdf.text(`CPF: ${cpf} | Registros no período: ${regsColab.length} | Faltas: ${totalFaltas} (Período não fechado)`, 20, y);
+          y += 10;
+        });
+        if (colabs.length === 0) pdf.text("Nenhum registro encontrado para esta competência.", 20, y);
+      }
     } else if (tipoRelatorio === "horas_extras") {
       const heColabs = espelhos.filter(e => e.total_horas_extras_50_minutos > 0 || e.total_horas_extras_100_minutos > 0);
-      heColabs.forEach(e => {
-        if (y > 270) { pdf.addPage(); y = 20; }
-        pdf.setFontSize(10);
-        pdf.text(`${e.colaborador_nome}: HE 50% = ${formatMinutos(e.total_horas_extras_50_minutos)}, HE 100% = ${formatMinutos(e.total_horas_extras_100_minutos)}`, 20, y);
-        y += 8;
-      });
-      if (heColabs.length === 0) pdf.text("Nenhuma hora extra registrada.", 20, y);
+      if (heColabs.length > 0) {
+        heColabs.forEach(e => {
+          if (y > 270) { pdf.addPage(); y = 20; }
+          pdf.setFontSize(10);
+          pdf.text(`${e.colaborador_nome}: HE 50% = ${formatMinutos(e.total_horas_extras_50_minutos)}, HE 100% = ${formatMinutos(e.total_horas_extras_100_minutos)}`, 20, y);
+          y += 8;
+        });
+      } else {
+        pdf.text("Nenhuma hora extra registrada (é necessário realizar o fechamento do período).", 20, y);
+      }
     } else if (tipoRelatorio === "absenteismo") {
-      const faltosos = espelhos.filter(e => e.total_faltas > 0);
-      faltosos.forEach(e => {
-        if (y > 270) { pdf.addPage(); y = 20; }
-        pdf.setFontSize(10);
-        pdf.text(`${e.colaborador_nome}: ${e.total_faltas} falta(s), Atrasos: ${formatMinutos(e.total_atrasos_minutos)}`, 20, y);
-        y += 8;
-      });
-      if (faltosos.length === 0) pdf.text("Nenhuma falta registrada.", 20, y);
+      const faltosos = registrosMes.filter(r => r.status === "falta" || r.status === "atraso");
+      if (faltosos.length > 0) {
+        const colabs = Array.from(new Set(faltosos.map(f => f.colaborador_nome)));
+        colabs.forEach(nome => {
+          if (y > 270) { pdf.addPage(); y = 20; }
+          const totalFaltas = faltosos.filter(f => f.colaborador_nome === nome && f.status === "falta").length;
+          const totalAtrasos = faltosos.filter(f => f.colaborador_nome === nome && f.status === "atraso").length;
+          pdf.setFontSize(10);
+          pdf.text(`${nome}: ${totalFaltas} falta(s), ${totalAtrasos} atraso(s)`, 20, y);
+          y += 8;
+        });
+      } else {
+        pdf.text("Nenhuma falta ou atraso registrado no período.", 20, y);
+      }
     }
 
     pdf.save(`${titulo.replace(/\s/g, "_")}_${competencia}.pdf`);
@@ -184,7 +214,7 @@ export function PontoRelatoriosTab() {
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
     let dados: any[] = [];
 
-    if (tipoRelatorio === "espelho" || tipoRelatorio === "horas_extras" || tipoRelatorio === "absenteismo") {
+    if (espelhos.length > 0) {
       dados = espelhos.map(e => ({
         Colaborador: e.colaborador_nome,
         CPF: e.colaborador_cpf,
@@ -194,6 +224,18 @@ export function PontoRelatoriosTab() {
         Faltas: e.total_faltas,
         "Atrasos (min)": e.total_atrasos_minutos,
         Status: e.status,
+      }));
+    } else {
+      dados = registrosMes.map(r => ({
+        Data: r.data,
+        Colaborador: r.colaborador_nome,
+        CPF: r.colaborador_cpf,
+        Entrada: r.entrada,
+        "Saída Almoço": r.saida_almoco,
+        "Retorno Almoço": r.retorno_almoco,
+        Saída: r.saida,
+        Status: r.status,
+        Observação: r.observacao
       }));
     }
 
