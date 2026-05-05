@@ -132,7 +132,7 @@ export default function CompletarCadastro() {
           arquivo_url: filePath, // Store path for private access
           arquivo_nome: file.name,
           arquivo_tamanho: file.size,
-          status: 'enviado',
+          status: 'enviado' as DocumentoStatus,
           data_envio: new Date().toISOString()
         })
         .eq("id", documentoId);
