@@ -514,50 +514,50 @@ export function PsicossocialSuperAdminPanel() {
                       <TableRow
                         key={t.tenant_id}
                         className={cn(
-                          "cursor-pointer transition-colors",
-                          hasAlert && "bg-amber-500/[0.03] hover:bg-amber-500/[0.07]",
+                          "cursor-pointer transition-all hover:translate-x-0.5",
+                          hasAlert ? "bg-amber-500/[0.03] hover:bg-amber-500/[0.07]" : "hover:bg-muted/30",
                         )}
                         onClick={() => drillTenant(t.tenant_id)}
                       >
                         <TableCell>
-                          <div className="font-medium text-sm">{t.tenant_nome}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {t.colaboradores_ativos} colab. · {t.plano}
+                          <div className="font-black text-xs uppercase tracking-tight">{t.tenant_nome}</div>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5">
+                            {t.colaboradores_ativos} COLABS · {t.plano}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center font-semibold">{t.total_campanhas}</TableCell>
+                        <TableCell className="text-center font-black text-sm">{t.total_campanhas}</TableCell>
                         <TableCell className="text-center">
                           {t.ativas > 0 ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">{t.ativas}</Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-black text-[10px]">{t.ativas}</Badge>
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
-                        <TableCell className="text-center font-mono text-sm">{t.total_respostas}</TableCell>
+                        <TableCell className="text-center font-black text-xs tabular-nums">{t.total_respostas}</TableCell>
                         <TableCell className="text-center">
                           {t.ips_medio != null ? (
-                            <Badge variant="outline" className="font-mono">{Number(t.ips_medio).toFixed(1)}</Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                            <Badge variant="outline" className="font-black text-[10px] border-violet-500/30 text-violet-600 bg-violet-500/5">{Number(t.ips_medio).toFixed(1)}</Badge>
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
                         <TableCell className="text-center">
                           {t.alertas > 0 ? (
-                            <Badge variant="destructive" className="gap-1">
-                              <AlertTriangle className="w-3 h-3" />{t.alertas}
+                            <Badge variant="destructive" className="gap-1 font-black text-[10px] bg-red-600 shadow-sm shadow-red-500/20">
+                              {t.alertas}
                             </Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
                         <TableCell className="text-center">
                           {t.ativas_sem_minimo > 0 ? (
-                            <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
-                              <AlertCircle className="w-3 h-3" />{t.ativas_sem_minimo}
+                            <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1 font-black text-[10px]">
+                              {t.ativas_sem_minimo}
                             </Badge>
-                          ) : <span className="text-muted-foreground">—</span>}
+                          ) : <span className="text-muted-foreground text-[10px] font-bold">—</span>}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
                           {t.ultima_atividade
                             ? formatDistanceToNow(new Date(t.ultima_atividade), { locale: ptBR, addSuffix: true })
                             : "—"}
                         </TableCell>
                         <TableCell>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                         </TableCell>
                       </TableRow>
                     );
