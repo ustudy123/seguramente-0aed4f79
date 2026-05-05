@@ -1,6 +1,10 @@
 import { useRef, useState, useCallback, useEffect, type ReactNode, type MouseEvent } from "react";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, FileImage, FileText, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 interface OrgCanvasProps {
   children: ReactNode;
@@ -13,6 +17,8 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Attach wheel listener as non-passive so preventDefault works
   useEffect(() => {
@@ -53,10 +59,82 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
     setTranslate({ x: 0, y: 0 });
   }, []);
 
+  const exportAs = async (format: "png" | "pdf") => {
+    if (!contentRef.current) return;
+    setIsExporting(true);
+    const toastId = toast.loading(`Gerando ${format.toUpperCase()}...`);
+
+    try {
+      // Temporarily reset zoom and translate for clean capture
+      const originalScale = scale;
+      const originalTranslate = translate;
+      setScale(1);
+      setTranslate({ x: 0, y: 0 });
+
+      // Wait for re-render
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(contentRef.current, {
+        useCORS: true,
+        scale: 2, // High quality
+        backgroundColor: "#f8fafc", // matches muted/20 bg
+        logging: false,
+      });
+
+      // Restore view
+      setScale(originalScale);
+      setTranslate(originalTranslate);
+
+      if (format === "png") {
+        const link = document.createElement("a");
+        link.download = `organograma-${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      } else {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({
+          orientation: canvas.width > canvas.height ? "l" : "p",
+          unit: "px",
+          format: [canvas.width / 2, canvas.height / 2]
+        });
+        pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+        pdf.save(`organograma-${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+
+      toast.success(`${format.toUpperCase()} gerado com sucesso!`, { id: toastId });
+    } catch (error) {
+      console.error("Erro ao exportar:", error);
+      toast.error("Erro ao gerar arquivo", { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className={`relative ${className || ""}`}>
-      {/* Zoom controls */}
+      {/* Zoom and Export controls */}
       <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-background/90 backdrop-blur-sm border rounded-lg p-1 shadow-sm">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-xs" disabled={isExporting}>
+              {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-primary" />}
+              Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => exportAs("png")} className="gap-2 cursor-pointer">
+              <FileImage className="w-4 h-4 text-muted-foreground" />
+              <span>Imagem (PNG)</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportAs("pdf")} className="gap-2 cursor-pointer">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              <span>Documento (PDF)</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className="w-px h-5 bg-border mx-1" />
+
         <Button
           variant="ghost"
           size="icon"
@@ -98,9 +176,10 @@ export function OrgCanvas({ children, className }: OrgCanvasProps) {
           style={{
             transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
             transformOrigin: "top center",
-            transition: isPanning ? "none" : "transform 0.15s ease-out",
+            transition: (isPanning || isExporting) ? "none" : "transform 0.15s ease-out",
           }}
           data-canvas="true"
+          ref={contentRef}
         >
           {children}
         </div>
