@@ -90,11 +90,19 @@ export function normalizeManualHtml(html: string) {
   documentNode.head.appendChild(baseStyle);
 
   const textElements = documentNode.body.querySelectorAll("p, li, td, blockquote");
+  const headingElements = documentNode.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
+
+  headingElements.forEach((el) => {
+    appendInlineStyle(el as HTMLElement, "margin-bottom: 8px !important; margin-top: 16px !important; page-break-after: avoid !important;");
+  });
 
   textElements.forEach((element) => {
     const text = element.textContent?.replace(/\s+/g, " ").trim() || "";
 
     if (text.length < LONG_TEXT_MIN_LENGTH || hasCenteredAncestor(element)) {
+      if (element.tagName === "P") {
+        appendInlineStyle(element, "margin-top: 0 !important; margin-bottom: 12px !important;");
+      }
       return;
     }
 
@@ -108,8 +116,10 @@ export function normalizeManualHtml(html: string) {
         "overflow-wrap: break-word !important",
         "word-spacing: 0.05em !important",
         "letter-spacing: normal !important",
-        "line-height: 1.65",
+        "line-height: 1.6",
         "hyphens: none !important",
+        "margin-top: 0 !important",
+        "margin-bottom: 12px !important",
       ].join(";") + ";"
     );
   });
@@ -124,41 +134,69 @@ export function normalizeManualHtml(html: string) {
 function collectSections(root: HTMLElement): HTMLElement[] {
   if (!root || !root.children || root.children.length === 0) return [];
   
-  const direct = Array.from(root.children) as HTMLElement[];
   const sections: HTMLElement[] = [];
-
   const isHeading = (el: HTMLElement) => el && el.tagName && /^H[1-6]$/i.test(el.tagName);
 
-  for (const child of direct) {
-    if (!child) continue;
+  // Deeply collect all significant elements
+  const walk = (node: HTMLElement) => {
+    const children = Array.from(node.children) as HTMLElement[];
     
-    // If a top-level wrapper contains many block children, descend one level
-    // so that headings and paragraphs become individual sections.
-    const grandChildren = Array.from(child.children || []) as HTMLElement[];
-    const looksLikeWrapper =
-      grandChildren.length > 3 &&
-      grandChildren.some((g) => g && (isHeading(g) || ["P", "DIV", "SECTION", "TABLE", "UL", "OL"].includes(g.tagName)));
+    // Check if this node is a container that should be flattened
+    const isGenericContainer = ["DIV", "SECTION", "ARTICLE", "BODY"].includes(node.tagName);
+    const hasManyBlockChildren = children.length > 2 && children.some(c => 
+      isHeading(c) || ["P", "TABLE", "UL", "OL", "BLOCKQUOTE", "HR"].includes(c.tagName)
+    );
 
-    if (looksLikeWrapper && child.tagName !== "TABLE") {
-      sections.push(...grandChildren);
-    } else {
-      sections.push(child);
+    if (isGenericContainer && (hasManyBlockChildren || node === root)) {
+      children.forEach(walk);
+    } else if (node.tagName !== "STYLE" && node.tagName !== "SCRIPT") {
+      sections.push(node);
     }
-  }
+  };
 
-  // Group consecutive headings with the next non-heading sibling so titles
-  // never get separated from their content.
+  walk(root);
+
+  // Refined grouping: group headings with their immediate followers
+  // AND group short elements that might be split unnecessarily
   const grouped: HTMLElement[] = [];
   let i = 0;
   while (i < sections.length) {
     const current = sections[i];
+    
     if (current && isHeading(current) && i + 1 < sections.length) {
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "background:#ffffff; width: 100%; box-sizing: border-box;";
-      wrapper.appendChild(current.cloneNode(true));
-      wrapper.appendChild(sections[i + 1].cloneNode(true));
+      wrapper.style.cssText = "background:#ffffff; width: 100%; box-sizing: border-box; display: block; overflow: visible;";
+      
+      // Clone heading
+      const headingClone = current.cloneNode(true) as HTMLElement;
+      // Reduce margin between heading and content
+      headingClone.style.marginBottom = "8px";
+      headingClone.style.marginTop = "16px";
+      wrapper.appendChild(headingClone);
+      
+      // Keep adding elements until we hit another heading or a large block
+      let j = i + 1;
+      while (j < sections.length && j < i + 4) { // Limit grouping to prevent massive blocks
+        const next = sections[j];
+        if (isHeading(next)) break;
+        
+        const nextClone = next.cloneNode(true) as HTMLElement;
+        if (nextClone.tagName === "P") {
+          nextClone.style.marginTop = "0px";
+          nextClone.style.marginBottom = "12px";
+        }
+        wrapper.appendChild(nextClone);
+        
+        // Stop if it's a large block (like a table)
+        if (["TABLE", "UL", "OL"].includes(next.tagName)) {
+          j++;
+          break;
+        }
+        j++;
+      }
+      
       grouped.push(wrapper);
-      i += 2;
+      i = j;
     } else if (current) {
       grouped.push(current);
       i += 1;
@@ -167,7 +205,7 @@ function collectSections(root: HTMLElement): HTMLElement[] {
     }
   }
 
-  return grouped.length ? grouped : direct;
+  return grouped.length ? grouped : Array.from(root.children) as HTMLElement[];
 }
 
 export async function generatePdfFromHtml({ html, filenamePrefix }: GeneratePdfFromHtmlOptions) {
