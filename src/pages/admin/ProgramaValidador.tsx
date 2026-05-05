@@ -460,7 +460,11 @@ function DetalheCliente({
       return data;
     },
     onSuccess: (data) => {
-      const url = `${window.location.origin}/aceite-documento/${data.token}`;
+      const customDomain = "https://youreyes.com.br";
+      const baseUrl = window.location.hostname.includes("lovable.app") || window.location.hostname === "localhost"
+        ? window.location.origin 
+        : customDomain;
+      const url = `${baseUrl}/aceite-documento/${data.token}`;
       navigator.clipboard.writeText(url).then(() => {
         toast.success('Link de aceite copiado para a área de transferência!');
       });
