@@ -291,6 +291,51 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
 
+              {/* Foto */}
+              <div className="flex flex-col items-center justify-center space-y-3 pb-4">
+                <Avatar className="h-24 w-24 border-2 border-primary/10">
+                  <AvatarImage src={form.watch("foto_url") || ""} />
+                  <AvatarFallback className="bg-primary/5 text-primary text-2xl">
+                    <User className="h-12 w-12" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    {form.watch("foto_url") ? "Alterar Foto" : "Adicionar Foto"}
+                  </Button>
+                  {form.watch("foto_url") && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => form.setValue("foto_url", "")}
+                      disabled={isUploading}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadPhoto(file);
+                  }}
+                />
+              </div>
+
               {/* Nome */}
               <FormField
                 control={form.control}
