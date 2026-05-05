@@ -81,6 +81,7 @@ export interface EstrategiaOrganograma {
   departamento_id?: string;
   titulo: string;
   nome_ocupante?: string;
+  colaborador_id?: string;
   tipo: string;
   ordem: number;
   created_at: string;
