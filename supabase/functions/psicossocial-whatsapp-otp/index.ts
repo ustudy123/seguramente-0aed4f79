@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           number: `55${telefoneLimpo}`,
-          text: `🔐 Seu código de verificação Seguramente: *${otp}*\n\nEste código expira em 10 minutos.\nNão compartilhe com ninguém.`,
+          text: `🔐 Seu código de verificação YourEyes: *${otp}*\n\nEste código expira em 10 minutos.\nNão compartilhe com ninguém.`,
         }),
       });
 
