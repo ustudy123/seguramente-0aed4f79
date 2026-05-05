@@ -158,6 +158,7 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
               </Badge>
               <Badge variant="outline" className="text-[10px]">
                 {PERIODO_LABELS[meta.periodo]} {meta.ano}
+                {meta.trimestre && ` ${meta.trimestre}º Trimestre`}
               </Badge>
             </div>
             <div className="space-y-1">
