@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { FileDown, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 type ReportType = "espelho" | "horas_extras" | "banco_horas" | "absenteismo" | "afd";
