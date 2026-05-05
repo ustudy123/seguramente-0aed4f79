@@ -97,7 +97,15 @@ export function PsicossocialSuperAdminPanel() {
   const filteredTenants = useMemo(() => {
     return tenants
       .filter((t: any) => filterTenant === "all" || t.tenant_id === filterTenant)
-      .filter((t: any) => !search || t.tenant_nome.toLowerCase().includes(search.toLowerCase()));
+      .filter((t: any) => !search || t.tenant_nome.toLowerCase().includes(search.toLowerCase()))
+      .sort((a: any, b: any) => {
+        // Prioriza empresas com atividade real: colaboradores → respostas → campanhas
+        const score = (t: any) =>
+          (Number(t.colaboradores_ativos) || 0) * 1000 +
+          (Number(t.total_respostas) || 0) * 10 +
+          (Number(t.total_campanhas) || 0);
+        return score(b) - score(a);
+      });
   }, [tenants, filterTenant, search]);
 
   const classifData = useMemo(() => {
