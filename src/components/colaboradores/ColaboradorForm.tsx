@@ -223,6 +223,7 @@ export function ColaboradorForm({ open, onOpenChange, onSuccess, colaborador }: 
           status: "concluido",
           criado_por: user?.id,
           matricula_esocial: data.matricula_esocial || null,
+          foto_url: data.foto_url || null,
         }).select("id").single();
 
         if (error) {
