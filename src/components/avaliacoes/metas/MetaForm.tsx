@@ -36,8 +36,8 @@ const formSchema = z.object({
   trimestre: z.number().min(1).max(4).optional(),
   colaborador_id: z.string().optional(),
   departamento_id: z.string().optional(),
-  data_inicio: z.string().optional(),
-  data_fim: z.string().optional(),
+  // data_inicio e data_fim removidos do schema conforme solicitação
+
   peso: z.number().min(0.1).max(10).default(1),
   premiacao_tipo: z.string().optional(),
   premiacao_descricao: z.string().optional(),
@@ -90,8 +90,6 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
       colaborador_nome: colaborador?.nome_completo,
       departamento_id: data.departamento_id,
       departamento_nome: departamento?.nome,
-      data_inicio: data.data_inicio,
-      data_fim: data.data_fim,
       peso: data.peso,
     };
 
@@ -280,10 +278,10 @@ export function MetaForm({ onSuccess }: MetaFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="1">Q1</SelectItem>
-                      <SelectItem value="2">Q2</SelectItem>
-                      <SelectItem value="3">Q3</SelectItem>
-                      <SelectItem value="4">Q4</SelectItem>
+                      <SelectItem value="1">Trimestre 1</SelectItem>
+                      <SelectItem value="2">Trimestre 2</SelectItem>
+                      <SelectItem value="3">Trimestre 3</SelectItem>
+                      <SelectItem value="4">Trimestre 4</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

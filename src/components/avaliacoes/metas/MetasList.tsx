@@ -221,7 +221,7 @@ export function MetasList() {
                           </Badge>
                           <Badge variant="outline">
                             {PERIODO_LABELS[meta.periodo]} {meta.ano}
-                            {meta.trimestre && ` Q${meta.trimestre}`}
+                            {meta.trimestre && ` Trimestre ${meta.trimestre}`}
                           </Badge>
                           <Badge variant="secondary">
                             {CATEGORIA_META_LABELS[(extMeta.categoria_meta as CategoriaMetaMEA) || "operacional"]}

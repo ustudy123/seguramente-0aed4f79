@@ -272,25 +272,16 @@ export function MetaFormModule({
           <Select value={form.trimestre?.toString() || ""} onValueChange={v => set("trimestre", v ? parseInt(v) : undefined)}>
             <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Q1</SelectItem>
-              <SelectItem value="2">Q2</SelectItem>
-              <SelectItem value="3">Q3</SelectItem>
-              <SelectItem value="4">Q4</SelectItem>
+              <SelectItem value="1">Trimestre 1</SelectItem>
+              <SelectItem value="2">Trimestre 2</SelectItem>
+              <SelectItem value="3">Trimestre 3</SelectItem>
+              <SelectItem value="4">Trimestre 4</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>Data Início</Label>
-          <Input type="date" value={form.data_inicio || ""} onChange={e => set("data_inicio", e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Data Fim</Label>
-          <Input type="date" value={form.data_fim || ""} onChange={e => set("data_fim", e.target.value)} />
-        </div>
-      </div>
+      {/* Datas removidas conforme solicitação */}
 
       {/* Indicador */}
       <Card>
