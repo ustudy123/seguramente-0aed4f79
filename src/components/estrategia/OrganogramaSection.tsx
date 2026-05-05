@@ -450,38 +450,71 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                 </div>
 
                 <div className="space-y-1">
-                  <Label>Ocupante</Label>
-                  {ocupantesDisponiveis.length > 0 ? (
-                    <div className="border rounded-md p-2 space-y-1">
-                      <Input
-                        value={ocupanteSearch}
-                        onChange={(e) => setOcupanteSearch(e.target.value)}
-                        placeholder="Pesquisar ocupante..."
-                        className="h-8 text-sm mb-1"
-                      />
-                      <div className="max-h-40 overflow-y-auto space-y-0.5">
-                        {ocupantesDisponiveis
-                          .filter((c) => c.nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
-                          .map((c) => (
-                            <OcupanteItem 
-                              key={c.id} 
-                              colab={c} 
-                              isSelected={form.selectedOcupantes.some(o => o.id === c.id)}
-                              onToggle={() => toggleOcupante(c)}
-                            />
-                          ))}
-                        {ocupantesDisponiveis.filter((c) => c.nome.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
-                          <p className="text-xs text-muted-foreground px-2 py-1">Nenhum ocupante encontrado</p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
+                <Label>Vincular Colaborador {form.titulo ? `(sugestões para "${form.titulo}")` : ""}</Label>
+                <div className="border rounded-md p-2 space-y-1">
+                  <Input
+                    value={ocupanteSearch}
+                    onChange={(e) => setOcupanteSearch(e.target.value)}
+                    placeholder="Pesquisar colaborador..."
+                    className="h-8 text-sm mb-1"
+                  />
+                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                    {/* First show exact title matches */}
+                    {ocupantesDisponiveis
+                      .filter((c) => c.nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
+                      .map((c) => (
+                        <OcupanteItem 
+                          key={c.id} 
+                          colab={c} 
+                          isSelected={editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)}
+                          onToggle={() => {
+                            if (editingNode) {
+                              setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome });
+                            } else {
+                              toggleOcupante(c);
+                            }
+                          }}
+                        />
+                      ))}
+                    
+                    {/* Then show other collaborators if searching or if no matches */}
+                    {(ocupanteSearch.length > 1 || ocupantesDisponiveis.length === 0) && 
+                      colaboradores
+                        .filter(c => !ocupantesDisponiveis.some(od => od.id === c.id)) // exclude already shown
+                        .filter(c => c.nome_completo.toLowerCase().includes(ocupanteSearch.toLowerCase()))
+                        .slice(0, 10) // Limit to avoid performance issues
+                        .map(c => (
+                          <OcupanteItem 
+                            key={c.id} 
+                            colab={{ id: c.id, nome: c.nome_completo, foto_url: c.foto_url }} 
+                            isSelected={editingNode ? form.colaborador_id === c.id : form.selectedOcupantes.some(o => o.id === c.id)}
+                            onToggle={() => {
+                              if (editingNode) {
+                                setForm({ ...form, colaborador_id: form.colaborador_id === c.id ? "" : c.id, nome_ocupante: c.nome_completo });
+                              } else {
+                                toggleOcupante({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
+                              }
+                            }}
+                          />
+                        ))
+                    }
+
+                    {colaboradores.filter(c => c.nome_completo.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
+                      <p className="text-xs text-muted-foreground px-2 py-1">Nenhum colaborador encontrado</p>
+                    )}
+                  </div>
+                </div>
+                {!editingNode && (
+                  <div className="mt-2 pt-2 border-t">
+                    <Label className="text-xs">Ou digite um nome (sem vincular):</Label>
                     <Input
                       value={form.nome_ocupante}
-                      onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value })}
-                      placeholder="Nome da pessoa (opcional)"
+                      onChange={(e) => setForm({ ...form, nome_ocupante: e.target.value, colaborador_id: "", selectedOcupantes: [] })}
+                      placeholder="Nome personalizado"
+                      className="h-8 text-sm mt-1"
                     />
-                  )}
+                  </div>
+                )}
                 </div>
 
                 {organograma.length > 0 && (
