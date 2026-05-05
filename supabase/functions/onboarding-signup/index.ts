@@ -179,7 +179,7 @@ serve(async (req) => {
                   <hr style="border-color: #e8e5f0; margin: 16px 0;" />
                   <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">Olá, ${nomeCompleto}!</h1>
                   <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
-                    Você foi convidado(a) para acessar a plataforma <strong>Seguramente</strong>, a solução completa em Saúde e Segurança do Trabalho.
+                    Você foi convidado(a) para acessar a plataforma <strong>YourEyes</strong>, a solução completa em Saúde e Segurança do Trabalho.
                   </p>
                   <p style="font-size: 14px; color: hsl(260, 10%, 46%); line-height: 1.6; margin: 0 0 20px;">
                     Clique no botão abaixo para aceitar o convite e configurar sua conta:
