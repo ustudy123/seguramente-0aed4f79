@@ -174,7 +174,7 @@ serve(async (req) => {
               html: `
                 <div style="font-family: 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
                   <div style="text-align: center; margin-bottom: 8px;">
-                    <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ Seguramente</p>
+                    <p style="font-size: 24px; font-weight: bold; color: hsl(262, 52%, 50%); margin: 0;">🛡️ YourEyes</p>
                   </div>
                   <hr style="border-color: #e8e5f0; margin: 16px 0;" />
                   <h1 style="font-size: 22px; font-weight: bold; color: hsl(260, 20%, 16%); margin: 0 0 16px;">Olá, ${nomeCompleto}!</h1>
