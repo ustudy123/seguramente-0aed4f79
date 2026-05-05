@@ -11075,6 +11075,128 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_interacoes: {
+        Row: {
+          conteudo: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_id: string
+          metadata: Json | null
+          tipo: string
+        }
+        Insert: {
+          conteudo?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          tipo: string
+        }
+        Update: {
+          conteudo?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_interacoes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          cargo: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          empresa: string | null
+          id: string
+          landing_lead_id: string | null
+          nome: string
+          notas: string | null
+          origem: Database["public"]["Enums"]["lead_origem"]
+          proxima_acao_data: string | null
+          proxima_acao_descricao: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          tags: string[] | null
+          telefone: string | null
+          tenant_convertido_id: string | null
+          ultimo_contato_at: string | null
+          updated_at: string
+          valor_estimado: number | null
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          landing_lead_id?: string | null
+          nome: string
+          notas?: string | null
+          origem?: Database["public"]["Enums"]["lead_origem"]
+          proxima_acao_data?: string | null
+          proxima_acao_descricao?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          tags?: string[] | null
+          telefone?: string | null
+          tenant_convertido_id?: string | null
+          ultimo_contato_at?: string | null
+          updated_at?: string
+          valor_estimado?: number | null
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          landing_lead_id?: string | null
+          nome?: string
+          notas?: string | null
+          origem?: Database["public"]["Enums"]["lead_origem"]
+          proxima_acao_data?: string | null
+          proxima_acao_descricao?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          tags?: string[] | null
+          telefone?: string | null
+          tenant_convertido_id?: string | null
+          ultimo_contato_at?: string | null
+          updated_at?: string
+          valor_estimado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_landing_lead_id_fkey"
+            columns: ["landing_lead_id"]
+            isOneToOne: false
+            referencedRelation: "landing_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_tenant_convertido_id_fkey"
+            columns: ["tenant_convertido_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lembretes_dispensados: {
         Row: {
           chave: string
@@ -20302,6 +20424,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      superadmin_global_stats: { Args: never; Returns: Json }
+      superadmin_growth_series: { Args: { _dias?: number }; Returns: Json }
+      superadmin_tenants_status: { Args: never; Returns: Json }
+      superadmin_usuarios_global: {
+        Args: { _limite?: number; _search?: string }
+        Returns: Json
+      }
       user_has_empresa_vinculo: {
         Args: { _empresa_id: string }
         Returns: boolean
@@ -20492,6 +20621,22 @@ export type Database = {
         | "financeiro"
         | "marco"
         | "hibrido"
+      lead_origem:
+        | "landing_page"
+        | "indicacao"
+        | "prospect_manual"
+        | "linkedin"
+        | "whatsapp"
+        | "evento"
+        | "outro"
+      lead_status:
+        | "novo"
+        | "contatado"
+        | "qualificado"
+        | "proposta"
+        | "negociacao"
+        | "convertido"
+        | "perdido"
       marketplace_contratacao_status:
         | "solicitada"
         | "aceita"
@@ -21057,6 +21202,24 @@ export const Constants = {
         "financeiro",
         "marco",
         "hibrido",
+      ],
+      lead_origem: [
+        "landing_page",
+        "indicacao",
+        "prospect_manual",
+        "linkedin",
+        "whatsapp",
+        "evento",
+        "outro",
+      ],
+      lead_status: [
+        "novo",
+        "contatado",
+        "qualificado",
+        "proposta",
+        "negociacao",
+        "convertido",
+        "perdido",
       ],
       marketplace_contratacao_status: [
         "solicitada",
