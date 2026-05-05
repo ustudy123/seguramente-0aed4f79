@@ -344,7 +344,10 @@ export function MetaFormModule({
               <Input type="number" value={form.valor_alvo || ""} onChange={e => set("valor_alvo", parseFloat(e.target.value) || undefined)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Baseline</Label>
+              <Label className="flex flex-col gap-1">
+                Baseline
+                <span className="text-[10px] font-normal text-muted-foreground leading-tight">Valor de referência inicial para medir o ponto de partida</span>
+              </Label>
               <Input type="number" value={form.valor_baseline || ""} onChange={e => set("valor_baseline", parseFloat(e.target.value) || undefined)} />
             </div>
           </div>
