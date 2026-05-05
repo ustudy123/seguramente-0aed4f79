@@ -83,12 +83,12 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
   const cargosAtivos = (cargos || []).filter((c: any) => c.ativo);
 
   const colaboradoresMap = useMemo(() => {
-    const m = new Map<string, string[]>();
+    const m = new Map<string, { id: string; nome: string; foto_url?: string }[]>();
     (colaboradores || []).forEach((c) => {
       if (c.cargo) {
         const key = c.cargo.toLowerCase();
         const arr = m.get(key) || [];
-        arr.push(c.nome_completo);
+        arr.push({ id: c.id, nome: c.nome_completo, foto_url: c.foto_url });
         m.set(key, arr);
       }
     });
@@ -107,11 +107,12 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     return colaboradoresMap.get(key) || [];
   }, [form.titulo, colaboradoresMap]);
 
-  const toggleOcupante = (nome: string) => {
+  const toggleOcupante = (colab: { id: string; nome: string }) => {
     setForm((prev) => {
-      const selected = prev.selectedOcupantes.includes(nome)
-        ? prev.selectedOcupantes.filter((n) => n !== nome)
-        : [...prev.selectedOcupantes, nome];
+      const isSelected = prev.selectedOcupantes.some(o => o.id === colab.id);
+      const selected = isSelected
+        ? prev.selectedOcupantes.filter((o) => o.id !== colab.id)
+        : [...prev.selectedOcupantes, colab];
       return { ...prev, selectedOcupantes: selected };
     });
   };
