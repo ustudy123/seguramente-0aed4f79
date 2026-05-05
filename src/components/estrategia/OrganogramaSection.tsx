@@ -15,6 +15,7 @@ import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos } from "@/hooks/useCadastros";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { OrgCanvas } from "./organograma/OrgCanvas";
