@@ -149,7 +149,7 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
 
     const ocupantes = form.selectedOcupantes.length > 0
       ? form.selectedOcupantes
-      : [form.nome_ocupante || ""];
+      : [{ id: form.colaborador_id, nome: form.nome_ocupante }];
 
     const parentId = form.parent_id || undefined;
     const resetForm = () => {
@@ -159,9 +159,9 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
     };
 
     let remaining = ocupantes.length;
-    ocupantes.forEach((nome) => {
+    ocupantes.forEach((colab) => {
       createOrgNode.mutate(
-        { titulo, nome_ocupante: nome || undefined, parent_id: parentId, tipo: "funcao" },
+        { titulo, nome_ocupante: colab.nome || undefined, colaborador_id: colab.id || undefined, parent_id: parentId, tipo: "funcao" },
         { onSuccess: () => { remaining--; if (remaining === 0) resetForm(); } },
       );
     });
