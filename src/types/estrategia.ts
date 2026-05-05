@@ -81,10 +81,12 @@ export interface EstrategiaOrganograma {
   departamento_id?: string;
   titulo: string;
   nome_ocupante?: string;
+  colaborador_id?: string;
   tipo: string;
   ordem: number;
   created_at: string;
   updated_at: string;
+  colaborador?: { id: string; nome_completo: string; foto_url?: string };
   children?: EstrategiaOrganograma[];
 }
 

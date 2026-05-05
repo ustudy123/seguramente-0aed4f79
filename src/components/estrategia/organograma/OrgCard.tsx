@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const CARD_STYLE = {
   gradient: "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5",
@@ -19,15 +21,17 @@ const CARD_STYLE = {
 type DropPosition = "child" | "sibling" | null;
 
 interface OrgCardProps {
-  node: EstrategiaOrganograma;
+  node: EstrategiaOrganograma & { colaborador?: { id: string; nome_completo: string; foto_url?: string } };
   onDelete: (id: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (parentId: string | undefined) => void;
   onMove?: (draggedId: string, targetId: string, position: "child" | "sibling") => void;
-  onEdit?: (id: string, updates: { titulo: string; nome_ocupante?: string }) => void;
+  onEdit?: (id: string, updates: Partial<EstrategiaOrganograma>) => void;
 }
 
 export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEdit }: OrgCardProps) {
+  const fotoUrl = useStorageImageUrl(node.colaborador?.foto_url);
+  const ocupanteNome = node.colaborador?.nome_completo || node.nome_ocupante;
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editTitulo, setEditTitulo] = useState(node.titulo);
@@ -102,17 +106,24 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEd
       </div>
 
       <div className="flex justify-center mb-2">
-        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", CARD_STYLE.badge)}>
-          <Briefcase className="w-5 h-5" />
+        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", !fotoUrl && CARD_STYLE.badge)}>
+          {fotoUrl ? (
+            <Avatar className="w-10 h-10 border-2 border-primary/20">
+              <AvatarImage src={fotoUrl} alt={ocupanteNome || "Ocupante"} />
+              <AvatarFallback><User className="w-5 h-5" /></AvatarFallback>
+            </Avatar>
+          ) : (
+            <Briefcase className="w-5 h-5" />
+          )}
         </div>
       </div>
 
       <p className="text-sm font-semibold text-foreground leading-tight">{node.titulo}</p>
 
-      {node.nome_ocupante && (
+      {ocupanteNome && (
         <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-          <User className="w-3 h-3" />
-          {node.nome_ocupante}
+          {!fotoUrl && <User className="w-3 h-3" />}
+          {ocupanteNome}
         </p>
       )}
 
@@ -182,7 +193,7 @@ export function OrgCard({ node, onDelete, onAddChild, onAddSibling, onMove, onEd
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir posição?</AlertDialogTitle>
             <AlertDialogDescription>
-              A posição "{node.titulo}"{node.nome_ocupante ? ` (${node.nome_ocupante})` : ""} será removida permanentemente.
+              A posição "{node.titulo}"{ocupanteNome ? ` (${ocupanteNome})` : ""} será removida permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
