@@ -17,7 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DocumentUpload } from './DocumentUpload';
 import { WorkflowTimeline } from './WorkflowTimeline';
 import { DocumentChecklistModal } from './DocumentChecklistModal';
@@ -25,6 +25,7 @@ import { useState } from 'react';
 import { Admissao, STATUS_LABELS, STATUS_COLORS } from '@/types/admissao';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useStorageImageUrl } from '@/hooks/useStorageImageUrl';
 
 interface AdmissaoDetailProps {
   admissao: Admissao;
@@ -66,6 +67,7 @@ export function AdmissaoDetail({
   isAdmin = false
 }: AdmissaoDetailProps) {
   const [showChecklist, setShowChecklist] = useState(false);
+  const resolvedPhotoUrl = useStorageImageUrl(admissao.fotoUrl, 'documentos');
   const { dadosPessoais, dadosContato, dadosProfissionais, dadosBancarios, documentos, status, historicoAprovacao, dataCriacao } = admissao;
 
   const initials = dadosPessoais.nomeCompleto
@@ -88,6 +90,7 @@ export function AdmissaoDetail({
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Avatar className="h-16 w-16 border-2 border-primary/20">
+            <AvatarImage src={resolvedPhotoUrl || ''} />
             <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
               {initials}
             </AvatarFallback>
