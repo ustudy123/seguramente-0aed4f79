@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, FileText, Link2, Loader2, Upload } from "lucide-react";
+import { 
+  Plus, FileText, Link2, Loader2, Upload, CalendarIcon, X, Image as ImageIcon, File
+} from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface MetaEvidenciaFormProps {
   metaId: string;
@@ -31,15 +39,29 @@ export function MetaEvidenciaForm({ metaId, onSave, isSaving }: MetaEvidenciaFor
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [linkExterno, setLinkExterno] = useState("");
-  const [periodoRef, setPeriodoRef] = useState("");
+  const [periodoRef, setPeriodoRef] = useState<Date | undefined>(new Date());
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
     setTipo("documento");
     setTitulo("");
     setDescricao("");
     setLinkExterno("");
-    setPeriodoRef("");
+    setPeriodoRef(new Date());
+    setFile(null);
     setShowForm(false);
+    setIsUploading(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      if (!titulo) {
+        setTitulo(e.target.files[0].name.split(".")[0]);
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -47,14 +69,44 @@ export function MetaEvidenciaForm({ metaId, onSave, isSaving }: MetaEvidenciaFor
       toast.error("Informe o título da evidência");
       return;
     }
+
+    let arquivoUrl = undefined;
+    let arquivoNome = undefined;
+
+    if (file) {
+      setIsUploading(true);
+      try {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `metas/evidencias/${metaId}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("documentos")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        arquivoUrl = filePath;
+        arquivoNome = file.name;
+      } catch (error: any) {
+        toast.error("Erro ao fazer upload do arquivo: " + error.message);
+        setIsUploading(false);
+        return;
+      }
+    }
+
     await onSave({
       meta_id: metaId,
       tipo,
       titulo: titulo.trim(),
       descricao: descricao.trim() || undefined,
       link_externo: linkExterno.trim() || undefined,
-      periodo_referencia: periodoRef || undefined,
+      arquivo_url: arquivoUrl,
+      arquivo_nome: arquivoNome,
+      periodo_referencia: periodoRef ? format(periodoRef, "yyyy-MM") : undefined,
     });
+    
+    setIsUploading(false);
     resetForm();
   };
 
