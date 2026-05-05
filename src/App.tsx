@@ -86,6 +86,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
+const CompletarCadastro = lazy(() => import("./pages/CompletarCadastro"));
 const SuperAdminDashboard = lazy(() => import("./pages/admin/SuperAdminDashboard"));
 const ManualSistema = lazy(() => import("./pages/admin/ManualSistema"));
 const QADashboard = lazy(() => import("./pages/admin/QADashboard"));
