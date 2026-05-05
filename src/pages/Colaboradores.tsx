@@ -336,6 +336,7 @@ function AtivosTab({ showImport, setShowImport }: { showImport: boolean; setShow
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
+                    <AvatarImage src={colab.foto_url || ""} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                       {colab.nome_completo.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </AvatarFallback>
