@@ -138,76 +138,151 @@ export function PontoRelatoriosTab() {
   };
 
   const gerarPDF = () => {
-    const pdf = new jsPDF();
+    const doc = new jsPDF();
     const titulo = REPORT_TYPES.find(r => r.value === tipoRelatorio)?.label || "Relatório";
+    const logoColor = [15, 23, 42]; // Slate 900
 
-    pdf.setFontSize(16);
-    pdf.text(`${titulo} — ${competencia}`, 20, 20);
-    pdf.setFontSize(9);
-    pdf.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 20, 28);
-
-    let y = 40;
-
-    const useEspelhoData = espelhos.length > 0;
-    const sourceData = useEspelhoData ? espelhos : null;
+    // Header logic
+    const addHeader = (data: any) => {
+      doc.setFontSize(20);
+      doc.setTextColor(logoColor[0], logoColor[1], logoColor[2]);
+      doc.text("YourEyes", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text("Controle de Ponto Inteligente", 14, 28);
+      
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text(titulo.toUpperCase(), 14, 45);
+      
+      doc.setFontSize(10);
+      doc.text(`Período: ${competencia}`, 14, 52);
+      doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 57);
+      
+      doc.setDrawColor(logoColor[0], logoColor[1], logoColor[2]);
+      doc.setLineWidth(0.5);
+      doc.line(14, 62, 196, 62);
+    };
 
     if (tipoRelatorio === "espelho") {
+      const useEspelhoData = espelhos.length > 0;
+      
+      const head = [["Colaborador", "CPF", "HE 50%", "HE 100%", "Faltas", "Status"]];
+      let body: any[] = [];
+
       if (useEspelhoData) {
-        espelhos.forEach(e => {
-          if (y > 270) { pdf.addPage(); y = 20; }
-          pdf.setFontSize(11);
-          pdf.text(e.colaborador_nome, 20, y); y += 6;
-          pdf.setFontSize(9);
-          pdf.text(`CPF: ${e.colaborador_cpf} | HE 50%: ${formatMinutos(e.total_horas_extras_50_minutos)} | HE 100%: ${formatMinutos(e.total_horas_extras_100_minutos)} | Faltas: ${e.total_faltas} | Status: ${e.status}`, 20, y);
-          y += 10;
-        });
+        body = espelhos.map(e => [
+          e.colaborador_nome,
+          e.colaborador_cpf,
+          formatMinutos(e.total_horas_extras_50_minutos),
+          formatMinutos(e.total_horas_extras_100_minutos),
+          e.total_faltas,
+          e.status
+        ]);
       } else {
-        // Fallback to daily records if no closed mirror exists
         const colabs = Array.from(new Set(registrosMes.map(r => r.colaborador_cpf)));
-        colabs.forEach(cpf => {
+        body = colabs.map(cpf => {
           const r = registrosMes.find(reg => reg.colaborador_cpf === cpf);
-          if (!r) return;
-          if (y > 270) { pdf.addPage(); y = 20; }
-          pdf.setFontSize(11);
-          pdf.text(r.colaborador_nome, 20, y); y += 6;
-          pdf.setFontSize(9);
           const regsColab = registrosMes.filter(reg => reg.colaborador_cpf === cpf);
           const totalFaltas = regsColab.filter(reg => reg.status === "falta").length;
-          pdf.text(`CPF: ${cpf} | Registros no período: ${regsColab.length} | Faltas: ${totalFaltas} (Período não fechado)`, 20, y);
-          y += 10;
+          return [
+            r?.colaborador_nome || "N/A",
+            cpf,
+            "-",
+            "-",
+            totalFaltas,
+            "Aberto"
+          ];
         });
-        if (colabs.length === 0) pdf.text("Nenhum registro encontrado para esta competência.", 20, y);
       }
+
+      autoTable(doc, {
+        head: head,
+        body: body,
+        startY: 70,
+        theme: 'striped',
+        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
+        didDrawPage: addHeader,
+        margin: { top: 70 }
+      });
     } else if (tipoRelatorio === "horas_extras") {
+      const head = [["Colaborador", "HE 50%", "HE 100%"]];
       const heColabs = espelhos.filter(e => e.total_horas_extras_50_minutos > 0 || e.total_horas_extras_100_minutos > 0);
-      if (heColabs.length > 0) {
-        heColabs.forEach(e => {
-          if (y > 270) { pdf.addPage(); y = 20; }
-          pdf.setFontSize(10);
-          pdf.text(`${e.colaborador_nome}: HE 50% = ${formatMinutos(e.total_horas_extras_50_minutos)}, HE 100% = ${formatMinutos(e.total_horas_extras_100_minutos)}`, 20, y);
-          y += 8;
-        });
-      } else {
-        pdf.text("Nenhuma hora extra registrada (é necessário realizar o fechamento do período).", 20, y);
-      }
+      
+      const body = heColabs.length > 0 
+        ? heColabs.map(e => [
+            e.colaborador_nome,
+            formatMinutos(e.total_horas_extras_50_minutos),
+            formatMinutos(e.total_horas_extras_100_minutos)
+          ])
+        : [["Nenhuma hora extra registrada no período", "", ""]];
+
+      autoTable(doc, {
+        head: head,
+        body: body,
+        startY: 70,
+        theme: 'striped',
+        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
+        didDrawPage: addHeader,
+        margin: { top: 70 }
+      });
     } else if (tipoRelatorio === "absenteismo") {
+      const head = [["Colaborador", "Faltas", "Atrasos"]];
       const faltosos = registrosMes.filter(r => r.status === "falta" || r.status === "atraso");
+      
+      const body: any[] = [];
       if (faltosos.length > 0) {
-        const colabs = Array.from(new Set(faltosos.map(f => f.colaborador_nome)));
-        colabs.forEach(nome => {
-          if (y > 270) { pdf.addPage(); y = 20; }
+        const colabNames = Array.from(new Set(faltosos.map(f => f.colaborador_nome)));
+        colabNames.forEach(nome => {
           const totalFaltas = faltosos.filter(f => f.colaborador_nome === nome && f.status === "falta").length;
           const totalAtrasos = faltosos.filter(f => f.colaborador_nome === nome && f.status === "atraso").length;
-          pdf.setFontSize(10);
-          pdf.text(`${nome}: ${totalFaltas} falta(s), ${totalAtrasos} atraso(s)`, 20, y);
-          y += 8;
+          body.push([nome, totalFaltas, totalAtrasos]);
         });
       } else {
-        pdf.text("Nenhuma falta ou atraso registrado no período.", 20, y);
+        body.push(["Nenhuma falta ou atraso registrado no período", "", ""]);
       }
+
+      autoTable(doc, {
+        head: head,
+        body: body,
+        startY: 70,
+        theme: 'striped',
+        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
+        didDrawPage: addHeader,
+        margin: { top: 70 }
+      });
+    } else if (tipoRelatorio === "banco_horas") {
+      const head = [["Colaborador", "Saldo Anterior", "Créditos", "Débitos", "Saldo Atual"]];
+      const body = espelhos.map(e => [
+        e.colaborador_nome,
+        formatMinutos(0), // Placeholder for previous balance
+        formatMinutos(e.total_horas_extras_50_minutos + e.total_horas_extras_100_minutos),
+        formatMinutos(e.total_atrasos_minutos),
+        formatMinutos(e.total_horas_extras_50_minutos + e.total_horas_extras_100_minutos - e.total_atrasos_minutos)
+      ]);
+
+      autoTable(doc, {
+        head: head,
+        body: body.length > 0 ? body : [["Nenhum dado de banco de horas", "", "", "", ""]],
+        startY: 70,
+        theme: 'striped',
+        headStyles: { fillColor: logoColor, textColor: 255, fontStyle: 'bold' },
+        didDrawPage: addHeader,
+        margin: { top: 70 }
+      });
     }
 
-    pdf.save(`${titulo.replace(/\s/g, "_")}_${competencia}.pdf`);
+    // Add page numbers at the end
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Página ${i} de ${pageCount}`, 196, 285, { align: "right" });
+    }
+
+    doc.save(`${titulo.replace(/\s/g, "_")}_${competencia}.pdf`);
     toast.success("PDF gerado!");
   };
 
