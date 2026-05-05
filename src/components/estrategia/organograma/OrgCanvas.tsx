@@ -1,6 +1,10 @@
 import { useRef, useState, useCallback, useEffect, type ReactNode, type MouseEvent } from "react";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, FileImage, FileText, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 interface OrgCanvasProps {
   children: ReactNode;
