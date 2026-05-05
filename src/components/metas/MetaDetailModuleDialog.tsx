@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -253,7 +254,51 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Valor Atual</Label>
-                        <Input type="number" value={checkinValue} onChange={e => setCheckinValue(e.target.value)} placeholder={String(meta.valor_atual || 0)} />
+                        {meta.indicador_tipo === "qualitativo" ? (
+                          <Select value={checkinValue} onValueChange={setCheckinValue}>
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {meta.indicador_unidade === "status" && (
+                                <>
+                                  <SelectItem value="0">Não Iniciado</SelectItem>
+                                  <SelectItem value="50">Em Andamento</SelectItem>
+                                  <SelectItem value="100">Concluído</SelectItem>
+                                </>
+                              )}
+                              {meta.indicador_unidade === "nivel" && (
+                                <>
+                                  <SelectItem value="1">Nível 1</SelectItem>
+                                  <SelectItem value="2">Nível 2</SelectItem>
+                                  <SelectItem value="3">Nível 3</SelectItem>
+                                  <SelectItem value="4">Nível 4</SelectItem>
+                                  <SelectItem value="5">Nível 5</SelectItem>
+                                </>
+                              )}
+                              {meta.indicador_unidade === "conceito" && (
+                                <>
+                                  <SelectItem value="0">E (Insuficiente)</SelectItem>
+                                  <SelectItem value="25">D (Regular)</SelectItem>
+                                  <SelectItem value="50">C (Bom)</SelectItem>
+                                  <SelectItem value="75">B (Muito Bom)</SelectItem>
+                                  <SelectItem value="100">A (Excelente)</SelectItem>
+                                </>
+                              )}
+                              {!["status", "nivel", "conceito"].includes(meta.indicador_unidade || "") && (
+                                <>
+                                  <SelectItem value="0">0%</SelectItem>
+                                  <SelectItem value="25">25%</SelectItem>
+                                  <SelectItem value="50">50%</SelectItem>
+                                  <SelectItem value="75">75%</SelectItem>
+                                  <SelectItem value="100">100%</SelectItem>
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input type="number" value={checkinValue} onChange={e => setCheckinValue(e.target.value)} placeholder={String(meta.valor_atual || 0)} />
+                        )}
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs flex items-center justify-between">
@@ -267,9 +312,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
                         <Input 
                           type="number" 
                           value={checkinProgress} 
+                          readOnly={meta.valor_alvo !== undefined}
                           onChange={e => setCheckinProgress(e.target.value)} 
                           placeholder={String(meta.progresso)}
-                          className={meta.valor_alvo !== undefined ? "bg-primary/5" : ""}
+                          className={meta.valor_alvo !== undefined ? "bg-muted cursor-not-allowed" : ""}
                         />
                       </div>
                     </div>
