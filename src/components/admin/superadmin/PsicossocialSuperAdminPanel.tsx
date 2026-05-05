@@ -485,21 +485,26 @@ export function PsicossocialSuperAdminPanel() {
         </TabsContent>
 
         {/* === EMPRESAS === */}
-        <TabsContent value="empresas" className="mt-4">
-          <Card>
+        <TabsContent value="empresas" className="mt-6 space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <LayoutGrid className="w-3.5 h-3.5" /> Panorama de Ativos por Unidade
+            </h3>
+          </div>
+          <Card className="border-muted/50 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Empresa</TableHead>
-                    <TableHead className="text-center">Campanhas</TableHead>
-                    <TableHead className="text-center">Ativas</TableHead>
-                    <TableHead className="text-center">Respostas</TableHead>
-                    <TableHead className="text-center">IPS Médio</TableHead>
-                    <TableHead className="text-center">Alertas</TableHead>
-                    <TableHead className="text-center">Sem mínimo</TableHead>
-                    <TableHead>Última atividade</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-b-muted/50">
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Unidade de Negócio</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Campanhas</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Monitorando</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Amostragem</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Score IPS</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Status Risco</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-wider h-10">Quórum</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-wider h-10">Sincronia</TableHead>
+                    <TableHead className="w-10 h-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
