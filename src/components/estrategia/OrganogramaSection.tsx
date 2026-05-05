@@ -499,10 +499,10 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                   </div>
                 )}
 
-                <Button onClick={handleCreate} disabled={!form.titulo.trim() || isCreating} className="w-full">
-                  {isCreating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-                  Adicionar
-                </Button>
+              <Button onClick={handleCreateOrUpdate} disabled={!form.titulo.trim() || isCreating} className="w-full">
+                {isCreating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                {editingNode ? "Salvar Alterações" : "Adicionar"}
+              </Button>
               </div>
             </DialogContent>
           </Dialog>
