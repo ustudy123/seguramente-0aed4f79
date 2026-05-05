@@ -117,13 +117,16 @@ export function usePonto() {
       queryFn: async (): Promise<PontoDiario[]> => {
         if (!tenantId) return [];
         
+        // Se houver empresa ativa selecionada, filtramos por ela.
+        // Se não houver (ex: SuperAdmin ou empresa não definida no registro), 
+        // buscamos registros onde empresa_id é null ou corresponde ao tenant.
         let query = fromTable("ponto_diario")
           .select("*")
           .eq("tenant_id", tenantId)
           .eq("data", dataStr);
 
         if (empresaAtivaId) {
-          query = query.eq("empresa_id", empresaAtivaId);
+          query = query.or(`empresa_id.eq.${empresaAtivaId},empresa_id.is.null`);
         }
 
         const { data: pontos, error } = await query
