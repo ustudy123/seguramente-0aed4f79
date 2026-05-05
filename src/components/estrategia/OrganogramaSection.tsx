@@ -389,20 +389,26 @@ export function OrganogramaSection({ escopo }: { escopo: EstrategiaEscopo }) {
                     />
                     <div className="max-h-40 overflow-y-auto space-y-0.5">
                       {ocupantesDisponiveis
-                        .filter((nome) => nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
-                        .map((nome) => (
-                          <label key={nome} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
+                        .filter((c) => c.nome.toLowerCase().includes(ocupanteSearch.toLowerCase()))
+                        .map((c) => (
+                          <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer text-sm">
                             <input
                               type="checkbox"
-                              checked={form.selectedOcupantes.includes(nome)}
-                              onChange={() => toggleOcupante(nome)}
+                              checked={form.selectedOcupantes.some(o => o.id === c.id)}
+                              onChange={() => toggleOcupante(c)}
                               className="rounded border-input"
                             />
-                            <User className="w-3.5 h-3.5 text-muted-foreground" />
-                            {nome}
+                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-primary/10 flex items-center justify-center">
+                              {c.foto_url ? (
+                                <img src={c.foto_url} alt={c.nome} className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-3.5 h-3.5 text-primary" />
+                              )}
+                            </div>
+                            <span className="truncate">{c.nome}</span>
                           </label>
                         ))}
-                      {ocupantesDisponiveis.filter((n) => n.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
+                      {ocupantesDisponiveis.filter((c) => c.nome.toLowerCase().includes(ocupanteSearch.toLowerCase())).length === 0 && (
                         <p className="text-xs text-muted-foreground px-2 py-1">Nenhum ocupante encontrado</p>
                       )}
                     </div>
