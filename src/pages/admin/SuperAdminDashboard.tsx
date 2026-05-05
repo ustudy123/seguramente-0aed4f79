@@ -175,6 +175,8 @@ export default function SuperAdminDashboard() {
 
           <TabsContent value="landing"><LandingLeadsTable /></TabsContent>
 
+          <TabsContent value="psicossocial"><PsicossocialSuperAdminPanel /></TabsContent>
+
           <TabsContent value="situacao"><TenantsStatusPanel /></TabsContent>
         </Tabs>
       </div>
