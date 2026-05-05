@@ -15,6 +15,7 @@ import { useEstrategia } from "@/hooks/useEstrategia";
 import { useCargos } from "@/hooks/useCadastros";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { toast } from "sonner";
+import { useStorageImageUrl } from "@/hooks/useStorageImageUrl";
 import type { EstrategiaOrganograma } from "@/types/estrategia";
 import type { EstrategiaEscopo } from "./EstrategiaEscopoSelector";
 import { OrgCanvas } from "./organograma/OrgCanvas";
@@ -97,9 +98,10 @@ function OcupanteItem({ colab, isSelected, onToggle }: {
 }
 
 function AvatarNode({ fotoUrl, size = "default" }: { fotoUrl?: string | null; size?: "small" | "default" }) {
+  const resolved = useStorageImageUrl(fotoUrl);
   return (
     <Avatar className={cn(size === "small" ? "w-6 h-6" : "w-7 h-7")}>
-      <AvatarImage src={fotoUrl || undefined} />
+      <AvatarImage src={resolved || undefined} />
       <AvatarFallback><User className={size === "small" ? "w-3 h-3" : "w-3.5 h-3.5"} /></AvatarFallback>
     </Avatar>
   );
