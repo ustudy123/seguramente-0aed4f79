@@ -442,8 +442,23 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
                 <Input
                   placeholder="000.000.000-00"
                   value={form.colaborador_cpf}
-                  onChange={e => setForm(f => ({ ...f, colaborador_cpf: e.target.value }))}
+                  inputMode="numeric"
+                  maxLength={14}
+                  onChange={e =>
+                    setForm(f => ({ ...f, colaborador_cpf: formatCpf(e.target.value) }))
+                  }
+                  className={cn(
+                    form.colaborador_cpf &&
+                      cleanCpf(form.colaborador_cpf).length === 11 &&
+                      !validateCpf(form.colaborador_cpf) &&
+                      "border-destructive focus-visible:ring-destructive"
+                  )}
                 />
+                {form.colaborador_cpf &&
+                  cleanCpf(form.colaborador_cpf).length === 11 &&
+                  !validateCpf(form.colaborador_cpf) && (
+                    <p className="text-[11px] text-destructive">CPF inválido</p>
+                  )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
