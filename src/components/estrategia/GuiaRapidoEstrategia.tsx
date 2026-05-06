@@ -347,7 +347,7 @@ export function GuiaRapidoEstrategia({ open, onOpenChange, contexto = "geral" }:
               <BookOpen className="h-5 w-5 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-foreground">Guia do Módulo Planejamento e Cultura</h2>
+              <h2 className="font-bold text-base text-foreground">{tituloModulo}</h2>
               <p className="text-xs text-muted-foreground">
                 {passo + 1} de {PASSOS.length} — {atual.titulo}
               </p>
