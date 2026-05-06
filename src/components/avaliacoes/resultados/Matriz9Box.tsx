@@ -205,20 +205,13 @@ export function Matriz9Box() {
                                   <div className="flex -space-x-2">
                                     {colaboradoresQ.slice(0, 4).map((c, i) => {
                                       const colab = colaboradores.find(x => x.id === c.colaborador_id);
-                                      const foto = colab?.foto_url;
                                       return (
-                                        <div
+                                        <ColaboradorAvatar
                                           key={c.id}
-                                          title={c.colaborador_nome}
-                                          className="w-10 h-10 rounded-full bg-background border-2 border-white shadow-lg overflow-hidden flex items-center justify-center text-xs font-bold text-foreground"
-                                          style={{ zIndex: 4 - i }}
-                                        >
-                                          {foto ? (
-                                            <img src={foto} alt={c.colaborador_nome} className="w-full h-full object-cover" />
-                                          ) : (
-                                            <span>{c.colaborador_nome.charAt(0)}</span>
-                                          )}
-                                        </div>
+                                          nome={c.colaborador_nome}
+                                          fotoUrl={colab?.foto_url}
+                                          className="w-10 h-10 border-2 border-white shadow-lg"
+                                        />
                                       );
                                     })}
                                     {colaboradoresQ.length > 4 && (
