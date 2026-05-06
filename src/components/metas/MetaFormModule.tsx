@@ -651,30 +651,37 @@ export function MetaFormModule({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
-                <Command shouldFilter={false}>
-                  <CommandInput placeholder="Buscar colaborador..." value={searchColaborador} onValueChange={setSearchColaborador} />
-                  <CommandList>
-                    <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
-                    <CommandGroup>
-                      {colaboradoresFiltrados.map(c => (
-                        <CommandItem
-                          key={c.user_id}
-                          value={c.nome_completo}
-                          onSelect={() => {
-                            set("colaborador_id", c.user_id);
-                            set("colaborador_nome", c.nome_completo);
-                            set("responsavel_id", c.user_id);
-                            set("responsavel_nome", c.nome_completo);
-                            setOpenColaborador(false);
-                            setSearchColaborador("");
-                          }}
-                        >
-                          {c.nome_completo}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Buscar colaborador..."
+                    value={searchColaborador}
+                    onChange={(e) => setSearchColaborador(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+                <div className="max-h-[240px] overflow-y-auto p-1">
+                  {colaboradoresFiltrados.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum colaborador encontrado.</p>
+                  ) : (
+                    colaboradoresFiltrados.filter(c => c.user_id && c.nome_completo).map(c => (
+                      <button
+                        key={c.user_id}
+                        type="button"
+                        onClick={() => {
+                          set("colaborador_id", c.user_id);
+                          set("colaborador_nome", c.nome_completo);
+                          set("responsavel_id", c.user_id);
+                          set("responsavel_nome", c.nome_completo);
+                          setOpenColaborador(false);
+                          setSearchColaborador("");
+                        }}
+                        className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent"
+                      >
+                        {c.nome_completo}
+                      </button>
+                    ))
+                  )}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
