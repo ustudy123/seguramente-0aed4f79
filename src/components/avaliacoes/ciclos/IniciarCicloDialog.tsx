@@ -173,16 +173,25 @@ export function IniciarCicloDialog({ ciclo, open, onOpenChange, onSuccess }: Ini
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
-          <DialogTitle className="flex items-center gap-2">
-            <Play className="h-5 w-5 text-primary" />
-            Iniciar Ciclo: {ciclo.nome}
-          </DialogTitle>
-          <DialogDescription>
-            O sistema gerará automaticamente as avaliações para todos os colaboradores elegíveis.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>Iniciar Ciclo: {ciclo.nome}</DialogTitle>
+          <DialogDescription>O sistema gerará automaticamente as avaliações para todos os colaboradores elegíveis.</DialogDescription>
+        </VisuallyHidden>
+        <div className="px-6 pt-6">
+          <GradientDialogHeader
+            icon={Play}
+            title={`Iniciar Ciclo: ${ciclo.nome}`}
+            description="O sistema gerará automaticamente as avaliações dos colaboradores elegíveis e enviará as notificações."
+            gradient="from-emerald-500 via-teal-500 to-cyan-600"
+            glow="shadow-emerald-500/40"
+            step={{
+              current: step === "review" ? 0 : step === "processing" ? 1 : 2,
+              total: 3,
+              labels: ["Revisar", "Gerando", "Concluído"],
+            }}
+          />
+        </div>
 
         {step === "review" && (
           <>
