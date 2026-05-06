@@ -257,13 +257,17 @@ export function PdiDocumentoModal({ open, onClose, pdi, checkins, feedbacks }: P
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-6xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
+        <DialogHeader className="relative px-6 py-4 border-b flex-shrink-0 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+          <div className="relative flex items-center justify-between gap-2 flex-wrap">
+            <DialogTitle className="text-lg font-bold flex items-center gap-2 text-white drop-shadow">
+              <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30">
+                <FileText className="w-5 h-5" />
+              </div>
               Documento PDI — {pdi.colaborador_nome}
             </DialogTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {!loading && html && (
                 <>
                   {saved && (
