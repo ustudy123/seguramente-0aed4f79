@@ -175,17 +175,13 @@ export function useEstrategia(escopo?: EstrategiaEscopo) {
   const upsertCultura = useMutation({
     mutationFn: async (input: Partial<EstrategiaCultura>) => {
       const payload = { ...input, tenant_id: tenantId, ...scopePayload(), criado_por: user?.id, criado_por_nome: user?.user_metadata?.nome || user?.email };
-      // For grupo scope we can't use tenant_id as the conflict key — use id if exists, else insert
-      if (isGrupo) {
-        if (cultura?.id) {
-          const { error } = await fromTable("estrategia_cultura").update(payload as any).eq("id", cultura.id) as { error: Error | null };
-          if (error) throw error;
-        } else {
-          const { error } = await fromTable("estrategia_cultura").insert(payload as any) as { error: Error | null };
-          if (error) throw error;
-        }
+      // Always update by id when there is already a record for the active scope, else insert.
+      // This guarantees isolation per empresa / per grupo (avoiding overwriting other companies).
+      if (cultura?.id) {
+        const { error } = await fromTable("estrategia_cultura").update(payload as any).eq("id", cultura.id) as { error: Error | null };
+        if (error) throw error;
       } else {
-        const { error } = await fromTable("estrategia_cultura").upsert(payload as never, { onConflict: "tenant_id" }) as { error: Error | null };
+        const { error } = await fromTable("estrategia_cultura").insert(payload as any) as { error: Error | null };
         if (error) throw error;
       }
     },
