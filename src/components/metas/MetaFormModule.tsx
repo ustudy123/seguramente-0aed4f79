@@ -433,7 +433,7 @@ export function MetaFormModule({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
-                <Command>
+                <Command shouldFilter={false}>
                   <CommandInput placeholder="Buscar unidade..." value={searchUnidade} onValueChange={setSearchUnidade} />
                   <CommandList>
                     <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
@@ -477,7 +477,7 @@ export function MetaFormModule({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
-                <Command>
+                <Command shouldFilter={false}>
                   <CommandInput placeholder="Buscar setor..." value={searchSetor} onValueChange={setSearchSetor} />
                   <CommandList>
                     <CommandEmpty>Nenhum setor encontrado.</CommandEmpty>
@@ -520,7 +520,7 @@ export function MetaFormModule({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
-                <Command>
+                <Command shouldFilter={false}>
                   <CommandInput placeholder="Buscar colaborador..." value={searchColaborador} onValueChange={setSearchColaborador} />
                   <CommandList>
                     <CommandEmpty>Nenhum colaborador encontrado.</CommandEmpty>
