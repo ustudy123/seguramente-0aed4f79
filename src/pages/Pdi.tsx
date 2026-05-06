@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Target, TrendingUp, CheckCircle2, Users, BarChart3 } from "lucide-react";
+import { Plus, Target, TrendingUp, CheckCircle2, Users, BarChart3, UserPlus, ListChecks, CalendarCheck, Sparkles, HelpCircle, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { usePdi } from "@/hooks/usePdi";
 import { PdiStats } from "@/components/pdi/PdiStats";
 import { PdiList } from "@/components/pdi/PdiList";
