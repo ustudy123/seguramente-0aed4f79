@@ -20,6 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Users, Play, AlertCircle, UserCheck, CheckCircle2 } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 
 interface IniciarCicloDialogProps {
   ciclo: AvaliacaoCiclo;
