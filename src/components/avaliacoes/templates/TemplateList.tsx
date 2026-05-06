@@ -202,13 +202,20 @@ export function TemplateList() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+        <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <VisuallyHidden>
             <DialogTitle>Novo Template de Avaliação</DialogTitle>
-            <DialogDescription>
-              Crie um modelo reutilizável para seus ciclos de avaliação
-            </DialogDescription>
-          </DialogHeader>
+            <DialogDescription>Crie um modelo reutilizável para seus ciclos de avaliação</DialogDescription>
+          </VisuallyHidden>
+          <div className="px-6 pt-6">
+            <GradientDialogHeader
+              icon={FileText}
+              title="Novo Template de Avaliação"
+              description="Modelo reutilizável (90°, 180°, 360°, autoavaliação) com competências, escalas e perguntas padrão por cargo ou nível."
+              gradient="from-amber-500 via-orange-500 to-rose-500"
+              glow="shadow-amber-500/40"
+            />
+          </div>
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <TemplateForm onSuccess={() => setShowForm(false)} />
           </div>
@@ -216,13 +223,20 @@ export function TemplateList() {
       </Dialog>
 
       <Dialog open={!!editingTemplate} onOpenChange={() => setEditingTemplate(null)}>
-        <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+        <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <VisuallyHidden>
             <DialogTitle>Editar Template</DialogTitle>
-            <DialogDescription>
-              Modifique as configurações do template de avaliação
-            </DialogDescription>
-          </DialogHeader>
+            <DialogDescription>Modifique as configurações do template de avaliação</DialogDescription>
+          </VisuallyHidden>
+          <div className="px-6 pt-6">
+            <GradientDialogHeader
+              icon={Edit}
+              title="Editar Template"
+              description="Ajuste competências, escalas e perguntas. As alterações valem para os próximos ciclos que usarem este template."
+              gradient="from-amber-500 via-orange-500 to-rose-500"
+              glow="shadow-amber-500/40"
+            />
+          </div>
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {editingTemplate && (
               <TemplateForm 
