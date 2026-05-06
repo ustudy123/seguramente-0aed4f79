@@ -182,11 +182,14 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
   };
 
   // Estatísticas — combina elegíveis individuais + respostas anônimas (Link Geral)
-  const elegiveis = participacoes.length;
+  // Quando a campanha é anônima (sem elegíveis nominais), usamos o total de respostas
+  // como fonte de verdade — espelhando a lógica do modal de Resultados.
+  const elegiveisNominais = participacoes.length;
   const respondidosIndividuais = participacoes.filter(p => p.respondido).length;
   const responderam = Math.max(respondidosIndividuais, totalRespostasReais);
+  const elegiveis = elegiveisNominais > 0 ? elegiveisNominais : responderam;
   const total = Math.max(elegiveis, responderam);
-  const pendentes = Math.max(0, elegiveis - respondidosIndividuais);
+  const pendentes = Math.max(0, elegiveisNominais - respondidosIndividuais);
   const taxa = total > 0 ? Math.round((responderam / total) * 100) : 0;
   const MINIMO = 5;
 
@@ -211,11 +214,15 @@ export function ParticipacaoManager({ campanha }: ParticipacaoManagerProps) {
               <span className="text-xs text-muted-foreground">Elegíveis</span>
             </div>
             <p className="text-2xl font-bold mt-1">{elegiveis}</p>
-            {totalRespostasReais > elegiveis && (
+            {elegiveisNominais === 0 && totalRespostasReais > 0 ? (
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                +{totalRespostasReais} via Link Geral (anônimo)
+                Campanha anônima — respostas via Link Geral
               </p>
-            )}
+            ) : totalRespostasReais > elegiveisNominais ? (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                +{totalRespostasReais - respondidosIndividuais} via Link Geral (anônimo)
+              </p>
+            ) : null}
           </CardContent>
         </Card>
         <Card>
