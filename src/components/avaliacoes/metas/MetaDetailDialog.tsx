@@ -28,38 +28,46 @@ interface MetaDetailDialogProps {
 export function MetaDetailDialog({ meta, open, onOpenChange }: MetaDetailDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <DialogTitle className="text-xl">{meta.titulo}</DialogTitle>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline">
-                  {PERIODO_LABELS[meta.periodo]} {meta.ano}
-                  {meta.trimestre && ` ${meta.trimestre}º Trimestre`}
-                </Badge>
-                <Badge variant="secondary">
-                  {CATEGORIA_META_LABELS[(meta.categoria_meta as CategoriaMetaMEA) || "operacional"]}
-                </Badge>
-                <Badge>{STATUS_META_LABELS[meta.status]}</Badge>
-                {(meta.ierm_score !== undefined && meta.ierm_score > 0) && (
-                  <IermBadge 
-                    score={meta.ierm_score} 
-                    nivel={(meta.ierm_nivel as IermNivel) || "segura"} 
-                    compact 
-                  />
-                )}
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Progresso</span>
-                  <span className="font-medium">{meta.progresso}%</span>
-                </div>
-                <Progress value={meta.progresso} className="h-2" />
-              </div>
-            </div>
+      <DialogContent className="w-full max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>{meta.titulo}</DialogTitle>
+          <DialogDescription>Detalhes da meta, ações vinculadas e histórico</DialogDescription>
+        </VisuallyHidden>
+        <div className="px-6 pt-6">
+          <GradientDialogHeader
+            icon={Target}
+            title={meta.titulo}
+            description="Detalhes, AEM (análise ergonômica), ações 5W2H e timeline da meta."
+            gradient="from-pink-500 via-rose-500 to-fuchsia-600"
+            glow="shadow-pink-500/40"
+          />
+        </div>
+        <div className="px-6 pt-4 pb-3 border-b shrink-0 space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline">
+              {PERIODO_LABELS[meta.periodo]} {meta.ano}
+              {meta.trimestre && ` ${meta.trimestre}º Trimestre`}
+            </Badge>
+            <Badge variant="secondary">
+              {CATEGORIA_META_LABELS[(meta.categoria_meta as CategoriaMetaMEA) || "operacional"]}
+            </Badge>
+            <Badge>{STATUS_META_LABELS[meta.status]}</Badge>
+            {(meta.ierm_score !== undefined && meta.ierm_score > 0) && (
+              <IermBadge
+                score={meta.ierm_score}
+                nivel={(meta.ierm_nivel as IermNivel) || "segura"}
+                compact
+              />
+            )}
           </div>
-        </DialogHeader>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Progresso</span>
+              <span className="font-medium">{meta.progresso}%</span>
+            </div>
+            <Progress value={meta.progresso} className="h-2" />
+          </div>
+        </div>
 
         <div className="flex-1 overflow-y-auto">
           <Tabs defaultValue="acoes" className="w-full">
