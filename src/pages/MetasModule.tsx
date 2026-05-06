@@ -237,7 +237,7 @@ export default function Metas() {
                       )}
                     >
                       <Icon className="w-3.5 h-3.5" />
-                      {n.label}
+                      {n.labelCurto}
                       <span className="ml-0.5 text-[10px] opacity-80">({count})</span>
                     </button>
                   );
