@@ -382,10 +382,14 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
               {/* Evidências */}
               <TabsContent value="evidencias" className="mt-0 space-y-3">
+                <div className="rounded-lg border border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> O que anexar aqui?</p>
+                  <p>Comprovantes do que foi declarado nos check-ins: <strong>fotos, listas de presença, certificados, planilhas, links de relatório</strong>. Recomendado anexar 1 evidência a cada check-in para dar segurança jurídica à meta.</p>
+                </div>
                 <MetaEvidenciaForm metaId={meta.id} onSave={handleAddEvidencia} />
 
                 {evidencias.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma evidência anexada.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma evidência anexada ainda.</p>
                 ) : (
                   evidencias.map((e: any) => (
                     <div key={e.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-2 border border-border/50">
@@ -446,6 +450,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
               </TabsContent>
 
               <TabsContent value="participantes" className="mt-0 space-y-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900 p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Para que serve?</p>
+                  <p>Lista quem mais participa da execução além do responsável principal (corresponsáveis, apoio). <strong>Defina uma vez ao planejar a meta</strong> — não precisa atualizar a cada check-in.</p>
+                </div>
                 <Card>
                   <CardContent className="space-y-3 p-4">
                     <div className="flex items-center justify-between gap-3">
@@ -491,6 +499,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
               {/* Análise IA */}
               <TabsContent value="risco" className="mt-0 space-y-4">
+                <div className="rounded-lg border border-purple-200 bg-purple-50/60 dark:bg-purple-950/20 dark:border-purple-900 p-3 text-xs text-purple-900 dark:text-purple-200 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Quando usar?</p>
+                  <p>Diagnóstico opcional da IA cruzando <strong>progresso atual × tempo restante × histórico de check-ins</strong>. Útil antes de reuniões de acompanhamento ou quando a meta parece atrasada. Não roda automaticamente — clique no botão abaixo.</p>
+                </div>
                 <Button variant="outline" onClick={handleAnaliseRisco} disabled={isAnalysing} className="gap-1.5">
                   {isAnalysing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   Analisar Risco com IA
@@ -536,6 +548,10 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
               {/* Histórico */}
               <TabsContent value="historico" className="mt-0 space-y-2">
+                <div className="rounded-lg border border-slate-200 bg-slate-50/60 dark:bg-slate-900/40 dark:border-slate-800 p-3 text-xs text-slate-700 dark:text-slate-300 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><History className="h-3.5 w-3.5" /> Linha do tempo automática</p>
+                  <p>Registra <strong>tudo o que aconteceu com a meta</strong>: criação, envios para aprovação, mudanças de status e quem fez cada ação. <strong>Apenas leitura</strong> — preenchido pelo sistema.</p>
+                </div>
                 {workflowLogs.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Sem histórico de workflow.</p>
                 ) : (
