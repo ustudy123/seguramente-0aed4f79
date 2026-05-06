@@ -29,6 +29,8 @@ import {
 import { useAvaliacoes } from "@/hooks/useAvaliacoes";
 import { TemplateForm } from "./TemplateForm";
 import type { AvaliacaoTemplate } from "@/types/avaliacao";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 
 export function TemplateList() {
   const { templates, isLoadingTemplates, deleteTemplate, updateTemplate } = useAvaliacoes();
