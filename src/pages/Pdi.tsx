@@ -25,33 +25,55 @@ const PDI = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Target className="w-7 h-7 text-primary" />
-            PDI — Plano de Desenvolvimento Individual
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Estruture metas, ações e acompanhamentos para o crescimento de cada colaborador.
-          </p>
+      {/* Header com gradiente 3D */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-info to-purple-600 p-6 md:p-8 shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.5)]"
+      >
+        {/* Decorações */}
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-purple-300/20 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
+                <Target className="w-7 h-7 drop-shadow" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold drop-shadow-md">
+                PDI — Plano de Desenvolvimento Individual
+              </h1>
+            </div>
+            <p className="text-white/90 text-sm md:text-base max-w-2xl">
+              Estruture metas, ações e acompanhamentos para o crescimento de cada colaborador.
+            </p>
+          </div>
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }}>
+            <Button
+              onClick={() => setShowForm(true)}
+              size="lg"
+              className="gap-2 bg-white text-primary hover:bg-white/95 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] font-semibold"
+            >
+              <Plus className="w-4 h-4" /> Criar novo PDI
+            </Button>
+          </motion.div>
         </div>
-        <Button onClick={() => setShowForm(true)} size="lg" className="gap-2 shadow-md">
-          <Plus className="w-4 h-4" /> Criar novo PDI
-        </Button>
       </motion.div>
 
       {/* Banner: O que é PDI */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-info/5">
-          <CardContent className="p-5">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-                <Lightbulb className="w-5 h-5" />
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-rose-950/30 shadow-lg">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-300/20 rounded-full blur-3xl" />
+          <CardContent className="relative p-5">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shrink-0 shadow-lg shadow-orange-500/30">
+                <Lightbulb className="w-5 h-5 drop-shadow" />
               </div>
               <div className="flex-1">
-                <h2 className="font-semibold text-foreground mb-1">O que é o PDI e para que serve?</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="font-bold text-foreground mb-1.5 text-base">O que é o PDI e para que serve?</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   O Plano de Desenvolvimento Individual organiza, em um único lugar,{" "}
                   <strong className="text-foreground">o que cada colaborador precisa desenvolver</strong>,{" "}
                   <strong className="text-foreground">como vai desenvolver</strong> e{" "}
@@ -64,25 +86,35 @@ const PDI = () => {
         </Card>
       </motion.div>
 
-      {/* Passo a passo */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      {/* Passo a passo com gradientes coloridos */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { icon: UserPlus, title: "1. Crie um PDI", desc: "Selecione o colaborador, defina período (trimestral, semestral ou anual) e responsáveis." },
-          { icon: Target, title: "2. Adicione metas SMART", desc: "Específicas, mensuráveis, atingíveis, relevantes e com prazo. Use a I.A. para sugestões." },
-          { icon: ListChecks, title: "3. Defina ações", desc: "Quebre cada meta em tarefas, hábitos, treinamentos ou mentorias com prazos claros." },
-          { icon: CalendarCheck, title: "4. Faça check-ins", desc: "Registre avanços, bloqueios e evidências. Acompanhe o progresso em tempo real." },
-        ].map((s) => (
-          <Card key={s.title} className="hover:shadow-md transition-shadow border-l-4 border-l-primary/40">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-                  <s.icon className="w-4 h-4" />
+          { icon: UserPlus, title: "1. Crie um PDI", desc: "Selecione o colaborador, defina período (trimestral, semestral ou anual) e responsáveis.", gradient: "from-violet-500 to-purple-600", glow: "shadow-violet-500/30" },
+          { icon: Target, title: "2. Adicione metas SMART", desc: "Específicas, mensuráveis, atingíveis, relevantes e com prazo. Use a I.A. para sugestões.", gradient: "from-pink-500 to-rose-600", glow: "shadow-pink-500/30" },
+          { icon: ListChecks, title: "3. Defina ações", desc: "Quebre cada meta em tarefas, hábitos, treinamentos ou mentorias com prazos claros.", gradient: "from-sky-500 to-cyan-600", glow: "shadow-sky-500/30" },
+          { icon: CalendarCheck, title: "4. Faça check-ins", desc: "Registre avanços, bloqueios e evidências. Acompanhe o progresso em tempo real.", gradient: "from-emerald-500 to-teal-600", glow: "shadow-emerald-500/30" },
+        ].map((s, i) => (
+          <motion.div
+            key={s.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 + i * 0.07, type: "spring", stiffness: 120 }}
+            whileHover={{ y: -6, rotateX: 5, rotateY: -3, scale: 1.02 }}
+            style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+          >
+            <Card className={`relative overflow-hidden h-full border-0 bg-card shadow-lg ${s.glow} hover:shadow-xl transition-shadow`}>
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${s.gradient}`} />
+              <CardContent className="p-4 pt-5">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className={`p-2 rounded-xl bg-gradient-to-br ${s.gradient} text-white shadow-md ${s.glow}`}>
+                    <s.icon className="w-4 h-4 drop-shadow" />
+                  </div>
+                  <h3 className="font-bold text-sm text-foreground">{s.title}</h3>
                 </div>
-                <h3 className="font-semibold text-sm text-foreground">{s.title}</h3>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </motion.div>
 
