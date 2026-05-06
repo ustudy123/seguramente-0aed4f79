@@ -382,10 +382,14 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
               {/* Evidências */}
               <TabsContent value="evidencias" className="mt-0 space-y-3">
+                <div className="rounded-lg border border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> O que anexar aqui?</p>
+                  <p>Comprovantes do que foi declarado nos check-ins: <strong>fotos, listas de presença, certificados, planilhas, links de relatório</strong>. Recomendado anexar 1 evidência a cada check-in para dar segurança jurídica à meta.</p>
+                </div>
                 <MetaEvidenciaForm metaId={meta.id} onSave={handleAddEvidencia} />
 
                 {evidencias.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma evidência anexada.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma evidência anexada ainda.</p>
                 ) : (
                   evidencias.map((e: any) => (
                     <div key={e.id} className="p-3 bg-muted/50 rounded-lg text-xs space-y-2 border border-border/50">
