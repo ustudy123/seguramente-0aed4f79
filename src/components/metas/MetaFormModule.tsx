@@ -556,7 +556,9 @@ export function MetaFormModule({
             <Input value={form.responsavel_nome || ""} onChange={e => set("responsavel_nome", e.target.value)} placeholder="Nome do responsável" />
           </div>
         )}
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <MetaParticipantesEditor
         compartilhada={Boolean(form.compartilhada)}
