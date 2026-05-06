@@ -6,13 +6,15 @@ const corsHeaders = {
 };
 
 interface PlanoAcaoRequest {
-  tipo: "sugerir" | "gerar_5w2h" | "priorizar";
+  tipo: "sugerir" | "gerar_5w2h" | "priorizar" | "sugerir_campo";
   contexto: string;
   dados?: {
     titulo?: string;
     descricao?: string;
     origem?: string;
     risco?: string;
+    campo?: string;
+    valorAtual?: string;
   };
 }
 
