@@ -35,6 +35,39 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
   });
 
   const selectedColab = colaboradores.find(c => c.id === form.colaborador_id);
+  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | null>(null);
+
+  const sugerir = async (campo: "titulo" | "descricao") => {
+    if (!selectedColab) {
+      toast.error("Selecione um colaborador antes de pedir sugestão");
+      return;
+    }
+    setAiLoading(campo);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-pdi-sugestao", {
+        body: {
+          campo,
+          colaborador_nome: selectedColab.nome_completo,
+          colaborador_cargo: selectedColab.cargo,
+          colaborador_departamento: selectedColab.departamento,
+          periodo: form.periodo,
+          gatilho: form.gatilho,
+          titulo: form.titulo,
+          descricao: form.descricao,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const sugestao = data?.sugestao?.trim();
+      if (!sugestao) throw new Error("Sem sugestão");
+      setForm(f => ({ ...f, [campo]: sugestao }));
+      toast.success("Sugestão aplicada");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao gerar sugestão");
+    } finally {
+      setAiLoading(null);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.colaborador_id || !form.titulo || !form.data_inicio || !form.data_fim) return;
