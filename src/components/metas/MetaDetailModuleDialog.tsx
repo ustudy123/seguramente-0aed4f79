@@ -131,16 +131,17 @@ export function MetaDetailModuleDialog({ meta, open, onOpenChange, onCheckin, on
 
   const handleCheckin = async () => {
     if (!meta || !onCheckin) return;
-    const prog = parseInt(checkinProgress);
-    if (isNaN(prog)) { toast.error("Informe o progresso"); return; }
+    if (checkinValue === "" || isNaN(valorNumerico)) {
+      toast.error("Informe o valor atual alcançado");
+      return;
+    }
     await onCheckin({
       meta_id: meta.id,
-      valor_novo: checkinValue ? parseFloat(checkinValue) : undefined,
-      progresso_novo: prog,
+      valor_novo: valorNumerico,
+      progresso_novo: progressoCalculado,
       observacao: checkinObs || undefined,
     });
     setCheckinValue("");
-    setCheckinProgress("");
     setCheckinObs("");
     toast.success("Check-in registrado!");
   };
