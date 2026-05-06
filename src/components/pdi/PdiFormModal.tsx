@@ -192,7 +192,18 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={isCreating || !form.colaborador_id || !form.titulo || !form.data_fim} className="w-full">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Observações</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir("observacoes")} disabled={aiLoading !== null}>
+                {aiLoading === "observacoes" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Sugerir com I.A.
+              </Button>
+            </div>
+            <Textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} rows={2} placeholder="Pontos de atenção, oportunidades, cuidados…" />
+          </div>
+
+          <Button onClick={handleSubmit} disabled={isCreating || !form.colaborador_id || !form.titulo || !form.data_fim} className="w-full bg-gradient-to-r from-primary via-info to-purple-600 hover:opacity-95 shadow-lg shadow-primary/30">
             {isCreating ? "Criando..." : "Criar PDI"}
           </Button>
         </div>
