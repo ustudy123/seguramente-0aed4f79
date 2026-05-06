@@ -202,11 +202,29 @@ export function Matriz9Box() {
                               {colaboradoresQ.length > 0 ? (
                                 <>
                                   <div className="flex -space-x-2">
-                                    {colaboradoresQ.slice(0, 3).map((c, i) => (
-                                      <div key={c.id} className="w-8 h-8 rounded-full bg-background border-2 border-background shadow flex items-center justify-center text-xs font-bold text-foreground" style={{ zIndex: 3 - i }}>
-                                        {c.colaborador_nome.charAt(0)}
+                                    {colaboradoresQ.slice(0, 4).map((c, i) => {
+                                      const colab = colaboradores.find(x => x.id === c.colaborador_id);
+                                      const foto = colab?.foto_url;
+                                      return (
+                                        <div
+                                          key={c.id}
+                                          title={c.colaborador_nome}
+                                          className="w-10 h-10 rounded-full bg-background border-2 border-white shadow-lg overflow-hidden flex items-center justify-center text-xs font-bold text-foreground"
+                                          style={{ zIndex: 4 - i }}
+                                        >
+                                          {foto ? (
+                                            <img src={foto} alt={c.colaborador_nome} className="w-full h-full object-cover" />
+                                          ) : (
+                                            <span>{c.colaborador_nome.charAt(0)}</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                    {colaboradoresQ.length > 4 && (
+                                      <div className="w-10 h-10 rounded-full bg-background/90 border-2 border-white shadow-lg flex items-center justify-center text-xs font-bold text-foreground">
+                                        +{colaboradoresQ.length - 4}
                                       </div>
-                                    ))}
+                                    )}
                                   </div>
                                   <span className="text-xs font-semibold text-white drop-shadow">
                                     {colaboradoresQ.length} colaborador{colaboradoresQ.length > 1 ? "es" : ""}
@@ -251,22 +269,29 @@ export function Matriz9Box() {
                   </Badge>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {colaboradoresPorQuadrante[selectedQuadrante].map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <Users className="h-5 w-5 text-primary" />
+                  {colaboradoresPorQuadrante[selectedQuadrante].map((item) => {
+                    const colab = colaboradores.find(x => x.id === item.colaborador_id);
+                    return (
+                      <div key={item.id} className="flex items-center gap-3 p-3 bg-background rounded-lg">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                          {colab?.foto_url ? (
+                            <img src={colab.foto_url} alt={item.colaborador_nome} className="w-full h-full object-cover" />
+                          ) : (
+                            <Users className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.colaborador_nome}</p>
+                          {item.justificativa && (
+                            <p className="text-xs text-muted-foreground truncate">{item.justificativa}</p>
+                          )}
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => abrirModal(item)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{item.colaborador_nome}</p>
-                        {item.justificativa && (
-                          <p className="text-xs text-muted-foreground truncate">{item.justificativa}</p>
-                        )}
-                      </div>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => abrirModal(item)}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
