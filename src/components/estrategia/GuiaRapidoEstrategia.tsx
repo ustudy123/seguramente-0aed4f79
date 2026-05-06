@@ -11,12 +11,15 @@ import {
 import { cn } from "@/lib/utils";
 import { ManualEstrategia } from "./ManualEstrategia";
 
+type GuiaContexto = "geral" | "cultura" | "organograma";
+
 interface GuiaRapidoEstrategiaProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  contexto?: GuiaContexto;
 }
 
-const PASSOS = [
+const PASSOS_GERAL = [
   {
     id: "overview",
     icon: Compass,
