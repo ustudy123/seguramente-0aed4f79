@@ -214,11 +214,14 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
           </div>
 
           <div>
-            <Label>Observações</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Observações</Label>
+              {aiBtn("observacoes")}
+            </div>
             <Textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} rows={2} placeholder="Anotações gerais sobre o PDI" />
           </div>
 
-          <Button onClick={handleSubmit} disabled={saving || !form.titulo || !form.data_inicio || !form.data_fim} className="w-full">
+          <Button onClick={handleSubmit} disabled={saving || !form.titulo || !form.data_inicio || !form.data_fim} className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 shadow-lg shadow-sky-500/30">
             {saving ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
