@@ -42,6 +42,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { CampanhaPsicossocial } from "@/types/psicossocial";
 import { cn } from "@/lib/utils";
+import { formatCpf, cleanCpf, validateCpf } from "@/lib/cpf";
 
 interface Participacao {
   id: string;
