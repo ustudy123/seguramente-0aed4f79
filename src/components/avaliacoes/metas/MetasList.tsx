@@ -32,6 +32,8 @@ import { IERM_CONFIG, CATEGORIA_META_LABELS, type IermNivel, type CategoriaMetaM
 import { MetaForm } from "./MetaForm";
 import { IermBadge } from "./IermBadge";
 import { MetaDetailDialog } from "./MetaDetailDialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 
 const statusConfig: Record<MetaStatus, { color: string; icon: typeof Clock }> = {
   nao_iniciada: { color: "bg-slate-100 text-slate-700", icon: Clock },
@@ -382,13 +384,20 @@ export function MetasList() {
 
       {/* New Meta Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+        <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <VisuallyHidden>
             <DialogTitle>Nova Meta Ergonomicamente Alinhada</DialogTitle>
-            <DialogDescription>
-              Defina a meta e sua análise ergonômica integrada
-            </DialogDescription>
-          </DialogHeader>
+            <DialogDescription>Defina a meta e sua análise ergonômica integrada</DialogDescription>
+          </VisuallyHidden>
+          <div className="px-6 pt-6">
+            <GradientDialogHeader
+              icon={Target}
+              title="Nova Meta SMART"
+              description="Específica · Mensurável · Atingível · Relevante · Temporal — com análise ergonômica integrada (IERM) para evitar sobrecarga."
+              gradient="from-pink-500 via-rose-500 to-fuchsia-600"
+              glow="shadow-pink-500/40"
+            />
+          </div>
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <MetaForm onSuccess={() => setShowForm(false)} />
           </div>
@@ -397,10 +406,19 @@ export function MetasList() {
 
       {/* OKR Dialog */}
       <Dialog open={!!okrMetaId} onOpenChange={(open) => !open && setOkrMetaId(null)}>
-        <DialogContent className="w-full max-w-md max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+        <DialogContent className="w-full max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <VisuallyHidden>
             <DialogTitle>Novo Resultado-Chave</DialogTitle>
-          </DialogHeader>
+          </VisuallyHidden>
+          <div className="px-6 pt-6">
+            <GradientDialogHeader
+              icon={ListChecks}
+              title="Novo Resultado-Chave"
+              description="Defina um Key Result mensurável que comprove o progresso do Objective."
+              gradient="from-fuchsia-500 via-pink-500 to-rose-500"
+              glow="shadow-fuchsia-500/40"
+            />
+          </div>
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label>Resultado-Chave *</Label>

@@ -35,6 +35,8 @@ import { ptBR } from "date-fns/locale";
 import { STATUS_CICLO_LABELS, type AvaliacaoCicloStatus, type AvaliacaoCiclo } from "@/types/avaliacao";
 import { CicloForm } from "./CicloForm";
 import { IniciarCicloDialog } from "./IniciarCicloDialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { GradientDialogHeader } from "@/components/pdi/GradientDialogHeader";
 
 const statusConfig: Record<AvaliacaoCicloStatus, { color: string; icon: typeof Play }> = {
   rascunho: { color: "bg-slate-100 text-slate-700", icon: Edit },
@@ -226,13 +228,20 @@ export function CicloList() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
+        <DialogContent className="w-full max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <VisuallyHidden>
             <DialogTitle>Novo Ciclo de Avaliação</DialogTitle>
-            <DialogDescription>
-              Configure um novo ciclo de avaliação de desempenho
-            </DialogDescription>
-          </DialogHeader>
+            <DialogDescription>Configure um novo ciclo de avaliação de desempenho</DialogDescription>
+          </VisuallyHidden>
+          <div className="px-6 pt-6">
+            <GradientDialogHeader
+              icon={Calendar}
+              title="Novo Ciclo de Avaliação"
+              description="Defina período, abrangência, template e regras de quem avalia quem. O sistema gera automaticamente as avaliações dos elegíveis."
+              gradient="from-sky-500 via-blue-500 to-indigo-600"
+              glow="shadow-sky-500/40"
+            />
+          </div>
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <CicloForm onSuccess={() => setShowForm(false)} />
           </div>
