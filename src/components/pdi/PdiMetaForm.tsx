@@ -356,9 +356,9 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
             {step > 0 ? "Voltar" : "Cancelar"}
           </Button>
           {step < steps.length - 1 ? (
-            <Button onClick={() => handleStepChange(step + 1)} disabled={step === 0 && !form.titulo}>Próximo</Button>
+            <Button onClick={() => handleStepChange(step + 1)} disabled={step === 0 && !form.titulo} className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:opacity-95 shadow-lg shadow-pink-500/30">Próximo</Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={!form.titulo}>Criar Meta</Button>
+            <Button onClick={handleSubmit} disabled={!form.titulo} className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:opacity-95 shadow-lg shadow-pink-500/30">Criar Meta</Button>
           )}
         </div>
       </DialogContent>
