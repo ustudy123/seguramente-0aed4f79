@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { ResponsavelSelect } from "@/components/planoAcao/ResponsavelSelect";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Target } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import type { PdiInsert, PdiPeriodo } from "@/types/pdi";
 import { PDI_PERIODO_LABELS } from "@/types/pdi";
+import { GradientDialogHeader } from "./GradientDialogHeader";
 
 interface PdiFormModalProps {
   open: boolean;
@@ -35,9 +37,9 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
   });
 
   const selectedColab = colaboradores.find(c => c.id === form.colaborador_id);
-  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | null>(null);
+  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | "observacoes" | null>(null);
 
-  const sugerir = async (campo: "titulo" | "descricao") => {
+  const sugerir = async (campo: "titulo" | "descricao" | "observacoes") => {
     if (!selectedColab) {
       toast.error("Selecione um colaborador antes de pedir sugestão");
       return;
@@ -91,11 +93,18 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
+        <VisuallyHidden>
           <DialogTitle>Novo PDI</DialogTitle>
-          <DialogDescription>Crie um plano de desenvolvimento para um colaborador</DialogDescription>
-        </DialogHeader>
+          <DialogDescription>Crie um plano de desenvolvimento estruturado para um colaborador</DialogDescription>
+        </VisuallyHidden>
+        <GradientDialogHeader
+          icon={Target}
+          title="Novo PDI"
+          description="Crie um plano de desenvolvimento estruturado para um colaborador"
+          gradient="from-primary via-info to-purple-600"
+          glow="shadow-primary/40"
+        />
 
         <div className="space-y-4">
           <div>
@@ -183,7 +192,18 @@ export const PdiFormModal = ({ open, onOpenChange, onCreate, isCreating }: PdiFo
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={isCreating || !form.colaborador_id || !form.titulo || !form.data_fim} className="w-full">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Observações</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir("observacoes")} disabled={aiLoading !== null}>
+                {aiLoading === "observacoes" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Sugerir com I.A.
+              </Button>
+            </div>
+            <Textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} rows={2} placeholder="Pontos de atenção, oportunidades, cuidados…" />
+          </div>
+
+          <Button onClick={handleSubmit} disabled={isCreating || !form.colaborador_id || !form.titulo || !form.data_fim} className="w-full bg-gradient-to-r from-primary via-info to-purple-600 hover:opacity-95 shadow-lg shadow-primary/30">
             {isCreating ? "Criando..." : "Criar PDI"}
           </Button>
         </div>

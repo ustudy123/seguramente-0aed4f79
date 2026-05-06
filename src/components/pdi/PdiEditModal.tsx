@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { ResponsavelSelect } from "@/components/planoAcao/ResponsavelSelect";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles, Loader2, Pencil } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { GradientDialogHeader } from "./GradientDialogHeader";
 import type { Pdi, PdiPeriodo, PdiStatus } from "@/types/pdi";
 import { PDI_PERIODO_LABELS, PDI_STATUS_LABELS } from "@/types/pdi";
 
@@ -30,6 +35,40 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
     observacoes: "",
   });
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState<"titulo" | "descricao" | "observacoes" | null>(null);
+
+  const sugerir = async (campo: "titulo" | "descricao" | "observacoes") => {
+    setAiLoading(campo);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-pdi-sugestao", {
+        body: {
+          campo,
+          colaborador_nome: pdi.colaborador_nome,
+          colaborador_cargo: pdi.colaborador_cargo,
+          colaborador_departamento: pdi.colaborador_departamento,
+          periodo: form.periodo,
+          gatilho: form.gatilho,
+          titulo: form.titulo,
+          descricao: form.descricao,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setForm(f => ({ ...f, [campo]: data?.sugestao || "" }));
+      toast.success("Sugestão aplicada");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao gerar sugestão");
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const aiBtn = (campo: "titulo" | "descricao" | "observacoes") => (
+    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary" onClick={() => sugerir(campo)} disabled={aiLoading !== null}>
+      {aiLoading === campo ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+      Sugerir com I.A.
+    </Button>
+  );
 
   useEffect(() => {
     if (open && pdi) {
@@ -72,11 +111,18 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-6">
+        <VisuallyHidden>
           <DialogTitle>Editar PDI</DialogTitle>
           <DialogDescription>Atualize as informações do plano de desenvolvimento</DialogDescription>
-        </DialogHeader>
+        </VisuallyHidden>
+        <GradientDialogHeader
+          icon={Pencil}
+          title="Editar PDI"
+          description="Atualize as informações do plano de desenvolvimento"
+          gradient="from-sky-500 via-blue-500 to-indigo-600"
+          glow="shadow-sky-500/40"
+        />
 
         <div className="space-y-4">
           {/* Colaborador (read-only) */}
@@ -86,12 +132,18 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
           </div>
 
           <div>
-            <Label>Título *</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Título *</Label>
+              {aiBtn("titulo")}
+            </div>
             <Input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} />
           </div>
 
           <div>
-            <Label>Descrição</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Descrição</Label>
+              {aiBtn("descricao")}
+            </div>
             <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} rows={2} />
           </div>
 
@@ -162,11 +214,14 @@ export const PdiEditModal = ({ open, onOpenChange, pdi, onUpdate }: PdiEditModal
           </div>
 
           <div>
-            <Label>Observações</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Observações</Label>
+              {aiBtn("observacoes")}
+            </div>
             <Textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} rows={2} placeholder="Anotações gerais sobre o PDI" />
           </div>
 
-          <Button onClick={handleSubmit} disabled={saving || !form.titulo || !form.data_inicio || !form.data_fim} className="w-full">
+          <Button onClick={handleSubmit} disabled={saving || !form.titulo || !form.data_inicio || !form.data_fim} className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 shadow-lg shadow-sky-500/30">
             {saving ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>

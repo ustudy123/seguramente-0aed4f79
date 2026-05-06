@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Wand2, Loader2, HelpCircle } from "lucide-react";
+import { Sparkles, Wand2, Loader2, HelpCircle, Target } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { PdiMetaInsert, PdiMetaCategoria, PdiCheckinFrequencia } from "@/types/pdi";
 import { PDI_META_CATEGORIA_LABELS, PDI_CHECKIN_FREQ_LABELS } from "@/types/pdi";
+import { GradientDialogHeader } from "./GradientDialogHeader";
 
 interface PdiMetaFormProps {
   open: boolean;
@@ -159,18 +161,19 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <VisuallyHidden>
           <DialogTitle>Nova Meta SMART — {steps[step].title}</DialogTitle>
           <DialogDescription>Passo {step + 1} de {steps.length}</DialogDescription>
-        </DialogHeader>
-
-        {/* Steps progress */}
-        <div className="flex gap-1 mb-2">
-          {steps.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`} />
-          ))}
-        </div>
+        </VisuallyHidden>
+        <GradientDialogHeader
+          icon={Target}
+          title={`Nova Meta SMART · ${steps[step].title}`}
+          description="Específica · Mensurável · Atingível · Relevante · Temporal"
+          gradient="from-pink-500 via-rose-500 to-fuchsia-600"
+          glow="shadow-pink-500/40"
+          step={{ current: step, total: steps.length, labels: steps.map(s => s.title) }}
+        />
 
         <div className="space-y-4 min-h-[180px]">
           {/* STEP 0 — Definição */}
@@ -353,9 +356,9 @@ export const PdiMetaForm = ({ open, onOpenChange, pdiId, onCreate }: PdiMetaForm
             {step > 0 ? "Voltar" : "Cancelar"}
           </Button>
           {step < steps.length - 1 ? (
-            <Button onClick={() => handleStepChange(step + 1)} disabled={step === 0 && !form.titulo}>Próximo</Button>
+            <Button onClick={() => handleStepChange(step + 1)} disabled={step === 0 && !form.titulo} className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:opacity-95 shadow-lg shadow-pink-500/30">Próximo</Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={!form.titulo}>Criar Meta</Button>
+            <Button onClick={handleSubmit} disabled={!form.titulo} className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:opacity-95 shadow-lg shadow-pink-500/30">Criar Meta</Button>
           )}
         </div>
       </DialogContent>
